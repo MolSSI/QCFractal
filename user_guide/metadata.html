@@ -1,0 +1,1491 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Interpreting metadata &#8212; QCArchive 0.50b4.post27+g460e54b7 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+<link href="../_static/styles/bootstrap.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/design-tabs.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Query Iterators" href="query_iterators.html" />
+    <link rel="prev" title="Connecting to a server" href="connecting_qcportal.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="docsearch:language" content="en">
+  </head>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__primary" id="__primary">
+  <label class="overlay overlay-primary" for="__primary"></label>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__secondary" id="__secondary">
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+      
+<form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+    </div>
+  </div>
+
+  
+  <nav class="bd-header navbar navbar-expand-lg bd-navbar" id="navbar-main"><div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+      <span class="fa-solid fa-bars"></span>
+  </label>
+  <div id="navbar-start">
+    
+    
+  
+
+
+<a class="navbar-brand logo" href="../index.html">
+
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <img src="../_static/molssi_main_logo.png" class="logo__image only-light" alt="Logo image">
+    <img src="../_static/molssi_main_logo_inverted_white.png" class="logo__image only-dark" alt="Logo image">
+  
+  
+</a>
+    
+  </div>
+
+  
+  <div class="col-lg-9 navbar-header-items">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../overview/index.html">
+                        Overview
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="index.html">
+                        User Guide
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../admin_guide/index.html">
+                        Admin Guide
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../web_api/index.html">
+                        Web API
+                      </a>
+                    </li>
+                
+            <div class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    More
+                </button>
+                <div class="dropdown-menu">
+                    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../developer_guide/index.html">
+                        Developer Guide
+                      </a>
+                    </li>
+                
+
+                <li class="nav-item">
+                  <a class="nav-link nav-external" href="https://molssi.org">
+                    MolSSI
+                  </a>
+                </li>
+                
+                </div>
+            </div>
+            
+    </ul>
+</nav>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+        <div class="navbar-end-item navbar-persistent--container">
+          
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-toggle="tooltip">
+  <i class="fa-solid fa-magnifying-glass"></i>
+</button>
+        </div>
+      
+      
+      <div class="navbar-end-item">
+        <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MolSSI/QCFractal" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fa-brands fa-square-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+
+
+  
+  
+    <div class="navbar-persistent--mobile">
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-toggle="tooltip">
+  <i class="fa-solid fa-magnifying-glass"></i>
+</button>
+    </div>
+  
+
+  
+  <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fa-solid fa-outdent"></span>
+  </label>
+  
+
+</div>
+  </nav>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../overview/index.html">
+                        Overview
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="index.html">
+                        User Guide
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../admin_guide/index.html">
+                        Admin Guide
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../web_api/index.html">
+                        Web API
+                      </a>
+                    </li>
+                
+            <div class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    More
+                </button>
+                <div class="dropdown-menu">
+                    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../developer_guide/index.html">
+                        Developer Guide
+                      </a>
+                    </li>
+                
+
+                <li class="nav-item">
+                  <a class="nav-link nav-external" href="https://molssi.org">
+                    MolSSI
+                  </a>
+                </li>
+                
+                </div>
+            </div>
+            
+    </ul>
+</nav>
+      </div>
+      
+      </div>
+    
+
+    
+    
+    <div class="sidebar-header-items__end">
+      
+      <div class="navbar-end-item">
+        <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MolSSI/QCFractal" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fa-brands fa-square-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+    
+  </div>
+
+  
+  <div class="sidebar-start-items sidebar-primary__section">
+    <div class="sidebar-start-items__item"><nav class="bd-links" id="bd-docs-nav" aria-label="Section navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">
+    Section Navigation
+  </p>
+  <div class="bd-toc-item navbar-nav">
+    <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="client_setup.html">QCPortal Installation &amp; Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connecting_qcportal.html">Connecting to a server</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Interpreting metadata</a></li>
+
+<li class="toctree-l1"><a class="reference internal" href="query_iterators.html">Query Iterators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="molecule.html">Molecules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="record_retrieval.html">Retrieving records</a></li>
+<li class="toctree-l1"><a class="reference internal" href="record_submission.html">Submitting computations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="record_management.html">Managing Records</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets.html">Using datasets</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="records/index.html">Computation Types</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="records/base.html">Base Record</a></li>
+
+<li class="toctree-l2"><a class="reference internal" href="records/singlepoint.html">Singlepoint calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/optimization.html">Optimization calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/gridoptimization.html">Gridoptimization calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/torsiondrive.html">Torsiondrive calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/manybody.html">Manybody calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/reaction.html">Reaction calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/neb.html">NEB calculations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="qcportal_reference.html">QCPortal API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="webapi_reference.html">Web API</a></li>
+</ul>
+
+  </div>
+</nav>
+    </div>
+  </div>
+  
+
+  
+  <div class="sidebar-end-items sidebar-primary__section">
+    <div class="sidebar-end-items__item">
+    </div>
+  </div>
+
+  
+  <div id="rtd-footer-container"></div>
+
+      </div>
+      <main id="main-content" class="bd-main">
+        
+        
+        <div class="bd-content">
+          <div class="bd-article-container">
+            
+            <div class="bd-header-article">
+                
+            </div>
+            
+            
+            <article class="bd-article" role="main">
+              
+  <section id="interpreting-metadata">
+<h1>Interpreting metadata<a class="headerlink" href="#interpreting-metadata" title="Permalink to this heading">#</a></h1>
+<p>Many client functions return metadata. This class includes information about what objects records were created or
+already existing on the server, or which objects were deleted, modified, or had errors.</p>
+<p>All metadata objects have some common features. Notably, if the operation was completely successful operation,
+then <code class="docutils literal notranslate"><span class="pre">meta.success</span></code> will be <code class="docutils literal notranslate"><span class="pre">True</span></code>. If any errors happened, these are also stored in <code class="docutils literal notranslate"><span class="pre">meta.errors</span></code> and
+<code class="docutils literal notranslate"><span class="pre">meta.success</span></code> will be <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+<p>Metadata classes also have fields with an <code class="docutils literal notranslate"><span class="pre">_idx</span></code> suffix. These are lists that reference the
+<cite>zero-based index</cite> of the input list. If we take molecules as an example,</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">water</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nitrogen</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="s1">&#39;N&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_molecules</span><span class="p">([</span><span class="n">water</span><span class="p">,</span> <span class="n">nitrogen</span><span class="p">])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">success</span><span class="p">)</span>
+<span class="go">True</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+<span class="go">InsertMetadata(error_description=None, errors=[], inserted_idx=[0], existing_idx=[1])</span>
+</pre></div>
+</div>
+<p>In this case, the addition of the two molecules to the server was a success. The first molecule <code class="docutils literal notranslate"><span class="pre">water</span></code>
+did not exist and was added to the server - this is represented by <code class="docutils literal notranslate"><span class="pre">0</span></code> in the <code class="docutils literal notranslate"><span class="pre">inserted_idx</span></code> attribute
+of the metadata. Likewise, the nitrogen molecule already existed (because <code class="docutils literal notranslate"><span class="pre">1</span></code> is in the <code class="docutils literal notranslate"><span class="pre">existing_idx</span></code> list).</p>
+<p>If the <code class="docutils literal notranslate"><span class="pre">water</span></code> molecule already existed as well, <code class="docutils literal notranslate"><span class="pre">inserted_idx</span></code> would be <code class="docutils literal notranslate"><span class="pre">[]</span></code> and <code class="docutils literal notranslate"><span class="pre">existing_idx</span></code> would be
+<code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.</p>
+<p>The total number of inserted or existing objects can be retrieved with <code class="docutils literal notranslate"><span class="pre">n_inserted</span></code> and <code class="docutils literal notranslate"><span class="pre">n_existing</span></code>.</p>
+</section>
+<section id="metadata-api">
+<h1>Metadata API<a class="headerlink" href="#metadata-api" title="Permalink to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InsertMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_description=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inserted_idx=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">existing_idx=&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/metadata_models.html#InsertMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Metadata returned by insertion / adding functions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>error_description</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>errors</strong> (<em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>inserted_idx</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – </p></li>
+<li><p><strong>existing_idx</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.error_description">
+<span class="sig-name descname"><span class="pre">error_description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.error_description" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.errors">
+<span class="sig-name descname"><span class="pre">errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.errors" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.inserted_idx">
+<span class="sig-name descname"><span class="pre">inserted_idx</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.inserted_idx" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.existing_idx">
+<span class="sig-name descname"><span class="pre">existing_idx</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.existing_idx" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.n_inserted">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_inserted</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.n_inserted" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.n_existing">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_existing</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.n_existing" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.n_errors">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_errors</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.n_errors" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.error_idx">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error_idx</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.error_idx" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.success">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">success</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.success" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.error_string">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error_string</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.error_string" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.sort_fields">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sort_fields</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/metadata_models.html#InsertMetadata.sort_fields"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.sort_fields" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.check_all_indices">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">check_all_indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/metadata_models.html#InsertMetadata.check_all_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.check_all_indices" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.dict">
+<span class="sig-name descname"><span class="pre">dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/metadata_models.html#InsertMetadata.dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.dict" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns the information from this dataclass as a dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Dict</em>[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DeleteMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_description=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deleted_idx=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_children_deleted=0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/metadata_models.html#DeleteMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Metadata returned by delete functions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>error_description</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>errors</strong> (<em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>deleted_idx</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – </p></li>
+<li><p><strong>n_children_deleted</strong> (<em>int</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata.error_description">
+<span class="sig-name descname"><span class="pre">error_description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.error_description" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata.errors">
+<span class="sig-name descname"><span class="pre">errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.errors" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata.deleted_idx">
+<span class="sig-name descname"><span class="pre">deleted_idx</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.deleted_idx" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata.n_children_deleted">
+<span class="sig-name descname"><span class="pre">n_children_deleted</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.n_children_deleted" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata.n_deleted">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_deleted</span></span><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.n_deleted" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata.n_errors">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_errors</span></span><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.n_errors" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata.error_idx">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error_idx</span></span><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.error_idx" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata.success">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">success</span></span><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.success" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata.error_string">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error_string</span></span><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.error_string" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata.sort_fields">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sort_fields</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/metadata_models.html#DeleteMetadata.sort_fields"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.sort_fields" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata.check_all_indices">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">check_all_indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/metadata_models.html#DeleteMetadata.check_all_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.check_all_indices" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata.dict">
+<span class="sig-name descname"><span class="pre">dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/metadata_models.html#DeleteMetadata.dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.dict" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns the information from this dataclass as a dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Dict</em>[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UpdateMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_description=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">updated_idx=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_children_updated=0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/metadata_models.html#UpdateMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Metadata returned by update functions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>error_description</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>errors</strong> (<em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>updated_idx</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – </p></li>
+<li><p><strong>n_children_updated</strong> (<em>int</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata.error_description">
+<span class="sig-name descname"><span class="pre">error_description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.error_description" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata.errors">
+<span class="sig-name descname"><span class="pre">errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.errors" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata.updated_idx">
+<span class="sig-name descname"><span class="pre">updated_idx</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.updated_idx" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata.n_children_updated">
+<span class="sig-name descname"><span class="pre">n_children_updated</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.n_children_updated" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata.n_updated">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_updated</span></span><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.n_updated" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata.n_errors">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_errors</span></span><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.n_errors" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata.error_idx">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error_idx</span></span><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.error_idx" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata.success">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">success</span></span><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.success" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata.error_string">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error_string</span></span><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.error_string" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata.sort_fields">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sort_fields</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/metadata_models.html#UpdateMetadata.sort_fields"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.sort_fields" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata.check_all_indices">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">check_all_indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/metadata_models.html#UpdateMetadata.check_all_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.check_all_indices" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata.dict">
+<span class="sig-name descname"><span class="pre">dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/metadata_models.html#UpdateMetadata.dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.dict" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns the information from this dataclass as a dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Dict</em>[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qcportal.metadata_models.QueryMetadata">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QueryMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_description=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_found=0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/metadata_models.html#QueryMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.QueryMetadata" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Metadata returned by query functions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>error_description</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>errors</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>n_found</strong> (<em>int</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.metadata_models.QueryMetadata.error_description">
+<span class="sig-name descname"><span class="pre">error_description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.metadata_models.QueryMetadata.error_description" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.metadata_models.QueryMetadata.errors">
+<span class="sig-name descname"><span class="pre">errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.metadata_models.QueryMetadata.errors" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.metadata_models.QueryMetadata.n_found">
+<span class="sig-name descname"><span class="pre">n_found</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#qcportal.metadata_models.QueryMetadata.n_found" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.metadata_models.QueryMetadata.success">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">success</span></span><a class="headerlink" href="#qcportal.metadata_models.QueryMetadata.success" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.metadata_models.QueryMetadata.error_string">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error_string</span></span><a class="headerlink" href="#qcportal.metadata_models.QueryMetadata.error_string" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.metadata_models.QueryMetadata.n_errors">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_errors</span></span><a class="headerlink" href="#qcportal.metadata_models.QueryMetadata.n_errors" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.metadata_models.QueryMetadata.sort_fields">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sort_fields</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/metadata_models.html#QueryMetadata.sort_fields"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.QueryMetadata.sort_fields" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.metadata_models.QueryMetadata.dict">
+<span class="sig-name descname"><span class="pre">dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/metadata_models.html#QueryMetadata.dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.QueryMetadata.dict" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns the information from this dataclass as a dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Dict</em>[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qcportal.metadata_models.TaskReturnMetadata">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TaskReturnMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_description=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rejected_info=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accepted_ids=&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/metadata_models.html#TaskReturnMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Metadata returned to managers that have sent completed tasks back to the server</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>error_description</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>rejected_info</strong> (<em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>accepted_ids</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.metadata_models.TaskReturnMetadata.error_description">
+<span class="sig-name descname"><span class="pre">error_description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.error_description" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.metadata_models.TaskReturnMetadata.rejected_info">
+<span class="sig-name descname"><span class="pre">rejected_info</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.rejected_info" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.metadata_models.TaskReturnMetadata.accepted_ids">
+<span class="sig-name descname"><span class="pre">accepted_ids</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.accepted_ids" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.metadata_models.TaskReturnMetadata.n_accepted">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_accepted</span></span><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.n_accepted" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.metadata_models.TaskReturnMetadata.n_rejected">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_rejected</span></span><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.n_rejected" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.metadata_models.TaskReturnMetadata.rejected_ids">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rejected_ids</span></span><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.rejected_ids" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.metadata_models.TaskReturnMetadata.success">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">success</span></span><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.success" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.metadata_models.TaskReturnMetadata.error_string">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error_string</span></span><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.error_string" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.metadata_models.TaskReturnMetadata.sort_fields">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sort_fields</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/metadata_models.html#TaskReturnMetadata.sort_fields"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.sort_fields" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.metadata_models.TaskReturnMetadata.dict">
+<span class="sig-name descname"><span class="pre">dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/metadata_models.html#TaskReturnMetadata.dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.dict" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns the information from this dataclass as a dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Dict</em>[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+            </article>
+            
+            
+            
+            <footer class="bd-footer-article">
+                <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+  <a class='left-prev' id="prev-link" href="connecting_qcportal.html" title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+          <p class="prev-next-subtitle">previous</p>
+          <p class="prev-next-title">Connecting to a server</p>
+      </div>
+  </a>
+  <a class='right-next' id="next-link" href="query_iterators.html" title="next page">
+  <div class="prev-next-info">
+      <p class="prev-next-subtitle">next</p>
+      <p class="prev-next-title">Query Iterators</p>
+  </div>
+  <i class="fa-solid fa-angle-right"></i>
+  </a>
+</div>
+            </footer>
+            
+          </div>
+          
+          
+          
+            <div class="bd-sidebar-secondary bd-toc">
+              
+<div class="toc-item">
+  
+<div class="tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+</div>
+<nav id="bd-toc-nav" class="page-toc">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#">
+   Interpreting metadata
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#metadata-api">
+   Metadata API
+  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h2 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       InsertMetadata
+      </span>
+     </code>
+    </a>
+    <ul class="visible nav section-nav flex-column">
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.error_description">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InsertMetadata.error_description
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.errors">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InsertMetadata.errors
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.inserted_idx">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InsertMetadata.inserted_idx
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.existing_idx">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InsertMetadata.existing_idx
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.n_inserted">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InsertMetadata.n_inserted
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.n_existing">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InsertMetadata.n_existing
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.n_errors">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InsertMetadata.n_errors
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.error_idx">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InsertMetadata.error_idx
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.success">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InsertMetadata.success
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.error_string">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InsertMetadata.error_string
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.sort_fields">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InsertMetadata.sort_fields()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.check_all_indices">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InsertMetadata.check_all_indices()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.dict">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InsertMetadata.dict()
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toc-h2 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       DeleteMetadata
+      </span>
+     </code>
+    </a>
+    <ul class="visible nav section-nav flex-column">
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.error_description">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         DeleteMetadata.error_description
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.errors">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         DeleteMetadata.errors
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.deleted_idx">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         DeleteMetadata.deleted_idx
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.n_children_deleted">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         DeleteMetadata.n_children_deleted
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.n_deleted">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         DeleteMetadata.n_deleted
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.n_errors">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         DeleteMetadata.n_errors
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.error_idx">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         DeleteMetadata.error_idx
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.success">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         DeleteMetadata.success
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.error_string">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         DeleteMetadata.error_string
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.sort_fields">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         DeleteMetadata.sort_fields()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.check_all_indices">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         DeleteMetadata.check_all_indices()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.dict">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         DeleteMetadata.dict()
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toc-h2 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       UpdateMetadata
+      </span>
+     </code>
+    </a>
+    <ul class="visible nav section-nav flex-column">
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.error_description">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         UpdateMetadata.error_description
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.errors">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         UpdateMetadata.errors
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.updated_idx">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         UpdateMetadata.updated_idx
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.n_children_updated">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         UpdateMetadata.n_children_updated
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.n_updated">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         UpdateMetadata.n_updated
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.n_errors">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         UpdateMetadata.n_errors
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.error_idx">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         UpdateMetadata.error_idx
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.success">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         UpdateMetadata.success
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.error_string">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         UpdateMetadata.error_string
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.sort_fields">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         UpdateMetadata.sort_fields()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.check_all_indices">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         UpdateMetadata.check_all_indices()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.dict">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         UpdateMetadata.dict()
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toc-h2 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#qcportal.metadata_models.QueryMetadata">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       QueryMetadata
+      </span>
+     </code>
+    </a>
+    <ul class="visible nav section-nav flex-column">
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.QueryMetadata.error_description">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         QueryMetadata.error_description
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.QueryMetadata.errors">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         QueryMetadata.errors
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.QueryMetadata.n_found">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         QueryMetadata.n_found
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.QueryMetadata.success">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         QueryMetadata.success
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.QueryMetadata.error_string">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         QueryMetadata.error_string
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.QueryMetadata.n_errors">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         QueryMetadata.n_errors
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.QueryMetadata.sort_fields">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         QueryMetadata.sort_fields()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.QueryMetadata.dict">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         QueryMetadata.dict()
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toc-h2 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       TaskReturnMetadata
+      </span>
+     </code>
+    </a>
+    <ul class="visible nav section-nav flex-column">
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata.error_description">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         TaskReturnMetadata.error_description
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata.rejected_info">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         TaskReturnMetadata.rejected_info
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata.accepted_ids">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         TaskReturnMetadata.accepted_ids
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata.n_accepted">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         TaskReturnMetadata.n_accepted
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata.n_rejected">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         TaskReturnMetadata.n_rejected
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata.rejected_ids">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         TaskReturnMetadata.rejected_ids
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata.success">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         TaskReturnMetadata.success
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata.error_string">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         TaskReturnMetadata.error_string
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata.sort_fields">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         TaskReturnMetadata.sort_fields()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata.dict">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         TaskReturnMetadata.dict()
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+</nav>
+</div>
+
+<div class="toc-item">
+  
+<div class="tocsection sourcelink">
+    <a href="../_sources/user_guide/metadata.rst.txt">
+        <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+</div>
+
+</div>
+
+            </div>
+          
+          
+        </div>
+        <footer class="bd-footer-content">
+          <div class="bd-footer-content__inner">
+            
+          </div>
+        </footer>
+        
+      </main>
+    </div>
+  </div>
+
+  
+    
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94"></script>
+
+  <footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    
+<p class="copyright">
+
+    &copy; Copyright 2018-2023, The Molecular Sciences Software Institute.<br>
+
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    <p class="theme-version">
+    Built with the
+    <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">
+        PyData Sphinx Theme
+    </a>
+    0.12.0.
+</p>
+  </div>
+  
+  <div class="footer-item">
+    
+<p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
+</p>
+
+  </div>
+  
+</div>
+  </footer>
+  </body>
+</html>

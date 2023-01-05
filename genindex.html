@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; QCArchive 0.50b4.post22+g98d898c3 documentation</title>
+    <title>Index &#8212; QCArchive 0.50b4.post27+g460e54b7 documentation</title>
   
   
   
@@ -394,6 +394,8 @@
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.TaskReturnMetadata.accepted_ids">accepted_ids (TaskReturnMetadata attribute)</a>
+</li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.add_comment">add_comment() (PortalClient method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.add_dataset">add_dataset() (PortalClient method)</a>
@@ -410,10 +412,10 @@
 </li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.add_optimizations">add_optimizations() (PortalClient method)</a>
 </li>
-      <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.add_reactions">add_reactions() (PortalClient method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.add_reactions">add_reactions() (PortalClient method)</a>
+</li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.add_role">add_role() (PortalClient method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.add_singlepoints">add_singlepoints() (PortalClient method)</a>
@@ -458,6 +460,14 @@
       </ul></li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.change_user_password">change_user_password() (PortalClient method)</a>
 </li>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata.check_all_indices">check_all_indices() (DeleteMetadata class method)</a>
+
+      <ul>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.InsertMetadata.check_all_indices">(InsertMetadata class method)</a>
+</li>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata.check_all_indices">(UpdateMetadata class method)</a>
+</li>
+      </ul></li>
       <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.client">client (BaseRecord attribute)</a>
 
       <ul>
@@ -547,11 +557,7 @@
 </li>
       </ul></li>
       <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJobQueryFilters.cursor">cursor (InternalJobQueryFilters attribute)</a>
-
-      <ul>
-        <li><a href="user_guide/qcportal_reference.html#qcportal.molecules.models.MoleculeQueryFilters.cursor">(MoleculeQueryFilters attribute)</a>
 </li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -570,8 +576,6 @@
 </li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.delete_molecules">delete_molecules() (PortalClient method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.delete_records">delete_records() (PortalClient method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.delete_role">delete_role() (PortalClient method)</a>
@@ -580,10 +584,28 @@
 </li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.delete_user">delete_user() (PortalClient method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/records/base.html#qcportal.record_models.RecordStatusEnum.deleted">deleted (RecordStatusEnum attribute)</a>
+</li>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata.deleted_idx">deleted_idx (DeleteMetadata attribute)</a>
+</li>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata">DeleteMetadata (class in qcportal.metadata_models)</a>
 </li>
       <li><a href="overview/tasks_services.html#qcportal.record_models.ServiceRecord.dependencies">dependencies (ServiceRecord attribute)</a>
 </li>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata.dict">dict() (DeleteMetadata method)</a>
+
+      <ul>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.InsertMetadata.dict">(InsertMetadata method)</a>
+</li>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.QueryMetadata.dict">(QueryMetadata method)</a>
+</li>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.TaskReturnMetadata.dict">(TaskReturnMetadata method)</a>
+</li>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata.dict">(UpdateMetadata method)</a>
+</li>
+      </ul></li>
       <li><a href="user_guide/records/singlepoint.html#qcportal.singlepoint.QCSpecification.driver">driver (QCSpecification attribute)</a>
 </li>
   </ul></td>
@@ -620,12 +642,54 @@
         <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.error">(TorsiondriveRecord property)</a>
 </li>
       </ul></li>
-      <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJobQueryFilters.exclude">exclude (InternalJobQueryFilters attribute)</a>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata.error_description">error_description (DeleteMetadata attribute)</a>
 
       <ul>
-        <li><a href="user_guide/qcportal_reference.html#qcportal.molecules.models.MoleculeQueryFilters.exclude">(MoleculeQueryFilters attribute)</a>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.InsertMetadata.error_description">(InsertMetadata attribute)</a>
+</li>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.QueryMetadata.error_description">(QueryMetadata attribute)</a>
+</li>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.TaskReturnMetadata.error_description">(TaskReturnMetadata attribute)</a>
+</li>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata.error_description">(UpdateMetadata attribute)</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata.error_idx">error_idx (DeleteMetadata property)</a>
+
+      <ul>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.InsertMetadata.error_idx">(InsertMetadata property)</a>
+</li>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata.error_idx">(UpdateMetadata property)</a>
+</li>
+      </ul></li>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata.error_string">error_string (DeleteMetadata property)</a>
+
+      <ul>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.InsertMetadata.error_string">(InsertMetadata property)</a>
+</li>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.QueryMetadata.error_string">(QueryMetadata property)</a>
+</li>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.TaskReturnMetadata.error_string">(TaskReturnMetadata property)</a>
+</li>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata.error_string">(UpdateMetadata property)</a>
+</li>
+      </ul></li>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata.errors">errors (DeleteMetadata attribute)</a>
+
+      <ul>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.InsertMetadata.errors">(InsertMetadata attribute)</a>
+</li>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.QueryMetadata.errors">(QueryMetadata attribute)</a>
+</li>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata.errors">(UpdateMetadata attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJobQueryFilters.exclude">exclude (InternalJobQueryFilters attribute)</a>
+</li>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.InsertMetadata.existing_idx">existing_idx (InsertMetadata attribute)</a>
+</li>
       <li><a href="user_guide/records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord.Config.extra">extra (GridoptimizationRecord.Config attribute)</a>
 
       <ul>
@@ -656,8 +720,6 @@
         <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveSpecification.Config.extra">(TorsiondriveSpecification.Config attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.extras">extras (BaseRecord property)</a>
 
       <ul>
@@ -824,20 +886,10 @@
         <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.id">(TorsiondriveRecord property)</a>
 </li>
       </ul></li>
-      <li><a href="user_guide/qcportal_reference.html#qcportal.molecules.models.MoleculeQueryFilters.identifiers">identifiers (MoleculeQueryFilters attribute)</a>
-</li>
       <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJobQueryFilters.include">include (InternalJobQueryFilters attribute)</a>
-
-      <ul>
-        <li><a href="user_guide/qcportal_reference.html#qcportal.molecules.models.MoleculeQueryFilters.include">(MoleculeQueryFilters attribute)</a>
 </li>
-      </ul></li>
       <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJobQueryFilters.include_metadata">include_metadata (InternalJobQueryFilters attribute)</a>
-
-      <ul>
-        <li><a href="user_guide/qcportal_reference.html#qcportal.molecules.models.MoleculeQueryFilters.include_metadata">(MoleculeQueryFilters attribute)</a>
 </li>
-      </ul></li>
       <li><a href="user_guide/records/neb.html#qcportal.neb.NEBRecord.initial_chain">initial_chain (NEBRecord property)</a>
 </li>
       <li><a href="user_guide/records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord.initial_molecule">initial_molecule (GridoptimizationRecord property)</a>
@@ -859,6 +911,10 @@
 </li>
       </ul></li>
       <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.initial_molecules">initial_molecules (TorsiondriveRecord property)</a>
+</li>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.InsertMetadata.inserted_idx">inserted_idx (InsertMetadata attribute)</a>
+</li>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.InsertMetadata">InsertMetadata (class in qcportal.metadata_models)</a>
 </li>
       <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJobQueryIterator">InternalJobQueryIterator (class in qcportal.internal_jobs.models)</a>
 </li>
@@ -933,11 +989,7 @@
       <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_before">last_updated_before (InternalJobQueryFilters attribute)</a>
 </li>
       <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJobQueryFilters.limit">limit (InternalJobQueryFilters attribute)</a>
-
-      <ul>
-        <li><a href="user_guide/qcportal_reference.html#qcportal.molecules.models.MoleculeQueryFilters.limit">(MoleculeQueryFilters attribute)</a>
 </li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.list_datasets">list_datasets() (PortalClient method)</a>
@@ -1017,23 +1069,47 @@
         <li><a href="admin_guide/monitoring.html#module-qcportal.internal_jobs.models">qcportal.internal_jobs.models</a>
 </li>
       </ul></li>
-      <li><a href="user_guide/qcportal_reference.html#qcportal.molecules.models.MoleculeQueryFilters.molecular_formula">molecular_formula (MoleculeQueryFilters attribute)</a>
-</li>
       <li><a href="user_guide/records/singlepoint.html#qcportal.singlepoint.SinglepointRecord.molecule">molecule (SinglepointRecord property)</a>
 </li>
-      <li><a href="user_guide/qcportal_reference.html#qcportal.molecules.models.MoleculeQueryFilters.molecule_hash">molecule_hash (MoleculeQueryFilters attribute)</a>
+      <li><a href="user_guide/records/singlepoint.html#qcportal.singlepoint.SinglepointRecord.molecule_id">molecule_id (SinglepointRecord property)</a>
 </li>
-      <li><a href="user_guide/qcportal_reference.html#qcportal.molecules.models.MoleculeQueryFilters.molecule_id">molecule_id (MoleculeQueryFilters attribute)</a>
-
-      <ul>
-        <li><a href="user_guide/records/singlepoint.html#qcportal.singlepoint.SinglepointRecord.molecule_id">(SinglepointRecord property)</a>
+      <li><a href="user_guide/qcportal_reference.html#qcportal.molecules.models.MoleculeQueryIterator">MoleculeQueryIterator (class in qcportal.molecules.models)</a>, <a href="user_guide/query_iterators.html#qcportal.molecules.models.MoleculeQueryIterator">[1]</a>
 </li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="N">N</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.TaskReturnMetadata.n_accepted">n_accepted (TaskReturnMetadata property)</a>
+</li>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata.n_children_deleted">n_children_deleted (DeleteMetadata attribute)</a>
+</li>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata.n_children_updated">n_children_updated (UpdateMetadata attribute)</a>
+</li>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata.n_deleted">n_deleted (DeleteMetadata property)</a>
+</li>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata.n_errors">n_errors (DeleteMetadata property)</a>
+
+      <ul>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.InsertMetadata.n_errors">(InsertMetadata property)</a>
+</li>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.QueryMetadata.n_errors">(QueryMetadata property)</a>
+</li>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata.n_errors">(UpdateMetadata property)</a>
+</li>
+      </ul></li>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.InsertMetadata.n_existing">n_existing (InsertMetadata property)</a>
+</li>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.QueryMetadata.n_found">n_found (QueryMetadata attribute)</a>
+</li>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.InsertMetadata.n_inserted">n_inserted (InsertMetadata property)</a>
+</li>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.TaskReturnMetadata.n_rejected">n_rejected (TaskReturnMetadata property)</a>
+</li>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata.n_updated">n_updated (UpdateMetadata property)</a>
+</li>
+  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJob.name">name (InternalJob attribute)</a>
 
@@ -1059,8 +1135,6 @@
         <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.native_files">(TorsiondriveRecord property)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/records/neb.html#qcportal.neb.NEBRecord.neb_result">neb_result (NEBRecord property)</a>
 </li>
       <li><a href="user_guide/records/neb.html#qcportal.neb.NEBRecord">NEBRecord (class in qcportal.neb)</a>
@@ -1270,6 +1344,8 @@
 </li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.query_torsiondrives">query_torsiondrives() (PortalClient method)</a>
 </li>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.QueryMetadata">QueryMetadata (class in qcportal.metadata_models)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -1324,9 +1400,13 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="user_guide/records/base.html#qcportal.record_models.RecordQueryIterator">RecordQueryIterator (class in qcportal.record_models)</a>
+      <li><a href="user_guide/query_iterators.html#qcportal.record_models.RecordQueryIterator">RecordQueryIterator (class in qcportal.record_models)</a>, <a href="user_guide/records/base.html#qcportal.record_models.RecordQueryIterator">[1]</a>
 </li>
       <li><a href="user_guide/records/base.html#qcportal.record_models.RecordStatusEnum">RecordStatusEnum (class in qcportal.record_models)</a>
+</li>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.TaskReturnMetadata.rejected_ids">rejected_ids (TaskReturnMetadata property)</a>
+</li>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.TaskReturnMetadata.rejected_info">rejected_info (TaskReturnMetadata attribute)</a>
 </li>
       <li><a href="overview/tasks_services.html#qcportal.record_models.TaskRecord.required_programs">required_programs (TaskRecord attribute)</a>
 </li>
@@ -1335,7 +1415,9 @@
       <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJobQueryIterator.reset">reset() (InternalJobQueryIterator method)</a>
 
       <ul>
-        <li><a href="user_guide/records/base.html#qcportal.record_models.RecordQueryIterator.reset">(RecordQueryIterator method)</a>
+        <li><a href="user_guide/qcportal_reference.html#qcportal.molecules.models.MoleculeQueryIterator.reset">(MoleculeQueryIterator method)</a>, <a href="user_guide/query_iterators.html#qcportal.molecules.models.MoleculeQueryIterator.reset">[1]</a>
+</li>
+        <li><a href="user_guide/query_iterators.html#qcportal.record_models.RecordQueryIterator.reset">(RecordQueryIterator method)</a>, <a href="user_guide/records/base.html#qcportal.record_models.RecordQueryIterator.reset">[1]</a>
 </li>
       </ul></li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.reset_records">reset_records() (PortalClient method)</a>
@@ -1408,6 +1490,18 @@
 </li>
       <li><a href="user_guide/records/neb.html#qcportal.neb.NEBRecord.singlepoints">singlepoints (NEBRecord property)</a>
 </li>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata.sort_fields">sort_fields() (DeleteMetadata class method)</a>
+
+      <ul>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.InsertMetadata.sort_fields">(InsertMetadata class method)</a>
+</li>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.QueryMetadata.sort_fields">(QueryMetadata class method)</a>
+</li>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.TaskReturnMetadata.sort_fields">(TaskReturnMetadata class method)</a>
+</li>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata.sort_fields">(UpdateMetadata class method)</a>
+</li>
+      </ul></li>
       <li><a href="overview/tasks_services.html#qcportal.record_models.TaskRecord.spec">spec (TaskRecord attribute)</a>
 </li>
       <li><a href="user_guide/records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord.specification">specification (GridoptimizationRecord property)</a>
@@ -1494,6 +1588,18 @@
         <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.stdout">(TorsiondriveRecord property)</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata.success">success (DeleteMetadata property)</a>
+
+      <ul>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.InsertMetadata.success">(InsertMetadata property)</a>
+</li>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.QueryMetadata.success">(QueryMetadata property)</a>
+</li>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.TaskReturnMetadata.success">(TaskReturnMetadata property)</a>
+</li>
+        <li><a href="user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata.success">(UpdateMetadata property)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -1524,6 +1630,8 @@
         <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.task">(TorsiondriveRecord property)</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.TaskReturnMetadata">TaskReturnMetadata (class in qcportal.metadata_models)</a>
+</li>
       <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord">TorsiondriveRecord (class in qcportal.torsiondrive)</a>
 </li>
   </ul></td>
@@ -1564,9 +1672,13 @@
 </li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.undelete_records">undelete_records() (PortalClient method)</a>
 </li>
+      <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.uninvalidate_records">uninvalidate_records() (PortalClient method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.uninvalidate_records">uninvalidate_records() (PortalClient method)</a>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata.updated_idx">updated_idx (UpdateMetadata attribute)</a>
+</li>
+      <li><a href="user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata">UpdateMetadata (class in qcportal.metadata_models)</a>
 </li>
       <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJob.user">user (InternalJob attribute)</a>
 
@@ -1581,11 +1693,7 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJobQueryFilters.validate_lists">validate_lists() (InternalJobQueryFilters class method)</a>
-
-      <ul>
-        <li><a href="user_guide/qcportal_reference.html#qcportal.molecules.models.MoleculeQueryFilters.validate_lists">(MoleculeQueryFilters class method)</a>
 </li>
-      </ul></li>
   </ul></td>
 </tr></table>
 

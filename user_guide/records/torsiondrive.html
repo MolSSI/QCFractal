@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Torsiondrive calculations &#8212; QCArchive 0.50b4.post22+g98d898c3 documentation</title>
+    <title>Torsiondrive calculations &#8212; QCArchive 0.50b4.post27+g460e54b7 documentation</title>
   
   
   
@@ -348,6 +348,9 @@
     <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../client_setup.html">QCPortal Installation &amp; Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../connecting_qcportal.html">Connecting to a server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata.html">Interpreting metadata</a></li>
+
+<li class="toctree-l1"><a class="reference internal" href="../query_iterators.html">Query Iterators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../molecule.html">Molecules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../record_retrieval.html">Retrieving records</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../record_submission.html">Submitting computations</a></li>
@@ -428,7 +431,8 @@
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.raw_data">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">raw_data</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">_DataModel</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.raw_data" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>Raw data retrieved from the server. Generally for internal use only</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.transform_includes">
@@ -525,9 +529,13 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.get_subclass">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_subclass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.get_subclass" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Obtain a subclass of this class given its record_type</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>record_type</strong> (<em>str</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Type</em>[<a class="reference internal" href="base.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><em>BaseRecord</em></a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -610,7 +618,8 @@
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.client">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">client</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Any</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.client" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>Client connected to the server that this record belongs to</p>
+</dd></dl>
 
 </dd></dl>
 

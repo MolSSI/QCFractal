@@ -125,7 +125,7 @@ the :attr:`~qcportal.record_models.BaseRecord.error`, :attr:`~qcportal.record_mo
   >>> print(meta)
   UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)
 
-The metadata is :ref:`interpreted <interpret_insert_metadata>` similarly to the metadata returned by ``add_`` functions.
+The :doc:`metadata <metadata>` is similarly to the metadata returned by ``add_`` functions.
 In this case, the only record (index 0) had its status updated back to ``waiting`` and will be picked up/run by a
 manager again.
 

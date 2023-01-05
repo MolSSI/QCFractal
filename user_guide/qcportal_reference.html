@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>QCPortal API Reference &#8212; QCArchive 0.50b4.post22+g98d898c3 documentation</title>
+    <title>QCPortal API Reference &#8212; QCArchive 0.50b4.post27+g460e54b7 documentation</title>
   
   
   
@@ -348,6 +348,9 @@
     <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="client_setup.html">QCPortal Installation &amp; Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connecting_qcportal.html">Connecting to a server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metadata.html">Interpreting metadata</a></li>
+
+<li class="toctree-l1"><a class="reference internal" href="query_iterators.html">Query Iterators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="molecule.html">Molecules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="record_retrieval.html">Retrieving records</a></li>
 <li class="toctree-l1"><a class="reference internal" href="record_submission.html">Submitting computations</a></li>
@@ -592,7 +595,7 @@ Molecular formulas are not order-sensitive (e.g. “H2O == OH2 != Oh2”).</p></
 <dd class="field-even"><p>An iterator that can be used to retrieve the results of the query</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>MoleculeQueryIterator</em></p>
+<dd class="field-odd"><p><a class="reference internal" href="query_iterators.html#qcportal.molecules.models.MoleculeQueryIterator" title="qcportal.molecules.models.MoleculeQueryIterator"><em>MoleculeQueryIterator</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -612,7 +615,7 @@ molecule is kept and that particular molecule is not added.</p>
 in the same order as the <cite>molecules</cite> parameter.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Tuple</em>[<em>InsertMetadata</em>, <em>List</em>[int]]</p>
+<dd class="field-odd"><p><em>Tuple</em>[<a class="reference internal" href="metadata.html#qcportal.metadata_models.InsertMetadata" title="qcportal.metadata_models.InsertMetadata"><em>InsertMetadata</em></a>, <em>List</em>[int]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -641,7 +644,7 @@ are never removed.</p></li>
 <dd class="field-even"><p>Metadata about the modification/update.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>UpdateMetadata</em></p>
+<dd class="field-odd"><p><a class="reference internal" href="metadata.html#qcportal.metadata_models.UpdateMetadata" title="qcportal.metadata_models.UpdateMetadata"><em>UpdateMetadata</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -659,7 +662,7 @@ are never removed.</p></li>
 <dd class="field-even"><p>Metadata about what was deleted</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>DeleteMetadata</em></p>
+<dd class="field-odd"><p><a class="reference internal" href="metadata.html#qcportal.metadata_models.DeleteMetadata" title="qcportal.metadata_models.DeleteMetadata"><em>DeleteMetadata</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -737,7 +740,7 @@ that are common among all records.</p>
 <dd class="field-odd"><p><strong>record_ids</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em>) – </p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>UpdateMetadata</em></p>
+<dd class="field-even"><p><a class="reference internal" href="metadata.html#qcportal.metadata_models.UpdateMetadata" title="qcportal.metadata_models.UpdateMetadata"><em>UpdateMetadata</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -752,7 +755,7 @@ that are common among all records.</p>
 <dd class="field-odd"><p><strong>record_ids</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em>) – </p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>UpdateMetadata</em></p>
+<dd class="field-even"><p><a class="reference internal" href="metadata.html#qcportal.metadata_models.UpdateMetadata" title="qcportal.metadata_models.UpdateMetadata"><em>UpdateMetadata</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -768,7 +771,7 @@ is not correct.</p>
 <dd class="field-odd"><p><strong>record_ids</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em>) – </p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>UpdateMetadata</em></p>
+<dd class="field-even"><p><a class="reference internal" href="metadata.html#qcportal.metadata_models.UpdateMetadata" title="qcportal.metadata_models.UpdateMetadata"><em>UpdateMetadata</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -788,7 +791,7 @@ happen later. Soft delete can be undone with undelete</p>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>DeleteMetadata</em></p>
+<dd class="field-even"><p><a class="reference internal" href="metadata.html#qcportal.metadata_models.DeleteMetadata" title="qcportal.metadata_models.DeleteMetadata"><em>DeleteMetadata</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -802,7 +805,7 @@ happen later. Soft delete can be undone with undelete</p>
 <dd class="field-odd"><p><strong>record_ids</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em>) – </p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>UpdateMetadata</em></p>
+<dd class="field-even"><p><a class="reference internal" href="metadata.html#qcportal.metadata_models.UpdateMetadata" title="qcportal.metadata_models.UpdateMetadata"><em>UpdateMetadata</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -816,7 +819,7 @@ happen later. Soft delete can be undone with undelete</p>
 <dd class="field-odd"><p><strong>record_ids</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em>) – </p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>UpdateMetadata</em></p>
+<dd class="field-even"><p><a class="reference internal" href="metadata.html#qcportal.metadata_models.UpdateMetadata" title="qcportal.metadata_models.UpdateMetadata"><em>UpdateMetadata</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -830,7 +833,7 @@ happen later. Soft delete can be undone with undelete</p>
 <dd class="field-odd"><p><strong>record_ids</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em>) – </p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>UpdateMetadata</em></p>
+<dd class="field-even"><p><a class="reference internal" href="metadata.html#qcportal.metadata_models.UpdateMetadata" title="qcportal.metadata_models.UpdateMetadata"><em>UpdateMetadata</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -848,7 +851,7 @@ happen later. Soft delete can be undone with undelete</p>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>UpdateMetadata</em></p>
+<dd class="field-even"><p><a class="reference internal" href="metadata.html#qcportal.metadata_models.UpdateMetadata" title="qcportal.metadata_models.UpdateMetadata"><em>UpdateMetadata</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -868,7 +871,7 @@ happen later. Soft delete can be undone with undelete</p>
 <dd class="field-even"><p>Metadata about which records were updated</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>UpdateMetadata</em></p>
+<dd class="field-odd"><p><a class="reference internal" href="metadata.html#qcportal.metadata_models.UpdateMetadata" title="qcportal.metadata_models.UpdateMetadata"><em>UpdateMetadata</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -900,7 +903,7 @@ the existing id, otherwise it will insert it and return the new id.</p>
 order of the input molecules</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Tuple</em>[<em>InsertMetadata</em>, <em>List</em>[int]]</p>
+<dd class="field-odd"><p><em>Tuple</em>[<a class="reference internal" href="metadata.html#qcportal.metadata_models.InsertMetadata" title="qcportal.metadata_models.InsertMetadata"><em>InsertMetadata</em></a>, <em>List</em>[int]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -994,7 +997,7 @@ the existing id, otherwise it will insert it and return the new id.</p>
 order of the input molecules</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Tuple</em>[<em>InsertMetadata</em>, <em>List</em>[int]]</p>
+<dd class="field-odd"><p><em>Tuple</em>[<a class="reference internal" href="metadata.html#qcportal.metadata_models.InsertMetadata" title="qcportal.metadata_models.InsertMetadata"><em>InsertMetadata</em></a>, <em>List</em>[int]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1089,7 +1092,7 @@ multiple molecules, so this is a nested list</p></li>
 order of the input molecules</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Tuple</em>[<em>InsertMetadata</em>, <em>List</em>[int]]</p>
+<dd class="field-odd"><p><em>Tuple</em>[<a class="reference internal" href="metadata.html#qcportal.metadata_models.InsertMetadata" title="qcportal.metadata_models.InsertMetadata"><em>InsertMetadata</em></a>, <em>List</em>[int]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1187,7 +1190,7 @@ the existing id, otherwise it will insert it and return the new id.</p>
 order of the input molecules</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Tuple</em>[<em>InsertMetadata</em>, <em>List</em>[int]]</p>
+<dd class="field-odd"><p><em>Tuple</em>[<a class="reference internal" href="metadata.html#qcportal.metadata_models.InsertMetadata" title="qcportal.metadata_models.InsertMetadata"><em>InsertMetadata</em></a>, <em>List</em>[int]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1287,7 +1290,7 @@ molecules/coefficients, so this is a nested list</p></li>
 order of the input molecules</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Tuple[InsertMetadata, List[int]]</p>
+<dd class="field-odd"><p>Tuple[<a class="reference internal" href="metadata.html#qcportal.metadata_models.InsertMetadata" title="qcportal.metadata_models.InsertMetadata">InsertMetadata</a>, List[int]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1381,7 +1384,7 @@ the existing id, otherwise it will insert it and return the new id.</p>
 order of the input molecules</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Tuple</em>[<em>InsertMetadata</em>, <em>List</em>[int]]</p>
+<dd class="field-odd"><p><em>Tuple</em>[<a class="reference internal" href="metadata.html#qcportal.metadata_models.InsertMetadata" title="qcportal.metadata_models.InsertMetadata"><em>InsertMetadata</em></a>, <em>List</em>[int]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1467,7 +1470,7 @@ that was not found.</p>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Tuple</em>[<em>InsertMetadata</em>, <em>List</em>[int]]</p>
+<dd class="field-even"><p><em>Tuple</em>[<a class="reference internal" href="metadata.html#qcportal.metadata_models.InsertMetadata" title="qcportal.metadata_models.InsertMetadata"><em>InsertMetadata</em></a>, <em>List</em>[int]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2051,110 +2054,27 @@ are searched for “qcportal_config.yaml”</p>
 
 </dd></dl>
 
-<dl class="py class pydantic_model">
-<dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeQueryFilters">
-<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MoleculeQueryFilters</span></span><a class="reference internal" href="../_modules/qcportal/molecules/models.html#MoleculeQueryFilters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryFilters" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QueryProjModelBase</span></code></p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeQueryIterator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MoleculeQueryIterator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_filters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/molecules/models.html#MoleculeQueryIterator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryIterator" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QueryIteratorBase</span></code></p>
+<p>Iterator for molecule queries</p>
+<p>This iterator transparently handles batching and pagination over the results
+of a molecule query.</p>
+<p>Construct an iterator</p>
 <dl class="field-list simple">
-<dt class="field-odd">Config<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>extra</strong>: <em>Extra = forbid</em></p></li>
-<li><p><strong>validate_assignment</strong>: <em>bool = True</em></p></li>
-</ul>
-</dd>
-<dt class="field-even">Fields<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><a class="reference internal" href="#qcportal.molecules.models.MoleculeQueryFilters.cursor" title="qcportal.molecules.models.MoleculeQueryFilters.cursor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cursor</span> <span class="pre">(Optional[int])</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.molecules.models.MoleculeQueryFilters.exclude" title="qcportal.molecules.models.MoleculeQueryFilters.exclude"><code class="xref py py-obj docutils literal notranslate"><span class="pre">exclude</span> <span class="pre">(Optional[List[str]])</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.molecules.models.MoleculeQueryFilters.identifiers" title="qcportal.molecules.models.MoleculeQueryFilters.identifiers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">identifiers</span> <span class="pre">(Optional[Dict[str,</span> <span class="pre">List[str]]])</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.molecules.models.MoleculeQueryFilters.include" title="qcportal.molecules.models.MoleculeQueryFilters.include"><code class="xref py py-obj docutils literal notranslate"><span class="pre">include</span> <span class="pre">(Optional[List[str]])</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.molecules.models.MoleculeQueryFilters.include_metadata" title="qcportal.molecules.models.MoleculeQueryFilters.include_metadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">include_metadata</span> <span class="pre">(bool)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.molecules.models.MoleculeQueryFilters.limit" title="qcportal.molecules.models.MoleculeQueryFilters.limit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">limit</span> <span class="pre">(Optional[int])</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.molecules.models.MoleculeQueryFilters.molecular_formula" title="qcportal.molecules.models.MoleculeQueryFilters.molecular_formula"><code class="xref py py-obj docutils literal notranslate"><span class="pre">molecular_formula</span> <span class="pre">(Optional[List[str]])</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.molecules.models.MoleculeQueryFilters.molecule_hash" title="qcportal.molecules.models.MoleculeQueryFilters.molecule_hash"><code class="xref py py-obj docutils literal notranslate"><span class="pre">molecule_hash</span> <span class="pre">(Optional[List[str]])</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.molecules.models.MoleculeQueryFilters.molecule_id" title="qcportal.molecules.models.MoleculeQueryFilters.molecule_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">molecule_id</span> <span class="pre">(Optional[List[int]])</span></code></a></p></li>
-</ul>
-</dd>
-<dt class="field-odd">Validators<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_lists</span></code> » <a class="reference internal" href="#qcportal.molecules.models.MoleculeQueryFilters.cursor" title="qcportal.molecules.models.MoleculeQueryFilters.cursor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cursor</span></code></a></p></li>
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_lists</span></code> » <a class="reference internal" href="#qcportal.molecules.models.MoleculeQueryFilters.include_metadata" title="qcportal.molecules.models.MoleculeQueryFilters.include_metadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">include_metadata</span></code></a></p></li>
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_lists</span></code> » <a class="reference internal" href="#qcportal.molecules.models.MoleculeQueryFilters.limit" title="qcportal.molecules.models.MoleculeQueryFilters.limit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">limit</span></code></a></p></li>
+<li><p><strong>client</strong> – QCPortal client object used to contact/retrieve data from the server</p></li>
+<li><p><strong>query_filters</strong> (<em>MoleculeQueryFilters</em>) – The actual query information to send to the server</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeQueryFilters.molecule_id">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">molecule_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryFilters.molecule_id" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeQueryFilters.molecule_hash">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">molecule_hash</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryFilters.molecule_hash" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeQueryFilters.molecular_formula">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">molecular_formula</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryFilters.molecular_formula" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeQueryFilters.identifiers">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">identifiers</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryFilters.identifiers" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method pydantic_validator">
-<dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeQueryFilters.validate_lists">
-<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_lists</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.molecules.models.MoleculeQueryFilters.include_metadata" title="qcportal.molecules.models.MoleculeQueryFilters.include_metadata"><em class="xref py py-obj"><span class="pre">include_metadata</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.molecules.models.MoleculeQueryFilters.limit" title="qcportal.molecules.models.MoleculeQueryFilters.limit"><em class="xref py py-obj"><span class="pre">limit</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.molecules.models.MoleculeQueryFilters.cursor" title="qcportal.molecules.models.MoleculeQueryFilters.cursor"><em class="xref py py-obj"><span class="pre">cursor</span></em></a><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryFilters.validate_lists" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeQueryFilters.limit">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">limit</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryFilters.limit" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Validated by<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_lists</span></code></p></li>
-</ul>
-</dd>
-</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeQueryIterator.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryIterator.reset" title="Permalink to this definition">#</a></dt>
+<dd><p>Starts retrieval of results from the beginning again</p>
 </dd></dl>
-
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeQueryFilters.cursor">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cursor</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryFilters.cursor" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Validated by<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_lists</span></code></p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeQueryFilters.include_metadata">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">include_metadata</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryFilters.include_metadata" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Validated by<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_lists</span></code></p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeQueryFilters.include">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">include</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryFilters.include" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeQueryFilters.exclude">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exclude</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryFilters.exclude" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 
@@ -2912,100 +2832,19 @@ are searched for “qcportal_config.yaml”</p>
   </ul>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeQueryFilters">
+  <a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeQueryIterator">
    <code class="docutils literal notranslate">
     <span class="pre">
-     MoleculeQueryFilters
+     MoleculeQueryIterator
     </span>
    </code>
   </a>
   <ul class="visible nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeQueryFilters.molecule_id">
+    <a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeQueryIterator.reset">
      <code class="docutils literal notranslate">
       <span class="pre">
-       MoleculeQueryFilters.molecule_id
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeQueryFilters.molecule_hash">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MoleculeQueryFilters.molecule_hash
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeQueryFilters.molecular_formula">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MoleculeQueryFilters.molecular_formula
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeQueryFilters.identifiers">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MoleculeQueryFilters.identifiers
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeQueryFilters.validate_lists">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MoleculeQueryFilters.validate_lists
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeQueryFilters.limit">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MoleculeQueryFilters.limit
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeQueryFilters.cursor">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MoleculeQueryFilters.cursor
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeQueryFilters.include_metadata">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MoleculeQueryFilters.include_metadata
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeQueryFilters.include">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MoleculeQueryFilters.include
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeQueryFilters.exclude">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MoleculeQueryFilters.exclude
+       MoleculeQueryIterator.reset()
       </span>
      </code>
     </a>

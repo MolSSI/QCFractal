@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Molecules &#8212; QCArchive 0.50b4.post22+g98d898c3 documentation</title>
+    <title>Molecules &#8212; QCArchive 0.50b4.post27+g460e54b7 documentation</title>
   
   
   
@@ -46,7 +46,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Retrieving records" href="record_retrieval.html" />
-    <link rel="prev" title="Connecting to a server" href="connecting_qcportal.html" />
+    <link rel="prev" title="Query Iterators" href="query_iterators.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="docsearch:language" content="en">
   </head>
@@ -348,6 +348,9 @@
     <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="client_setup.html">QCPortal Installation &amp; Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connecting_qcportal.html">Connecting to a server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metadata.html">Interpreting metadata</a></li>
+
+<li class="toctree-l1"><a class="reference internal" href="query_iterators.html">Query Iterators</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Molecules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="record_retrieval.html">Retrieving records</a></li>
 <li class="toctree-l1"><a class="reference internal" href="record_submission.html">Submitting computations</a></li>
@@ -400,6 +403,144 @@
               
   <section id="molecules">
 <h1>Molecules<a class="headerlink" href="#molecules" title="Permalink to this heading">#</a></h1>
+<p>The molecule objects used in QCArchive come from the
+<a class="reference external" href="https://docs.qcarchive.molssi.org/projects/QCElemental">QCElemental package</a>. This class is also accessible
+from <code class="docutils literal notranslate"><span class="pre">qcportal.molecules.Molecule</span></code>, but is otherwise the same as the
+<a class="reference external" href="https://docs.qcarchive.molssi.org/projects/QCElemental/en/stable/model_molecule.html">QCElemental Molecule</a>.</p>
+<section id="creating-molecules">
+<h2>Creating Molecules<a class="headerlink" href="#creating-molecules" title="Permalink to this heading">#</a></h2>
+<p>A common way to programmatically create a molecule is with the Molecule constructor. With the constructor,
+you typically specify the symbols and geometry (coordinates) in bohr:</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">qcportal.molecules</span> <span class="kn">import</span> <span class="n">Molecule</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">water</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">water</span><span class="p">)</span>
+<span class="go">Molecule(name=&#39;H2O&#39;, formula=&#39;H2O&#39;, hash=&#39;3a04ba3&#39;)</span>
+</pre></div>
+</div>
+<p>The geometry can be specified as a nested list as above, or simply as a flattened list. The below is equivalent to the
+above:</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">qcportal.molecules</span> <span class="kn">import</span> <span class="n">Molecule</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">water</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">water</span><span class="p">)</span>
+<span class="go">Molecule(name=&#39;H2O&#39;, formula=&#39;H2O&#39;, hash=&#39;3a04ba3&#39;)</span>
+</pre></div>
+</div>
+<p>Another option is to read molecules from strings that are in some common format (like XYZ, although it will work
+with more):</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mol_xyz</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="gp">... </span><span class="s2">  3</span>
+<span class="gp">...</span>
+<span class="gp">... </span><span class="s2">  H   0.000000 1.000000 0.000000</span>
+<span class="gp">... </span><span class="s2">  H   1.000000 0.000000 0.000000</span>
+<span class="gp">... </span><span class="s2">  O   0.000000 0.000000 0.000000</span>
+<span class="gp">... </span><span class="s2">&quot;&quot;&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">water</span> <span class="o">=</span> <span class="n">Molecule</span><span class="o">.</span><span class="n">from_data</span><span class="p">(</span><span class="n">mol_xyz</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">water2</span><span class="p">)</span>
+<span class="go">Molecule(name=&#39;H2O&#39;, formula=&#39;H2O&#39;, hash=&#39;246998b&#39;)</span>
+</pre></div>
+</div>
+<p>Note that in the case of XYZ files, the units are angstroms.</p>
+<p>Similarly, you can construct the molecule from a file. If the above XYZ data was in a file,</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">water</span> <span class="o">=</span> <span class="n">Molecule</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="s1">&#39;water.xyz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">water2</span><span class="p">)</span>
+<span class="go">Molecule(name=&#39;H2O&#39;, formula=&#39;H2O&#39;, hash=&#39;246998b&#39;)</span>
+</pre></div>
+</div>
+</section>
+<section id="adding-molecules-to-the-server">
+<h2>Adding molecules to the server<a class="headerlink" href="#adding-molecules-to-the-server" title="Permalink to this heading">#</a></h2>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>For the most part, this is not needed. You can pass a Molecule object to functions like
+<a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.add_singlepoints" title="qcportal.client.PortalClient.add_singlepoints"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_singlepoints()</span></code></a> and they will be automatically added
+to the database as needed. However, in some cases, this may be useful.</p>
+</div>
+<p>Molecules can be added to the server database with <cite>~qcportal.client.PortalClient.add_molecules</cite>. This returns
+some metadata about the insertion, and the molecule IDs.</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">water</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">water2</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_molecules</span><span class="p">([</span><span class="n">water</span><span class="p">,</span> <span class="n">water2</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+<span class="go">InsertMetadata(error_description=None, errors=[], inserted_idx=[0, 1], existing_idx=[])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span>
+<span class="go">[585, 586]</span>
+</pre></div>
+</div>
+<p>These IDs can be passed into functions like <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.add_singlepoints" title="qcportal.client.PortalClient.add_singlepoints"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_singlepoints()</span></code></a> instead of
+full molecule objects.</p>
+</section>
+<section id="retrieving-and-querying-molecules">
+<h2>Retrieving and Querying Molecules<a class="headerlink" href="#retrieving-and-querying-molecules" title="Permalink to this heading">#</a></h2>
+<p>The client has two methods for retrieving molecules: <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.get_molecules" title="qcportal.client.PortalClient.get_molecules"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_molecules()</span></code></a> and
+<a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.query_molecules" title="qcportal.client.PortalClient.query_molecules"><code class="xref py py-meth docutils literal notranslate"><span class="pre">query_molecules()</span></code></a>. The <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.get_molecules" title="qcportal.client.PortalClient.get_molecules"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_molecules()</span></code></a>
+method is used to get molecules by ID, and returns molecules in the same order as the given ids.</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mols</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_molecules</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">mols</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">mols</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">mols</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+<span class="go">5 15 10</span>
+</pre></div>
+</div>
+<p>You can also specify a single ID and get a single molecule back</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_molecules</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+<span class="go">5</span>
+</pre></div>
+</div>
+<p>You can also query the molecules in the database with <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.query_molecules" title="qcportal.client.PortalClient.query_molecules"><code class="xref py py-meth docutils literal notranslate"><span class="pre">query_molecules()</span></code></a>.
+This function returns an <a class="reference internal" href="query_iterators.html"><span class="doc">iterator</span></a>, which you can then use to
+iterate over the results. The iterator automatically handles returning batches or pages of query results from the
+server.</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">query_it</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">query_molecules</span><span class="p">(</span><span class="n">molecular_formula</span><span class="o">=</span><span class="s1">&#39;N2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">mol</span> <span class="ow">in</span> <span class="n">query_it</span><span class="p">:</span>
+<span class="gp">... </span>   <span class="nb">print</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">identifiers</span><span class="o">.</span><span class="n">molecular_formula</span><span class="p">)</span>
+<span class="go">371 N2</span>
+<span class="go">372 N2</span>
+</pre></div>
+</div>
+<div class="admonition caution">
+<p class="admonition-title">Caution</p>
+<p>Unlike the <code class="docutils literal notranslate"><span class="pre">get_molecules</span></code> function, the molecules from <code class="docutils literal notranslate"><span class="pre">query_molecules</span></code> are not in any defined order,
+and the order may be different even with repeated calls with the same arguments</p>
+</div>
+</section>
+<section id="managing-molecules">
+<h2>Managing Molecules<a class="headerlink" href="#managing-molecules" title="Permalink to this heading">#</a></h2>
+<p>Molecules can be deleted from the server with <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.delete_molecules" title="qcportal.client.PortalClient.delete_molecules"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_molecules()</span></code></a></p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">delete_molecules</span><span class="p">([</span><span class="mi">585</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+<span class="go">DeleteMetadata(error_description=None, errors=[], deleted_idx=[0], n_children_deleted=0)</span>
+</pre></div>
+</div>
+<p>The server also allows for some limited modification of molecules. This is limited to the name, comment, and
+identifiers of the molecule. By default, new identifiers will be merged with the existing identifiers
+unless <code class="docutils literal notranslate"><span class="pre">overwrite_identifiers=True</span></code>, in which case all identifiers will be replaced (that is, identifiers
+that are not specified in the call to <code class="docutils literal notranslate"><span class="pre">modify_molecules</span></code> will be removed).</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">n2</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="s1">&#39;N&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">],</span>
+<span class="gp">... </span>              <span class="n">name</span><span class="o">=</span><span class="s1">&#39;nitrogen&#39;</span><span class="p">,</span> <span class="n">comment</span><span class="o">=</span><span class="s1">&#39;initial geometry of nitrogen&#39;</span><span class="p">,</span> <span class="n">identifiers</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;smiles&#39;</span><span class="p">:</span> <span class="s1">&#39;N#N&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_molecules</span><span class="p">([</span><span class="n">n2</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span>
+<span class="go">[601]</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">modify_molecule</span><span class="p">(</span><span class="mi">601</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;dinitrogen&#39;</span><span class="p">,</span> <span class="n">comment</span><span class="o">=</span><span class="s1">&#39;dinitrogen molecule&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                              <span class="n">identifiers</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;pubchem_cid&#39;</span><span class="p">:</span> <span class="s1">&#39;947&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+<span class="go">UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_molecules</span><span class="p">(</span><span class="mi">601</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<span class="go">dinitrogen</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">comment</span><span class="p">)</span>
+<span class="go">dinitrogen molecule</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">identifiers</span><span class="o">.</span><span class="n">smiles</span><span class="p">)</span>
+<span class="go">N#N</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">identifiers</span><span class="o">.</span><span class="n">pubchem_cid</span><span class="p">)</span>
+<span class="go">947</span>
+</pre></div>
+</div>
+</section>
 </section>
 
 
@@ -410,11 +551,11 @@
             <footer class="bd-footer-article">
                 <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-  <a class='left-prev' id="prev-link" href="connecting_qcportal.html" title="previous page">
+  <a class='left-prev' id="prev-link" href="query_iterators.html" title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
           <p class="prev-next-subtitle">previous</p>
-          <p class="prev-next-title">Connecting to a server</p>
+          <p class="prev-next-title">Query Iterators</p>
       </div>
   </a>
   <a class='right-next' id="next-link" href="record_retrieval.html" title="next page">
@@ -433,6 +574,38 @@
           
             <div class="bd-sidebar-secondary bd-toc">
               
+<div class="toc-item">
+  
+<div class="tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+</div>
+<nav id="bd-toc-nav" class="page-toc">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#creating-molecules">
+   Creating Molecules
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#adding-molecules-to-the-server">
+   Adding molecules to the server
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#retrieving-and-querying-molecules">
+   Retrieving and Querying Molecules
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#managing-molecules">
+   Managing Molecules
+  </a>
+ </li>
+</ul>
+
+</nav>
+</div>
+
 <div class="toc-item">
   
 <div class="tocsection sourcelink">

@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Retrieving records &#8212; QCArchive 0.50b4.post22+g98d898c3 documentation</title>
+    <title>Retrieving records &#8212; QCArchive 0.50b4.post27+g460e54b7 documentation</title>
   
   
   
@@ -350,6 +350,9 @@
     <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="client_setup.html">QCPortal Installation &amp; Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connecting_qcportal.html">Connecting to a server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metadata.html">Interpreting metadata</a></li>
+
+<li class="toctree-l1"><a class="reference internal" href="query_iterators.html">Query Iterators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="molecule.html">Molecules</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Retrieving records</a></li>
 <li class="toctree-l1"><a class="reference internal" href="record_submission.html">Submitting computations</a></li>
@@ -537,7 +540,7 @@ calculation features.</p>
 <p>Unlike the <code class="docutils literal notranslate"><span class="pre">get_</span></code> functions, the records returned from query functions are not in any defined order,
 and the order may be different even with repeated calls with the same arguments</p>
 </div>
-<p>Query functions return an <a class="reference internal" href="records/base.html#qcportal.record_models.RecordQueryIterator" title="qcportal.record_models.RecordQueryIterator"><code class="xref py py-class docutils literal notranslate"><span class="pre">iterator</span></code></a> object.
+<p>Query functions return an <a class="reference internal" href="query_iterators.html"><span class="doc">iterator</span></a> object.
 This iterator handles transparent and efficient fetching from the server in
 batches, especially when many records may be returned by a query</p>
 <div class="sphinx-tabs docutils container">

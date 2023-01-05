@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Administration &amp; maintenance &#8212; QCArchive 0.50b4.post27+g460e54b7 documentation</title>
+    <title>Query Iterators &#8212; QCArchive 0.50b4.post27+g460e54b7 documentation</title>
   
   
   
@@ -45,8 +45,8 @@
     <script src="../_static/design-tabs.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Server administration via client and API" href="monitoring.html" />
-    <link rel="prev" title="Server Configuration" href="configuration.html" />
+    <link rel="next" title="Molecules" href="molecule.html" />
+    <link rel="prev" title="Interpreting metadata" href="metadata.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="docsearch:language" content="en">
   </head>
@@ -127,15 +127,15 @@
                     </li>
                 
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../user_guide/index.html">
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="index.html">
                         User Guide
                       </a>
                     </li>
                 
 
-                    <li class="nav-item current active">
-                      <a class="nav-link nav-internal" href="index.html">
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../admin_guide/index.html">
                         Admin Guide
                       </a>
                     </li>
@@ -257,15 +257,15 @@
                     </li>
                 
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../user_guide/index.html">
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="index.html">
                         User Guide
                       </a>
                     </li>
                 
 
-                    <li class="nav-item current active">
-                      <a class="nav-link nav-internal" href="index.html">
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../admin_guide/index.html">
                         Admin Guide
                       </a>
                     </li>
@@ -345,16 +345,31 @@
     Section Navigation
   </p>
   <div class="bd-toc-item navbar-nav">
-    <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="setup.html">QCFractal Installation and Setup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="configuration.html">Server Configuration</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Administration &amp; maintenance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="monitoring.html">Server administration via client and API</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="managers/index.html">QCFractalCompute - Compute Managers and Workers</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="managers/setup.html">Compute manager setup</a></li>
+    <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="client_setup.html">QCPortal Installation &amp; Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connecting_qcportal.html">Connecting to a server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metadata.html">Interpreting metadata</a></li>
+
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Query Iterators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="molecule.html">Molecules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="record_retrieval.html">Retrieving records</a></li>
+<li class="toctree-l1"><a class="reference internal" href="record_submission.html">Submitting computations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="record_management.html">Managing Records</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets.html">Using datasets</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="records/index.html">Computation Types</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="records/base.html">Base Record</a></li>
+
+<li class="toctree-l2"><a class="reference internal" href="records/singlepoint.html">Singlepoint calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/optimization.html">Optimization calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/gridoptimization.html">Gridoptimization calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/torsiondrive.html">Torsiondrive calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/manybody.html">Manybody calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/reaction.html">Reaction calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/neb.html">NEB calculations</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="qcportal_reference.html">QCPortal API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="webapi_reference.html">Web API</a></li>
 </ul>
 
   </div>
@@ -386,25 +401,80 @@
             
             <article class="bd-article" role="main">
               
-  <section id="administration-maintenance">
-<h1>Administration &amp; maintenance<a class="headerlink" href="#administration-maintenance" title="Permalink to this heading">#</a></h1>
-<section id="starting-and-stopping">
-<span id="server-admin-startstop"></span><h2>Starting and Stopping<a class="headerlink" href="#starting-and-stopping" title="Permalink to this heading">#</a></h2>
-</section>
-<section id="backup-and-restore">
-<span id="server-admin-backup"></span><h2>Backup and Restore<a class="headerlink" href="#backup-and-restore" title="Permalink to this heading">#</a></h2>
-</section>
-<section id="upgrading">
-<span id="server-admin-upgrade"></span><h2>Upgrading<a class="headerlink" href="#upgrading" title="Permalink to this heading">#</a></h2>
-</section>
-<section id="security">
-<span id="server-admin-security"></span><h2>Security<a class="headerlink" href="#security" title="Permalink to this heading">#</a></h2>
-</section>
-<section id="users-and-passwords">
-<span id="server-admin-users"></span><h2>Users and Passwords<a class="headerlink" href="#users-and-passwords" title="Permalink to this heading">#</a></h2>
-</section>
-<section id="access-logs-and-geoip">
-<span id="server-admin-accesslog"></span><h2>Access Logs and Geoip<a class="headerlink" href="#access-logs-and-geoip" title="Permalink to this heading">#</a></h2>
+  <section id="query-iterators">
+<h1>Query Iterators<a class="headerlink" href="#query-iterators" title="Permalink to this heading">#</a></h1>
+<p>Query functions typically return objects that behave like <a class="reference external" href="https://wiki.python.org/moin/Iterator">iterators</a>.
+These objects do not allow for direct access to individual items (like <code class="docutils literal notranslate"><span class="pre">iter[0]</span></code>), but do allow for looping through
+them.</p>
+<p>The reason for returning an iterator rather than a list is that an iterator will handle batching to the server. Since
+a query can return many items, they must be retrieved in batches. The iterator does this automatically, but does so
+incrementally as iteration continues.</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">query_it</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">query_molecules</span><span class="p">(</span><span class="n">molecular_formula</span><span class="o">=</span><span class="s1">&#39;N2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">mol</span> <span class="ow">in</span> <span class="n">query_it</span><span class="p">:</span>
+<span class="gp">... </span>   <span class="nb">print</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">identifiers</span><span class="o">.</span><span class="n">molecular_formula</span><span class="p">)</span>
+<span class="go">371 N2</span>
+<span class="go">372 N2</span>
+</pre></div>
+</div>
+<p>If you need all items as a list, then you can use the <code class="docutils literal notranslate"><span class="pre">list</span></code> constructor, which will use the iterator to fill in the
+list. In this case, all the records will be fetched from the server as the list is being created.</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">query_it</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">query_molecules</span><span class="p">(</span><span class="n">molecular_formula</span><span class="o">=</span><span class="s1">&#39;N2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">query_it</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mols</span><span class="p">))</span>
+<span class="go">621</span>
+</pre></div>
+</div>
+<section id="iterators-api">
+<h2>Iterators API<a class="headerlink" href="#iterators-api" title="Permalink to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeQueryIterator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MoleculeQueryIterator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_filters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/molecules/models.html#MoleculeQueryIterator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryIterator" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QueryIteratorBase</span></code></p>
+<p>Iterator for molecule queries</p>
+<p>This iterator transparently handles batching and pagination over the results
+of a molecule query.</p>
+<p>Construct an iterator</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>client</strong> – QCPortal client object used to contact/retrieve data from the server</p></li>
+<li><p><strong>query_filters</strong> (<em>MoleculeQueryFilters</em>) – The actual query information to send to the server</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeQueryIterator.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryIterator.reset" title="Permalink to this definition">#</a></dt>
+<dd><p>Starts retrieval of results from the beginning again</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordQueryIterator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RecordQueryIterator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_filters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/record_models.html#RecordQueryIterator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.record_models.RecordQueryIterator" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QueryIteratorBase</span></code></p>
+<p>Iterator for all types of record queries</p>
+<p>This iterator transparently handles batching and pagination over the results
+of a record query, and works with all kinds of records.</p>
+<p>Construct an iterator</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>client</strong> – QCPortal client object used to contact/retrieve data from the server</p></li>
+<li><p><strong>query_filters</strong> (<em>RecordQueryFilters</em>) – The actual query information to send to the server</p></li>
+<li><p><strong>record_type</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – What type of record we are querying for</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordQueryIterator.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordQueryIterator.reset" title="Permalink to this definition">#</a></dt>
+<dd><p>Starts retrieval of results from the beginning again</p>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 </section>
 
@@ -416,17 +486,17 @@
             <footer class="bd-footer-article">
                 <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-  <a class='left-prev' id="prev-link" href="configuration.html" title="previous page">
+  <a class='left-prev' id="prev-link" href="metadata.html" title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
           <p class="prev-next-subtitle">previous</p>
-          <p class="prev-next-title">Server Configuration</p>
+          <p class="prev-next-title">Interpreting metadata</p>
       </div>
   </a>
-  <a class='right-next' id="next-link" href="monitoring.html" title="next page">
+  <a class='right-next' id="next-link" href="molecule.html" title="next page">
   <div class="prev-next-info">
       <p class="prev-next-subtitle">next</p>
-      <p class="prev-next-title">Server administration via client and API</p>
+      <p class="prev-next-title">Molecules</p>
   </div>
   <i class="fa-solid fa-angle-right"></i>
   </a>
@@ -447,34 +517,51 @@
 <nav id="bd-toc-nav" class="page-toc">
     <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#starting-and-stopping">
-   Starting and Stopping
+  <a class="reference internal nav-link" href="#iterators-api">
+   Iterators API
   </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#backup-and-restore">
-   Backup and Restore
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#upgrading">
-   Upgrading
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#security">
-   Security
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#users-and-passwords">
-   Users and Passwords
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#access-logs-and-geoip">
-   Access Logs and Geoip
-  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeQueryIterator">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       MoleculeQueryIterator
+      </span>
+     </code>
+    </a>
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeQueryIterator.reset">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         MoleculeQueryIterator.reset()
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#qcportal.record_models.RecordQueryIterator">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       RecordQueryIterator
+      </span>
+     </code>
+    </a>
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.record_models.RecordQueryIterator.reset">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         RecordQueryIterator.reset()
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
  </li>
 </ul>
 
@@ -484,7 +571,7 @@
 <div class="toc-item">
   
 <div class="tocsection sourcelink">
-    <a href="../_sources/admin_guide/cli_admin.rst.txt">
+    <a href="../_sources/user_guide/query_iterators.rst.txt">
         <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
 </div>

@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Managing Records &#8212; QCArchive 0.50b4.post22+g98d898c3 documentation</title>
+    <title>Managing Records &#8212; QCArchive 0.50b4.post27+g460e54b7 documentation</title>
   
   
   
@@ -348,6 +348,9 @@
     <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="client_setup.html">QCPortal Installation &amp; Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connecting_qcportal.html">Connecting to a server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metadata.html">Interpreting metadata</a></li>
+
+<li class="toctree-l1"><a class="reference internal" href="query_iterators.html">Query Iterators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="molecule.html">Molecules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="record_retrieval.html">Retrieving records</a></li>
 <li class="toctree-l1"><a class="reference internal" href="record_submission.html">Submitting computations</a></li>
@@ -495,7 +498,7 @@ the <a class="reference internal" href="records/base.html#qcportal.record_models
 <span class="go">UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)</span>
 </pre></div>
 </div>
-<p>The metadata is <a class="reference internal" href="record_submission.html#interpret-insert-metadata"><span class="std std-ref">interpreted</span></a> similarly to the metadata returned by <code class="docutils literal notranslate"><span class="pre">add_</span></code> functions.
+<p>The <a class="reference internal" href="metadata.html"><span class="doc">metadata</span></a> is similarly to the metadata returned by <code class="docutils literal notranslate"><span class="pre">add_</span></code> functions.
 In this case, the only record (index 0) had its status updated back to <code class="docutils literal notranslate"><span class="pre">waiting</span></code> and will be picked up/run by a
 manager again.</p>
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">411</span><span class="p">)</span>
