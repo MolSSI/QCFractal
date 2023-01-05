@@ -37,4 +37,6 @@ jobs:
 
     - name: Lint
       shell: bash
-      run: black --check qcfractal qcportal qcfractalcompute qcarchivetesting
+      run: |
+        # Running black qcfractal qcportal ... causes some weird issues
+        black --check qcfractal && black --check qcportal && black --check qcfractalcompute && black --check qcarchivetesting
