@@ -7,6 +7,7 @@ import pandas as pd
 import pydantic
 from pydantic import BaseModel, Extra, validator
 from qcelemental.models.types import Array
+from tabulate import tabulate
 
 from qcportal.base_models import RestModelBase, validate_list_to_single
 from qcportal.dataset_view import DatasetViewWrapper
@@ -237,6 +238,26 @@ class BaseDataset(BaseModel):
             None,
             None,
         )
+
+    def status_table(self) -> str:
+        """
+        Returns the status of the dataset's computations as a table (in a string)
+        """
+
+        ds_status = self.status()
+        all_status = {x for y in ds_status.values() for x in y}
+        headers = ["specification"] + [x.value for x in all_status]
+
+        table = []
+        for spec, spec_statuses in sorted(ds_status.items()):
+            row = [spec]
+            row.extend(spec_statuses.get(s, "") for s in all_status)
+            table.append(row)
+
+        return tabulate(table, headers=headers, stralign="right")
+
+    def print_status(self) -> None:
+        print(self.status_table())
 
     def detailed_status(self) -> List[Tuple[str, str, RecordStatusEnum]]:
         self.assert_online()

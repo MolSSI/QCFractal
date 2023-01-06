@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import os
 from datetime import datetime
-from pathlib import Path
 from typing import (
     Any,
     Dict,
@@ -13,6 +11,8 @@ from typing import (
     Sequence,
     Iterable,
 )
+
+from tabulate import tabulate
 
 from qcportal.gridoptimization import (
     GridoptimizationKeywords,
@@ -69,7 +69,6 @@ from .auth import (
     is_valid_groupname,
 )
 from .base_models import CommonBulkGetNamesBody, CommonBulkGetBody, ProjURLParameters
-from .cache import PortalCache
 from .client_base import PortalClientBase
 from .dataset_models import (
     BaseDataset,
@@ -279,6 +278,15 @@ class PortalClient(PortalClientBase):
             None,
             None,
         )
+
+    def list_datasets_table(self) -> str:
+        ds_list = self.list_datasets()
+        headers = ["id", "type", "name"]
+        table = [(x["id"], x["dataset_type"], x["dataset_name"]) for x in ds_list]
+        return tabulate(table, headers=headers)
+
+    def print_datasets_table(self) -> None:
+        print(self.list_datasets_table())
 
     def get_dataset(self, dataset_type: str, dataset_name: str):
 
