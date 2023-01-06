@@ -34,6 +34,8 @@ Base Record API
 
 .. autopydantic_model:: qcportal.record_models.BaseRecord
 
+.. autopydantic_model:: qcportal.dataset_models.BaseDataset
+
 .. autoclass:: qcportal.record_models.RecordStatusEnum
 
 .. autoclass:: qcportal.record_models.PriorityEnum
