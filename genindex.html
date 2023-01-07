@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; QCArchive 0.50b4.post28+g1db27170 documentation</title>
+    <title>Index &#8212; QCArchive 0.50b4.post31+g11562beb documentation</title>
   
   
   
@@ -412,12 +412,12 @@
 </li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.add_optimizations">add_optimizations() (PortalClient method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.add_reactions">add_reactions() (PortalClient method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.add_role">add_role() (PortalClient method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.add_singlepoints">add_singlepoints() (PortalClient method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.add_torsiondrives">add_torsiondrives() (PortalClient method)</a>
@@ -433,6 +433,14 @@
       <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJob.after_function">after_function (InternalJob attribute)</a>
 </li>
       <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJob.after_function_kwargs">after_function_kwargs (InternalJob attribute)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.assert_is_not_view">assert_is_not_view() (BaseDataset method)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.assert_online">assert_online() (BaseDataset method)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.auto_fetch_missing">auto_fetch_missing (BaseDataset attribute)</a>
+</li>
+      <li><a href="overview/snowflake.html#qcfractal.snowflake.FractalSnowflake.await_results">await_results() (FractalSnowflake method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -450,8 +458,12 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.cancel_internal_job">cancel_internal_job() (PortalClient method)</a>
 </li>
-      <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.cancel_records">cancel_records() (PortalClient method)</a>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.cancel_records">cancel_records() (BaseDataset method)</a>
+
+      <ul>
+        <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.cancel_records">(PortalClient method)</a>
 </li>
+      </ul></li>
       <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJobStatusEnum.cancelled">cancelled (InternalJobStatusEnum attribute)</a>
 
       <ul>
@@ -468,9 +480,11 @@
         <li><a href="user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata.check_all_indices">(UpdateMetadata class method)</a>
 </li>
       </ul></li>
-      <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.client">client (BaseRecord attribute)</a>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.client">client (BaseDataset attribute)</a>
 
       <ul>
+        <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.client">(BaseRecord attribute)</a>
+</li>
         <li><a href="user_guide/records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord.client">(GridoptimizationRecord attribute)</a>
 </li>
         <li><a href="user_guide/records/manybody.html#qcportal.manybody.ManybodyRecord.client">(ManybodyRecord attribute)</a>
@@ -486,6 +500,8 @@
         <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.client">(TorsiondriveRecord attribute)</a>
 </li>
       </ul></li>
+      <li><a href="overview/snowflake.html#qcfractal.snowflake.FractalSnowflake.client">client() (FractalSnowflake method)</a>
+</li>
       <li><a href="user_guide/records/manybody.html#qcportal.manybody.ManybodyRecord.clusters">clusters (ManybodyRecord property)</a>
 </li>
       <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.comments">comments (BaseRecord property)</a>
@@ -508,6 +524,8 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.compile_values">compile_values() (BaseDataset method)</a>
+</li>
       <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJobStatusEnum.complete">complete (InternalJobStatusEnum attribute)</a>
 
       <ul>
@@ -534,6 +552,8 @@
         <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.compute_history">(TorsiondriveRecord property)</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.contributed_values">contributed_values (BaseDataset property)</a>
+</li>
       <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.created_on">created_on (BaseRecord property)</a>
 
       <ul>
@@ -564,9 +584,17 @@
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.dataset_type">dataset_type (BaseDataset property)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.default_priority">default_priority (BaseDataset property)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.default_tag">default_tag (BaseDataset property)</a>
+</li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.delete_access_log">delete_access_log() (PortalClient method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.delete_dataset">delete_dataset() (PortalClient method)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.delete_entries">delete_entries() (BaseDataset method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.delete_error_log">delete_error_log() (PortalClient method)</a>
 </li>
@@ -582,10 +610,12 @@
 </li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.delete_server_stats">delete_server_stats() (PortalClient method)</a>
 </li>
-      <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.delete_user">delete_user() (PortalClient method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.delete_specification">delete_specification() (BaseDataset method)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.delete_user">delete_user() (PortalClient method)</a>
+</li>
       <li><a href="user_guide/records/base.html#qcportal.record_models.RecordStatusEnum.deleted">deleted (RecordStatusEnum attribute)</a>
 </li>
       <li><a href="user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata.deleted_idx">deleted_idx (DeleteMetadata attribute)</a>
@@ -593,6 +623,10 @@
       <li><a href="user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata">DeleteMetadata (class in qcportal.metadata_models)</a>
 </li>
       <li><a href="overview/tasks_services.html#qcportal.record_models.ServiceRecord.dependencies">dependencies (ServiceRecord attribute)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.description">description (BaseDataset property)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.detailed_status">detailed_status() (BaseDataset method)</a>
 </li>
       <li><a href="user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata.dict">dict() (DeleteMetadata method)</a>
 
@@ -619,6 +653,8 @@
       <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJob.ended_date">ended_date (InternalJob attribute)</a>
 </li>
       <li><a href="user_guide/records/optimization.html#qcportal.optimization.OptimizationRecord.energies">energies (OptimizationRecord property)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.entry_names">entry_names (BaseDataset property)</a>
 </li>
       <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.error">error (BaseRecord property)</a>
 
@@ -674,6 +710,8 @@
         <li><a href="user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata.error_string">(UpdateMetadata property)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata.errors">errors (DeleteMetadata attribute)</a>
 
       <ul>
@@ -684,8 +722,6 @@
         <li><a href="user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata.errors">(UpdateMetadata attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJobQueryFilters.exclude">exclude (InternalJobQueryFilters attribute)</a>
 </li>
       <li><a href="user_guide/metadata.html#qcportal.metadata_models.InsertMetadata.existing_idx">existing_idx (InsertMetadata attribute)</a>
@@ -744,6 +780,16 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.fetch_contributed_values">fetch_contributed_values() (BaseDataset method)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.fetch_entries">fetch_entries() (BaseDataset method)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.fetch_entry_names">fetch_entry_names() (BaseDataset method)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.fetch_records">fetch_records() (BaseDataset method)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.fetch_specifications">fetch_specifications() (BaseDataset method)</a>
+</li>
       <li><a href="user_guide/records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord.final_energies">final_energies (GridoptimizationRecord property)</a>
 
       <ul>
@@ -756,9 +802,15 @@
 </li>
       <li><a href="user_guide/records/optimization.html#qcportal.optimization.OptimizationSpecification.force_qcspec">force_qcspec() (OptimizationSpecification class method)</a>
 </li>
-      <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.from_datamodel">from_datamodel() (BaseRecord class method)</a>
+      <li><a href="overview/snowflake.html#qcfractal.snowflake.FractalSnowflake">FractalSnowflake (class in qcfractal.snowflake)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.from_datamodel">from_datamodel() (BaseDataset class method)</a>
 
       <ul>
+        <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.from_datamodel">(BaseRecord class method)</a>
+</li>
         <li><a href="user_guide/records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord.from_datamodel">(GridoptimizationRecord class method)</a>
 </li>
         <li><a href="user_guide/records/manybody.html#qcportal.manybody.ManybodyRecord.from_datamodel">(ManybodyRecord class method)</a>
@@ -774,8 +826,6 @@
         <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.from_datamodel">(TorsiondriveRecord class method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.from_file">from_file() (PortalClient class method)</a>
 </li>
       <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJob.function">function (InternalJob attribute)</a>
@@ -791,6 +841,8 @@
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_dataset_by_id">get_dataset_by_id() (PortalClient method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_dataset_status_by_id">get_dataset_status_by_id() (PortalClient method)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.get_entry">get_entry() (BaseDataset method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_gridoptimizations">get_gridoptimizations() (PortalClient method)</a>
 </li>
@@ -812,19 +864,23 @@
 </li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_reactions">get_reactions() (PortalClient method)</a>
 </li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.get_record">get_record() (BaseDataset method)</a>
+</li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_records">get_records() (PortalClient method)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_role">get_role() (PortalClient method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_role">get_role() (PortalClient method)</a>
-</li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_server_information">get_server_information() (PortalClient method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_singlepoints">get_singlepoints() (PortalClient method)</a>
 </li>
-      <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.get_subclass">get_subclass() (BaseRecord class method)</a>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.get_subclass">get_subclass() (BaseDataset class method)</a>
 
       <ul>
+        <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.get_subclass">(BaseRecord class method)</a>
+</li>
         <li><a href="user_guide/records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord.get_subclass">(GridoptimizationRecord class method)</a>
 </li>
         <li><a href="user_guide/records/manybody.html#qcportal.manybody.ManybodyRecord.get_subclass">(ManybodyRecord class method)</a>
@@ -842,11 +898,15 @@
       </ul></li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_torsiondrives">get_torsiondrives() (PortalClient method)</a>
 </li>
+      <li><a href="overview/snowflake.html#qcfractal.snowflake.FractalSnowflake.get_uri">get_uri() (FractalSnowflake method)</a>
+</li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_user">get_user() (PortalClient method)</a>
 </li>
       <li><a href="user_guide/records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord">GridoptimizationRecord (class in qcportal.gridoptimization)</a>
 </li>
       <li><a href="user_guide/records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationSpecification">GridoptimizationSpecification (class in qcportal.gridoptimization)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.group">group (BaseDataset property)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -862,9 +922,11 @@
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.id">id (BaseRecord property)</a>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.id">id (BaseDataset property)</a>
 
       <ul>
+        <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.id">(BaseRecord property)</a>
+</li>
         <li><a href="user_guide/records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord.id">(GridoptimizationRecord property)</a>
 </li>
         <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJob.id">(InternalJob attribute)</a>
@@ -900,8 +962,6 @@
         <li><a href="user_guide/records/optimization.html#qcportal.optimization.OptimizationRecord.initial_molecule">(OptimizationRecord property)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord.initial_molecule_id">initial_molecule_id (GridoptimizationRecord property)</a>
 
       <ul>
@@ -910,6 +970,8 @@
         <li><a href="user_guide/records/optimization.html#qcportal.optimization.OptimizationRecord.initial_molecule_id">(OptimizationRecord property)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.initial_molecules">initial_molecules (TorsiondriveRecord property)</a>
 </li>
       <li><a href="user_guide/metadata.html#qcportal.metadata_models.InsertMetadata.inserted_idx">inserted_idx (InsertMetadata attribute)</a>
@@ -922,8 +984,12 @@
 </li>
       <li><a href="user_guide/records/base.html#qcportal.record_models.RecordStatusEnum.invalid">invalid (RecordStatusEnum attribute)</a>
 </li>
-      <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.invalidate_records">invalidate_records() (PortalClient method)</a>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.invalidate_records">invalidate_records() (BaseDataset method)</a>
+
+      <ul>
+        <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.invalidate_records">(PortalClient method)</a>
 </li>
+      </ul></li>
       <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.is_service">is_service (BaseRecord property)</a>
 
       <ul>
@@ -942,6 +1008,12 @@
         <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.is_service">(TorsiondriveRecord property)</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.is_view">is_view (BaseDataset property)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.iterate_entries">iterate_entries() (BaseDataset method)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.iterate_records">iterate_records() (BaseDataset method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -1032,6 +1104,8 @@
 </li>
       <li><a href="user_guide/records/manybody.html#qcportal.manybody.ManybodySpecification">ManybodySpecification (class in qcportal.manybody)</a>
 </li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.metadata">metadata (BaseDataset property)</a>
+</li>
       <li><a href="user_guide/records/singlepoint.html#qcportal.singlepoint.QCSpecification.method">method (QCSpecification attribute)</a>
 </li>
       <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.minimum_optimizations">minimum_optimizations (TorsiondriveRecord property)</a>
@@ -1058,8 +1132,12 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.modify_molecule">modify_molecule() (PortalClient method)</a>
 </li>
-      <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.modify_records">modify_records() (PortalClient method)</a>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.modify_records">modify_records() (BaseDataset method)</a>
+
+      <ul>
+        <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.modify_records">(PortalClient method)</a>
 </li>
+      </ul></li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.modify_role">modify_role() (PortalClient method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.modify_user">modify_user() (PortalClient method)</a>
@@ -1111,14 +1189,16 @@
 </li>
       <li><a href="user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata.n_updated">n_updated (UpdateMetadata property)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJob.name">name (InternalJob attribute)</a>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.name">name (BaseDataset property)</a>
 
       <ul>
+        <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJob.name">(InternalJob attribute)</a>
+</li>
         <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJobQueryFilters.name">(InternalJobQueryFilters attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.native_files">native_files (BaseRecord property)</a>
 
       <ul>
@@ -1151,9 +1231,11 @@
 <h2 id="O">O</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.offline">offline (BaseRecord property)</a>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.offline">offline (BaseDataset property)</a>
 
       <ul>
+        <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.offline">(BaseRecord property)</a>
+</li>
         <li><a href="user_guide/records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord.offline">(GridoptimizationRecord property)</a>
 </li>
         <li><a href="user_guide/records/manybody.html#qcportal.manybody.ManybodyRecord.offline">(ManybodyRecord property)</a>
@@ -1191,9 +1273,11 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.owner_group">owner_group (BaseRecord property)</a>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.owner_group">owner_group (BaseDataset property)</a>
 
       <ul>
+        <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.owner_group">(BaseRecord property)</a>
+</li>
         <li><a href="user_guide/records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord.owner_group">(GridoptimizationRecord property)</a>
 </li>
         <li><a href="user_guide/records/manybody.html#qcportal.manybody.ManybodyRecord.owner_group">(ManybodyRecord property)</a>
@@ -1209,9 +1293,11 @@
         <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.owner_group">(TorsiondriveRecord property)</a>
 </li>
       </ul></li>
-      <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.owner_user">owner_user (BaseRecord property)</a>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.owner_user">owner_user (BaseDataset property)</a>
 
       <ul>
+        <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.owner_user">(BaseRecord property)</a>
+</li>
         <li><a href="user_guide/records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord.owner_user">(GridoptimizationRecord property)</a>
 </li>
         <li><a href="user_guide/records/manybody.html#qcportal.manybody.ManybodyRecord.owner_user">(ManybodyRecord property)</a>
@@ -1242,6 +1328,8 @@
       <li><a href="user_guide/records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord.preoptimization">preoptimization (GridoptimizationRecord property)</a>
 </li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.print_datasets_table">print_datasets_table() (PortalClient method)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.print_status">print_status() (BaseDataset method)</a>
 </li>
       <li><a href="overview/tasks_services.html#qcportal.record_models.ServiceRecord.priority">priority (ServiceRecord attribute)</a>
 
@@ -1279,9 +1367,11 @@
         <li><a href="user_guide/records/singlepoint.html#qcportal.singlepoint.QCSpecification.protocols">(QCSpecification attribute)</a>
 </li>
       </ul></li>
-      <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.provenance">provenance (BaseRecord property)</a>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.provenance">provenance (BaseDataset property)</a>
 
       <ul>
+        <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.provenance">(BaseRecord property)</a>
+</li>
         <li><a href="user_guide/records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord.provenance">(GridoptimizationRecord property)</a>
 </li>
         <li><a href="user_guide/records/manybody.html#qcportal.manybody.ManybodyRecord.provenance">(ManybodyRecord property)</a>
@@ -1356,9 +1446,11 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.raw_data">raw_data (BaseRecord attribute)</a>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.raw_data">raw_data (BaseDataset attribute)</a>
 
       <ul>
+        <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.raw_data">(BaseRecord attribute)</a>
+</li>
         <li><a href="user_guide/records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord.raw_data">(GridoptimizationRecord attribute)</a>
 </li>
         <li><a href="user_guide/records/manybody.html#qcportal.manybody.ManybodyRecord.raw_data">(ManybodyRecord attribute)</a>
@@ -1412,6 +1504,12 @@
 </li>
       <li><a href="user_guide/metadata.html#qcportal.metadata_models.TaskReturnMetadata.rejected_info">rejected_info (TaskReturnMetadata attribute)</a>
 </li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.remove_records">remove_records() (BaseDataset method)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.rename_entries">rename_entries() (BaseDataset method)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.rename_specification">rename_specification() (BaseDataset method)</a>
+</li>
       <li><a href="overview/tasks_services.html#qcportal.record_models.TaskRecord.required_programs">required_programs (TaskRecord attribute)</a>
 </li>
       <li><a href="user_guide/records/reaction.html#qcportal.reaction.ReactionSpecification.required_spec">required_spec() (ReactionSpecification class method)</a>
@@ -1424,8 +1522,12 @@
         <li><a href="user_guide/query_iterators.html#qcportal.record_models.RecordQueryIterator.reset">(RecordQueryIterator method)</a>, <a href="user_guide/records/base.html#qcportal.record_models.RecordQueryIterator.reset">[1]</a>
 </li>
       </ul></li>
-      <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.reset_records">reset_records() (PortalClient method)</a>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.reset_records">reset_records() (BaseDataset method)</a>
+
+      <ul>
+        <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.reset_records">(PortalClient method)</a>
 </li>
+      </ul></li>
       <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJob.result">result (InternalJob attribute)</a>
 </li>
       <li><a href="user_guide/records/manybody.html#qcportal.manybody.ManybodyRecord.results">results (ManybodyRecord property)</a>
@@ -1478,7 +1580,27 @@
       </ul></li>
       <li><a href="overview/tasks_services.html#qcportal.record_models.ServiceRecord.service_state">service_state (ServiceRecord attribute)</a>
 </li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.set_default_priority">set_default_priority() (BaseDataset method)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.set_default_tag">set_default_tag() (BaseDataset method)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.set_description">set_description() (BaseDataset method)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.set_group">set_group() (BaseDataset method)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.set_metadata">set_metadata() (BaseDataset method)</a>
+</li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.set_motd">set_motd() (PortalClient method)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.set_name">set_name() (BaseDataset method)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.set_provenance">set_provenance() (BaseDataset method)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.set_tagline">set_tagline() (BaseDataset method)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.set_tags">set_tags() (BaseDataset method)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.set_visibility">set_visibility() (BaseDataset method)</a>
 </li>
       <li><a href="user_guide/records/neb.html#qcportal.neb.NEBRecord.singlepoint_cache">singlepoint_cache (NEBRecord attribute)</a>
 </li>
@@ -1524,10 +1646,16 @@
         <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.specification">(TorsiondriveRecord property)</a>
 </li>
       </ul></li>
-      <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJob.started_date">started_date (InternalJob attribute)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.specification_names">specification_names (BaseDataset property)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.specifications">specifications (BaseDataset property)</a>
+</li>
+      <li><a href="overview/snowflake.html#qcfractal.snowflake.FractalSnowflake.start">start() (FractalSnowflake method)</a>
+</li>
+      <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJob.started_date">started_date (InternalJob attribute)</a>
+</li>
       <li><a href="user_guide/records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord.starting_grid">starting_grid (GridoptimizationRecord property)</a>
 </li>
       <li><a href="user_guide/records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord.starting_molecule">starting_molecule (GridoptimizationRecord property)</a>
@@ -1556,6 +1684,10 @@
         <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.status">(TorsiondriveRecord property)</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.status">status() (BaseDataset method)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.status_table">status_table() (BaseDataset method)</a>
+</li>
       <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.stderr">stderr (BaseRecord property)</a>
 
       <ul>
@@ -1592,6 +1724,10 @@
         <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.stdout">(TorsiondriveRecord property)</a>
 </li>
       </ul></li>
+      <li><a href="overview/snowflake.html#qcfractal.snowflake.FractalSnowflake.stop">stop() (FractalSnowflake method)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.submit">submit() (BaseDataset method)</a>
+</li>
       <li><a href="user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata.success">success (DeleteMetadata property)</a>
 
       <ul>
@@ -1616,6 +1752,10 @@
         <li><a href="overview/tasks_services.html#qcportal.record_models.TaskRecord.tag">(TaskRecord attribute)</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.tagline">tagline (BaseDataset property)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.tags">tags (BaseDataset property)</a>
+</li>
       <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.task">task (BaseRecord property)</a>
 
       <ul>
@@ -1636,10 +1776,10 @@
       </ul></li>
       <li><a href="user_guide/metadata.html#qcportal.metadata_models.TaskReturnMetadata">TaskReturnMetadata (class in qcportal.metadata_models)</a>
 </li>
-      <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord">TorsiondriveRecord (class in qcportal.torsiondrive)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord">TorsiondriveRecord (class in qcportal.torsiondrive)</a>
+</li>
       <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveSpecification">TorsiondriveSpecification (class in qcportal.torsiondrive)</a>
 </li>
       <li><a href="user_guide/records/reaction.html#qcportal.reaction.ReactionRecord.total_energy">total_energy (ReactionRecord property)</a>
@@ -1672,12 +1812,20 @@
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.uncancel_records">uncancel_records() (PortalClient method)</a>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.uncancel_records">uncancel_records() (BaseDataset method)</a>
+
+      <ul>
+        <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.uncancel_records">(PortalClient method)</a>
 </li>
+      </ul></li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.undelete_records">undelete_records() (PortalClient method)</a>
 </li>
-      <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.uninvalidate_records">uninvalidate_records() (PortalClient method)</a>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.uninvalidate_records">uninvalidate_records() (BaseDataset method)</a>
+
+      <ul>
+        <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.uninvalidate_records">(PortalClient method)</a>
 </li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata.updated_idx">updated_idx (UpdateMetadata attribute)</a>
@@ -1699,11 +1847,19 @@
       <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJobQueryFilters.validate_lists">validate_lists() (InternalJobQueryFilters class method)</a>
 </li>
   </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.view_data">view_data (BaseDataset attribute)</a>
+</li>
+      <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.visibility">visibility (BaseDataset property)</a>
+</li>
+  </ul></td>
 </tr></table>
 
 <h2 id="W">W</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="overview/snowflake.html#qcfractal.snowflake.FractalSnowflake.wait_for_flask">wait_for_flask() (FractalSnowflake method)</a>
+</li>
       <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJobStatusEnum.waiting">waiting (InternalJobStatusEnum attribute)</a>
 
       <ul>

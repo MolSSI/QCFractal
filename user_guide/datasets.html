@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Using datasets &#8212; QCArchive 0.50b4.post28+g1db27170 documentation</title>
+    <title>Using datasets &#8212; QCArchive 0.50b4.post31+g11562beb documentation</title>
   
   
   
@@ -42,9 +42,7 @@
     <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/tabs.js"></script>
     <script src="../_static/design-tabs.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/datasets';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Computation Types" href="records/index.html" />
@@ -443,6 +441,9 @@ record 23210 is an MP2/cc-pvdz computation on ethanol.</p>
 <p>Using a dataset allows for control of entire rows and columns of the table, and even
 the entire table itself. As an example, you can add a new specification, and then easily
 submit computations for that specification that apply to all the existing entries.</p>
+<p>Dataset entries, specifications, and records are dependent on the type of dataset; different dataset types
+have different types for these items. That is, entries in a <a class="reference internal" href="records/singlepoint.html#singlepoint-dataset"><span class="std std-ref">Singlepoint Dataset</span></a> are different than entries
+in an <a class="reference internal" href="records/optimization.html#optimization-dataset"><span class="std std-ref">Optimization Dataset</span></a>, and the same is true for specifications.</p>
 <section id="dataset-limitations">
 <h2>Dataset Limitations<a class="headerlink" href="#dataset-limitations" title="Permalink to this heading">#</a></h2>
 <p>A dataset can only contain one type of calculation. For example, you can have a <a class="reference internal" href="records/singlepoint.html#singlepoint-dataset"><span class="std std-ref">Singlepoint Dataset</span></a>
@@ -452,13 +453,17 @@ calculations.</p>
 keywords on a per-entry basis, but there is no way to assign a different basis for a particular entry.</p>
 </section>
 <section id="retrieving-datasets">
-<h2>Retrieving datasets<a class="headerlink" href="#retrieving-datasets" title="Permalink to this heading">#</a></h2>
+<h2>Retrieving Datasets<a class="headerlink" href="#retrieving-datasets" title="Permalink to this heading">#</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When retrieving a dataset, only a limited about of data is downloaded first. After that, operations such as
+retrieving entries or records will require contacting the server. This is generally done transparently.</p>
+</div>
 <p>Datasets have unique ID, and a unique name. The unique name only applies to datasets of the same type,
 so two datasets can have the same name as long as they are of different types. The names are not case sensitive.</p>
 <p>You can retrieve a dataset with via its ID with <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.get_dataset_by_id" title="qcportal.client.PortalClient.get_dataset_by_id"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_dataset_by_id()</span></code></a>
 and its name with <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.get_dataset" title="qcportal.client.PortalClient.get_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_dataset()</span></code></a></p>
-<div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-0-0-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-0-0-0" name="0-0" role="tab" tabindex="0">QCPortal</button></div><div aria-labelledby="tab-0-0-0" class="sphinx-tabs-panel" id="panel-0-0-0" name="0-0" role="tabpanel" tabindex="0"><div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_dataset_by_id</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_dataset_by_id</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">dataset_type</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 <span class="go">123 singlepoint Organic molecule energies</span>
 
@@ -467,12 +472,285 @@ and its name with <a class="reference internal" href="qcportal_reference.html#qc
 <span class="go">52 optimization Diatomic geometries</span>
 </pre></div>
 </div>
-</div></div>
 </section>
 <section id="adding-datasets">
-<h2>Adding datasets<a class="headerlink" href="#adding-datasets" title="Permalink to this heading">#</a></h2>
+<h2>Adding Datasets<a class="headerlink" href="#adding-datasets" title="Permalink to this heading">#</a></h2>
 <p>Datasets can be created on a server with the <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.add_dataset" title="qcportal.client.PortalClient.add_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_dataset()</span></code></a>
-function of the <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">PortalClient</span></code></a>.</p>
+function of the <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">PortalClient</span></code></a>. This function returns the dataset:</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;optimization&quot;</span><span class="p">,</span> <span class="s2">&quot;Optimization of important molecules&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+<span class="go">27</span>
+</pre></div>
+</div>
+<p>The <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.add_dataset" title="qcportal.client.PortalClient.add_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_dataset()</span></code></a> takes several optional arguments, including
+some for descriptions of the dataset as well as default priority and <a class="reference internal" href="../overview/tasks_services.html#routing-tags"><span class="std std-ref">tags</span></a>.</p>
+</section>
+<section id="dataset-metadata">
+<h2>Dataset Metadata<a class="headerlink" href="#dataset-metadata" title="Permalink to this heading">#</a></h2>
+<p>Datasets have some useful metadata and properties</p>
+<ul class="simple">
+<li><p><strong>name</strong>, <strong>description</strong>, <strong>tagline</strong>, <strong>group</strong>, and <strong>tags</strong> are user-defined metadata that categorize this dataset
+among the other datasets</p></li>
+<li><p><strong>default_tag</strong> and <strong>default_priority</strong> are the defaults used when submitting new computations (can be overridden
+in <a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.submit" title="qcportal.dataset_models.BaseDataset.submit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">submit()</span></code></a>, see <a class="reference internal" href="#dataset-submission"><span class="std std-ref">Submitting Computations</span></a>).</p></li>
+<li><p><strong>provenance</strong> is a user-defined dictionary with any provenance or source information</p></li>
+<li><p><strong>metadata</strong> is a user-defined dictionary with any other metadata the user wants to attach to the dataset</p></li>
+</ul>
+<p>This metadata is created when the dataset is constructed on the server, but can be changed
+with <a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.set_name" title="qcportal.dataset_models.BaseDataset.set_name"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_name()</span></code></a>,
+<a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.set_description" title="qcportal.dataset_models.BaseDataset.set_description"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_description()</span></code></a>,
+<a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.set_metadata" title="qcportal.dataset_models.BaseDataset.set_metadata"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_metadata()</span></code></a>, and so on.</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
+<span class="go">Optimization of diatomic molecules at different levels of theory</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">set_description</span><span class="p">(</span><span class="s2">&quot;A new description&quot;</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># It has been changed on the server</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_dataset_by_id</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
+<span class="go">A new description</span>
+</pre></div>
+</div>
+<section id="status">
+<h3>Status<a class="headerlink" href="#status" title="Permalink to this heading">#</a></h3>
+<p>The <a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.status" title="qcportal.dataset_models.BaseDataset.status"><code class="xref py py-meth docutils literal notranslate"><span class="pre">status()</span></code></a> returns a dictionary describing the status of the computations.
+This is indexed by specification</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span> <span class="o">&gt;&gt;&gt;</span> <span class="n">ds</span><span class="o">.</span><span class="n">status</span><span class="p">()</span>
+ <span class="p">{</span><span class="s1">&#39;pbe0/sto-3g&#39;</span><span class="p">:</span> <span class="p">{</span><span class="o">&lt;</span><span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">complete</span><span class="p">:</span> <span class="s1">&#39;complete&#39;</span><span class="o">&gt;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">error</span><span class="p">:</span> <span class="s1">&#39;error&#39;</span><span class="o">&gt;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+<span class="s1">&#39;b3lyp/def2-tzvp&#39;</span><span class="p">:</span> <span class="p">{</span><span class="o">&lt;</span><span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">error</span><span class="p">:</span> <span class="s1">&#39;error&#39;</span><span class="o">&gt;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">complete</span><span class="p">:</span> <span class="s1">&#39;complete&#39;</span><span class="o">&gt;</span><span class="p">:</span> <span class="mi">4</span><span class="p">},</span>
+<span class="s1">&#39;pbe/6-31g&#39;</span><span class="p">:</span> <span class="p">{</span><span class="o">&lt;</span><span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">complete</span><span class="p">:</span> <span class="s1">&#39;complete&#39;</span><span class="o">&gt;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">error</span><span class="p">:</span> <span class="s1">&#39;error&#39;</span><span class="o">&gt;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}}</span>
+</pre></div>
+</div>
+<p>If you are in an interactive session or notebook, or just want a prettier version, you can use
+<a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.status_table" title="qcportal.dataset_models.BaseDataset.status_table"><code class="xref py py-meth docutils literal notranslate"><span class="pre">status_table()</span></code></a> returns a table as a string, and
+<a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.print_status" title="qcportal.dataset_models.BaseDataset.print_status"><code class="xref py py-meth docutils literal notranslate"><span class="pre">print_status()</span></code></a> prints a table of the statuses.</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">print_status_</span><span class="p">()</span>
+<span class="go">    specification    complete    error    invalid</span>
+<span class="go">-----------------  ----------  -------  ---------</span>
+<span class="go">    pbe/def2-tzvp           3        2</span>
+<span class="go">       pbe/sto-3g           4        1</span>
+<span class="go">       pbe0/6-31g           4        1</span>
+<span class="go">     pbe0/6-31g**           4        1</span>
+<span class="go"> pbe0/aug-cc-pvtz           3        1          1</span>
+<span class="go">   pbe0/def2-tzvp           4        1</span>
+<span class="go">      pbe0/sto-3g           4        1</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The status is computed on the server, and does require download all the records. This does mean the the
+status may reflect changes to records that have been retrieved, and so may be out of sync with any
+local caching.</p>
+</div>
+</section>
+</section>
+<section id="specifications-and-entries">
+<h2>Specifications and Entries<a class="headerlink" href="#specifications-and-entries" title="Permalink to this heading">#</a></h2>
+<p>The specifications of the dataset are available with the <code class="docutils literal notranslate"><span class="pre">.specification_names</span></code> and <code class="docutils literal notranslate"><span class="pre">.specifications</span></code> properties.
+<code class="docutils literal notranslate"><span class="pre">.specifications</span></code> returns a dictionary, with the key being the name of the specification.</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">specification_names</span><span class="p">)</span>
+<span class="go">[&#39;hf/sto-3g&#39;, &#39;hf/def2-tzvp&#39;]</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">specifications</span><span class="p">[</span><span class="s1">&#39;hf/sto-3g&#39;</span><span class="p">])</span>
+<span class="go">name=&#39;hf/sto-3g&#39; specification=OptimizationSpecification(program=&#39;geometric&#39;,</span>
+<span class="go">qc_specification=QCSpecification(program=&#39;psi4&#39;, driver=&lt;SinglepointDriver.deferred: &#39;deferred&#39;&gt;, method=&#39;hf&#39;,</span>
+<span class="go">basis=&#39;sto-3g&#39;, keywords={&#39;maxiter&#39;: 100}, protocols=AtomicResultProtocols(wavefunction=&lt;WavefunctionProtocolEnum.none: &#39;none&#39;&gt;,</span>
+<span class="go">stdout=True, error_correction=ErrorCorrectionProtocol(default_policy=True, policies=None),</span>
+<span class="go">native_files=&lt;NativeFilesProtocolEnum.none: &#39;none&#39;&gt;)), keywords={},</span>
+<span class="go">protocols=OptimizationProtocols(trajectory=&lt;TrajectoryProtocolEnum.all: &#39;all&#39;&gt;)) description=None</span>
+</pre></div>
+</div>
+<p>Entries are slightly different. Since it is expected that a dataset may have many entries, only the names
+are accessible all at once</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">entry_names</span><span class="p">)</span>
+<span class="go">[&#39;H2&#39;, &#39;N2&#39;, &#39;O2&#39;, &#39;F2&#39;, &#39;Hg2&#39;]</span>
+</pre></div>
+</div>
+<p>You can obtain a full entry from its name with <a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.get_entry" title="qcportal.dataset_models.BaseDataset.get_entry"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_entry()</span></code></a>:</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">get_entry</span><span class="p">)</span>
+<span class="go">OptimizationDatasetEntry(name=&#39;H2&#39;, initial_molecule=Molecule(name=&#39;H2&#39;, formula=&#39;H2&#39;, hash=&#39;7746e69&#39;),</span>
+<span class="go">additional_keywords={}, attributes={}, comment=None)</span>
+</pre></div>
+</div>
+<p>If you need to get all entries, you may iterate over the entries with
+<a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.iterate_entries" title="qcportal.dataset_models.BaseDataset.iterate_entries"><code class="xref py py-meth docutils literal notranslate"><span class="pre">iterate_entries()</span></code></a>:</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">iterate_entries</span><span class="p">():</span>
+<span class="gp">... </span>   <span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">initial_molecule</span><span class="p">)</span>
+<span class="go">Molecule(name=&#39;H2&#39;, formula=&#39;H2&#39;, hash=&#39;7746e69&#39;)</span>
+<span class="go">Molecule(name=&#39;N2&#39;, formula=&#39;N2&#39;, hash=&#39;609abf3&#39;)</span>
+<span class="go">Molecule(name=&#39;O2&#39;, formula=&#39;O2&#39;, hash=&#39;018caee&#39;)</span>
+<span class="go">Molecule(name=&#39;F2&#39;, formula=&#39;F2&#39;, hash=&#39;7ffa835&#39;)</span>
+<span class="go">Molecule(name=&#39;Hg2&#39;, formula=&#39;Hg2&#39;, hash=&#39;a67cb93&#39;)</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.iterate_entries" title="qcportal.dataset_models.BaseDataset.iterate_entries"><code class="xref py py-meth docutils literal notranslate"><span class="pre">iterate_entries()</span></code></a> can also be restricted to only iterate over certain
+entry names.</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">iterate_entries</span><span class="p">(</span><span class="n">entry_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;H2&#39;</span><span class="p">,</span> <span class="s1">&#39;O2&#39;</span><span class="p">]):</span>
+<span class="gp">... </span>   <span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">initial_molecule</span><span class="p">)</span>
+<span class="go">Molecule(name=&#39;H2&#39;, formula=&#39;H2&#39;, hash=&#39;7746e69&#39;)</span>
+<span class="go">Molecule(name=&#39;O2&#39;, formula=&#39;O2&#39;, hash=&#39;018caee&#39;)</span>
+</pre></div>
+</div>
+</section>
+<section id="retrieving-records">
+<h2>Retrieving Records<a class="headerlink" href="#retrieving-records" title="Permalink to this heading">#</a></h2>
+<p>A single records can be retrieved by entry name and specification name
+with <a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.get_record" title="qcportal.dataset_models.BaseDataset.get_record"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_record()</span></code></a></p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rec</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">get_record</span><span class="p">(</span><span class="s1">&#39;H2&#39;</span><span class="p">,</span> <span class="s1">&#39;hf/sto-3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">rec</span><span class="p">)</span>
+<span class="go">&lt;OptimizationRecord id=3 status=complete&gt;</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">final_molecule</span><span class="p">)</span>
+<span class="go">Molecule(name=&#39;H2&#39;, formula=&#39;H2&#39;, hash=&#39;6c7a0a9&#39;)</span>
+</pre></div>
+</div>
+<p>Multiple records (or all records) can be obtained by using the iterator returned from
+<a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.iterate_records" title="qcportal.dataset_models.BaseDataset.iterate_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">iterate_records()</span></code></a>. The iterator return a tuple of three
+values - the entry name, specification name, and then the full record.</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">e_name</span><span class="p">,</span> <span class="n">s_name</span><span class="p">,</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">iterate_records</span><span class="p">():</span>
+<span class="gp">... </span>  <span class="nb">print</span><span class="p">(</span><span class="n">e_name</span><span class="p">,</span> <span class="n">s_name</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+<span class="go">H2 hf/sto-3g 3 RecordStatusEnum.complete</span>
+<span class="go">N2 hf/sto-3g 1 RecordStatusEnum.complete</span>
+<span class="go">O2 hf/sto-3g 4 RecordStatusEnum.complete</span>
+<span class="go">F2 hf/sto-3g 5 RecordStatusEnum.complete</span>
+<span class="go">Hg2 hf/sto-3g 2 RecordStatusEnum.error</span>
+<span class="go">H2 hf/def2-tzvp 8 RecordStatusEnum.complete</span>
+<span class="go">N2 hf/def2-tzvp 9 RecordStatusEnum.complete</span>
+<span class="go">O2 hf/def2-tzvp 6 RecordStatusEnum.complete</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.iterate_records" title="qcportal.dataset_models.BaseDataset.iterate_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">iterate_records()</span></code></a> also has filtering options, including
+by entry name, specification name, and status</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">e_name</span><span class="p">,</span> <span class="n">s_name</span><span class="p">,</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">iterate_records</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="nb">print</span><span class="p">(</span><span class="n">e_name</span><span class="p">,</span> <span class="n">s_name</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+<span class="go">Hg2 hf/sto-3g 2 RecordStatusEnum.error</span>
+<span class="go">Hg2 hf/def2-tzvp 10 RecordStatusEnum.error</span>
+<span class="go">Hg2 hf/6-31g 15 RecordStatusEnum.error</span>
+<span class="go">Hg2 hf/6-31g** 17 RecordStatusEnum.error</span>
+</pre></div>
+</div>
+<p>If the record was previously retrieved, it won’t be retrieved again unless it has been updated on the server. This can
+be overridden with <code class="docutils literal notranslate"><span class="pre">force_refetch=True</span></code> which will always download a fresh record.</p>
+</section>
+<section id="manipulating-entries-and-specifications">
+<h2>Manipulating Entries and Specifications<a class="headerlink" href="#manipulating-entries-and-specifications" title="Permalink to this heading">#</a></h2>
+<p>Entries and specifications can be added with <code class="docutils literal notranslate"><span class="pre">add_entries</span></code>, <code class="docutils literal notranslate"><span class="pre">add_entry</span></code>, and <code class="docutils literal notranslate"><span class="pre">add_specification</span></code>.
+The details of these functions depend on the type of dataset - see <a class="reference internal" href="records/index.html"><span class="doc">Computation Types</span></a>. The following examples
+are for an <a class="reference internal" href="records/optimization.html#optimization-dataset"><span class="std std-ref">optimization dataset</span></a>.</p>
+<p>Both entries and specifications are given descriptive names, which can be use later in other functions
+(like <a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.get_record" title="qcportal.dataset_models.BaseDataset.get_record"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_record()</span></code></a>).</p>
+<p>When entries or specifications are added, the changes are reflected immediately on the server.</p>
+<p>First, we add some entries to this dataset. For an optimization dataset, an entry corresponds to
+an unoptimized ‘initial’ molecule. Adding entries returns <a class="reference internal" href="metadata.html"><span class="doc">metadata</span></a>.</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">qcportal.molecules</span> <span class="kn">import</span> <span class="n">Molecule</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">qcportal.optimization</span> <span class="kn">import</span> <span class="n">OptimizationDatasetEntry</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">&quot;carbon monoxide&quot;</span><span class="p">,</span> <span class="n">mol</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+<span class="go">InsertMetadata(error_description=None, errors=[], inserted_idx=[0], existing_idx=[])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Can also create lots of entries and add them at once</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol2</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;F&#39;</span><span class="p">,</span> <span class="s1">&#39;F&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol3</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Br&#39;</span><span class="p">,</span> <span class="s1">&#39;Br&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">entry2</span> <span class="o">=</span> <span class="n">OptimizationDatasetEntry</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;difluorine&#39;</span><span class="p">,</span> <span class="n">initial_molecule</span><span class="o">=</span><span class="n">mol2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">entry3</span> <span class="o">=</span> <span class="n">OptimizationDatasetEntry</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;dibromine&#39;</span><span class="p">,</span> <span class="n">initial_molecule</span><span class="o">=</span><span class="n">mol3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">add_entries</span><span class="p">([</span><span class="n">entry2</span><span class="p">,</span> <span class="n">entry3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+<span class="go">InsertMetadata(error_description=None, errors=[], inserted_idx=[0, 1], existing_idx=[])</span>
+</pre></div>
+</div>
+<p>Now our dataset has three entries</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">entry_names</span><span class="p">)</span>
+<span class="go">[&#39;carbon monoxide&#39;, &#39;difluorine&#39;, &#39;dibromine&#39;]</span>
+</pre></div>
+</div>
+<p>Next, we will add some specifications. For an optimization dataset, this is an
+<a class="reference internal" href="records/optimization.html#qcportal.optimization.OptimizationSpecification" title="qcportal.optimization.OptimizationSpecification"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationSpecification</span></code></a>.</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">qcportal.singlepoint</span> <span class="kn">import</span> <span class="n">SinglepointSpecification</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">qcportal.optimization</span> <span class="kn">import</span> <span class="n">OptimizationSpecification</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Use geometric, compute gradients with psi4. Optimize with b3lyp/def2-tzvp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">OptimizationSpecification</span><span class="p">(</span>
+<span class="gp">... </span>  <span class="n">program</span><span class="o">=</span><span class="s1">&#39;geometric&#39;</span><span class="p">,</span>
+<span class="gp">... </span>  <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;deferred&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-tzvp&#39;</span><span class="p">,</span>
+<span class="gp">... </span>  <span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;psi4/b3lyp/def2-tzvp&#39;</span><span class="p">,</span> <span class="n">specification</span><span class="o">=</span><span class="n">spec</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+<span class="go">InsertMetadata(error_description=None, errors=[], inserted_idx=[0], existing_idx=[])</span>
+</pre></div>
+</div>
+</section>
+<section id="submitting-computations">
+<span id="dataset-submission"></span><h2>Submitting Computations<a class="headerlink" href="#submitting-computations" title="Permalink to this heading">#</a></h2>
+<p>Adding entries and specifications does not immediately create the underlying records. To do that,
+we use <a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.submit" title="qcportal.dataset_models.BaseDataset.submit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">submit()</span></code></a>.</p>
+<p>With no arguments, this will create missing records for all entries and specifications, using the
+default tag and priority of the dataset. However, you may also submit only certain entries and specifications,
+or change the tag and priority.</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">submit</span><span class="p">()</span> <span class="c1"># Create everything</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Submit missing difluorine computations with a special tag</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">submit</span><span class="p">([</span><span class="s1">&#39;difluorine&#39;</span><span class="p">],</span> <span class="n">tag</span><span class="o">=</span><span class="s1">&#39;special_tag&#39;</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Submit dibromine hf/sto-3g computation at a high priority</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">submit</span><span class="p">([</span><span class="s1">&#39;dibromine&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;hf/sto-3g&#39;</span><span class="p">],</span> <span class="n">priority</span><span class="o">=</span><span class="s1">&#39;high&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<section id="renaming-and-deleting-entries-and-specifications">
+<h3>Renaming and Deleting Entries and Specifications<a class="headerlink" href="#renaming-and-deleting-entries-and-specifications" title="Permalink to this heading">#</a></h3>
+<p>Entries and specifications can be renamed and deleted. Deletion can also optionally delete the underlying record.</p>
+<p><a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.rename_entries" title="qcportal.dataset_models.BaseDataset.rename_entries"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rename_entries()</span></code></a> and
+<a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.rename_specification" title="qcportal.dataset_models.BaseDataset.rename_specification"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rename_specification()</span></code></a>
+take a dictionary of old name to new name</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">rename_entries</span><span class="p">({</span><span class="s1">&#39;difluorine&#39;</span><span class="p">:</span> <span class="s1">&#39;F2 molecule&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ent</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">get_entry</span><span class="p">(</span><span class="s1">&#39;F2 molecule&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ent</span><span class="o">.</span><span class="n">initial_molecule</span><span class="p">)</span>
+<span class="go">initial_molecule=Molecule(name=&#39;F2&#39;, formula=&#39;F2&#39;, hash=&#39;7ffa835&#39;)</span>
+</pre></div>
+</div>
+<p>Entries and specifications are deleted with
+<a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.delete_entries" title="qcportal.dataset_models.BaseDataset.delete_entries"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_entries()</span></code></a> and
+<a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.delete_specification" title="qcportal.dataset_models.BaseDataset.delete_specification"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_specification()</span></code></a>.
+Note that deleting entries and specifications by default do not delete the records</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Keeps any records, but removes from dataset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">delete_entries</span><span class="p">([</span><span class="s1">&#39;carbon monoxide&#39;</span><span class="p">])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Deletes the records too</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">delete_specification</span><span class="p">(</span><span class="s1">&#39;hf/sto-3g&#39;</span><span class="p">,</span> <span class="n">delete_records</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="record-management">
+<h2>Record Management<a class="headerlink" href="#record-management" title="Permalink to this heading">#</a></h2>
+<p>Records that belong to the dataset can be managed via the usual client methods (see <a class="reference internal" href="record_management.html"><span class="doc">Managing Records</span></a>).
+However, datasets have convenient methods for management, which use entry and specification names rather than record.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.modify_records" title="qcportal.dataset_models.BaseDataset.modify_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">modify_records()</span></code></a></p></li>
+<li><p><a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.reset_records" title="qcportal.dataset_models.BaseDataset.reset_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset_records()</span></code></a></p></li>
+<li><p><a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.cancel_records" title="qcportal.dataset_models.BaseDataset.cancel_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cancel_records()</span></code></a> and <a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.uncancel_records" title="qcportal.dataset_models.BaseDataset.uncancel_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncancel_records()</span></code></a></p></li>
+<li><p><a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.invalidate_records" title="qcportal.dataset_models.BaseDataset.invalidate_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">invalidate_records()</span></code></a> and <a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.uninvalidate_records" title="qcportal.dataset_models.BaseDataset.uninvalidate_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uninvalidate_records()</span></code></a></p></li>
+</ul>
+<p>These functions are similar to the client counterparts, but instead use entry and specification names.</p>
+<p>In addition, individual records can be removed from a dataset (and optionally deleted) with
+<a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.remove_records" title="qcportal.dataset_models.BaseDataset.remove_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">remove_records()</span></code></a>.</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Reset carbon monoxide records</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">reset_records</span><span class="p">(</span><span class="n">entry_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;carbon monoxide&#39;</span><span class="p">])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Cancel pbe0/def2-qzvp computations</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">cancel_records</span><span class="p">(</span><span class="n">specification_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;pbe0/def2-qzvp&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
 </section>
 </section>
 
@@ -521,12 +799,56 @@ function of the <a class="reference internal" href="qcportal_reference.html#qcpo
  </li>
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#retrieving-datasets">
-   Retrieving datasets
+   Retrieving Datasets
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#adding-datasets">
-   Adding datasets
+   Adding Datasets
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#dataset-metadata">
+   Dataset Metadata
+  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#status">
+     Status
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#specifications-and-entries">
+   Specifications and Entries
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#retrieving-records">
+   Retrieving Records
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#manipulating-entries-and-specifications">
+   Manipulating Entries and Specifications
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#submitting-computations">
+   Submitting Computations
+  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#renaming-and-deleting-entries-and-specifications">
+     Renaming and Deleting Entries and Specifications
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#record-management">
+   Record Management
   </a>
  </li>
 </ul>

@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Base Record &#8212; QCArchive 0.50b4.post28+g1db27170 documentation</title>
+    <title>Base Record &#8212; QCArchive 0.50b4.post31+g11562beb documentation</title>
   
   
   
@@ -602,6 +602,659 @@ lots of subrecords of different types (such as a <a class="reference internal" h
 
 </dd></dl>
 
+<dl class="py class pydantic_model">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset">
+<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BaseDataset</span></span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Config<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extra</strong>: <em>Extra = forbid</em></p></li>
+</ul>
+</dd>
+<dt class="field-even">Fields<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.auto_fetch_missing" title="qcportal.dataset_models.BaseDataset.auto_fetch_missing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">auto_fetch_missing</span> <span class="pre">(bool)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.client" title="qcportal.dataset_models.BaseDataset.client"><code class="xref py py-obj docutils literal notranslate"><span class="pre">client</span> <span class="pre">(Any)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.raw_data" title="qcportal.dataset_models.BaseDataset.raw_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">raw_data</span> <span class="pre">(_DataModel)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.view_data" title="qcportal.dataset_models.BaseDataset.view_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">view_data</span> <span class="pre">(Optional[DatasetViewWrapper])</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.client">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">client</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Any</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.client" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.raw_data">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">raw_data</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">_DataModel</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.raw_data" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.view_data">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">view_data</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">DatasetViewWrapper</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.view_data" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.auto_fetch_missing">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">auto_fetch_missing</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.auto_fetch_missing" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.get_subclass">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_subclass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.get_subclass"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.get_subclass" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dataset_type</strong> (<em>str</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.from_datamodel">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_datamodel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">view_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.from_datamodel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.from_datamodel" title="Permalink to this definition">#</a></dt>
+<dd><p>Create a dataset from a dataset DataModel (as an object or a dictionary)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>raw_data</strong> (<em>Union</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>, </em><em>_DataModel</em><em>]</em>) – </p></li>
+<li><p><strong>client</strong> (<em>Any</em>) – </p></li>
+<li><p><strong>view_data</strong> (<em>Optional</em><em>[</em><em>DatasetViewWrapper</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.submit">
+<span class="sig-name descname"><span class="pre">submit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.submit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.submit" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>tag</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>priority</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.status">
+<span class="sig-name descname"><span class="pre">status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.status" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Dict</em>[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.status_table">
+<span class="sig-name descname"><span class="pre">status_table</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.status_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.status_table" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns the status of the dataset’s computations as a table (in a string)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.print_status">
+<span class="sig-name descname"><span class="pre">print_status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.print_status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.print_status" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.detailed_status">
+<span class="sig-name descname"><span class="pre">detailed_status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.detailed_status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.detailed_status" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>List</em>[<em>Tuple</em>[str, str, <a class="reference internal" href="#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.dataset_type">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dataset_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.dataset_type" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.offline">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">offline</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.offline" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.assert_online">
+<span class="sig-name descname"><span class="pre">assert_online</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.assert_online"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.assert_online" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.is_view">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_view</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.is_view" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.assert_is_not_view">
+<span class="sig-name descname"><span class="pre">assert_is_not_view</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.assert_is_not_view"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.assert_is_not_view" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.id">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.id" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.set_name">
+<span class="sig-name descname"><span class="pre">set_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.set_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.set_name" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_name</strong> (<em>str</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.description">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.description" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.set_description">
+<span class="sig-name descname"><span class="pre">set_description</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_description</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.set_description"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.set_description" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_description</strong> (<em>str</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.visibility">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">visibility</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.visibility" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.set_visibility">
+<span class="sig-name descname"><span class="pre">set_visibility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_visibility</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.set_visibility"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.set_visibility" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_visibility</strong> (<em>bool</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.group">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">group</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.group" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.set_group">
+<span class="sig-name descname"><span class="pre">set_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_group</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.set_group"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.set_group" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_group</strong> (<em>str</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.owner_user">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">owner_user</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.owner_user" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.owner_group">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">owner_group</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.owner_group" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.tags">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tags</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.tags" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.set_tags">
+<span class="sig-name descname"><span class="pre">set_tags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_tags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.set_tags"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.set_tags" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_tags</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.tagline">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tagline</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.tagline" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.set_tagline">
+<span class="sig-name descname"><span class="pre">set_tagline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_tagline</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.set_tagline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.set_tagline" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_tagline</strong> (<em>str</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.provenance">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">provenance</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.provenance" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.set_provenance">
+<span class="sig-name descname"><span class="pre">set_provenance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_provenance</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.set_provenance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.set_provenance" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_provenance</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.metadata">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">metadata</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.metadata" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.set_metadata">
+<span class="sig-name descname"><span class="pre">set_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_metadata</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.set_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.set_metadata" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_metadata</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.default_tag">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">default_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.default_tag" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.set_default_tag">
+<span class="sig-name descname"><span class="pre">set_default_tag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_default_tag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.set_default_tag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.set_default_tag" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_default_tag</strong> (<em>str</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.default_priority">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">default_priority</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><span class="pre">PriorityEnum</span></a></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.default_priority" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.set_default_priority">
+<span class="sig-name descname"><span class="pre">set_default_priority</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_default_priority</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.set_default_priority"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.set_default_priority" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_default_priority</strong> (<a class="reference internal" href="#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.specifications">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">specifications</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.specifications" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.specification_names">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">specification_names</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.specification_names" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.fetch_specifications">
+<span class="sig-name descname"><span class="pre">fetch_specifications</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.fetch_specifications"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.fetch_specifications" title="Permalink to this definition">#</a></dt>
+<dd><p>Fetch all specifications from the remote server</p>
+<p>These are fetched and then stored internally, and not returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.rename_specification">
+<span class="sig-name descname"><span class="pre">rename_specification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">old_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.rename_specification"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.rename_specification" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>old_name</strong> (<em>str</em>) – </p></li>
+<li><p><strong>new_name</strong> (<em>str</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.delete_specification">
+<span class="sig-name descname"><span class="pre">delete_specification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delete_records</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.delete_specification"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.delete_specification" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – </p></li>
+<li><p><strong>delete_records</strong> (<em>bool</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="../metadata.html#qcportal.metadata_models.DeleteMetadata" title="qcportal.metadata_models.DeleteMetadata"><em>DeleteMetadata</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.fetch_entry_names">
+<span class="sig-name descname"><span class="pre">fetch_entry_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.fetch_entry_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.fetch_entry_names" title="Permalink to this definition">#</a></dt>
+<dd><p>Fetch all entry names from the remote server</p>
+<p>These are fetched and then stored internally, and not returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.fetch_entries">
+<span class="sig-name descname"><span class="pre">fetch_entries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_refetch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.fetch_entries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.fetch_entries" title="Permalink to this definition">#</a></dt>
+<dd><p>Fetches entry information from the remote server, storing it internally</p>
+<p>By default, already-fetched entries will not be fetched again, unless
+<cite>force_refetch</cite> is True.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Names of entries to fetch. If None, fetch all entries</p></li>
+<li><p><strong>include</strong> – Additional fields/data to include when fetching the entry</p></li>
+<li><p><strong>force_refetch</strong> (<em>bool</em>) – If true, fetch data from the server even if it already exists locally</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.get_entry">
+<span class="sig-name descname"><span class="pre">get_entry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_refetch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.get_entry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.get_entry" title="Permalink to this definition">#</a></dt>
+<dd><p>Obtain entry information</p>
+<p>The entry will be automatically fetched from the remote server if needed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entry_name</strong> (<em>str</em>) – </p></li>
+<li><p><strong>force_refetch</strong> (<em>bool</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Optional</em>[<em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.iterate_entries">
+<span class="sig-name descname"><span class="pre">iterate_entries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_refetch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.iterate_entries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.iterate_entries" title="Permalink to this definition">#</a></dt>
+<dd><p>Iterate over all entries</p>
+<p>This is used as a generator, and automatically fetches entries as needed</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Names of entries to iterate over. If None, iterate over all entries</p></li>
+<li><p><strong>force_refetch</strong> (<em>bool</em>) – If true, fetch data from the server even if it already exists locally</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.entry_names">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">entry_names</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.entry_names" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.rename_entries">
+<span class="sig-name descname"><span class="pre">rename_entries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name_map</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.rename_entries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.rename_entries" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name_map</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.delete_entries">
+<span class="sig-name descname"><span class="pre">delete_entries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delete_records</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.delete_entries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.delete_entries" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>names</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>delete_records</strong> (<em>bool</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="../metadata.html#qcportal.metadata_models.DeleteMetadata" title="qcportal.metadata_models.DeleteMetadata"><em>DeleteMetadata</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.fetch_records">
+<span class="sig-name descname"><span class="pre">fetch_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fetch_updated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_refetch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.fetch_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.fetch_records" title="Permalink to this definition">#</a></dt>
+<dd><p>Fetches record information from the remote server, storing it internally</p>
+<p>By default, this function will only fetch records that have not been fetch previously.
+If <cite>force_refetch</cite> is True, then this will always fetch the records.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Names of the entries whose records to fetch. If None, fetch all entries</p></li>
+<li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Names of the specifications whose records to fetch. If None, fetch all specifications</p></li>
+<li><p><strong>status</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>]</em><em>]</em><em>]</em>) – Fetch only records with these statuses</p></li>
+<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Additional fields to include in the returned record</p></li>
+<li><p><strong>fetch_updated</strong> (<em>bool</em>) – Fetch any records that exist locally but have been updated on the server</p></li>
+<li><p><strong>force_refetch</strong> (<em>bool</em>) – If true, fetch data from the server even if it already exists locally</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.get_record">
+<span class="sig-name descname"><span class="pre">get_record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_refetch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.get_record"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.get_record" title="Permalink to this definition">#</a></dt>
+<dd><p>Obtain a calculation record related to this dataset</p>
+<p>The record will be automatically fetched from the remote server if needed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entry_name</strong> (<em>str</em>) – </p></li>
+<li><p><strong>specification_name</strong> (<em>str</em>) – </p></li>
+<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>force_refetch</strong> (<em>bool</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Optional</em>[<a class="reference internal" href="#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><em>BaseRecord</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.iterate_records">
+<span class="sig-name descname"><span class="pre">iterate_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fetch_updated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_refetch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.iterate_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.iterate_records" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>status</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>fetch_updated</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>force_refetch</strong> (<em>bool</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.remove_records">
+<span class="sig-name descname"><span class="pre">remove_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delete_records</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.remove_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.remove_records" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>delete_records</strong> (<em>bool</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="../metadata.html#qcportal.metadata_models.DeleteMetadata" title="qcportal.metadata_models.DeleteMetadata"><em>DeleteMetadata</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.modify_records">
+<span class="sig-name descname"><span class="pre">modify_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_tag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_priority</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_comment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refetch_records</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.modify_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.modify_records" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>new_tag</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>new_priority</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a><em>]</em>) – </p></li>
+<li><p><strong>new_comment</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>refetch_records</strong> (<em>bool</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.reset_records">
+<span class="sig-name descname"><span class="pre">reset_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refetch_records</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.reset_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.reset_records" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>refetch_records</strong> (<em>bool</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.cancel_records">
+<span class="sig-name descname"><span class="pre">cancel_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refetch_records</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.cancel_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.cancel_records" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>refetch_records</strong> (<em>bool</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.uncancel_records">
+<span class="sig-name descname"><span class="pre">uncancel_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refetch_records</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.uncancel_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.uncancel_records" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>refetch_records</strong> (<em>bool</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.invalidate_records">
+<span class="sig-name descname"><span class="pre">invalidate_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refetch_records</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.invalidate_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.invalidate_records" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>refetch_records</strong> (<em>bool</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.uninvalidate_records">
+<span class="sig-name descname"><span class="pre">uninvalidate_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refetch_records</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.uninvalidate_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.uninvalidate_records" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>refetch_records</strong> (<em>bool</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.compile_values">
+<span class="sig-name descname"><span class="pre">compile_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value_call</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fetch_updated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_refetch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.compile_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.compile_values" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value_call</strong> (<em>Callable</em>) – </p></li>
+<li><p><strong>value_name</strong> (<em>str</em>) – </p></li>
+<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>fetch_updated</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>force_refetch</strong> (<em>bool</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>DataFrame</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.fetch_contributed_values">
+<span class="sig-name descname"><span class="pre">fetch_contributed_values</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.fetch_contributed_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.fetch_contributed_values" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.contributed_values">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">contributed_values</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ContributedValues</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.contributed_values" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RecordStatusEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/record_models.html#RecordStatusEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum" title="Permalink to this definition">#</a></dt>
@@ -988,6 +1641,593 @@ of a record query, and works with all kinds of records.</p>
        <code class="docutils literal notranslate">
         <span class="pre">
          BaseRecord.provenance
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toc-h2 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       BaseDataset
+      </span>
+     </code>
+    </a>
+    <ul class="visible nav section-nav flex-column">
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.client">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.client
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.raw_data">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.raw_data
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.view_data">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.view_data
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.auto_fetch_missing">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.auto_fetch_missing
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.get_subclass">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.get_subclass()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.from_datamodel">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.from_datamodel()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.submit">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.submit()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.status">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.status()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.status_table">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.status_table()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.print_status">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.print_status()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.detailed_status">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.detailed_status()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.dataset_type">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.dataset_type
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.offline">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.offline
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.assert_online">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.assert_online()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.is_view">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.is_view
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.assert_is_not_view">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.assert_is_not_view()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.id">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.id
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.name">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.name
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.set_name">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.set_name()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.description">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.description
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.set_description">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.set_description()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.visibility">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.visibility
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.set_visibility">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.set_visibility()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.group">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.group
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.set_group">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.set_group()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.owner_user">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.owner_user
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.owner_group">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.owner_group
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.tags">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.tags
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.set_tags">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.set_tags()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.tagline">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.tagline
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.set_tagline">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.set_tagline()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.provenance">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.provenance
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.set_provenance">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.set_provenance()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.metadata">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.metadata
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.set_metadata">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.set_metadata()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.default_tag">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.default_tag
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.set_default_tag">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.set_default_tag()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.default_priority">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.default_priority
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.set_default_priority">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.set_default_priority()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.specifications">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.specifications
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.specification_names">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.specification_names
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.fetch_specifications">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.fetch_specifications()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.rename_specification">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.rename_specification()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.delete_specification">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.delete_specification()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.fetch_entry_names">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.fetch_entry_names()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.fetch_entries">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.fetch_entries()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.get_entry">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.get_entry()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.iterate_entries">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.iterate_entries()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.entry_names">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.entry_names
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.rename_entries">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.rename_entries()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.delete_entries">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.delete_entries()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.fetch_records">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.fetch_records()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.get_record">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.get_record()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.iterate_records">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.iterate_records()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.remove_records">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.remove_records()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.modify_records">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.modify_records()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.reset_records">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.reset_records()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.cancel_records">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.cancel_records()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.uncancel_records">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.uncancel_records()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.invalidate_records">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.invalidate_records()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.uninvalidate_records">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.uninvalidate_records()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.compile_values">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.compile_values()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.fetch_contributed_values">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.fetch_contributed_values()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.contributed_values">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         BaseDataset.contributed_values
         </span>
        </code>
       </a>

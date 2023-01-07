@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>QCFractal Snowflake &#8212; QCArchive 0.50b4.post28+g1db27170 documentation</title>
+    <title>QCFractal Snowflake &#8212; QCArchive 0.50b4.post31+g11562beb documentation</title>
   
   
   
@@ -384,6 +384,131 @@
               
   <section id="qcfractal-snowflake">
 <h1>QCFractal Snowflake<a class="headerlink" href="#qcfractal-snowflake" title="Permalink to this heading">#</a></h1>
+<p>The QCFractal Snowflake is a self-contained server and <a class="reference internal" href="glossary.html#glossary-manager"><span class="std std-ref">compute manager</span></a>.
+The snowflake provides a way to experiment or test QCArchive without needing to set up a standalone server.</p>
+<p>There are a few caveats to using the snowflake</p>
+<ul class="simple">
+<li><p>The database is stored in a temporary directory and deleted when the snowflake is destructed</p></li>
+<li><p>By default, security is not enabled</p></li>
+<li><p>You are generally limited to a couple compute workers, and they run on the same computer the server is
+running on</p></li>
+<li><p>Programs for running the computations (like Psi4) must be available on the computer (and in the environment you are
+running the snowflake in)</p></li>
+<li><p>Postgres software must be available</p></li>
+</ul>
+<p>While there are ways around the above limitations, they are generally against the spirit of using the snowflake,
+and you are probably better off setting up a complete server instead.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>When a snowflake is destructed, the database is destroyed and all data is lost. It is not meant to permanently
+store data.</p>
+</div>
+<section id="using-the-snowflake">
+<h2>Using the Snowflake<a class="headerlink" href="#using-the-snowflake" title="Permalink to this heading">#</a></h2>
+<p>The snowflake can be used by constructing a FractalSnowflake. From there, a client can be obtained and
+used as if it were any other client.</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">qcfractal.snowflake</span> <span class="kn">import</span> <span class="n">FractalSnowflake</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">snowflake</span> <span class="o">=</span> <span class="n">FractalSnowflake</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">snowflake</span><span class="o">.</span><span class="n">client</span><span class="p">()</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Add computations, create datasets, do whatever you want</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">add_singlepoints</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="s1">&#39;energy&#39;</span><span class="p">,</span> <span class="s1">&#39;hf&#39;</span><span class="p">,</span> <span class="s1">&#39;sto-3g&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="snowflake-api">
+<h2>Snowflake API<a class="headerlink" href="#snowflake-api" title="Permalink to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="qcfractal.snowflake.FractalSnowflake">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FractalSnowflake</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_watching</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">database_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcfractal/snowflake.html#FractalSnowflake"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcfractal.snowflake.FractalSnowflake" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A temporary, self-contained server</p>
+<p>A snowflake contains the server and compute manager, and can be used to test
+QCFractal/QCPortal, or to experiment.</p>
+<p>All data is lost when the server is shutdown.</p>
+<p>This can also be used as a context manager (<cite>with FractalSnowflake(…) as s:</cite>)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>compute_workers</strong> (<em>int</em>) – </p></li>
+<li><p><strong>enable_watching</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>database_config</strong> (<em>Optional</em><em>[</em><em>DatabaseConfig</em><em>]</em>) – </p></li>
+<li><p><strong>extra_config</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="qcfractal.snowflake.FractalSnowflake.wait_for_flask">
+<span class="sig-name descname"><span class="pre">wait_for_flask</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcfractal/snowflake.html#FractalSnowflake.wait_for_flask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcfractal.snowflake.FractalSnowflake.wait_for_flask" title="Permalink to this definition">#</a></dt>
+<dd><p>Wait for the flask server to come up and then exit</p>
+<p>If it does not come up after some time, an exception will be raised</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcfractal.snowflake.FractalSnowflake.stop">
+<span class="sig-name descname"><span class="pre">stop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcfractal/snowflake.html#FractalSnowflake.stop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcfractal.snowflake.FractalSnowflake.stop" title="Permalink to this definition">#</a></dt>
+<dd><p>Stops the server</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcfractal.snowflake.FractalSnowflake.start">
+<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcfractal/snowflake.html#FractalSnowflake.start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcfractal.snowflake.FractalSnowflake.start" title="Permalink to this definition">#</a></dt>
+<dd><p>Starts the server</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcfractal.snowflake.FractalSnowflake.get_uri">
+<span class="sig-name descname"><span class="pre">get_uri</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcfractal/snowflake.html#FractalSnowflake.get_uri"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcfractal.snowflake.FractalSnowflake.get_uri" title="Permalink to this definition">#</a></dt>
+<dd><p>Obtain the URI/address of the REST interface of this server</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Address/URI of the rest interface (ie, ‘<a class="reference external" href="http://127.0.0.1:1234">http://127.0.0.1:1234</a>’)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcfractal.snowflake.FractalSnowflake.await_results">
+<span class="sig-name descname"><span class="pre">await_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcfractal/snowflake.html#FractalSnowflake.await_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcfractal.snowflake.FractalSnowflake.await_results" title="Permalink to this definition">#</a></dt>
+<dd><p>Wait for computations to complete</p>
+<p>This function will block until the specified computations are complete (either success for failure).
+If timeout is given, that is the maximum amount of time to wait for a result. This timer is reset
+after each completed result.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ids</strong> (<em>Optional</em><em>[</em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em>) – Result/Procedure IDs to wait for. If not specified, all currently incomplete tasks
+will be waited for.</p></li>
+<li><p><strong>timeout</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – Maximum time to wait for a single result.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if all the results were received, False if timeout has elapsed without receiving a completed computation</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcfractal.snowflake.FractalSnowflake.client">
+<span class="sig-name descname"><span class="pre">client</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcfractal/snowflake.html#FractalSnowflake.client"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcfractal.snowflake.FractalSnowflake.client" title="Permalink to this definition">#</a></dt>
+<dd><p>Obtain a PortalClient connected to this server</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../user_guide/qcportal_reference.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><em>PortalClient</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 </section>
 
 
@@ -417,6 +542,95 @@
           
             <div class="bd-sidebar-secondary bd-toc">
               
+<div class="toc-item">
+  
+<div class="tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+</div>
+<nav id="bd-toc-nav" class="page-toc">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#using-the-snowflake">
+   Using the Snowflake
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#snowflake-api">
+   Snowflake API
+  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#qcfractal.snowflake.FractalSnowflake">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FractalSnowflake
+      </span>
+     </code>
+    </a>
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcfractal.snowflake.FractalSnowflake.wait_for_flask">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         FractalSnowflake.wait_for_flask()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcfractal.snowflake.FractalSnowflake.stop">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         FractalSnowflake.stop()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcfractal.snowflake.FractalSnowflake.start">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         FractalSnowflake.start()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcfractal.snowflake.FractalSnowflake.get_uri">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         FractalSnowflake.get_uri()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcfractal.snowflake.FractalSnowflake.await_results">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         FractalSnowflake.await_results()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcfractal.snowflake.FractalSnowflake.client">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         FractalSnowflake.client()
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+</nav>
+</div>
+
 <div class="toc-item">
   
 <div class="tocsection sourcelink">
