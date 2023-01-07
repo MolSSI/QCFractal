@@ -155,7 +155,10 @@ class BaseDataset(BaseModel):
             Names of the new entries that have been added to the remote server
         """
 
-        self.raw_data.entry_names.extend(x for x in entry_names if x not in self.raw_data.entry_names)
+        # If entry names have been fetched, add the new entry names
+        # This should still be ok if there are no entries - they will be fetched if the list is empty
+        if self.raw_data.entry_names:
+            self.raw_data.entry_names.extend(x for x in entry_names if x not in self.raw_data.entry_names)
 
     def _post_add_specification(self, specification_name) -> None:
         """
