@@ -1,7 +1,6 @@
 sphinx_design
 pydata_sphinx_theme
 sphinx
-sphinx-tabs
 autodoc-pydantic
 -e ../qcportal
 -e ../qcfractalcompute

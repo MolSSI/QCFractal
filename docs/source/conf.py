@@ -44,14 +44,12 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
-    'sphinx_tabs.tabs',
     'sphinx_design',
     'sphinxcontrib.autodoc_pydantic',
 ]
 
 # Some options
 add_module_names = False
-sphinx_tabs_disable_tab_closing = True
 autoclass_content = "both"
 autodoc_typehints = 'description'
 autodoc_default_options = {
