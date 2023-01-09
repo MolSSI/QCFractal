@@ -4,9 +4,9 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Interpreting metadata &#8212; QCArchive 0.50b4.post31+g11562beb documentation</title>
+    <title>Interpreting metadata &#8212; QCArchive 0.50b4.post33+gbe1c80a8 documentation</title>
   
   
   
@@ -28,7 +28,6 @@
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
     <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
   
@@ -43,6 +42,7 @@
     <script src="../_static/doctools.js"></script>
     <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/design-tabs.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/metadata';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Query Iterators" href="query_iterators.html" />
@@ -349,7 +349,6 @@
 <li class="toctree-l1"><a class="reference internal" href="client_setup.html">QCPortal Installation &amp; Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connecting_qcportal.html">Connecting to a server</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Interpreting metadata</a></li>
-
 <li class="toctree-l1"><a class="reference internal" href="query_iterators.html">Query Iterators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="molecule.html">Molecules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="record_retrieval.html">Retrieving records</a></li>
@@ -427,9 +426,8 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
 <p>If the <code class="docutils literal notranslate"><span class="pre">water</span></code> molecule already existed as well, <code class="docutils literal notranslate"><span class="pre">inserted_idx</span></code> would be <code class="docutils literal notranslate"><span class="pre">[]</span></code> and <code class="docutils literal notranslate"><span class="pre">existing_idx</span></code> would be
 <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.</p>
 <p>The total number of inserted or existing objects can be retrieved with <code class="docutils literal notranslate"><span class="pre">n_inserted</span></code> and <code class="docutils literal notranslate"><span class="pre">n_existing</span></code>.</p>
-</section>
 <section id="metadata-api">
-<h1>Metadata API<a class="headerlink" href="#metadata-api" title="Permalink to this heading">#</a></h1>
+<h2>Metadata API<a class="headerlink" href="#metadata-api" title="Permalink to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InsertMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_description=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inserted_idx=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">existing_idx=&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/metadata_models.html#InsertMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata" title="Permalink to this definition">#</a></dt>
@@ -819,6 +817,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
 </dd></dl>
 
 </section>
+</section>
 
 
             </article>
@@ -858,17 +857,12 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
 </div>
 <nav id="bd-toc-nav" class="page-toc">
     <ul class="visible nav section-nav flex-column">
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#">
-   Interpreting metadata
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#metadata-api">
    Metadata API
   </a>
   <ul class="visible nav section-nav flex-column">
-   <li class="toc-h2 nav-item toc-entry">
+   <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata">
      <code class="docutils literal notranslate">
       <span class="pre">
@@ -876,8 +870,8 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
       </span>
      </code>
     </a>
-    <ul class="visible nav section-nav flex-column">
-     <li class="toc-h3 nav-item toc-entry">
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.error_description">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -886,7 +880,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.errors">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -895,7 +889,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.inserted_idx">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -904,7 +898,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.existing_idx">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -913,7 +907,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.n_inserted">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -922,7 +916,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.n_existing">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -931,7 +925,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.n_errors">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -940,7 +934,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.error_idx">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -949,7 +943,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.success">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -958,7 +952,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.error_string">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -967,7 +961,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.sort_fields">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -976,7 +970,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.check_all_indices">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -985,7 +979,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.dict">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -996,7 +990,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
      </li>
     </ul>
    </li>
-   <li class="toc-h2 nav-item toc-entry">
+   <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata">
      <code class="docutils literal notranslate">
       <span class="pre">
@@ -1004,8 +998,8 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
       </span>
      </code>
     </a>
-    <ul class="visible nav section-nav flex-column">
-     <li class="toc-h3 nav-item toc-entry">
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.error_description">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1014,7 +1008,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.errors">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1023,7 +1017,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.deleted_idx">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1032,7 +1026,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.n_children_deleted">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1041,7 +1035,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.n_deleted">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1050,7 +1044,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.n_errors">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1059,7 +1053,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.error_idx">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1068,7 +1062,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.success">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1077,7 +1071,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.error_string">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1086,7 +1080,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.sort_fields">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1095,7 +1089,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.check_all_indices">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1104,7 +1098,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.dict">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1115,7 +1109,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
      </li>
     </ul>
    </li>
-   <li class="toc-h2 nav-item toc-entry">
+   <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata">
      <code class="docutils literal notranslate">
       <span class="pre">
@@ -1123,8 +1117,8 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
       </span>
      </code>
     </a>
-    <ul class="visible nav section-nav flex-column">
-     <li class="toc-h3 nav-item toc-entry">
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.error_description">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1133,7 +1127,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.errors">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1142,7 +1136,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.updated_idx">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1151,7 +1145,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.n_children_updated">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1160,7 +1154,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.n_updated">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1169,7 +1163,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.n_errors">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1178,7 +1172,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.error_idx">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1187,7 +1181,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.success">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1196,7 +1190,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.error_string">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1205,7 +1199,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.sort_fields">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1214,7 +1208,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.check_all_indices">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1223,7 +1217,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.dict">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1234,7 +1228,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
      </li>
     </ul>
    </li>
-   <li class="toc-h2 nav-item toc-entry">
+   <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#qcportal.metadata_models.QueryMetadata">
      <code class="docutils literal notranslate">
       <span class="pre">
@@ -1242,8 +1236,8 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
       </span>
      </code>
     </a>
-    <ul class="visible nav section-nav flex-column">
-     <li class="toc-h3 nav-item toc-entry">
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.QueryMetadata.error_description">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1252,7 +1246,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.QueryMetadata.errors">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1261,7 +1255,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.QueryMetadata.n_found">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1270,7 +1264,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.QueryMetadata.success">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1279,7 +1273,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.QueryMetadata.error_string">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1288,7 +1282,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.QueryMetadata.n_errors">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1297,7 +1291,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.QueryMetadata.sort_fields">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1306,7 +1300,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.QueryMetadata.dict">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1317,7 +1311,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
      </li>
     </ul>
    </li>
-   <li class="toc-h2 nav-item toc-entry">
+   <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata">
      <code class="docutils literal notranslate">
       <span class="pre">
@@ -1325,8 +1319,8 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
       </span>
      </code>
     </a>
-    <ul class="visible nav section-nav flex-column">
-     <li class="toc-h3 nav-item toc-entry">
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata.error_description">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1335,7 +1329,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata.rejected_info">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1344,7 +1338,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata.accepted_ids">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1353,7 +1347,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata.n_accepted">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1362,7 +1356,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata.n_rejected">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1371,7 +1365,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata.rejected_ids">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1380,7 +1374,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata.success">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1389,7 +1383,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata.error_string">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1398,7 +1392,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata.sort_fields">
        <code class="docutils literal notranslate">
         <span class="pre">
@@ -1407,7 +1401,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
        </code>
       </a>
      </li>
-     <li class="toc-h3 nav-item toc-entry">
+     <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata.dict">
        <code class="docutils literal notranslate">
         <span class="pre">

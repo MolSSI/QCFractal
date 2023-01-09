@@ -112,7 +112,7 @@ server.
 
 .. code-block:: py3
 
-  >>> query_it = c.query_molecules(molecular_formula='N2')
+  >>> query_it = client.query_molecules(molecular_formula='N2')
   >>> for mol in query_it:
   ...    print(mol.id, mol.identifiers.molecular_formula)
   371 N2

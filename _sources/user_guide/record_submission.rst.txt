@@ -24,8 +24,10 @@ The second object is a list of record IDs, in the order of the input molecule(s)
 if only one record is added.
 
 
-.. tabs::
-  .. tab:: QCPortal
+.. tab-set::
+
+  .. tab-item:: QCPortal
+
     .. code-block:: py3
 
       # Add a single computation
@@ -63,8 +65,10 @@ or as an enum member (like ``PriorityEnum.high``).
 
 See :class:`~qcportal.record_models.PriorityEnum`.
 
-.. tabs::
-  .. tab:: QCPortal
+.. tab-set::
+
+  .. tab-item:: QCPortal
+
     .. code-block:: py3
 
       # Add a single computation

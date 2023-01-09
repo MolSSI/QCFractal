@@ -34,7 +34,7 @@ The total number of inserted or existing objects can be retrieved with ``n_inser
 
 
 Metadata API
-------------
+============
 
 .. autoclass:: qcportal.metadata_models.InsertMetadata
 

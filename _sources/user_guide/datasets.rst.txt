@@ -77,7 +77,7 @@ function of the :class:`~qcportal.client.PortalClient`. This function returns th
 
 .. code-block:: py3
 
-  >>> ds = c.add_dataset("optimization", "Optimization of important molecules")
+  >>> ds = client.add_dataset("optimization", "Optimization of important molecules")
   >>> print(ds.id)
   27
 

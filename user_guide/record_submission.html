@@ -4,9 +4,9 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Submitting computations &#8212; QCArchive 0.50b4.post31+g11562beb documentation</title>
+    <title>Submitting computations &#8212; QCArchive 0.50b4.post33+gbe1c80a8 documentation</title>
   
   
   
@@ -28,7 +28,6 @@
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
     <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
   
@@ -42,7 +41,6 @@
     <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/tabs.js"></script>
     <script src="../_static/design-tabs.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/record_submission';</script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -351,7 +349,6 @@
 <li class="toctree-l1"><a class="reference internal" href="client_setup.html">QCPortal Installation &amp; Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connecting_qcportal.html">Connecting to a server</a></li>
 <li class="toctree-l1"><a class="reference internal" href="metadata.html">Interpreting metadata</a></li>
-
 <li class="toctree-l1"><a class="reference internal" href="query_iterators.html">Query Iterators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="molecule.html">Molecules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="record_retrieval.html">Retrieving records</a></li>
@@ -424,8 +421,11 @@ about the insertion, which describes which records were inserted/created, and wh
 existed on the server (see <a class="reference internal" href="metadata.html"><span class="doc">Interpreting metadata</span></a>).</p>
 <p>The second object is a list of record IDs, in the order of the input molecule(s). It is always a list, even
 if only one record is added.</p>
-<div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-0-0-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-0-0-0" name="0-0" role="tab" tabindex="0">QCPortal</button></div><div aria-labelledby="tab-0-0-0" class="sphinx-tabs-panel" id="panel-0-0-0" name="0-0" role="tabpanel" tabindex="0"><div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Add a single computation</span>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-0">
+QCPortal</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Add a single computation</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_singlepoints</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="s1">&#39;energy&#39;</span><span class="p">,</span> <span class="s1">&#39;hf&#39;</span><span class="p">,</span> <span class="s1">&#39;sto-3g&#39;</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
@@ -444,7 +444,8 @@ if only one record is added.</p>
 <span class="p">[</span><span class="mi">940</span><span class="p">,</span> <span class="mi">941</span><span class="p">]</span>
 </pre></div>
 </div>
-</div></div>
+</div>
+</div>
 <p>The specifics of the <code class="docutils literal notranslate"><span class="pre">add_</span></code> functions depends on the type of computation. <a class="reference internal" href="records/index.html"><span class="doc">See the documentation
 for different records</span></a>.</p>
 <section id="tag-priority">
@@ -454,8 +455,11 @@ well. Tasks with a higher priority will be claimed before lower priorities. Prio
 specified either as a string or integer (0 = ‘low’, 1 = ‘normal’, 2 = ‘high’),
 or as an enum member (like <code class="docutils literal notranslate"><span class="pre">PriorityEnum.high</span></code>).</p>
 <p>See <a class="reference internal" href="records/base.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">PriorityEnum</span></code></a>.</p>
-<div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-1-1-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-1-1-0" name="1-0" role="tab" tabindex="0">QCPortal</button></div><div aria-labelledby="tab-1-1-0" class="sphinx-tabs-panel" id="panel-1-1-0" name="1-0" role="tabpanel" tabindex="0"><div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Add a single computation</span>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-1">
+QCPortal</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Add a single computation</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_singlepoints</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="s1">&#39;energy&#39;</span><span class="p">,</span> <span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> <span class="s1">&#39;def2-tzvp&#39;</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s1">&#39;small_mem&#39;</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="s1">&#39;high&#39;</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
@@ -466,7 +470,8 @@ or as an enum member (like <code class="docutils literal notranslate"><span clas
 <span class="s1">&#39;small_mem&#39;</span>
 </pre></div>
 </div>
-</div></div>
+</div>
+</div>
 </section>
 <section id="record-deduplication">
 <span id="record-submit-dedup"></span><h2>Record Deduplication<a class="headerlink" href="#record-deduplication" title="Permalink to this heading">#</a></h2>

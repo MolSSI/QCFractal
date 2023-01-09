@@ -11,15 +11,18 @@ The first is through ``get_`` functions,  which is used to retrieve records by t
 These functions (such as :func:`~qcportal.client.PortalClient.get_records` and :func:`~qcportal.client.PortalClient.get_singlepoints`)
 take a list or other sequence of IDs, and returns a list of records in the same order as the given IDs
 
-.. tabs::
-  .. tab:: QCPortal
+.. tab-set::
+
+  .. tab-item:: QCPortal
+
     .. code-block:: py3
 
-      >>> records = c.get_records([245, 827])
+      >>> records = client.get_records([245, 827])
       >>> print(records[0].id, records[1].id)
       245 827
 
-  .. tab:: Raw API
+  .. tab-item:: Raw API
+
     .. code-block:: http
 
       POST /api/v1/records/bulkGet HTTP/1.1
@@ -63,15 +66,18 @@ take a list or other sequence of IDs, and returns a list of records in the same 
 If a single ID is specified rather than a list, then just that record is returned (not a list)
 
 
-.. tabs::
-  .. tab:: QCPortal
+.. tab-set::
+
+  .. tab-item:: QCPortal
+
     .. code-block:: py3
 
-      >>> records = c.get_records(245)
+      >>> records = client.get_records(245)
       >>> print(records.id)
       245
 
-  .. tab:: Raw API
+  .. tab-item:: Raw API
+
     .. code-block:: http
 
       GET /api/v1/records/245 HTTP/1.1
@@ -98,15 +104,18 @@ If a single ID is specified rather than a list, then just that record is returne
 If a record is not found, then an exception is raised. This can be suppressed with ``missing_ok=True``, in which
 case missing records are returned as ``None``
 
-.. tabs::
-  .. tab:: QCPortal
+.. tab-set::
+
+  .. tab-item:: QCPortal
+
     .. code-block:: py3
 
-      >>> records = c.get_records([245, 9999999, 827])
+      >>> records = client.get_records([245, 9999999, 827])
       >>> print(records[1])
       None
 
-  .. tab:: Raw API (bulk)
+  .. tab-item:: Raw API (bulk)
+
     .. code-block:: http
 
       POST /api/v1/records/bulkGet HTTP/1.1
@@ -165,11 +174,13 @@ Query functions return an :doc:`iterator <query_iterators>` object.
 This iterator handles transparent and efficient fetching from the server in
 batches, especially when many records may be returned by a query
 
-.. tabs::
-  .. tab:: QCPortal
+.. tab-set::
+
+  .. tab-item:: QCPortal
+
     .. code-block:: py3
 
-      >>> record_it = c.query_records(record_type='singlepoint', created_before='2021-02-01')
+      >>> record_it = client.query_records(record_type='singlepoint', created_before='2021-02-01')
       >>> for record in record_it:
       ...    print(record.id)
       114296306
@@ -182,11 +193,13 @@ Query functions can take lists or iterables for most parameters as well, in whic
 any within the list will be returned. For example, the following finds errored or complete records
 that were recently modified
 
-.. tabs::
-  .. tab:: QCPortal
+.. tab-set::
+
+  .. tab-item:: QCPortal
+
     .. code-block:: py3
 
-      >>> record_it = c.query_records(status=['complete', 'error'], modified_after='2022-12-01')
+      >>> record_it = client.query_records(status=['complete', 'error'], modified_after='2022-12-01')
       >>> for record in record_it:
       ...    print(record.id)
       81798273

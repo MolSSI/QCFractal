@@ -4,9 +4,9 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Query Iterators &#8212; QCArchive 0.50b4.post31+g11562beb documentation</title>
+    <title>Query Iterators &#8212; QCArchive 0.50b4.post33+gbe1c80a8 documentation</title>
   
   
   
@@ -28,7 +28,6 @@
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
     <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
   
@@ -43,6 +42,7 @@
     <script src="../_static/doctools.js"></script>
     <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/design-tabs.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/query_iterators';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Molecules" href="molecule.html" />
@@ -349,7 +349,6 @@
 <li class="toctree-l1"><a class="reference internal" href="client_setup.html">QCPortal Installation &amp; Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connecting_qcportal.html">Connecting to a server</a></li>
 <li class="toctree-l1"><a class="reference internal" href="metadata.html">Interpreting metadata</a></li>
-
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Query Iterators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="molecule.html">Molecules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="record_retrieval.html">Retrieving records</a></li>
@@ -409,7 +408,7 @@ them.</p>
 <p>The reason for returning an iterator rather than a list is that an iterator will handle batching to the server. Since
 a query can return many items, they must be retrieved in batches. The iterator does this automatically, but does so
 incrementally as iteration continues.</p>
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">query_it</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">query_molecules</span><span class="p">(</span><span class="n">molecular_formula</span><span class="o">=</span><span class="s1">&#39;N2&#39;</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">query_it</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_molecules</span><span class="p">(</span><span class="n">molecular_formula</span><span class="o">=</span><span class="s1">&#39;N2&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">mol</span> <span class="ow">in</span> <span class="n">query_it</span><span class="p">:</span>
 <span class="gp">... </span>   <span class="nb">print</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">identifiers</span><span class="o">.</span><span class="n">molecular_formula</span><span class="p">)</span>
 <span class="go">371 N2</span>
@@ -418,7 +417,7 @@ incrementally as iteration continues.</p>
 </div>
 <p>If you need all items as a list, then you can use the <code class="docutils literal notranslate"><span class="pre">list</span></code> constructor, which will use the iterator to fill in the
 list. In this case, all the records will be fetched from the server as the list is being created.</p>
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">query_it</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">query_molecules</span><span class="p">(</span><span class="n">molecular_formula</span><span class="o">=</span><span class="s1">&#39;N2&#39;</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">query_it</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_molecules</span><span class="p">(</span><span class="n">molecular_formula</span><span class="o">=</span><span class="s1">&#39;N2&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">query_it</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mols</span><span class="p">))</span>
 <span class="go">621</span>

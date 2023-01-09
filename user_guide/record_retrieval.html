@@ -4,9 +4,9 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Retrieving records &#8212; QCArchive 0.50b4.post31+g11562beb documentation</title>
+    <title>Retrieving records &#8212; QCArchive 0.50b4.post33+gbe1c80a8 documentation</title>
   
   
   
@@ -28,7 +28,6 @@
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
     <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
   
@@ -42,7 +41,6 @@
     <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/tabs.js"></script>
     <script src="../_static/design-tabs.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/record_retrieval';</script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -351,7 +349,6 @@
 <li class="toctree-l1"><a class="reference internal" href="client_setup.html">QCPortal Installation &amp; Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connecting_qcportal.html">Connecting to a server</a></li>
 <li class="toctree-l1"><a class="reference internal" href="metadata.html">Interpreting metadata</a></li>
-
 <li class="toctree-l1"><a class="reference internal" href="query_iterators.html">Query Iterators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="molecule.html">Molecules</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Retrieving records</a></li>
@@ -412,13 +409,20 @@ not created by hand by the user, but retrieved from the server.</p>
 The first is through <code class="docutils literal notranslate"><span class="pre">get_</span></code> functions,  which is used to retrieve records by their ID.
 These functions (such as <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.get_records" title="qcportal.client.PortalClient.get_records"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_records()</span></code></a> and <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.get_singlepoints" title="qcportal.client.PortalClient.get_singlepoints"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_singlepoints()</span></code></a>)
 take a list or other sequence of IDs, and returns a list of records in the same order as the given IDs</p>
-<div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-0-0-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-0-0-0" name="0-0" role="tab" tabindex="0">QCPortal</button><button aria-controls="panel-0-0-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-0-0-1" name="0-1" role="tab" tabindex="-1">Raw API</button></div><div aria-labelledby="tab-0-0-0" class="sphinx-tabs-panel" id="panel-0-0-0" name="0-0" role="tabpanel" tabindex="0"><div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">records</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">get_records</span><span class="p">([</span><span class="mi">245</span><span class="p">,</span> <span class="mi">827</span><span class="p">])</span>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-0">
+QCPortal</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">records</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">([</span><span class="mi">245</span><span class="p">,</span> <span class="mi">827</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">records</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">records</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
 <span class="go">245 827</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-0-0-1" class="sphinx-tabs-panel" hidden="true" id="panel-0-0-1" name="0-1" role="tabpanel" tabindex="0"><div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">POST</span> <span class="nn">/api/v1/records/bulkGet</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</div>
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-1">
+Raw API</label><div class="sd-tab-content docutils">
+<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">POST</span> <span class="nn">/api/v1/records/bulkGet</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
 <span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
 <span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
 
@@ -455,15 +459,23 @@ take a list or other sequence of IDs, and returns a list of records in the same 
 <span class="p">]</span>
 </pre></div>
 </div>
-</div></div>
+</div>
+</div>
 <p>If a single ID is specified rather than a list, then just that record is returned (not a list)</p>
-<div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-1-1-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-1-1-0" name="1-0" role="tab" tabindex="0">QCPortal</button><button aria-controls="panel-1-1-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-1-1-1" name="1-1" role="tab" tabindex="-1">Raw API</button></div><div aria-labelledby="tab-1-1-0" class="sphinx-tabs-panel" id="panel-1-1-0" name="1-0" role="tabpanel" tabindex="0"><div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">records</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">245</span><span class="p">)</span>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-2" name="sd-tab-set-1" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-2">
+QCPortal</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">records</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">245</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">records</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
 <span class="go">245</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-1-1-1" class="sphinx-tabs-panel" hidden="true" id="panel-1-1-1" name="1-1" role="tabpanel" tabindex="0"><div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">GET</span> <span class="nn">/api/v1/records/245</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</div>
+<input id="sd-tab-item-3" name="sd-tab-set-1" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-3">
+Raw API</label><div class="sd-tab-content docutils">
+<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">GET</span> <span class="nn">/api/v1/records/245</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
 <span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
 </pre></div>
 </div>
@@ -481,16 +493,24 @@ take a list or other sequence of IDs, and returns a list of records in the same 
 <span class="p">}</span>
 </pre></div>
 </div>
-</div></div>
+</div>
+</div>
 <p>If a record is not found, then an exception is raised. This can be suppressed with <code class="docutils literal notranslate"><span class="pre">missing_ok=True</span></code>, in which
 case missing records are returned as <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
-<div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-2-2-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-2-2-0" name="2-0" role="tab" tabindex="0">QCPortal</button><button aria-controls="panel-2-2-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-2-2-1" name="2-1" role="tab" tabindex="-1">Raw API (bulk)</button></div><div aria-labelledby="tab-2-2-0" class="sphinx-tabs-panel" id="panel-2-2-0" name="2-0" role="tabpanel" tabindex="0"><div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">records</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">get_records</span><span class="p">([</span><span class="mi">245</span><span class="p">,</span> <span class="mi">9999999</span><span class="p">,</span> <span class="mi">827</span><span class="p">])</span>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-4" name="sd-tab-set-2" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-4">
+QCPortal</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">records</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">([</span><span class="mi">245</span><span class="p">,</span> <span class="mi">9999999</span><span class="p">,</span> <span class="mi">827</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">records</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 <span class="go">None</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-2-2-1" class="sphinx-tabs-panel" hidden="true" id="panel-2-2-1" name="2-1" role="tabpanel" tabindex="0"><div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">POST</span> <span class="nn">/api/v1/records/bulkGet</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</div>
+<input id="sd-tab-item-5" name="sd-tab-set-2" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-5">
+Raw API (bulk)</label><div class="sd-tab-content docutils">
+<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">POST</span> <span class="nn">/api/v1/records/bulkGet</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
 <span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
 <span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
 
@@ -528,7 +548,8 @@ case missing records are returned as <code class="docutils literal notranslate">
 <span class="p">]</span>
 </pre></div>
 </div>
-</div></div>
+</div>
+</div>
 <section id="querying">
 <h2>Querying<a class="headerlink" href="#querying" title="Permalink to this heading">#</a></h2>
 <p>The second way of retrieving records is by querying the server using <code class="docutils literal notranslate"><span class="pre">query_</span></code> functions
@@ -543,8 +564,11 @@ and the order may be different even with repeated calls with the same arguments<
 <p>Query functions return an <a class="reference internal" href="query_iterators.html"><span class="doc">iterator</span></a> object.
 This iterator handles transparent and efficient fetching from the server in
 batches, especially when many records may be returned by a query</p>
-<div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-3-3-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-3-3-0" name="3-0" role="tab" tabindex="0">QCPortal</button></div><div aria-labelledby="tab-3-3-0" class="sphinx-tabs-panel" id="panel-3-3-0" name="3-0" role="tabpanel" tabindex="0"><div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">record_it</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">query_records</span><span class="p">(</span><span class="n">record_type</span><span class="o">=</span><span class="s1">&#39;singlepoint&#39;</span><span class="p">,</span> <span class="n">created_before</span><span class="o">=</span><span class="s1">&#39;2021-02-01&#39;</span><span class="p">)</span>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-6" name="sd-tab-set-3" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-6">
+QCPortal</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">record_it</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_records</span><span class="p">(</span><span class="n">record_type</span><span class="o">=</span><span class="s1">&#39;singlepoint&#39;</span><span class="p">,</span> <span class="n">created_before</span><span class="o">=</span><span class="s1">&#39;2021-02-01&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">record_it</span><span class="p">:</span>
 <span class="gp">... </span>   <span class="nb">print</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
 <span class="go">114296306</span>
@@ -553,13 +577,17 @@ batches, especially when many records may be returned by a query</p>
 <span class="go">  ...</span>
 </pre></div>
 </div>
-</div></div>
+</div>
+</div>
 <p>Records that are returned must match all query parameters.
 Query functions can take lists or iterables for most parameters as well, in which case records that match
 any within the list will be returned. For example, the following finds errored or complete records
 that were recently modified</p>
-<div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-4-4-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-4-4-0" name="4-0" role="tab" tabindex="0">QCPortal</button></div><div aria-labelledby="tab-4-4-0" class="sphinx-tabs-panel" id="panel-4-4-0" name="4-0" role="tabpanel" tabindex="0"><div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">record_it</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">query_records</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;complete&#39;</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">],</span> <span class="n">modified_after</span><span class="o">=</span><span class="s1">&#39;2022-12-01&#39;</span><span class="p">)</span>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-7" name="sd-tab-set-4" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-7">
+QCPortal</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">record_it</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_records</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;complete&#39;</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">],</span> <span class="n">modified_after</span><span class="o">=</span><span class="s1">&#39;2022-12-01&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">record_it</span><span class="p">:</span>
 <span class="gp">... </span>   <span class="nb">print</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
 <span class="go">81798273</span>
@@ -567,7 +595,8 @@ that were recently modified</p>
 <span class="go">  ...</span>
 </pre></div>
 </div>
-</div></div>
+</div>
+</div>
 <p>Query functions for different records types (such as <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.query_singlepoints" title="qcportal.client.PortalClient.query_singlepoints"><code class="xref py py-func docutils literal notranslate"><span class="pre">query_singlepoints()</span></code></a>)
 take more parameters that are specific to that computation (such as basis set for singlepoints, initial molecule for
 optimizations, etc).</p>
