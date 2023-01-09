@@ -1,5 +1,5 @@
 Interpreting metadata
----------------------
+=====================
 
 Many client functions return metadata. This class includes information about what objects records were created or
 already existing on the server, or which objects were deleted, modified, or had errors.

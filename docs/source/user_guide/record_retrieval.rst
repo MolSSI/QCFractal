@@ -17,7 +17,7 @@ take a list or other sequence of IDs, and returns a list of records in the same 
 
     .. code-block:: py3
 
-      >>> records = c.get_records([245, 827])
+      >>> records = client.get_records([245, 827])
       >>> print(records[0].id, records[1].id)
       245 827
 
@@ -72,7 +72,7 @@ If a single ID is specified rather than a list, then just that record is returne
 
     .. code-block:: py3
 
-      >>> records = c.get_records(245)
+      >>> records = client.get_records(245)
       >>> print(records.id)
       245
 
@@ -110,7 +110,7 @@ case missing records are returned as ``None``
 
     .. code-block:: py3
 
-      >>> records = c.get_records([245, 9999999, 827])
+      >>> records = client.get_records([245, 9999999, 827])
       >>> print(records[1])
       None
 
@@ -157,8 +157,8 @@ case missing records are returned as ``None``
         }
       ]
 
-Querying
-~~~~~~~~
+Querying records
+----------------
 
 The second way of retrieving records is by querying the server using ``query_`` functions
 (:func:`~qcportal.client.PortalClient.query_records`, :func:`~qcportal.client.PortalClient.query_singlepoints`, etc).
@@ -180,7 +180,7 @@ batches, especially when many records may be returned by a query
 
     .. code-block:: py3
 
-      >>> record_it = c.query_records(record_type='singlepoint', created_before='2021-02-01')
+      >>> record_it = client.query_records(record_type='singlepoint', created_before='2021-02-01')
       >>> for record in record_it:
       ...    print(record.id)
       114296306
@@ -199,7 +199,7 @@ that were recently modified
 
     .. code-block:: py3
 
-      >>> record_it = c.query_records(status=['complete', 'error'], modified_after='2022-12-01')
+      >>> record_it = client.query_records(status=['complete', 'error'], modified_after='2022-12-01')
       >>> for record in record_it:
       ...    print(record.id)
       81798273
