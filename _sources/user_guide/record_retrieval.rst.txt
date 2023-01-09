@@ -157,8 +157,8 @@ case missing records are returned as ``None``
         }
       ]
 
-Querying
-~~~~~~~~
+Querying records
+----------------
 
 The second way of retrieving records is by querying the server using ``query_`` functions
 (:func:`~qcportal.client.PortalClient.query_records`, :func:`~qcportal.client.PortalClient.query_singlepoints`, etc).
