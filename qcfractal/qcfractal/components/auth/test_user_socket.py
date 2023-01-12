@@ -48,6 +48,42 @@ def test_user_socket_add_get(storage_socket: SQLAlchemySocket):
     assert uinfo2 == uinfo3
 
 
+def test_user_socket_assert_group_membership(storage_socket: SQLAlchemySocket):
+    storage_socket.groups.add(GroupInfo(groupname="group1"))
+    storage_socket.groups.add(GroupInfo(groupname="group2"))
+    storage_socket.groups.add(GroupInfo(groupname="group3"))
+
+    uinfo = UserInfo(
+        username="george",
+        role="read",
+        groups=["group1", "group2"],
+        enabled=True,
+    )
+
+    storage_socket.users.add(uinfo)
+
+    # The initial userinfo doesn't contain the id
+    uinfo2 = storage_socket.users.get("george")
+    uid = uinfo2["id"]
+
+    # Test assert_group_member
+    group1_id = storage_socket.groups.get("group1")["id"]
+    group2_id = storage_socket.groups.get("group2")["id"]
+    group3_id = storage_socket.groups.get("group3")["id"]
+
+    storage_socket.users.assert_group_member(uid, group1_id)
+    storage_socket.users.assert_group_member(uid, group2_id)
+
+    with pytest.raises(AuthenticationFailure, match="does not belong to group"):
+        storage_socket.users.assert_group_member(uid, group3_id)
+
+    storage_socket.users.assert_group_member(None, None)
+    storage_socket.users.assert_group_member(uid, None)
+
+    with pytest.raises(AuthenticationFailure, match="cannot belong to group"):
+        storage_socket.users.assert_group_member(None, group3_id)
+
+
 def test_user_socket_add_duplicate(storage_socket: SQLAlchemySocket):
     uinfo = UserInfo(
         username="george",

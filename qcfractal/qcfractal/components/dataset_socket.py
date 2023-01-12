@@ -314,6 +314,10 @@ class BaseDatasetSocket:
         )
 
         with self.root_socket.optional_session(session) as session:
+
+            user_id, group_id = self.root_socket.users.get_owner_ids(owner_user, owner_group)
+            self.root_socket.users.assert_group_member(user_id, group_id, session=session)
+
             stmt = select(self.dataset_orm.id)
             stmt = stmt.where(self.dataset_orm.lname == name.lower())
             stmt = stmt.where(self.dataset_orm.dataset_type == self.dataset_type)
@@ -322,7 +326,6 @@ class BaseDatasetSocket:
             if existing is not None:
                 raise AlreadyExistsError(f"Dataset with type='{self.dataset_type}' and name='{name}' already exists")
 
-            user_id, group_id = self.root_socket.users.get_owner_ids(owner_user, owner_group)
             ds_orm.owner_user_id = user_id
             ds_orm.owner_group_id = group_id
 

@@ -527,6 +527,9 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         tag = tag.lower()
 
         with self.root_socket.optional_session(session, False) as session:
+
+            self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
+
             td_ids = []
             inserted_idx = []
             existing_idx = []

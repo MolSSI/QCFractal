@@ -10,7 +10,7 @@ from sqlalchemy.sql import select
 
 from qcportal.auth import UserInfo, is_valid_password, is_valid_username, AuthTypeEnum
 from qcportal.exceptions import AuthenticationFailure, UserManagementError
-from .db_models import UserORM
+from .db_models import UserORM, UserGroupORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -379,3 +379,28 @@ class UserSocket:
                     raise UserManagementError(f"User {username_or_id} is not part of group {groupname_or_id}")
 
             return user.id, group_id
+
+    def assert_group_member(
+        self, user_id: Optional[int], group_id: Optional[int], *, session: Optional[Session] = None
+    ):
+
+        # No user and group - ok
+        if user_id is None and group_id is None:
+            return
+
+        # User but no group - ok
+        if user_id is not None and group_id is None:
+            return
+
+        # No user but group specified - not ok
+        if user_id is None and group_id is not None:
+            raise AuthenticationFailure(f"No user specified, so cannot belong to group (id={group_id})")
+
+        stmt = select(UserGroupORM)
+        stmt = stmt.where(UserGroupORM.user_id == user_id)
+        stmt = stmt.where(UserGroupORM.group_id == group_id)
+
+        with self.root_socket.optional_session(session, True) as session:
+            r = session.execute(stmt).scalar_one_or_none()
+            if r is None:
+                raise AuthenticationFailure(f"User (id={user_id}) does not belong to group (id={group_id})")

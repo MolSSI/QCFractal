@@ -599,6 +599,8 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
 
         with self.root_socket.optional_session(session, False) as session:
 
+            self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
+
             all_orm = []
             for mid in initial_molecule_ids:
                 go_orm = GridoptimizationRecordORM(

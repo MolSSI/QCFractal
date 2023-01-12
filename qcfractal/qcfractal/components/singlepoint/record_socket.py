@@ -323,6 +323,8 @@ class SinglepointRecordSocket(BaseRecordSocket):
 
         with self.root_socket.optional_session(session, False) as session:
 
+            self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
+
             # Get the spec orm. The full orm will be needed for create_task
             stmt = select(QCSpecificationORM).where(QCSpecificationORM.id == qc_spec_id)
             spec_orm = session.execute(stmt).scalar_one()
