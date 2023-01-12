@@ -82,8 +82,8 @@ html_theme_options = {
 	"github_url": "https://github.com/MolSSI/QCFractal",
 
 	"logo": {
-      "image_light": "molssi_main_logo.png",
-      "image_dark": "molssi_main_logo_inverted_white.png",
+      "image_light": "qcarchive_logo.svg",
+      "image_dark": "qcarchive_logo_inverted.svg",
     },
 	"show_toc_level": 2,
 	"header_links_before_dropdown": 4,
