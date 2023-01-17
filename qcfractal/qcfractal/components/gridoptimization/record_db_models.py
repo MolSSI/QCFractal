@@ -80,12 +80,6 @@ class GridoptimizationSpecificationORM(BaseORM):
         exclude = self.append_exclude(exclude, "id", "keywords_hash", "optimization_specification_id")
         return BaseORM.model_dict(self, exclude)
 
-    @property
-    def required_programs(self) -> Dict[str, Optional[str]]:
-        r = {self.program: None}
-        r.update(self.optimization_specification.required_programs)
-        return r
-
 
 class GridoptimizationRecordORM(BaseRecordORM):
     """
@@ -120,7 +114,3 @@ class GridoptimizationRecordORM(BaseRecordORM):
         # Remove fields not present in the model
         exclude = self.append_exclude(exclude, "specification_id")
         return BaseRecordORM.model_dict(self, exclude)
-
-    @property
-    def required_programs(self) -> Dict[str, Optional[str]]:
-        return self.specification.required_programs

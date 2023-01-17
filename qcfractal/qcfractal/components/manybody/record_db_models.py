@@ -88,10 +88,6 @@ class ManybodySpecificationORM(BaseORM):
         exclude = self.append_exclude(exclude, "id", "keywords_hash", "singlepoint_specification_id")
         return BaseORM.model_dict(self, exclude)
 
-    @property
-    def required_programs(self) -> Dict[str, Optional[str]]:
-        return self.singlepoint_specification.required_programs
-
 
 class ManybodyRecordORM(BaseRecordORM):
     """
@@ -122,7 +118,3 @@ class ManybodyRecordORM(BaseRecordORM):
         # Remove fields not present in the model
         exclude = self.append_exclude(exclude, "specification_id")
         return BaseRecordORM.model_dict(self, exclude)
-
-    @property
-    def required_programs(self) -> Dict[str, Optional[str]]:
-        return self.specification.required_programs

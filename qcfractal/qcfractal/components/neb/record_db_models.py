@@ -87,12 +87,6 @@ class NEBSpecificationORM(BaseORM):
         exclude = self.append_exclude(exclude, "id", "keywords_hash", "singlepoint_specification_id")
         return BaseORM.model_dict(self, exclude)
 
-    @property
-    def required_programs(self) -> Dict[str, Optional[str]]:
-        r = {self.program: None}
-        r.update(self.singlepoint_specification.required_programs)
-        return r
-
 
 class NEBRecordORM(BaseRecordORM):
 
@@ -130,7 +124,3 @@ class NEBRecordORM(BaseRecordORM):
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         exclude = self.append_exclude(exclude, "specification_id")
         return BaseRecordORM.model_dict(self, exclude)
-
-    @property
-    def required_programs(self) -> Dict[str, Optional[str]]:
-        return self.specification.required_programs

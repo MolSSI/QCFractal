@@ -119,7 +119,3 @@ class ReactionRecordORM(BaseRecordORM):
         # Remove fields not present in the model
         exclude = self.append_exclude(exclude, "specification_id")
         return BaseRecordORM.model_dict(self, exclude)
-
-    @property
-    def required_programs(self) -> Dict[str, Optional[str]]:
-        return self.specification.required_programs
