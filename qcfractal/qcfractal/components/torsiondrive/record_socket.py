@@ -84,7 +84,6 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
 
     # Used by the base class
     record_orm = TorsiondriveRecordORM
-    specification_orm = TorsiondriveSpecificationORM
 
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseRecordSocket.__init__(self, root_socket)

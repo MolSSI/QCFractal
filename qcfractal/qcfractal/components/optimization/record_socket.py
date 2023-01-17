@@ -41,7 +41,6 @@ class OptimizationRecordSocket(BaseRecordSocket):
 
     # Used by the base class
     record_orm = OptimizationRecordORM
-    specification_orm = OptimizationSpecificationORM
 
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseRecordSocket.__init__(self, root_socket)

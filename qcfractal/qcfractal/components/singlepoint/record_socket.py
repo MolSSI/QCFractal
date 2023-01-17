@@ -60,7 +60,6 @@ class SinglepointRecordSocket(BaseRecordSocket):
 
     # Used by the base class
     record_orm = SinglepointRecordORM
-    specification_orm = QCSpecificationORM
 
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseRecordSocket.__init__(self, root_socket)

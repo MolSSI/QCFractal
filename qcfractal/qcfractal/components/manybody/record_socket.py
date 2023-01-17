@@ -188,7 +188,6 @@ class ManybodyRecordSocket(BaseRecordSocket):
 
     # Used by the base class
     record_orm = ManybodyRecordORM
-    specification_orm = QCSpecificationORM
 
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseRecordSocket.__init__(self, root_socket)

@@ -103,14 +103,12 @@ class BaseRecordSocket:
 
     # Must be overridden by derived classes
     record_orm: Optional[Type[BaseRecordORM]] = None
-    specification_orm: Optional[Type[BaseORM]] = None
 
     def __init__(self, root_socket: SQLAlchemySocket):
         self.root_socket = root_socket
 
         # Make sure these were set by the derived classes
         assert self.record_orm is not None
-        assert self.specification_orm is not None
 
     @staticmethod
     def get_children_select() -> List[Any]:

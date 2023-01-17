@@ -36,7 +36,6 @@ class ReactionRecordSocket(BaseRecordSocket):
 
     # Used by the base class
     record_orm = ReactionRecordORM
-    specification_orm = ReactionSpecificationORM
 
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseRecordSocket.__init__(self, root_socket)
