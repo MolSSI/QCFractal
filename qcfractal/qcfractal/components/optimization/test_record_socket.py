@@ -27,7 +27,9 @@ if TYPE_CHECKING:
 
 
 @pytest.mark.parametrize("spec", test_specs)
-def test_optimization_socket_task_spec(storage_socket: SQLAlchemySocket, spec: OptimizationSpecification):
+def test_optimization_socket_task_spec(
+    storage_socket: SQLAlchemySocket, spec: OptimizationSpecification, activated_manager_name: ManagerName
+):
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
     ne4 = load_molecule_data("neon_tetramer")
@@ -38,26 +40,7 @@ def test_optimization_socket_task_spec(storage_socket: SQLAlchemySocket, spec: O
     time_1 = datetime.utcnow()
     assert meta.success
 
-    mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
-    storage_socket.managers.activate(
-        name_data=mname1,
-        manager_version="v2.0",
-        username="bill",
-        programs={
-            "qcengine": None,
-            "qcengine": None,
-            "optprog1": None,
-            "optprog2": None,
-            "optprog3": None,
-            "optprog4": None,
-            "prog1": None,
-            "prog2": "v3.0",
-            "prog3": None,
-            "prog4": None,
-        },
-        tags=["*"],
-    )
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
+    tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname)
 
     assert len(tasks) == 3
     for t in tasks:

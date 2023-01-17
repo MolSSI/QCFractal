@@ -211,6 +211,10 @@ def activated_manager_name(storage_socket: SQLAlchemySocket) -> ManagerName:
             "prog2": None,
             "prog3": None,
             "prog4": None,
+            "optprog1": None,
+            "optprog2": None,
+            "optprog3": None,
+            "optprog4": None,
         },
         tags=["*"],
     )
