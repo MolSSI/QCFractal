@@ -29,12 +29,12 @@ class FireworksAdapter(BaseAdapter):
     def _submit_task(self, task_spec: Dict[str, Any]) -> Tuple[Hashable, Any]:
         import fireworks
 
-        kwargs = task_spec["spec"]["kwargs"]
+        kwargs = task_spec["function_kwargs"]
         kwargs["return_dict"] = True
         fw = fireworks.Firework(
             fireworks.PyTask(
-                func=task_spec["spec"]["function"],
-                args=task_spec["spec"]["args"],
+                func=task_spec["function"],
+                args=[],
                 kwargs=kwargs,
                 stored_data_varname="fw_results",
             ),

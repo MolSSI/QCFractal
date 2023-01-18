@@ -72,8 +72,8 @@ class ParslAdapter(BaseAdapter):
     def _submit_task(self, task_spec: Dict[str, Any]) -> Tuple[Hashable, Any]:
 
         # Form run tuple
-        func = self.get_app(task_spec["spec"]["function"])
-        task = func(*task_spec["spec"]["args"], **task_spec["spec"]["kwargs"])
+        func = self.get_app(task_spec["function"])
+        task = func(**task_spec["function_kwargs"])
         return task_spec["id"], task
 
     def count_active_task_slots(self) -> int:

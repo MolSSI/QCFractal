@@ -719,9 +719,9 @@ class ComputeManager:
                 task = json.loads(task_base)
                 program_id = program + str(x)
                 task["id"] = program_id
-                task["spec"]["args"][0]["model"] = model
-                task["spec"]["args"][0]["keywords"] = {"e_convergence": (x * 1.0e-6 + 1.0e-6)}
-                task["spec"]["args"][1] = program
+                task["function_kwargs"]["program"] = program
+                task["function_kwargs"]["input_data"]["model"] = model
+                task["function_kwargs"]["input_data"]["keywords"] = {"e_convergence": (x * 1.0e-6 + 1.0e-6)}
 
                 tasks.append(task)
                 found_programs.append(program_id)

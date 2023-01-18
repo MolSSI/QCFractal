@@ -153,10 +153,10 @@ class BaseAdapter(abc.ABC):
                 continue
 
             # Trap QCEngine Memory and CPU
-            if task_spec["spec"]["function"].startswith("qcengine.compute") and self.qcengine_local_options:
+            if task_spec["function"].startswith("qcengine.compute") and self.qcengine_local_options:
                 task_spec = task_spec.copy()  # Copy for safety
-                task_spec["spec"]["kwargs"] = {
-                    **task_spec["spec"]["kwargs"],
+                task_spec["function_kwargs"] = {
+                    **task_spec["function_kwargs"],
                     **{"local_options": self.qcengine_local_options},
                 }
 

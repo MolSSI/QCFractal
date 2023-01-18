@@ -89,8 +89,10 @@ class SinglepointRecordSocket(BaseRecordSocket):
 
         return {
             "function": "qcengine.compute",
-            "args": [qcschema_input.dict(), specification.program],
-            "kwargs": {},
+            "function_kwargs": {
+                "input_data": qcschema_input.dict(encoding="json"),
+                "program": specification.program,
+            },
         }
 
     def update_completed_task(

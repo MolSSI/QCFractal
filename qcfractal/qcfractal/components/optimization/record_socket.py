@@ -77,10 +77,14 @@ class OptimizationRecordSocket(BaseRecordSocket):
             protocols=specification.protocols,
         )
 
+        # Note that the 'program' that runs an optimization is
+        # called a 'procedure' in QCEngine
         return {
             "function": "qcengine.compute_procedure",
-            "args": [qcschema_input.dict(), specification.program],
-            "kwargs": {},
+            "function_kwargs": {
+                "input_data": qcschema_input.dict(encoding="json"),
+                "procedure": specification.program,
+            },
         }
 
     def update_completed_task(

@@ -1,11 +1,11 @@
 import datetime
 
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Index, CheckConstraint, UniqueConstraint
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Index, CheckConstraint, UniqueConstraint, JSON
 from sqlalchemy.dialects.postgresql import ARRAY, TEXT
 from sqlalchemy.orm import relationship
 
 from qcfractal.components.record_db_models import BaseRecordORM
-from qcfractal.db_socket import BaseORM, MsgpackExt
+from qcfractal.db_socket import BaseORM
 
 
 class TaskQueueORM(BaseORM):
@@ -17,7 +17,8 @@ class TaskQueueORM(BaseORM):
 
     id = Column(Integer, primary_key=True)
 
-    spec = Column(MsgpackExt, nullable=True)
+    function = Column(String, nullable=True)
+    function_kwargs = Column(JSON, nullable=True)
 
     # For some reason, this can't be array of varchar. If it is, the comparisons
     # when claiming tasks don't work

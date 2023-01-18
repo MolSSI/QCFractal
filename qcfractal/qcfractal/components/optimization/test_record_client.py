@@ -76,7 +76,8 @@ def test_optimization_client_add_get(
         assert r.raw_data.record_type == "optimization"
         assert compare_optimization_specs(spec, r.raw_data.specification)
 
-        assert r.task.spec is None
+        assert r.task.function is None
+        assert r.task.function_kwargs is None
         assert r.raw_data.task.tag == "tag1"
         assert r.raw_data.task.priority == PriorityEnum.low
 

@@ -30,7 +30,6 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from sqlalchemy.sql import Select
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from qcfractal.db_socket.base_orm import BaseORM
     from qcportal.all_results import AllResultTypes
     from qcportal.record_models import RecordQueryFilters
     from typing import List, Dict, Tuple, Optional, Sequence, Any, Iterable, Type
@@ -601,9 +600,12 @@ class RecordSocket:
         """
 
         for t in task_orm:
-            if t.spec is None:
+            if t.function is None:
                 record_type = t.record.record_type
-                t.spec = self._handler_map[record_type].generate_task_specification(t.record)
+                spec = self._handler_map[record_type].generate_task_specification(t.record)
+
+                t.function = spec["function"]
+                t.function_kwargs = spec["function_kwargs"]
 
     def update_completed_task(
         self, session: Session, record_orm: BaseRecordORM, result: AllResultTypes, manager_name: str

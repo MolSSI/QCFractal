@@ -44,23 +44,24 @@ def test_optimization_socket_task_spec(
 
     assert len(tasks) == 3
     for t in tasks:
-        task_spec = t["spec"]["args"][0]
-        assert t["spec"]["args"][1] == spec.program
+        assert t["function"] == "qcengine.compute_procedure"
+        assert t["function_kwargs"]["procedure"] == spec.program
 
         kw_with_prog = spec.keywords.copy()
         kw_with_prog["program"] = spec.qc_specification.program
 
-        assert task_spec["keywords"] == kw_with_prog
-        assert task_spec["protocols"] == spec.protocols.dict(exclude_defaults=True)
+        task_input = t["function_kwargs"]["input_data"]
+        assert task_input["keywords"] == kw_with_prog
+        assert task_input["protocols"] == spec.protocols.dict(exclude_defaults=True)
 
         # Forced to gradient in the qcschema input
-        assert task_spec["input_specification"]["driver"] == SinglepointDriver.gradient
-        assert task_spec["input_specification"]["model"] == {
+        assert task_input["input_specification"]["driver"] == SinglepointDriver.gradient
+        assert task_input["input_specification"]["model"] == {
             "method": spec.qc_specification.method,
             "basis": spec.qc_specification.basis,
         }
 
-        assert task_spec["input_specification"]["keywords"] == spec.qc_specification.keywords
+        assert task_input["input_specification"]["keywords"] == spec.qc_specification.keywords
 
         assert t["tag"] == "tag1"
         assert t["priority"] == PriorityEnum.low
@@ -73,9 +74,18 @@ def test_optimization_socket_task_spec(
         id[2]: all_mols[2],
     }
 
-    assert Molecule(**tasks[0]["spec"]["args"][0]["initial_molecule"]) == rec_id_mol_map[tasks[0]["record_id"]]
-    assert Molecule(**tasks[1]["spec"]["args"][0]["initial_molecule"]) == rec_id_mol_map[tasks[1]["record_id"]]
-    assert Molecule(**tasks[2]["spec"]["args"][0]["initial_molecule"]) == rec_id_mol_map[tasks[2]["record_id"]]
+    assert (
+        Molecule(**tasks[0]["function_kwargs"]["input_data"]["initial_molecule"])
+        == rec_id_mol_map[tasks[0]["record_id"]]
+    )
+    assert (
+        Molecule(**tasks[1]["function_kwargs"]["input_data"]["initial_molecule"])
+        == rec_id_mol_map[tasks[1]["record_id"]]
+    )
+    assert (
+        Molecule(**tasks[2]["function_kwargs"]["input_data"]["initial_molecule"])
+        == rec_id_mol_map[tasks[2]["record_id"]]
+    )
 
 
 def test_optimization_socket_add_same_1(storage_socket: SQLAlchemySocket):

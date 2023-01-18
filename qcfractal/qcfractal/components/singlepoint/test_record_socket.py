@@ -46,10 +46,10 @@ def test_singlepoint_socket_task_spec(
 
     assert len(tasks) == 3
     for t in tasks:
-        assert t["spec"]["args"][0]["model"] == {"method": spec.method, "basis": spec.basis}
-        assert t["spec"]["args"][0]["protocols"] == spec.protocols.dict(exclude_defaults=True)
-        assert t["spec"]["args"][0]["keywords"] == spec.keywords
-        assert t["spec"]["args"][1] == spec.program
+        assert t["function_kwargs"]["input_data"]["model"] == {"method": spec.method, "basis": spec.basis}
+        assert t["function_kwargs"]["input_data"]["protocols"] == spec.protocols.dict(exclude_defaults=True)
+        assert t["function_kwargs"]["input_data"]["keywords"] == spec.keywords
+        assert t["function_kwargs"]["program"] == spec.program
         assert t["tag"] == "tag1"
         assert t["priority"] == PriorityEnum.low
         assert time_0 < t["created_on"] < time_1
@@ -60,9 +60,9 @@ def test_singlepoint_socket_task_spec(
         id[2]: all_mols[2],
     }
 
-    assert Molecule(**tasks[0]["spec"]["args"][0]["molecule"]) == rec_id_mol_map[tasks[0]["record_id"]]
-    assert Molecule(**tasks[1]["spec"]["args"][0]["molecule"]) == rec_id_mol_map[tasks[1]["record_id"]]
-    assert Molecule(**tasks[2]["spec"]["args"][0]["molecule"]) == rec_id_mol_map[tasks[2]["record_id"]]
+    assert Molecule(**tasks[0]["function_kwargs"]["input_data"]["molecule"]) == rec_id_mol_map[tasks[0]["record_id"]]
+    assert Molecule(**tasks[1]["function_kwargs"]["input_data"]["molecule"]) == rec_id_mol_map[tasks[1]["record_id"]]
+    assert Molecule(**tasks[2]["function_kwargs"]["input_data"]["molecule"]) == rec_id_mol_map[tasks[2]["record_id"]]
 
 
 def test_singlepoint_socket_add_same_1(storage_socket: SQLAlchemySocket):
