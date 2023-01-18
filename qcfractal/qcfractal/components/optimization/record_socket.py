@@ -13,7 +13,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import contains_eager
 
 from qcfractal.components.record_socket import BaseRecordSocket
-from qcfractal.components.singlepoint.record_db_models import SinglepointRecordORM, QCSpecificationORM
+from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
 from qcfractal.db_socket.helpers import insert_general
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
@@ -68,6 +68,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
         opt_keywords["program"] = specification.qc_specification.program
 
         qcschema_input = QCEl_OptimizationInput(
+            id=record_orm.id,
             input_specification=QCEl_QCInputSpecification(
                 model=model, keywords=specification.qc_specification.keywords
             ),

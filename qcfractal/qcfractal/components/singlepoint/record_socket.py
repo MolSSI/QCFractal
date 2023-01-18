@@ -79,6 +79,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
             model["basis"] = specification.basis
 
         qcschema_input = QCEl_AtomicInput(
+            id=record_orm.id,
             driver=specification.driver,
             model=model,
             molecule=molecule,
