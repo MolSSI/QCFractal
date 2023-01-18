@@ -103,14 +103,6 @@ class OptimizationRecordSocket(BaseRecordSocket):
         record_orm.energies = result.energies
         record_orm.extras = result.extras
 
-    def insert_complete_record(
-        self,
-        session: Session,
-        result: QCEl_OptimizationResult,
-    ) -> SinglepointRecordORM:
-
-        raise RuntimeError("Not yet implemented")
-
     def add_specification(
         self, opt_spec: OptimizationSpecification, *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, int]:

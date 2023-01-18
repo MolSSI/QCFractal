@@ -252,11 +252,3 @@ class BaseRecordORM(BaseORM):
         d["owner_group"] = self.owner_group.groupname if self.owner_group is not None else None
 
         return d
-
-    @property
-    def required_programs(self) -> Dict[str, Optional[str]]:
-        """
-        Obtain a dictionary of required programs and versions
-        """
-
-        raise RuntimeError("Developer error - cannot create task for base record")
