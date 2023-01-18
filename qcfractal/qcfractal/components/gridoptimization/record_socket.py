@@ -669,7 +669,9 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
 
         with self.root_socket.optional_session(session, False) as session:
 
-            user_id, group_id = self.root_socket.users.get_owner_ids(owner_user, owner_group, session=session)
+            owner_user_id, owner_group_id = self.root_socket.users.get_owner_ids(
+                owner_user, owner_group, session=session
+            )
 
             # First, add the specification
             spec_meta, spec_id = self.add_specification(go_spec, session=session)
@@ -689,4 +691,6 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                     [],
                 )
 
-            return self.add_internal(init_mol_ids, spec_id, tag, priority, user_id, group_id, session=session)
+            return self.add_internal(
+                init_mol_ids, spec_id, tag, priority, owner_user_id, owner_group_id, session=session
+            )

@@ -645,7 +645,9 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
 
         with self.root_socket.optional_session(session, False) as session:
 
-            user_id, group_id = self.root_socket.users.get_owner_ids(owner_user, owner_group, session=session)
+            owner_user_id, owner_group_id = self.root_socket.users.get_owner_ids(
+                owner_user, owner_group, session=session
+            )
 
             # First, add the specification
             spec_meta, spec_id = self.add_specification(td_spec, session=session)
@@ -672,7 +674,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                 init_mol_ids.append(mol_ids)
 
             return self.add_internal(
-                init_mol_ids, spec_id, as_service, tag, priority, user_id, group_id, session=session
+                init_mol_ids, spec_id, as_service, tag, priority, owner_user_id, owner_group_id, session=session
             )
 
     def get_minimum_optimizations(
