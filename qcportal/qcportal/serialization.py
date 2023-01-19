@@ -85,3 +85,17 @@ def serialize(data, content_type: str) -> str:
         return json.dumps(data, cls=_JSONEncoder)
     else:
         raise RuntimeError(f"Unknown content type for serialization: {content_type}")
+
+
+def convert_numpy_recursive(obj, flatten=False):
+    if isinstance(obj, dict):
+        return {k: convert_numpy_recursive(v, flatten) for k, v in obj.items()}
+    elif isinstance(obj, (list, tuple, set)):
+        return [convert_numpy_recursive(v, flatten) for v in obj]
+    elif isinstance(obj, np.ndarray):
+        if obj.shape and flatten:
+            return obj.ravel().tolist()
+        else:
+            return obj.tolist()
+    else:
+        return obj
