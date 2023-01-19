@@ -6,6 +6,7 @@ from typing import Optional, Iterable, Dict, Any
 from sqlalchemy import (
     Column,
     Integer,
+    JSON,
     ForeignKey,
     String,
     DateTime,
@@ -74,3 +75,29 @@ class ServiceQueueORM(BaseORM):
         Index("ix_service_queue_waiting_sort", priority.desc(), created_on),
         CheckConstraint("tag = LOWER(tag)", name="ck_service_queue_tag_lower"),
     )
+
+
+class ServiceSubtaskRecordORM(BaseRecordORM):
+    """
+    Table for storing records associated with service iterations
+    """
+
+    __tablename__ = "service_subtask_record"
+
+    id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="cascade"), primary_key=True)
+
+    # In other records, required_programs is a property. But here, it's basically
+    # specified by whoever creates the record, so it's a column
+    required_programs = Column(JSON, nullable=False)
+
+    function = Column(String, nullable=False)
+    function_kwargs = Column(JSON, nullable=False)
+
+    results = Column(JSON, nullable=True)
+
+    # We need the inherit_condition because we have two foreign keys to the BaseRecordORM and
+    # we need to disambiguate
+    __mapper_args__ = {
+        "polymorphic_identity": "servicesubtask",
+        "inherit_condition": (id == BaseRecordORM.id),
+    }

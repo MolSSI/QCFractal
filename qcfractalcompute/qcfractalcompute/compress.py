@@ -6,13 +6,14 @@ from typing import Union, Dict, Any
 
 from qcelemental.models import AtomicResult, OptimizationResult
 
+from qcportal.generic_result import GenericTaskResult
 from qcportal.compression import CompressionEnum
 from qcportal.nativefiles import NativeFile
 from qcportal.outputstore.models import OutputStore, OutputTypeEnum
 
 
 def _compress_common(
-    result: Union[AtomicResult, OptimizationResult],
+    result: Union[AtomicResult, OptimizationResult, GenericTaskResult],
 ):
     """
     Compresses outputs of an AtomicResult or OptimizationResult, storing them in extras
@@ -106,6 +107,8 @@ def compress_results(
             ret[k] = _compress_native_files(ret[k])
         elif isinstance(result, OptimizationResult):
             ret[k] = _compress_optimizationresult(result)
+        elif isinstance(result, GenericTaskResult):
+            ret[k] = _compress_common(result)
         else:
             ret[k] = result
 

@@ -136,8 +136,8 @@ class BaseAdapter(abc.ABC):
 
         Parameters
         ----------
-        tasks : list of dict
-            Canonical Fractal task with {"spec: {"function", "args", "kwargs"}} fields.
+        tasks
+            Task information (function and kwargs)
 
         Returns
         -------
@@ -160,11 +160,20 @@ class BaseAdapter(abc.ABC):
                     **{"local_options": self.qcengine_local_options},
                 }
 
-            queue_key, task = self._submit_task(task_spec)
-            # self.logger.debug(f"Submitted Task:\n{task_spec}\n")
+                queue_key, task = self._submit_task(task_spec)
+            else:
+                # Use the generic wrapper function
+                # We pass in the origin task info. The wrap_generic_function
+                # will then call the function specified therein.
+                # But we pass in the call to the wrapper function into _submit_task
+                wrapper_spec = {
+                    "id": task_spec["id"],
+                    "function": "qcfractalcompute.wrap_generic_function",
+                    "function_kwargs": {"task_info": task_spec},
+                }
+                queue_key, task = self._submit_task(wrapper_spec)
 
             self.queue[queue_key] = task
-            # self.logger.info("Adapter: Task submitted {}".format(tag))
             ret.append(tag)
         return ret
 

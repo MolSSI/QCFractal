@@ -254,6 +254,7 @@ class RecordSocket:
         self._logger = logging.getLogger(__name__)
 
         # All the subsockets
+        from .services.socket import ServiceSubtaskRecordSocket
         from .singlepoint.record_socket import SinglepointRecordSocket
         from .optimization.record_socket import OptimizationRecordSocket
         from .torsiondrive.record_socket import TorsiondriveRecordSocket
@@ -262,6 +263,7 @@ class RecordSocket:
         from .manybody.record_socket import ManybodyRecordSocket
         from .neb.record_socket import NEBRecordSocket
 
+        self.service_subtask = ServiceSubtaskRecordSocket(root_socket)
         self.singlepoint = SinglepointRecordSocket(root_socket)
         self.optimization = OptimizationRecordSocket(root_socket)
         self.torsiondrive = TorsiondriveRecordSocket(root_socket)
@@ -271,6 +273,7 @@ class RecordSocket:
         self.neb = NEBRecordSocket(root_socket)
 
         self._handler_map: Dict[str, BaseRecordSocket] = {
+            "servicesubtask": self.service_subtask,
             "singlepoint": self.singlepoint,
             "optimization": self.optimization,
             "torsiondrive": self.torsiondrive,

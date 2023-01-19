@@ -11,19 +11,22 @@ from sqlalchemy.orm import contains_eager, make_transient, aliased, defer, selec
 
 from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.record_db_models import BaseRecordORM, RecordComputeHistoryORM
+from qcfractal.components.record_socket import BaseRecordSocket
 from qcfractal.db_socket.helpers import (
     get_count,
 )
 from qcportal.compression import CompressionEnum
+from qcportal.metadata_models import InsertMetadata
 from qcportal.outputstore import OutputStore, OutputTypeEnum
-from qcportal.record_models import RecordStatusEnum
-from .db_models import ServiceQueueORM, ServiceDependencyORM
+from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.generic_result import GenericTaskResult
+from .db_models import ServiceQueueORM, ServiceDependencyORM, ServiceSubtaskRecordORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from qcfractal.components.internal_jobs.status import JobStatus
-    from typing import Optional
+    from typing import List, Dict, Tuple, Optional, Any, Union
 
 
 class ServiceSocket:
@@ -354,3 +357,111 @@ class ServiceSocket:
                     self.root_socket.notify_finished_watch(service_orm.record_id, RecordStatusEnum.error)
 
         return running_count
+
+
+class ServiceSubtaskRecordSocket(BaseRecordSocket):
+    """
+    Socket for handling distributed service generic subtasks
+    """
+
+    # Used by the base class
+    record_orm = ServiceSubtaskRecordORM
+
+    def __init__(self, root_socket: SQLAlchemySocket):
+        BaseRecordSocket.__init__(self, root_socket)
+        self._logger = logging.getLogger(__name__)
+
+    @staticmethod
+    def get_children_select() -> List[Any]:
+        return []
+
+    def generate_task_specification(self, record_orm: ServiceSubtaskRecordORM) -> Dict[str, Any]:
+
+        # Normally, this function is a little more complicated (ie, for others the spec is
+        # generated from data in the record). However, this record type is a pretty
+        # transparent passthrough. The function and kwargs are stored in the record, and just
+        # copied to the task
+        return {"function": record_orm.function, "function_kwargs": record_orm.function_kwargs}
+
+    def update_completed_task(
+        self, session: Session, record_orm: ServiceSubtaskRecordORM, result: GenericTaskResult, manager_name: str
+    ) -> None:
+
+        # Isn't a whole lot to do here
+        record_orm.results = result.results
+
+    def add(
+        self,
+        required_programs: Dict[str, Any],
+        function: str,
+        function_kwargs: List[Dict[str, Any]],
+        tag: str,
+        priority: PriorityEnum,
+        owner_user: Optional[Union[int, str]],
+        owner_group: Optional[Union[int, str]],
+        *,
+        session: Optional[Session] = None,
+    ) -> Tuple[InsertMetadata, List[Optional[int]]]:
+        """
+        Adds new service iteration records
+
+        No duplicate checking is done, so records will always be added
+
+        Parameters
+        ----------
+        required_programs
+            Programs & versions required on the worker
+        function
+            The compute function to run on the worker
+        function_kwargs
+            Keyword arguments passed to the compute function. One record will be added for
+            each dictionary in the list.
+        tag
+            The tag for the task. This will assist in routing to appropriate compute managers.
+        priority
+            The priority for the computation
+        owner_user
+            Name or ID of the user who owns the record
+        owner_group
+            Group with additional permission for these records
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the insertion, and a list of record ids. The ids will be in the
+            order of the function_kwargs list
+        """
+
+        with self.root_socket.optional_session(session, False) as session:
+
+            owner_user_id, owner_group_id = self.root_socket.users.get_owner_ids(
+                owner_user, owner_group, session=session
+            )
+            self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
+
+            all_orm = []
+
+            for kw in function_kwargs:
+                rec_orm = ServiceSubtaskRecordORM(
+                    is_service=False,
+                    function=function,
+                    function_kwargs=kw,
+                    required_programs=required_programs,
+                    status=RecordStatusEnum.waiting,
+                    owner_user_id=owner_user_id,
+                    owner_group_id=owner_group_id,
+                )
+
+                self.create_task(rec_orm, tag, priority)
+                all_orm.append(rec_orm)
+                session.add(rec_orm)
+
+            session.flush()
+
+            ids = [r.id for r in all_orm]
+            meta = InsertMetadata(inserted_idx=list(range(len(function_kwargs))), existing_idx=[])
+
+            return meta, ids
