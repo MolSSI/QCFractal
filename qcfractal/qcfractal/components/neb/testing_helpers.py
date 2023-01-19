@@ -7,6 +7,7 @@ from qcelemental.models import Molecule, FailedOperation, ComputeError, AtomicRe
 
 from qcarchivetesting.helpers import read_record_data
 from qcfractal.testing_helpers import run_service
+from qcportal.generic_result import GenericTaskResult
 from qcportal.neb import NEBSpecification, NEBKeywords
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
@@ -70,21 +71,27 @@ def generate_task_key(record):
 
     if record_type == "optimization":
         mol_hash = record["initial_molecule"]["identifiers"]["molecule_hash"]
-    else:
+        return record_type + "|" + mol_hash
+    elif record_type == "singlepoint":
         mol_hash = record["molecule"]["identifiers"]["molecule_hash"]
-
-    return record_type + "|" + mol_hash
+        return record_type + "|" + mol_hash
+    else:
+        # hash function + kwargs
+        normalized = recursive_normalizer(record["function_kwargs"], digits=6)
+        return record["function"] + "|" + hash_dict(normalized)
 
 
 def load_test_data(
     name: str,
-) -> Tuple[NEBSpecification, List[Molecule], Dict[str, Union[AtomicResult, OptimizationResult]]]:
+) -> Tuple[NEBSpecification, List[Molecule], Dict[str, Union[AtomicResult, OptimizationResult, GenericTaskResult]]]:
     test_data = read_record_data(name)
 
     return (
         pydantic.parse_obj_as(NEBSpecification, test_data["specification"]),
         pydantic.parse_obj_as(List[Molecule], test_data["initial_chain"]),
-        pydantic.parse_obj_as(Dict[str, Union[AtomicResult, OptimizationResult]], test_data["results"]),
+        pydantic.parse_obj_as(
+            Dict[str, Union[AtomicResult, OptimizationResult, GenericTaskResult]], test_data["results"]
+        ),
     )
 
 

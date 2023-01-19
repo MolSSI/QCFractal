@@ -20,11 +20,11 @@ def test_neb_full_1(fulltest_client: PortalClient):
         coordinate_system="tric",
         energy_weighted=None,
         optimize_endpoints=True,
-        maximum_force=0.1,
-        average_force=0.05,
+        maximum_force=0.02,
+        average_force=0.02,
         optimize_ts=True,
         align_chain=False,
-        epsilon=1e-5,
+        epsilon=1e-6,
         hessian_reset=True,
         spring_type=0,
     )
@@ -41,7 +41,7 @@ def test_neb_full_1(fulltest_client: PortalClient):
         initial_chains=[chain], program="geometric", singlepoint_specification=sp_spec, keywords=neb_keywords
     )
 
-    for i in range(60):
+    for i in range(600):
         time.sleep(15)
         rec = fulltest_client.get_nebs(ids[0])
         if rec.status not in [RecordStatusEnum.running, RecordStatusEnum.waiting]:
@@ -50,3 +50,4 @@ def test_neb_full_1(fulltest_client: PortalClient):
         raise RuntimeError("Did not finish calculation in time")
 
     assert rec.status == RecordStatusEnum.complete
+    print(rec.stdout)

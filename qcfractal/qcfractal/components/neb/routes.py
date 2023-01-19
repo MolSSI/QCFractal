@@ -43,6 +43,15 @@ def get_neb_singlepoints_v1(record_id: int, url_params: ProjURLParameters):
     return rec[0]["singlepoints"]
 
 
+@api_v1.route("/records/neb/<int:record_id>/subtasks", methods=["GET"])
+@wrap_route("READ")
+def get_neb_subtasks_v1(record_id: int, url_params: ProjURLParameters):
+    # adjust the includes/excludes to refer to the nextchain subtasks
+    ch_includes, ch_excludes = prefix_projection(url_params, "subtasks")
+    rec = storage_socket.records.neb.get([record_id], include=ch_includes, exclude=ch_excludes)
+    return rec[0]["subtasks"]
+
+
 @api_v1.route("/records/neb/<int:record_id>/neb_result", methods=["GET"])
 @wrap_route("READ")
 def get_neb_result_v1(record_id: int, url_params: ProjURLParameters):

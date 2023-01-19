@@ -30,6 +30,7 @@ from qcportal.neb import (
 from qcportal.optimization import OptimizationSpecification
 from qcportal.outputstore import OutputTypeEnum
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.serialization import convert_numpy_recursive
 from qcportal.singlepoint import QCSpecification
 from qcportal.utils import hash_dict
 from .record_db_models import (
@@ -37,6 +38,7 @@ from .record_db_models import (
     NEBSpecificationORM,
     NEBSinglepointsORM,
     NEBInitialchainORM,
+    NEBSubtaskORM,
     NEBRecordORM,
 )
 
@@ -103,6 +105,10 @@ class NEBRecordSocket(BaseRecordSocket):
                 NEBOptimizationsORM.neb_id.label("parent_id"),
                 NEBOptimizationsORM.optimization_id.label("child_id"),
             ),
+            select(
+                NEBSubtaskORM.neb_id.label("parent_id"),
+                NEBSubtaskORM.subtask_id.label("child_id"),
+            ),
         )
         return [stmt]
 
@@ -160,6 +166,9 @@ class NEBRecordSocket(BaseRecordSocket):
         session: Session,
         service_orm: ServiceQueueORM,
     ) -> bool:
+
+        finished = False
+
         neb_orm: NEBRecordORM = service_orm.record
         # Always update with the current provenance
         neb_orm.compute_history[-1].provenance = {
@@ -176,107 +185,128 @@ class NEBRecordSocket(BaseRecordSocket):
         params["iteration"] = service_state.iteration
         output = ""
         if service_state.iteration == 0:
-            initial_chain: List[Dict[str, Any]] = [x.model_dict() for x in neb_orm.initial_chain]
-            initial_molecules = [Molecule(**M) for M in initial_chain]
+            service_state.converged = False
+            initial_molecules = [x.to_model(Molecule) for x in neb_orm.initial_chain]
+
             if service_state.optimized:
+                # First iteration, but we have been told to optimize the endpoints
                 output += "\nFirst, optimizing the end points"
                 self.submit_optimizations(session, service_orm, [initial_molecules[0], initial_molecules[-1]])
                 service_state.optimized = False
-                finished = False
             else:
+                # Either no endpoint optimizations, or they have been done
                 complete_opts = sorted(service_orm.dependencies, key=lambda x: x.extras["position"])
+
+                # If there are completed opts, replace the endpoints with the optimized molecules
                 if len(complete_opts) != 0:
-                    initial_molecules[0] = Molecule(**complete_opts[0].record.final_molecule.model_dict())
-                    initial_molecules[-1] = Molecule(**complete_opts[-1].record.final_molecule.model_dict())
+                    if len(complete_opts) != 2:
+                        raise RuntimeError(f"Expected 2 completed optimizations, got {len(complete_opts)}")
+
+                    initial_molecules[0] = complete_opts[0].record.final_molecule.to_model(Molecule)
+                    initial_molecules[-1] = complete_opts[-1].record.final_molecule.to_model(Molecule)
+
                 neb_stdout = io.StringIO()
                 logging.captureWarnings(True)
                 with contextlib.redirect_stdout(neb_stdout):
                     aligned_chain = geometric.neb.arrange(initial_molecules, service_state.align)
                 logging.captureWarnings(False)
                 output += "\n" + neb_stdout.getvalue()
+
+                # Submit the first batch of singlepoint calculations
                 self.submit_singlepoints(session, service_state, service_orm, aligned_chain)
                 service_state.iteration += 1
-                finished = False
+
         else:
             if not service_state.converged:
-                complete_tasks = sorted(service_orm.dependencies, key=lambda x: x.extras["position"])
-                geometries = []
-                energies = []
-                gradients = []
-                for task in complete_tasks:
-                    sp_record = task.record
-                    mol_data = self.root_socket.molecules.get(
-                        molecule_id=[sp_record.molecule_id], include=["geometry"], session=session
-                    )
-                    geometries.append(mol_data[0]["geometry"])
-                    energies.append(sp_record.properties["return_energy"])
-                    gradients.append(sp_record.properties["return_gradient"])
-                service_state.nebinfo["geometry"] = geometries
-                service_state.nebinfo["energies"] = energies
-                service_state.nebinfo["gradients"] = gradients
-                service_state.nebinfo["params"] = params
-                neb_stdout = io.StringIO()
-                logging.captureWarnings(True)
-                with contextlib.redirect_stdout(neb_stdout):
-                    if service_state.iteration == 1:
-                        newcoords, prev = geometric.neb.prepare(service_state.nebinfo)
+                # Returned task a nextchain computation
+                if service_orm.dependencies and service_orm.dependencies[0].record.record_type == "servicesubtask":
+                    newcoords, prev = service_orm.dependencies[0].record.results
+                    service_state.nebinfo = prev
+
+                    # Append the output
+                    stdout = service_orm.dependencies[0].record.compute_history[-1].get_output("stdout")
+                    output += stdout.as_string()
+
+                    # If nextchain returns None, then we are now converged
+                    if newcoords is None:
+                        service_state.converged = True
                     else:
-                        newcoords, prev = geometric.neb.nextchain(service_state.nebinfo)
-                output += "\n" + neb_stdout.getvalue()
-                logging.captureWarnings(False)
-                service_state.nebinfo = prev
-            else:
-                newcoords = None
-            if newcoords is not None:
-                next_chain = [Molecule(**molecule_template, geometry=geometry) for geometry in newcoords]
-                self.submit_singlepoints(session, service_state, service_orm, next_chain)
-                service_state.iteration += 1
-                finished = False
-            else:
-                if service_state.converged:
-                    if service_state.tsoptimize:
-
-                        stmt = (
-                            select(MoleculeORM)
-                            .join(SinglepointRecordORM)
-                            .join(NEBSinglepointsORM)
-                            .where(NEBSinglepointsORM.neb_id == neb_orm.id)
-                            .order_by(
-                                NEBSinglepointsORM.chain_iteration.desc(),
-                                SinglepointRecordORM.properties["return_energy"]
-                                .cast(TEXT)
-                                .cast(DOUBLE_PRECISION)
-                                .desc(),
-                            )
-                            .limit(1)
-                        )
-
-                        TS_mol = session.execute(stmt).scalar_one_or_none()
-                        if TS_mol is None:
-                            raise MissingDataError("MoleculeORM of a guessed transition state from NEB can't be found.")
-
-                        if len(service_state.tshessian) == 0:
-                            output += (
-                                "\nOptimizing the guessed transition state structure to locate a first-order saddle point.\n"
-                                "Hessian will be calculated and passed to geomeTRIC."
-                            )
-
-                            self.submit_singlepoints(
-                                session, service_state, service_orm, [Molecule(**TS_mol.model_dict())]
-                            )
-                            service_state.tshessian = [1]
-                        else:
-                            complete_sp = sorted(service_orm.dependencies)[0]
-                            service_orm.service_state["tshessian"] = complete_sp.record.properties["return_hessian"]
-                            self.submit_optimizations(session, service_orm, [Molecule(**TS_mol.model_dict())])
-                            service_state.tsoptimize = False
-                        finished = False
-                    else:
-                        output += "\nNEB calculation is completed with %i iterations" % service_state.iteration
-                        finished = True
+                        next_chain = [Molecule(**molecule_template, geometry=geometry) for geometry in newcoords]
+                        self.submit_singlepoints(session, service_state, service_orm, next_chain)
+                        service_state.iteration += 1
                 else:
-                    service_state.converged = True
-                    finished = False
+                    complete_tasks = sorted(service_orm.dependencies, key=lambda x: x.extras["position"])
+                    geometries = []
+                    energies = []
+                    gradients = []
+                    for task in complete_tasks:
+                        sp_record = task.record
+                        mol_data = self.root_socket.molecules.get(
+                            molecule_id=[sp_record.molecule_id], include=["geometry"], session=session
+                        )
+                        geometries.append(mol_data[0]["geometry"])
+                        energies.append(sp_record.properties["return_energy"])
+                        gradients.append(sp_record.properties["return_gradient"])
+                    service_state.nebinfo["geometry"] = convert_numpy_recursive(geometries, flatten=False)
+                    service_state.nebinfo["energies"] = energies
+                    service_state.nebinfo["gradients"] = gradients
+                    service_state.nebinfo["params"] = params
+                    neb_stdout = io.StringIO()
+                    logging.captureWarnings(True)
+                    with contextlib.redirect_stdout(neb_stdout):
+                        if service_state.iteration == 1:
+                            newcoords, prev = geometric.neb.prepare(service_state.nebinfo)
+                            service_state.nebinfo = prev
+
+                            next_chain = [Molecule(**molecule_template, geometry=geometry) for geometry in newcoords]
+                            self.submit_singlepoints(session, service_state, service_orm, next_chain)
+                            service_state.iteration += 1
+                        else:
+                            self.submit_nextchain_subtask(session, service_state, service_orm)
+
+                    output += "\n" + neb_stdout.getvalue()
+                    logging.captureWarnings(False)
+
+            # We are converged, but need to handle TS optimization
+            if service_state.converged and service_state.tsoptimize:
+                stmt = (
+                    select(MoleculeORM)
+                    .join(SinglepointRecordORM)
+                    .join(NEBSinglepointsORM)
+                    .where(NEBSinglepointsORM.neb_id == neb_orm.id)
+                    .order_by(
+                        NEBSinglepointsORM.chain_iteration.desc(),
+                        SinglepointRecordORM.properties["return_energy"].cast(TEXT).cast(DOUBLE_PRECISION).desc(),
+                    )
+                    .limit(1)
+                )
+
+                TS_mol = session.execute(stmt).scalar_one_or_none()
+                if TS_mol is None:
+                    raise MissingDataError("MoleculeORM of a guessed transition state from NEB can't be found.")
+
+                # Has the TS hessian calculation been completed?
+                if len(service_state.tshessian) == 0:
+                    output += (
+                        "\nOptimizing the guessed transition state structure to locate a first-order saddle point.\n"
+                        "Hessian will be calculated and passed to geomeTRIC."
+                    )
+
+                    self.submit_singlepoints(session, service_state, service_orm, [Molecule(**TS_mol.model_dict())])
+
+                    # Mark that we are expecting the tshessian the next iteration
+                    service_state.tshessian = [1]
+                else:
+                    # Hessian completed, do optimization
+                    complete_sp = service_orm.dependencies[0]
+                    service_orm.service_state["tshessian"] = complete_sp.record.properties["return_hessian"]
+                    self.submit_optimizations(session, service_orm, [Molecule(**TS_mol.model_dict())])
+                    service_state.tsoptimize = False
+
+            elif service_state.converged:
+                # Converged, but not waiting for anything else
+                finished = True
+                output += "\nNEB calculation is completed with %i iterations" % service_state.iteration
 
         stdout_orm = neb_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
         stdout_orm.append(output)
@@ -382,6 +412,38 @@ class NEBRecordSocket(BaseRecordSocket):
 
             service_orm.dependencies.append(svc_dep)
             neb_orm.singlepoints.append(sp_history)
+
+    def submit_nextchain_subtask(
+        self,
+        session: Session,
+        service_state: NEBServiceState,
+        service_orm: ServiceQueueORM,
+    ):
+        neb_orm: NEBRecordORM = service_orm.record
+
+        # delete all existing entries in the dependency list
+        service_orm.dependencies = []
+
+        meta, ids = self.root_socket.records.service_subtask.add(
+            {"geometric": None},
+            "geometric.neb.nextchain",
+            [{"info_dict": service_state.nebinfo}],
+            service_orm.tag,
+            service_orm.priority,
+            neb_orm.owner_user_id,
+            neb_orm.owner_group_id,
+            session=session,
+        )
+
+        nc_history = NEBSubtaskORM(neb_id=neb_orm.id, subtask_id=ids[0], chain_iteration=service_state.iteration)
+
+        svc_dep = ServiceDependencyORM(
+            record_id=ids[0],
+            extras={},
+        )
+
+        neb_orm.subtasks.append(nc_history)
+        service_orm.dependencies.append(svc_dep)
 
     def add_specification(
         self, neb_spec: NEBSpecification, *, session: Optional[Session] = None

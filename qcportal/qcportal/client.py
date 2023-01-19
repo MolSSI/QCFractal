@@ -93,6 +93,9 @@ from .record_models import (
     RecordQueryIterator,
     records_from_datamodels,
 )
+
+from .services import ServiceSubtaskRecord
+
 from .serverinfo import (
     AccessLogQueryFilters,
     AccessLogSummaryFilters,

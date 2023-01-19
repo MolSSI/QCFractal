@@ -66,8 +66,10 @@ test_data["results"] = {}
 for record_id, result in result_data.items():
     if result["schema_name"] == "qcschema_optimization_output":
         record = client.get_optimizations(record_id, include=["initial_molecule"])
-    else:
+    elif result["schema_name"] == "qcschema_output":
         record = client.get_singlepoints(record_id, include=["molecule"])
+    else:
+        record = client.get_records(record_id)
 
     task_key = generate_task_key(record.raw_data.dict())
     test_data["results"][task_key] = result
