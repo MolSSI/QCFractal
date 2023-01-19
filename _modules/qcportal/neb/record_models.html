@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.neb.record_models &#8212; QCArchive 0.50b4.post35+g0006cef2 documentation</title>
+    <title>qcportal.neb.record_models &#8212; QCArchive 0.50b5.post8+g7989b30b documentation</title>
   
   
   
@@ -522,9 +522,9 @@
         <span class="n">singlepoints</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">NEBSinglepoint</span><span class="p">]]</span>
         <span class="n">optimizations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">NEBOptimization</span><span class="p">]]</span>
         <span class="n">optimizations_cache</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">OptimizationRecord</span><span class="p">]]</span>
+        <span class="n">singlepoints_cache</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">SinglepointRecord</span><span class="p">]]]</span>
 
     <span class="n">raw_data</span><span class="p">:</span> <span class="n">_DataModel</span>
-    <span class="n">singlepoint_cache</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SinglepointRecord</span><span class="p">]]</span>
 
 <div class="viewcode-block" id="NEBRecord.transform_includes"><a class="viewcode-back" href="../../../user_guide/records/neb.html#qcportal.neb.NEBRecord.transform_includes">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">transform_includes</span><span class="p">(</span><span class="n">includes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
@@ -617,8 +617,8 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">singlepoints</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">SinglepointRecord</span><span class="p">]]:</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">singlepoint_cache</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">singlepoint_cache</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="o">.</span><span class="n">singlepoints_cache</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="o">.</span><span class="n">singlepoints_cache</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="o">.</span><span class="n">singlepoints</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_singlepoints</span><span class="p">()</span>
@@ -628,7 +628,7 @@
         <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="o">.</span><span class="n">singlepoints</span><span class="p">:</span>
             <span class="n">ret</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">chain_iteration</span><span class="p">,</span> <span class="nb">list</span><span class="p">())</span>
             <span class="n">ret</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">chain_iteration</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SinglepointRecord</span><span class="o">.</span><span class="n">from_datamodel</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">singlepoint_record</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">singlepoint_cache</span> <span class="o">=</span> <span class="n">ret</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="o">.</span><span class="n">singlepoints_cache</span> <span class="o">=</span> <span class="n">ret</span>
         <span class="k">return</span> <span class="n">ret</span>
 
     <span class="nd">@property</span>
