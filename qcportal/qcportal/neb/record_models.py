@@ -159,9 +159,9 @@ class NEBRecord(BaseRecord):
         singlepoints: Optional[List[NEBSinglepoint]]
         optimizations: Optional[List[NEBOptimization]]
         optimizations_cache: Optional[Dict[str, OptimizationRecord]]
+        singlepoints_cache: Optional[Dict[int, List[SinglepointRecord]]]
 
     raw_data: _DataModel
-    singlepoint_cache: Optional[Dict[str, SinglepointRecord]]
 
     @staticmethod
     def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
@@ -254,8 +254,8 @@ class NEBRecord(BaseRecord):
 
     @property
     def singlepoints(self) -> Dict[int, List[SinglepointRecord]]:
-        if self.singlepoint_cache is not None:
-            return self.singlepoint_cache
+        if self.raw_data.singlepoints_cache is not None:
+            return self.raw_data.singlepoints_cache
 
         if self.raw_data.singlepoints is None:
             self._fetch_singlepoints()
@@ -265,7 +265,7 @@ class NEBRecord(BaseRecord):
         for sp in self.raw_data.singlepoints:
             ret.setdefault(sp.chain_iteration, list())
             ret[sp.chain_iteration].append(SinglepointRecord.from_datamodel(sp.singlepoint_record, self.client))
-        self.singlepoint_cache = ret
+        self.raw_data.singlepoints_cache = ret
         return ret
 
     @property
