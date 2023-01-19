@@ -66,3 +66,10 @@ class OutputStoreORM(BaseORM):
         self.data = new_obj.data
         self.compression = new_obj.compression
         self.compression_level = new_obj.compression_level
+
+    def as_string(self):
+        """
+        Returns the output as a string
+        """
+
+        return self.to_model(OutputStore).as_string
