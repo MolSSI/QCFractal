@@ -162,7 +162,7 @@ def _get_query_proj_options(
             subrel_options = _get_query_proj_options(sub_orm, tuple(cols), None)
             options += [selectinload(getattr(orm_type, base)).options(*subrel_options)]
 
-    if len(options) == 0:
+    if len(options) == 0 and (include_set and "*" not in include_set):
         raise UserReportableError(
             "No columns or relationships specified to be loaded."
             "This is likely due to only including columns that don't exist, or otherwise including nothing"
