@@ -2,7 +2,7 @@ import json
 import lzma
 import random
 
-from qcfractal.components.hashing import hash_dict
+from qcportal.utils import hash_dict
 
 letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 

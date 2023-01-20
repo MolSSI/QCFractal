@@ -19,8 +19,8 @@ from qcportal.singlepoint import (
     WavefunctionProperties,
     SinglepointQueryFilters,
 )
+from qcportal.utils import hash_dict
 from .record_db_models import QCSpecificationORM, SinglepointRecordORM
-from ..hashing import hash_dict
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session

@@ -31,6 +31,7 @@ from qcportal.optimization import OptimizationSpecification
 from qcportal.outputstore import OutputTypeEnum
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import QCSpecification
+from qcportal.utils import hash_dict
 from .record_db_models import (
     NEBOptimizationsORM,
     NEBSpecificationORM,
@@ -38,7 +39,6 @@ from .record_db_models import (
     NEBInitialchainORM,
     NEBRecordORM,
 )
-from ..hashing import hash_dict
 
 # geometric package is optional
 _geo_spec = importlib.util.find_spec("geometric")

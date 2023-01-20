@@ -1,7 +1,7 @@
 import random
 
 from qcarchivetesting import load_hash_test_data
-from qcfractal.components.hashing import hash_dict
+from qcportal.utils import hash_dict
 
 
 def shuffle_dict(d):

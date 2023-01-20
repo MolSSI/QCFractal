@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import json
+from hashlib import sha256
 from typing import Optional, Union, Sequence, List, TypeVar, Any, Dict
 
 import numpy as np
+
+from qcportal.serialization import _JSONEncoder
 
 _T = TypeVar("_T")
 
@@ -42,12 +46,10 @@ def make_str(obj: Optional[Union[_T, Sequence[_T]]]) -> Optional[List[_T]]:
         raise ValueError("`obj` must be `None`, a str, list, tuple, or non-sequence")
 
 
-def recursive_normalizer(value: Any, **kwargs: Dict[str, Any]) -> Any:
+def recursive_normalizer(value: Any, digits: int = 10, lowercase: bool = True) -> Any:
     """
     Prepare a structure for hashing by lowercasing all values and round all floats
     """
-    digits = kwargs.get("digits", 10)
-    lowercase = kwargs.get("lowercase", True)
 
     if isinstance(value, (int, type(None))):
         pass
@@ -57,17 +59,17 @@ def recursive_normalizer(value: Any, **kwargs: Dict[str, Any]) -> Any:
             value = value.lower()
 
     elif isinstance(value, list):
-        value = [recursive_normalizer(x, **kwargs) for x in value]
+        value = [recursive_normalizer(x, digits, lowercase) for x in value]
 
     elif isinstance(value, tuple):
-        value = tuple(recursive_normalizer(x, **kwargs) for x in value)
+        value = tuple(recursive_normalizer(x, digits, lowercase) for x in value)
 
     elif isinstance(value, dict):
         ret = {}
         for k, v in value.items():
             if lowercase:
                 k = k.lower()
-            ret[k] = recursive_normalizer(v, **kwargs)
+            ret[k] = recursive_normalizer(v, digits, lowercase)
         value = ret
 
     elif isinstance(value, np.ndarray):
@@ -102,3 +104,8 @@ def calculate_limit(max_limit: int, given_limit: Optional[int]) -> int:
         return max_limit
 
     return min(given_limit, max_limit)
+
+
+def hash_dict(d: Dict[str, Any]) -> str:
+    j = json.dumps(d, ensure_ascii=True, sort_keys=True, cls=_JSONEncoder).encode("utf-8")
+    return sha256(j).hexdigest()

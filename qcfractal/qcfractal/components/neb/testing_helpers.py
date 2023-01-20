@@ -10,6 +10,7 @@ from qcfractal.testing_helpers import run_service
 from qcportal.neb import NEBSpecification, NEBKeywords
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
+from qcportal.utils import recursive_normalizer, hash_dict
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

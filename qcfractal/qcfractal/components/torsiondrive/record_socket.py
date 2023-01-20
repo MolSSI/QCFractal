@@ -32,13 +32,13 @@ from qcportal.torsiondrive import (
     TorsiondriveSpecification,
     TorsiondriveQueryFilters,
 )
+from qcportal.utils import hash_dict
 from .record_db_models import (
     TorsiondriveSpecificationORM,
     TorsiondriveInitialMoleculeORM,
     TorsiondriveOptimizationORM,
     TorsiondriveRecordORM,
 )
-from ..hashing import hash_dict
 
 # Torsiondrive package is optional
 _td_spec = importlib.util.find_spec("torsiondrive")

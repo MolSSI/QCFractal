@@ -25,8 +25,8 @@ from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputTypeEnum
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.utils import hash_dict
 from .record_db_models import ManybodyClusterORM, ManybodyRecordORM, ManybodySpecificationORM
-from ..hashing import hash_dict
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
