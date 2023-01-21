@@ -38,6 +38,10 @@ dependencies = [
 qcfractal_fixtures = "qcarchivetesting.testing_fixtures"
 
 
+[tool.setuptools.package-data]
+qcarchivetesting = ["*_data/**", "config_files/**"]
+
+
 [tool.black]
 line-length = 120
 
@@ -47,7 +51,3 @@ line-length = 120
 
 [tool.versioningit.vcs]
 default-tag = "0.0.99" # useful for CI/shallow clones
-
-[tool.setuptools.package-data]
-qcarchivetesting = ["*_data/**", "config_files/**"]
-
