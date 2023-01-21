@@ -6,4 +6,4 @@ autodoc-pydantic
 -e ../qcfractalcompute
 -e ../qcfractal
 -e ../qcarchivetesting
-git+https://github.com/jchen0506/molssi_doc_theme.git
+git+https://github.com/MolSSI/molssi_doc_theme.git
