@@ -1,0 +1,44 @@
+{% if not theme_logo.get("link") %}
+  {% set href = pathto(root_doc) %}
+{% elif hasdoc(theme_logo.get("link")) %}
+  {% set href = pathto(theme_logo.get("link")) %} {# internal page #}
+{% else %}
+  {% set href = theme_logo.get("link") %} {# external url #}
+{% endif %}
+
+{# get all the brand information from html_theme_option #}
+  {% set is_logo = logo or theme_logo.get("image_light") or theme_logo.get("image_dark") %}
+  {% set image_light = theme_logo.get("molssi_light") or logo %}
+  {% set image_dark = theme_logo.get("molssi_dark") or logo %}
+  {% set image_light = image_light if image_light.startswith("http") else pathto('_static/' + image_light, 1) %}
+  {% set image_dark = image_dark if image_dark.startswith("http") else pathto('_static/' + image_dark, 1) %}
+  {% set alt = theme_logo.get("alt_text", "Logo image") %}
+  {% set nsf_logo = pathto('_static/' + 'nsf.png', 1)  %}
+
+
+<div class="row h-10">
+    <div class="col-2">
+        <a href="https://molssi.org/" target="_blank" title="Go to MolSSI in a new tab">
+            <img src="{{ image_light }}" class="logo__image only-light footer_logo" alt="{{ alt }}">
+            <img src="{{ image_dark }}" class="logo__image only-dark footer_logo" alt="{{ alt }}">
+        </a>
+    </div>
+    <div class="col-8">
+        <p> &copy; Copyright 2019-2023 <a href="https://molssi.org/">The Molecular Sciences Software Institute</a></p>
+        <p>Funded by the National Science Foundation 
+          <a href="https://nsf.gov/awardsearch/showAward?AWD_ID=1547580">OAC-1547580</a> and 
+          <a href="https://www.nsf.gov/awardsearch/showAward?AWD_ID=2136142">CHE-2136142.</a></p>
+ 
+        {% if show_sphinx %}
+        <p class="sphinx-version">
+        {% trans sphinx_version=sphinx_version|e %}Created using <a href="http://sphinx-doc.org/">Sphinx</a> {{ sphinx_version }}.{% endtrans %}<br>
+        </p>
+        {% endif %}
+
+    </div>
+    <div class="col-2">
+        <a href="https://nsf.gov/" target="_blank" title="Go to the NSF in a new tab">
+            <img src="{{ nsf_logo }}" class="footer_logo" alt="The NSF">
+          </a>
+    </div>
+</div>

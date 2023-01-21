@@ -79,19 +79,23 @@ exclude_patterns = ['.ipynb_checkpoints/*']
 html_theme = 'pydata_sphinx_theme'
 
 html_theme_options = {
-	"github_url": "https://github.com/MolSSI/QCFractal",
+    "github_url": "https://github.com/MolSSI/QCFractal",
 
-	"logo": {
+    "logo": {
       "image_light": "qcarchive_logo.svg",
       "image_dark": "qcarchive_logo_inverted.svg",
+      "text": "QCArchive",
+      "molssi_light": "molssi_main_logo.png",
+      "molssi_dark": "molssi_main_logo_inverted_white.png",
     },
-	"show_toc_level": 2,
-	"header_links_before_dropdown": 4,
-	"external_links": [
+    "show_toc_level": 2,
+    "header_links_before_dropdown": 4,
+    "external_links": [
       {"name": "MolSSI", "url": "https://molssi.org"}
   ],
 
-	"secondary_sidebar_items": ["page-toc", "sourcelink"],
+    "secondary_sidebar_items": ["page-toc", "sourcelink"],
+    "footer_items": [ "molssi_footer" ],
 }
 
 html_css_files = ['css/custom.css']
