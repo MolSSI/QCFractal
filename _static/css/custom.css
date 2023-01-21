@@ -29,9 +29,18 @@ html[data-theme="dark"] h1, html[data-theme="dark"] h2, html[data-theme="dark"] 
 }
 
 
-
 html[data-theme="dark"] a {
 	color: #ffffff;
+}
+
+html[data-theme="dark"] .reference.external {
+	text-decoration: underline;
+
+}
+
+html[data-theme="dark"] p .reference.internal {
+	text-decoration: underline;
+
 }
 
 html[data-theme="dark"] a:hover {
@@ -48,4 +57,17 @@ html[data-theme="dark"] .prev-next-area:hover a:hover p.prev-next-title:hover {
 
 html[data-theme="dark"] dt:target {
     background-color: #000000;
+}
+
+html .toctree-wrapper li[class^=toctree-l] {
+	list-style: circle;
+}
+
+img:not(.logo__image, .footer_logo) {
+	padding: 20px;
+}
+
+
+.footer_logo {
+	max-height: 60px;
 }
