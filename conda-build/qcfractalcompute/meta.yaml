@@ -1,4 +1,5 @@
 {% set name = "qcfractalcompute" %}
+{% set pyproject = load_file_data(name ~ '/pyproject.toml') %}
 {% set version = environ.get('GIT_DESCRIBE_TAG', '').lstrip('v') %}
 
 package:
@@ -11,12 +12,18 @@ source:
 build:
   number: 0
   noarch: python
-  script: {{ PYTHON }} -m pip install --no-deps -vv ./qcfractalcompute
+  script: {{ PYTHON }} -m pip install --no-deps -vv ./{{ name }}
 
 requirements:
   host:
     - python >=3.8
-    - versioningit
+
+    # All dependencies in 'requires' under the 'build-system' block
+    # of pyproject.toml
+    {% for dep in pyproject.get('build-system').get('requires') %}
+    - {{ dep }}
+    {% endfor %}
+
 
   run:
     - qcportal ={{ version }}
