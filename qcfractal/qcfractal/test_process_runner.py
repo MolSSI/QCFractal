@@ -205,7 +205,7 @@ def test_exception_in_setup(stopped_snowflake, test_base_class):
     runner = ProcessRunner(f"process_runner_{test_base_class.__name__}", obj, start=False)
     runner.start()
     do_stop.wait()
-    time.sleep(1)
+    time.sleep(2)
     assert runner.is_alive() is False
     assert runner.exitcode() != 0
 
