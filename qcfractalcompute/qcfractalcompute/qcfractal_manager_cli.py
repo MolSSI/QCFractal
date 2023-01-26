@@ -223,6 +223,7 @@ class SchedulerEnum(str, Enum):
     moab = "moab"
     lsf = "lsf"
     cobalt = "cobalt"
+    local = "local"
 
 
 class AdaptiveCluster(str, Enum):
@@ -839,6 +840,7 @@ def main():
             "sge": "GridEngineProvider",
             "cobalt": "CobaltProvider",
             "lsf": None,
+            "local": "LocalProvider",
         }
 
         if _provider_loaders[settings.cluster.scheduler] is None:
@@ -852,6 +854,7 @@ def main():
             "sge": "#$$",
             "lsf": None,
             "cobalt": "#COBALT",
+            "local": "",
         }
 
         # Import the parsl things we need
@@ -859,6 +862,7 @@ def main():
             import parsl
             from parsl.config import Config
             from parsl.executors import HighThroughputExecutor
+            from parsl.executors.threads import ThreadPoolExecutor
             from parsl.addresses import address_by_hostname
 
             provider_module = cli_utils.import_module(
@@ -898,12 +902,17 @@ def main():
         common_parsl_provider_construct = {
             "init_blocks": 0,  # Update this at a later time of Parsl
             "max_blocks": max_blocks,
-            "walltime": settings.cluster.walltime,
-            "scheduler_options": f"{provider_header} " + f"\n{provider_header} ".join(scheduler_opts) + "\n",
             "nodes_per_block": settings.common.nodes_per_job,
             "worker_init": "\n".join(settings.cluster.task_startup_commands),
             **settings.parsl.provider.dict(skip_defaults=True, exclude={"partition", "launcher"}),
         }
+
+        if settings.cluster.scheduler.lower() != "local":
+            common_parsl_provider_construct["walltime"] = settings.cluster.walltime
+            common_parsl_provider_construct["scheduler_options"] = (
+                f"{provider_header} " + f"\n{provider_header} ".join(scheduler_opts) + "\n",
+            )
+
         if settings.cluster.scheduler.lower() == "slurm" and "cores_per_node" not in common_parsl_provider_construct:
             common_parsl_provider_construct["cores_per_node"] = settings.common.cores_per_worker
         # TODO: uncomment after Parsl#1416 is resolved
