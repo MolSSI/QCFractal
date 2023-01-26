@@ -21,6 +21,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.8", "3.9", "3.10"]
+        adapter: ["pool", "parsl"]
 
     steps:
       - name: Set up Python ${{ matrix.python-version }}
@@ -72,7 +73,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           activate-environment: qcarchive-worker
-          environment-file: qcarchive/qcarchivetesting/conda-envs/fulltest_worker_pool.yaml
+          environment-file: qcarchive/qcarchivetesting/conda-envs/fulltest_worker_${{ matrix.adapter }}.yaml
           auto-activate-base: false
 
       - name: Install QCFractalCompute
@@ -89,8 +90,8 @@ jobs:
         shell: bash -l {0}
         run: |
           mkdir compute; cd compute
-          cp ../qcarchive/qcarchivetesting/qcarchivetesting/config_files/gha_fractal_compute_pool.yaml ./
-          qcfractal-manager --config=gha_fractal_compute_pool.yaml &
+          cp ../qcarchive/qcarchivetesting/qcarchivetesting/config_files/gha_fractal_compute_${{ matrix.adapter }}.yaml ./
+          qcfractal-manager --config=gha_fractal_compute_${{ matrix.adapter }}.yaml &
 
 
       #################################################

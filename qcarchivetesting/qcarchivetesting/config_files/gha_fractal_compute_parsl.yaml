@@ -1,5 +1,5 @@
 common:
-  adapter: pool
+  adapter: parsl
   cores_per_rank: 1
   cores_per_worker: 2
   max_workers: 1
@@ -24,3 +24,7 @@ server:
   password: null
   username: null
   verify: false
+
+cluster:
+ node_exclusivity: True
+ scheduler: local

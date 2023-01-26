@@ -1,0 +1,40 @@
+name: qcarchive
+channels:
+  - defaults
+  - psi4/label/dev
+  - conda-forge
+
+dependencies:
+  - pip
+
+  # QCFractal dependencies
+  # NOTES:
+  #     msgpack-python in conda is msgpack in pypi (due to a rename around v0.5)
+  - numpy
+  - msgpack-python
+  - requests
+  - pyyaml
+  - pydantic
+  - zstandard
+  - qcelemental
+  - qcengine
+  - tabulate
+
+  # QCPortal dependencies
+  - tqdm
+  - pandas
+
+  # Specific codes below
+  - psi4
+
+  # Pins for https://github.com/conda-forge/rdkit-feedstock/issues/111
+  - rdkit==2022.03.5
+  - boost-cpp==1.74.0
+
+  # Adapter
+  - parsl
+
+  # Geometric service
+  - pip:
+    - scipy
+    - "geometric @ git+https://github.com/hjnpark/geomeTRIC@neb"
