@@ -83,10 +83,14 @@ class DaskAdapter(BaseAdapter):
         return "<DaskAdapter client={}>".format(self.client)
 
     def _submit_task(self, task_spec: Dict[str, Any]) -> Tuple[Hashable, Any]:
+        # Rename local_options -> task_config
+        if "local_options" in task_spec["function_kwargs"]:
+            task_spec["function_kwargs"]["task_config"] = task_spec["function_kwargs"].pop("local_options")
+
         func = self.get_function(task_spec["function"])
 
         # Watch out for thread unsafe tasks and our own constraints
-        task = self.client.submit(func, **task_spec["function_kwargs"], resources={"process": 1})
+        task = self.client.submit(func, **task_spec["function_kwargs"])
         return task_spec["id"], task
 
     def count_active_task_slots(self) -> int:

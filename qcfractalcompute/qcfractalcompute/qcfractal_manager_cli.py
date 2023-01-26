@@ -772,6 +772,7 @@ def main():
             "moab": "MoabCluster",
             "sge": "SGECluster",
             "lsf": "LSFCluster",
+            "local": "LocalCluster",
         }
         dask_exclusivity_map = {
             "slurm": "--exclusive",
@@ -779,6 +780,7 @@ def main():
             "moab": "-n",  # Less sure about this one
             "sge": "-l exclusive=true",
             "lsf": "-x",
+            "local": "",
         }
         if settings.cluster.node_exclusivity and dask_exclusivity_map[settings.cluster.scheduler] not in scheduler_opts:
             scheduler_opts.append(dask_exclusivity_map[settings.cluster.scheduler])
@@ -786,26 +788,33 @@ def main():
         # Create one construct to quickly merge dicts with a final check
         dask_construct = {
             "name": "QCFractal_Dask_Compute_Executor",
-            "cores": settings.common.cores_per_worker,
-            "memory": str(settings.common.memory_per_worker) + "GB",
             "processes": settings.common.tasks_per_worker,  # Number of workers to generate == tasks in this construct
-            "walltime": settings.cluster.walltime,
-            "job_extra": scheduler_opts,
-            "env_extra": settings.cluster.task_startup_commands,
-            **dask_settings,
         }
+
+        if settings.cluster.scheduler == "local":
+            dask_construct["memory_limit"] = str(settings.common.memory_per_worker) + "GB"
+            dask_construct["resources"] = {"process": 1}
+        else:
+            dask_construct["cores"] = settings.common.cores_per_worker
+            dask_construct["memory"] = str(settings.common.memory_per_worker) + "GB"
+            dask_construct["walltime"] = settings.cluster.walltime
+            dask_construct["job_extra"] = scheduler_opts
+            dask_construct["env_extra"] = settings.cluster.task_startup_commands
+            dask_construct["resources"] = {"process": 1}
+            dask_construct.update(**dask_settings)
 
         try:
             # Import the dask things we need
             import dask_jobqueue
-            from dask.distributed import Client
+            from dask.distributed import Client, LocalCluster
 
-            cluster_module = cli_utils.import_module(
-                "dask_jobqueue", package=_cluster_loaders[settings.cluster.scheduler]
-            )
-            cluster_class = getattr(cluster_module, _cluster_loaders[settings.cluster.scheduler])
-            if dask_jobqueue.__version__ < "0.5.0":
-                raise ImportError
+            if settings.cluster.scheduler == "local":
+                cluster_class = LocalCluster
+            else:
+                cluster_module = cli_utils.import_module(
+                    "dask_jobqueue", package=_cluster_loaders[settings.cluster.scheduler]
+                )
+                cluster_class = getattr(cluster_module, _cluster_loaders[settings.cluster.scheduler])
         except ImportError:
             raise ImportError("You need`dask-jobqueue >= 0.5.0` to use the `dask` adapter")
 

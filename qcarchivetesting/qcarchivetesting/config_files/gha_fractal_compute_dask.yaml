@@ -1,0 +1,30 @@
+common:
+  adapter: dask
+  cores_per_rank: 1
+  cores_per_worker: 2
+  max_workers: 2
+  memory_per_worker: 2
+  nodes_per_job: 1
+  nodes_per_task: 1
+  retries: 2
+  scratch_directory: /tmp
+  tasks_per_worker: 1
+  verbose: true
+
+manager:
+  log_file_prefix: qcfractal_compute.log
+  manager_name: testworker
+  max_queued_tasks: 3
+  update_frequency: 5.0
+  queue_tag:
+    - '*'
+
+server:
+  fractal_uri: http://localhost:7900
+  password: null
+  username: null
+  verify: false
+
+cluster:
+ node_exclusivity: True
+ scheduler: local
