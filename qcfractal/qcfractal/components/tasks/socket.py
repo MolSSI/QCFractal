@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from qcelemental.models import FailedOperation
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import array
-from sqlalchemy.orm import joinedload, contains_eager
+from sqlalchemy.orm import joinedload, contains_eager, defer, load_only, Load
 
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.record_db_models import BaseRecordORM
@@ -275,7 +275,14 @@ class TaskSocket:
                 # We do a plain .join() because we are querying, and then also supplying contains_eager() so that
                 # the TaskQueueORM.record gets populated
                 # See https://docs-sqlalchemy.readthedocs.io/ko/latest/orm/loading_relationships.html#routing-explicit-joins-statements-into-eagerly-loaded-collections
-                stmt = select(TaskQueueORM).join(TaskQueueORM.record).options(contains_eager(TaskQueueORM.record))
+                stmt = select(TaskQueueORM, BaseRecordORM).join(TaskQueueORM.record)
+
+                # Only load a few columns we need of the record
+                stmt = stmt.options(
+                    Load(BaseRecordORM).load_only(
+                        BaseRecordORM.status, BaseRecordORM.manager_name, BaseRecordORM.modified_on
+                    )
+                )
                 stmt = stmt.filter(BaseRecordORM.status == RecordStatusEnum.waiting)
                 stmt = stmt.filter(manager_programs.contains(TaskQueueORM.required_programs))
                 stmt = stmt.order_by(TaskQueueORM.priority.desc(), TaskQueueORM.created_on)
@@ -287,22 +294,22 @@ class TaskSocket:
                 # Skip locked rows - They may be in the process of being claimed by someone else
                 stmt = stmt.limit(new_limit).with_for_update(skip_locked=True)
 
-                new_items = session.execute(stmt).scalars().all()
+                new_items = session.execute(stmt).all()
 
                 # Update all the task records to reflect this manager claiming them
-                for task_orm in new_items:
-                    task_orm.record.status = RecordStatusEnum.running
-                    task_orm.record.manager_name = manager_name
-                    task_orm.record.modified_on = datetime.utcnow()
+                for _, record_orm in new_items:
+                    record_orm.status = RecordStatusEnum.running
+                    record_orm.manager_name = manager_name
+                    record_orm.modified_on = datetime.utcnow()
 
                 # Generate the specification that is passed to QCEngine
-                self.root_socket.records.generate_task_specification(new_items)
+                self.root_socket.records.generate_task_specification([x[0] for x in new_items])
 
                 session.flush()
 
                 # Store in dict form for returning,
                 # but no need to store the info from the base record
-                found.extend(task_orm.model_dict(exclude=["record"]) for task_orm in new_items)
+                found.extend(task_orm.model_dict(exclude=["record"]) for task_orm, _ in new_items)
 
             manager.claimed += len(found)
 
