@@ -48,9 +48,11 @@ class SQLAlchemySocket:
         # If pool_size in the config is non-zero, then set the pool class to None (meaning use
         # SQLAlchemy default)
         if qcf_config.database.pool_size == 0:
-            self.engine = create_engine(uri, echo=qcf_config.database.echo_sql, poolclass=NullPool)
+            self.engine = create_engine(uri, echo=qcf_config.database.echo_sql, poolclass=NullPool, future=True)
         else:
-            self.engine = create_engine(uri, echo=qcf_config.database.echo_sql, pool_size=qcf_config.database.pool_size)
+            self.engine = create_engine(
+                uri, echo=qcf_config.database.echo_sql, pool_size=qcf_config.database.pool_size, future=True
+            )
 
         self.logger.info(
             "Connected SQLAlchemy to DB dialect {} with driver {}".format(self.engine.dialect.name, self.engine.driver)
@@ -180,7 +182,7 @@ class SQLAlchemySocket:
         # create the tables via sqlalchemy
         uri = db_config.uri
         logger.info(f"Creating tables for database: {uri}")
-        engine = create_engine(uri, echo=False, poolclass=NullPool)
+        engine = create_engine(uri, echo=False, poolclass=NullPool, future=True)
         session = sessionmaker(bind=engine)()
 
         from qcfractal.db_socket.base_orm import BaseORM
