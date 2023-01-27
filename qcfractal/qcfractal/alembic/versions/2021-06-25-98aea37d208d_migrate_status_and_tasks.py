@@ -32,44 +32,53 @@ def upgrade():
     # The only thing to really change is 'incomplete' base_result rows. Change those to be the status
     # of the task/service)
     op.execute(
-        """UPDATE base_result
+        sa.text(
+            """UPDATE base_result
            SET status = task_queue.status::text::recordstatusenum
            FROM task_queue
            WHERE base_result.id = task_queue.base_result_id
            AND base_result.status = 'incomplete'"""
+        )
     )
 
     op.execute(
-        """UPDATE base_result
+        sa.text(
+            """UPDATE base_result
            SET status = service_queue.status::text::recordstatusenum
            FROM service_queue
            WHERE base_result.id = service_queue.procedure_id
            AND base_result.status = 'incomplete'"""
+        )
     )
 
     # Delete all tasks/services for completed records
     op.execute(
-        """
+        sa.text(
+            """
                DELETE FROM task_queue
                USING base_result
                WHERE base_result.id = task_queue.base_result_id
                AND base_result.status = 'complete'
                """
+        )
     )
 
     # Delete all tasks/services for completed records
     op.execute(
-        """
+        sa.text(
+            """
                DELETE FROM service_queue
                USING base_result
                WHERE base_result.id = service_queue.procedure_id
                AND base_result.status = 'complete'
                """
+        )
     )
 
     # Also mark all results without a corresponding task or service as "cancelled"
     op.execute(
-        """
+        sa.text(
+            """
                UPDATE base_result
                SET status = 'cancelled'
                WHERE id IN (
@@ -80,10 +89,12 @@ def upgrade():
                    AND task_queue.base_result_id IS NULL
                )
                """
+        )
     )
 
     op.execute(
-        """
+        sa.text(
+            """
                UPDATE base_result
                SET status = 'cancelled'
                WHERE id IN (
@@ -94,11 +105,13 @@ def upgrade():
                    AND service_queue.procedure_id IS NULL
                )
                """
+        )
     )
 
     # Reset tasks that are assigned to inactive managers
     op.execute(
-        """
+        sa.text(
+            """
                UPDATE base_result
                SET status = 'waiting'
                WHERE id IN (
@@ -109,23 +122,26 @@ def upgrade():
                    AND queue_manager.status = 'inactive'
                )
                """
+        )
     )
 
     # There should be no more incompletes. Check
     session = Session(op.get_bind())
-    r = session.execute("""SELECT id FROM base_result WHERE status = 'incomplete'""").scalars().first()
+    r = session.execute(sa.text("""SELECT id FROM base_result WHERE status = 'incomplete'""")).scalars().first()
     assert r is None
 
     # Now rename 'incomplete' to 'invalid'
-    op.execute("ALTER TYPE recordstatusenum RENAME VALUE 'incomplete' TO 'invalid'")
+    op.execute(sa.text("ALTER TYPE recordstatusenum RENAME VALUE 'incomplete' TO 'invalid'"))
 
     # Now do the required_programs column of the task_queue
     # Form this from the program and procedure columns
     op.add_column("task_queue", sa.Column("required_programs", postgresql.ARRAY(sa.TEXT()), nullable=True))
     op.execute(
-        "UPDATE task_queue SET required_programs = ARRAY[LOWER(program), LOWER(procedure)] WHERE procedure IS NOT NULL"
+        sa.text(
+            "UPDATE task_queue SET required_programs = ARRAY[LOWER(program), LOWER(procedure)] WHERE procedure IS NOT NULL"
+        )
     )
-    op.execute("UPDATE task_queue SET required_programs = ARRAY[LOWER(program)] WHERE procedure IS NULL")
+    op.execute(sa.text("UPDATE task_queue SET required_programs = ARRAY[LOWER(program)] WHERE procedure IS NULL"))
     op.alter_column("task_queue", "required_programs", existing_type=postgresql.JSONB, nullable=False)
     op.create_check_constraint(
         "ck_task_queue_requirements_lower",
@@ -159,7 +175,7 @@ def upgrade():
     op.drop_index("ix_service_queue_status", table_name="service_queue")
     op.drop_index("ix_service_queue_status_tag_hash", table_name="service_queue")
     op.create_index("ix_service_queue_tag", "service_queue", ["tag"], unique=False)
-    op.execute("CREATE INDEX ix_service_queue_waiting_sort ON service_queue (priority desc, created_on)")
+    op.execute(sa.text("CREATE INDEX ix_service_queue_waiting_sort ON service_queue (priority desc, created_on)"))
     op.drop_column("service_queue", "status")
     op.execute("DROP TYPE taskstatusenum")
     # ### end Alembic commands ###

@@ -6,20 +6,21 @@ Create Date: 2022-03-15 12:51:52.995657
 
 """
 
-import re
+import json
 import os
 import sys
-import json
-import sqlalchemy as sa
 from datetime import datetime
+
+import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql import table, column
+
 from qcfractal import __version__ as qcfractal_version
 
 sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
-from migration_helpers.v0_50_helpers import get_empty_keywords_id, add_opt_spec, add_qc_spec
+from migration_helpers.v0_50_helpers import get_empty_keywords_id, add_qc_spec
 
 # revision identifiers, used by Alembic.
 revision = "0b31ab4244de"
@@ -38,9 +39,7 @@ def create_reaction_record(conn, ds_id, created_on, modified_on, spec_id, stoich
                VALUES ('reaction', true, :status, :created_on, :modified_on)
                RETURNING id"""
         ),
-        status="waiting",
-        created_on=created_on,
-        modified_on=modified_on,
+        parameters=dict(status="waiting", created_on=created_on, modified_on=modified_on),
     )
 
     reaction_id = r.scalar()
@@ -51,9 +50,11 @@ def create_reaction_record(conn, ds_id, created_on, modified_on, spec_id, stoich
             """INSERT INTO record_comment (record_id, timestamp, comment)
                VALUES (:record_id, :timestamp, :comment)"""
         ),
-        record_id=reaction_id,
-        timestamp=datetime.utcnow(),
-        comment=f"Reaction is imported/migrated from dataset {ds_id}",
+        parameters=dict(
+            record_id=reaction_id,
+            timestamp=datetime.utcnow(),
+            comment=f"Reaction is imported/migrated from dataset {ds_id}",
+        ),
     )
 
     # Insert the compute history (always, for a service)
@@ -68,17 +69,15 @@ def create_reaction_record(conn, ds_id, created_on, modified_on, spec_id, stoich
             """INSERT INTO record_compute_history (record_id, status, modified_on, provenance)
                VALUES (:record_id, :status, :modified_on, :provenance) RETURNING id"""
         ),
-        record_id=reaction_id,
-        status="waiting",
-        modified_on=modified_on,
-        provenance=json.dumps(provenance),
+        parameters=dict(
+            record_id=reaction_id, status="waiting", modified_on=modified_on, provenance=json.dumps(provenance)
+        ),
     )
 
     # Now add to the reaction record table
     conn.execute(
         sa.text("INSERT INTO reaction_record (id, specification_id) VALUES (:reaction_id, :spec_id)"),
-        reaction_id=reaction_id,
-        spec_id=spec_id,
+        parameters=dict(reaction_id=reaction_id, spec_id=spec_id),
     )
 
     stoich_map = {int(mid): coef for mid, coef in stoichiometries}
@@ -90,10 +89,7 @@ def create_reaction_record(conn, ds_id, created_on, modified_on, spec_id, stoich
                 """INSERT INTO reaction_component (reaction_id, molecule_id, coefficient, singlepoint_id)
                    VALUES (:reaction_id, :molecule_id, :coef, :sp_id)"""
             ),
-            reaction_id=reaction_id,
-            molecule_id=mid,
-            coef=stoich_map[mid],
-            sp_id=sp_id,
+            parameters=dict(reaction_id=reaction_id, molecule_id=mid, coef=stoich_map[mid], sp_id=sp_id),
         )
 
     # Add the service
@@ -101,7 +97,8 @@ def create_reaction_record(conn, ds_id, created_on, modified_on, spec_id, stoich
 
     # guess a tag
     r = conn.execute(
-        sa.text("SELECT tag FROM task_queue WHERE record_id IN :record_id LIMIT 1"), record_id=tuple(sp_ids)
+        sa.text("SELECT tag FROM task_queue WHERE record_id IN :record_id LIMIT 1"),
+        parameters=dict(record_id=tuple(sp_ids)),
     )
     tag = r.scalar_one_or_none()
     if tag is None:
@@ -115,10 +112,7 @@ def create_reaction_record(conn, ds_id, created_on, modified_on, spec_id, stoich
            RETURNING id
         """
         ),
-        reaction_id=reaction_id,
-        created_on=created_on,
-        tag=tag,
-        priority=1,
+        paramters=dict(reaction_id=reaction_id, created_on=created_on, tag=tag, priority=1),
     )
 
     return reaction_id
@@ -134,9 +128,7 @@ def create_manybody_record(conn, ds_id, created_on, modified_on, spec_id, mol_id
                VALUES ('manybody', true, :status, :created_on, :modified_on)
                RETURNING id"""
         ),
-        status="waiting",
-        created_on=created_on,
-        modified_on=modified_on,
+        parameters=dict(status="waiting", created_on=created_on, modified_on=modified_on),
     )
 
     manybody_id = r.scalar()
@@ -147,9 +139,11 @@ def create_manybody_record(conn, ds_id, created_on, modified_on, spec_id, mol_id
             """INSERT INTO record_comment (record_id, timestamp, comment)
                VALUES (:record_id, :timestamp, :comment)"""
         ),
-        record_id=manybody_id,
-        timestamp=datetime.utcnow(),
-        comment=f"Manybody record is imported/migrated from reaction dataset {ds_id}",
+        parameters=dict(
+            record_id=manybody_id,
+            timestamp=datetime.utcnow(),
+            comment=f"Manybody record is imported/migrated from reaction dataset {ds_id}",
+        ),
     )
 
     # Insert the compute history (always, for a service)
@@ -164,10 +158,9 @@ def create_manybody_record(conn, ds_id, created_on, modified_on, spec_id, mol_id
             """INSERT INTO record_compute_history (record_id, status, modified_on, provenance)
                VALUES (:record_id, :status, :modified_on, :provenance) RETURNING id"""
         ),
-        record_id=manybody_id,
-        status="waiting",
-        modified_on=modified_on,
-        provenance=json.dumps(provenance),
+        parameters=dict(
+            record_id=manybody_id, status="waiting", modified_on=modified_on, provenance=json.dumps(provenance)
+        ),
     )
 
     # Now add to the manybody record table
@@ -175,9 +168,7 @@ def create_manybody_record(conn, ds_id, created_on, modified_on, spec_id, mol_id
         sa.text(
             "INSERT INTO manybody_record (id, initial_molecule_id, specification_id) VALUES (:manybody_id, :mol_id, :spec_id)"
         ),
-        manybody_id=manybody_id,
-        mol_id=mol_id,
-        spec_id=spec_id,
+        parameters=dict(manybody_id=manybody_id, mol_id=mol_id, spec_id=spec_id),
     )
 
     # guess a tag
@@ -194,10 +185,7 @@ def create_manybody_record(conn, ds_id, created_on, modified_on, spec_id, mol_id
            RETURNING id
         """
         ),
-        manybody_id=manybody_id,
-        created_on=created_on,
-        tag=tag,
-        priority=1,
+        parameters=dict(manybody_id=manybody_id, created_on=created_on, tag=tag, priority=1),
     )
 
     return manybody_id
@@ -384,8 +372,8 @@ def upgrade():
     datasets = session.query(rxn_dataset_table).all()
 
     for ds in datasets:
-        ds_type = ds["ds_type"]
-        entries = session.query(rxn_entry_table).filter(rxn_entry_table.c.dataset_id == ds["id"]).all()
+        ds_type = ds.ds_type
+        entries = session.query(rxn_entry_table).filter(rxn_entry_table.c.dataset_id == ds.id).all()
 
         # Test before ding migrations
         # Find all stoichiometries, and bail if there are more than 1 and they have different molecules
@@ -404,12 +392,12 @@ def upgrade():
         # If an IE calculation, create an MB dataset
         if ds_type == "ie":
             # We have to add the manybody dataset
-            conn.execute(sa.text("INSERT INTO manybody_dataset (id) VALUES (:ds_id)"), ds_id=ds["id"])
+            conn.execute(sa.text("INSERT INTO manybody_dataset (id) VALUES (:ds_id)"), parameters=dict(ds_id=ds.id))
 
         # Loop over the history, forming specifications
-        for idx, h in enumerate(ds["history"]):
+        for idx, h in enumerate(ds.history):
             spec_name = f"spec_{idx}"
-            spec = dict(zip(ds["history_keys"], h))
+            spec = dict(zip(ds.history_keys, h))
 
             # keywords should be in alias_keywords, except for dftd3 directly run through the
             # composition planner......
@@ -417,7 +405,7 @@ def upgrade():
                 if spec["keywords"] is None:
                     kw = None
                 else:
-                    kw = ds["alias_keywords"][spec["program"]][spec["keywords"]]
+                    kw = ds.alias_keywords[spec["program"]][spec["keywords"]]
             except KeyError:
                 if spec["program"] == "dftd3":
                     kw = empty_kw
@@ -440,7 +428,7 @@ def upgrade():
                        VALUES ('reaction', :spec_id, NULL, '{}'::jsonb)
                        ON CONFLICT DO NOTHING"""
                     ),
-                    spec_id=qc_spec_id,
+                    parameters=dict(spec_id=qc_spec_id),
                 )
 
                 rxn_spec_res = conn.execute(
@@ -452,7 +440,7 @@ def upgrade():
                             AND optimization_specification_id IS NULL
                             AND keywords = '{}'::jsonb"""
                     ),
-                    spec_id=qc_spec_id,
+                    parameters=dict(spec_id=qc_spec_id),
                 )
 
                 rxn_spec_id = rxn_spec_res.scalar()
@@ -463,9 +451,7 @@ def upgrade():
                         """INSERT INTO reaction_dataset_specification (dataset_id, name, specification_id)
                                 VALUES (:ds_id, :spec_name, :spec_id)"""
                     ),
-                    ds_id=ds["id"],
-                    spec_name=spec_name,
-                    spec_id=rxn_spec_id,
+                    parameters=dict(ds_id=ds.id, spec_name=spec_name, spec_id=rxn_spec_id),
                 )
 
                 for entry in entries:
@@ -484,10 +470,7 @@ def upgrade():
                             ON CONFLICT DO NOTHING
                         """
                             ),
-                            ds_id=ds["id"],
-                            name=entry["name"],
-                            mol_id=mol_id,
-                            coeff=coeff,
+                            parameters=dict(ds_id=ds.id, name=entry["name"], mol_id=mol_id, coeff=coeff),
                         )
 
                     # This stoichiometry has molecule ids (as str) as keys
@@ -503,8 +486,7 @@ def upgrade():
                                                 AND sp.molecule_id IN :mol_ids
                                                 """
                         ),
-                        spec_id=qc_spec_id,
-                        mol_ids=tuple(mol_ids),
+                        parameters=dict(spec_id=qc_spec_id, mol_ids=tuple(mol_ids)),
                     )
 
                     records = r.all()
@@ -519,7 +501,7 @@ def upgrade():
                         created_on = min(x[3] for x in records)
                         modified_on = max(x[4] for x in records)
                         rxn_id = create_reaction_record(
-                            conn, ds["id"], created_on, modified_on, rxn_spec_id, stoich_mol_coeff, records
+                            conn, ds.id, created_on, modified_on, rxn_spec_id, stoich_mol_coeff, records
                         )
 
                         # Now add to dataset
@@ -529,10 +511,9 @@ def upgrade():
                             INSERT INTO reaction_dataset_record (dataset_id, entry_name, specification_name, record_id)
                             VALUES (:ds_id, :entry_name, :spec_name, :record_id)"""
                             ),
-                            ds_id=ds["id"],
-                            entry_name=entry["name"],
-                            spec_name=spec_name,
-                            record_id=rxn_id,
+                            parameters=dict(
+                                ds_id=ds.id, entry_name=entry["name"], spec_name=spec_name, record_id=rxn_id
+                            ),
                         )
 
             else:  # Is interaction energy (ie)
@@ -553,8 +534,7 @@ def upgrade():
                        VALUES ('manybody', :spec_id, :mb_kw)
                        ON CONFLICT DO NOTHING"""
                     ),
-                    spec_id=qc_spec_id,
-                    mb_kw=mb_kw_str,
+                    parameters=dict(spec_id=qc_spec_id, mb_kw=mb_kw_str),
                 )
 
                 mb_spec_res = conn.execute(
@@ -565,8 +545,7 @@ def upgrade():
                             AND singlepoint_specification_id = :spec_id
                             AND keywords = :mb_kw"""
                     ),
-                    spec_id=qc_spec_id,
-                    mb_kw=mb_kw_str,
+                    parameters=dict(spec_id=qc_spec_id, mb_kw=mb_kw_str),
                 )
 
                 mb_spec_id = mb_spec_res.scalar()
@@ -577,9 +556,7 @@ def upgrade():
                         """INSERT INTO manybody_dataset_specification (dataset_id, name, specification_id)
                                 VALUES (:ds_id, :spec_name, :spec_id)"""
                     ),
-                    ds_id=ds["id"],
-                    spec_name=spec_name,
-                    spec_id=mb_spec_id,
+                    parameters=dict(ds_id=ds.id, spec_name=spec_name, spec_id=mb_spec_id),
                 )
 
                 for entry in entries:
@@ -600,10 +577,9 @@ def upgrade():
                         ON CONFLICT DO NOTHING
                         """
                         ),
-                        ds_id=ds["id"],
-                        name=entry["name"],
-                        mol_id=mol_id,
-                        attrib=json.dumps(entry["attributes"]),
+                        parameters=dict(
+                            ds_id=ds.id, name=entry["name"], mol_id=mol_id, attrib=json.dumps(entry["attributes"])
+                        ),
                     )
 
                     # See if this parent molecule has been computed
@@ -617,8 +593,7 @@ def upgrade():
                                AND sp.molecule_id = :mol_id
                                """
                         ),
-                        spec_id=qc_spec_id,
-                        mol_id=mol_id,
+                        parameters=dict(spec_id=qc_spec_id, mol_id=mol_id),
                     )
 
                     record = r.one_or_none()
@@ -630,9 +605,7 @@ def upgrade():
                         # The user must have tried to compute these?
                         created_on = record[3]
                         modified_on = record[4]
-                        mb_id = create_manybody_record(
-                            conn, ds["id"], created_on, modified_on, mb_spec_id, mol_id, record
-                        )
+                        mb_id = create_manybody_record(conn, ds.id, created_on, modified_on, mb_spec_id, mol_id, record)
 
                         # Now add to dataset
                         conn.execute(
@@ -641,14 +614,13 @@ def upgrade():
                             INSERT INTO manybody_dataset_record (dataset_id, entry_name, specification_name, record_id)
                             VALUES (:ds_id, :entry_name, :spec_name, :record_id)"""
                             ),
-                            ds_id=ds["id"],
-                            entry_name=entry["name"],
-                            spec_name=spec_name,
-                            record_id=mb_id,
+                            parameters=dict(
+                                ds_id=ds.id, entry_name=entry["name"], spec_name=spec_name, record_id=mb_id
+                            ),
                         )
 
                 # Remove from the reaction dataset table
-                conn.execute(sa.text("DELETE FROM reaction_dataset WHERE id = :ds_id"), ds_id=ds["id"])
+                conn.execute(sa.text("DELETE FROM reaction_dataset WHERE id = :ds_id"), parameters=dict(ds_id=ds.id))
 
     #########################################
     # Modify existing reaction_dataset table

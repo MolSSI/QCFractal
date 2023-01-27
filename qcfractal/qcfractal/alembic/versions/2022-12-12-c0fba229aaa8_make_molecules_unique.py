@@ -5,9 +5,9 @@ Revises: 48d1c43c27e0
 Create Date: 2022-12-12 09:39:10.950668
 
 """
+import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.orm.session import Session
-
 
 # revision identifiers, used by Alembic.
 revision = "c0fba229aaa8"
@@ -23,12 +23,14 @@ def upgrade():
     session = Session(op.get_bind())
 
     duplicates = session.execute(
-        """
+        sa.text(
+            """
         SELECT molecule_hash, array_agg(id), count(*)
         FROM molecule
         GROUP BY molecule_hash
         HAVING count(*) > 1
     """
+        )
     )
 
     for (mol_hash, mol_ids, _) in duplicates:

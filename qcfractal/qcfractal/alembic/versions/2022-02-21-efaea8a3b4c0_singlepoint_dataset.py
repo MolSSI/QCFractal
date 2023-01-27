@@ -7,6 +7,7 @@ Create Date: 2022-02-21 10:19:54.041035
 """
 import os
 import sys
+
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
@@ -14,7 +15,7 @@ from sqlalchemy.orm.session import Session
 from sqlalchemy.sql import table, column
 
 sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
-from migration_helpers.v0_50_helpers import get_empty_keywords_id, add_opt_spec, add_qc_spec
+from migration_helpers.v0_50_helpers import get_empty_keywords_id, add_qc_spec
 
 # revision identifiers, used by Alembic.
 revision = "efaea8a3b4c0"
@@ -143,8 +144,8 @@ def upgrade():
 
     for ds in datasets:
         spec_idx = 1
-        for h in ds["history"]:
-            spec = dict(zip(ds["history_keys"], h))
+        for h in ds.history:
+            spec = dict(zip(ds.history_keys, h))
 
             # keywords should be in alias_keywords, except for dftd3 directly run through the
             # composition planner......
@@ -152,7 +153,7 @@ def upgrade():
                 if spec["keywords"] is None:
                     kw = None
                 else:
-                    kw = ds["alias_keywords"][spec["program"]][spec["keywords"]]
+                    kw = ds.alias_keywords[spec["program"]][spec["keywords"]]
             except KeyError:
                 if spec["program"] == "dftd3":
                     kw = empty_kw
@@ -176,12 +177,14 @@ def upgrade():
                     AND q.keywords_id = :keywords_id
                     """
                 ),
-                col_id=ds["id"],
-                program=spec["program"],
-                driver=spec["driver"],
-                method=spec["method"],
-                basis="" if spec["basis"] is None else spec["basis"],
-                keywords_id=kw,
+                parameters=dict(
+                    col_id=ds.id,
+                    program=spec["program"],
+                    driver=spec["driver"],
+                    method=spec["method"],
+                    basis="" if spec["basis"] is None else spec["basis"],
+                    keywords_id=kw,
+                ),
             )
 
             spec_ids = res.scalars().all()
@@ -210,10 +213,7 @@ def upgrade():
                         """INSERT INTO singlepoint_dataset_specification (dataset_id, name, description, specification_id)
                                       VALUES (:col_id, :spec_name, :spec_desc, :qc_spec_id)"""
                     ),
-                    col_id=ds["id"],
-                    spec_name=spec_name,
-                    spec_desc="",
-                    qc_spec_id=sid,
+                    parameters=dict(col_id=ds.id, spec_name=spec_name, spec_desc="", qc_spec_id=sid),
                 )
 
                 # Now what records match these specs
@@ -231,8 +231,7 @@ def upgrade():
                         ON CONFLICT DO NOTHING
                         """
                     ),
-                    col_id=ds["id"],
-                    qc_spec_id=sid,
+                    parameters=dict(col_id=ds.id, qc_spec_id=sid),
                 )
 
     # Drop old dataset columns

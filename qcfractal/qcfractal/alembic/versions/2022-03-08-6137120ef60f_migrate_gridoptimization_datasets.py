@@ -5,9 +5,9 @@ Revises: bea426877db0
 Create Date: 2022-03-08 09:52:33.268151
 
 """
+import json
 import os
 import sys
-import json
 
 import sqlalchemy as sa
 from alembic import op
@@ -152,12 +152,12 @@ def upgrade():
     session = Session(conn)
     collections = session.query(collection_table).where(collection_table.c.collection == "gridoptimization").all()
     for col in collections:
-        ext = col["extra"]
+        ext = col.extra
         col_specs = ext.pop("specs")
         col_record = ext.pop("records")
 
         # Add the dataset to the separate optimziation dataset table
-        conn.execute(sa.text("INSERT INTO gridoptimization_dataset (id) VALUES (:colid)"), colid=col["id"])
+        conn.execute(sa.text("INSERT INTO gridoptimization_dataset (id) VALUES (:colid)"), parameters={"colid": col.id})
 
         # Specifications
         # Empty keywords
@@ -203,10 +203,9 @@ def upgrade():
                        VALUES (:col_id, :spec_name, :spec_desc, :opt_spec_id)
                     """
                 ),
-                col_id=col["id"],
-                spec_name=spec["name"],
-                spec_desc=spec["description"],
-                opt_spec_id=opt_spec_id,
+                parameters=dict(
+                    col_id=col.id, spec_name=spec["name"], spec_desc=spec["description"], opt_spec_id=opt_spec_id
+                ),
             )
 
         ####################
@@ -222,7 +221,7 @@ def upgrade():
                    WHERE collection.id = :col_id
                 """
             ),
-            col_id=col["id"],
+            parameters={"col_id": col.id},
         )
 
         for ent_name, ent in col_record.items():
@@ -236,18 +235,14 @@ def upgrade():
                            WHERE r.id = :record_id
                            """
                     ),
-                    col_id=col["id"],
-                    ent_name=ent_name,
-                    spec_name=spec_name,
-                    record_id=record_id,
+                    parameters=dict(col_id=col.id, ent_name=ent_name, spec_name=spec_name, record_id=record_id),
                 )
 
         # Update the collection extra, with the removed fields
         ext.pop("history", None)
         conn.execute(
             sa.text("UPDATE collection SET extra = (:extra)::json WHERE id = :col_id"),
-            col_id=col["id"],
-            extra=json.dumps(ext),
+            parameters=dict(col_id=col.id, extra=json.dumps(ext)),
         )
 
     # ### end Alembic commands ###

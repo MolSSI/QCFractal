@@ -27,12 +27,12 @@ def hash_dict(d):
 
 def create_hashes(table):
     conn = op.get_bind()
-    res = conn.execute(f"SELECT id,keywords FROM {table};")
+    res = conn.execute(sa.text(f"SELECT id,keywords FROM {table};"))
     all_kw = res.fetchall()
 
     for spec_id, kw in all_kw:
         h = hash_dict(kw)
-        op.execute(f"""UPDATE {table} SET keywords_hash = '{h}' WHERE id = {spec_id};""")
+        op.execute(sa.text(f"""UPDATE {table} SET keywords_hash = '{h}' WHERE id = {spec_id};"""))
 
 
 def upgrade():

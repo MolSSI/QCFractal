@@ -44,12 +44,9 @@ def add_qc_spec(conn, program, driver, method, basis, keywords_id, protocols):
                ON CONFLICT DO NOTHING
                """
         ),
-        program=program,
-        driver=driver,
-        method=method,
-        basis=basis,
-        keywords_id=keywords_id,
-        protocols=protocols_str,
+        parameters=dict(
+            program=program, driver=driver, method=method, basis=basis, keywords_id=keywords_id, protocols=protocols_str
+        ),
     )
 
     res = conn.execute(
@@ -63,12 +60,9 @@ def add_qc_spec(conn, program, driver, method, basis, keywords_id, protocols):
                    AND protocols = (:protocols)::jsonb
                 """
         ),
-        program=program,
-        driver=driver,
-        method=method,
-        basis=basis,
-        keywords_id=keywords_id,
-        protocols=protocols_str,
+        parameters=dict(
+            program=program, driver=driver, method=method, basis=basis, keywords_id=keywords_id, protocols=protocols_str
+        ),
     )
     return res.scalar()
 
@@ -90,10 +84,9 @@ def add_opt_spec(conn, qc_specification_id, program, keywords, protocols):
            ON CONFLICT DO NOTHING
            """
         ),
-        program=program,
-        keywords=keywords_str,
-        protocols=protocols_str,
-        qc_specification_id=qc_specification_id,
+        parameters=dict(
+            program=program, keywords=keywords_str, protocols=protocols_str, qc_specification_id=qc_specification_id
+        ),
     )
 
     res = conn.execute(
@@ -106,10 +99,9 @@ def add_opt_spec(conn, qc_specification_id, program, keywords, protocols):
                 AND qc_specification_id = :qc_specification_id
                 """
         ),
-        program=program,
-        keywords=keywords_str,
-        protocols=protocols_str,
-        qc_specification_id=qc_specification_id,
+        parameters=dict(
+            program=program, keywords=keywords_str, protocols=protocols_str, qc_specification_id=qc_specification_id
+        ),
     )
 
     return res.scalar()

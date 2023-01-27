@@ -135,10 +135,12 @@ def upgrade():
 
     # For all collections
     conn.execute(
-        """UPDATE collection
+        sa.text(
+            """UPDATE collection
         SET provenance = NULL
         WHERE provenance::jsonb = 'null'::jsonb
         """
+        )
     )
 
     # Just for optimization
@@ -158,12 +160,12 @@ def upgrade():
     session = Session(conn)
     collections = session.query(collection_table).where(collection_table.c.collection == "optimization").all()
     for col in collections:
-        ext = col["extra"]
+        ext = col.extra
         col_specs = ext.pop("specs")
         col_record = ext.pop("records")
 
         # Add the dataset to the separate optimziation dataset table
-        conn.execute(sa.text("INSERT INTO optimization_dataset (id) VALUES (:colid)"), colid=col["id"])
+        conn.execute(sa.text("INSERT INTO optimization_dataset (id) VALUES (:colid)"), parameters={"colid": col.id})
 
         # Specifications
         # Empty keywords
@@ -209,10 +211,9 @@ def upgrade():
                        VALUES (:col_id, :spec_name, :spec_desc, :opt_spec_id)
                     """
                 ),
-                col_id=col["id"],
-                spec_name=spec["name"],
-                spec_desc=spec["description"],
-                opt_spec_id=opt_spec_id,
+                parameters=dict(
+                    col_id=col.id, spec_name=spec["name"], spec_desc=spec["description"], opt_spec_id=opt_spec_id
+                ),
             )
 
         ####################
@@ -228,7 +229,7 @@ def upgrade():
                    WHERE collection.id = :col_id
                 """
             ),
-            col_id=col["id"],
+            parameters=dict(col_id=col.id),
         )
 
         for ent_name, ent in col_record.items():
@@ -242,18 +243,22 @@ def upgrade():
                            WHERE r.id = :record_id
                            """
                     ),
-                    col_id=col["id"],
-                    ent_name=ent_name,
-                    spec_name=spec_name,
-                    record_id=record_id,
+                    parameters=dict(
+                        col_id=col.id,
+                        ent_name=ent_name,
+                        spec_name=spec_name,
+                        record_id=record_id,
+                    ),
                 )
 
         # Update the collection extra, with the removed fields
         ext.pop("history", None)
         conn.execute(
             sa.text("UPDATE collection SET extra = (:extra)::json WHERE id = :col_id"),
-            col_id=col["id"],
-            extra=json.dumps(ext),
+            parameters=dict(
+                col_id=col.id,
+                extra=json.dumps(ext),
+            ),
         )
 
     # ### end Alembic commands ###
