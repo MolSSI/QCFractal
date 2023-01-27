@@ -90,6 +90,8 @@ def _get_query_proj_options(
             subrel_map.setdefault(base, list())
             subrel_map[base].append(col)
 
+    subrel_bases = set(subrel_map.keys())
+
     mapper = inspect(orm_type)
 
     # We use mapper.mapper. This works for the usual ORM, as well as
@@ -102,9 +104,13 @@ def _get_query_proj_options(
         # load only the non-excluded columns
         # skip loading excluded relationships
         load_columns = columns - exclude_set
-        noload_rels = relationships & exclude_set
-        options = [load_only(*load_columns)]
-        options += [lazyload(getattr(orm_type, x)) for x in noload_rels]
+        noload_rels = (relationships & exclude_set) - subrel_bases
+
+        options = [lazyload(getattr(orm_type, x)) for x in noload_rels]
+
+        if load_columns:
+            load_columns_attr = [getattr(orm_type, x) for x in load_columns]
+            options += [load_only(*load_columns_attr)]
 
     elif include_set and "*" in include_set and not exclude_set:
         # include_set has '*', no exclude_sets
@@ -113,27 +119,33 @@ def _get_query_proj_options(
         options = [selectinload(getattr(orm_type, x)) for x in load_rels]
 
     elif include_set and "*" in include_set and exclude_set:
-        # include_set has '*', and we have exclude_sets
+        # include_set has '*', and we have exclude_set
         # Load only non-excluded columns
         # Add any relationship specified in include_set (and not in exclude_set)
         # Skip loading any relationships that are excluded
         load_columns = columns - exclude_set
         load_rels = (relationships & include_set) - exclude_set
-        noload_rels = relationships & exclude_set
+        noload_rels = (relationships & exclude_set) - subrel_bases
 
-        options = [load_only(*load_columns)]
-        options += [selectinload(getattr(orm_type, x)) for x in load_rels]
+        options = [selectinload(getattr(orm_type, x)) for x in load_rels]
         options += [lazyload(getattr(orm_type, x)) for x in noload_rels]
+
+        if load_columns:
+            load_columns_attr = [getattr(orm_type, x) for x in load_columns]
+            options += [load_only(*load_columns_attr)]
 
     elif include_set and not exclude_set:
         # Include, but with no exclude_set
         load_columns = columns & include_set
         load_rels = relationships & include_set
-        noload_rels = relationships - include_set
+        noload_rels = relationships - include_set - subrel_bases
 
-        options = [load_only(*load_columns)]
-        options += [selectinload(getattr(orm_type, x)) for x in load_rels]
+        options = [selectinload(getattr(orm_type, x)) for x in load_rels]
         options += [lazyload(getattr(orm_type, x)) for x in noload_rels]
+
+        if load_columns:
+            load_columns_attr = [getattr(orm_type, x) for x in load_columns]
+            options += [load_only(*load_columns_attr)]
 
     elif include_set and exclude_set:
         # Both include_set and exclude_set specified
@@ -143,11 +155,14 @@ def _get_query_proj_options(
 
         load_columns = (columns & include_set) - exclude_set
         load_rels = (relationships & include_set) - exclude_set
-        noload_rels = (relationships - include_set) | (relationships & exclude_set)
+        noload_rels = ((relationships - include_set) | (relationships & exclude_set)) - subrel_bases
 
-        options = [load_only(*load_columns)]
-        options += [selectinload(getattr(orm_type, x)) for x in load_rels]
+        options = [selectinload(getattr(orm_type, x)) for x in load_rels]
         options += [lazyload(getattr(orm_type, x)) for x in noload_rels]
+
+        if load_columns:
+            load_columns_attr = [getattr(orm_type, x) for x in load_columns]
+            options += [load_only(*load_columns_attr)]
 
     else:
         raise RuntimeError(
