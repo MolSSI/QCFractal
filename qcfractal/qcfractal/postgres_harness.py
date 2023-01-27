@@ -13,6 +13,7 @@ import weakref
 from typing import TYPE_CHECKING
 
 import psycopg2
+from psycopg2.errors import OperationalError, ObjectInUse
 
 from .config import DatabaseConfig
 from .db_socket.socket import SQLAlchemySocket
@@ -392,7 +393,7 @@ class PostgresHarness:
 
         try:
             cursor.execute(f"DROP DATABASE IF EXISTS {self.config.database_name}")
-        except psycopg2.OperationalError as e:
+        except (OperationalError, ObjectInUse) as e:
             raise RuntimeError(f"Could not delete database. Was it still open somewhere? Error: {str(e)}")
 
     def start(self) -> None:
