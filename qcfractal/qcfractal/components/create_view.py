@@ -1,8 +1,7 @@
 import os
 
 from sqlalchemy import select, create_engine, Column, String, ForeignKey, LargeBinary
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import selectinload, sessionmaker
+from sqlalchemy.orm import selectinload, sessionmaker, declarative_base
 
 from qcfractal.db_socket.socket import SQLAlchemySocket
 from qcportal.compression import compress, CompressionEnum

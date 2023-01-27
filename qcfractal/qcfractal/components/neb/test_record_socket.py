@@ -37,7 +37,7 @@ def test_neb_socket_add_get(storage_socket: SQLAlchemySocket, spec: NEBSpecifica
     time_1 = datetime.utcnow()
     assert meta.success
 
-    recs = storage_socket.records.neb.get(id, include=["*", "initial_chain", "initial_chain.molecule", "service"])
+    recs = storage_socket.records.neb.get(id, include=["*", "initial_chain", "service"])
 
     assert len(recs) == 2
     for r in recs:

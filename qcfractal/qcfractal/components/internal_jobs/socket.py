@@ -10,7 +10,7 @@ from socket import gethostname
 from typing import TYPE_CHECKING
 
 import psycopg2
-from sqlalchemy import select, delete, update, and_, or_
+from sqlalchemy import select, delete, update, and_, or_, text
 from sqlalchemy.dialects.postgresql import insert
 
 from qcfractal.components.auth.db_models import UserIDMapSubquery
@@ -146,7 +146,7 @@ class InternalJobSocket:
                 session.flush()
 
                 # NOTIFY is not sent until COMMIT (according to postgresql docs)
-                session.execute("NOTIFY check_internal_jobs;")
+                session.execute(text("NOTIFY check_internal_jobs;"))
                 job_id = job_orm.id
 
         return job_id
@@ -465,6 +465,13 @@ class InternalJobSocket:
 
             # Stop the updating thread and cleanup
             job_status.stop()
+
+        # Remove the listener registration for this process
+        cursor.execute("UNLISTEN check_internal_jobs;")
+
+        session_main.close()
+        session_status.close()
+        conn.close()
 
     def run_processes(self, end_event):
         """

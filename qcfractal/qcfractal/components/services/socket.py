@@ -16,10 +16,10 @@ from qcfractal.db_socket.helpers import (
     get_count,
 )
 from qcportal.compression import CompressionEnum
+from qcportal.generic_result import GenericTaskResult
 from qcportal.metadata_models import InsertMetadata
 from qcportal.outputstore import OutputStore, OutputTypeEnum
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
-from qcportal.generic_result import GenericTaskResult
 from .db_models import ServiceQueueORM, ServiceDependencyORM, ServiceSubtaskRecordORM
 
 if TYPE_CHECKING:
@@ -206,7 +206,7 @@ class ServiceSocket:
         # with at least one error
         stmt = (
             select(ServiceQueueORM)
-            .options(defer("service_state"))  # could be large, but is not needed
+            .options(defer(ServiceQueueORM.service_state))  # could be large, but is not needed
             .options(joinedload(ServiceQueueORM.record))
             .join(status_cte, status_cte.c.service_id == ServiceQueueORM.id)
             .where(status_cte.c.task_statuses.contained_by(["complete", "error"]))

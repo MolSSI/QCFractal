@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy.ext.declarative import as_declarative
+from sqlalchemy.orm import as_declarative
 
 if TYPE_CHECKING:
     from typing import Any, TypeVar, Type, Dict, Optional, Iterable, Union, List
