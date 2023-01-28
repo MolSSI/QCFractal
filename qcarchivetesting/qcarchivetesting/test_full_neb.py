@@ -50,4 +50,3 @@ def test_neb_full_1(fulltest_client: PortalClient):
         raise RuntimeError("Did not finish calculation in time")
 
     assert rec.status == RecordStatusEnum.complete
-    print(rec.stdout)
