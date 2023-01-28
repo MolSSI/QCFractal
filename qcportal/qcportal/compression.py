@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import lzma
 from enum import Enum
-from typing import Optional, Union, Dict, Tuple, Any
+from typing import Optional, Union, Dict, Tuple, List, Any
 
 import zstandard
 
@@ -41,7 +41,7 @@ def compress(
     be different from the provided arguments)
     """
 
-    if isinstance(input_data, dict):
+    if isinstance(input_data, (dict, list, tuple)):
         data = json.dumps(input_data).encode()
     elif isinstance(input_data, str):
         data = input_data.encode()
@@ -103,7 +103,7 @@ def decompress_string(compressed_data: bytes, compression_type: CompressionEnum)
     return decompress_bytes(compressed_data, compression_type).decode()
 
 
-def decompress_json(compressed_data: bytes, compression_type: CompressionEnum) -> Dict[Any, Any]:
+def decompress_json(compressed_data: bytes, compression_type: CompressionEnum) -> Union[List[Any], Dict[Any, Any]]:
     """
     Returns a dictionary that was stored compressed
     """
