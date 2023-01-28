@@ -11,7 +11,7 @@ import shutil
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
-from sqlalchemy import create_engine, exc, event
+from sqlalchemy import create_engine, exc, event, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 
@@ -80,6 +80,7 @@ class SQLAlchemySocket:
         self.Session = sessionmaker(bind=self.engine, future=True)
 
         # Create/initialize the subsockets
+        from ..components.largebinary.socket import LargeBinarySocket
         from ..components.internal_jobs.socket import InternalJobSocket
         from ..components.molecules.socket import MoleculeSocket
         from ..components.auth.user_socket import UserSocket
@@ -92,6 +93,9 @@ class SQLAlchemySocket:
         from ..components.services.socket import ServiceSocket
         from ..components.record_socket import RecordSocket
         from ..components.dataset_socket import DatasetSocket
+
+        # Large storage
+        self.largebinary = LargeBinarySocket(self)
 
         # Internal job socket goes first - others may depend on this
         self.internal_jobs = InternalJobSocket(self)
@@ -193,6 +197,9 @@ class SQLAlchemySocket:
             BaseORM.metadata.create_all(engine)
         except Exception as e:
             raise RuntimeError(f"SQLAlchemy Connection Error\n{str(e)}")
+
+        # Some things can't be done on creation
+        session.execute(text("ALTER TABLE largebinary_store ALTER COLUMN data_local SET STORAGE EXTERNAL"))
 
         try:
             for rolename, permissions in default_roles.items():

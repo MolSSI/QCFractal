@@ -51,6 +51,10 @@ class MissingDataError(UserReportableError):
     pass
 
 
+class CorruptDataError(UserReportableError):
+    pass
+
+
 class AlreadyExistsError(UserReportableError):
     pass
 
