@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>QCPortal API Reference &#8212; QCArchive 0.50b6.post3+g22ea0d3f documentation</title>
+    <title>QCPortal API Reference &#8212; QCArchive 0.50b6.post7+g05f8eccf documentation</title>
   
   
   
@@ -737,8 +737,8 @@ that are common among all records.</p>
 <li><p><strong>created_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created after the given date/time</p></li>
 <li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified before the given date/time</p></li>
 <li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified after the given date/time</p></li>
-<li><p><strong>owner_user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a user in the given list (usernames or IDs)</p></li>
-<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a group in the given list (group names or IDS)</p></li>
+<li><p><strong>owner_user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a user in the given list (usernames or IDs)</p></li>
+<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a group in the given list (group names or IDS)</p></li>
 <li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of records to return. Note that the server limit is always obeyed.</p></li>
 <li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Additional fields to include in the returned record</p></li>
 </ul>
@@ -977,11 +977,11 @@ that was not found.</p>
 <li><p><strong>basis</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Optional</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records whose basis is in the given list</p></li>
 <li><p><strong>keywords</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>, </em><em>Iterable</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records with these keywords (exact match)</p></li>
 <li><p><strong>molecule_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records whose molecule (id) is in the given list</p></li>
-<li><p><strong>owner_user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a user in the given list</p></li>
+<li><p><strong>owner_user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a user in the given list</p></li>
 <li><p><strong>owner_user</strong> – Query records owned by a group in the given list</p></li>
 <li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of records to return. Note that the server limit is always obeyed.</p></li>
 <li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Additional fields to include in the returned record</p></li>
-<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1072,11 +1072,11 @@ that was not found.</p>
 <li><p><strong>qc_basis</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Optional</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records whose basis is in the given list</p></li>
 <li><p><strong>initial_molecule_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records whose initial molecule (id) is in the given list</p></li>
 <li><p><strong>final_molecule_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records whose final molecule (id) is in the given list</p></li>
-<li><p><strong>owner_user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a user in the given list</p></li>
+<li><p><strong>owner_user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a user in the given list</p></li>
 <li><p><strong>owner_user</strong> – Query records owned by a group in the given list</p></li>
 <li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of records to return. Note that the server limit is always obeyed.</p></li>
 <li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Additional fields to include in the returned record</p></li>
-<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1167,11 +1167,11 @@ that was not found.</p>
 <li><p><strong>qc_method</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose method is in the given list</p></li>
 <li><p><strong>qc_basis</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose basis is in the given list</p></li>
 <li><p><strong>initial_molecule_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records whose initial molecule (id) is in the given list</p></li>
-<li><p><strong>owner_user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a user in the given list</p></li>
+<li><p><strong>owner_user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a user in the given list</p></li>
 <li><p><strong>owner_user</strong> – Query records owned by a group in the given list</p></li>
 <li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of records to return. Note that the server limit is always obeyed.</p></li>
 <li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Additional fields to include in the returned record</p></li>
-<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1265,11 +1265,11 @@ that was not found.</p>
 <li><p><strong>qc_method</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose method is in the given list</p></li>
 <li><p><strong>qc_basis</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Optional</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records whose basis is in the given list</p></li>
 <li><p><strong>initial_molecule_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records whose initial molecule (id) is in the given list</p></li>
-<li><p><strong>owner_user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a user in the given list</p></li>
+<li><p><strong>owner_user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a user in the given list</p></li>
 <li><p><strong>owner_user</strong> – Query records owned by a group in the given list</p></li>
 <li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of records to return. Note that the server limit is always obeyed.</p></li>
 <li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Additional fields to include in the returned record</p></li>
-<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1365,11 +1365,11 @@ that was not found.</p>
 <li><p><strong>qc_method</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose method is in the given list</p></li>
 <li><p><strong>qc_basis</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose basis is in the given list</p></li>
 <li><p><strong>molecule_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query reactions that contain a molecule (id) is in the given list</p></li>
-<li><p><strong>owner_user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a user in the given list</p></li>
+<li><p><strong>owner_user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a user in the given list</p></li>
 <li><p><strong>owner_user</strong> – Query records owned by a group in the given list</p></li>
 <li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of records to return. Note that the server limit is always obeyed.</p></li>
 <li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Additional fields to include in the returned record</p></li>
-<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1458,11 +1458,11 @@ that was not found.</p>
 <li><p><strong>qc_method</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose qc method is in the given list</p></li>
 <li><p><strong>qc_basis</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose qc basis is in the given list</p></li>
 <li><p><strong>initial_molecule_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query manybody calculations that contain an initial molecule (id) is in the given list</p></li>
-<li><p><strong>owner_user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a user in the given list</p></li>
+<li><p><strong>owner_user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a user in the given list</p></li>
 <li><p><strong>owner_user</strong> – Query records owned by a group in the given list</p></li>
 <li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of records to return. Note that the server limit is always obeyed.</p></li>
 <li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Additional fields to include in the returned record</p></li>
-<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1536,8 +1536,8 @@ that was not found.</p>
 <li><p><strong>qc_basis</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
 <li><p><strong>initial_chain_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – </p></li>
 <li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – </p></li>
-<li><p><strong>owner_user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>owner_user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – </p></li>
 <li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – </p></li>
 </ul>
 </dd>
@@ -1650,7 +1650,7 @@ as they are not deleted)</p>
 <li><p><strong>access_method</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Return log entries whose access_method is in the given list</p></li>
 <li><p><strong>before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Return log entries captured before the specified date/time</p></li>
 <li><p><strong>after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Return log entries captured after the specified date/time</p></li>
-<li><p><strong>user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>]</em><em>]</em><em>]</em>) – User name or ID associated with the log entry</p></li>
+<li><p><strong>user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – User name or ID associated with the log entry</p></li>
 <li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of log entries to return. Note that the server limit is always obeyed.</p></li>
 </ul>
 </dd>
@@ -1689,7 +1689,7 @@ as they are not deleted)</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>error_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Return error log entries whose id is in the list</p></li>
-<li><p><strong>user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Return error log entries whose user name or ID is in the list</p></li>
+<li><p><strong>user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Return error log entries whose user name or ID is in the list</p></li>
 <li><p><strong>before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Return error log entries captured before the specified date/time</p></li>
 <li><p><strong>after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Return error log entries captured after the specified date/time</p></li>
 <li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of log entries to return. Note that the server limit is always obeyed.</p></li>
