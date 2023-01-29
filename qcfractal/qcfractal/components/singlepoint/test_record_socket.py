@@ -8,7 +8,7 @@ from qcelemental.models.results import AtomicResultProperties
 
 from qcarchivetesting import load_molecule_data
 from qcfractal.components.wavefunctions.test_db_models import assert_wfn_equal
-from qcportal.compression import decompress_string
+from qcportal.compression import decompress, decompress_old_string
 from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputStore
@@ -279,7 +279,7 @@ def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket, activated_mana
         for o in outs.values():
             out_obj = OutputStore(**o)
             co = result.extras["_qcfractal_compressed_outputs"][0]
-            ro = decompress_string(co["data"], co["compression"])
+            ro = decompress_old_string(co["data"], co["compression"])
             assert out_obj.as_string == ro
 
 

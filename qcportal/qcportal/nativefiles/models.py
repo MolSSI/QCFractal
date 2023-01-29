@@ -3,7 +3,13 @@ from typing import Union, Optional
 
 from pydantic import Field, validator, BaseModel, Extra
 
-from qcportal.compression import CompressionEnum, compress, decompress_bytes, decompress_string, get_compressed_ext
+from qcportal.compression import (
+    CompressionEnum,
+    compress_old,
+    decompress_old_bytes,
+    decompress_old_string,
+    get_compressed_ext,
+)
 
 
 class NativeFile(BaseModel):
@@ -65,7 +71,9 @@ class NativeFile(BaseModel):
             is_text = True
 
         uncompressed_size = len(input_data)
-        compressed_data, compression_type, compression_level = compress(input_data, compression_type, compression_level)
+        compressed_data, compression_type, compression_level = compress_old(
+            input_data, compression_type, compression_level
+        )
 
         return cls(
             name=name,
@@ -81,7 +89,7 @@ class NativeFile(BaseModel):
         if not self.is_text:
             raise RuntimeError("Cannot print as string - is not text!")
 
-        return decompress_string(self.data, self.compression)
+        return decompress_old_string(self.data, self.compression)
 
     def save_file(
         self, directory: str, new_name: Optional[str] = None, keep_compressed: bool = False, overwrite: bool = False
@@ -107,4 +115,4 @@ class NativeFile(BaseModel):
                 f.write(self.data)
             else:
                 # Ok if text. We won't decode into a string
-                f.write(decompress_bytes(self.data, self.compression))
+                f.write(decompress_old_bytes(self.data, self.compression))

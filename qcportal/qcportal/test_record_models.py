@@ -11,7 +11,7 @@ from qcfractal.components.singlepoint.testing_helpers import (
     submit_test_data as submit_sp_test_data,
 )
 from qcfractal.components.torsiondrive.testing_helpers import submit_test_data as submit_td_test_data
-from qcportal.compression import decompress_string
+from qcportal.compression import decompress_old_string
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 
 if TYPE_CHECKING:
@@ -56,7 +56,7 @@ def test_baserecord_model_common(
     assert record.modified_on > record.created_on
 
     co = result.extras["_qcfractal_compressed_outputs"][0]
-    ro = decompress_string(co["data"], co["compression"])
+    ro = decompress_old_string(co["data"], co["compression"])
     assert record.stdout == ro
 
     assert len(record.comments) == 1

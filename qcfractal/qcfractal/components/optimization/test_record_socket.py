@@ -8,7 +8,7 @@ import pytest
 from qcarchivetesting import load_molecule_data
 from qcfractal.components.optimization.testing_helpers import test_specs, load_test_data, run_test_data
 from qcfractal.db_socket import SQLAlchemySocket
-from qcportal.compression import decompress_string
+from qcportal.compression import decompress, decompress_old_string
 from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule
 from qcportal.optimization import (
@@ -278,7 +278,7 @@ def test_optimization_socket_run(storage_socket: SQLAlchemySocket, activated_man
         for o in outs.values():
             out_obj = OutputStore(**o)
             co = result.extras["_qcfractal_compressed_outputs"][0]
-            ro = decompress_string(co["data"], co["compression"])
+            ro = decompress_old_string(co["data"], co["compression"])
             assert out_obj.as_string == ro
 
         # Test the trajectory

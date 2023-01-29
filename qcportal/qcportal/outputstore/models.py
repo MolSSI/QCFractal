@@ -4,7 +4,7 @@ from typing import Union, Dict, Optional, Any
 
 from pydantic import Field, validator, BaseModel, Extra
 
-from qcportal.compression import CompressionEnum, compress, decompress_string, decompress_json
+from qcportal.compression import CompressionEnum, compress_old, decompress_old_string, decompress_old_json
 
 
 class OutputTypeEnum(str, Enum):
@@ -95,7 +95,9 @@ class OutputStore(BaseModel):
         If compression_level is None, but a compression_type is specified, an appropriate default level is chosen
         """
 
-        compressed_data, compression_type, compression_level = compress(input_data, compression_type, compression_level)
+        compressed_data, compression_type, compression_level = compress_old(
+            input_data, compression_type, compression_level
+        )
 
         return cls(
             output_type=output_type,
@@ -108,7 +110,7 @@ class OutputStore(BaseModel):
         """
         Returns the string representing the output
         """
-        return decompress_string(self.data, self.compression)
+        return decompress_old_string(self.data, self.compression)
 
     def get_json(self) -> Dict[Any, Any]:
         """
@@ -117,7 +119,7 @@ class OutputStore(BaseModel):
         (errors are stored as JSON. stdout/stderr are just strings)
         """
 
-        return decompress_json(self.data, self.compression)
+        return decompress_old_json(self.data, self.compression)
 
     @property
     def as_string(self) -> str:
