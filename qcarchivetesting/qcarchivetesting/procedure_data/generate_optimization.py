@@ -57,10 +57,12 @@ if record.status != "complete":
 
 result_data = compute.get_data()
 assert len(result_data) == 1
-assert record_id in result_data
-assert result_data[record_id]["success"] is True
 
-test_data["result"] = result_data[record_id]
+task, result = result_data[0]
+assert task["record_id"] == record_id
+assert result["success"] is True
+
+test_data["result"] = result
 
 print(f"** Writing output to {outfile_name}")
 with lzma.open(outfile_name, "wt") as f:

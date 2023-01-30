@@ -18,21 +18,21 @@ class DataGeneratorManager(ComputeManager):
     def __init__(self, worker_pool, fractal_uri, manager_name, result_queue):
         ComputeManager.__init__(self, worker_pool, fractal_uri=fractal_uri, manager_name=manager_name)
 
-        # Maps task id to record id
+        # Maps task id to full task
         self._task_map = {}
 
         self._result_queue = result_queue
 
     def postprocess_results(self, results):
-        # Replace task id with record id
-        results = {self._task_map[k]: v for k, v in results.items()}
-
-        for item in results.items():
-            self._result_queue.put(item)
+        # results is a dict of task_id to result
+        for task_id, result in results.items():
+            # Return full task + full result (as dict)
+            self._result_queue.put((self._task_map[task_id], result.dict()))
 
     def preprocess_new_tasks(self, new_tasks):
         for task in new_tasks:
-            self._task_map[task["id"]] = task["record_id"]
+            # Store the full task by task id
+            self._task_map[task["id"]] = task
 
 
 class DataGeneratorComputeProcess(ProcessBase):
@@ -70,10 +70,11 @@ class DataGeneratorComputeProcess(ProcessBase):
         self._worker_pool.join()
 
     def get_data(self):
+        # Returns list of iterable (task, result)
         data = []
 
         while not self._result_queue.empty():
             d = self._result_queue.get(False)
-            data.append((d[0], process_result(d[1])))
+            data.append(d)
 
-        return dict(data)
+        return data

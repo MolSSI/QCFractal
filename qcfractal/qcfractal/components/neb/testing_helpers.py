@@ -66,19 +66,25 @@ def compare_neb_specs(
     return input_spec == output_spec
 
 
-def generate_task_key(record):
-    record_type = record["record_type"]
+def generate_task_key(task):
+    if task["function"] in ("qcengine.compute", "qcengine.compute_procedure"):
+        inp_data = task["function_kwargs"]["input_data"]
 
-    if record_type == "optimization":
-        mol_hash = record["initial_molecule"]["identifiers"]["molecule_hash"]
-        return record_type + "|" + mol_hash
-    elif record_type == "singlepoint":
-        mol_hash = record["molecule"]["identifiers"]["molecule_hash"]
+        if inp_data["schema_name"] == "qcschema_optimization_input":
+            record_type = "optimization"
+            mol_hash = inp_data["initial_molecule"]["identifiers"]["molecule_hash"]
+        elif inp_data["schema_name"] == "qcschema_input":
+            record_type = "singlepoint"
+            mol_hash = inp_data["molecule"]["identifiers"]["molecule_hash"]
+        else:
+            raise RuntimeError(f"Unknown result type: {inp_data['schema_name']}")
+
         return record_type + "|" + mol_hash
     else:
+        # generic service subtask (nextchain)
         # hash function + kwargs
-        normalized = recursive_normalizer(record["function_kwargs"], digits=6)
-        return record["function"] + "|" + hash_dict(normalized)
+        normalized = recursive_normalizer(task["function_kwargs"], digits=6)
+        return task["function"] + "|" + hash_dict(normalized)
 
 
 def load_test_data(

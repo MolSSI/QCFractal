@@ -66,10 +66,13 @@ def compare_manybody_specs(
     return input_spec == output_spec
 
 
-def generate_task_key(record):
-    record_type = record["record_type"]
-    mol_hash = record["molecule"]["identifiers"]["molecule_hash"]
-    return record_type + "|" + mol_hash
+def generate_task_key(task):
+    # task is a singlepoint
+    inp_data = task["function_kwargs"]["input_data"]
+    assert inp_data["schema_name"] in "qcschema_input"
+
+    mol_hash = inp_data["molecule"]["identifiers"]["molecule_hash"]
+    return "singlepoint" + "|" + mol_hash
 
 
 def load_test_data(name: str) -> Tuple[ManybodySpecification, Molecule, Dict[str, AtomicResult]]:

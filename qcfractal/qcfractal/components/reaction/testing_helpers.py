@@ -50,13 +50,17 @@ def compare_reaction_specs(
     return input_spec == output_spec
 
 
-def generate_task_key(record):
-    record_type = record["record_type"]
+def generate_task_key(task):
+    inp_data = task["function_kwargs"]["input_data"]
 
-    if record_type == "optimization":
-        mol_hash = record["initial_molecule"]["identifiers"]["molecule_hash"]
+    if inp_data["schema_name"] == "qcschema_optimization_input":
+        record_type = "optimization"
+        mol_hash = inp_data["initial_molecule"]["identifiers"]["molecule_hash"]
+    elif inp_data["schema_name"] == "qcschema_input":
+        record_type = "singlepoint"
+        mol_hash = inp_data["molecule"]["identifiers"]["molecule_hash"]
     else:
-        mol_hash = record["molecule"]["identifiers"]["molecule_hash"]
+        raise RuntimeError(f"Unknown result type: {inp_data['schema_name']}")
 
     return record_type + "|" + mol_hash
 

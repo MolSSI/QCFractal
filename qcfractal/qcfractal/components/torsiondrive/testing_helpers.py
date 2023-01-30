@@ -82,10 +82,13 @@ def compare_torsiondrive_specs(
     return input_spec == output_spec
 
 
-def generate_task_key(record: Dict[str, Any]):
-    # record is an optimization
-    mol_hash = record["initial_molecule"]["identifiers"]["molecule_hash"]
-    constraints = record["specification"]["keywords"].get("constraints", None)
+def generate_task_key(task: Dict[str, Any]):
+    # task is an optimization
+    inp_data = task["function_kwargs"]["input_data"]
+    assert inp_data["schema_name"] in "qcschema_optimization_input"
+
+    mol_hash = inp_data["initial_molecule"]["identifiers"]["molecule_hash"]
+    constraints = inp_data["keywords"].get("constraints", None)
 
     # Lookups may depend on floating point values
     constraints = recursive_normalizer(constraints)

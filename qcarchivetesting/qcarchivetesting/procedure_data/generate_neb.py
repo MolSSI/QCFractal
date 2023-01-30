@@ -45,10 +45,10 @@ compute_proc = ProcessRunner("snowflake_compute", compute, False)
 compute_proc.start()
 
 print(f"** Waiting for computation to finish")
-result_data = {}
+result_data = []
 while True:
-    finished = snowflake.await_results([record_id], timeout=60)
-    result_data.update(compute.get_data())
+    finished = snowflake.await_results([record_id], timeout=5)
+    result_data.extend(compute.get_data())
 
     if finished:
         break
@@ -63,15 +63,8 @@ if record.status != "complete":
     raise RuntimeError(f"Record status is {record.status}")
 
 test_data["results"] = {}
-for record_id, result in result_data.items():
-    if result["schema_name"] == "qcschema_optimization_output":
-        record = client.get_optimizations(record_id, include=["initial_molecule"])
-    elif result["schema_name"] == "qcschema_output":
-        record = client.get_singlepoints(record_id, include=["molecule"])
-    else:
-        record = client.get_records(record_id)
-
-    task_key = generate_task_key(record.raw_data.dict())
+for task, result in result_data:
+    task_key = generate_task_key(task)
     test_data["results"][task_key] = result
 
 print(f"** Writing output to {outfile_name}")
