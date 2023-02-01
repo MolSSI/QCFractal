@@ -114,7 +114,6 @@ class ReactionDatasetRecordItemORM(BaseORM):
             onupdate="cascade",
         ),
         Index("ix_reaction_dataset_record_record_id", "record_id"),
-        UniqueConstraint("dataset_id", "entry_name", "specification_name", name="ux_reaction_dataset_record_unique"),
     )
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:

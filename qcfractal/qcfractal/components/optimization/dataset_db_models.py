@@ -90,9 +90,6 @@ class OptimizationDatasetRecordItemORM(BaseORM):
             onupdate="cascade",
         ),
         Index("ix_optimization_dataset_record_record_id", "record_id"),
-        UniqueConstraint(
-            "dataset_id", "entry_name", "specification_name", name="ux_optimization_dataset_record_unique"
-        ),
     )
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
