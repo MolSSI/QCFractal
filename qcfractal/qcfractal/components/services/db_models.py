@@ -17,6 +17,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
+from qcfractal.components.largebinary.db_models import LargeBinaryORM
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.db_socket import BaseORM, PlainMsgpackExt
 
@@ -91,9 +92,15 @@ class ServiceSubtaskRecordORM(BaseRecordORM):
     required_programs = Column(JSON, nullable=False)
 
     function = Column(String, nullable=False)
-    function_kwargs = Column(JSON, nullable=False)
 
-    results = Column(JSON, nullable=True)
+    # Nullable to help with circular dependencies
+    function_kwargs_lb_id = Column(Integer, ForeignKey(LargeBinaryORM.id), nullable=True)
+    results_lb_id = Column(Integer, ForeignKey(LargeBinaryORM.id), nullable=True)
+
+    __table_args__ = (
+        Index("ix_service_subtask_record_function_kwargs_lb_id", "function_kwargs_lb_id"),
+        Index("ix_service_subtask_record_results_lb_id", "results_lb_id"),
+    )
 
     # We need the inherit_condition because we have two foreign keys to the BaseRecordORM and
     # we need to disambiguate

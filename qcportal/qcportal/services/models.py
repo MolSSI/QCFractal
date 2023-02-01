@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from typing_extensions import Literal
 
@@ -13,9 +13,8 @@ class ServiceSubtaskRecord(BaseRecord):
 
         required_programs: Dict[str, Any]
         function: str
-        function_kwargs: Any
-
-        results: Any
+        function_kwargs_lb_id: Optional[int]
+        results_lb_id: Optional[int]
 
     raw_data: ServiceSubtaskRecord._DataModel
 
@@ -26,11 +25,3 @@ class ServiceSubtaskRecord(BaseRecord):
     @property
     def function(self) -> str:
         return self.raw_data.function
-
-    @property
-    def function_kwargs(self) -> Any:
-        return self.raw_data.function_kwargs
-
-    @property
-    def results(self) -> Any:
-        return self.raw_data.results

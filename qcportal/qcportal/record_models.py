@@ -134,7 +134,7 @@ class TaskRecord(BaseModel):
     record_id: int
 
     function: Optional[str]
-    function_kwargs: Optional[Dict[str, Any]]
+    function_kwargs_lb_id: Optional[int]
 
     tag: str
     priority: PriorityEnum

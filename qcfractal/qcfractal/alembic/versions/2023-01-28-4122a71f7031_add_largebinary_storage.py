@@ -33,6 +33,35 @@ def upgrade():
     op.create_foreign_key(None, "largebinary_store", "base_record", ["record_id"], ["id"], ondelete="cascade")
 
     op.execute(sa.text("ALTER TABLE largebinary_store ALTER COLUMN data_local SET STORAGE EXTERNAL"))
+
+    # Now migrate task queue
+    # We can just drop the function kwargs column. The data will be re-generated if we also delete the
+    # data in the 'function' column
+    op.add_column("task_queue", sa.Column("function_kwargs_lb_id", sa.Integer(), nullable=True))
+    op.create_index("ix_task_queue_function_kwargs_lb_id", "task_queue", ["function_kwargs_lb_id"], unique=False)
+    op.create_foreign_key(None, "task_queue", "largebinary_store", ["function_kwargs_lb_id"], ["id"])
+    op.drop_column("task_queue", "function_kwargs")
+    op.execute(sa.text("UPDATE task_queue SET function = NULL"))
+
+    # Service subtasks will be empty for this migration, so don't migrate any data
+    op.add_column("service_subtask_record", sa.Column("function_kwargs_lb_id", sa.Integer(), nullable=True))
+    op.add_column("service_subtask_record", sa.Column("results_lb_id", sa.Integer(), nullable=True))
+    op.create_index(
+        "ix_service_subtask_record_function_kwargs_lb_id",
+        "service_subtask_record",
+        ["function_kwargs_lb_id"],
+        unique=False,
+    )
+    op.create_index(
+        "ix_service_subtask_record_results_lb_id",
+        "service_subtask_record",
+        ["results_lb_id"],
+        unique=False,
+    )
+    op.create_foreign_key(None, "service_subtask_record", "largebinary_store", ["function_kwargs_lb_id"], ["id"])
+    op.create_foreign_key(None, "service_subtask_record", "largebinary_store", ["results_lb_id"], ["id"])
+    op.drop_column("service_subtask_record", "function_kwargs")
+    op.drop_column("service_subtask_record", "results")
     # ### end Alembic commands ###
 
 

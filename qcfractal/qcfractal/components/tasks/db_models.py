@@ -1,9 +1,10 @@
 import datetime
 
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Index, CheckConstraint, UniqueConstraint, JSON
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Index, CheckConstraint, UniqueConstraint
 from sqlalchemy.dialects.postgresql import ARRAY, TEXT
 from sqlalchemy.orm import relationship
 
+from qcfractal.components.largebinary.db_models import LargeBinaryORM
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.db_socket import BaseORM
 
@@ -18,7 +19,7 @@ class TaskQueueORM(BaseORM):
     id = Column(Integer, primary_key=True)
 
     function = Column(String, nullable=True)
-    function_kwargs = Column(JSON, nullable=True)
+    function_kwargs_lb_id = Column(Integer, ForeignKey(LargeBinaryORM.id), nullable=True)
 
     # For some reason, this can't be array of varchar. If it is, the comparisons
     # when claiming tasks don't work
@@ -40,6 +41,7 @@ class TaskQueueORM(BaseORM):
         Index("ix_task_queue_tag", "tag"),
         Index("ix_task_queue_required_programs", "required_programs"),
         Index("ix_task_queue_waiting_sort", priority.desc(), created_on),
+        Index("ix_task_queue_function_kwargs_lb_id", "function_kwargs_lb_id"),
         UniqueConstraint("record_id", name="ux_task_queue_record_id"),
         # WARNING - these are not autodetected by alembic
         CheckConstraint(

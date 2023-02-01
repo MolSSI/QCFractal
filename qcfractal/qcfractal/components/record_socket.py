@@ -597,18 +597,13 @@ class RecordSocket:
         with self.root_socket.optional_session(session, True) as session:
             return get_general(session, wp, wp.id, record_ids, include, exclude, missing_ok)
 
-    def generate_task_specification(self, task_orm: Sequence[TaskQueueORM]):
+    def generate_task_specification(self, task_orm: TaskQueueORM) -> Dict[str, Any]:
         """
         Generate the actual QCSchema input and related fields for a task
         """
 
-        for t in task_orm:
-            if t.function is None:
-                record_type = t.record.record_type
-                spec = self._handler_map[record_type].generate_task_specification(t.record)
-
-                t.function = spec["function"]
-                t.function_kwargs = spec["function_kwargs"]
+        record_type = task_orm.record.record_type
+        return self._handler_map[record_type].generate_task_specification(task_orm.record)
 
     def update_completed_task(
         self, session: Session, record_orm: BaseRecordORM, result: AllResultTypes, manager_name: str

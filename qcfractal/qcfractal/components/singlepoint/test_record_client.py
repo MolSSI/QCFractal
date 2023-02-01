@@ -58,7 +58,6 @@ def test_singlepoint_client_add_get(submitter_client: PortalClient, spec: QCSpec
         assert r.raw_data.record_type == "singlepoint"
         assert compare_singlepoint_specs(spec, r.raw_data.specification)
         assert r.raw_data.task.function is None
-        assert r.raw_data.task.function_kwargs is None
         assert r.raw_data.task.tag == "tag1"
         assert r.raw_data.task.priority == PriorityEnum.high
         assert r.raw_data.owner_user == submitter_client.username

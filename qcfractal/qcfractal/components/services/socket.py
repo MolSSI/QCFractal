@@ -379,16 +379,18 @@ class ServiceSubtaskRecordSocket(BaseRecordSocket):
 
         # Normally, this function is a little more complicated (ie, for others the spec is
         # generated from data in the record). However, this record type is a pretty
-        # transparent passthrough. The function and kwargs are stored in the record, and just
-        # copied to the task
-        return {"function": record_orm.function, "function_kwargs": record_orm.function_kwargs}
+        # transparent passthrough. The function and kwargs_id are stored in the record, so just return them
+        return {"function": record_orm.function, "function_kwargs_lb_id": record_orm.function_kwargs_lb_id}
 
     def update_completed_task(
         self, session: Session, record_orm: ServiceSubtaskRecordORM, result: GenericTaskResult, manager_name: str
     ) -> None:
 
         # Isn't a whole lot to do here
-        record_orm.results = result.results
+        results_lb_id = self.root_socket.largebinary.add_compress(
+            record_orm.id, result.results, CompressionEnum.zstd, session=session
+        )
+        record_orm.results_lb_id = results_lb_id
 
     def add(
         self,
@@ -448,7 +450,6 @@ class ServiceSubtaskRecordSocket(BaseRecordSocket):
                 rec_orm = ServiceSubtaskRecordORM(
                     is_service=False,
                     function=function,
-                    function_kwargs=kw,
                     required_programs=required_programs,
                     status=RecordStatusEnum.waiting,
                     owner_user_id=owner_user_id,
@@ -458,6 +459,10 @@ class ServiceSubtaskRecordSocket(BaseRecordSocket):
                 self.create_task(rec_orm, tag, priority)
                 all_orm.append(rec_orm)
                 session.add(rec_orm)
+
+                session.flush()
+                kwargs_lb_id = self.root_socket.largebinary.add_compress(rec_orm.id, kw, session=session)
+                rec_orm.function_kwargs_lb_id = kwargs_lb_id
 
             session.flush()
 

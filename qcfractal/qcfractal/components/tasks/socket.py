@@ -8,10 +8,11 @@ from typing import TYPE_CHECKING
 from qcelemental.models import FailedOperation
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import array
-from sqlalchemy.orm import joinedload, contains_eager, defer, load_only, Load
+from sqlalchemy.orm import joinedload, Load
 
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.record_db_models import BaseRecordORM
+from qcportal.compression import compress, CompressionEnum
 from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerStatusEnum
 from qcportal.metadata_models import TaskReturnMetadata
@@ -302,14 +303,50 @@ class TaskSocket:
                     record_orm.manager_name = manager_name
                     record_orm.modified_on = datetime.utcnow()
 
-                # Generate the specification that is passed to QCEngine
-                self.root_socket.records.generate_task_specification([x[0] for x in new_items])
+                # Store in dict form for returning, but no need to store the info from the base record
+                # Also, retrieve the actual function kwargs. Eventually we may want the managers
+                # to retrieve the kwargs themselves
+                for task_orm, _ in new_items:
+
+                    task_dict = task_orm.model_dict(exclude=["record"])
+
+                    if task_orm.function is None:
+                        # Generate the task on the fly
+                        task_spec = self.root_socket.records.generate_task_specification(task_orm)
+
+                        # If "function_kwargs" is part of the task spec, then we need to compress them
+                        # Otherwise if an id is already given, retrieve the uncompressed form from the
+                        # largebinary socket
+                        if "function_kwargs_lb_id" in task_spec:
+                            kwargs_lb_id = task_spec["function_kwargs_lb_id"]
+                            kwargs = self.root_socket.largebinary.get(kwargs_lb_id, session=session)
+                        elif "function_kwargs" in task_spec:
+                            kwargs = task_spec["function_kwargs"]
+                            kwargs_lb_id = self.root_socket.largebinary.add_compress(
+                                task_orm.record_id, kwargs, CompressionEnum.zstd, session=session
+                            )
+                        else:
+                            raise RuntimeError(
+                                "Neither kwargs or kwargs id found in task spec. This is a developer error"
+                            )
+
+                        # Add this to the orm for any future managers claiming this task
+                        task_orm.function = task_spec["function"]
+                        task_orm.function_kwargs_lb_id = kwargs_lb_id
+
+                        # But just use what we created when returning to this manager
+                        task_dict["function"] = task_spec["function"]
+                        task_dict["function_kwargs"] = kwargs
+                        task_dict["function_kwargs_lb_id"] = kwargs_lb_id
+                    else:
+                        # Retrieve the kwargs from the largebinary socket
+                        kwargs_lb_id = task_dict["function_kwargs_lb_id"]
+                        kwargs = self.root_socket.largebinary.get(kwargs_lb_id, session=session)
+                        task_dict["function_kwargs"] = kwargs
+
+                    found.append(task_dict)
 
                 session.flush()
-
-                # Store in dict form for returning,
-                # but no need to store the info from the base record
-                found.extend(task_orm.model_dict(exclude=["record"]) for task_orm, _ in new_items)
 
             manager.claimed += len(found)
 

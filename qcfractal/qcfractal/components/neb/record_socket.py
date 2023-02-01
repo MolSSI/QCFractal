@@ -220,7 +220,9 @@ class NEBRecordSocket(BaseRecordSocket):
             if not service_state.converged:
                 # Returned task a nextchain computation
                 if service_orm.dependencies and service_orm.dependencies[0].record.record_type == "servicesubtask":
-                    newcoords, prev = service_orm.dependencies[0].record.results
+                    results_lb_id = service_orm.dependencies[0].record.results_lb_id
+                    results = self.root_socket.largebinary.get(results_lb_id, session=session)
+                    newcoords, prev = results
                     service_state.nebinfo = prev
 
                     # Append the output
