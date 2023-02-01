@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.neb.record_models &#8212; QCArchive 0.50b6.post15+g2bfce1b7 documentation</title>
+    <title>qcportal.neb.record_models &#8212; QCArchive 0.50b6.post19+g5ffe9375 documentation</title>
   
   
   
@@ -484,15 +484,6 @@
     <span class="n">singlepoint_record</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SinglepointRecord</span><span class="o">.</span><span class="n">_DataModel</span><span class="p">]</span>
 
 
-<span class="k">class</span> <span class="nc">NEBSubtask</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
-        <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span>
-
-    <span class="n">subtask_id</span><span class="p">:</span> <span class="nb">int</span>
-    <span class="n">chain_iteration</span><span class="p">:</span> <span class="nb">int</span>
-    <span class="n">subtask_record</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ServiceSubtaskRecord</span><span class="o">.</span><span class="n">_DataModel</span><span class="p">]</span>
-
-
 <span class="c1"># class NEBInitialchain(BaseModel):</span>
 <span class="c1">#    class Config:</span>
 <span class="c1">#        extra = Extra.forbid</span>
@@ -533,7 +524,6 @@
         <span class="n">initial_chain</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Molecule</span><span class="p">]]</span>
         <span class="n">singlepoints</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">NEBSinglepoint</span><span class="p">]]</span>
         <span class="n">optimizations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">NEBOptimization</span><span class="p">]]</span>
-        <span class="n">subtasks</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">NEBSubtask</span><span class="p">]]</span>
 
         <span class="n">optimizations_cache</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">OptimizationRecord</span><span class="p">]]</span>
         <span class="n">singlepoints_cache</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">SinglepointRecord</span><span class="p">]]]</span>
@@ -553,8 +543,6 @@
             <span class="n">ret</span> <span class="o">|=</span> <span class="p">{</span><span class="s2">&quot;singlepoints.*&quot;</span><span class="p">,</span> <span class="s2">&quot;singlepoints.singlepoint_record&quot;</span><span class="p">}</span>
         <span class="k">if</span> <span class="s2">&quot;optimizations&quot;</span> <span class="ow">in</span> <span class="n">includes</span><span class="p">:</span>
             <span class="n">ret</span> <span class="o">|=</span> <span class="p">{</span><span class="s2">&quot;optimizations.*&quot;</span><span class="p">,</span> <span class="s2">&quot;optimizations.optimization_record&quot;</span><span class="p">}</span>
-        <span class="k">if</span> <span class="s2">&quot;subtasks&quot;</span> <span class="ow">in</span> <span class="n">includes</span><span class="p">:</span>
-            <span class="n">ret</span> <span class="o">|=</span> <span class="p">{</span><span class="s2">&quot;subtasks.*&quot;</span><span class="p">,</span> <span class="s2">&quot;subtasks.subtask_record&quot;</span><span class="p">}</span>
 
         <span class="k">return</span> <span class="n">ret</span></div>
 
@@ -621,21 +609,6 @@
             <span class="n">url_params</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_fetch_subtasks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_online</span><span class="p">()</span>
-
-        <span class="n">url_params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;include&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="s2">&quot;subtask_record&quot;</span><span class="p">]}</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="o">.</span><span class="n">subtasks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">_auto_request</span><span class="p">(</span>
-            <span class="s2">&quot;get&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;v1/records/neb/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/subtasks&quot;</span><span class="p">,</span>
-            <span class="kc">None</span><span class="p">,</span>
-            <span class="n">ProjURLParameters</span><span class="p">,</span>
-            <span class="n">List</span><span class="p">[</span><span class="n">NEBSubtask</span><span class="p">],</span>
-            <span class="kc">None</span><span class="p">,</span>
-            <span class="n">url_params</span><span class="p">,</span>
-        <span class="p">)</span>
-
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">specification</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NEBSpecification</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="o">.</span><span class="n">specification</span>
@@ -685,13 +658,6 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_optimizations</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="o">.</span><span class="n">optimizations_cache</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">subtasks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">NEBSubtask</span><span class="p">]]:</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="o">.</span><span class="n">subtasks</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_subtasks</span><span class="p">()</span>
-
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="o">.</span><span class="n">subtasks</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">ts_optimization</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">OptimizationRecord</span><span class="p">]:</span>
