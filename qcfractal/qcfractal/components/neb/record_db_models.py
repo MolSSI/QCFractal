@@ -45,21 +45,6 @@ class NEBSinglepointsORM(BaseORM):
         return BaseORM.model_dict(self, exclude)
 
 
-class NEBSubtaskORM(BaseORM):
-
-    __tablename__ = "neb_subtasks"
-
-    neb_id = Column(Integer, ForeignKey("neb_record.id", ondelete="cascade"), primary_key=True)
-    subtask_id = Column(Integer, ForeignKey(ServiceSubtaskRecordORM.id), primary_key=True)
-    chain_iteration = Column(Integer, primary_key=True)
-
-    subtask_record = relationship(ServiceSubtaskRecordORM)
-
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        exclude = self.append_exclude(exclude, "neb_id")
-        return BaseORM.model_dict(self, exclude)
-
-
 class NEBInitialchainORM(BaseORM):
 
     __tablename__ = "neb_initialchain"
@@ -130,13 +115,6 @@ class NEBRecordORM(BaseRecordORM):
         NEBOptimizationsORM,
         order_by=NEBOptimizationsORM.position,
         collection_class=ordering_list("position"),
-        cascade="all, delete-orphan",
-    )
-
-    subtasks = relationship(
-        NEBSubtaskORM,
-        order_by=NEBSubtaskORM.chain_iteration,
-        collection_class=ordering_list("chain_iteration"),
         cascade="all, delete-orphan",
     )
 

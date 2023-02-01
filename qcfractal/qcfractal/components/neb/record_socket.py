@@ -38,7 +38,6 @@ from .record_db_models import (
     NEBSpecificationORM,
     NEBSinglepointsORM,
     NEBInitialchainORM,
-    NEBSubtaskORM,
     NEBRecordORM,
 )
 
@@ -104,10 +103,6 @@ class NEBRecordSocket(BaseRecordSocket):
             select(
                 NEBOptimizationsORM.neb_id.label("parent_id"),
                 NEBOptimizationsORM.optimization_id.label("child_id"),
-            ),
-            select(
-                NEBSubtaskORM.neb_id.label("parent_id"),
-                NEBSubtaskORM.subtask_id.label("child_id"),
             ),
         )
         return [stmt]
@@ -222,12 +217,17 @@ class NEBRecordSocket(BaseRecordSocket):
                 if service_orm.dependencies and service_orm.dependencies[0].record.record_type == "servicesubtask":
                     results_lb_id = service_orm.dependencies[0].record.results_lb_id
                     results = self.root_socket.largebinary.get(results_lb_id, session=session)
+
                     newcoords, prev = results
                     service_state.nebinfo = prev
 
                     # Append the output
                     stdout = service_orm.dependencies[0].record.compute_history[-1].get_output("stdout")
                     output += stdout.as_string()
+
+                    # Delete the subtask - no longer needed
+                    to_delete = service_orm.dependencies.pop()
+                    self.root_socket.records.delete([to_delete.record_id], soft_delete=False, session=session)
 
                     # If nextchain returns None, then we are now converged
                     if newcoords is None:
@@ -236,6 +236,7 @@ class NEBRecordSocket(BaseRecordSocket):
                         next_chain = [Molecule(**molecule_template, geometry=geometry) for geometry in newcoords]
                         self.submit_singlepoints(session, service_state, service_orm, next_chain)
                         service_state.iteration += 1
+
                 else:
                     complete_tasks = sorted(service_orm.dependencies, key=lambda x: x.extras["position"])
                     geometries = []
@@ -437,14 +438,11 @@ class NEBRecordSocket(BaseRecordSocket):
             session=session,
         )
 
-        nc_history = NEBSubtaskORM(neb_id=neb_orm.id, subtask_id=ids[0], chain_iteration=service_state.iteration)
-
         svc_dep = ServiceDependencyORM(
             record_id=ids[0],
             extras={},
         )
 
-        neb_orm.subtasks.append(nc_history)
         service_orm.dependencies.append(svc_dep)
 
     def add_specification(

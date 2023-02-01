@@ -64,7 +64,7 @@ def test_neb_client_add_get(submitter_client: PortalClient, spec: NEBSpecificati
     time_1 = datetime.utcnow()
     assert meta.success
 
-    recs = submitter_client.get_nebs(id, include=["service", "initial_chain", "subtasks"])
+    recs = submitter_client.get_nebs(id, include=["service", "initial_chain"])
 
     assert len(recs) == 2
 
@@ -129,7 +129,6 @@ def test_neb_client_delete(
             "optimizations.*",
             "optimizations.optimization_record.*",
             "optimizations.optimization_record.trajectory",
-            "subtasks.*",
         ],
     )
 
@@ -141,8 +140,6 @@ def test_neb_client_delete(
     for opt in rec[0]["optimizations"]:
         traj_ids = [x["singlepoint_id"] for x in opt["optimization_record"]["trajectory"]]
         child_ids.extend(traj_ids)
-
-    child_ids.extend(x["subtask_id"] for x in rec[0]["subtasks"])
 
     # Some duplicates here
     child_ids = list(set(child_ids))

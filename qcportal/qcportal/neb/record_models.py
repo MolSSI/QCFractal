@@ -119,15 +119,6 @@ class NEBSinglepoint(BaseModel):
     singlepoint_record: Optional[SinglepointRecord._DataModel]
 
 
-class NEBSubtask(BaseModel):
-    class Config:
-        extra = Extra.forbid
-
-    subtask_id: int
-    chain_iteration: int
-    subtask_record: Optional[ServiceSubtaskRecord._DataModel]
-
-
 # class NEBInitialchain(BaseModel):
 #    class Config:
 #        extra = Extra.forbid
@@ -168,7 +159,6 @@ class NEBRecord(BaseRecord):
         initial_chain: Optional[List[Molecule]]
         singlepoints: Optional[List[NEBSinglepoint]]
         optimizations: Optional[List[NEBOptimization]]
-        subtasks: Optional[List[NEBSubtask]]
 
         optimizations_cache: Optional[Dict[str, OptimizationRecord]]
         singlepoints_cache: Optional[Dict[int, List[SinglepointRecord]]]
@@ -188,8 +178,6 @@ class NEBRecord(BaseRecord):
             ret |= {"singlepoints.*", "singlepoints.singlepoint_record"}
         if "optimizations" in includes:
             ret |= {"optimizations.*", "optimizations.optimization_record"}
-        if "subtasks" in includes:
-            ret |= {"subtasks.*", "subtasks.subtask_record"}
 
         return ret
 
@@ -256,21 +244,6 @@ class NEBRecord(BaseRecord):
             url_params,
         )
 
-    def _fetch_subtasks(self):
-        self._assert_online()
-
-        url_params = {"include": ["*", "subtask_record"]}
-
-        self.raw_data.subtasks = self.client._auto_request(
-            "get",
-            f"v1/records/neb/{self.raw_data.id}/subtasks",
-            None,
-            ProjURLParameters,
-            List[NEBSubtask],
-            None,
-            url_params,
-        )
-
     @property
     def specification(self) -> NEBSpecification:
         return self.raw_data.specification
@@ -320,13 +293,6 @@ class NEBRecord(BaseRecord):
             self._fetch_optimizations()
 
         return self.raw_data.optimizations_cache
-
-    @property
-    def subtasks(self) -> Optional[List[NEBSubtask]]:
-        if self.raw_data.subtasks is None:
-            self._fetch_subtasks()
-
-        return self.raw_data.subtasks
 
     @property
     def ts_optimization(self) -> Optional[OptimizationRecord]:
