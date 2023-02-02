@@ -224,7 +224,8 @@ class PostgresHarness:
             if not check_database:
                 # We try to connect to the existing database (usually 'postgres') which should always exist
                 uri = replace_db_in_uri(uri, self.config.existing_db)
-            self.connect(uri)
+            conn = self.connect(uri)
+            conn.close()
             return True
         except psycopg2.OperationalError as e:
             return False
@@ -281,10 +282,14 @@ class PostgresHarness:
             conn.autocommit = True
         cursor = conn.cursor()
 
-        self._logger.debug(f"Executing SQL: {statement}")
-        cursor.execute(statement)
-        if returns:
-            return cursor.fetchall()
+        try:
+            self._logger.debug(f"Executing SQL: {statement}")
+            cursor.execute(statement)
+            if returns:
+                return cursor.fetchall()
+        finally:
+            cursor.close()
+            conn.close()
 
     def pg_ctl(self, cmds: List[str]) -> Tuple[int, str, str]:
         """Runs a pg_ctl command and returns its output
@@ -311,24 +316,29 @@ class PostgresHarness:
 
     def get_postgres_version(self) -> str:
         pg_uri = replace_db_in_uri(self.config.uri, self.config.existing_db)
-        conn = self.connect(pg_uri)
 
+        conn = self.connect(pg_uri)
         cursor = conn.cursor()
 
-        cursor.execute(f"SELECT version()")
-        ver = cursor.fetchone()[0]
-        cursor.close()
+        try:
+            cursor.execute(f"SELECT version()")
+            ver = cursor.fetchone()[0]
+        finally:
+            cursor.close()
+            conn.close()
 
         return ver
 
     def get_alembic_version(self) -> str:
         conn = self.connect(self.config.uri)
-
         cursor = conn.cursor()
 
-        cursor.execute(f"SELECT version_num from alembic_version")
-        ver = cursor.fetchone()[0]
-        cursor.close()
+        try:
+            cursor.execute(f"SELECT version_num from alembic_version")
+            ver = cursor.fetchone()[0]
+        finally:
+            cursor.close()
+            conn.close()
 
         return ver
 
@@ -355,25 +365,27 @@ class PostgresHarness:
 
         cursor = conn.cursor()
 
-        # Now we can search the pg_catalog to see if the database we want exists yet
-        cursor.execute(f"SELECT 1 FROM pg_catalog.pg_database WHERE datname = '{self.config.database_name}'")
-        exists = cursor.fetchone()
+        try:
+            # Now we can search the pg_catalog to see if the database we want exists yet
+            cursor.execute(f"SELECT 1 FROM pg_catalog.pg_database WHERE datname = '{self.config.database_name}'")
+            exists = cursor.fetchone()
 
-        if not exists:
-            self._logger.info(f"Database {self.config.database_name} does not exist. Creating...")
-            cursor.execute(f"CREATE DATABASE {self.config.database_name}")
-            self._logger.info(f"Database {self.config.database_name} created")
+            if not exists:
+                self._logger.info(f"Database {self.config.database_name} does not exist. Creating...")
+                cursor.execute(f"CREATE DATABASE {self.config.database_name}")
+                self._logger.info(f"Database {self.config.database_name} created")
 
-            if create_tables:
-                SQLAlchemySocket.create_database_tables(self.config)
-        else:
-            self._logger.info(f"Database {self.config.database_name} already exists, so I am leaving it alone")
+                if create_tables:
+                    SQLAlchemySocket.create_database_tables(self.config)
+            else:
+                self._logger.info(f"Database {self.config.database_name} already exists, so I am leaving it alone")
 
-        # Check to see that everything is ok
-        if not self.is_alive():
-            raise RuntimeError("I created the database, but now it is not alive? Maybe check the postgres logs")
-
-        cursor.close()
+            # Check to see that everything is ok
+            if not self.is_alive():
+                raise RuntimeError("I created the database, but now it is not alive? Maybe check the postgres logs")
+        finally:
+            cursor.close()
+            conn.close()
 
     def delete_database(self) -> None:
         """
@@ -399,9 +411,14 @@ class PostgresHarness:
             cursor.execute("SELECT pid,state,query_start,wait_event_type,wait_event,query FROM pg_stat_activity")
 
             err += "Open Connections\n-----------------------\n"
-            err += tabulate.tabulate(cursor, headers=['pid', 'state', 'query_start', 'wait_event_type', 'wait_event', 'query'])
+            err += tabulate.tabulate(
+                cursor, headers=["pid", "state", "query_start", "wait_event_type", "wait_event", "query"]
+            )
             err += "\n"
             raise RuntimeError(err)
+        finally:
+            cursor.close()
+            conn.close()
 
     def start(self) -> None:
         """
