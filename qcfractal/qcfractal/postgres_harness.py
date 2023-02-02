@@ -13,6 +13,7 @@ import weakref
 from typing import TYPE_CHECKING
 
 import psycopg2
+import tabulate
 from psycopg2.errors import OperationalError, ObjectInUse
 
 from .config import DatabaseConfig
@@ -394,7 +395,13 @@ class PostgresHarness:
         try:
             cursor.execute(f"DROP DATABASE IF EXISTS {self.config.database_name}")
         except (OperationalError, ObjectInUse) as e:
-            raise RuntimeError(f"Could not delete database. Was it still open somewhere? Error: {str(e)}")
+            err = f"Could not delete database. Was it still open somewhere?\nError: {str(e)}\n"
+            cursor.execute("SELECT pid,state,query_start,wait_event_type,wait_event,query FROM pg_stat_activity")
+
+            err += "Open Connections\n-----------------------\n"
+            err += tabulate.tabulate(cursor, headers=['pid', 'state', 'query_start', 'wait_event_type', 'wait_event', 'query'])
+            err += "\n"
+            raise RuntimeError(err)
 
     def start(self) -> None:
         """
