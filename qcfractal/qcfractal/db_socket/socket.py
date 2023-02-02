@@ -247,11 +247,16 @@ class SQLAlchemySocket:
         context = MigrationContext.configure(connection=conn)
         current_rev = context.get_current_revision()
 
-        if len(heads) > 1:
-            raise RuntimeError("Multiple alembic revision heads not supported")
+        try:
+            if len(heads) > 1:
+                raise RuntimeError("Multiple alembic revision heads not supported")
 
-        if heads[0] != current_rev:
-            raise RuntimeError("Database needs migration. Please run `qcfractal-server upgrade-db` (after backing up!)")
+            if heads[0] != current_rev:
+                raise RuntimeError(
+                    "Database needs migration. Please run `qcfractal-server upgrade-db` (after backing up!)"
+                )
+        finally:
+            conn.close()
 
     def get_connection(self):
         """
