@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Optimization calculations &#8212; QCArchive 0.50b6.post22+g641ff748 documentation</title>
+    <title>Optimization calculations &#8212; QCArchive 0.50b6.post23+gbd56aba9 documentation</title>
   
   
   
@@ -484,6 +484,19 @@
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">trajectory</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="singlepoint.html#qcportal.singlepoint.SinglepointRecord" title="qcportal.singlepoint.record_models.SinglepointRecord"><span class="pre">SinglepointRecord</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.optimization.OptimizationRecord.trajectory" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.optimization.OptimizationRecord.trajectory_element">
+<span class="sig-name descname"><span class="pre">trajectory_element</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trajectory_index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/optimization/record_models.html#OptimizationRecord.trajectory_element"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.OptimizationRecord.trajectory_element" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>trajectory_index</strong> (<em>int</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="singlepoint.html#qcportal.singlepoint.SinglepointRecord" title="qcportal.singlepoint.record_models.SinglepointRecord"><em>SinglepointRecord</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py class pydantic_config">
 <dt class="sig sig-object py" id="qcportal.optimization.OptimizationRecord.Config">
 <em class="property"><span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Config</span></span><a class="headerlink" href="#qcportal.optimization.OptimizationRecord.Config" title="Permalink to this definition">#</a></dt>
@@ -840,6 +853,15 @@
        <code class="docutils literal notranslate">
         <span class="pre">
          OptimizationRecord.trajectory
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.optimization.OptimizationRecord.trajectory_element">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         OptimizationRecord.trajectory_element()
         </span>
        </code>
       </a>

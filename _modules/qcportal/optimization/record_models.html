@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.optimization.record_models &#8212; QCArchive 0.50b6.post22+g641ff748 documentation</title>
+    <title>qcportal.optimization.record_models &#8212; QCArchive 0.50b6.post23+gbd56aba9 documentation</title>
   
   
   
@@ -500,7 +500,25 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="o">.</span><span class="n">trajectory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_trajectory</span><span class="p">()</span>
         <span class="n">traj_dm</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">singlepoint_record</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="o">.</span><span class="n">trajectory</span><span class="p">]</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">SinglepointRecord</span><span class="o">.</span><span class="n">from_datamodel</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">traj_dm</span><span class="p">]</span></div>
+        <span class="k">return</span> <span class="p">[</span><span class="n">SinglepointRecord</span><span class="o">.</span><span class="n">from_datamodel</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">traj_dm</span><span class="p">]</span>
+
+<div class="viewcode-block" id="OptimizationRecord.trajectory_element"><a class="viewcode-back" href="../../../user_guide/records/optimization.html#qcportal.optimization.OptimizationRecord.trajectory_element">[docs]</a>    <span class="k">def</span> <span class="nf">trajectory_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trajectory_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SinglepointRecord</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="o">.</span><span class="n">trajectory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">SinglepointRecord</span><span class="o">.</span><span class="n">from_datamodel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="o">.</span><span class="n">trajectory</span><span class="p">[</span><span class="n">trajectory_index</span><span class="p">]</span><span class="o">.</span><span class="n">singlepoint_record</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">url_params</span> <span class="o">=</span> <span class="p">{}</span>
+
+            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">_auto_request</span><span class="p">(</span>
+                <span class="s2">&quot;get&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;v1/records/optimization/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/trajectory/</span><span class="si">{</span><span class="n">trajectory_index</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="kc">None</span><span class="p">,</span>
+                <span class="n">ProjURLParameters</span><span class="p">,</span>
+                <span class="n">SinglepointRecord</span><span class="o">.</span><span class="n">_DataModel</span><span class="p">,</span>
+                <span class="kc">None</span><span class="p">,</span>
+                <span class="n">url_params</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">SinglepointRecord</span><span class="o">.</span><span class="n">from_datamodel</span><span class="p">(</span><span class="n">r</span><span class="p">)</span></div></div>
 
 
 <span class="k">class</span> <span class="nc">OptimizationQueryFilters</span><span class="p">(</span><span class="n">RecordQueryFilters</span><span class="p">):</span>
