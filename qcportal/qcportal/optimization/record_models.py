@@ -137,6 +137,24 @@ class OptimizationRecord(BaseRecord):
         traj_dm = [x.singlepoint_record for x in self.raw_data.trajectory]
         return [SinglepointRecord.from_datamodel(x, self.client) for x in traj_dm]
 
+    def trajectory_element(self, trajectory_index: int) -> SinglepointRecord:
+        if self.raw_data.trajectory is not None:
+            return SinglepointRecord.from_datamodel(self.raw_data.trajectory[trajectory_index].singlepoint_record)
+        else:
+            url_params = {}
+
+            r = self.client._auto_request(
+                "get",
+                f"v1/records/optimization/{self.raw_data.id}/trajectory/{trajectory_index}",
+                None,
+                ProjURLParameters,
+                SinglepointRecord._DataModel,
+                None,
+                url_params,
+            )
+
+            return SinglepointRecord.from_datamodel(r)
+
 
 class OptimizationQueryFilters(RecordQueryFilters):
     program: Optional[List[str]] = None

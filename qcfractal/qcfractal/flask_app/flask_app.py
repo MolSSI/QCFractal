@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from flask import Flask
 from flask_jwt_extended import JWTManager
+from werkzeug.routing import IntegerConverter
 
 from qcfractal.db_socket.socket import SQLAlchemySocket
 from qcfractal.process_runner import ProcessBase
@@ -33,9 +34,17 @@ storage_socket = _FlaskSQLAlchemySocket()
 
 jwt = JWTManager()
 
+# Some routes allow for negative integers (ie, list index)
+# See https://github.com/pallets/flask/issues/2643
+class SignedIntConverter(IntegerConverter):
+    regex = r"-?\d+"
+
 
 def create_flask_app(qcfractal_config: FractalConfig, init_storage: bool = True):
     app = Flask(__name__)
+
+    app.url_map.converters["signed_int"] = SignedIntConverter
+
     app.logger = logging.getLogger("fractal_flask_app")
     app.logger.info(f"Creating flask app")
 

@@ -208,6 +208,32 @@ def test_optimization_client_delete_traj_inuse(
     assert ch_rec is not None
 
 
+@pytest.mark.parametrize("opt_file", ["opt_psi4_benzene", "opt_psi4_methane_sometraj"])
+@pytest.mark.parametrize("fetch_traj", [True, False])
+def test_optimization_client_traj(
+    snowflake_client: PortalClient,
+    storage_socket: SQLAlchemySocket,
+    activated_manager_name: ManagerName,
+    opt_file: str,
+    fetch_traj: bool,
+):
+    opt_id = run_test_data(storage_socket, activated_manager_name, opt_file)
+
+    rec = snowflake_client.get_optimizations(opt_id)
+    rec_traj = snowflake_client.get_optimizations(opt_id, include=["trajectory"])
+
+    assert rec_traj.raw_data.trajectory is not None
+
+    if fetch_traj:
+        rec._fetch_trajectory()
+        assert rec.raw_data.trajectory is not None
+    else:
+        assert rec.raw_data.trajectory is None
+
+    assert rec.trajectory_element(0).id == rec_traj.trajectory[0].id
+    assert rec.trajectory_element(-1).id == rec_traj.trajectory[-1].id
+
+
 def test_optimization_client_query(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
     id_1, _ = submit_test_data(storage_socket, "opt_psi4_fluoroethane_notraj")
     id_2, _ = submit_test_data(storage_socket, "opt_psi4_benzene")

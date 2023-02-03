@@ -49,6 +49,15 @@ def get_optimization_trajectory_v1(record_id: int, url_params: ProjURLParameters
     return rec[0]["trajectory"]
 
 
+@api_v1.route("/records/optimization/<int:record_id>/trajectory/<signed_int:trajectory_index>", methods=["GET"])
+@wrap_route("READ")
+def get_optimization_trajectory_element_v1(record_id: int, trajectory_index: int, url_params: ProjURLParameters):
+    # adjust the includes/excludes to refer to the trajectory
+    return storage_socket.records.optimization.get_trajectory_element(
+        record_id, trajectory_index, url_params.include, url_params.exclude
+    )
+
+
 @api_v1.route("/records/optimization/query", methods=["POST"])
 @wrap_route("READ")
 def query_optimization_v1(body_data: OptimizationQueryFilters):
