@@ -304,6 +304,7 @@ class InternalJobSocket:
         """
 
         job_orm.started_date = datetime.utcnow()
+        job_orm.last_updated = datetime.utcnow()
         job_orm.runner_hostname = self._hostname
         job_orm.runner_uuid = job_status._runner_uuid
         job_orm.status = InternalJobStatusEnum.running
