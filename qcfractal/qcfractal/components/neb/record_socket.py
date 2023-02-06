@@ -95,7 +95,7 @@ class NEBRecordSocket(BaseRecordSocket):
 
     @staticmethod
     def get_children_select() -> List[Any]:
-        stmt = union(
+        stmt = [
             select(
                 NEBSinglepointsORM.neb_id.label("parent_id"),
                 NEBSinglepointsORM.singlepoint_id.label("child_id"),
@@ -104,8 +104,8 @@ class NEBRecordSocket(BaseRecordSocket):
                 NEBOptimizationsORM.neb_id.label("parent_id"),
                 NEBOptimizationsORM.optimization_id.label("child_id"),
             ),
-        )
-        return [stmt]
+        ]
+        return stmt
 
     def initialize_service(
         self,

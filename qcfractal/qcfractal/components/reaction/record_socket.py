@@ -43,7 +43,7 @@ class ReactionRecordSocket(BaseRecordSocket):
 
     @staticmethod
     def get_children_select() -> List[Any]:
-        stmt = union(
+        stmt = [
             select(
                 ReactionComponentORM.reaction_id.label("parent_id"),
                 ReactionComponentORM.singlepoint_id.label("child_id"),
@@ -52,8 +52,8 @@ class ReactionRecordSocket(BaseRecordSocket):
                 ReactionComponentORM.reaction_id.label("parent_id"),
                 ReactionComponentORM.optimization_id.label("child_id"),
             ),
-        )
-        return [stmt]
+        ]
+        return stmt
 
     def initialize_service(self, session: Session, service_orm: ServiceQueueORM) -> None:
         rxn_orm: ReactionRecordORM = service_orm.record
