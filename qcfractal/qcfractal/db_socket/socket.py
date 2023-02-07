@@ -9,9 +9,10 @@ import logging
 import os
 import shutil
 from contextlib import contextmanager
+from functools import lru_cache
 from typing import TYPE_CHECKING
 
-from sqlalchemy import create_engine, exc, event, text
+from sqlalchemy import create_engine, exc, event, inspect, select, union, MetaData
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 
@@ -341,3 +342,63 @@ class SQLAlchemySocket:
         if self._finished_queue is not None:
             # Don't want to block here. Just put it in the queue and move on
             self._finished_queue.put((int(record_id), status), block=False)
+
+    @lru_cache()
+    def find_referencing_cols(self, column):
+        """
+        Finds columns that have a foreign key referencing the given column
+
+        For example, `find_referencing_cols(LargeBinaryORM.id)` will find all columns (in all tables in the database)
+        that reference `LargeBinaryORM.id`
+        """
+
+        md = MetaData()
+        md.reflect(bind=self.engine)
+
+        insp_col = inspect(column)
+        table = insp_col.table
+
+        this_table_name = table.name
+        this_column_name = insp_col.name
+
+        db_reflection = inspect(self.engine)
+
+        referencing_cols = []
+
+        all_fkc = db_reflection.get_multi_foreign_keys()
+
+        # Looking at all foreign keys, we want all that refer to this table and column
+        # (constrained_columns is the columns on the other table)
+        for (schema, table_name), fks in all_fkc.items():
+            for fk in fks:
+                if fk["referred_table"] == this_table_name and this_column_name in fk["referred_columns"]:
+
+                    # Find what column refers to this one. It may be part of a composite fk
+                    col_idx = fk["referred_columns"].index(this_column_name)
+                    tb = md.tables[table_name]
+
+                    # Turns it into something like BaseRecord.id (or the equivalent of a Table)
+                    referencing_cols.append(getattr(tb.columns, fk["constrained_columns"][col_idx]))
+
+        return referencing_cols
+
+    def find_orphaned_rows(self, session: Session, column):
+        """
+        Finds any rows in a table that are not referenced elsewhere
+
+        Only the given column is searched to find references
+        """
+
+        cte_parts = []
+        referencing_columns = self.find_referencing_cols(column)
+        for rc in referencing_columns:
+            cp = select(rc.label("ref_col"))
+            cte_parts.append(cp)
+
+        cte = union(*cte_parts).cte()
+        stmt = select(column)
+        stmt = stmt.join(cte, cte.c.ref_col == column, isouter=True)
+        stmt = stmt.where(cte.c.ref_col.is_(None))
+
+        r = session.execute(stmt).scalars().all()
+        return r
