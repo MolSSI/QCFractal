@@ -387,9 +387,7 @@ class ServiceSubtaskRecordSocket(BaseRecordSocket):
     ) -> None:
 
         # Isn't a whole lot to do here
-        results_lb_id = self.root_socket.largebinary.add_compress(
-            record_orm.id, result.results, CompressionEnum.zstd, session=session
-        )
+        results_lb_id = self.root_socket.largebinary.add_compress(result.results, CompressionEnum.zstd, session=session)
         record_orm.results_lb_id = results_lb_id
 
     def add(
@@ -457,12 +455,12 @@ class ServiceSubtaskRecordSocket(BaseRecordSocket):
                 )
 
                 self.create_task(rec_orm, tag, priority)
+
+                kwargs_lb_id = self.root_socket.largebinary.add_compress(kw, session=session)
+                rec_orm.function_kwargs_lb_id = kwargs_lb_id
+
                 all_orm.append(rec_orm)
                 session.add(rec_orm)
-
-                session.flush()
-                kwargs_lb_id = self.root_socket.largebinary.add_compress(rec_orm.id, kw, session=session)
-                rec_orm.function_kwargs_lb_id = kwargs_lb_id
 
             session.flush()
 

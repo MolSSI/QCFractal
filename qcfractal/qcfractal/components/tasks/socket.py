@@ -12,7 +12,7 @@ from sqlalchemy.orm import joinedload, Load
 
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.record_db_models import BaseRecordORM
-from qcportal.compression import compress, CompressionEnum
+from qcportal.compression import CompressionEnum
 from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerStatusEnum
 from qcportal.metadata_models import TaskReturnMetadata
@@ -318,12 +318,16 @@ class TaskSocket:
                         # Otherwise if an id is already given, retrieve the uncompressed form from the
                         # largebinary socket
                         if "function_kwargs_lb_id" in task_spec:
-                            kwargs_lb_id = task_spec["function_kwargs_lb_id"]
-                            kwargs = self.root_socket.largebinary.get(kwargs_lb_id, session=session)
+                            # TODO - hacky. Decompresses then compresses
+                            task_kwargs_lb_id = task_spec["function_kwargs_lb_id"]
+                            kwargs = self.root_socket.largebinary.get(task_kwargs_lb_id, session=session)
+                            kwargs_lb_id = self.root_socket.largebinary.add_compress(
+                                kwargs, CompressionEnum.zstd, session=session
+                            )
                         elif "function_kwargs" in task_spec:
                             kwargs = task_spec["function_kwargs"]
                             kwargs_lb_id = self.root_socket.largebinary.add_compress(
-                                task_orm.record_id, kwargs, CompressionEnum.zstd, session=session
+                                kwargs, CompressionEnum.zstd, session=session
                             )
                         else:
                             raise RuntimeError(

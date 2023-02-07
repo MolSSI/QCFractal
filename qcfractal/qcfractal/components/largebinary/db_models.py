@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, String, Enum, LargeBinary, BigInteger, ForeignKey, event, DDL
+from sqlalchemy import Column, Integer, String, Enum, LargeBinary, BigInteger, event, DDL
+from sqlalchemy.orm import deferred
 
 from qcfractal.db_socket import BaseORM
 from qcportal.compression import CompressionEnum
-from qcfractal.components.record_db_models import BaseRecordORM
 
 if TYPE_CHECKING:
     pass
@@ -20,15 +20,16 @@ class LargeBinaryORM(BaseORM):
     __tablename__ = "largebinary_store"
 
     id = Column(Integer, primary_key=True)
+    largebinary_type = Column(String, nullable=False)
 
-    record_id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="cascade"), nullable=False)
     size = Column(BigInteger, nullable=False)
     checksum = Column(String, nullable=False)
     compression_type = Column(Enum(CompressionEnum), nullable=False)
 
-    # This column is marked as STORAGE EXTERNAL, which disables compression
-    # (this is done elsewhere, I don't know of a way to do it declaratively)
-    data_local = Column(LargeBinary, nullable=False)
+    # This column is marked as STORAGE EXTERNAL with an event below, which disables compression
+    data_local = deferred(Column(LargeBinary, nullable=False))
+
+    __mapper_args__ = {"polymorphic_on": "largebinary_type", "polymorphic_identity": "generic"}
 
 
 # Mark the storage of the data_local column as external

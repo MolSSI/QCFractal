@@ -28,16 +28,12 @@ class LargeBinarySocket:
 
         self._tasks_claim_limit = root_socket.qcf_config.api_limits.manager_tasks_claim
 
-    def add(
-        self, record_id: int, data: bytes, compression_type: CompressionEnum, *, session: Optional[Session] = None
-    ) -> int:
+    def add(self, data: bytes, compression_type: CompressionEnum, *, session: Optional[Session] = None) -> int:
 
         size = len(data)
         checksum = md5(data).hexdigest()
 
-        orm = LargeBinaryORM(
-            record_id=record_id, size=size, checksum=checksum, compression_type=compression_type, data_local=data
-        )
+        orm = LargeBinaryORM(size=size, checksum=checksum, compression_type=compression_type, data_local=data)
 
         with self.root_socket.optional_session(session) as session:
             session.add(orm)
@@ -46,7 +42,6 @@ class LargeBinarySocket:
 
     def add_compress(
         self,
-        record_id: int,
         data: Any,
         compression_type: CompressionEnum = CompressionEnum.zstd,
         *,
@@ -54,7 +49,7 @@ class LargeBinarySocket:
     ) -> int:
 
         data_compressed, _, _ = compress(data, compression_type=compression_type)
-        return self.add(record_id, data_compressed, compression_type, session=session)
+        return self.add(data_compressed, compression_type, session=session)
 
     def get_metadata(self, lb_id: int, *, session: Optional[Session] = None) -> Dict[str, Any]:
 
