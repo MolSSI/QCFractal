@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, String, Enum, LargeBinary, BigInteger, ForeignKey
+from sqlalchemy import Column, Integer, String, Enum, LargeBinary, BigInteger, ForeignKey, event, DDL
 
 from qcfractal.db_socket import BaseORM
 from qcportal.compression import CompressionEnum
@@ -29,3 +29,13 @@ class LargeBinaryORM(BaseORM):
     # This column is marked as STORAGE EXTERNAL, which disables compression
     # (this is done elsewhere, I don't know of a way to do it declaratively)
     data_local = Column(LargeBinary, nullable=False)
+
+
+# Mark the storage of the data_local column as external
+event.listen(
+    LargeBinaryORM.__table__,
+    "after_create",
+    DDL("ALTER TABLE largebinary_store ALTER COLUMN data_local SET STORAGE EXTERNAL").execute_if(
+        dialect=("postgresql")
+    ),
+)

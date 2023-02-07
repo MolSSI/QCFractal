@@ -198,9 +198,6 @@ class SQLAlchemySocket:
         except Exception as e:
             raise RuntimeError(f"SQLAlchemy Connection Error\n{str(e)}")
 
-        # Some things can't be done on creation
-        session.execute(text("ALTER TABLE largebinary_store ALTER COLUMN data_local SET STORAGE EXTERNAL"))
-
         try:
             for rolename, permissions in default_roles.items():
                 orm = RoleORM(rolename=rolename, permissions=permissions)
