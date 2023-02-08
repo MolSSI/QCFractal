@@ -9,7 +9,7 @@ from qcfractal.db_socket import BaseORM
 from qcportal.compression import CompressionEnum
 
 if TYPE_CHECKING:
-    pass
+    from typing import Iterable, Optional, Dict, Any
 
 
 class LargeBinaryORM(BaseORM):
@@ -30,6 +30,11 @@ class LargeBinaryORM(BaseORM):
     data_local = deferred(Column(LargeBinary, nullable=False))
 
     __mapper_args__ = {"polymorphic_on": "largebinary_type", "polymorphic_identity": "generic"}
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "largebinary_type")
+        return BaseORM.model_dict(self, exclude)
 
 
 # Mark the storage of the data_local column as external

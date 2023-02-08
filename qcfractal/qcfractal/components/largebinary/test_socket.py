@@ -34,7 +34,7 @@ def test_largebinary_socket_basic(storage_socket: SQLAlchemySocket):
         assert lb_meta["size"] == len(compressed)
         assert lb_meta["compression_type"] == compression_type
         assert lb_meta["checksum"] == md5(compressed).hexdigest()
-        assert set(lb_meta.keys()) == {"id", "size", "compression_type", "checksum", "largebinary_type"}
+        assert set(lb_meta.keys()) == {"id", "size", "compression_type", "checksum"}
 
         lb_ids.append(lb_id)
 
