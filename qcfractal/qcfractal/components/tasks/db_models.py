@@ -1,6 +1,17 @@
 import datetime
 
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Index, CheckConstraint, UniqueConstraint
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    DateTime,
+    ForeignKey,
+    Index,
+    CheckConstraint,
+    UniqueConstraint,
+    DDL,
+    event,
+)
 from sqlalchemy.dialects.postgresql import ARRAY, TEXT
 from sqlalchemy.orm import relationship
 
@@ -49,3 +60,23 @@ class TaskQueueORM(BaseORM):
         ),
         CheckConstraint("tag = LOWER(tag)", name="ck_task_queue_tag_lower"),
     )
+
+
+# Trigger for deleting largebinary_store rows when rows of task_queue are deleted
+_del_lb_trigger = DDL(
+    """
+    CREATE FUNCTION qca_task_queue_delete_lb() RETURNS TRIGGER AS
+    $_$
+    BEGIN
+      DELETE FROM largebinary_store WHERE largebinary_store.id = OLD.function_kwargs_lb_id;
+      RETURN OLD;
+    END
+    $_$ LANGUAGE 'plpgsql';
+
+    CREATE TRIGGER qca_task_queue_delete_lb_tr
+    AFTER DELETE ON task_queue
+    FOR EACH ROW EXECUTE PROCEDURE qca_task_queue_delete_lb();
+    """
+)
+
+event.listen(TaskQueueORM.__table__, "after_create", _del_lb_trigger.execute_if(dialect=("postgresql")))

@@ -40,3 +40,18 @@ event.listen(
         dialect=("postgresql")
     ),
 )
+
+# Function for deleting large binary when derived classes are deleted
+_del_lb_trigger = DDL(
+    """
+    CREATE FUNCTION qca_largebinary_base_delete() RETURNS TRIGGER AS
+    $_$
+    BEGIN
+      DELETE FROM largebinary_store WHERE largebinary_store.id = OLD.id;
+      RETURN OLD;
+    END
+    $_$ LANGUAGE 'plpgsql';
+    """
+)
+
+event.listen(LargeBinaryORM.__table__, "after_create", _del_lb_trigger.execute_if(dialect=("postgresql")))

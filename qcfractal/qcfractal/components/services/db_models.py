@@ -13,6 +13,8 @@ from sqlalchemy import (
     Index,
     UniqueConstraint,
     CheckConstraint,
+    event,
+    DDL,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
@@ -108,3 +110,24 @@ class ServiceSubtaskRecordORM(BaseRecordORM):
         "polymorphic_identity": "servicesubtask",
         "inherit_condition": (id == BaseRecordORM.id),
     }
+
+
+# Trigger for deleting largebinary_store rows when rows of service_subtask_record are deleted
+_del_lb_trigger = DDL(
+    """
+    CREATE FUNCTION qca_service_subtask_delete_lb() RETURNS TRIGGER AS
+    $_$
+    BEGIN
+      DELETE FROM largebinary_store
+      WHERE largebinary_store.id = OLD.function_kwargs_lb_id OR largebinary_store.id = OLD.results_lb_id;
+      RETURN OLD;
+    END
+    $_$ LANGUAGE 'plpgsql';
+
+    CREATE TRIGGER qca_service_subtask_delete_lb_tr
+    AFTER DELETE ON service_subtask_record
+    FOR EACH ROW EXECUTE PROCEDURE qca_service_subtask_delete_lb();
+    """
+)
+
+event.listen(ServiceSubtaskRecordORM.__table__, "after_create", _del_lb_trigger.execute_if(dialect=("postgresql")))
