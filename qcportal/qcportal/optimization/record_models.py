@@ -139,7 +139,9 @@ class OptimizationRecord(BaseRecord):
 
     def trajectory_element(self, trajectory_index: int) -> SinglepointRecord:
         if self.raw_data.trajectory is not None:
-            return SinglepointRecord.from_datamodel(self.raw_data.trajectory[trajectory_index].singlepoint_record)
+            return SinglepointRecord.from_datamodel(
+                self.raw_data.trajectory[trajectory_index].singlepoint_record, self.client
+            )
         else:
             url_params = {}
 
