@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import select, delete
 from sqlalchemy.orm import load_only
 
-from qcportal.compression import CompressionEnum, compress, decompress
+from qcportal.compression import CompressionEnum, decompress
 from qcportal.exceptions import MissingDataError, CorruptDataError
 from .db_models import LargeBinaryORM
 
@@ -28,28 +28,27 @@ class LargeBinarySocket:
 
         self._tasks_claim_limit = root_socket.qcf_config.api_limits.manager_tasks_claim
 
-    def add(self, data: bytes, compression_type: CompressionEnum, *, session: Optional[Session] = None) -> int:
-
-        size = len(data)
-        checksum = md5(data).hexdigest()
-
-        orm = LargeBinaryORM(size=size, checksum=checksum, compression_type=compression_type, data_local=data)
-
-        with self.root_socket.optional_session(session) as session:
-            session.add(orm)
-            session.flush()
-            return orm.id
-
-    def add_compress(
+    def populate_orm(
         self,
-        data: Any,
-        compression_type: CompressionEnum = CompressionEnum.zstd,
+        lb_orm: LargeBinaryORM,
+        data: bytes,
+        compression_type: CompressionEnum,
         *,
         session: Optional[Session] = None,
-    ) -> int:
+    ):
 
-        data_compressed, _, _ = compress(data, compression_type=compression_type)
-        return self.add(data_compressed, compression_type, session=session)
+        # session not used, but may be in the future
+        lb_orm.size = len(data)
+        lb_orm.checksum = md5(data).hexdigest()
+        lb_orm.compression_type = compression_type
+        lb_orm.data_local = data
+
+    def add_orm(self, lb_orm: LargeBinaryORM, *, session: Optional[Session] = None) -> int:
+
+        with self.root_socket.optional_session(session) as session:
+            session.add(lb_orm)
+            session.flush()
+            return lb_orm.id
 
     def get_metadata(self, lb_id: int, *, session: Optional[Session] = None) -> Dict[str, Any]:
 

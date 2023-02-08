@@ -9,13 +9,14 @@ from sqlalchemy import select, or_
 from sqlalchemy.dialects.postgresql import array_agg
 from sqlalchemy.orm import contains_eager, make_transient, aliased, defer, selectinload, joinedload
 
+from qcfractal.components.largebinary.db_models import LargeBinaryORM
 from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.record_db_models import BaseRecordORM, RecordComputeHistoryORM
 from qcfractal.components.record_socket import BaseRecordSocket
 from qcfractal.db_socket.helpers import (
     get_count,
 )
-from qcportal.compression import CompressionEnum
+from qcportal.compression import CompressionEnum, compress
 from qcportal.generic_result import GenericTaskResult
 from qcportal.metadata_models import InsertMetadata
 from qcportal.outputstore import OutputStore, OutputTypeEnum
@@ -387,8 +388,11 @@ class ServiceSubtaskRecordSocket(BaseRecordSocket):
     ) -> None:
 
         # Isn't a whole lot to do here
-        results_lb_id = self.root_socket.largebinary.add_compress(result.results, CompressionEnum.zstd, session=session)
-        record_orm.results_lb_id = results_lb_id
+        data, _, _ = compress(result.results, CompressionEnum.zstd)
+        lb_orm = LargeBinaryORM()
+        self.root_socket.largebinary.populate_orm(lb_orm, data, CompressionEnum.zstd, session=session)
+        self.root_socket.largebinary.add_orm(lb_orm, session=session)
+        record_orm.results_lb_id = lb_orm.id
 
     def add(
         self,
@@ -456,8 +460,12 @@ class ServiceSubtaskRecordSocket(BaseRecordSocket):
 
                 self.create_task(rec_orm, tag, priority)
 
-                kwargs_lb_id = self.root_socket.largebinary.add_compress(kw, session=session)
-                rec_orm.function_kwargs_lb_id = kwargs_lb_id
+                data, _, _ = compress(kw, CompressionEnum.zstd)
+                kwargs_lb_orm = LargeBinaryORM()
+                self.root_socket.largebinary.populate_orm(kwargs_lb_orm, data, CompressionEnum.zstd, session=session)
+                self.root_socket.largebinary.add_orm(kwargs_lb_orm, session=session)
+
+                rec_orm.function_kwargs_lb_id = kwargs_lb_orm.id
 
                 all_orm.append(rec_orm)
                 session.add(rec_orm)

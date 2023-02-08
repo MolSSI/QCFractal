@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from qcfractal.components.largebinary.db_models import LargeBinaryORM
 from qcfractal.db_socket import SQLAlchemySocket
-from qcportal.compression import compress, decompress, CompressionEnum
+from qcportal.compression import compress, CompressionEnum
 from qcportal.exceptions import MissingDataError
-from qcfractal.components.singlepoint.testing_helpers import submit_test_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -22,7 +22,9 @@ def test_largebinary_socket_basic(storage_socket: SQLAlchemySocket):
         compressed, ctype, _ = compress(data, compression_type=compression_type)
         assert ctype == compression_type
 
-        lb_id = storage_socket.largebinary.add(compressed, compression_type=compression_type)
+        lb_orm = LargeBinaryORM()
+        storage_socket.largebinary.populate_orm(lb_orm, compressed, compression_type)
+        lb_id = storage_socket.largebinary.add_orm(lb_orm)
         assert lb_id is not None
 
         compressed2, compression_type2 = storage_socket.largebinary.get_raw(lb_id)
@@ -51,46 +53,3 @@ def test_largebinary_socket_basic(storage_socket: SQLAlchemySocket):
         for exist_lb_id in existing_ids:
             # Just see if it exists
             storage_socket.largebinary.get_raw(exist_lb_id)
-
-
-def test_largebinary_socket_add_compress(storage_socket: SQLAlchemySocket):
-
-    for compression_type in list(CompressionEnum):
-        data = "This is some data" * 10000
-
-        lb_id = storage_socket.largebinary.add_compress(data, compression_type=compression_type)
-        assert lb_id is not None
-
-        compressed2, compression_type2 = storage_socket.largebinary.get_raw(lb_id)
-        assert compression_type2 == compression_type
-        assert decompress(compressed2, compression_type) == data
-
-        # Now test a dictionary
-        data = {"a": "a string" * 1000, "b": "another string" * 1000, "3": 18273}
-
-        lb_id = storage_socket.largebinary.add_compress(data, compression_type=compression_type)
-        assert lb_id is not None
-
-        compressed2, compression_type2 = storage_socket.largebinary.get_raw(lb_id)
-        assert compression_type2 == compression_type
-        assert decompress(compressed2, compression_type) == data
-
-        # General get function
-        data2 = storage_socket.largebinary.get(lb_id)
-        assert data2 == data
-
-
-# def test_largebinary_socket_delete_record(storage_socket: SQLAlchemySocket):
-#
-#    data = "This is some data" * 10000
-#    compressed, ctype, _ = compress(data, compression_type=CompressionEnum.zstd)
-#
-#    lb_id = storage_socket.largebinary.add(compressed, compression_type=CompressionEnum.zstd)
-#    assert lb_id is not None
-#
-#    meta = storage_socket.records.delete([record_id], soft_delete=False)
-#    assert meta.success
-#    assert meta.deleted_idx == [0]
-#
-#    with pytest.raises(MissingDataError, match="Cannot find large binary data"):
-#        storage_socket.largebinary.get_raw(lb_id)

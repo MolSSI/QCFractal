@@ -10,9 +10,10 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import array
 from sqlalchemy.orm import joinedload, Load
 
+from qcfractal.components.largebinary.db_models import LargeBinaryORM
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.record_db_models import BaseRecordORM
-from qcportal.compression import CompressionEnum
+from qcportal.compression import CompressionEnum, compress, decompress
 from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerStatusEnum
 from qcportal.metadata_models import TaskReturnMetadata
@@ -318,30 +319,41 @@ class TaskSocket:
                         # Otherwise if an id is already given, retrieve the uncompressed form from the
                         # largebinary socket
                         if "function_kwargs_lb_id" in task_spec:
-                            # TODO - hacky. Decompresses then compresses
+                            # Copy the largebinary
                             task_kwargs_lb_id = task_spec["function_kwargs_lb_id"]
-                            kwargs = self.root_socket.largebinary.get(task_kwargs_lb_id, session=session)
-                            kwargs_lb_id = self.root_socket.largebinary.add_compress(
-                                kwargs, CompressionEnum.zstd, session=session
+
+                            # Get the compressed form from the largebinary compute managers
+                            kwargs_data, kwargs_ctype = self.root_socket.largebinary.get_raw(
+                                task_kwargs_lb_id, session=session
                             )
+
+                            # TODO - eventually pass compressed data to workers
+                            kwargs = decompress(kwargs_data, kwargs_ctype)
+
                         elif "function_kwargs" in task_spec:
                             kwargs = task_spec["function_kwargs"]
-                            kwargs_lb_id = self.root_socket.largebinary.add_compress(
-                                kwargs, CompressionEnum.zstd, session=session
-                            )
+                            kwargs_data, kwargs_ctype, _ = compress(kwargs, CompressionEnum.zstd)
+
                         else:
                             raise RuntimeError(
                                 "Neither kwargs or kwargs id found in task spec. This is a developer error"
                             )
 
+                        kwargs_lb_orm = LargeBinaryORM()
+                        self.root_socket.largebinary.populate_orm(
+                            kwargs_lb_orm, kwargs_data, kwargs_ctype, session=session
+                        )
+                        self.root_socket.largebinary.add_orm(kwargs_lb_orm, session=session)
+
                         # Add this to the orm for any future managers claiming this task
                         task_orm.function = task_spec["function"]
-                        task_orm.function_kwargs_lb_id = kwargs_lb_id
+                        task_orm.function_kwargs_lb_id = kwargs_lb_orm.id
 
                         # But just use what we created when returning to this manager
                         task_dict["function"] = task_spec["function"]
                         task_dict["function_kwargs"] = kwargs
-                        task_dict["function_kwargs_lb_id"] = kwargs_lb_id
+                        task_dict["function_kwargs_lb_id"] = kwargs_lb_orm.id
+
                     else:
                         # Retrieve the kwargs from the largebinary socket
                         kwargs_lb_id = task_dict["function_kwargs_lb_id"]
