@@ -69,6 +69,14 @@ def get_record_native_files_v1(record_id: int):
     return rec[0]["native_files"]
 
 
+@api_v1.route("/records/<int:record_id>/native_files/<string:name>", methods=["GET"])
+@wrap_route("READ")
+def get_record_native_file_byname_v1(record_id: int, name: str):
+    with storage_socket.session_scope(True) as session:
+        lb_id = storage_socket.records.get_native_file_lb_id(record_id, name, session=session)
+        return storage_socket.largebinary.get_raw(lb_id, session=session)
+
+
 @api_v1.route("/records/<int:record_id>", methods=["DELETE"])
 @wrap_route("DELETE")
 def delete_records_v1(record_id: int):

@@ -437,6 +437,11 @@ class BaseRecord(BaseModel):
     def native_files(self) -> Optional[Dict[str, NativeFile]]:
         if self.raw_data.native_files is None:
             self._fetch_native_files()
+
+        # Kinda hacky?
+        for n in self.raw_data.native_files.values():
+            n.client = self.client
+
         return self.raw_data.native_files
 
     @property

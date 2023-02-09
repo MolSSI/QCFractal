@@ -80,21 +80,6 @@ def create_compute_history_entry(
     return history_orm
 
 
-def native_files_to_orm(result: AllResultTypes) -> Dict[str, NativeFileORM]:
-    """
-    Convert the native files stored in a QCElemental result to an ORM
-    """
-
-    # Get the compressed outputs if they exist
-    compressed_nf = result.extras.pop("_qcfractal_compressed_native_files", None)
-
-    if compressed_nf is not None:
-        return {k: NativeFileORM(**v) for k, v in compressed_nf.items()}
-    else:
-        # Don't bother with checking if they exist uncompressed?
-        return {}
-
-
 class BaseRecordSocket:
     """
     Base class for all record sockets
@@ -605,6 +590,25 @@ class RecordSocket:
         record_type = task_orm.record.record_type
         return self._handler_map[record_type].generate_task_specification(task_orm.record)
 
+    def native_files_to_orm(self, session: Session, result: AllResultTypes) -> Dict[str, NativeFileORM]:
+        """
+        Convert the native files stored in a QCElemental result to an ORM
+        """
+
+        compressed_nf = result.extras.pop("_qcfractal_compressed_native_files", {})
+
+        native_files = {}
+        for name, nf_data in compressed_nf.items():
+            # nf_data is a dictionary with keys 'data', 'compression_type'
+            nf_orm = NativeFileORM(name=name)
+            self.root_socket.largebinary.populate_orm(
+                nf_orm, nf_data["data"], nf_data["compression_type"], session=session
+            )
+
+            native_files[name] = nf_orm
+
+        return native_files
+
     def update_completed_task(
         self, session: Session, record_orm: BaseRecordORM, result: AllResultTypes, manager_name: str
     ):
@@ -644,7 +648,7 @@ class RecordSocket:
         history_orm = create_compute_history_entry(result)
         history_orm.manager_name = manager_name
         record_orm.compute_history.append(history_orm)
-        record_orm.native_files = native_files_to_orm(result)
+        record_orm.native_files = self.native_files_to_orm(session, result)
 
         record_orm.status = history_orm.status
         record_orm.manager_name = manager_name
@@ -792,8 +796,7 @@ class RecordSocket:
 
             # Now back to the common modifications
             record_orm.compute_history.append(history_orm)
-            record_orm.native_files = native_files_to_orm(result)
-
+            record_orm.native_files = self.native_files_to_orm(session, result)
             record_orm.status = history_orm.status
             record_orm.modified_on = history_orm.modified_on
 
@@ -1440,8 +1443,6 @@ class RecordSocket:
 
             return ret
 
-        return UpdateMetadata()
-
     def revert_generic(self, record_id: Sequence[int], revert_status: RecordStatusEnum) -> UpdateMetadata:
         """
         Reverts the status of a record to the previous status
@@ -1460,3 +1461,21 @@ class RecordSocket:
             return self.undelete(record_id)
 
         raise RuntimeError(f"Unknown status to revert: ", revert_status)
+
+    #################################################
+    # Some common stuff to be retrieved for records #
+    #################################################
+
+    def get_native_file_lb_id(self, record_id: int, name: str, *, session: Optional[Session] = None):
+
+        stmt = select(NativeFileORM.id)
+        stmt = stmt.where(NativeFileORM.record_id == record_id)
+        stmt = stmt.where(NativeFileORM.name == name)
+
+        with self.root_socket.optional_session(session, True) as session:
+            lb_id = session.execute(stmt).scalar_one_or_none()
+
+            if lb_id is None:
+                raise MissingDataError(f"Native file {name} does not exist for record {record_id}")
+
+            return lb_id
