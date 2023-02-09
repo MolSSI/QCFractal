@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 from qcelemental.models.results import AtomicResultProperties
+from qcfractal.components.wavefunctions.test_db_models import assert_wfn_equal
 
 from qcarchivetesting import load_molecule_data
-from qcfractal.components.wavefunctions.test_db_models import assert_wfn_equal
-from qcportal.compression import decompress, decompress_old_string
+from qcportal.compression import decompress_old_string
 from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputStore
@@ -219,7 +219,13 @@ def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket, activated_mana
 
     recs = storage_socket.records.singlepoint.get(
         all_id,
-        include=["*", "wavefunction", "compute_history.*", "compute_history.outputs", "native_files"],
+        include=[
+            "*",
+            "wavefunction",
+            "compute_history.*",
+            "compute_history.outputs",
+            "native_files",
+        ],
     )
 
     for record, result in zip(recs, all_results):
@@ -253,7 +259,8 @@ def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket, activated_mana
         if wfn is None:
             assert result.wavefunction is None
         else:
-            wfn_model = WavefunctionProperties(**record["wavefunction"])
+            wfn_data = storage_socket.largebinary.get(wfn["id"])
+            wfn_model = WavefunctionProperties(**wfn_data)
             assert_wfn_equal(wfn_model, result.wavefunction)
 
         nf = record.get("native_files", None)
@@ -327,8 +334,10 @@ def test_singlepoint_socket_insert(storage_socket: SQLAlchemySocket):
     assert arprop1.scf_iterations == arprop2.scf_iterations
     assert arprop1.scf_total_energy == arprop2.scf_total_energy
 
-    wfn_model_1 = WavefunctionProperties(**recs[0]["wavefunction"])
-    wfn_model_2 = WavefunctionProperties(**recs[1]["wavefunction"])
+    wfn_data_1 = storage_socket.largebinary.get(recs[0]["wavefunction"]["id"])
+    wfn_model_1 = WavefunctionProperties(**wfn_data_1)
+    wfn_data_2 = storage_socket.largebinary.get(recs[1]["wavefunction"]["id"])
+    wfn_model_2 = WavefunctionProperties(**wfn_data_2)
     assert_wfn_equal(wfn_model_1, wfn_model_2)
 
     assert len(recs[0]["compute_history"][0]["outputs"]) == 1

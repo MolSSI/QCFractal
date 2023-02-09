@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from qcelemental.models import AtomicInput as QCEl_AtomicInput, AtomicResult as QCEl_AtomicResult
 from sqlalchemy import select
@@ -9,8 +9,10 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import contains_eager
 
 from qcfractal.components.record_socket import BaseRecordSocket
-from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
+from qcfractal.components.wavefunctions.db_models import WavefunctionORM
 from qcfractal.db_socket.helpers import insert_general
+from qcportal.compression import CompressionEnum, compress
+from qcportal.exceptions import MissingDataError
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
@@ -26,31 +28,6 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from typing import List, Dict, Tuple, Optional, Sequence, Any, Union
-
-
-def wavefunction_to_orm(wavefunction: Optional[WavefunctionProperties]) -> Optional[WavefunctionStoreORM]:
-    """
-    Convert a QCElemental wavefunction into a wavefunction ORM
-    """
-
-    _wfn_all_fields = set(WavefunctionProperties.__fields__.keys())
-    logger = logging.getLogger(__name__)
-
-    if wavefunction is None:
-        return None
-
-    wfn_dict = wavefunction.dict()
-    available_keys = set(wfn_dict.keys())
-
-    # Extra fields are trimmed as we have a column *per* wavefunction structure.
-    extra_fields = available_keys - _wfn_all_fields
-    if extra_fields:
-        logger.warning(f"Too much wavefunction data for result, removing extra data: {extra_fields}")
-        available_keys &= _wfn_all_fields
-
-    wavefunction_save = {k: wfn_dict[k] for k in available_keys}
-    wfn_prop = WavefunctionProperties(**wavefunction_save)
-    return WavefunctionStoreORM.from_model(wfn_prop)
 
 
 class SinglepointRecordSocket(BaseRecordSocket):
@@ -95,13 +72,45 @@ class SinglepointRecordSocket(BaseRecordSocket):
             },
         }
 
+    def wavefunction_to_orm(
+        self, session: Session, wavefunction: Optional[WavefunctionProperties]
+    ) -> Optional[WavefunctionORM]:
+        """
+        Convert a QCElemental wavefunction into a wavefunction ORM
+        """
+
+        _wfn_all_fields = set(WavefunctionProperties.__fields__.keys())
+        logger = logging.getLogger(__name__)
+
+        if wavefunction is None:
+            return None
+
+        wfn_dict = wavefunction.dict()
+        available_keys = set(wfn_dict.keys())
+
+        # Extra fields are trimmed as we have a column *per* wavefunction structure.
+        extra_fields = available_keys - _wfn_all_fields
+        if extra_fields:
+            logger.warning(f"Too much wavefunction data for result, removing extra data: {extra_fields}")
+            available_keys &= _wfn_all_fields
+
+        wavefunction_save = {k: wfn_dict[k] for k in available_keys}
+        wfn_prop = WavefunctionProperties(**wavefunction_save)
+
+        cdata, ctype, _ = compress(wfn_prop.dict(encoding="json"), CompressionEnum.zstd)
+
+        wfn_orm = WavefunctionORM()
+        self.root_socket.largebinary.populate_orm(wfn_orm, cdata, ctype, session=session)
+
+        return wfn_orm
+
     def update_completed_task(
         self, session: Session, record_orm: SinglepointRecordORM, result: QCEl_AtomicResult, manager_name: str
     ) -> None:
         # Update the fields themselves
         record_orm.return_result = result.return_result
         record_orm.properties = result.properties.dict(encoding="json")
-        record_orm.wavefunction = wavefunction_to_orm(result.wavefunction)
+        record_orm.wavefunction = self.wavefunction_to_orm(session, result.wavefunction)
         record_orm.extras = result.extras
 
     def insert_complete_record(
@@ -136,7 +145,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
         record_orm.status = RecordStatusEnum.complete
         record_orm.return_result = result.return_result
         record_orm.properties = result.properties.dict(encoding="json")
-        record_orm.wavefunction = wavefunction_to_orm(result.wavefunction)
+        record_orm.wavefunction = self.wavefunction_to_orm(session, result.wavefunction)
         record_orm.extras = result.extras
 
         session.add(record_orm)
@@ -422,3 +431,20 @@ class SinglepointRecordSocket(BaseRecordSocket):
                 )
 
             return self.add_internal(mol_ids, spec_id, tag, priority, owner_user_id, owner_group_id, session=session)
+
+    ######################################################
+    # Some common stuff to be retrieved for singlepoints #
+    ######################################################
+
+    def get_wavefunction_lb_id(self, record_id: int, *, session: Optional[Session] = None):
+
+        stmt = select(WavefunctionORM.id)
+        stmt = stmt.where(WavefunctionORM.record_id == record_id)
+
+        with self.root_socket.optional_session(session, True) as session:
+            lb_id = session.execute(stmt).scalar_one_or_none()
+
+            if lb_id is None:
+                raise MissingDataError(f"Wavefunction data does not exist for record {record_id}")
+
+            return lb_id

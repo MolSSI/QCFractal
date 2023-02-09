@@ -79,4 +79,7 @@ def test_singlepointrecord_model(
 
     all_properties = result_dict["properties"]
     assert record.properties == all_properties
-    assert record.wavefunction.dict(encoding="json") == result.wavefunction.dict(encoding="json")
+
+    # Wfn always require a client
+    if includes is None:
+        assert record.wavefunction.dict(encoding="json") == result.wavefunction.dict(encoding="json")

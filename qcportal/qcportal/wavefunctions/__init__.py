@@ -1,1 +1,1 @@
-from .models import WavefunctionProperties
+from .models import WavefunctionProperties, Wavefunction

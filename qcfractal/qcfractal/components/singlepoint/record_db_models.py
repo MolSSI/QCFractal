@@ -8,7 +8,7 @@ from sqlalchemy.orm import relationship
 
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.record_db_models import BaseRecordORM
-from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
+from qcfractal.components.wavefunctions.db_models import WavefunctionORM
 from qcfractal.db_socket.base_orm import BaseORM
 from qcfractal.db_socket.column_types import MsgpackExt
 from qcportal.singlepoint import SinglepointDriver
@@ -79,7 +79,7 @@ class SinglepointRecordORM(BaseRecordORM):
     return_result = Column(MsgpackExt)
     properties = Column(JSONB)
 
-    wavefunction = relationship(WavefunctionStoreORM, uselist=False)
+    wavefunction = relationship(WavefunctionORM, uselist=False)
 
     __table_args__ = (
         Index("ix_singlepoint_record_molecule_id", "molecule_id"),

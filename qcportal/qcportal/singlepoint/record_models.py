@@ -10,6 +10,7 @@ from qcelemental.models.results import (
 from typing_extensions import Literal
 
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
+from qcportal.wavefunctions.models import Wavefunction
 
 
 class SinglepointDriver(str, Enum):
@@ -57,7 +58,7 @@ class SinglepointRecord(BaseRecord):
         molecule: Optional[Molecule]
         return_result: Any
         properties: Optional[Dict[str, Any]]
-        wavefunction: Optional[WavefunctionProperties] = None
+        wavefunction: Optional[Wavefunction] = None
 
     raw_data: _DataModel
 
@@ -88,10 +89,11 @@ class SinglepointRecord(BaseRecord):
             f"v1/records/singlepoint/{self.raw_data.id}/wavefunction",
             None,
             None,
-            Optional[WavefunctionProperties],
+            Optional[Union[WavefunctionProperties, Wavefunction]],
             None,
             None,
         )
+
 
     @property
     def specification(self) -> QCSpecification:
@@ -116,10 +118,16 @@ class SinglepointRecord(BaseRecord):
         return self.raw_data.properties
 
     @property
-    def wavefunction(self) -> WavefunctionProperties:
+    def wavefunction(self) -> Optional[WavefunctionProperties]:
         if self.raw_data.wavefunction is None:
             self._fetch_wavefunction()
-        return self.raw_data.wavefunction
+
+        if self.raw_data.wavefunction is not None:
+            # Kinda hacky? Needed for the .data property
+            self.raw_data.wavefunction.client = self.client
+            return WavefunctionProperties(**self.raw_data.wavefunction.data)
+        else:
+            return None
 
 
 class SinglepointAddBody(RecordAddBodyBase):
