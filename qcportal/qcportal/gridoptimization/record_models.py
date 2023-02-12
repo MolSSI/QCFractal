@@ -1,8 +1,8 @@
 import json
 from enum import Enum
-from typing import List, Union, Optional, Dict, Set, Iterable, Tuple, Sequence
+from typing import List, Union, Optional, Dict, Set, Iterable, Tuple, Sequence, Any
 
-from pydantic import BaseModel, Extra, Field, constr, validator
+from pydantic import BaseModel, Extra, Field, constr, validator, PrivateAttr
 from typing_extensions import Literal
 
 from qcportal.base_models import ProjURLParameters
@@ -179,23 +179,28 @@ class GridoptimizationOptimization(BaseModel):
     key: str
 
     energy: Optional[float] = None
-    optimization_record: Optional[OptimizationRecord._DataModel]
+    optimization_record: Optional[OptimizationRecord]
 
 
 class GridoptimizationRecord(BaseRecord):
-    class _DataModel(BaseRecord._DataModel):
-        record_type: Literal["gridoptimization"] = "gridoptimization"
-        specification: GridoptimizationSpecification
-        starting_grid: Optional[List[int]]
-        initial_molecule_id: int
-        initial_molecule: Optional[Molecule] = None
-        starting_molecule_id: Optional[int]
-        starting_molecule: Optional[Molecule] = None
-        optimizations: Optional[List[GridoptimizationOptimization]] = None
 
-        optimizations_cache: Optional[Dict[str, OptimizationRecord]] = None
+    record_type: Literal["gridoptimization"] = "gridoptimization"
+    specification: GridoptimizationSpecification
+    starting_grid: Optional[List[int]]
+    initial_molecule_id: int
+    starting_molecule_id: Optional[int]
 
-    raw_data: _DataModel
+    ######################################################
+    # Fields not always included when fetching the record
+    ######################################################
+    initial_molecule_: Optional[Molecule] = Field(None, alias="initial_molecule")
+    starting_molecule_: Optional[Molecule] = Field(None, alias="starting_molecule")
+    optimizations_: Optional[List[GridoptimizationOptimization]] = Field(None, alias="optimizations")
+
+    ########################################
+    # Private caches
+    ########################################
+    _optimizations_cache: Optional[Dict[Any, OptimizationRecord]] = PrivateAttr(None)
 
     @staticmethod
     def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
@@ -214,33 +219,43 @@ class GridoptimizationRecord(BaseRecord):
 
         return ret
 
-    def _make_caches(self):
-        if self.raw_data.optimizations is None:
+    def propagate_client(self, client):
+        BaseRecord.propagate_client(self, client)
+
+        # Don't need to do _optimizations_cache. Those should point back to the records in optimizations_
+        if self.optimizations_ is not None:
+            for opt in self.optimizations_:
+                if opt.optimization_record:
+                    opt.optimization_record.propagate_client(client)
+
+    def make_caches(self):
+        BaseRecord.make_caches(self)
+
+        if self.optimizations_ is None:
+            self._optimizations_cache = None
             return
 
-        if self.raw_data.optimizations_cache is None:
-            # convert the raw optimization data to a dictionary of key -> OptimizationRecord
-            self.raw_data.optimizations_cache = {
-                x.key: OptimizationRecord.from_datamodel(x.optimization_record, self.client)
-                for x in self.raw_data.optimizations
-            }
+        self._optimizations_cache = {}
+
+        # convert the raw optimization data to a dictionary of key -> OptimizationRecord
+        self._optimizations_cache = {deserialize_key(x.key): x.optimization_record for x in self.optimizations_}
 
     def _fetch_initial_molecule(self):
         self._assert_online()
-        self.raw_data.initial_molecule = self.client.get_molecules([self.raw_data.initial_molecule_id])[0]
+        self.initial_molecule_ = self._client.get_molecules([self.initial_molecule_id])[0]
 
     def _fetch_starting_molecule(self):
         self._assert_online()
-        self.raw_data.starting_molecule = self.client.get_molecules([self.raw_data.starting_molecule_id])[0]
+        self.starting_molecule_ = self._client.get_molecules([self.starting_molecule_id])[0]
 
     def _fetch_optimizations(self):
         self._assert_online()
 
         url_params = {"include": ["*", "optimization_record"]}
 
-        self.raw_data.optimizations = self.client._auto_request(
+        self.optimizations_ = self._client._auto_request(
             "get",
-            f"v1/records/gridoptimization/{self.raw_data.id}/optimizations",
+            f"v1/records/gridoptimization/{self.id}/optimizations",
             None,
             ProjURLParameters,
             List[GridoptimizationOptimization],
@@ -248,51 +263,32 @@ class GridoptimizationRecord(BaseRecord):
             url_params,
         )
 
-        self._make_caches()
-
-    @property
-    def specification(self) -> GridoptimizationSpecification:
-        return self.raw_data.specification
-
-    @property
-    def starting_grid(self) -> Optional[List[int]]:
-        return self.raw_data.starting_grid
-
-    @property
-    def initial_molecule_id(self) -> int:
-        return self.raw_data.initial_molecule_id
+        self.make_caches()
+        self.propagate_client(self._client)
 
     @property
     def initial_molecule(self) -> Molecule:
-        if self.raw_data.initial_molecule is None:
+        if self.initial_molecule_ is None:
             self._fetch_initial_molecule()
-        return self.raw_data.initial_molecule
-
-    @property
-    def starting_molecule_id(self) -> Optional[int]:
-        return self.raw_data.starting_molecule_id
+        return self.initial_molecule_
 
     @property
     def starting_molecule(self) -> Optional[Molecule]:
-        if self.raw_data.initial_molecule is None:
-            self._fetch_initial_molecule()
-        return self.raw_data.initial_molecule
+        if self.starting_molecule_ is None:
+            self._fetch_starting_molecule()
+        return self.starting_molecule_
 
     @property
-    def optimizations(self) -> Dict[Tuple[int, ...], OptimizationRecord]:
-        self._make_caches()
-        if self.raw_data.optimizations_cache is None:
+    def optimizations(self) -> Dict[Any, OptimizationRecord]:
+        if self._optimizations_cache is None:
             self._fetch_optimizations()
-
-        return {deserialize_key(k): v for k, v in self.raw_data.optimizations_cache.items() if k != "preoptimization"}
+        return self._optimizations_cache
 
     @property
     def preoptimization(self) -> Optional[OptimizationRecord]:
-        self._make_caches()
-        if self.raw_data.optimizations_cache is None:
+        if self._optimizations_cache is None:
             self._fetch_optimizations()
-
-        return self.raw_data.optimizations_cache.get("preoptimization", None)
+        return self._optimizations_cache.get("preoptimization", None)
 
     @property
     def final_energies(self) -> Dict[Tuple[int, ...], float]:

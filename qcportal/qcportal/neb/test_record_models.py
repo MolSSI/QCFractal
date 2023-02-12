@@ -30,7 +30,7 @@ def test_neb_record_model(
     record = snowflake_client.get_nebs(rec_id, include=includes)
 
     if includes is not None:
-        record.client = None
+        record._client = None
         assert record.offline
 
     assert record.id == rec_id

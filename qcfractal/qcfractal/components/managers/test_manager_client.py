@@ -187,8 +187,8 @@ def test_manager_mclient_deactivate(snowflake: QCATestingSnowflake):
     assert manager[1].claimed == 1
 
     record = client.get_records(id1)
-    assert record.raw_data.status == "waiting"
-    assert record.raw_data.manager_name is None
+    assert record.status == "waiting"
+    assert record.manager_name is None
 
 
 def test_manager_mclient_deactivate_deactivated(snowflake: QCATestingSnowflake):

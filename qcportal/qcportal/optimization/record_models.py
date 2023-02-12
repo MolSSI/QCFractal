@@ -43,21 +43,23 @@ class OptimizationTrajectory(BaseModel):
         extra = Extra.forbid
 
     singlepoint_id: int
-    singlepoint_record: Optional[SinglepointRecord._DataModel]
+    singlepoint_record: Optional[SinglepointRecord]
 
 
 class OptimizationRecord(BaseRecord):
-    class _DataModel(BaseRecord._DataModel):
-        record_type: Literal["optimization"] = "optimization"
-        specification: OptimizationSpecification
-        initial_molecule_id: int
-        initial_molecule: Optional[Molecule]
-        final_molecule_id: Optional[int]
-        final_molecule: Optional[Molecule]
-        energies: Optional[List[float]]
-        trajectory: Optional[List[OptimizationTrajectory]]
 
-    raw_data: _DataModel
+    record_type: Literal["optimization"] = "optimization"
+    specification: OptimizationSpecification
+    initial_molecule_id: int
+    final_molecule_id: Optional[int]
+    energies: Optional[List[float]]
+
+    ######################################################
+    # Fields not always included when fetching the record
+    ######################################################
+    initial_molecule_: Optional[Molecule] = Field(None, alias="initial_molecule")
+    final_molecule_: Optional[Molecule] = Field(None, alias="final_molecule")
+    trajectory_: Optional[List[OptimizationTrajectory]] = Field(None, alias="trajectory")
 
     @staticmethod
     def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
@@ -76,25 +78,33 @@ class OptimizationRecord(BaseRecord):
 
         return ret
 
+    def propagate_client(self, client):
+        BaseRecord.propagate_client(self, client)
+
+        if self.trajectory_ is not None:
+            for sp in self.trajectory_:
+                if sp.singlepoint_record:
+                    sp.singlepoint_record.propagate_client(client)
+
     def _fetch_initial_molecule(self):
         self._assert_online()
-        self.raw_data.initial_molecule = self.client.get_molecules([self.raw_data.initial_molecule_id])[0]
+        self.initial_molecule_ = self._client.get_molecules([self.initial_molecule_id])[0]
 
     def _fetch_final_molecule(self):
         self._assert_online()
-        if self.raw_data.final_molecule_id is not None:
-            self.raw_data.final_molecule = self.client.get_molecules([self.raw_data.final_molecule_id])[0]
+        if self.final_molecule_id is not None:
+            self.final_molecule_ = self._client.get_molecules([self.final_molecule_id])[0]
         else:
-            self.raw_data.final_molecule = None
+            self.final_molecule_ = None
 
     def _fetch_trajectory(self):
         self._assert_online()
 
         url_params = {"include": ["*", "singlepoint_record"]}
 
-        self.raw_data.trajectory = self.client._auto_request(
+        self.trajectory_ = self._client._auto_request(
             "get",
-            f"v1/records/optimization/{self.raw_data.id}/trajectory",
+            f"v1/records/optimization/{self.id}/trajectory",
             None,
             ProjURLParameters,
             List[OptimizationTrajectory],
@@ -102,60 +112,45 @@ class OptimizationRecord(BaseRecord):
             url_params,
         )
 
-    @property
-    def specification(self) -> OptimizationSpecification:
-        return self.raw_data.specification
-
-    @property
-    def initial_molecule_id(self) -> int:
-        return self.raw_data.initial_molecule_id
+        self.propagate_client(self._client)
 
     @property
     def initial_molecule(self) -> Molecule:
-        if self.raw_data.initial_molecule is None:
+        if self.initial_molecule_ is None:
             self._fetch_initial_molecule()
-        return self.raw_data.initial_molecule
-
-    @property
-    def final_molecule_id(self) -> Optional[Molecule]:
-        return self.raw_data.final_molecule
+        return self.initial_molecule_
 
     @property
     def final_molecule(self) -> Optional[Molecule]:
-        if self.raw_data.final_molecule is None:
+        if self.final_molecule_ is None:
             self._fetch_final_molecule()
-        return self.raw_data.final_molecule
+        return self.final_molecule_
 
     @property
-    def energies(self) -> Optional[List[float]]:
-        return self.raw_data.energies
-
-    @property
-    def trajectory(self) -> List[Optional[SinglepointRecord]]:
-        if self.raw_data.trajectory is None:
+    def trajectory(self) -> Optional[List[SinglepointRecord]]:
+        if self.trajectory_ is None:
             self._fetch_trajectory()
-        traj_dm = [x.singlepoint_record for x in self.raw_data.trajectory]
-        return [SinglepointRecord.from_datamodel(x, self.client) for x in traj_dm]
+
+        return [x.singlepoint_record for x in self.trajectory_]
 
     def trajectory_element(self, trajectory_index: int) -> SinglepointRecord:
-        if self.raw_data.trajectory is not None:
-            return SinglepointRecord.from_datamodel(
-                self.raw_data.trajectory[trajectory_index].singlepoint_record, self.client
-            )
+        if self.trajectory_ is not None:
+            return self.trajectory_[trajectory_index].singlepoint_record
         else:
             url_params = {}
 
-            r = self.client._auto_request(
+            sp_rec = self._client._auto_request(
                 "get",
-                f"v1/records/optimization/{self.raw_data.id}/trajectory/{trajectory_index}",
+                f"v1/records/optimization/{self.id}/trajectory/{trajectory_index}",
                 None,
                 ProjURLParameters,
-                SinglepointRecord._DataModel,
+                SinglepointRecord,
                 None,
                 url_params,
             )
 
-            return SinglepointRecord.from_datamodel(r)
+            sp_rec.propagate_client(self._client)
+            return sp_rec
 
 
 class OptimizationQueryFilters(RecordQueryFilters):

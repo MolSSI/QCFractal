@@ -17,7 +17,7 @@ class LargeBinary(BaseModel):
         allow_mutation = True
         extra = Extra.forbid
 
-    client: Any
+    _client: Any = PrivateAttr(None)
 
     id: int
     size: int
@@ -29,7 +29,7 @@ class LargeBinary(BaseModel):
 
     def _fetch_from_url(self, url: str):
         if self._compressed_data is None and self._decompressed_data is None:
-            cdata, ctype = self.client._auto_request(
+            cdata, ctype = self._client._auto_request(
                 "get",
                 url,
                 None,

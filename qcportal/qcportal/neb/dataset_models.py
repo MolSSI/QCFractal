@@ -46,7 +46,7 @@ class NEBDatasetRecordItem(BaseModel):
     entry_name: str
     specification_name: str
     record_id: int
-    record: Optional[NEBRecord._DataModel]
+    record: Optional[NEBRecord]
 
 
 class NEBDataset(BaseDataset):

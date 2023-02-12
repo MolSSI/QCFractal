@@ -24,8 +24,8 @@ def test_singlepoint_client_tag_priority(snowflake_client: PortalClient, tag: st
         [water], "prog", SinglepointDriver.energy, "hf", "sto-3g", None, None, priority=priority, tag=tag
     )
     rec = snowflake_client.get_records(id1, include=["task"])
-    assert rec[0].raw_data.task.tag == tag
-    assert rec[0].raw_data.task.priority == priority
+    assert rec[0].task.tag == tag
+    assert rec[0].task.priority == priority
 
 
 @pytest.mark.parametrize("spec", test_specs)
@@ -55,20 +55,20 @@ def test_singlepoint_client_add_get(submitter_client: PortalClient, spec: QCSpec
 
     for r in recs:
         assert r.record_type == "singlepoint"
-        assert r.raw_data.record_type == "singlepoint"
-        assert compare_singlepoint_specs(spec, r.raw_data.specification)
-        assert r.raw_data.task.function is None
-        assert r.raw_data.task.tag == "tag1"
-        assert r.raw_data.task.priority == PriorityEnum.high
-        assert r.raw_data.owner_user == submitter_client.username
-        assert r.raw_data.owner_group == owner_group
-        assert time_0 < r.raw_data.created_on < time_1
-        assert time_0 < r.raw_data.modified_on < time_1
-        assert time_0 < r.raw_data.task.created_on < time_1
+        assert r.record_type == "singlepoint"
+        assert compare_singlepoint_specs(spec, r.specification)
+        assert r.task.function is None
+        assert r.task.tag == "tag1"
+        assert r.task.priority == PriorityEnum.high
+        assert r.owner_user == submitter_client.username
+        assert r.owner_group == owner_group
+        assert time_0 < r.created_on < time_1
+        assert time_0 < r.modified_on < time_1
+        assert time_0 < r.task.created_on < time_1
 
-    assert recs[0].raw_data.molecule == water
-    assert recs[1].raw_data.molecule == hooh
-    assert recs[2].raw_data.molecule == ne4
+    assert recs[0].molecule == water
+    assert recs[1].molecule == hooh
+    assert recs[2].molecule == ne4
 
 
 def test_singlepoint_client_properties(
@@ -111,8 +111,8 @@ def test_singlepoint_client_add_existing_molecule(snowflake_client: PortalClient
     recs = snowflake_client.get_singlepoints(ids, include=["molecule"])
 
     assert len(recs) == 3
-    assert recs[2].raw_data.molecule_id == mol_ids[0]
-    assert recs[2].raw_data.molecule == ne4
+    assert recs[2].molecule_id == mol_ids[0]
+    assert recs[2].molecule == ne4
 
 
 def test_singlepoint_client_delete(

@@ -1,12 +1,11 @@
 from typing import List, Optional, Union, Dict, Set, Iterable
 
-from pydantic import BaseModel, Field, Extra, root_validator, constr, validator
+from pydantic import BaseModel, Field, Extra, root_validator, constr, validator, PrivateAttr
 from typing_extensions import Literal
 
 from qcportal.base_models import ProjURLParameters
 from qcportal.molecules import Molecule
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
-from qcportal.services.models import ServiceSubtaskRecord
 from qcportal.utils import recursive_normalizer
 from ..optimization.record_models import OptimizationRecord
 from ..singlepoint.record_models import QCSpecification, SinglepointRecord
@@ -106,7 +105,7 @@ class NEBOptimization(BaseModel):
     optimization_id: int
     position: int
     ts: bool
-    optimization_record: Optional[OptimizationRecord._DataModel]
+    optimization_record: Optional[OptimizationRecord]
 
 
 class NEBSinglepoint(BaseModel):
@@ -116,7 +115,7 @@ class NEBSinglepoint(BaseModel):
     singlepoint_id: int
     chain_iteration: int
     position: int
-    singlepoint_record: Optional[SinglepointRecord._DataModel]
+    singlepoint_record: Optional[SinglepointRecord]
 
 
 # class NEBInitialchain(BaseModel):
@@ -153,17 +152,21 @@ class NEBQueryFilters(RecordQueryFilters):
 
 
 class NEBRecord(BaseRecord):
-    class _DataModel(BaseRecord._DataModel):
-        record_type: Literal["neb"] = "neb"
-        specification: NEBSpecification
-        initial_chain: Optional[List[Molecule]]
-        singlepoints: Optional[List[NEBSinglepoint]]
-        optimizations: Optional[List[NEBOptimization]]
 
-        optimizations_cache: Optional[Dict[str, OptimizationRecord]]
-        singlepoints_cache: Optional[Dict[int, List[SinglepointRecord]]]
+    record_type: Literal["neb"] = "neb"
+    specification: NEBSpecification
 
-    raw_data: _DataModel
+    ######################################################
+    # Fields not always included when fetching the record
+    ######################################################
+    initial_chain_: Optional[List[Molecule]] = Field(None, alias="initial_chain")
+    singlepoints_: Optional[List[NEBSinglepoint]] = Field(None, alias="singlepoints")
+    optimizations_: Optional[List[NEBOptimization]] = Field(None, alias="optimizations")
+
+    ########################################
+    # Private caches
+    _optimizations_cache: Optional[Dict[str, OptimizationRecord]] = PrivateAttr(None)
+    _singlepoints_cache: Optional[Dict[int, List[SinglepointRecord]]] = PrivateAttr(None)
 
     @staticmethod
     def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
@@ -181,32 +184,58 @@ class NEBRecord(BaseRecord):
 
         return ret
 
-    def _make_caches(self):
-        if self.raw_data.optimizations is None:
-            return
+    def propagate_client(self, client):
+        BaseRecord.propagate_client(self, client)
 
-        if self.raw_data.optimizations_cache is None:
+        # Don't need to do _optimizations_cache. Those should point back to the records in optimizations_
+        if self.optimizations_ is not None:
+            for sp in self.optimizations_:
+                if sp.optimization_record:
+                    sp.optimization_record.propagate_client(client)
+
+        # Don't need to do _singlepoints_cache. Those should point back to the records in singlepoints_
+        if self.singlepoints_ is not None:
+            for sp in self.singlepoints_:
+                if sp.singlepoint_record:
+                    sp.singlepoint_record.propagate_client(client)
+
+    def make_caches(self):
+        BaseRecord.make_caches(self)
+
+        if self.optimizations_ is None:
+            self._optimizations_cache = None
+        if self.singlepoints_ is None:
+            self._singlepoints_cache = None
+
+        if self.optimizations_ is not None:
+            self._optimizations_cache = {}
+
             # convert the raw optimization data to a dictionary of key -> Dict[str, OptimizationRecord]
-            opt_map = {}
-            for opt in self.raw_data.optimizations:
-                opt_rec = OptimizationRecord.from_datamodel(opt.optimization_record, self.client)
+            for opt in self.optimizations_:
+                opt_rec = opt.optimization_record
                 if opt.ts:
-                    opt_map["transition"] = opt_rec
+                    self._optimizations_cache["transition"] = opt_rec
                 elif opt.position == 0:
-                    opt_map["initial"] = opt_rec
+                    self._optimizations_cache["initial"] = opt_rec
                 else:
-                    opt_map["final"] = opt_rec
+                    self._optimizations_cache["final"] = opt_rec
 
-            self.raw_data.optimizations_cache = opt_map
+        if self.singlepoints_ is not None:
+            self._singlepoints_cache = {}
+
+            # Singlepoints should be in order of (iteration, position)
+            for sp in self.singlepoints_:
+                self._singlepoints_cache.setdefault(sp.chain_iteration, list())
+                self._singlepoints_cache[sp.chain_iteration].append(sp.singlepoint_record)
 
     def _fetch_optimizations(self):
         self._assert_online()
 
         url_params = {"include": ["*", "optimization_record"]}
 
-        self.raw_data.optimizations = self.client._auto_request(
+        self.optimizations_ = self._client._auto_request(
             "get",
-            f"v1/records/neb/{self.raw_data.id}/optimizations",
+            f"v1/records/neb/{self.id}/optimizations",
             None,
             ProjURLParameters,
             List[NEBOptimization],
@@ -214,14 +243,15 @@ class NEBRecord(BaseRecord):
             url_params,
         )
 
-        self._make_caches()
+        self.make_caches()
+        self.propagate_client(self._client)
 
     def _fetch_initial_chain(self):
         self._assert_online()
 
-        self.raw_data.initial_chain = self.client._auto_request(
+        self.initial_chain_ = self._client._auto_request(
             "get",
-            f"v1/records/neb/{self.raw_data.id}/initial_chain",
+            f"v1/records/neb/{self.id}/initial_chain",
             None,
             None,
             List[Molecule],
@@ -234,9 +264,9 @@ class NEBRecord(BaseRecord):
 
         url_params = {"include": ["*", "singlepoint_record"]}
 
-        self.raw_data.singlepoints = self.client._auto_request(
+        self.singlepoints_ = self._client._auto_request(
             "get",
-            f"v1/records/neb/{self.raw_data.id}/singlepoints",
+            f"v1/records/neb/{self.id}/singlepoints",
             None,
             ProjURLParameters,
             List[NEBSinglepoint],
@@ -244,38 +274,27 @@ class NEBRecord(BaseRecord):
             url_params,
         )
 
-    @property
-    def specification(self) -> NEBSpecification:
-        return self.raw_data.specification
+        self.make_caches()
+        self.propagate_client(self._client)
 
     @property
     def initial_chain(self) -> List[Molecule]:
-        if self.raw_data.initial_chain is None:
+        if self.initial_chain_ is None:
             self._fetch_initial_chain()
-        return self.raw_data.initial_chain
+        return self.initial_chain_
 
     @property
     def singlepoints(self) -> Dict[int, List[SinglepointRecord]]:
-        if self.raw_data.singlepoints_cache is not None:
-            return self.raw_data.singlepoints_cache
-
-        if self.raw_data.singlepoints is None:
+        if self._singlepoints_cache is None:
             self._fetch_singlepoints()
-
-        ret = {}
-        # Singlepoints should be in order of (iteration, position)
-        for sp in self.raw_data.singlepoints:
-            ret.setdefault(sp.chain_iteration, list())
-            ret[sp.chain_iteration].append(SinglepointRecord.from_datamodel(sp.singlepoint_record, self.client))
-        self.raw_data.singlepoints_cache = ret
-        return ret
+        return self._singlepoints_cache
 
     @property
     def neb_result(self):
         url_params = {}
-        r = self.client._auto_request(
+        r = self._client._auto_request(
             "get",
-            f"v1/records/neb/{self.raw_data.id}/neb_result",
+            f"v1/records/neb/{self.id}/neb_result",
             None,
             ProjURLParameters,
             Molecule,
@@ -287,18 +306,12 @@ class NEBRecord(BaseRecord):
 
     @property
     def optimizations(self) -> Optional[Dict[str, OptimizationRecord]]:
-        self._make_caches()
-
-        if self.raw_data.optimizations_cache is None:
+        if self._optimizations_cache is None:
             self._fetch_optimizations()
-
-        return self.raw_data.optimizations_cache
+        return self._optimizations_cache
 
     @property
     def ts_optimization(self) -> Optional[OptimizationRecord]:
-        self._make_caches()
-
-        if self.raw_data.optimizations_cache is None:
+        if self._optimizations_cache is None:
             self._fetch_optimizations()
-
-        return self.raw_data.optimizations_cache.get("transition", None)
+        return self._optimizations_cache.get("transition", None)

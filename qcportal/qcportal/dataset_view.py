@@ -7,7 +7,6 @@ from typing import Optional, Dict, Any, List, Iterable
 import zstandard
 from pydantic import BaseModel, validator, PrivateAttr, parse_obj_as, Extra
 
-from qcportal.record_models import record_from_datamodel
 from qcportal.serialization import deserialize
 
 
@@ -101,5 +100,5 @@ class DatasetViewWrapper(BaseModel):
 
             entry_name, spec_name, record_item_data = row
             record_item = self.deserialize_model(record_item_data, record_item_type)
-            record = record_from_datamodel(record_item.record, None)
+            record = record_item.record
             yield entry_name, spec_name, record

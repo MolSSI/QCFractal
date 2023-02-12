@@ -30,7 +30,7 @@ def test_reactionrecord_model(
     record = snowflake_client.get_reactions(rec_id, include=includes)
 
     if includes is not None:
-        record.client = None
+        record._client = None
         assert record.offline
 
     assert record.id == rec_id

@@ -1,6 +1,6 @@
 from typing import List, Union, Optional, Tuple, Set, Iterable
 
-from pydantic import BaseModel, Extra, root_validator, constr
+from pydantic import BaseModel, Extra, root_validator, constr, Field
 from typing_extensions import Literal
 
 from qcportal.base_models import ProjURLParameters
@@ -58,7 +58,7 @@ class ReactionQueryFilters(RecordQueryFilters):
     molecule_id: Optional[List[int]] = None
 
 
-class ReactionComponent_(BaseModel):
+class ReactionComponent(BaseModel):
     class Config:
         extra = Extra.forbid
 
@@ -68,26 +68,21 @@ class ReactionComponent_(BaseModel):
     optimization_id: Optional[int]
 
     molecule: Molecule
-    singlepoint_record: Optional[SinglepointRecord._DataModel]
-    optimization_record: Optional[OptimizationRecord._DataModel]
-
-
-class ReactionComponent(ReactionComponent_):
     singlepoint_record: Optional[SinglepointRecord]
     optimization_record: Optional[OptimizationRecord]
 
 
 class ReactionRecord(BaseRecord):
-    class _DataModel(BaseRecord._DataModel):
-        record_type: Literal["reaction"] = "reaction"
-        specification: ReactionSpecification
 
-        total_energy: Optional[float]
+    record_type: Literal["reaction"] = "reaction"
+    specification: ReactionSpecification
 
-        components: Optional[List[ReactionComponent_]] = None
-        components_cache: Optional[List[ReactionComponent]] = None
+    total_energy: Optional[float]
 
-    raw_data: _DataModel
+    ######################################################
+    # Fields not always included when fetching the record
+    ######################################################
+    components_: Optional[List[ReactionComponent]] = Field(None, alias="components")
 
     @staticmethod
     def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
@@ -107,54 +102,34 @@ class ReactionRecord(BaseRecord):
 
         return ret
 
-    def _make_caches(self):
-        if self.raw_data.components is None:
-            return
+    def propagate_client(self, client):
+        BaseRecord.propagate_client(self, client)
 
-        if self.raw_data.components_cache is None:
-            self.raw_data.components_cache = []
-
-            for com in self.raw_data.components:
-                update = {}
-                if com.singlepoint_record is not None:
-                    sp = SinglepointRecord.from_datamodel(com.singlepoint_record, self.client)
-                    update["singlepoint_record"] = sp
-                if com.singlepoint_record is not None:
-                    opt = OptimizationRecord.from_datamodel(com.optimization_record, self.client)
-                    update["optimization_record"] = opt
-
-                com2 = ReactionComponent(**com.dict(exclude={"singlepoint_record", "optimization_record"}), **update)
-                self.raw_data.components_cache.append(com2)
+        if self.components_ is not None:
+            for comp in self.components_:
+                if comp.singlepoint_record:
+                    comp.singlepoint_record.propagate_client(self._client)
+                if comp.optimization_record:
+                    comp.optimization_record.propagate_client(self._client)
 
     def _fetch_components(self):
         self._assert_online()
         url_params = {"include": ["*", "singlepoint_record", "optimization_record", "molecule"]}
 
-        self.raw_data.components = self.client._auto_request(
+        self.components_ = self._client._auto_request(
             "get",
-            f"v1/records/reaction/{self.raw_data.id}/components",
+            f"v1/records/reaction/{self.id}/components",
             None,
             ProjURLParameters,
-            List[ReactionComponent_],
+            List[ReactionComponent],
             None,
             url_params,
         )
 
-        self._make_caches()
-
-    @property
-    def specification(self) -> ReactionSpecification:
-        return self.raw_data.specification
+        self.propagate_client(self._client)
 
     @property
     def components(self) -> List[ReactionComponent]:
-        self._make_caches()
-
-        if self.raw_data.components_cache is None:
+        if self.components_ is None:
             self._fetch_components()
-
-        return self.raw_data.components_cache
-
-    @property
-    def total_energy(self) -> Optional[float]:
-        return self.raw_data.total_energy
+        return self.components_

@@ -115,14 +115,14 @@ def test_record_client_query(queryable_records_client: PortalClient):
     query_res = queryable_records_client.query_records(status=RecordStatusEnum.error)
     recs = list(query_res)
     assert query_res._current_meta.n_found == 1
-    assert recs[0].raw_data.task is None
-    assert recs[0].raw_data.compute_history[0].outputs is None
+    assert recs[0].task_ is None
+    assert recs[0].compute_history[0].outputs is None
 
     query_res = queryable_records_client.query_records(status=RecordStatusEnum.error, include=["outputs", "task"])
     recs = list(query_res)
     assert query_res._current_meta.n_found == 1
-    assert recs[0].raw_data.task is not None
-    assert recs[0].raw_data.compute_history[0].outputs is not None
+    assert recs[0].task_ is not None
+    assert recs[0].compute_history_[0].outputs is not None
 
 
 def test_record_client_query_empty_iter(queryable_records_client: PortalClient):

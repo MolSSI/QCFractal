@@ -30,7 +30,7 @@ def singlepoint_ds(submitter_client: PortalClient):
     )
 
     assert ds.owner_user is not None
-    assert ds.owner_user == ds.client.username
+    assert ds.owner_user == ds._client.username
     assert ds.owner_group == "group1"
 
     yield ds
@@ -62,7 +62,7 @@ def test_singlepoint_dataset_client_submit(singlepoint_ds: SinglepointDataset):
     assert singlepoint_ds.status() == {}
 
     # record still on the server?
-    r = singlepoint_ds.client.get_records(record_id)
+    r = singlepoint_ds._client.get_records(record_id)
     assert r.owner_user == singlepoint_ds.owner_user
 
     # now resubmit

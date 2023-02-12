@@ -12,7 +12,7 @@ from tabulate import tabulate
 from qcportal.base_models import RestModelBase, validate_list_to_single
 from qcportal.dataset_view import DatasetViewWrapper
 from qcportal.metadata_models import DeleteMetadata
-from qcportal.record_models import PriorityEnum, RecordStatusEnum, record_from_datamodel, BaseRecord
+from qcportal.record_models import PriorityEnum, RecordStatusEnum, BaseRecord
 from qcportal.utils import make_list
 
 
@@ -757,8 +757,7 @@ class BaseDataset(BaseModel):
 
         # Update the locally-stored records
         for rec_item in record_info:
-            record = record_from_datamodel(rec_item.record, self.client)
-            self.raw_data.record_map[(rec_item.entry_name, rec_item.specification_name)] = record
+            self.raw_data.record_map[(rec_item.entry_name, rec_item.specification_name)] = rec_item.record
 
     def _internal_update_records(
         self,
@@ -923,7 +922,7 @@ class BaseDataset(BaseModel):
             if record_item is None:
                 return None
             else:
-                return record_from_datamodel(record_item.record, client=None)
+                return record_item.record
         else:
             self.fetch_records(entry_name, specification_name, include=include, force_refetch=force_refetch)
             return self._lookup_record(entry_name, specification_name)

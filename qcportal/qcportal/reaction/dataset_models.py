@@ -53,7 +53,7 @@ class ReactionDatasetRecordItem(BaseModel):
     entry_name: str
     specification_name: str
     record_id: int
-    record: Optional[ReactionRecord._DataModel]
+    record: Optional[ReactionRecord]
 
 
 class ReactionDataset(BaseDataset):

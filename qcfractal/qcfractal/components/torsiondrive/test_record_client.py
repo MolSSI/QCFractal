@@ -35,8 +35,8 @@ def test_torsiondrive_client_tag_priority_as_service(snowflake_client: PortalCli
         tag=tag,
     )
     rec = snowflake_client.get_records(id1, include=["service"])
-    assert rec[0].raw_data.service.tag == tag
-    assert rec[0].raw_data.service.priority == priority
+    assert rec[0].service.tag == tag
+    assert rec[0].service.priority == priority
 
 
 @pytest.mark.parametrize("spec", test_specs)
@@ -66,27 +66,27 @@ def test_torsiondrive_client_add_get(
 
     for r in recs:
         assert r.record_type == "torsiondrive"
-        assert r.raw_data.record_type == "torsiondrive"
-        assert compare_torsiondrive_specs(spec, r.raw_data.specification)
+        assert r.record_type == "torsiondrive"
+        assert compare_torsiondrive_specs(spec, r.specification)
 
-        assert r.raw_data.service.tag == "tag1"
-        assert r.raw_data.service.priority == PriorityEnum.low
+        assert r.service.tag == "tag1"
+        assert r.service.priority == PriorityEnum.low
 
-        assert r.raw_data.owner_user == submitter_client.username
-        assert r.raw_data.owner_group == owner_group
+        assert r.owner_user == submitter_client.username
+        assert r.owner_group == owner_group
 
-        assert time_0 < r.raw_data.created_on < time_1
-        assert time_0 < r.raw_data.modified_on < time_1
-        assert time_0 < r.raw_data.service.created_on < time_1
+        assert time_0 < r.created_on < time_1
+        assert time_0 < r.modified_on < time_1
+        assert time_0 < r.service.created_on < time_1
 
-    assert len(recs[0].raw_data.initial_molecules) == 1
-    assert len(recs[1].raw_data.initial_molecules) == 2
+    assert len(recs[0].initial_molecules) == 1
+    assert len(recs[1].initial_molecules) == 2
 
-    assert recs[0].raw_data.initial_molecules[0].get_hash() == hooh.get_hash()
+    assert recs[0].initial_molecules[0].get_hash() == hooh.get_hash()
 
     # Not necessarily in the input order
-    hash1 = recs[1].raw_data.initial_molecules[0].get_hash()
-    hash2 = recs[1].raw_data.initial_molecules[1].get_hash()
+    hash1 = recs[1].initial_molecules[0].get_hash()
+    hash2 = recs[1].initial_molecules[1].get_hash()
     assert {hash1, hash2} == {td_mol_1.get_hash(), td_mol_2.get_hash()}
 
 
@@ -115,9 +115,9 @@ def test_torsiondrive_client_add_existing_molecule(snowflake_client: PortalClien
 
     recs = snowflake_client.get_torsiondrives(id, include=["initial_molecules"])
     assert len(recs) == 2
-    assert recs[0].raw_data.id == recs[1].raw_data.id
+    assert recs[0].id == recs[1].id
 
-    rec_mols = {x.id for x in recs[0].raw_data.initial_molecules}
+    rec_mols = {x.id for x in recs[0].initial_molecules}
     _, mol_ids_2 = snowflake_client.add_molecules([mol1])
     assert rec_mols == set(mol_ids + mol_ids_2)
 

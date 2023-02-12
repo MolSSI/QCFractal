@@ -91,11 +91,8 @@ from .record_models import (
     RecordRevertBody,
     BaseRecord,
     RecordQueryIterator,
-    records_from_datamodels,
+    records_from_dicts,
 )
-
-from .services import ServiceSubtaskRecord
-
 from .serverinfo import (
     AccessLogQueryFilters,
     AccessLogSummaryFilters,
@@ -665,7 +662,7 @@ class PortalClient(PortalClientBase):
             None,
         )
 
-        records = records_from_datamodels(record_data, self)
+        records = records_from_dicts(record_data, self)
 
         if is_single:
             return records[0]
@@ -1054,12 +1051,12 @@ class PortalClient(PortalClientBase):
             "v1/records/singlepoint/bulkGet",
             CommonBulkGetBody,
             None,
-            List[Optional[SinglepointRecord._DataModel]],
+            List[Optional[Dict[str, Any]]],
             body_data,
             None,
         )
 
-        records = [SinglepointRecord.from_datamodel(r, self) if r is not None else None for r in record_data]
+        records = [SinglepointRecord(self, **r) if r is not None else None for r in record_data]
 
         if is_single:
             return records[0]
@@ -1306,12 +1303,12 @@ class PortalClient(PortalClientBase):
             "v1/records/optimization/bulkGet",
             CommonBulkGetBody,
             None,
-            List[Optional[OptimizationRecord._DataModel]],
+            List[Optional[Dict[str, Any]]],
             body_data,
             None,
         )
 
-        records = [OptimizationRecord.from_datamodel(r, self) if r is not None else None for r in record_data]
+        records = [OptimizationRecord(self, **r) if r is not None else None for r in record_data]
 
         if is_single:
             return records[0]
@@ -1554,12 +1551,12 @@ class PortalClient(PortalClientBase):
             "v1/records/torsiondrive/bulkGet",
             CommonBulkGetBody,
             None,
-            List[Optional[TorsiondriveRecord._DataModel]],
+            List[Optional[Dict[str, Any]]],
             body_data,
             None,
         )
 
-        records = [TorsiondriveRecord.from_datamodel(r, self) if r is not None else None for r in record_data]
+        records = [TorsiondriveRecord(self, **r) if r is not None else None for r in record_data]
 
         if is_single:
             return records[0]
@@ -1802,12 +1799,12 @@ class PortalClient(PortalClientBase):
             "v1/records/gridoptimization/bulkGet",
             CommonBulkGetBody,
             None,
-            List[Optional[GridoptimizationRecord._DataModel]],
+            List[Optional[Dict[str, Any]]],
             body_data,
             None,
         )
 
-        records = [GridoptimizationRecord.from_datamodel(r, self) if r is not None else None for r in record_data]
+        records = [GridoptimizationRecord(self, **r) if r is not None else None for r in record_data]
 
         if is_single:
             return records[0]
@@ -2058,12 +2055,12 @@ class PortalClient(PortalClientBase):
             "v1/records/reaction/bulkGet",
             CommonBulkGetBody,
             None,
-            List[Optional[ReactionRecord._DataModel]],
+            List[Optional[Dict[str, Any]]],
             body_data,
             None,
         )
 
-        records = [ReactionRecord.from_datamodel(r, self) if r is not None else None for r in record_data]
+        records = [ReactionRecord(self, **r) if r is not None else None for r in record_data]
 
         if is_single:
             return records[0]
@@ -2305,12 +2302,12 @@ class PortalClient(PortalClientBase):
             "v1/records/manybody/bulkGet",
             CommonBulkGetBody,
             None,
-            List[Optional[ManybodyRecord._DataModel]],
+            List[Optional[Dict[str, Any]]],
             body_data,
             None,
         )
 
-        records = [ManybodyRecord.from_datamodel(r, self) if r is not None else None for r in record_data]
+        records = [ManybodyRecord(self, **r) if r is not None else None for r in record_data]
 
         if is_single:
             return records[0]
@@ -2496,12 +2493,12 @@ class PortalClient(PortalClientBase):
             "v1/records/neb/bulkGet",
             CommonBulkGetBody,
             None,
-            List[Optional[NEBRecord._DataModel]],
+            List[Optional[Dict[str, Any]]],
             body_data,
             None,
         )
 
-        records = [NEBRecord.from_datamodel(r, self) if r is not None else None for r in record_data]
+        records = [NEBRecord(self, **r) if r is not None else None for r in record_data]
 
         if is_single:
             return records[0]

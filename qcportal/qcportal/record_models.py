@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict, Any, List, Union, Iterable, Set, Tuple, Sequence, Type
+from typing import Optional, Dict, Any, List, Union, Iterable, Set, Tuple, Type, Sequence, ClassVar
 
 from dateutil.parser import parse as date_parser
-from pydantic import BaseModel, Extra, constr, validator
+from pydantic import BaseModel, Extra, constr, validator, PrivateAttr, Field
 from qcelemental.models.results import Provenance
 
 from qcportal.base_models import (
@@ -167,49 +167,51 @@ class ServiceRecord(BaseModel):
 
 
 class BaseRecord(BaseModel):
-    class _DataModel(BaseModel):
-        class Config:
-            extra = Extra.forbid
-            allow_mutation = True
-            validate_assignment = True
-
-        id: int
-        record_type: str
-        is_service: bool
-
-        extras: Optional[Dict[str, Any]] = None
-
-        status: RecordStatusEnum
-        manager_name: Optional[str]
-
-        created_on: datetime
-        modified_on: datetime
-
-        owner_user: Optional[str]
-        owner_group: Optional[str]
-
-        compute_history: List[ComputeHistory]
-
-        task: Optional[TaskRecord] = None
-        service: Optional[ServiceRecord] = None
-
-        comments: Optional[List[RecordComment]] = None
-
-        native_files: Optional[Dict[str, NativeFile]] = None
-
-        info_backup: Optional[List[RecordInfoBackup]]
-
     class Config:
         extra = Extra.forbid
+        allow_mutation = True
+        validate_assignment = True
 
-    client: Any
+    id: int
+    record_type: str
+    is_service: bool
+
+    extras: Optional[Dict[str, Any]] = None
+
+    status: RecordStatusEnum
+    manager_name: Optional[str]
+
+    created_on: datetime
+    modified_on: datetime
+
+    owner_user: Optional[str]
+    owner_group: Optional[str]
+
+    ######################################################
+    # Fields not always included when fetching the record
+    ######################################################
+    compute_history_: Optional[List[ComputeHistory]] = Field(None, alias="compute_history")
+    task_: Optional[TaskRecord] = Field(None, alias="task")
+    service_: Optional[ServiceRecord] = Field(None, alias="service")
+    comments_: Optional[List[RecordComment]] = Field(None, alias="comments")
+    native_files_: Optional[Dict[str, NativeFile]] = Field(None, alias="native_files")
+
+    # Private non-pydantic fields
+    _client: Any = PrivateAttr(None)
     """ Client connected to the server that this record belongs to """
 
-    raw_data: _DataModel  # Meant to be overridden by derived classes
-    """ Raw data retrieved from the server. Generally for internal use only """
-
     # A dictionary of all subclasses (calculation types) to actual class type
-    _all_subclasses: Dict[str, Type[BaseRecord]] = {}
+    _all_subclasses: ClassVar[Dict[str, Type[BaseRecord]]] = {}
+
+    def __init__(self, client=None, **kwargs):
+        BaseModel.__init__(self, **kwargs)
+
+        # Calls derived class propagate_client & make_caches,
+        # which should filter down to the ones in this (BaseRecord) class
+        self.propagate_client(client)
+        self.make_caches()
+
+        assert self._client is client, "Client not set in base record class?"
 
     def __init_subclass__(cls):
         """
@@ -219,8 +221,7 @@ class BaseRecord(BaseModel):
         # Get the record type. This is kind of ugly, but works.
         # We could use ClassVar, but in my tests it doesn't work for
         # disambiguating (ie, via parse_obj_as)
-        record_type = cls._DataModel.__fields__["record_type"].default
-
+        record_type = cls.__fields__["record_type"].default
         cls._all_subclasses[record_type] = cls
 
     @classmethod
@@ -233,13 +234,6 @@ class BaseRecord(BaseModel):
         if subcls is None:
             raise RuntimeError(f"Cannot find subclass for record type {record_type}")
         return subcls
-
-    @classmethod
-    def from_datamodel(cls, raw_data: Union[BaseRecord._DataModel, Dict[str, Any]], client: Any = None) -> BaseRecord:
-        """
-        Create a record from a record DataModel (as an object or a dictionary)
-        """
-        return cls(client=client, raw_data=raw_data)
 
     @staticmethod
     def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
@@ -266,20 +260,38 @@ class BaseRecord(BaseModel):
     def __str__(self) -> str:
         return f"<{self.__class__.__name__} id={self.id} status={self.status}>"
 
+    def propagate_client(self, client):
+        """
+        Propagates a client to this record to any fields within this record that need it
+
+        This is expected to be called from derived class propagate_client functions as well
+        """
+        self._client = client
+
+    def make_caches(self):
+        """
+        Prepare any internal caches
+
+        This is expected to be called from derived class make_caches as well
+        """
+        pass
+
     def _assert_online(self):
         """Raises an exception if this record does not have an associated client"""
         if self.offline:
             raise RuntimeError("Record is not connected to a client")
 
     def _fetch_compute_history(self, include_outputs: bool = False):
+        self._assert_online()
+
         url_params = {}
 
         if include_outputs:
             url_params = {"include": ["*", "outputs"]}
 
-        self.raw_data.compute_history = self.client._auto_request(
+        self.compute_history_ = self._client._auto_request(
             "get",
-            f"v1/records/{self.raw_data.id}/compute_history",
+            f"v1/records/{self.id}/compute_history",
             None,
             ProjURLParameters,
             List[ComputeHistory],
@@ -290,12 +302,12 @@ class BaseRecord(BaseModel):
     def _fetch_task(self):
         self._assert_online()
 
-        if self.raw_data.is_service:
+        if self.is_service:
             return
 
-        self.raw_data.task = self.client._auto_request(
+        self.task_ = self._client._auto_request(
             "get",
-            f"v1/records/{self.raw_data.id}/task",
+            f"v1/records/{self.id}/task",
             None,
             None,
             Optional[TaskRecord],
@@ -306,14 +318,14 @@ class BaseRecord(BaseModel):
     def _fetch_service(self):
         self._assert_online()
 
-        if not self.raw_data.is_service:
+        if not self.is_service:
             return
 
         url_params = {"include": ["*", "dependencies"]}
 
-        self.raw_data.service = self.client._auto_request(
+        self.service_ = self._client._auto_request(
             "get",
-            f"v1/records/{self.raw_data.id}/service",
+            f"v1/records/{self.id}/service",
             None,
             ProjURLParameters,
             Optional[ServiceRecord],
@@ -324,9 +336,9 @@ class BaseRecord(BaseModel):
     def _fetch_comments(self):
         self._assert_online()
 
-        self.raw_data.comments = self.client._auto_request(
+        self.comments_ = self._client._auto_request(
             "get",
-            f"v1/records/{self.raw_data.id}/comments",
+            f"v1/records/{self.id}/comments",
             None,
             None,
             Optional[List[RecordComment]],
@@ -337,9 +349,9 @@ class BaseRecord(BaseModel):
     def _fetch_native_files(self):
         self._assert_online()
 
-        self.raw_data.native_files = self.client._auto_request(
+        self.native_files_ = self._client._auto_request(
             "get",
-            f"v1/records/{self.raw_data.id}/native_files",
+            f"v1/records/{self.id}/native_files",
             None,
             None,
             Optional[Dict[str, NativeFile]],
@@ -348,17 +360,17 @@ class BaseRecord(BaseModel):
         )
 
     def _get_last_compute_history(self, include_outputs: bool = False) -> Optional[ComputeHistory]:
-        if not self.raw_data.compute_history:
+        if self.compute_history_ is None:
             self._fetch_compute_history(include_outputs=include_outputs)
 
-        if not self.raw_data.compute_history:
+        if not self.compute_history_:
             return None
 
         # If we want outputs but we don't have them
-        if include_outputs and not self.raw_data.compute_history[-1].outputs:
+        if include_outputs and not self.compute_history_[-1].outputs:
             self._fetch_compute_history(include_outputs=include_outputs)
 
-        return self.raw_data.compute_history[-1]
+        return self.compute_history_[-1]
 
     def _get_output(self, output_type: OutputTypeEnum) -> Optional[Union[str, Dict[str, Any]]]:
         last_history = self._get_last_compute_history(include_outputs=True)
@@ -368,81 +380,38 @@ class BaseRecord(BaseModel):
         return last_history.get_output(output_type)
 
     @property
-    def record_type(self) -> str:
-        return self.raw_data.record_type
-
-    @property
     def offline(self) -> bool:
-        return self.client is None
-
-    @property
-    def id(self) -> int:
-        return self.raw_data.id
-
-    @property
-    def is_service(self) -> bool:
-        return self.raw_data.is_service
-
-    @property
-    def extras(self) -> Optional[Dict[str, Any]]:
-        return self.raw_data.extras
-
-    @property
-    def status(self):
-        return self.raw_data.status
-
-    @property
-    def manager_name(self) -> Optional[str]:
-        return self.raw_data.manager_name
-
-    @property
-    def created_on(self) -> datetime:
-        return self.raw_data.created_on
-
-    @property
-    def modified_on(self) -> datetime:
-        return self.raw_data.modified_on
-
-    @property
-    def owner_user(self) -> str:
-        return self.raw_data.owner_user
-
-    @property
-    def owner_group(self) -> str:
-        return self.raw_data.owner_group
+        return self._client is None
 
     @property
     def compute_history(self) -> List[ComputeHistory]:
-        return self.raw_data.compute_history
+        if self.compute_history_ is None:
+            self._fetch_compute_history()
+        return self.compute_history_
 
     @property
     def task(self) -> Optional[TaskRecord]:
-        if self.raw_data.task is None:
+        if self.task_ is None:
             self._fetch_task()
-        return self.raw_data.task
+        return self.task_
 
     @property
     def service(self) -> Optional[ServiceRecord]:
-        if self.raw_data.service is None:
+        if self.service_ is None:
             self._fetch_service()
-        return self.raw_data.service
+        return self.service_
 
     @property
     def comments(self) -> Optional[List[RecordComment]]:
-        if self.raw_data.comments is None:
+        if self.comments_ is None:
             self._fetch_comments()
-        return self.raw_data.comments
+        return self.comments_
 
     @property
     def native_files(self) -> Optional[Dict[str, NativeFile]]:
-        if self.raw_data.native_files is None:
+        if self.native_files_ is None:
             self._fetch_native_files()
-
-        # Kinda hacky?
-        for n in self.raw_data.native_files.values():
-            n.client = self.client
-
-        return self.raw_data.native_files
+        return self.native_files_
 
     @property
     def stdout(self) -> Optional[str]:
@@ -457,7 +426,7 @@ class BaseRecord(BaseModel):
         return self._get_output(OutputTypeEnum.error)
 
     @property
-    def provenance(self):
+    def provenance(self) -> Optional[Provenance]:
         last_history = self._get_last_compute_history(include_outputs=False)
         if last_history is None:
             return None
@@ -563,30 +532,24 @@ class RecordQueryIterator(QueryIteratorBase):
                 None,
             )
 
-        return meta, records_from_datamodels(raw_data, self._client)
+        return meta, records_from_dicts(raw_data, self._client)
 
 
-def record_from_datamodel(data: Union[BaseRecord._DataModel, Dict[str, Any]], client: Any) -> BaseRecord:
+def record_from_dict(data: Dict[str, Any], client: Any = None) -> BaseRecord:
     """
-    Create a record object from a datamodel
+    Create a record object from a dictionary containing the record information
 
     This determines the appropriate record class (deriving from BaseRecord)
     and creates an instance of that class.
-
-    This works if the data is a datamodel object already or a dictionary
     """
 
-    if isinstance(data, BaseRecord._DataModel):
-        record_type = data.record_type
-    else:
-        record_type = data["record_type"]
-
+    record_type = data["record_type"]
     cls = BaseRecord.get_subclass(record_type)
-    return cls.from_datamodel(data, client)
+    return cls(**data, client=client)
 
 
-def records_from_datamodels(
-    data: Sequence[Optional[Union[BaseRecord._DataModel, Dict[str, Any]]]],
+def records_from_dicts(
+    data: Sequence[Optional[Dict[str, Any]]],
     client: Any,
 ) -> List[Optional[BaseRecord]]:
     """
@@ -601,5 +564,5 @@ def records_from_datamodels(
         if rd is None:
             ret.append(None)
         else:
-            ret.append(record_from_datamodel(rd, client))
+            ret.append(record_from_dict(rd, client))
     return ret

@@ -1,7 +1,7 @@
 import json
-from typing import List, Optional, Tuple, Union, Dict, Set, Iterable, Sequence
+from typing import List, Optional, Tuple, Union, Dict, Set, Iterable, Sequence, Any
 
-from pydantic import BaseModel, Field, Extra, root_validator, constr, validator
+from pydantic import BaseModel, Field, Extra, root_validator, constr, validator, PrivateAttr
 from typing_extensions import Literal
 
 from qcportal.base_models import ProjURLParameters
@@ -98,7 +98,7 @@ class TorsiondriveOptimization(BaseModel):
     position: int
 
     energy: Optional[float] = None
-    optimization_record: Optional[OptimizationRecord._DataModel]
+    optimization_record: Optional[OptimizationRecord]
 
 
 class TorsiondriveAddBody(RecordAddBodyBase):
@@ -126,17 +126,20 @@ class TorsiondriveQueryFilters(RecordQueryFilters):
 
 
 class TorsiondriveRecord(BaseRecord):
-    class _DataModel(BaseRecord._DataModel):
-        record_type: Literal["torsiondrive"] = "torsiondrive"
-        specification: TorsiondriveSpecification
-        initial_molecules: Optional[List[Molecule]] = None
-        optimizations: Optional[List[TorsiondriveOptimization]] = None
+    record_type: Literal["torsiondrive"] = "torsiondrive"
+    specification: TorsiondriveSpecification
 
-        # These hold actual optimization records
-        optimizations_cache: Optional[Dict[str, List[OptimizationRecord]]] = None
-        minimum_optimizations_cache: Optional[Dict[str, OptimizationRecord]] = None
+    ######################################################
+    # Fields not always included when fetching the record
+    ######################################################
+    initial_molecules_: Optional[List[Molecule]] = Field(None, alias="initial_molecules")
+    optimizations_: Optional[List[TorsiondriveOptimization]] = Field(None, alias="optimizations")
 
-    raw_data: _DataModel
+    ########################################
+    # Private caches
+    ########################################
+    _optimizations_cache: Optional[Dict[Any, List[OptimizationRecord]]] = PrivateAttr(None)
+    _minimum_optimizations_cache: Optional[Dict[Any, OptimizationRecord]] = PrivateAttr(None)
 
     @staticmethod
     def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
@@ -153,37 +156,52 @@ class TorsiondriveRecord(BaseRecord):
 
         return ret
 
-    def _make_caches(self):
-        if self.raw_data.optimizations is None:
+    def propagate_client(self, client):
+        BaseRecord.propagate_client(self, client)
+
+        # Don't need to do _optimizations_cache. Those should point back to the records in optimizations_
+        if self.optimizations_ is not None:
+            for opt in self.optimizations_:
+                if opt.optimization_record:
+                    opt.optimization_record.propagate_client(client)
+
+        # But may need to do _minimum_optimizations_cache, since they may have been obtained separately
+        if self._minimum_optimizations_cache is not None:
+            for opt in self._minimum_optimizations_cache.values():
+                if opt:
+                    opt.propagate_client(client)
+
+    def make_caches(self):
+        BaseRecord.make_caches(self)
+
+        if self.optimizations_ is None:
+            self._optimizations_cache = None
+            self._minimum_optimizations_cache = None
             return
 
-        if self.raw_data.optimizations_cache is None:
-            # convert the raw optimization data to a dictionary of key -> List[OptimizationRecord]
-            opt_map = {}
-            for opt in self.raw_data.optimizations:
-                opt_map.setdefault(opt.key, list())
-                opt_map[opt.key].append(OptimizationRecord.from_datamodel(opt.optimization_record, self.client))
+        self._optimizations_cache = {}
+        self._minimum_optimizations_cache = {}
 
-            self.raw_data.optimizations_cache = opt_map
+        # convert the raw optimization data to a dictionary of key -> List[OptimizationRecord]
+        for opt in self.optimizations_:
+            opt_key = deserialize_key(opt.key)
+            self._optimizations_cache.setdefault(opt_key, list())
+            self._optimizations_cache[opt_key].append(opt.optimization_record)
 
         # find the minimum optimizations for each key
-        if self.raw_data.minimum_optimizations_cache is None:
-
-            # chooses the lowest id if there are records with the same energy
-            self.raw_data.minimum_optimizations_cache = {}
-
-            for k, v in self.raw_data.optimizations_cache.items():
-                # Remove any optimizations without energies
-                v2 = [x for x in v if x.energies]
-                if v2:
-                    self.raw_data.minimum_optimizations_cache[k] = min(v2, key=lambda x: (x.energies[-1], x.id))
+        # chooses the lowest id if there are records with the same energy
+        for k, v in self._optimizations_cache.items():
+            # Remove any optimizations without energies
+            v2 = [x for x in v if x.energies]
+            if v2:
+                self._minimum_optimizations_cache[k] = min(v2, key=lambda x: (x.energies[-1], x.id))
 
     def _fetch_initial_molecules(self):
         self._assert_online()
 
-        self.raw_data.initial_molecules = self.client._auto_request(
+        self.initial_molecules_ = self._client._auto_request(
             "get",
-            f"v1/records/torsiondrive/{self.raw_data.id}/initial_molecules",
+            f"v1/records/torsiondrive/{self.id}/initial_molecules",
             None,
             None,
             List[Molecule],
@@ -196,9 +214,9 @@ class TorsiondriveRecord(BaseRecord):
 
         url_params = {"include": ["*", "optimization_record"]}
 
-        self.raw_data.optimizations = self.client._auto_request(
+        self.optimizations_ = self._client._auto_request(
             "get",
-            f"v1/records/torsiondrive/{self.raw_data.id}/optimizations",
+            f"v1/records/torsiondrive/{self.id}/optimizations",
             None,
             ProjURLParameters,
             List[TorsiondriveOptimization],
@@ -206,52 +224,49 @@ class TorsiondriveRecord(BaseRecord):
             url_params,
         )
 
-        self._make_caches()
+        self.make_caches()
+        self.propagate_client(self._client)
 
     def _fetch_minimum_optimizations(self):
         self._assert_online()
 
         url_params = {}
 
-        r = self.client._auto_request(
+        min_opt = self._client._auto_request(
             "get",
-            f"v1/records/torsiondrive/{self.raw_data.id}/minimum_optimizations",
+            f"v1/records/torsiondrive/{self.id}/minimum_optimizations",
             None,
             ProjURLParameters,
-            Dict[str, OptimizationRecord._DataModel],
+            Dict[str, OptimizationRecord],
             None,
             url_params,
         )
 
-        self.raw_data.minimum_optimizations_cache = {
-            k: OptimizationRecord.from_datamodel(v, self.client) for k, v in r.items()
-        }
+        self._minimum_optimizations_cache = {}
+        for key, opt in min_opt.items():
+            self._minimum_optimizations_cache[deserialize_key(key)] = opt
 
-    @property
-    def specification(self) -> TorsiondriveSpecification:
-        return self.raw_data.specification
+        self.propagate_client(self._client)
 
     @property
     def initial_molecules(self) -> List[Molecule]:
-        if self.raw_data.initial_molecules is None:
+        if self.initial_molecules_ is None:
             self._fetch_initial_molecules()
-        return self.raw_data.initial_molecules
+        return self.initial_molecules_
 
     @property
     def optimizations(self) -> Dict[str, List[OptimizationRecord]]:
-        self._make_caches()
-        if self.raw_data.optimizations_cache is None:
+        if self._optimizations_cache is None:
             self._fetch_optimizations()
 
-        return {deserialize_key(k): v for k, v in self.raw_data.optimizations_cache.items()}
+        return self._optimizations_cache
 
     @property
     def minimum_optimizations(self) -> Dict[Tuple[float, ...], OptimizationRecord]:
-        self._make_caches()
-        if self.raw_data.minimum_optimizations_cache is None:
+        if self._minimum_optimizations_cache is None:
             self._fetch_minimum_optimizations()
 
-        return {deserialize_key(k): v for k, v in self.raw_data.minimum_optimizations_cache.items()}
+        return self._minimum_optimizations_cache
 
     @property
     def final_energies(self) -> Dict[Tuple[float, ...], float]:

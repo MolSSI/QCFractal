@@ -31,7 +31,7 @@ def test_gridoptimizationrecord_model(
     record = snowflake_client.get_gridoptimizations(rec_id, include=includes)
 
     if includes is not None:
-        record.client = None
+        record._client = None
         assert record.offline
 
     assert record.id == rec_id
@@ -46,5 +46,4 @@ def test_gridoptimizationrecord_model(
     assert record.starting_grid == [0]
 
     opts = record.optimizations
-    opt_add = 1 if record.preoptimization is not None else 0
-    assert len(opts) + opt_add == len(results)
+    assert len(opts) == len(results)

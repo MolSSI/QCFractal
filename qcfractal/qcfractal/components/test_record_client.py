@@ -39,18 +39,18 @@ def test_record_client_get(
 
     r = snowflake_client.get_records(all_id)
     assert len(r)
-    assert all_id == [x.raw_data.id for x in r]
-    assert [x.raw_data.task is None for x in r]
-    assert len(r[0].raw_data.compute_history) == 1
-    assert len(r[1].raw_data.compute_history) == 0
+    assert all_id == [x.id for x in r]
+    assert [x.task is None for x in r]
+    assert len(r[0].compute_history) == 1
+    assert len(r[1].compute_history) == 0
 
-    assert r[0].raw_data.compute_history[0].outputs is None
-    assert [x.raw_data.task is None for x in r]
+    assert r[0].compute_history[0].outputs is None
+    assert [x.task is None for x in r]
 
     r = snowflake_client.get_records(all_id, include=["outputs", "task"])
-    assert r[0].raw_data.compute_history[0].outputs is not None
-    assert r[0].raw_data.task is None
-    assert r[1].raw_data.task is not None
+    assert r[0].compute_history[0].outputs is not None
+    assert r[0].task is None
+    assert r[1].task is not None
 
 
 def test_record_client_get_missing(storage_socket: SQLAlchemySocket, snowflake_client: PortalClient):
@@ -65,8 +65,8 @@ def test_record_client_get_missing(storage_socket: SQLAlchemySocket, snowflake_c
 
     r = snowflake_client.get_records([all_id[0], 9999, all_id[1]], missing_ok=True)
     assert r[1] is None
-    assert r[0].raw_data.id == all_id[0]
-    assert r[2].raw_data.id == all_id[1]
+    assert r[0].id == all_id[0]
+    assert r[2].id == all_id[1]
 
 
 def test_record_client_get_empty(storage_socket: SQLAlchemySocket, snowflake_client: PortalClient):
@@ -86,7 +86,7 @@ def test_record_client_query_parents_children(
     opt_rec = snowflake_client.get_optimizations(id1, include=["trajectory"])
     assert opt_rec.status == RecordStatusEnum.complete
 
-    traj_id = [x.singlepoint_id for x in opt_rec.raw_data.trajectory]
+    traj_id = [x.id for x in opt_rec.trajectory]
     assert len(traj_id) > 0
 
     # Query for records containing a record as a parent
@@ -111,11 +111,11 @@ def test_record_client_add_comment(secure_snowflake: QCATestingSnowflake, storag
     # comments not retrieved by default
     rec = client.get_records(all_id)
     for r in rec:
-        assert r.raw_data.comments is None
+        assert r.comments_ is None
 
     rec = client.get_records(all_id, include=["comments"])
     for r in rec:
-        assert r.raw_data.comments == []
+        assert r.comments_ == []
 
     time_0 = datetime.utcnow()
     meta = client.add_comment([all_id[1], all_id[3]], comment="This is a test comment")
@@ -131,24 +131,24 @@ def test_record_client_add_comment(secure_snowflake: QCATestingSnowflake, storag
     assert meta.updated_idx == [0, 1]
 
     rec = client.get_records(all_id, include=["comments"])
-    assert rec[0].raw_data.comments == []
-    assert len(rec[1].raw_data.comments) == 1
-    assert len(rec[2].raw_data.comments) == 1
-    assert len(rec[3].raw_data.comments) == 2
+    assert rec[0].comments == []
+    assert len(rec[1].comments) == 1
+    assert len(rec[2].comments) == 1
+    assert len(rec[3].comments) == 2
 
-    assert time_0 < rec[1].raw_data.comments[0].timestamp < time_1
-    assert time_1 < rec[2].raw_data.comments[0].timestamp < time_2
-    assert time_0 < rec[3].raw_data.comments[0].timestamp < time_1
-    assert time_1 < rec[3].raw_data.comments[1].timestamp < time_2
-    assert rec[1].raw_data.comments[0].username == "admin_user"
-    assert rec[3].raw_data.comments[0].username == "admin_user"
-    assert rec[2].raw_data.comments[0].username == "admin_user"
-    assert rec[3].raw_data.comments[1].username == "admin_user"
+    assert time_0 < rec[1].comments[0].timestamp < time_1
+    assert time_1 < rec[2].comments[0].timestamp < time_2
+    assert time_0 < rec[3].comments[0].timestamp < time_1
+    assert time_1 < rec[3].comments[1].timestamp < time_2
+    assert rec[1].comments[0].username == "admin_user"
+    assert rec[3].comments[0].username == "admin_user"
+    assert rec[2].comments[0].username == "admin_user"
+    assert rec[3].comments[1].username == "admin_user"
 
-    assert rec[1].raw_data.comments[0].comment == "This is a test comment"
-    assert rec[3].raw_data.comments[0].comment == "This is a test comment"
-    assert rec[2].raw_data.comments[0].comment == "This is another test comment"
-    assert rec[3].raw_data.comments[1].comment == "This is another test comment"
+    assert rec[1].comments[0].comment == "This is a test comment"
+    assert rec[3].comments[0].comment == "This is a test comment"
+    assert rec[2].comments[0].comment == "This is another test comment"
+    assert rec[3].comments[1].comment == "This is another test comment"
 
 
 def test_record_client_add_comment_nouser(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
@@ -166,16 +166,16 @@ def test_record_client_add_comment_nouser(snowflake_client: PortalClient, storag
     assert meta.updated_idx == [0, 1]
 
     rec = snowflake_client.get_records(all_id, include=["comments"])
-    assert len(rec[1].raw_data.comments) == 1
-    assert len(rec[3].raw_data.comments) == 1
+    assert len(rec[1].comments) == 1
+    assert len(rec[3].comments) == 1
 
-    assert time_0 < rec[1].raw_data.comments[0].timestamp < time_1
-    assert time_0 < rec[3].raw_data.comments[0].timestamp < time_1
-    assert rec[1].raw_data.comments[0].username is None
-    assert rec[3].raw_data.comments[0].username is None
+    assert time_0 < rec[1].comments[0].timestamp < time_1
+    assert time_0 < rec[3].comments[0].timestamp < time_1
+    assert rec[1].comments[0].username is None
+    assert rec[3].comments[0].username is None
 
-    assert rec[1].raw_data.comments[0].comment == "This is a test comment"
-    assert rec[3].raw_data.comments[0].comment == "This is a test comment"
+    assert rec[1].comments[0].comment == "This is a test comment"
+    assert rec[3].comments[0].comment == "This is a test comment"
 
 
 def test_record_client_add_comment_badid(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
@@ -209,41 +209,41 @@ def test_record_client_modify(snowflake_client: PortalClient, storage_socket: SQ
 
     # created_on and modified_on hasn't changed
     for r in rec:
-        assert r.raw_data.created_on < time_0
-        assert r.raw_data.modified_on < time_0
+        assert r.created_on < time_0
+        assert r.modified_on < time_0
 
     # 0 - waiting
-    assert rec[0].raw_data.task.tag == "new_tag"
-    assert rec[0].raw_data.task.priority == PriorityEnum.normal
+    assert rec[0].task.tag == "new_tag"
+    assert rec[0].task.priority == PriorityEnum.normal
 
     # 1 - completed
-    assert rec[1].raw_data.task is None
+    assert rec[1].task is None
 
     # 2 - running - not changed
-    assert rec[2].raw_data.task.tag == "tag2"
-    assert rec[2].raw_data.task.priority == PriorityEnum.high
+    assert rec[2].task.tag == "tag2"
+    assert rec[2].task.priority == PriorityEnum.high
 
     # 3 - error
-    assert rec[3].raw_data.task.tag == "tag3"
-    assert rec[3].raw_data.task.priority == PriorityEnum.low
+    assert rec[3].task.tag == "tag3"
+    assert rec[3].task.priority == PriorityEnum.low
 
     # 4/5/6 - cancelled/deleted/invalid
-    assert rec[4].raw_data.task is None
-    assert rec[5].raw_data.task is None
-    assert rec[6].raw_data.task is None
+    assert rec[4].task is None
+    assert rec[5].task is None
+    assert rec[6].task is None
 
     rec = snowflake_client.get_records(all_id, include=["task"])
 
     # created_on and modified_on hasn't changed
     for r in rec:
-        assert r.raw_data.created_on < time_0
-        assert r.raw_data.modified_on < time_0
+        assert r.created_on < time_0
+        assert r.modified_on < time_0
 
-    assert rec[1].raw_data.task is None
-    assert rec[2].raw_data.task.priority == PriorityEnum.high
-    assert rec[4].raw_data.task is None
-    assert rec[5].raw_data.task is None
-    assert rec[6].raw_data.task is None
+    assert rec[1].task is None
+    assert rec[2].task.priority == PriorityEnum.high
+    assert rec[4].task is None
+    assert rec[5].task is None
+    assert rec[6].task is None
 
 
 def test_record_client_modify_service(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):

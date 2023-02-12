@@ -38,8 +38,8 @@ def test_optimization_client_tag_priority(snowflake_client: PortalClient, tag: s
         tag=tag,
     )
     rec = snowflake_client.get_records(id1, include=["task"])
-    assert rec[0].raw_data.task.tag == tag
-    assert rec[0].raw_data.task.priority == priority
+    assert rec[0].task.tag == tag
+    assert rec[0].task.priority == priority
 
 
 @pytest.mark.parametrize("spec", test_specs)
@@ -73,31 +73,31 @@ def test_optimization_client_add_get(
 
     for r in recs:
         assert r.record_type == "optimization"
-        assert r.raw_data.record_type == "optimization"
-        assert compare_optimization_specs(spec, r.raw_data.specification)
+        assert r.record_type == "optimization"
+        assert compare_optimization_specs(spec, r.specification)
 
         assert r.task.function is None
-        assert r.raw_data.task.tag == "tag1"
-        assert r.raw_data.task.priority == PriorityEnum.low
+        assert r.task.tag == "tag1"
+        assert r.task.priority == PriorityEnum.low
 
-        assert r.raw_data.owner_user == submitter_client.username
-        assert r.raw_data.owner_group == owner_group
+        assert r.owner_user == submitter_client.username
+        assert r.owner_group == owner_group
 
-        assert time_0 < r.raw_data.created_on < time_1
-        assert time_0 < r.raw_data.modified_on < time_1
-        assert time_0 < r.raw_data.task.created_on < time_1
+        assert time_0 < r.created_on < time_1
+        assert time_0 < r.modified_on < time_1
+        assert time_0 < r.task.created_on < time_1
 
-    mol1 = submitter_client.get_molecules([recs[0].raw_data.initial_molecule_id])[0]
-    mol2 = submitter_client.get_molecules([recs[1].raw_data.initial_molecule_id])[0]
-    mol3 = submitter_client.get_molecules([recs[2].raw_data.initial_molecule_id])[0]
+    mol1 = submitter_client.get_molecules([recs[0].initial_molecule_id])[0]
+    mol2 = submitter_client.get_molecules([recs[1].initial_molecule_id])[0]
+    mol3 = submitter_client.get_molecules([recs[2].initial_molecule_id])[0]
     assert mol1.identifiers.molecule_hash == water.get_hash()
-    assert recs[0].raw_data.initial_molecule.identifiers.molecule_hash == water.get_hash()
+    assert recs[0].initial_molecule.identifiers.molecule_hash == water.get_hash()
 
     assert mol2.identifiers.molecule_hash == hooh.get_hash()
-    assert recs[1].raw_data.initial_molecule.identifiers.molecule_hash == hooh.get_hash()
+    assert recs[1].initial_molecule.identifiers.molecule_hash == hooh.get_hash()
 
     assert mol3.identifiers.molecule_hash == ne4.get_hash()
-    assert recs[2].raw_data.initial_molecule.identifiers.molecule_hash == ne4.get_hash()
+    assert recs[2].initial_molecule.identifiers.molecule_hash == ne4.get_hash()
 
 
 def test_optimization_client_add_existing_molecule(snowflake_client: PortalClient):
@@ -124,7 +124,7 @@ def test_optimization_client_add_existing_molecule(snowflake_client: PortalClien
     recs = snowflake_client.get_optimizations(id)
 
     assert len(recs) == 3
-    assert recs[2].raw_data.initial_molecule_id == mol_ids[0]
+    assert recs[2].initial_molecule_id == mol_ids[0]
 
 
 @pytest.mark.parametrize("opt_file", ["opt_psi4_benzene", "opt_psi4_fluoroethane_notraj"])
@@ -222,13 +222,13 @@ def test_optimization_client_traj(
     rec = snowflake_client.get_optimizations(opt_id)
     rec_traj = snowflake_client.get_optimizations(opt_id, include=["trajectory"])
 
-    assert rec_traj.raw_data.trajectory is not None
+    assert rec_traj.trajectory is not None
 
     if fetch_traj:
         rec._fetch_trajectory()
-        assert rec.raw_data.trajectory is not None
+        assert rec.trajectory_ is not None
     else:
-        assert rec.raw_data.trajectory is None
+        assert rec.trajectory_ is None
 
     assert rec.trajectory_element(0).id == rec_traj.trajectory[0].id
     assert rec.trajectory_element(-1).id == rec_traj.trajectory[-1].id
@@ -242,7 +242,7 @@ def test_optimization_client_query(snowflake_client: PortalClient, storage_socke
     recs = snowflake_client.get_optimizations([id_1, id_2, id_3])
 
     # query for molecule
-    query_res = snowflake_client.query_optimizations(initial_molecule_id=[recs[1].raw_data.initial_molecule_id])
+    query_res = snowflake_client.query_optimizations(initial_molecule_id=[recs[1].initial_molecule_id])
     assert query_res._current_meta.n_found == 1
 
     # query for program

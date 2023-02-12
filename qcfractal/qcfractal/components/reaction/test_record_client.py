@@ -37,8 +37,8 @@ def test_reaction_client_tag_priority(snowflake_client: PortalClient, tag: str, 
     )
 
     rec = snowflake_client.get_records(id1, include=["service"])
-    assert rec[0].raw_data.service.tag == tag
-    assert rec[0].raw_data.service.priority == priority
+    assert rec[0].service.tag == tag
+    assert rec[0].service.priority == priority
 
 
 @pytest.mark.parametrize("spec", test_specs)
@@ -69,31 +69,31 @@ def test_reaction_client_add_get(
 
     for r in recs:
         assert r.record_type == "reaction"
-        assert r.raw_data.record_type == "reaction"
-        assert compare_reaction_specs(spec, r.raw_data.specification)
+        assert r.record_type == "reaction"
+        assert compare_reaction_specs(spec, r.specification)
 
-        assert r.raw_data.service.tag == "tag1"
-        assert r.raw_data.service.priority == PriorityEnum.low
+        assert r.service.tag == "tag1"
+        assert r.service.priority == PriorityEnum.low
 
-        assert r.raw_data.owner_user == submitter_client.username
-        assert r.raw_data.owner_group == owner_group
+        assert r.owner_user == submitter_client.username
+        assert r.owner_group == owner_group
 
-        assert time_0 < r.raw_data.created_on < time_1
-        assert time_0 < r.raw_data.modified_on < time_1
-        assert time_0 < r.raw_data.service.created_on < time_1
+        assert time_0 < r.created_on < time_1
+        assert time_0 < r.modified_on < time_1
+        assert time_0 < r.service.created_on < time_1
 
-    mol_hash_0 = set(x.molecule.identifiers.molecule_hash for x in recs[0].raw_data.components)
-    mol_hash_1 = set(x.molecule.identifiers.molecule_hash for x in recs[1].raw_data.components)
+    mol_hash_0 = set(x.molecule.identifiers.molecule_hash for x in recs[0].components)
+    mol_hash_1 = set(x.molecule.identifiers.molecule_hash for x in recs[1].components)
 
     assert mol_hash_0 == {hooh.get_hash(), ne4.get_hash()}
     assert mol_hash_1 == {hooh.get_hash(), water.get_hash()}
 
     expected_coef = {hooh.get_hash(): 1.0, ne4.get_hash(): 2.0}
-    db_coef = {x.molecule.identifiers.molecule_hash: x.coefficient for x in recs[0].raw_data.components}
+    db_coef = {x.molecule.identifiers.molecule_hash: x.coefficient for x in recs[0].components}
     assert expected_coef == db_coef
 
     expected_coef = {hooh.get_hash(): 3.0, water.get_hash(): 4.0}
-    db_coef = {x.molecule.identifiers.molecule_hash: x.coefficient for x in recs[1].raw_data.components}
+    db_coef = {x.molecule.identifiers.molecule_hash: x.coefficient for x in recs[1].components}
     assert expected_coef == db_coef
 
 
@@ -126,10 +126,10 @@ def test_reaction_client_add_existing_molecule(snowflake_client: PortalClient):
 
     recs = snowflake_client.get_reactions(id1, include=["components"])
     assert len(recs) == 3
-    assert recs[0].raw_data.id == recs[2].raw_data.id
-    assert recs[0].raw_data.id != recs[1].raw_data.id
+    assert recs[0].id == recs[2].id
+    assert recs[0].id != recs[1].id
 
-    rec_mols_1 = set(x.molecule.id for x in recs[0].raw_data.components)
+    rec_mols_1 = set(x.molecule.id for x in recs[0].components)
 
     assert mol_ids[0] in rec_mols_1
 

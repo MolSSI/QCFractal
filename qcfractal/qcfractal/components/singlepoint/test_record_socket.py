@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 
 import pytest
 from qcelemental.models.results import AtomicResultProperties
-from qcfractal.components.wavefunctions.test_db_models import assert_wfn_equal
 
 from qcarchivetesting import load_molecule_data
 from qcportal.compression import decompress_old_string
@@ -261,7 +260,7 @@ def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket, activated_mana
         else:
             wfn_data = storage_socket.largebinary.get(wfn["id"])
             wfn_model = WavefunctionProperties(**wfn_data)
-            assert_wfn_equal(wfn_model, result.wavefunction)
+            assert wfn_model.dict(encoding="json") == result.wavefunction.dict(encoding="json")
 
         nf = record.get("native_files", None)
         if not nf:
@@ -338,7 +337,7 @@ def test_singlepoint_socket_insert(storage_socket: SQLAlchemySocket):
     wfn_model_1 = WavefunctionProperties(**wfn_data_1)
     wfn_data_2 = storage_socket.largebinary.get(recs[1]["wavefunction"]["id"])
     wfn_model_2 = WavefunctionProperties(**wfn_data_2)
-    assert_wfn_equal(wfn_model_1, wfn_model_2)
+    assert wfn_model_1.dict(encoding="json") == wfn_model_2.dict(encoding="json")
 
     assert len(recs[0]["compute_history"][0]["outputs"]) == 1
     assert len(recs[1]["compute_history"][0]["outputs"]) == 1

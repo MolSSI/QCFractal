@@ -51,16 +51,17 @@ class QCSpecification(BaseModel):
 
 
 class SinglepointRecord(BaseRecord):
-    class _DataModel(BaseRecord._DataModel):
-        record_type: Literal["singlepoint"] = "singlepoint"
-        specification: QCSpecification
-        molecule_id: int
-        molecule: Optional[Molecule]
-        return_result: Any
-        properties: Optional[Dict[str, Any]]
-        wavefunction: Optional[Wavefunction] = None
+    record_type: Literal["singlepoint"] = "singlepoint"
+    specification: QCSpecification
+    molecule_id: int
+    return_result: Any
+    properties: Optional[Dict[str, Any]]
 
-    raw_data: _DataModel
+    ######################################################
+    # Fields not always included when fetching the record
+    ######################################################
+    molecule_: Optional[Molecule] = Field(None, alias="molecule")
+    wavefunction_: Optional[Wavefunction] = Field(None, alias="wavefunction")
 
     @staticmethod
     def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
@@ -77,55 +78,48 @@ class SinglepointRecord(BaseRecord):
 
         return ret
 
+    def propagate_client(self, client):
+        BaseRecord.propagate_client(self, client)
+
+        if self.wavefunction_ is not None:
+            self.wavefunction_._client = self._client
+
+        if self.native_files_ is not None:
+            for nf in self.native_files_.values():
+                nf._client = self._client
+
     def _fetch_molecule(self):
         self._assert_online()
-        self.raw_data.molecule = self.client.get_molecules([self.raw_data.molecule_id])[0]
+        self.molecule_ = self._client.get_molecules([self.molecule_id])[0]
 
     def _fetch_wavefunction(self):
         self._assert_online()
 
-        self.raw_data.wavefunction = self.client._auto_request(
+        self.wavefunction_ = self._client._auto_request(
             "get",
-            f"v1/records/singlepoint/{self.raw_data.id}/wavefunction",
+            f"v1/records/singlepoint/{self.id}/wavefunction",
             None,
             None,
-            Optional[Union[WavefunctionProperties, Wavefunction]],
+            Optional[Wavefunction],
             None,
             None,
         )
 
-
-    @property
-    def specification(self) -> QCSpecification:
-        return self.raw_data.specification
-
-    @property
-    def molecule_id(self) -> int:
-        return self.raw_data.molecule_id
+        self.propagate_client(self._client)
 
     @property
     def molecule(self) -> Molecule:
-        if self.raw_data.molecule is None:
+        if self.molecule_ is None:
             self._fetch_molecule()
-        return self.raw_data.molecule
-
-    @property
-    def return_result(self) -> Any:
-        return self.raw_data.return_result
-
-    @property
-    def properties(self) -> Optional[Dict[str, Any]]:
-        return self.raw_data.properties
+        return self.molecule_
 
     @property
     def wavefunction(self) -> Optional[WavefunctionProperties]:
-        if self.raw_data.wavefunction is None:
+        if self.wavefunction_ is None:
             self._fetch_wavefunction()
 
-        if self.raw_data.wavefunction is not None:
-            # Kinda hacky? Needed for the .data property
-            self.raw_data.wavefunction.client = self.client
-            return WavefunctionProperties(**self.raw_data.wavefunction.data)
+        if self.wavefunction_ is not None:
+            return WavefunctionProperties(**self.wavefunction_.data)
         else:
             return None
 

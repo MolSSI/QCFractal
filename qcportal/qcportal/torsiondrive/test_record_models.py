@@ -30,7 +30,7 @@ def test_torsiondriverecord_model(
     record = snowflake_client.get_torsiondrives(rec_id, include=includes)
 
     if includes is not None:
-        record.client = None
+        record._client = None
         assert record.offline
 
     assert record.id == rec_id

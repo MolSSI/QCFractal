@@ -35,8 +35,8 @@ def test_manybody_client_tag_priority(snowflake_client: PortalClient, tag: str, 
     meta1, id1 = snowflake_client.add_manybodys([water], "manybody", sp_spec, kw, tag=tag, priority=priority)
 
     rec = snowflake_client.get_records(id1, include=["service"])
-    assert rec[0].raw_data.service.tag == tag
-    assert rec[0].raw_data.service.priority == priority
+    assert rec[0].service.tag == tag
+    assert rec[0].service.priority == priority
 
 
 @pytest.mark.parametrize("spec", test_specs)
@@ -65,21 +65,21 @@ def test_manybody_client_add_get(
 
     for r in recs:
         assert r.record_type == "manybody"
-        assert r.raw_data.record_type == "manybody"
-        assert compare_manybody_specs(spec, r.raw_data.specification)
+        assert r.record_type == "manybody"
+        assert compare_manybody_specs(spec, r.specification)
 
-        assert r.raw_data.service.tag == "tag1"
-        assert r.raw_data.service.priority == PriorityEnum.low
+        assert r.service.tag == "tag1"
+        assert r.service.priority == PriorityEnum.low
 
-        assert r.raw_data.owner_user == submitter_client.username
-        assert r.raw_data.owner_group == owner_group
+        assert r.owner_user == submitter_client.username
+        assert r.owner_group == owner_group
 
-        assert time_0 < r.raw_data.created_on < time_1
-        assert time_0 < r.raw_data.modified_on < time_1
-        assert time_0 < r.raw_data.service.created_on < time_1
+        assert time_0 < r.created_on < time_1
+        assert time_0 < r.modified_on < time_1
+        assert time_0 < r.service.created_on < time_1
 
-    assert recs[0].raw_data.initial_molecule.get_hash() == water2.get_hash()
-    assert recs[1].raw_data.initial_molecule.get_hash() == water4.get_hash()
+    assert recs[0].initial_molecule.get_hash() == water2.get_hash()
+    assert recs[1].initial_molecule.get_hash() == water4.get_hash()
 
 
 def test_manybody_client_add_existing_molecule(snowflake_client: PortalClient):
@@ -109,11 +109,11 @@ def test_manybody_client_add_existing_molecule(snowflake_client: PortalClient):
 
     recs = snowflake_client.get_manybodys(id1, include=["initial_molecule"])
     assert len(recs) == 3
-    assert recs[0].raw_data.id == recs[2].raw_data.id
-    assert recs[0].raw_data.id != recs[1].raw_data.id
+    assert recs[0].id == recs[2].id
+    assert recs[0].id != recs[1].id
 
-    assert recs[0].raw_data.initial_molecule.get_hash() == mol1.get_hash()
-    assert recs[1].raw_data.initial_molecule.get_hash() == mol2.get_hash()
+    assert recs[0].initial_molecule.get_hash() == mol1.get_hash()
+    assert recs[1].initial_molecule.get_hash() == mol2.get_hash()
 
 
 def test_manybody_client_delete(

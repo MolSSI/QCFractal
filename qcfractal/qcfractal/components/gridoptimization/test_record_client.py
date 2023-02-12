@@ -41,8 +41,8 @@ def test_gridoptimization_client_tag_priority(snowflake_client: PortalClient, ta
         tag=tag,
     )
     rec = snowflake_client.get_records(id1, include=["service"])
-    assert rec[0].raw_data.service.tag == tag
-    assert rec[0].raw_data.service.priority == priority
+    assert rec[0].service.tag == tag
+    assert rec[0].service.priority == priority
 
 
 @pytest.mark.parametrize("spec", test_specs)
@@ -72,21 +72,21 @@ def test_gridoptimization_client_add_get(
 
     for r in recs:
         assert r.record_type == "gridoptimization"
-        assert r.raw_data.record_type == "gridoptimization"
-        assert compare_gridoptimization_specs(spec, r.raw_data.specification)
+        assert r.record_type == "gridoptimization"
+        assert compare_gridoptimization_specs(spec, r.specification)
 
-        assert r.raw_data.service.tag == "tag1"
-        assert r.raw_data.service.priority == PriorityEnum.low
+        assert r.service.tag == "tag1"
+        assert r.service.priority == PriorityEnum.low
 
-        assert r.raw_data.owner_user == submitter_client.username
-        assert r.raw_data.owner_group == owner_group
+        assert r.owner_user == submitter_client.username
+        assert r.owner_group == owner_group
 
-        assert time_0 < r.raw_data.created_on < time_1
-        assert time_0 < r.raw_data.modified_on < time_1
-        assert time_0 < r.raw_data.service.created_on < time_1
+        assert time_0 < r.created_on < time_1
+        assert time_0 < r.modified_on < time_1
+        assert time_0 < r.service.created_on < time_1
 
-    assert recs[0].raw_data.initial_molecule.identifiers.molecule_hash == hooh.get_hash()
-    assert recs[1].raw_data.initial_molecule.identifiers.molecule_hash == h3ns.get_hash()
+    assert recs[0].initial_molecule.identifiers.molecule_hash == hooh.get_hash()
+    assert recs[1].initial_molecule.identifiers.molecule_hash == h3ns.get_hash()
 
 
 def test_gridoptimization_client_add_existing_molecule(snowflake_client: PortalClient):
@@ -114,10 +114,10 @@ def test_gridoptimization_client_add_existing_molecule(snowflake_client: PortalC
 
     recs = snowflake_client.get_gridoptimizations(id, include=["initial_molecule"])
     assert len(recs) == 4
-    assert recs[0].raw_data.id == recs[3].raw_data.id
-    assert recs[1].raw_data.id == recs[2].raw_data.id
+    assert recs[0].id == recs[3].id
+    assert recs[1].id == recs[2].id
 
-    rec_mols = {x.raw_data.initial_molecule.id for x in recs}
+    rec_mols = {x.initial_molecule.id for x in recs}
     _, mol_ids_2 = snowflake_client.add_molecules([mol1])
     assert rec_mols == set(mol_ids + mol_ids_2)
 

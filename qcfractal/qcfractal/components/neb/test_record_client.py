@@ -40,8 +40,8 @@ def test_neb_client_tag_priority(snowflake_client: PortalClient, tag: str, prior
         tag=tag,
     )
     rec = snowflake_client.get_records(id1, include=["service"])
-    assert rec[0].raw_data.service.tag == tag
-    assert rec[0].raw_data.service.priority == priority
+    assert rec[0].service.tag == tag
+    assert rec[0].service.priority == priority
 
 
 @pytest.mark.parametrize("spec", test_specs)
@@ -70,18 +70,18 @@ def test_neb_client_add_get(submitter_client: PortalClient, spec: NEBSpecificati
 
     for r in recs:
         assert r.record_type == "neb"
-        assert r.raw_data.record_type == "neb"
-        assert compare_neb_specs(spec, r.raw_data.specification)
+        assert r.record_type == "neb"
+        assert compare_neb_specs(spec, r.specification)
 
-        assert r.raw_data.service.tag == "tag1"
-        assert r.raw_data.service.priority == PriorityEnum.low
+        assert r.service.tag == "tag1"
+        assert r.service.priority == PriorityEnum.low
 
-        assert r.raw_data.owner_user == submitter_client.username
-        assert r.raw_data.owner_group == owner_group
+        assert r.owner_user == submitter_client.username
+        assert r.owner_group == owner_group
 
-        assert time_0 < r.raw_data.created_on < time_1
-        assert time_0 < r.raw_data.modified_on < time_1
-        assert time_0 < r.raw_data.service.created_on < time_1
+        assert time_0 < r.created_on < time_1
+        assert time_0 < r.modified_on < time_1
+        assert time_0 < r.service.created_on < time_1
 
     assert len(recs[0].initial_chain) == 11  # default image number
     assert len(recs[1].initial_chain) == 11

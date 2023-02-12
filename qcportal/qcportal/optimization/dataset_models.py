@@ -41,7 +41,7 @@ class OptimizationDatasetRecordItem(BaseModel):
     entry_name: str
     specification_name: str
     record_id: int
-    record: Optional[OptimizationRecord._DataModel]
+    record: Optional[OptimizationRecord]
 
 
 class OptimizationDataset(BaseDataset):
