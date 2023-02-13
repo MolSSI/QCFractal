@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional, Dict, Any, List, Iterable, Type, Tuple, Union, Callable
+from typing import Optional, Dict, Any, List, Iterable, Type, Tuple, Union, Callable, ClassVar
 
 import pandas as pd
 import pydantic
-from pydantic import BaseModel, Extra, validator
+from pydantic import BaseModel, Extra, validator, PrivateAttr, Field
 from qcelemental.models.types import Array
 from tabulate import tabulate
 
@@ -55,64 +55,69 @@ class ContributedValues(BaseModel):
 
 
 class BaseDataset(BaseModel):
-    class _DataModel(BaseModel):
-        class Config:
-            extra = Extra.forbid
-            allow_mutation = True
-            validate_assignment = True
-
-        id: int
-        dataset_type: str
-        name: str
-        description: str
-        tagline: str
-        tags: List[str]
-        group: str
-        visibility: bool
-        provenance: Dict[str, Any]
-
-        default_tag: str
-        default_priority: PriorityEnum
-
-        owner_user: Optional[str]
-        owner_group: Optional[str]
-
-        metadata: Dict[str, Any]
-        extras: Dict[str, Any]
-
-        ########################################
-        # Info about entries, specs, and records
-        ########################################
-        entry_names: List[str] = []
-
-        # To be overridden by the derived class with more specific types
-        specifications: Dict[str, Any] = {}
-        entries: Dict[str, Any] = {}
-        record_map: Dict[Tuple[str, str], Any] = {}
-
-        # Values computed outside QCA
-        contributed_values: Optional[Dict[str, ContributedValues]] = None
-
     class Config:
         extra = Extra.forbid
+        allow_mutation = True
+        validate_assignment = True
 
-    client: Any
-    raw_data: _DataModel  # Meant to be overridden by derived classes
+    id: int
+    dataset_type: str
+    name: str
+    description: str
+    tagline: str
+    tags: List[str]
+    group: str
+    visibility: bool
+    provenance: Dict[str, Any]
 
-    # If a view
-    view_data: Optional[DatasetViewWrapper] = None
+    default_tag: str
+    default_priority: PriorityEnum
+
+    owner_user: Optional[str]
+    owner_group: Optional[str]
+
+    metadata: Dict[str, Any]
+    extras: Dict[str, Any]
+
+    ########################################
+    # Caches of information
+    ########################################
+    entry_names_: List[str] = Field([], alias="entry_names")
+
+    # To be overridden by the derived class with more specific types
+    specifications_: Dict[str, Any] = {}
+    entries_: Dict[str, Any] = {}
+    record_map_: Dict[Tuple[str, str], Any] = {}
+
+    # Values computed outside QCA
+    contributed_values_: Optional[Dict[str, ContributedValues]] = None
+
+    #############################
+    # Private non-pydantic fields
+    #############################
+    _client: Any = PrivateAttr(None)
+    _view_data: Optional[DatasetViewWrapper] = PrivateAttr(None)
+
+    # To be overridden by the derived classes
+    _entry_type: ClassVar[Optional[Type]] = None
+    _specification_type: ClassVar[Optional[Type]] = None
+    _record_item_type: ClassVar[Optional[Type]] = None
+    _record_type: ClassVar[Optional[Type]] = None
+
+    # A dictionary of all subclasses (dataset types) to the actual class type
+    _all_subclasses: ClassVar[Dict[str, Type[BaseDataset]]] = {}
 
     # Some dataset options
     auto_fetch_missing: bool = True  # Automatically fetch missing records from the server
 
-    # To be overridden by the derived classes
-    _entry_type: Optional[Type] = None
-    _specification_type: Optional[Type] = None
-    _record_item_type: Optional[Type] = None
-    _record_type: Optional[Type] = None
+    def __init__(self, client=None, view_data=None, **kwargs):
+        BaseModel.__init__(self, **kwargs)
 
-    # all subclasses
-    _all_subclasses = {}
+        # Calls derived class propagate_client
+        # which should filter down to the ones in this (BaseDataset) class
+        self.propagate_client(client)
+
+        assert self._client is client, "Client not set in base dataset class?"
 
     def __init_subclass__(cls):
         """
@@ -122,7 +127,7 @@ class BaseDataset(BaseModel):
         # Get the dataset type. This is kind of ugly, but works.
         # We could use ClassVar, but in my tests it doesn't work for
         # disambiguating (ie, via parse_obj_as)
-        dataset_type = cls._DataModel.__fields__["dataset_type"].default
+        dataset_type = cls.__fields__["dataset_type"].default
 
         cls._all_subclasses[dataset_type] = cls
 
@@ -133,17 +138,15 @@ class BaseDataset(BaseModel):
             raise RuntimeError(f"Cannot find subclass for record type {dataset_type}")
         return subcls
 
-    @classmethod
-    def from_datamodel(
-        cls,
-        raw_data: Union[Dict[str, Any], _DataModel],
-        client: Any = None,
-        view_data: Optional[DatasetViewWrapper] = None,
-    ):
+    def propagate_client(self, client):
         """
-        Create a dataset from a dataset DataModel (as an object or a dictionary)
+        Propagates a client to this record to any fields within this record that need it
+
+        This may also be called from derived class propagate_client functions as well
         """
-        return cls(client=client, raw_data=raw_data, view_data=view_data)
+        self._client = client
+        for record in self.record_map_.values():
+            record.populate_client(client)
 
     def _post_add_entries(self, entry_names) -> None:
         """
@@ -157,8 +160,8 @@ class BaseDataset(BaseModel):
 
         # If entry names have been fetched, add the new entry names
         # This should still be ok if there are no entries - they will be fetched if the list is empty
-        if self.raw_data.entry_names:
-            self.raw_data.entry_names.extend(x for x in entry_names if x not in self.raw_data.entry_names)
+        if self.entry_names_:
+            self.entry_names_.extend(x for x in entry_names if x not in self.entry_names_)
 
     def _post_add_specification(self, specification_name) -> None:
         """
@@ -171,27 +174,28 @@ class BaseDataset(BaseModel):
         """
 
         # Ignoring the function argument for now... Just get all specs
+        # TODO - very inefficient for lots of specs
         self.fetch_specifications()
 
     def _update_metadata(self, **kwargs):
         self.assert_online()
 
         new_body = {
-            "name": self.raw_data.name,
-            "description": self.raw_data.description,
-            "tagline": self.raw_data.tagline,
-            "tags": self.raw_data.tags,
-            "group": self.raw_data.group,
-            "visibility": self.raw_data.visibility,
-            "provenance": self.raw_data.provenance,
-            "default_tag": self.raw_data.default_tag,
-            "default_priority": self.raw_data.default_priority,
-            "metadata": self.raw_data.metadata,
+            "name": self.name,
+            "description": self.description,
+            "tagline": self.tagline,
+            "tags": self.tags,
+            "group": self.group,
+            "visibility": self.visibility,
+            "provenance": self.provenance,
+            "default_tag": self.default_tag,
+            "default_priority": self.default_priority,
+            "metadata": self.metadata,
         }
 
         new_body.update(**kwargs)
 
-        self.client._auto_request(
+        self._client._auto_request(
             "patch",
             f"v1/datasets/{self.dataset_type}/{self.id}",
             DatasetModifyMetadata,
@@ -201,7 +205,16 @@ class BaseDataset(BaseModel):
             None,
         )
 
-        self.raw_data = self.raw_data.copy(update=new_body)
+        self.name = new_body["name"]
+        self.description = new_body["description"]
+        self.tagline = new_body["tagline"]
+        self.tags = new_body["tags"]
+        self.group = new_body["group"]
+        self.visibility = new_body["visibility"]
+        self.provenance = new_body["provenance"]
+        self.default_tag = new_body["default_tag"]
+        self.default_priority = new_body["default_priority"]
+        self.metadata = new_body["metadata"]
 
     def submit(
         self,
@@ -210,6 +223,7 @@ class BaseDataset(BaseModel):
         tag: Optional[str] = None,
         priority: PriorityEnum = None,
     ):
+        self.assert_is_not_view()
         self.assert_online()
 
         body_data = DatasetSubmitBody(
@@ -219,7 +233,7 @@ class BaseDataset(BaseModel):
             priority=priority,
         )
 
-        ret = self.client._auto_request(
+        ret = self._client._auto_request(
             "post", f"v1/datasets/{self.dataset_type}/{self.id}/submit", DatasetSubmitBody, None, Any, body_data, None
         )
 
@@ -232,7 +246,7 @@ class BaseDataset(BaseModel):
     def status(self) -> Dict[str, Any]:
         self.assert_online()
 
-        return self.client._auto_request(
+        return self._client._auto_request(
             "get",
             f"v1/datasets/{self.dataset_type}/{self.id}/status",
             None,
@@ -265,7 +279,7 @@ class BaseDataset(BaseModel):
     def detailed_status(self) -> List[Tuple[str, str, RecordStatusEnum]]:
         self.assert_online()
 
-        return self.client._auto_request(
+        return self._client._auto_request(
             "get",
             f"v1/datasets/{self.dataset_type}/{self.id}/detailed_status",
             None,
@@ -276,12 +290,8 @@ class BaseDataset(BaseModel):
         )
 
     @property
-    def dataset_type(self) -> str:
-        return self.raw_data.dataset_type
-
-    @property
     def offline(self) -> bool:
-        return self.client is None
+        return self._client is None
 
     def assert_online(self):
         if self.offline:
@@ -289,111 +299,59 @@ class BaseDataset(BaseModel):
 
     @property
     def is_view(self) -> bool:
-        return self.view_data is not None
+        return self._view_data is not None
 
     def assert_is_not_view(self):
         if self.is_view:
             raise RuntimeError("Dataset loaded from an offline view")
 
-    @property
-    def id(self) -> int:
-        return self.raw_data.id
-
-    @property
-    def name(self) -> str:
-        return self.raw_data.name
-
     def set_name(self, new_name: str):
         self._update_metadata(name=new_name)
-
-    @property
-    def description(self) -> str:
-        return self.raw_data.description
 
     def set_description(self, new_description: str):
         self._update_metadata(description=new_description)
 
-    @property
-    def visibility(self) -> bool:
-        return self.raw_data.visibility
-
     def set_visibility(self, new_visibility: bool):
         self._update_metadata(visibility=new_visibility)
-
-    @property
-    def group(self) -> str:
-        return self.raw_data.group
 
     def set_group(self, new_group: str):
         self._update_metadata(group=new_group)
 
-    @property
-    def owner_user(self) -> Optional[str]:
-        return self.raw_data.owner_user
-
-    @property
-    def owner_group(self) -> Optional[str]:
-        return self.raw_data.owner_group
-
-    @property
-    def tags(self) -> List[str]:
-        return self.raw_data.tags
-
     def set_tags(self, new_tags: List[str]):
         self._update_metadata(tags=new_tags)
-
-    @property
-    def tagline(self) -> str:
-        return self.raw_data.tagline
 
     def set_tagline(self, new_tagline: str):
         self._update_metadata(tagline=new_tagline)
 
-    @property
-    def provenance(self) -> Dict[str, Any]:
-        return self.raw_data.provenance
-
     def set_provenance(self, new_provenance: Dict[str, Any]):
         self._update_metadata(provenance=new_provenance)
-
-    @property
-    def metadata(self) -> Dict[str, Any]:
-        return self.raw_data.metadata
 
     def set_metadata(self, new_metadata: Dict[str, Any]):
         self._update_metadata(metadata=new_metadata)
 
-    @property
-    def default_tag(self) -> str:
-        return self.raw_data.default_tag
-
     def set_default_tag(self, new_default_tag: str):
         self._update_metadata(default_tag=new_default_tag)
-
-    @property
-    def default_priority(self) -> PriorityEnum:
-        return self.raw_data.default_priority
 
     def set_default_priority(self, new_default_priority: PriorityEnum):
         self._update_metadata(default_priority=new_default_priority)
 
+    ###################################
+    # Specifications
+    ###################################
     @property
     def specifications(self) -> Dict[str, Any]:
         if self.is_view:
-            return self.view_data.get_specifications(self._specification_type)
+            return self._view_data.get_specifications(self._specification_type)
         else:
-            if not self.raw_data.specifications:
+            if not self.specifications_:
                 self.fetch_specifications()
 
-            return self.raw_data.specifications
+            return self.specifications_
 
     @property
     def specification_names(self) -> List[str]:
         return list(self.specifications.keys())
 
-    ###################################
-    # Specifications
-    ###################################
     def fetch_specifications(self) -> None:
         """
         Fetch all specifications from the remote server
@@ -401,10 +359,9 @@ class BaseDataset(BaseModel):
         These are fetched and then stored internally, and not returned.
         """
         self.assert_is_not_view()
-        if self.offline:
-            return
+        self.assert_online()
 
-        self.raw_data.specifications = self.client._auto_request(
+        self.specifications_ = self._client._auto_request(
             "get",
             f"v1/datasets/{self.dataset_type}/{self.id}/specifications",
             None,
@@ -420,7 +377,7 @@ class BaseDataset(BaseModel):
 
         name_map = {old_name: new_name}
 
-        self.client._auto_request(
+        self._client._auto_request(
             "patch",
             f"v1/datasets/{self.dataset_type}/{self.id}/specifications",
             Dict[str, str],
@@ -430,10 +387,10 @@ class BaseDataset(BaseModel):
             None,
         )
 
-        self.raw_data.specifications = {name_map.get(k, k): v for k, v in self.raw_data.specifications.items()}
+        self.specifications_ = {name_map.get(k, k): v for k, v in self.specifications_.items()}
 
         # Renames the specifications in the record map
-        self.raw_data.record_map = {(e, name_map.get(s, s)): r for (e, s), r in self.raw_data.record_map.items()}
+        self.record_map_ = {(e, name_map.get(s, s)): r for (e, s), r in self.record_map_.items()}
 
     def delete_specification(self, name: str, delete_records: bool = False) -> DeleteMetadata:
         self.assert_is_not_view()
@@ -441,7 +398,7 @@ class BaseDataset(BaseModel):
 
         body_data = DatasetDeleteStrBody(names=[name], delete_records=delete_records)
 
-        ret = self.client._auto_request(
+        ret = self._client._auto_request(
             "post",
             f"v1/datasets/{self.dataset_type}/{self.id}/specifications/bulkDelete",
             DatasetDeleteStrBody,
@@ -452,8 +409,8 @@ class BaseDataset(BaseModel):
         )
 
         # Delete locally-cached stuff
-        self.raw_data.specifications.pop(name, None)
-        self.raw_data.record_map = {(e, s): r for (e, s), r in self.raw_data.record_map.items() if s != name}
+        self.specifications_.pop(name, None)
+        self.record_map_ = {(e, s): r for (e, s), r in self.record_map_.items() if s != name}
 
         return ret
 
@@ -467,10 +424,9 @@ class BaseDataset(BaseModel):
         These are fetched and then stored internally, and not returned.
         """
         self.assert_is_not_view()
-        if self.offline:
-            return
+        self.assert_online()
 
-        self.raw_data.entry_names = self.client._auto_request(
+        self.entry_names_ = self._client._auto_request(
             "get",
             f"v1/datasets/{self.dataset_type}/{self.id}/entry_names",
             None,
@@ -497,8 +453,6 @@ class BaseDataset(BaseModel):
         ----------
         entry_names
             Names of the entries to fetch
-        api_include
-            Additional fields/data to include when fetch the entry (the 'raw' fields used by the web API)
         """
 
         if not entry_names:
@@ -506,7 +460,7 @@ class BaseDataset(BaseModel):
 
         body_data = DatasetFetchEntryBody(names=entry_names)
 
-        fetched_entries = self.client._auto_request(
+        fetched_entries = self._client._auto_request(
             "post",
             f"v1/datasets/{self.dataset_type}/{self.id}/entries/bulkFetch",
             DatasetFetchEntryBody,
@@ -516,7 +470,7 @@ class BaseDataset(BaseModel):
             None,
         )
 
-        self.raw_data.entries.update(fetched_entries)
+        self.entries_.update(fetched_entries)
 
     def fetch_entries(
         self,
@@ -540,8 +494,7 @@ class BaseDataset(BaseModel):
         """
 
         self.assert_is_not_view()
-        if self.offline:
-            return
+        self.assert_online()
 
         # Reload entry names if we are forcing refetching
         if force_refetch:
@@ -555,9 +508,9 @@ class BaseDataset(BaseModel):
 
         # Strip out existing entries if we aren't forcing refetching
         if not force_refetch:
-            entry_names = [x for x in entry_names if x not in self.raw_data.entries]
+            entry_names = [x for x in entry_names if x not in self.entries_]
 
-        fetch_limit: int = self.client.api_limits["get_dataset_entries"] // 4
+        fetch_limit: int = self._client.api_limits["get_dataset_entries"] // 4
         n_entries = len(entry_names)
 
         for start_idx in range(0, n_entries, fetch_limit):
@@ -576,11 +529,11 @@ class BaseDataset(BaseModel):
         """
 
         if self.is_view:
-            entry_dict = self.view_data.get_entries(self._entry_type, [entry_name])
+            entry_dict = self._view_data.get_entries(self._entry_type, [entry_name])
             return entry_dict.get(entry_name)
         else:
             self.fetch_entries(entry_name, force_refetch=force_refetch)
-            return self.raw_data.entries.get(entry_name, None)
+            return self.entries_.get(entry_name, None)
 
     def iterate_entries(
         self,
@@ -624,11 +577,11 @@ class BaseDataset(BaseModel):
                     yield entry
         else:
             # Fetch from server
-            fetch_limit: int = self.client.api_limits["get_dataset_entries"] // 4
+            fetch_limit: int = self._client.api_limits["get_dataset_entries"] // 4
             n_entries = len(entry_names)
 
-            if self.raw_data.entries is None:
-                self.raw_data.entries = {}
+            if self.entries_ is None:
+                self.entries_ = {}
 
             for start_idx in range(0, n_entries, fetch_limit):
                 names_batch = entry_names[start_idx : start_idx + fetch_limit]
@@ -638,13 +591,13 @@ class BaseDataset(BaseModel):
                 if force_refetch:
                     names_tofetch = names_batch
                 else:
-                    names_tofetch = [x for x in names_batch if x not in self.raw_data.entries]
+                    names_tofetch = [x for x in names_batch if x not in self.entries_]
 
                 self._internal_fetch_entries(names_tofetch)
 
                 # Loop over the whole batch (not just what we fetched)
                 for entry_name in names_batch:
-                    entry = self.raw_data.entries.get(entry_name, None)
+                    entry = self.entries_.get(entry_name, None)
 
                     if entry is not None:
                         yield entry
@@ -652,18 +605,18 @@ class BaseDataset(BaseModel):
     @property
     def entry_names(self) -> List[str]:
         if self.is_view:
-            return self.view_data.get_entry_names()
+            return self._view_data.get_entry_names()
 
-        if not self.raw_data.entry_names:
+        if not self.entry_names_:
             self.fetch_entry_names()
 
-        return self.raw_data.entry_names
+        return self.entry_names_
 
     def rename_entries(self, name_map: Dict[str, str]):
         self.assert_is_not_view()
         self.assert_online()
 
-        ret = self.client._auto_request(
+        self._client._auto_request(
             "patch",
             f"v1/datasets/{self.dataset_type}/{self.id}/entries",
             Dict[str, str],
@@ -674,11 +627,11 @@ class BaseDataset(BaseModel):
         )
 
         # rename locally cached entries and stuff
-        self.raw_data.entry_names = [name_map.get(x, x) for x in self.raw_data.entry_names]
-        self.raw_data.entries = {name_map.get(k, k): v for k, v in self.raw_data.entries.items()}
+        self.entry_names_ = [name_map.get(x, x) for x in self.entry_names_]
+        self.entries_ = {name_map.get(k, k): v for k, v in self.entries_.items()}
 
         # Renames the entries in the record map
-        self.raw_data.record_map = {(name_map.get(e, e), s): r for (e, s), r in self.raw_data.record_map.items()}
+        self.record_map_ = {(name_map.get(e, e), s): r for (e, s), r in self.record_map_.items()}
 
     def delete_entries(self, names: Union[str, Iterable[str]], delete_records: bool = False) -> DeleteMetadata:
         self.assert_is_not_view()
@@ -687,7 +640,7 @@ class BaseDataset(BaseModel):
         names = make_list(names)
         body_data = DatasetDeleteStrBody(names=names, delete_records=delete_records)
 
-        ret = self.client._auto_request(
+        ret = self._client._auto_request(
             "post",
             f"v1/datasets/{self.dataset_type}/{self.id}/entries/bulkDelete",
             DatasetDeleteStrBody,
@@ -698,9 +651,9 @@ class BaseDataset(BaseModel):
         )
 
         # Delete locally-cached stuff
-        self.raw_data.entry_names = [x for x in self.raw_data.entry_names if x not in names]
-        self.raw_data.entries = {x: y for x, y in self.raw_data.entries.items() if x not in names}
-        self.raw_data.record_map = {(e, s): r for (e, s), r in self.raw_data.record_map.items() if e not in names}
+        self.entry_names_ = [x for x in self.entry_names_ if x not in names]
+        self.entries_ = {x: y for x, y in self.entries_.items() if x not in names}
+        self.record_map_ = {(e, s): r for (e, s), r in self.record_map_.items() if e not in names}
 
         return ret
 
@@ -708,7 +661,7 @@ class BaseDataset(BaseModel):
     # Records
     ###########################
     def _lookup_record(self, entry_name: str, specification_name: str):
-        return self.raw_data.record_map.get((entry_name, specification_name), None)
+        return self.record_map_.get((entry_name, specification_name), None)
 
     def _internal_fetch_records(
         self,
@@ -745,7 +698,7 @@ class BaseDataset(BaseModel):
             entry_names=entry_names, specification_names=specification_names, status=status, include=api_include
         )
 
-        record_info = self.client._auto_request(
+        record_info = self._client._auto_request(
             "post",
             f"v1/datasets/{self.dataset_type}/{self.id}/records/bulkFetch",
             DatasetFetchRecordsBody,
@@ -757,7 +710,8 @@ class BaseDataset(BaseModel):
 
         # Update the locally-stored records
         for rec_item in record_info:
-            self.raw_data.record_map[(rec_item.entry_name, rec_item.specification_name)] = rec_item.record
+            rec_item.record.propagate_client(self._client)
+            self.record_map_[(rec_item.entry_name, rec_item.specification_name)] = rec_item.record
 
     def _internal_update_records(
         self,
@@ -795,7 +749,7 @@ class BaseDataset(BaseModel):
             include=["modified_on"],
         )
 
-        modified_info = self.client._auto_request(
+        modified_info = self._client._auto_request(
             "post",
             f"v1/datasets/{self.dataset_type}/{self.id}/records/bulkFetch",
             DatasetFetchRecordsBody,
@@ -810,7 +764,7 @@ class BaseDataset(BaseModel):
         for minfo in modified_info:
             entry_name = minfo["entry_name"]
             spec_name = minfo["specification_name"]
-            existing_record = self.raw_data.record_map.get((entry_name, spec_name), None)
+            existing_record = self.record_map_.get((entry_name, spec_name), None)
 
             # Too lazy to look up how pydantic stores datetime, so use pydantic to parse it
             minfo_mtime = pydantic.parse_obj_as(datetime, minfo["record"]["modified_on"])
@@ -857,8 +811,7 @@ class BaseDataset(BaseModel):
         """
 
         self.assert_is_not_view()
-        if self.offline:
-            return
+        self.assert_online()
 
         # Reload entry names if we are forcing refetching
         if force_refetch:
@@ -875,7 +828,7 @@ class BaseDataset(BaseModel):
             entry_names = make_list(entry_names)
 
         if specification_names is None:
-            specification_names = list(self.specifications.keys())
+            specification_names = self.specification_names
         else:
             specification_names = make_list(specification_names)
 
@@ -883,7 +836,7 @@ class BaseDataset(BaseModel):
         # Assume there are many more entries than specifications, and that
         # everything has been submitted
         # Divide by 4 to go easy on the server
-        fetch_limit: int = self.client.api_limits["get_records"] // 4
+        fetch_limit: int = self._client.api_limits["get_records"] // 4
 
         n_entries = len(entry_names)
 
@@ -895,12 +848,12 @@ class BaseDataset(BaseModel):
 
                 # Handle existing records that need to be updated
                 if fetch_updated and not force_refetch:
-                    existing_batch = [x for x in entries_batch if (x, spec_name) in self.raw_data.record_map]
+                    existing_batch = [x for x in entries_batch if (x, spec_name) in self.record_map_]
                     self._internal_update_records(existing_batch, [spec_name], status, api_include)
 
                 # Prune records that already exist, and then fetch them
                 if not force_refetch:
-                    entries_batch = [x for x in entries_batch if (x, spec_name) not in self.raw_data.record_map]
+                    entries_batch = [x for x in entries_batch if (x, spec_name) not in self.record_map_]
 
                 self._internal_fetch_records(entries_batch, [spec_name], status, api_include)
 
@@ -918,7 +871,7 @@ class BaseDataset(BaseModel):
         """
 
         if self.is_view:
-            record_item = self.view_data.get_record_item(self._record_item_type, entry_name, specification_name)
+            record_item = self._view_data.get_record_item(self._record_item_type, entry_name, specification_name)
             if record_item is None:
                 return None
             else:
@@ -974,7 +927,7 @@ class BaseDataset(BaseModel):
                         yield entry_name, spec_name, rec
         else:
             # Smaller fetch limit for iteration (than in fetch_records)
-            fetch_limit: int = self.client.api_limits["get_records"] // 10
+            fetch_limit: int = self._client.api_limits["get_records"] // 10
 
             n_entries = len(entry_names)
 
@@ -984,14 +937,14 @@ class BaseDataset(BaseModel):
 
                     # Handle existing records that need to be updated
                     if fetch_updated and not force_refetch:
-                        existing_batch = [x for x in entries_batch if (x, spec_name) in self.raw_data.record_map]
+                        existing_batch = [x for x in entries_batch if (x, spec_name) in self.record_map_]
                         self._internal_update_records(existing_batch, [spec_name], status, api_include)
 
                     if force_refetch:
                         batch_tofetch = entries_batch
                     else:
                         # Filter if they already exist
-                        batch_tofetch = [x for x in entries_batch if (x, spec_name) not in self.raw_data.record_map]
+                        batch_tofetch = [x for x in entries_batch if (x, spec_name) not in self.record_map_]
 
                     self._internal_fetch_records(batch_tofetch, [spec_name], status, api_include)
 
@@ -1020,7 +973,7 @@ class BaseDataset(BaseModel):
             delete_records=delete_records,
         )
 
-        ret = self.client._auto_request(
+        ret = self._client._auto_request(
             "post",
             f"v1/datasets/{self.dataset_type}/{self.id}/records/bulkDelete",
             DatasetRemoveRecordsBody,
@@ -1031,10 +984,8 @@ class BaseDataset(BaseModel):
         )
 
         # Delete locally-cached stuff
-        self.raw_data.record_map = {
-            (e, s): r
-            for (e, s), r in self.raw_data.record_map.items()
-            if e not in entry_names and s not in specification_names
+        self.record_map_ = {
+            (e, s): r for (e, s), r in self.record_map_.items() if e not in entry_names and s not in specification_names
         }
 
         return ret
@@ -1049,6 +1000,7 @@ class BaseDataset(BaseModel):
         *,
         refetch_records: bool = False,
     ):
+        self.assert_is_not_view()
         self.assert_online()
 
         body_data = DatasetRecordModifyBody(
@@ -1059,7 +1011,7 @@ class BaseDataset(BaseModel):
             comment=new_comment,
         )
 
-        ret = self.client._auto_request(
+        ret = self._client._auto_request(
             "patch",
             f"v1/datasets/{self.dataset_type}/{self.id}/records",
             DatasetRecordModifyBody,
@@ -1090,7 +1042,7 @@ class BaseDataset(BaseModel):
             status=RecordStatusEnum.waiting,
         )
 
-        ret = self.client._auto_request(
+        ret = self._client._auto_request(
             "patch",
             f"v1/datasets/{self.dataset_type}/{self.id}/records",
             DatasetRecordModifyBody,
@@ -1121,7 +1073,7 @@ class BaseDataset(BaseModel):
             status=RecordStatusEnum.cancelled,
         )
 
-        ret = self.client._auto_request(
+        ret = self._client._auto_request(
             "patch",
             f"v1/datasets/{self.dataset_type}/{self.id}/records",
             DatasetRecordModifyBody,
@@ -1152,7 +1104,7 @@ class BaseDataset(BaseModel):
             revert_status=RecordStatusEnum.cancelled,
         )
 
-        ret = self.client._auto_request(
+        ret = self._client._auto_request(
             "post",
             f"v1/datasets/{self.dataset_type}/{self.id}/records/revert",
             DatasetRecordRevertBody,
@@ -1183,7 +1135,7 @@ class BaseDataset(BaseModel):
             status=RecordStatusEnum.invalid,
         )
 
-        ret = self.client._auto_request(
+        ret = self._client._auto_request(
             "patch",
             f"v1/datasets/{self.dataset_type}/{self.id}/records",
             DatasetRecordModifyBody,
@@ -1214,7 +1166,7 @@ class BaseDataset(BaseModel):
             revert_status=RecordStatusEnum.invalid,
         )
 
-        ret = self.client._auto_request(
+        ret = self._client._auto_request(
             "post",
             f"v1/datasets/{self.dataset_type}/{self.id}/records/revert",
             DatasetRecordRevertBody,
@@ -1259,10 +1211,10 @@ class BaseDataset(BaseModel):
     ##############################
 
     def fetch_contributed_values(self):
-        if self.offline:
-            return
+        self.assert_is_not_view()
+        self.assert_online()
 
-        self.raw_data.contributed_values = self.client._auto_request(
+        self.contributed_values_ = self._client._auto_request(
             "get",
             f"v1/datasets/{self.id}/contributed_values",
             None,
@@ -1274,10 +1226,10 @@ class BaseDataset(BaseModel):
 
     @property
     def contributed_values(self) -> Dict[str, ContributedValues]:
-        if not self.raw_data.contributed_values:
+        if not self.contributed_values:
             self.fetch_contributed_values()
 
-        return self.raw_data.contributed_values
+        return self.contributed_values
 
 
 class DatasetAddBody(RestModelBase):
@@ -1385,9 +1337,7 @@ class DatasetDeleteSpecificationBody(RestModelBase):
     delete_records: bool = False
 
 
-def dataset_from_datamodel(
-    data: Union[BaseDataset._DataModel, Dict[str, Any]], client: Any, view_data: Optional[DatasetViewWrapper] = None
-) -> BaseDataset:
+def dataset_from_dict(data: Dict[str, Any], client: Any, view_data: Optional[DatasetViewWrapper] = None) -> BaseDataset:
     """
     Create a dataset object from a datamodel
 
@@ -1397,13 +1347,9 @@ def dataset_from_datamodel(
     This works if the data is a datamodel object already or a dictionary
     """
 
-    if isinstance(data, BaseDataset._DataModel):
-        dataset_type = data.dataset_type
-    else:
-        dataset_type = data["dataset_type"]
-
+    dataset_type = data["dataset_type"]
     cls = BaseDataset.get_subclass(dataset_type)
-    return cls.from_datamodel(data, client, view_data)
+    return cls(client, view_data, **data)
 
 
 def load_dataset_view(view_path: str):
@@ -1411,4 +1357,4 @@ def load_dataset_view(view_path: str):
     view_data = DatasetViewWrapper(view_path=view_path)
     raw_data = view_data.get_datamodel()
 
-    return dataset_from_datamodel(raw_data, client=None, view_data=view_data)
+    return dataset_from_dict(raw_data, client=None, view_data=view_data)

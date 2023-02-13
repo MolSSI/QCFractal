@@ -48,14 +48,14 @@ class TorsiondriveDatasetRecordItem(BaseModel):
 
 
 class TorsiondriveDataset(BaseDataset):
-    class _DataModel(BaseDataset._DataModel):
-        dataset_type: Literal["torsiondrive"] = "torsiondrive"
+    dataset_type: Literal["torsiondrive"] = "torsiondrive"
 
-        specifications: Dict[str, TorsiondriveDatasetSpecification] = {}
-        entries: Dict[str, TorsiondriveDatasetEntry] = {}
-        record_map: Dict[Tuple[str, str], TorsiondriveRecord] = {}
-
-    raw_data: _DataModel
+    ########################################
+    # Caches of information
+    ########################################
+    specifications_: Dict[str, TorsiondriveDatasetSpecification] = {}
+    entries_: Dict[str, TorsiondriveDatasetEntry] = {}
+    record_map_: Dict[Tuple[str, str], TorsiondriveRecord] = {}
 
     # Needed by the base class
     _entry_type = TorsiondriveDatasetEntry
@@ -69,7 +69,7 @@ class TorsiondriveDataset(BaseDataset):
 
         payload = TorsiondriveDatasetSpecification(name=name, specification=specification, description=description)
 
-        ret = self.client._auto_request(
+        ret = self._client._auto_request(
             "post",
             f"v1/datasets/torsiondrive/{self.id}/specifications",
             List[TorsiondriveDatasetSpecification],
@@ -87,7 +87,7 @@ class TorsiondriveDataset(BaseDataset):
     ) -> InsertMetadata:
 
         entries = make_list(entries)
-        ret = self.client._auto_request(
+        ret = self._client._auto_request(
             "post",
             f"v1/datasets/torsiondrive/{self.id}/entries/bulkCreate",
             List[TorsiondriveDatasetNewEntry],

@@ -45,14 +45,14 @@ class OptimizationDatasetRecordItem(BaseModel):
 
 
 class OptimizationDataset(BaseDataset):
-    class _DataModel(BaseDataset._DataModel):
-        dataset_type: Literal["optimization"] = "optimization"
+    dataset_type: Literal["optimization"] = "optimization"
 
-        specifications: Dict[str, OptimizationDatasetSpecification] = {}
-        entries: Dict[str, OptimizationDatasetEntry] = {}
-        record_map: Dict[Tuple[str, str], OptimizationRecord] = {}
-
-    raw_data: _DataModel
+    ########################################
+    # Caches of information
+    ########################################
+    specifications_: Dict[str, OptimizationDatasetSpecification] = {}
+    entries_: Dict[str, OptimizationDatasetEntry] = {}
+    record_map_: Dict[Tuple[str, str], OptimizationRecord] = {}
 
     # Needed by the base class
     _entry_type = OptimizationDatasetEntry
@@ -67,7 +67,7 @@ class OptimizationDataset(BaseDataset):
 
         payload = OptimizationDatasetSpecification(name=name, specification=specification, description=description)
 
-        ret = self.client._auto_request(
+        ret = self._client._auto_request(
             "post",
             f"v1/datasets/optimization/{self.id}/specifications",
             List[OptimizationDatasetSpecification],
@@ -86,7 +86,7 @@ class OptimizationDataset(BaseDataset):
 
         entries = make_list(entries)
 
-        ret = self.client._auto_request(
+        ret = self._client._auto_request(
             "post",
             f"v1/datasets/optimization/{self.id}/entries/bulkCreate",
             List[OptimizationDatasetNewEntry],

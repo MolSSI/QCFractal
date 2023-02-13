@@ -49,14 +49,14 @@ class GridoptimizationDatasetRecordItem(BaseModel):
 
 
 class GridoptimizationDataset(BaseDataset):
-    class _DataModel(BaseDataset._DataModel):
-        dataset_type: Literal["gridoptimization"] = "gridoptimization"
+    dataset_type: Literal["gridoptimization"] = "gridoptimization"
 
-        specifications: Dict[str, GridoptimizationDatasetSpecification] = {}
-        entries: Dict[str, GridoptimizationDatasetEntry] = {}
-        record_map: Dict[Tuple[str, str], GridoptimizationRecord] = {}
-
-    raw_data: _DataModel
+    ########################################
+    # Caches of information
+    ########################################
+    specifications_: Dict[str, GridoptimizationDatasetSpecification] = {}
+    entries_: Dict[str, GridoptimizationDatasetEntry] = {}
+    record_map_: Dict[Tuple[str, str], GridoptimizationRecord] = {}
 
     # Needed by the base class
     _entry_type = GridoptimizationDatasetEntry
@@ -70,7 +70,7 @@ class GridoptimizationDataset(BaseDataset):
 
         payload = GridoptimizationDatasetSpecification(name=name, specification=specification, description=description)
 
-        ret = self.client._auto_request(
+        ret = self._client._auto_request(
             "post",
             f"v1/datasets/gridoptimization/{self.id}/specifications",
             List[GridoptimizationDatasetSpecification],
@@ -88,7 +88,7 @@ class GridoptimizationDataset(BaseDataset):
     ) -> InsertMetadata:
 
         entries = make_list(entries)
-        ret = self.client._auto_request(
+        ret = self._client._auto_request(
             "post",
             f"v1/datasets/gridoptimization/{self.id}/entries/bulkCreate",
             List[GridoptimizationDatasetNewEntry],

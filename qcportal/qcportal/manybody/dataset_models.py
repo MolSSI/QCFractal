@@ -42,14 +42,14 @@ class ManybodyDatasetRecordItem(BaseModel):
 
 
 class ManybodyDataset(BaseDataset):
-    class _DataModel(BaseDataset._DataModel):
-        dataset_type: Literal["manybody"] = "manybody"
+    dataset_type: Literal["manybody"] = "manybody"
 
-        specifications: Dict[str, ManybodyDatasetSpecification] = {}
-        entries: Dict[str, ManybodyDatasetEntry] = {}
-        record_map: Dict[Tuple[str, str], ManybodyRecord] = {}
-
-    raw_data: _DataModel
+    ########################################
+    # Caches of information
+    ########################################
+    specifications_: Dict[str, ManybodyDatasetSpecification] = {}
+    entries_: Dict[str, ManybodyDatasetEntry] = {}
+    record_map_: Dict[Tuple[str, str], ManybodyRecord] = {}
 
     # Needed by the base class
     _entry_type = ManybodyDatasetEntry
@@ -64,7 +64,7 @@ class ManybodyDataset(BaseDataset):
 
         payload = ManybodyDatasetSpecification(name=name, specification=specification, description=description)
 
-        ret = self.client._auto_request(
+        ret = self._client._auto_request(
             "post",
             f"v1/datasets/manybody/{self.id}/specifications",
             List[ManybodyDatasetSpecification],
@@ -80,7 +80,7 @@ class ManybodyDataset(BaseDataset):
     def add_entries(self, entries: Union[ManybodyDatasetNewEntry, Iterable[ManybodyDatasetNewEntry]]) -> InsertMetadata:
 
         entries = make_list(entries)
-        ret = self.client._auto_request(
+        ret = self._client._auto_request(
             "post",
             f"v1/datasets/manybody/{self.id}/entries/bulkCreate",
             List[ManybodyDatasetNewEntry],

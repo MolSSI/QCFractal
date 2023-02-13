@@ -76,7 +76,7 @@ from .dataset_models import (
     DatasetQueryRecords,
     DatasetDeleteParams,
     DatasetAddBody,
-    dataset_from_datamodel,
+    dataset_from_dict,
 )
 from .internal_jobs import InternalJob, InternalJobQueryFilters, InternalJobQueryIterator, InternalJobStatusEnum
 from .managers import ManagerQueryFilters, ManagerQueryIterator, ComputeManager
@@ -302,7 +302,7 @@ class PortalClient(PortalClientBase):
             None,
         )
 
-        return dataset_from_datamodel(ds, self)
+        return dataset_from_dict(ds, self)
 
     def query_dataset_records(
         self,
@@ -337,7 +337,7 @@ class PortalClient(PortalClientBase):
             None,
         )
 
-        return dataset_from_datamodel(ds, self)
+        return dataset_from_dict(ds, self)
 
     def get_dataset_status_by_id(self, dataset_id: int) -> Dict[str, Dict[RecordStatusEnum, int]]:
 

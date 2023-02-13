@@ -98,10 +98,10 @@ def run_dataset_model_delete_entry(snowflake_client, ds, test_entries, test_spec
 
     # Were removed from the model
     for name in [entry_name_1, entry_name_2]:
-        assert len(ds.raw_data.record_map) == 1
-        assert name not in ds.raw_data.entries
-        assert name not in ds.raw_data.entry_names
-        assert all(name != x for x, _ in ds.raw_data.record_map.keys())
+        assert len(ds.record_map_) == 1
+        assert name not in ds.entries_
+        assert name not in ds.entry_names
+        assert all(name != x for x, _ in ds.record_map_.keys())
         assert all(name != ent_name for ent_name, _, _ in ds.iterate_records())
 
     # Delete when it doesn't exist
@@ -190,9 +190,9 @@ def run_dataset_model_delete_spec(snowflake_client, ds, test_entries, test_specs
 
     # Were removed from the model
     for name in ["spec_1", "spec_2"]:
-        assert len(ds.raw_data.record_map) == 0
-        assert name not in ds.raw_data.specifications
-        assert all(name != x for _, x in ds.raw_data.record_map.keys())
+        assert len(ds.record_map_) == 0
+        assert name not in ds.specifications
+        assert all(name != x for _, x in ds.record_map_.keys())
         assert all(name != spec_name for _, spec_name, _ in ds.iterate_records())
 
     # Delete when it doesn't exist

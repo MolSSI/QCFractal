@@ -50,14 +50,11 @@ class NEBDatasetRecordItem(BaseModel):
 
 
 class NEBDataset(BaseDataset):
-    class _DataModel(BaseDataset._DataModel):
-        dataset_type: Literal["neb"] = "neb"
+    dataset_type: Literal["neb"] = "neb"
 
-        specifications: Dict[str, NEBDatasetSpecification] = {}
-        entries: Dict[str, NEBDatasetEntry] = {}
-        record_map: Dict[Tuple[str, str], NEBRecord] = {}
-
-    raw_data: _DataModel
+    specifications_: Dict[str, NEBDatasetSpecification] = {}
+    entries_: Dict[str, NEBDatasetEntry] = {}
+    record_map_: Dict[Tuple[str, str], NEBRecord] = {}
 
     # Needed by the base class
     _entry_type = NEBDatasetEntry
@@ -71,7 +68,7 @@ class NEBDataset(BaseDataset):
 
         payload = NEBDatasetSpecification(name=name, specification=specification, description=description)
 
-        ret = self.client._auto_request(
+        ret = self._client._auto_request(
             "post",
             f"v1/datasets/neb/{self.id}/specifications",
             List[NEBDatasetSpecification],
@@ -87,7 +84,7 @@ class NEBDataset(BaseDataset):
     def add_entries(self, entries: Union[NEBDatasetNewEntry, Iterable[NEBDatasetNewEntry]]) -> InsertMetadata:
 
         entries = make_list(entries)
-        ret = self.client._auto_request(
+        ret = self._client._auto_request(
             "post",
             f"v1/datasets/neb/{self.id}/entries/bulkCreate",
             List[NEBDatasetNewEntry],

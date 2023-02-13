@@ -49,16 +49,14 @@ class SinglepointDatasetRecordItem(BaseModel):
 
 
 class SinglepointDataset(BaseDataset):
-    class _DataModel(BaseDataset._DataModel):
-        dataset_type: Literal["singlepoint"] = "singlepoint"
+    dataset_type: Literal["singlepoint"] = "singlepoint"
 
-        specifications: Dict[str, SinglepointDatasetSpecification] = {}
-        entries: Dict[str, SinglepointDatasetEntry] = {}
-        record_map: Dict[Tuple[str, str], SinglepointRecord] = {}
-
-        contributed_values: Any
-
-    raw_data: _DataModel
+    ########################################
+    # Caches of information
+    ########################################
+    specifications_: Dict[str, SinglepointDatasetSpecification] = {}
+    entries_: Dict[str, SinglepointDatasetEntry] = {}
+    record_map_: Dict[Tuple[str, str], SinglepointRecord] = {}
 
     # Needed by the base class
     _entry_type = SinglepointDatasetEntry
@@ -72,7 +70,7 @@ class SinglepointDataset(BaseDataset):
 
         payload = SinglepointDatasetSpecification(name=name, specification=specification, description=description)
 
-        ret = self.client._auto_request(
+        ret = self._client._auto_request(
             "post",
             f"v1/datasets/singlepoint/{self.id}/specifications",
             List[SinglepointDatasetSpecification],
@@ -90,7 +88,7 @@ class SinglepointDataset(BaseDataset):
     ) -> InsertMetadata:
 
         entries = make_list(entries)
-        ret = self.client._auto_request(
+        ret = self._client._auto_request(
             "post",
             f"v1/datasets/singlepoint/{self.id}/entries/bulkCreate",
             List[SinglepointDatasetNewEntry],

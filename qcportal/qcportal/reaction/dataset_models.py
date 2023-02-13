@@ -57,16 +57,14 @@ class ReactionDatasetRecordItem(BaseModel):
 
 
 class ReactionDataset(BaseDataset):
-    class _DataModel(BaseDataset._DataModel):
-        dataset_type: Literal["reaction"] = "reaction"
+    dataset_type: Literal["reaction"] = "reaction"
 
-        specifications: Dict[str, ReactionDatasetSpecification] = {}
-        entries: Dict[str, ReactionDatasetEntry] = {}
-        record_map: Dict[Tuple[str, str], ReactionRecord] = {}
-
-        contributed_values: Any
-
-    raw_data: _DataModel
+    ########################################
+    # Caches of information
+    ########################################
+    specifications_: Dict[str, ReactionDatasetSpecification] = {}
+    entries_: Dict[str, ReactionDatasetEntry] = {}
+    record_map_: Dict[Tuple[str, str], ReactionRecord] = {}
 
     # Needed by the base class
     _entry_type = ReactionDatasetEntry
@@ -80,7 +78,7 @@ class ReactionDataset(BaseDataset):
 
         payload = ReactionDatasetSpecification(name=name, specification=specification, description=description)
 
-        ret = self.client._auto_request(
+        ret = self._client._auto_request(
             "post",
             f"v1/datasets/reaction/{self.id}/specifications",
             List[ReactionDatasetSpecification],
@@ -96,7 +94,7 @@ class ReactionDataset(BaseDataset):
     def add_entries(self, entries: Union[ReactionDatasetEntry, Iterable[ReactionDatasetNewEntry]]) -> InsertMetadata:
 
         entries = make_list(entries)
-        ret = self.client._auto_request(
+        ret = self._client._auto_request(
             "post",
             f"v1/datasets/reaction/{self.id}/entries/bulkCreate",
             List[ReactionDatasetNewEntry],
