@@ -649,9 +649,6 @@ class PortalClient(PortalClientBase):
 
         body_data = {"ids": record_ids, "missing_ok": missing_ok}
 
-        if include:
-            body_data["include"] = BaseRecord.transform_includes(include)
-
         record_data = self._auto_request(
             "post",
             "v1/records/bulkGet",
@@ -663,6 +660,10 @@ class PortalClient(PortalClientBase):
         )
 
         records = records_from_dicts(record_data, self)
+
+        if include:
+            for r in records:
+                r._handle_includes(include)
 
         if is_single:
             return records[0]
@@ -752,12 +753,9 @@ class PortalClient(PortalClientBase):
             "limit": limit,
         }
 
-        if include:
-            filter_dict["include"] = BaseRecord.transform_includes(include)
-
         filter_data = RecordQueryFilters(**filter_dict)
 
-        return RecordQueryIterator(self, filter_data, None)
+        return RecordQueryIterator(self, filter_data, None, include)
 
     def reset_records(self, record_ids: Union[int, Sequence[int]]) -> UpdateMetadata:
         """
@@ -1043,9 +1041,6 @@ class PortalClient(PortalClientBase):
 
         body_data = {"ids": record_ids, "missing_ok": missing_ok}
 
-        if include:
-            body_data["include"] = SinglepointRecord.transform_includes(include)
-
         record_data = self._auto_request(
             "post",
             "v1/records/singlepoint/bulkGet",
@@ -1057,6 +1052,10 @@ class PortalClient(PortalClientBase):
         )
 
         records = [SinglepointRecord(self, **r) if r is not None else None for r in record_data]
+
+        if include:
+            for r in records:
+                r._handle_includes(include)
 
         if is_single:
             return records[0]
@@ -1160,12 +1159,9 @@ class PortalClient(PortalClientBase):
             "limit": limit,
         }
 
-        if include:
-            filter_dict["include"] = SinglepointRecord.transform_includes(include)
-
         filter_data = SinglepointQueryFilters(**filter_dict)
 
-        return RecordQueryIterator(self, filter_data, "singlepoint")
+        return RecordQueryIterator(self, filter_data, "singlepoint", include)
 
     ##############################################################
     # Optimization calculations
@@ -1295,9 +1291,6 @@ class PortalClient(PortalClientBase):
 
         body_data = {"ids": record_ids, "missing_ok": missing_ok}
 
-        if include:
-            body_data["include"] = OptimizationRecord.transform_includes(include)
-
         record_data = self._auto_request(
             "post",
             "v1/records/optimization/bulkGet",
@@ -1309,6 +1302,10 @@ class PortalClient(PortalClientBase):
         )
 
         records = [OptimizationRecord(self, **r) if r is not None else None for r in record_data]
+
+        if include:
+            for r in records:
+                r._handle_includes(include)
 
         if is_single:
             return records[0]
@@ -1415,12 +1412,9 @@ class PortalClient(PortalClientBase):
             "limit": limit,
         }
 
-        if include:
-            filter_dict["include"] = OptimizationRecord.transform_includes(include)
-
         filter_data = OptimizationQueryFilters(**filter_dict)
 
-        return RecordQueryIterator(self, filter_data, "optimization")
+        return RecordQueryIterator(self, filter_data, "optimization", include)
 
     ##############################################################
     # Torsiondrive calculations
@@ -1543,9 +1537,6 @@ class PortalClient(PortalClientBase):
 
         body_data = {"ids": record_ids, "missing_ok": missing_ok}
 
-        if include:
-            body_data["include"] = TorsiondriveRecord.transform_includes(include)
-
         record_data = self._auto_request(
             "post",
             "v1/records/torsiondrive/bulkGet",
@@ -1557,6 +1548,10 @@ class PortalClient(PortalClientBase):
         )
 
         records = [TorsiondriveRecord(self, **r) if r is not None else None for r in record_data]
+
+        if include:
+            for r in records:
+                r._handle_includes(include)
 
         if is_single:
             return records[0]
@@ -1663,12 +1658,9 @@ class PortalClient(PortalClientBase):
             "limit": limit,
         }
 
-        if include:
-            filter_dict["include"] = TorsiondriveRecord.transform_includes(include)
-
         filter_data = TorsiondriveQueryFilters(**filter_dict)
 
-        return RecordQueryIterator(self, filter_data, "torsiondrive")
+        return RecordQueryIterator(self, filter_data, "torsiondrive", include)
 
     ##############################################################
     # Grid optimization calculations
@@ -1791,9 +1783,6 @@ class PortalClient(PortalClientBase):
 
         body_data = {"ids": record_ids, "missing_ok": missing_ok}
 
-        if include:
-            body_data["include"] = GridoptimizationRecord.transform_includes(include)
-
         record_data = self._auto_request(
             "post",
             "v1/records/gridoptimization/bulkGet",
@@ -1805,6 +1794,10 @@ class PortalClient(PortalClientBase):
         )
 
         records = [GridoptimizationRecord(self, **r) if r is not None else None for r in record_data]
+
+        if include:
+            for r in records:
+                r._handle_includes(include)
 
         if is_single:
             return records[0]
@@ -1911,12 +1904,9 @@ class PortalClient(PortalClientBase):
             "limit": limit,
         }
 
-        if include:
-            filter_dict["include"] = GridoptimizationRecord.transform_includes(include)
-
         filter_data = GridoptimizationQueryFilters(**filter_dict)
 
-        return RecordQueryIterator(self, filter_data, "gridoptimization")
+        return RecordQueryIterator(self, filter_data, "gridoptimization", include)
 
     ##############################################################
     # Reactions
@@ -2047,9 +2037,6 @@ class PortalClient(PortalClientBase):
 
         body_data = {"ids": record_ids, "missing_ok": missing_ok}
 
-        if include:
-            body_data["include"] = ReactionRecord.transform_includes(include)
-
         record_data = self._auto_request(
             "post",
             "v1/records/reaction/bulkGet",
@@ -2061,6 +2048,10 @@ class PortalClient(PortalClientBase):
         )
 
         records = [ReactionRecord(self, **r) if r is not None else None for r in record_data]
+
+        if include:
+            for r in records:
+                r._handle_includes(include)
 
         if is_single:
             return records[0]
@@ -2167,12 +2158,9 @@ class PortalClient(PortalClientBase):
             "limit": limit,
         }
 
-        if include:
-            filter_dict["include"] = ReactionRecord.transform_includes(include)
-
         filter_data = ReactionQueryFilters(**filter_dict)
 
-        return RecordQueryIterator(self, filter_data, "reaction")
+        return RecordQueryIterator(self, filter_data, "reaction", include)
 
     ##############################################################
     # Manybody calculations
@@ -2294,9 +2282,6 @@ class PortalClient(PortalClientBase):
 
         body_data = {"ids": record_ids, "missing_ok": missing_ok}
 
-        if include:
-            body_data["include"] = ManybodyRecord.transform_includes(include)
-
         record_data = self._auto_request(
             "post",
             "v1/records/manybody/bulkGet",
@@ -2308,6 +2293,10 @@ class PortalClient(PortalClientBase):
         )
 
         records = [ManybodyRecord(self, **r) if r is not None else None for r in record_data]
+
+        if include:
+            for r in records:
+                r._handle_includes(include)
 
         if is_single:
             return records[0]
@@ -2410,12 +2399,9 @@ class PortalClient(PortalClientBase):
             "limit": limit,
         }
 
-        if include:
-            filter_dict["include"] = ManybodyRecord.transform_includes(include)
-
         filter_data = ManybodyQueryFilters(**filter_dict)
 
-        return RecordQueryIterator(self, filter_data, "manybody")
+        return RecordQueryIterator(self, filter_data, "manybody", include)
 
     ##############################################################
     # NEB
@@ -2485,9 +2471,6 @@ class PortalClient(PortalClientBase):
 
         body_data = {"ids": record_ids, "missing_ok": missing_ok}
 
-        if include:
-            body_data["include"] = NEBRecord.transform_includes(include)
-
         record_data = self._auto_request(
             "post",
             "v1/records/neb/bulkGet",
@@ -2499,6 +2482,10 @@ class PortalClient(PortalClientBase):
         )
 
         records = [NEBRecord(self, **r) if r is not None else None for r in record_data]
+
+        if include:
+            for r in records:
+                r._handle_includes(include)
 
         if is_single:
             return records[0]
@@ -2597,9 +2584,6 @@ class PortalClient(PortalClientBase):
 
         body_data = CommonBulkGetNamesBody(names=names, missing_ok=missing_ok)
 
-        if include:
-            body_data.include = ComputeManager.transform_includes(include)
-
         managers = self._auto_request(
             "post", "v1/managers/bulkGet", CommonBulkGetNamesBody, None, List[Optional[ComputeManager]], body_data, None
         )
@@ -2620,7 +2604,6 @@ class PortalClient(PortalClientBase):
         modified_before: Optional[Union[datetime, str]] = None,
         modified_after: Optional[Union[datetime, str]] = None,
         limit: Optional[int] = None,
-        include: Optional[Iterable[str]] = None,
     ) -> ManagerQueryIterator:
         """
         Queries manager information on the server
@@ -2643,8 +2626,6 @@ class PortalClient(PortalClientBase):
             Query for managers last modified after a certain time
         limit
             The maximum number of managers to return. Note that the server limit is always obeyed.
-        include
-            Additional fields to include in the returned managers
 
         Returns
         -------
@@ -2662,9 +2643,6 @@ class PortalClient(PortalClientBase):
             "modified_after": modified_after,
             "limit": limit,
         }
-
-        if include:
-            filter_dict["include"] = ComputeManager.transform_includes(include)
 
         filter_data = ManagerQueryFilters(**filter_dict)
         return ManagerQueryIterator(self, filter_data)

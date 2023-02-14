@@ -235,28 +235,6 @@ class BaseRecord(BaseModel):
             raise RuntimeError(f"Cannot find subclass for record type {record_type}")
         return subcls
 
-    @staticmethod
-    def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
-        """
-        Transforms user-friendly includes into includes used by the web API
-        """
-
-        if includes is None:
-            return None
-
-        ret: Set[str] = {"*"}
-
-        if "task" in includes:
-            ret.add("task")
-        if "service" in includes:
-            ret |= {"service.*", "service.dependencies"}
-        if "outputs" in includes:
-            ret |= {"compute_history.*", "compute_history.outputs"}
-        if "comments" in includes:
-            ret.add("comments")
-
-        return ret
-
     def __str__(self) -> str:
         return f"<{self.__class__.__name__} id={self.id} status={self.status}>"
 
@@ -379,6 +357,26 @@ class BaseRecord(BaseModel):
 
         return last_history.get_output(output_type)
 
+    def _handle_includes(self, includes: Optional[Iterable[str]]):
+        """
+        Fetches information specified by some iterable of strings
+        """
+        if includes is None:
+            return
+
+        if "task" in includes:
+            self._fetch_task()
+        if "service" in includes:
+            self._fetch_task()
+        if "compute_history" in includes and "outputs" not in includes:
+            self._fetch_compute_history(False)
+        if "outputs" in includes:
+            self._fetch_compute_history(True)
+        if "comments" in includes:
+            self._fetch_comments()
+        if "native_files" in includes:
+            self._fetch_native_files()
+
     @property
     def offline(self) -> bool:
         return self._client is None
@@ -491,7 +489,13 @@ class RecordQueryIterator(QueryIteratorBase):
     of a record query, and works with all kinds of records.
     """
 
-    def __init__(self, client, query_filters: RecordQueryFilters, record_type: Optional[str]):
+    def __init__(
+        self,
+        client,
+        query_filters: RecordQueryFilters,
+        record_type: Optional[str],
+        include: Optional[Iterable[str]] = None,
+    ):
         """
         Construct an iterator
 
@@ -507,6 +511,7 @@ class RecordQueryIterator(QueryIteratorBase):
 
         batch_limit = client.api_limits["get_records"] // 4
         self.record_type = record_type
+        self.include = include
 
         QueryIteratorBase.__init__(self, client, query_filters, batch_limit)
 
@@ -532,7 +537,13 @@ class RecordQueryIterator(QueryIteratorBase):
                 None,
             )
 
-        return meta, records_from_dicts(raw_data, self._client)
+        records = records_from_dicts(raw_data, self._client)
+
+        if self.include:
+            for r in records:
+                r._handle_includes(self.include)
+
+        return meta, records
 
 
 def record_from_dict(data: Dict[str, Any], client: Any = None) -> BaseRecord:

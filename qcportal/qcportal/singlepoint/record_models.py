@@ -63,21 +63,6 @@ class SinglepointRecord(BaseRecord):
     molecule_: Optional[Molecule] = Field(None, alias="molecule")
     wavefunction_: Optional[Wavefunction] = Field(None, alias="wavefunction")
 
-    @staticmethod
-    def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
-
-        if includes is None:
-            return None
-
-        ret = BaseRecord.transform_includes(includes)
-
-        if "molecule" in includes:
-            ret.add("molecule")
-        if "wavefunction" in includes:
-            ret.add("wavefunction")
-
-        return ret
-
     def propagate_client(self, client):
         BaseRecord.propagate_client(self, client)
 
@@ -106,6 +91,17 @@ class SinglepointRecord(BaseRecord):
         )
 
         self.propagate_client(self._client)
+
+    def _handle_includes(self, includes: Optional[Iterable[str]]):
+        if includes is None:
+            return
+
+        BaseRecord._handle_includes(self, includes)
+
+        if "molecule" in includes:
+            self._fetch_molecule()
+        if "wavefunction" in includes:
+            self._fetch_wavefunction()
 
     @property
     def molecule(self) -> Molecule:

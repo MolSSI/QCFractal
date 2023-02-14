@@ -83,10 +83,10 @@ def test_manager_socket_get_proj(storage_socket: SQLAlchemySocket):
     name1 = mname1.fullname
     name2 = mname2.fullname
 
-    # Logs not included by default
+    # Logs included by default
     manager = storage_socket.managers.get([name1, name2])
-    assert "log" not in manager[0]
-    assert "log" not in manager[1]
+    assert "log" in manager[0]
+    assert "log" in manager[1]
 
     manager = storage_socket.managers.get([name1, name2], include=["cluster"])
     assert manager[0]["name"] == name1

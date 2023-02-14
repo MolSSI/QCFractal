@@ -61,23 +61,6 @@ class OptimizationRecord(BaseRecord):
     final_molecule_: Optional[Molecule] = Field(None, alias="final_molecule")
     trajectory_: Optional[List[OptimizationTrajectory]] = Field(None, alias="trajectory")
 
-    @staticmethod
-    def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
-
-        if includes is None:
-            return None
-
-        ret = BaseRecord.transform_includes(includes)
-
-        if "initial_molecule" in includes:
-            ret.add("initial_molecule")
-        if "final_molecule" in includes:
-            ret.add("final_molecule")
-        if "trajectory" in includes:
-            ret |= {"trajectory.*", "trajectory.singlepoint_record"}
-
-        return ret
-
     def propagate_client(self, client):
         BaseRecord.propagate_client(self, client)
 
@@ -113,6 +96,19 @@ class OptimizationRecord(BaseRecord):
         )
 
         self.propagate_client(self._client)
+
+    def _handle_includes(self, includes: Optional[Iterable[str]]):
+        if includes is None:
+            return
+
+        BaseRecord._handle_includes(self, includes)
+
+        if "initial_molecule" in includes:
+            self._fetch_initial_molecule()
+        if "final_molecule" in includes:
+            self._fetch_final_molecule()
+        if "trajectory" in includes:
+            self._fetch_trajectory()
 
     @property
     def initial_molecule(self) -> Molecule:

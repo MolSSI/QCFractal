@@ -141,21 +141,6 @@ class TorsiondriveRecord(BaseRecord):
     _optimizations_cache: Optional[Dict[Any, List[OptimizationRecord]]] = PrivateAttr(None)
     _minimum_optimizations_cache: Optional[Dict[Any, OptimizationRecord]] = PrivateAttr(None)
 
-    @staticmethod
-    def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
-
-        if includes is None:
-            return None
-
-        ret = BaseRecord.transform_includes(includes)
-
-        if "initial_molecules" in includes:
-            ret.add("initial_molecules")
-        if "optimizations" in includes:
-            ret |= {"optimizations.*", "optimizations.optimization_record"}
-
-        return ret
-
     def propagate_client(self, client):
         BaseRecord.propagate_client(self, client)
 
@@ -247,6 +232,19 @@ class TorsiondriveRecord(BaseRecord):
             self._minimum_optimizations_cache[deserialize_key(key)] = opt
 
         self.propagate_client(self._client)
+
+    def _handle_includes(self, includes: Optional[Iterable[str]]):
+        if includes is None:
+            return
+
+        BaseRecord._handle_includes(self, includes)
+
+        if "initial_molecules" in includes:
+            self._fetch_initial_molecules()
+        if "minimum_optimizations" in includes and "optimizations" not in includes:
+            self._fetch_minimum_optimizations()
+        if "optimizations" in includes:
+            self._fetch_optimizations()
 
     @property
     def initial_molecules(self) -> List[Molecule]:

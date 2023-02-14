@@ -168,22 +168,6 @@ class NEBRecord(BaseRecord):
     _optimizations_cache: Optional[Dict[str, OptimizationRecord]] = PrivateAttr(None)
     _singlepoints_cache: Optional[Dict[int, List[SinglepointRecord]]] = PrivateAttr(None)
 
-    @staticmethod
-    def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
-        if includes is None:
-            return None
-
-        ret = BaseRecord.transform_includes(includes)
-
-        if "initial_chain" in includes:
-            ret.add("initial_chain")
-        if "singlepoints" in includes:
-            ret |= {"singlepoints.*", "singlepoints.singlepoint_record"}
-        if "optimizations" in includes:
-            ret |= {"optimizations.*", "optimizations.optimization_record"}
-
-        return ret
-
     def propagate_client(self, client):
         BaseRecord.propagate_client(self, client)
 
@@ -276,6 +260,19 @@ class NEBRecord(BaseRecord):
 
         self.make_caches()
         self.propagate_client(self._client)
+
+    def _handle_includes(self, includes: Optional[Iterable[str]]):
+        if includes is None:
+            return
+
+        BaseRecord._handle_includes(self, includes)
+
+        if "initial_chain" in includes:
+            self._fetch_initial_chain()
+        if "singlepoints" in includes:
+            self._fetch_singlepoints()
+        if "optimizations" in includes:
+            self._fetch_optimizations()
 
     @property
     def initial_chain(self) -> List[Molecule]:

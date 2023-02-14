@@ -55,10 +55,6 @@ def test_manager_client_query(queryable_managers_client: PortalClient):
     managers = list(query_res)
     query_res = queryable_managers_client.query_managers(manager_id=[managers[0].id, managers[1].id])
     assert query_res._current_meta.n_found == 2
-    assert all(x.log is None for x in query_res)
-
-    query_res = queryable_managers_client.query_managers(manager_id=[managers[0].id, managers[1].id], include=["log"])
-    assert query_res._current_meta.n_found == 2
     assert all(x.log is not None for x in query_res)
 
 

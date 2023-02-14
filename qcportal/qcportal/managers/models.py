@@ -102,19 +102,7 @@ class ComputeManager(BaseModel):
     manager_version: str
     programs: Dict[str, Any]
 
-    log: Optional[List[ComputeManagerLogEntry]] = None
-
-    @staticmethod
-    def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
-        if includes is None:
-            return None
-
-        ret: Set[str] = {"*"}
-
-        if "log" in includes:
-            ret.add("log")
-
-        return ret
+    log: Optional[List[ComputeManagerLogEntry]]
 
 
 class ManagerActivationBody(RestModelBase):

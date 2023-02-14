@@ -668,7 +668,7 @@ class BaseDataset(BaseModel):
         entry_names: Iterable[str],
         specification_names: Iterable[str],
         status: Optional[Iterable[RecordStatusEnum]],
-        api_include: Optional[Iterable[str]],
+        include: Optional[Iterable[str]],
     ) -> None:
         """
         Fetches record information from the remote server, storing it internally
@@ -687,15 +687,15 @@ class BaseDataset(BaseModel):
             Names of the specifications whose records to fetch. If None, fetch all specifications
         status
             Fetch only records with these statuses
-        api_include
-            Additional fields/data to include when fetch the entry (the 'raw' fields used by the web API)
+        include
+            Additional fields/data to include when fetch the entry
         """
 
         if not (entry_names and specification_names):
             return
 
         body_data = DatasetFetchRecordsBody(
-            entry_names=entry_names, specification_names=specification_names, status=status, include=api_include
+            entry_names=entry_names, specification_names=specification_names, status=status
         )
 
         record_info = self._client._auto_request(
@@ -710,6 +710,7 @@ class BaseDataset(BaseModel):
 
         # Update the locally-stored records
         for rec_item in record_info:
+            rec_item.record._handle_includes(include)
             rec_item.record.propagate_client(self._client)
             self.record_map_[(rec_item.entry_name, rec_item.specification_name)] = rec_item.record
 
@@ -718,7 +719,7 @@ class BaseDataset(BaseModel):
         entry_names: Iterable[str],
         specification_names: Iterable[str],
         status: Optional[Iterable[RecordStatusEnum]],
-        api_include: Optional[Iterable[str]],
+        include: Optional[Iterable[str]],
     ):
         """
         Update local record information if it has been modified on the server
@@ -734,8 +735,8 @@ class BaseDataset(BaseModel):
             Names of the specifications whose records to update. If None, fetch all specifications
         status
             Fetch only records with these statuses (only records with the given status on the server will be fetched)
-        api_include
-            Additional fields/data to include when fetch the entry (the 'raw' fields used by the web API)
+        include
+            Additional fields/data to include when fetch the entry
         """
 
         if not (entry_names and specification_names):
@@ -777,7 +778,7 @@ class BaseDataset(BaseModel):
         # Go via one spec at a time
         for spec_name in specification_names:
             entries_to_update = [x[0] for x in need_updating if x[1] == spec_name]
-            self._internal_fetch_records(entries_to_update, [spec_name], None, api_include)
+            self._internal_fetch_records(entries_to_update, [spec_name], None, include)
 
     def fetch_records(
         self,
@@ -819,7 +820,6 @@ class BaseDataset(BaseModel):
             self.fetch_specifications()
 
         status = make_list(status)
-        api_include = self._record_type.transform_includes(include)
 
         # if not specified, do all entries and specs
         if entry_names is None:
@@ -849,13 +849,13 @@ class BaseDataset(BaseModel):
                 # Handle existing records that need to be updated
                 if fetch_updated and not force_refetch:
                     existing_batch = [x for x in entries_batch if (x, spec_name) in self.record_map_]
-                    self._internal_update_records(existing_batch, [spec_name], status, api_include)
+                    self._internal_update_records(existing_batch, [spec_name], status, include)
 
                 # Prune records that already exist, and then fetch them
                 if not force_refetch:
                     entries_batch = [x for x in entries_batch if (x, spec_name) not in self.record_map_]
 
-                self._internal_fetch_records(entries_batch, [spec_name], status, api_include)
+                self._internal_fetch_records(entries_batch, [spec_name], status, include)
 
     def get_record(
         self,
@@ -902,7 +902,6 @@ class BaseDataset(BaseModel):
             self.fetch_specifications()
 
         status = make_list(status)
-        api_include = self._record_type.transform_includes(include)
 
         # if not specified, do all entries and specs
         if entry_names is None:
@@ -938,7 +937,7 @@ class BaseDataset(BaseModel):
                     # Handle existing records that need to be updated
                     if fetch_updated and not force_refetch:
                         existing_batch = [x for x in entries_batch if (x, spec_name) in self.record_map_]
-                        self._internal_update_records(existing_batch, [spec_name], status, api_include)
+                        self._internal_update_records(existing_batch, [spec_name], status, include)
 
                     if force_refetch:
                         batch_tofetch = entries_batch
@@ -946,7 +945,7 @@ class BaseDataset(BaseModel):
                         # Filter if they already exist
                         batch_tofetch = [x for x in entries_batch if (x, spec_name) not in self.record_map_]
 
-                    self._internal_fetch_records(batch_tofetch, [spec_name], status, api_include)
+                    self._internal_fetch_records(batch_tofetch, [spec_name], status, include)
 
                     # Now lookup the just-fetched records and yield them
                     for entry_name in entries_batch:

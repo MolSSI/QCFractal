@@ -202,23 +202,6 @@ class GridoptimizationRecord(BaseRecord):
     ########################################
     _optimizations_cache: Optional[Dict[Any, OptimizationRecord]] = PrivateAttr(None)
 
-    @staticmethod
-    def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
-
-        if includes is None:
-            return None
-
-        ret = BaseRecord.transform_includes(includes)
-
-        if "initial_molecule" in includes:
-            ret.add("initial_molecule")
-        if "starting_molecule" in includes:
-            ret.add("starting_molecule")
-        if "optimizations" in includes:
-            ret |= {"optimizations.*", "optimizations.optimization_record"}
-
-        return ret
-
     def propagate_client(self, client):
         BaseRecord.propagate_client(self, client)
 
@@ -265,6 +248,19 @@ class GridoptimizationRecord(BaseRecord):
 
         self.make_caches()
         self.propagate_client(self._client)
+
+    def _handle_includes(self, includes: Optional[Iterable[str]]):
+        if includes is None:
+            return
+
+        BaseRecord._handle_includes(self, includes)
+
+        if "initial_molecule" in includes:
+            self._fetch_initial_molecule()
+        if "starting_molecule" in includes:
+            self._fetch_starting_molecule()
+        if "optimizations" in includes:
+            self._fetch_optimizations()
 
     @property
     def initial_molecule(self) -> Molecule:

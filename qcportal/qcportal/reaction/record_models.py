@@ -84,24 +84,6 @@ class ReactionRecord(BaseRecord):
     ######################################################
     components_: Optional[List[ReactionComponent]] = Field(None, alias="components")
 
-    @staticmethod
-    def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
-
-        if includes is None:
-            return None
-
-        ret = BaseRecord.transform_includes(includes)
-
-        if "components" in includes:
-            ret |= {
-                "components.*",
-                "components.molecule",
-                "components.singlepoint_record",
-                "components.optimization_record",
-            }
-
-        return ret
-
     def propagate_client(self, client):
         BaseRecord.propagate_client(self, client)
 
@@ -127,6 +109,15 @@ class ReactionRecord(BaseRecord):
         )
 
         self.propagate_client(self._client)
+
+    def _handle_includes(self, includes: Optional[Iterable[str]]):
+        if includes is None:
+            return
+
+        BaseRecord._handle_includes(self, includes)
+
+        if "components" in includes:
+            self._fetch_components()
 
     @property
     def components(self) -> List[ReactionComponent]:

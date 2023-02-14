@@ -32,7 +32,7 @@ def test_task_socket_fullworkflow_success(storage_socket: SQLAlchemySocket, acti
     assert manager[0]["claimed"] == 2
 
     # Status should be updated
-    records = storage_socket.records.get([id1, id2], include=["*", "task"])
+    records = storage_socket.records.get([id1, id2], include=["*", "task", "compute_history"])
     for rec in records:
         assert rec["status"] == RecordStatusEnum.running
         assert rec["manager_name"] == activated_manager_name.fullname
@@ -50,7 +50,7 @@ def test_task_socket_fullworkflow_success(storage_socket: SQLAlchemySocket, acti
     assert rmeta.n_rejected == 0
     assert rmeta.accepted_ids == sorted([id1, id2])
 
-    records = storage_socket.records.get([id1, id2], include=["*", "task"])
+    records = storage_socket.records.get([id1, id2], include=["*", "task", "compute_history"])
 
     for rec in records:
         # Status should be complete
@@ -99,7 +99,7 @@ def test_task_socket_fullworkflow_error(storage_socket: SQLAlchemySocket, activa
     assert rmeta.n_rejected == 0
     assert rmeta.accepted_ids == sorted([id1, id2])
 
-    records = storage_socket.records.get([id1, id2], include=["*", "task"])
+    records = storage_socket.records.get([id1, id2], include=["*", "task", "compute_history"])
 
     for rec in records:
         # Status should be error

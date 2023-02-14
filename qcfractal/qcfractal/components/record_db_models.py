@@ -194,9 +194,7 @@ class BaseRecordORM(BaseORM):
     )
 
     # Full compute history
-    compute_history = relationship(
-        RecordComputeHistoryORM, lazy="selectin", order_by=RecordComputeHistoryORM.modified_on.asc()
-    )
+    compute_history = relationship(RecordComputeHistoryORM, order_by=RecordComputeHistoryORM.modified_on.asc())
 
     comments = relationship(RecordCommentORM, order_by=RecordCommentORM.timestamp.asc())
 
