@@ -640,15 +640,19 @@ class RecordSocket:
 
         handler = self._handler_map[record_orm.record_type]
 
+        # Do these before calling the record-specific handler
+        # (these may pull stuff out of extras)
+        history_orm = create_compute_history_entry(result)
+        native_files_orm = self.native_files_to_orm(session, result)
+
         # Update record-specific fields
         handler.update_completed_task(session, record_orm, result, manager_name)
 
         # Now do everything common to all records
         # Get the outputs & status, storing in the history orm
-        history_orm = create_compute_history_entry(result)
         history_orm.manager_name = manager_name
         record_orm.compute_history.append(history_orm)
-        record_orm.native_files = self.native_files_to_orm(session, result)
+        record_orm.native_files = native_files_orm
 
         record_orm.status = history_orm.status
         record_orm.manager_name = manager_name
@@ -787,8 +791,9 @@ class RecordSocket:
 
             # Get the outputs & status, storing in the history orm.
             # Do this before calling the individual record handlers since it modifies extras
-            # (looking for compressed outputs)
+            # (looking for compressed outputs and compressed native files)
             history_orm = create_compute_history_entry(result)
+            native_files_orm = self.native_files_to_orm(session, result)
 
             # Now the record-specific stuff
             handler = self._handler_map_by_schema[result.schema_name]
@@ -796,7 +801,7 @@ class RecordSocket:
 
             # Now back to the common modifications
             record_orm.compute_history.append(history_orm)
-            record_orm.native_files = self.native_files_to_orm(session, result)
+            record_orm.native_files = native_files_orm
             record_orm.status = history_orm.status
             record_orm.modified_on = history_orm.modified_on
 
