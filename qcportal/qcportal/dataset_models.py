@@ -194,27 +194,19 @@ class BaseDataset(BaseModel):
         }
 
         new_body.update(**kwargs)
+        body = DatasetModifyMetadata(**new_body)
+        self._client.make_request("patch", f"v1/datasets/{self.dataset_type}/{self.id}", None, body=body)
 
-        self._client._auto_request(
-            "patch",
-            f"v1/datasets/{self.dataset_type}/{self.id}",
-            DatasetModifyMetadata,
-            None,
-            None,
-            new_body,
-            None,
-        )
-
-        self.name = new_body["name"]
-        self.description = new_body["description"]
-        self.tagline = new_body["tagline"]
-        self.tags = new_body["tags"]
-        self.group = new_body["group"]
-        self.visibility = new_body["visibility"]
-        self.provenance = new_body["provenance"]
-        self.default_tag = new_body["default_tag"]
-        self.default_priority = new_body["default_priority"]
-        self.metadata = new_body["metadata"]
+        self.name = body.name
+        self.description = body.description
+        self.tagline = body.tagline
+        self.tags = body.tags
+        self.group = body.group
+        self.visibility = body.visibility
+        self.provenance = body.provenance
+        self.default_tag = body.default_tag
+        self.default_priority = body.default_priority
+        self.metadata = body.metadata
 
     def submit(
         self,
@@ -233,11 +225,9 @@ class BaseDataset(BaseModel):
             priority=priority,
         )
 
-        ret = self._client._auto_request(
-            "post", f"v1/datasets/{self.dataset_type}/{self.id}/submit", DatasetSubmitBody, None, Any, body_data, None
+        return self._client.make_request(
+            "post", f"v1/datasets/{self.dataset_type}/{self.id}/submit", Any, body=body_data
         )
-
-        return ret
 
     #########################################
     # Various properties and getters/setters
@@ -246,14 +236,10 @@ class BaseDataset(BaseModel):
     def status(self) -> Dict[str, Any]:
         self.assert_online()
 
-        return self._client._auto_request(
+        return self._client.make_request(
             "get",
             f"v1/datasets/{self.dataset_type}/{self.id}/status",
-            None,
-            None,
             Dict[str, Dict[RecordStatusEnum, int]],
-            None,
-            None,
         )
 
     def status_table(self) -> str:
@@ -279,14 +265,10 @@ class BaseDataset(BaseModel):
     def detailed_status(self) -> List[Tuple[str, str, RecordStatusEnum]]:
         self.assert_online()
 
-        return self._client._auto_request(
+        return self._client.make_request(
             "get",
             f"v1/datasets/{self.dataset_type}/{self.id}/detailed_status",
-            None,
-            None,
             List[Tuple[str, str, RecordStatusEnum]],
-            None,
-            None,
         )
 
     @property
@@ -361,14 +343,10 @@ class BaseDataset(BaseModel):
         self.assert_is_not_view()
         self.assert_online()
 
-        self.specifications_ = self._client._auto_request(
+        self.specifications_ = self._client.make_request(
             "get",
             f"v1/datasets/{self.dataset_type}/{self.id}/specifications",
-            None,
-            None,
             Dict[str, self._specification_type],
-            None,
-            None,
         )
 
     def rename_specification(self, old_name: str, new_name: str):
@@ -377,14 +355,8 @@ class BaseDataset(BaseModel):
 
         name_map = {old_name: new_name}
 
-        self._client._auto_request(
-            "patch",
-            f"v1/datasets/{self.dataset_type}/{self.id}/specifications",
-            Dict[str, str],
-            None,
-            None,
-            name_map,
-            None,
+        self._client.make_request(
+            "patch", f"v1/datasets/{self.dataset_type}/{self.id}/specifications", None, body=name_map
         )
 
         self.specifications_ = {name_map.get(k, k): v for k, v in self.specifications_.items()}
@@ -396,16 +368,10 @@ class BaseDataset(BaseModel):
         self.assert_is_not_view()
         self.assert_online()
 
-        body_data = DatasetDeleteStrBody(names=[name], delete_records=delete_records)
+        body = DatasetDeleteStrBody(names=[name], delete_records=delete_records)
 
-        ret = self._client._auto_request(
-            "post",
-            f"v1/datasets/{self.dataset_type}/{self.id}/specifications/bulkDelete",
-            DatasetDeleteStrBody,
-            None,
-            DeleteMetadata,
-            body_data,
-            None,
+        ret = self._client.make_request(
+            "post", f"v1/datasets/{self.dataset_type}/{self.id}/specifications/bulkDelete", DeleteMetadata, body=body
         )
 
         # Delete locally-cached stuff
@@ -426,14 +392,10 @@ class BaseDataset(BaseModel):
         self.assert_is_not_view()
         self.assert_online()
 
-        self.entry_names_ = self._client._auto_request(
+        self.entry_names_ = self._client.make_request(
             "get",
             f"v1/datasets/{self.dataset_type}/{self.id}/entry_names",
-            None,
-            None,
             List[str],
-            None,
-            None,
         )
 
     def _internal_fetch_entries(
@@ -458,16 +420,13 @@ class BaseDataset(BaseModel):
         if not entry_names:
             return
 
-        body_data = DatasetFetchEntryBody(names=entry_names)
+        body = DatasetFetchEntryBody(names=entry_names)
 
-        fetched_entries = self._client._auto_request(
+        fetched_entries = self._client.make_request(
             "post",
             f"v1/datasets/{self.dataset_type}/{self.id}/entries/bulkFetch",
-            DatasetFetchEntryBody,
-            None,
             Dict[str, self._entry_type],
-            body_data,
-            None,
+            body=body,
         )
 
         self.entries_.update(fetched_entries)
@@ -616,15 +575,7 @@ class BaseDataset(BaseModel):
         self.assert_is_not_view()
         self.assert_online()
 
-        self._client._auto_request(
-            "patch",
-            f"v1/datasets/{self.dataset_type}/{self.id}/entries",
-            Dict[str, str],
-            None,
-            None,
-            name_map,
-            None,
-        )
+        self._client.make_request("patch", f"v1/datasets/{self.dataset_type}/{self.id}/entries", None, body=name_map)
 
         # rename locally cached entries and stuff
         self.entry_names_ = [name_map.get(x, x) for x in self.entry_names_]
@@ -638,16 +589,13 @@ class BaseDataset(BaseModel):
         self.assert_online()
 
         names = make_list(names)
-        body_data = DatasetDeleteStrBody(names=names, delete_records=delete_records)
+        body = DatasetDeleteStrBody(names=names, delete_records=delete_records)
 
-        ret = self._client._auto_request(
+        ret = self._client.make_request(
             "post",
             f"v1/datasets/{self.dataset_type}/{self.id}/entries/bulkDelete",
-            DatasetDeleteStrBody,
-            None,
             DeleteMetadata,
-            body_data,
-            None,
+            body=body,
         )
 
         # Delete locally-cached stuff
@@ -694,18 +642,13 @@ class BaseDataset(BaseModel):
         if not (entry_names and specification_names):
             return
 
-        body_data = DatasetFetchRecordsBody(
-            entry_names=entry_names, specification_names=specification_names, status=status
-        )
+        body = DatasetFetchRecordsBody(entry_names=entry_names, specification_names=specification_names, status=status)
 
-        record_info = self._client._auto_request(
+        record_info = self._client.make_request(
             "post",
             f"v1/datasets/{self.dataset_type}/{self.id}/records/bulkFetch",
-            DatasetFetchRecordsBody,
-            None,
             List[self._record_item_type],
-            body_data,
-            None,
+            body=body,
         )
 
         # Update the locally-stored records
@@ -743,21 +686,18 @@ class BaseDataset(BaseModel):
             return
 
         # Get modified_on field of all the records
-        body_data = DatasetFetchRecordsBody(
+        body = DatasetFetchRecordsBody(
             entry_names=entry_names,
             specification_names=specification_names,
             status=status,
             include=["modified_on"],
         )
 
-        modified_info = self._client._auto_request(
+        modified_info = self._client.make_request(
             "post",
             f"v1/datasets/{self.dataset_type}/{self.id}/records/bulkFetch",
-            DatasetFetchRecordsBody,
-            None,
             List[Dict[str, Any]],
-            body_data,
-            None,
+            body=body,
         )
 
         # Which ones need to be updated
@@ -966,20 +906,17 @@ class BaseDataset(BaseModel):
         self.assert_is_not_view()
         self.assert_online()
 
-        body_data = DatasetRemoveRecordsBody(
+        body = DatasetRemoveRecordsBody(
             entry_names=make_list(entry_names),
             specification_names=make_list(specification_names),
             delete_records=delete_records,
         )
 
-        ret = self._client._auto_request(
+        ret = self._client.make_request(
             "post",
             f"v1/datasets/{self.dataset_type}/{self.id}/records/bulkDelete",
-            DatasetRemoveRecordsBody,
             None,
-            None,
-            body_data,
-            None,
+            body=body,
         )
 
         # Delete locally-cached stuff
@@ -1002,7 +939,7 @@ class BaseDataset(BaseModel):
         self.assert_is_not_view()
         self.assert_online()
 
-        body_data = DatasetRecordModifyBody(
+        body = DatasetRecordModifyBody(
             entry_names=make_list(entry_names),
             specification_names=make_list(specification_names),
             tag=new_tag,
@@ -1010,14 +947,11 @@ class BaseDataset(BaseModel):
             comment=new_comment,
         )
 
-        ret = self._client._auto_request(
+        ret = self._client.make_request(
             "patch",
             f"v1/datasets/{self.dataset_type}/{self.id}/records",
-            DatasetRecordModifyBody,
             None,
-            None,
-            body_data,
-            None,
+            body=body,
         )
 
         if refetch_records:
@@ -1035,20 +969,17 @@ class BaseDataset(BaseModel):
         self.assert_is_not_view()
         self.assert_online()
 
-        body_data = DatasetRecordModifyBody(
+        body = DatasetRecordModifyBody(
             entry_names=make_list(entry_names),
             specification_names=make_list(specification_names),
             status=RecordStatusEnum.waiting,
         )
 
-        ret = self._client._auto_request(
+        ret = self._client.make_request(
             "patch",
             f"v1/datasets/{self.dataset_type}/{self.id}/records",
-            DatasetRecordModifyBody,
             None,
-            None,
-            body_data,
-            None,
+            body=body,
         )
 
         if refetch_records:
@@ -1066,20 +997,17 @@ class BaseDataset(BaseModel):
         self.assert_is_not_view()
         self.assert_online()
 
-        body_data = DatasetRecordModifyBody(
+        body = DatasetRecordModifyBody(
             entry_names=make_list(entry_names),
             specification_names=make_list(specification_names),
             status=RecordStatusEnum.cancelled,
         )
 
-        ret = self._client._auto_request(
+        ret = self._client.make_request(
             "patch",
             f"v1/datasets/{self.dataset_type}/{self.id}/records",
-            DatasetRecordModifyBody,
             None,
-            None,
-            body_data,
-            None,
+            body=body,
         )
 
         if refetch_records:
@@ -1097,20 +1025,17 @@ class BaseDataset(BaseModel):
         self.assert_is_not_view()
         self.assert_online()
 
-        body_data = DatasetRecordRevertBody(
+        body = DatasetRecordRevertBody(
             entry_names=make_list(entry_names),
             specification_names=make_list(specification_names),
             revert_status=RecordStatusEnum.cancelled,
         )
 
-        ret = self._client._auto_request(
+        ret = self._client.make_request(
             "post",
             f"v1/datasets/{self.dataset_type}/{self.id}/records/revert",
-            DatasetRecordRevertBody,
             None,
-            None,
-            body_data,
-            None,
+            body=body,
         )
 
         if refetch_records:
@@ -1128,20 +1053,17 @@ class BaseDataset(BaseModel):
         self.assert_is_not_view()
         self.assert_online()
 
-        body_data = DatasetRecordModifyBody(
+        body = DatasetRecordModifyBody(
             entry_names=make_list(entry_names),
             specification_names=make_list(specification_names),
             status=RecordStatusEnum.invalid,
         )
 
-        ret = self._client._auto_request(
+        ret = self._client.make_request(
             "patch",
             f"v1/datasets/{self.dataset_type}/{self.id}/records",
-            DatasetRecordModifyBody,
             None,
-            None,
-            body_data,
-            None,
+            body=body,
         )
 
         if refetch_records:
@@ -1159,20 +1081,17 @@ class BaseDataset(BaseModel):
         self.assert_is_not_view()
         self.assert_online()
 
-        body_data = DatasetRecordRevertBody(
+        body = DatasetRecordRevertBody(
             entry_names=make_list(entry_names),
             specification_names=make_list(specification_names),
             revert_status=RecordStatusEnum.invalid,
         )
 
-        ret = self._client._auto_request(
+        ret = self._client.make_request(
             "post",
             f"v1/datasets/{self.dataset_type}/{self.id}/records/revert",
-            DatasetRecordRevertBody,
             None,
-            None,
-            body_data,
-            None,
+            body=body,
         )
 
         if refetch_records:
@@ -1213,14 +1132,10 @@ class BaseDataset(BaseModel):
         self.assert_is_not_view()
         self.assert_online()
 
-        self.contributed_values_ = self._client._auto_request(
+        self.contributed_values_ = self._client.make_request(
             "get",
             f"v1/datasets/{self.id}/contributed_values",
-            None,
-            None,
             Optional[Dict[str, ContributedValues]],
-            None,
-            None,
         )
 
     @property

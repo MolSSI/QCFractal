@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict, Any, List, Union, Iterable, Set, Tuple, Type, Sequence, ClassVar
+from typing import Optional, Dict, Any, List, Union, Iterable, Tuple, Type, Sequence, ClassVar
 
 from dateutil.parser import parse as date_parser
 from pydantic import BaseModel, Extra, constr, validator, PrivateAttr, Field
@@ -267,14 +267,13 @@ class BaseRecord(BaseModel):
         if include_outputs:
             url_params = {"include": ["*", "outputs"]}
 
-        self.compute_history_ = self._client._auto_request(
+        url_params = ProjURLParameters(**url_params)
+
+        self.compute_history_ = self._client.make_request(
             "get",
             f"v1/records/{self.id}/compute_history",
-            None,
-            ProjURLParameters,
             List[ComputeHistory],
-            None,
-            url_params,
+            url_params=url_params,
         )
 
     def _fetch_task(self):
@@ -283,14 +282,10 @@ class BaseRecord(BaseModel):
         if self.is_service:
             return
 
-        self.task_ = self._client._auto_request(
+        self.task_ = self._client.make_request(
             "get",
             f"v1/records/{self.id}/task",
-            None,
-            None,
             Optional[TaskRecord],
-            None,
-            None,
         )
 
     def _fetch_service(self):
@@ -299,42 +294,28 @@ class BaseRecord(BaseModel):
         if not self.is_service:
             return
 
-        url_params = {"include": ["*", "dependencies"]}
+        url_params = ProjURLParameters(include=["*", "dependencies"])
 
-        self.service_ = self._client._auto_request(
-            "get",
-            f"v1/records/{self.id}/service",
-            None,
-            ProjURLParameters,
-            Optional[ServiceRecord],
-            None,
-            url_params,
+        self.service_ = self._client.make_request(
+            "get", f"v1/records/{self.id}/service", Optional[ServiceRecord], url_params=url_params
         )
 
     def _fetch_comments(self):
         self._assert_online()
 
-        self.comments_ = self._client._auto_request(
+        self.comments_ = self._client.make_request(
             "get",
             f"v1/records/{self.id}/comments",
-            None,
-            None,
             Optional[List[RecordComment]],
-            None,
-            None,
         )
 
     def _fetch_native_files(self):
         self._assert_online()
 
-        self.native_files_ = self._client._auto_request(
+        self.native_files_ = self._client.make_request(
             "get",
             f"v1/records/{self.id}/native_files",
-            None,
-            None,
             Optional[Dict[str, NativeFile]],
-            None,
-            None,
         )
 
     def _get_last_compute_history(self, include_outputs: bool = False) -> Optional[ComputeHistory]:
@@ -517,24 +498,18 @@ class RecordQueryIterator(QueryIteratorBase):
 
     def _request(self) -> Tuple[Optional[QueryMetadata], List[BaseRecord]]:
         if self.record_type is None:
-            meta, raw_data = self._client._auto_request(
+            meta, raw_data = self._client.make_request(
                 "post",
                 f"v1/records/query",
-                type(self._query_filters),  # Pass through as is
-                None,
                 Tuple[Optional[QueryMetadata], List[Dict[str, Any]]],
-                self._query_filters,
-                None,
+                body=self._query_filters,
             )
         else:
-            meta, raw_data = self._client._auto_request(
+            meta, raw_data = self._client.make_request(
                 "post",
                 f"v1/records/{self.record_type}/query",
-                type(self._query_filters),  # Pass through as is
-                None,
                 Tuple[Optional[QueryMetadata], List[Dict[str, Any]]],
-                self._query_filters,
-                None,
+                body=self._query_filters,
             )
 
         records = records_from_dicts(raw_data, self._client)

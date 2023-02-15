@@ -65,16 +65,13 @@ class OptimizationDataset(BaseDataset):
     ) -> InsertMetadata:
         initial_molecules: Optional[List[Molecule]]
 
-        payload = OptimizationDatasetSpecification(name=name, specification=specification, description=description)
+        spec = OptimizationDatasetSpecification(name=name, specification=specification, description=description)
 
-        ret = self._client._auto_request(
+        ret = self._client.make_request(
             "post",
             f"v1/datasets/optimization/{self.id}/specifications",
-            List[OptimizationDatasetSpecification],
-            None,
             InsertMetadata,
-            [payload],
-            None,
+            body=[spec],
         )
 
         self._post_add_specification(name)
@@ -86,14 +83,11 @@ class OptimizationDataset(BaseDataset):
 
         entries = make_list(entries)
 
-        ret = self._client._auto_request(
+        ret = self._client.make_request(
             "post",
             f"v1/datasets/optimization/{self.id}/entries/bulkCreate",
-            List[OptimizationDatasetNewEntry],
-            None,
             InsertMetadata,
-            entries,
-            None,
+            body=entries,
         )
 
         new_names = [x.name for x in entries]

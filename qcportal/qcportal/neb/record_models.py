@@ -215,16 +215,13 @@ class NEBRecord(BaseRecord):
     def _fetch_optimizations(self):
         self._assert_online()
 
-        url_params = {"include": ["*", "optimization_record"]}
+        url_params = ProjURLParameters(include=["*", "optimization_record"])
 
-        self.optimizations_ = self._client._auto_request(
+        self.optimizations_ = self._client.make_request(
             "get",
             f"v1/records/neb/{self.id}/optimizations",
-            None,
-            ProjURLParameters,
             List[NEBOptimization],
-            None,
-            url_params,
+            url_params=url_params,
         )
 
         self.make_caches()
@@ -233,29 +230,22 @@ class NEBRecord(BaseRecord):
     def _fetch_initial_chain(self):
         self._assert_online()
 
-        self.initial_chain_ = self._client._auto_request(
+        self.initial_chain_ = self._client.make_request(
             "get",
             f"v1/records/neb/{self.id}/initial_chain",
-            None,
-            None,
             List[Molecule],
-            None,
-            None,
         )
 
     def _fetch_singlepoints(self):
         self._assert_online()
 
-        url_params = {"include": ["*", "singlepoint_record"]}
+        url_params = ProjURLParameters(include=["*", "singlepoint_record"])
 
-        self.singlepoints_ = self._client._auto_request(
+        self.singlepoints_ = self._client.make_request(
             "get",
             f"v1/records/neb/{self.id}/singlepoints",
-            None,
-            ProjURLParameters,
             List[NEBSinglepoint],
-            None,
-            url_params,
+            url_params=url_params,
         )
 
         self.make_caches()
@@ -288,15 +278,10 @@ class NEBRecord(BaseRecord):
 
     @property
     def neb_result(self):
-        url_params = {}
-        r = self._client._auto_request(
+        r = self._client.make_request(
             "get",
             f"v1/records/neb/{self.id}/neb_result",
-            None,
-            ProjURLParameters,
             Molecule,
-            None,
-            url_params,
         )
 
         return r

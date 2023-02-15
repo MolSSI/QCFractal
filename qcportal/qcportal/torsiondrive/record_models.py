@@ -184,29 +184,22 @@ class TorsiondriveRecord(BaseRecord):
     def _fetch_initial_molecules(self):
         self._assert_online()
 
-        self.initial_molecules_ = self._client._auto_request(
+        self.initial_molecules_ = self._client.make_request(
             "get",
             f"v1/records/torsiondrive/{self.id}/initial_molecules",
-            None,
-            None,
             List[Molecule],
-            None,
-            None,
         )
 
     def _fetch_optimizations(self):
         self._assert_online()
 
-        url_params = {"include": ["*", "optimization_record"]}
+        url_params = ProjURLParameters(include=["*", "optimization_record"])
 
-        self.optimizations_ = self._client._auto_request(
+        self.optimizations_ = self._client.make_request(
             "get",
             f"v1/records/torsiondrive/{self.id}/optimizations",
-            None,
-            ProjURLParameters,
             List[TorsiondriveOptimization],
-            None,
-            url_params,
+            url_params=url_params,
         )
 
         self.make_caches()
@@ -215,16 +208,10 @@ class TorsiondriveRecord(BaseRecord):
     def _fetch_minimum_optimizations(self):
         self._assert_online()
 
-        url_params = {}
-
-        min_opt = self._client._auto_request(
+        min_opt = self._client.make_request(
             "get",
             f"v1/records/torsiondrive/{self.id}/minimum_optimizations",
-            None,
-            ProjURLParameters,
             Dict[str, OptimizationRecord],
-            None,
-            url_params,
         )
 
         self._minimum_optimizations_cache = {}

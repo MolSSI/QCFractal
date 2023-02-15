@@ -96,16 +96,13 @@ class ManybodyRecord(BaseRecord):
 
     def _fetch_clusters(self):
         self._assert_online()
-        url_params = {"include": ["*", "molecule", "singlepoint_record"]}
+        url_params = ProjURLParameters(include=["*", "molecule", "singlepoint_record"])
 
-        self.clusters_ = self._client._auto_request(
+        self.clusters_ = self._client.make_request(
             "get",
             f"v1/records/manybody/{self.id}/clusters",
-            None,
-            ProjURLParameters,
             List[ManybodyCluster],
-            None,
-            url_params,
+            url_params=url_params,
         )
 
         self.propagate_client(self._client)

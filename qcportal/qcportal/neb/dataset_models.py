@@ -66,16 +66,13 @@ class NEBDataset(BaseDataset):
         self, name: str, specification: NEBSpecification, description: Optional[str] = None
     ) -> InsertMetadata:
 
-        payload = NEBDatasetSpecification(name=name, specification=specification, description=description)
+        spec = NEBDatasetSpecification(name=name, specification=specification, description=description)
 
-        ret = self._client._auto_request(
+        ret = self._client.make_request(
             "post",
             f"v1/datasets/neb/{self.id}/specifications",
-            List[NEBDatasetSpecification],
-            None,
             InsertMetadata,
-            [payload],
-            None,
+            body=[spec],
         )
 
         self._post_add_specification(name)
@@ -84,14 +81,11 @@ class NEBDataset(BaseDataset):
     def add_entries(self, entries: Union[NEBDatasetNewEntry, Iterable[NEBDatasetNewEntry]]) -> InsertMetadata:
 
         entries = make_list(entries)
-        ret = self._client._auto_request(
+        ret = self._client.make_request(
             "post",
             f"v1/datasets/neb/{self.id}/entries/bulkCreate",
-            List[NEBDatasetNewEntry],
-            None,
             InsertMetadata,
-            entries,
-            None,
+            body=entries,
         )
 
         new_names = [x.name for x in entries]

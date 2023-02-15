@@ -80,14 +80,10 @@ class SinglepointRecord(BaseRecord):
     def _fetch_wavefunction(self):
         self._assert_online()
 
-        self.wavefunction_ = self._client._auto_request(
+        self.wavefunction_ = self._client.make_request(
             "get",
             f"v1/records/singlepoint/{self.id}/wavefunction",
-            None,
-            None,
             Optional[Wavefunction],
-            None,
-            None,
         )
 
         self.propagate_client(self._client)

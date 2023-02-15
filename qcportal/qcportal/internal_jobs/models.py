@@ -114,12 +114,9 @@ class InternalJobQueryIterator(QueryIteratorBase):
         QueryIteratorBase.__init__(self, client, query_filters, batch_limit)
 
     def _request(self) -> Tuple[Optional[QueryMetadata], List[InternalJob]]:
-        return self._client._auto_request(
+        return self._client.make_request(
             "post",
             "v1/internal_jobs/query",
-            InternalJobQueryFilters,
-            None,
             Tuple[Optional[QueryMetadata], List[InternalJob]],
-            self._query_filters,
-            None,
+            body=self._query_filters,
         )

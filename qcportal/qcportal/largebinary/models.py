@@ -29,14 +29,10 @@ class LargeBinary(BaseModel):
 
     def _fetch_from_url(self, url: str):
         if self._compressed_data is None and self._decompressed_data is None:
-            cdata, ctype = self._client._auto_request(
+            cdata, ctype = self._client.make_request(
                 "get",
                 url,
-                None,
-                None,
                 Tuple[bytes, CompressionEnum],
-                None,
-                None,
             )
 
             assert self.compression_type == ctype

@@ -62,16 +62,13 @@ class ManybodyDataset(BaseDataset):
     ) -> InsertMetadata:
         initial_molecules: Optional[List[Molecule]]
 
-        payload = ManybodyDatasetSpecification(name=name, specification=specification, description=description)
+        spec = ManybodyDatasetSpecification(name=name, specification=specification, description=description)
 
-        ret = self._client._auto_request(
+        ret = self._client.make_request(
             "post",
             f"v1/datasets/manybody/{self.id}/specifications",
-            List[ManybodyDatasetSpecification],
-            None,
             InsertMetadata,
-            [payload],
-            None,
+            body=[spec],
         )
 
         self._post_add_specification(name)
@@ -80,14 +77,11 @@ class ManybodyDataset(BaseDataset):
     def add_entries(self, entries: Union[ManybodyDatasetNewEntry, Iterable[ManybodyDatasetNewEntry]]) -> InsertMetadata:
 
         entries = make_list(entries)
-        ret = self._client._auto_request(
+        ret = self._client.make_request(
             "post",
             f"v1/datasets/manybody/{self.id}/entries/bulkCreate",
-            List[ManybodyDatasetNewEntry],
-            None,
             InsertMetadata,
-            entries,
-            None,
+            body=entries,
         )
 
         new_names = [x.name for x in entries]

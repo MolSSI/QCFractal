@@ -83,16 +83,13 @@ class OptimizationRecord(BaseRecord):
     def _fetch_trajectory(self):
         self._assert_online()
 
-        url_params = {"include": ["*", "singlepoint_record"]}
+        url_params = ProjURLParameters(include=["*", "singlepoint_record"])
 
-        self.trajectory_ = self._client._auto_request(
+        self.trajectory_ = self._client.make_request(
             "get",
             f"v1/records/optimization/{self.id}/trajectory",
-            None,
-            ProjURLParameters,
             List[OptimizationTrajectory],
-            None,
-            url_params,
+            url_params=url_params,
         )
 
         self.propagate_client(self._client)
@@ -133,16 +130,10 @@ class OptimizationRecord(BaseRecord):
         if self.trajectory_ is not None:
             return self.trajectory_[trajectory_index].singlepoint_record
         else:
-            url_params = {}
-
-            sp_rec = self._client._auto_request(
+            sp_rec = self._client.make_request(
                 "get",
                 f"v1/records/optimization/{self.id}/trajectory/{trajectory_index}",
-                None,
-                ProjURLParameters,
                 SinglepointRecord,
-                None,
-                url_params,
             )
 
             sp_rec.propagate_client(self._client)

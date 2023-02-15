@@ -49,15 +49,7 @@ class ManagerClient(PortalClientBase):
         self.manager_name_data = name_data
 
     def _update_on_server(self, manager_update: ManagerUpdateBody) -> None:
-        return self._auto_request(
-            "patch",
-            f"v1/managers/{self.manager_name_data.fullname}",
-            ManagerUpdateBody,
-            None,
-            None,
-            manager_update,
-            None,
-        )
+        return self.make_request("patch", f"v1/managers/{self.manager_name_data.fullname}", None, body=manager_update)
 
     def activate(
         self,
@@ -78,14 +70,11 @@ class ManagerClient(PortalClientBase):
             tags=tags,
         )
 
-        return self._auto_request(
+        return self.make_request(
             "post",
             "v1/managers",
-            ManagerActivationBody,
             None,
-            None,
-            manager_info,
-            None,
+            body=manager_info,
         )
 
     def deactivate(
@@ -129,17 +118,9 @@ class ManagerClient(PortalClientBase):
 
     def claim(self, limit: int) -> List[Dict[str, Any]]:
 
-        claim_data = {"name_data": self.manager_name_data, "limit": limit}
+        body = TaskClaimBody(name_data=self.manager_name_data, limit=limit)
 
-        return self._auto_request(
-            "post",
-            "v1/tasks/claim",
-            TaskClaimBody,
-            None,
-            List[Dict[str, Any]],
-            claim_data,
-            None,
-        )
+        return self.make_request("post", "v1/tasks/claim", List[Dict[str, Any]], body=body)
 
     def return_finished(self, results: Dict[int, AllResultTypes]) -> TaskReturnMetadata:
 
@@ -150,20 +131,11 @@ class ManagerClient(PortalClientBase):
 
         task_return_meta = TaskReturnMetadata()
         for chunk in range(0, n_results, limit):
-            return_data = {
-                "name_data": self.manager_name_data,
-                "results": {k: v for k, v in results_flat[chunk : chunk + limit]},
-            }
-
-            meta = self._auto_request(
-                "post",
-                "v1/tasks/return",
-                TaskReturnBody,
-                None,
-                TaskReturnMetadata,
-                return_data,
-                None,
+            body = TaskReturnBody(
+                name_data=self.manager_name_data, results={k: v for k, v in results_flat[chunk : chunk + limit]}
             )
+
+            meta = self.make_request("post", "v1/tasks/return", TaskReturnMetadata, body=body)
 
             task_return_meta.error_description = meta.error_description
             task_return_meta.rejected_info.extend(meta.rejected_info)

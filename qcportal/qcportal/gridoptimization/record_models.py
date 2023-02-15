@@ -234,16 +234,13 @@ class GridoptimizationRecord(BaseRecord):
     def _fetch_optimizations(self):
         self._assert_online()
 
-        url_params = {"include": ["*", "optimization_record"]}
+        url_params = ProjURLParameters(include=["*", "optimization_record"])
 
-        self.optimizations_ = self._client._auto_request(
+        self.optimizations_ = self._client.make_request(
             "get",
             f"v1/records/gridoptimization/{self.id}/optimizations",
-            None,
-            ProjURLParameters,
             List[GridoptimizationOptimization],
-            None,
-            url_params,
+            url_params=url_params,
         )
 
         self.make_caches()

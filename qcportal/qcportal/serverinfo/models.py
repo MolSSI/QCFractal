@@ -91,14 +91,11 @@ class AccessLogQueryIterator(QueryIteratorBase):
         QueryIteratorBase.__init__(self, client, query_filters, batch_limit)
 
     def _request(self) -> Tuple[Optional[QueryMetadata], List[AccessLogEntry]]:
-        return self._client._auto_request(
+        return self._client.make_request(
             "post",
             "v1/access_logs/query",
-            AccessLogQueryFilters,
-            None,
             Tuple[Optional[QueryMetadata], List[AccessLogEntry]],
-            self._query_filters,
-            None,
+            body=self._query_filters,
         )
 
 
@@ -188,14 +185,11 @@ class ErrorLogQueryIterator(QueryIteratorBase):
         QueryIteratorBase.__init__(self, client, query_filters, batch_limit)
 
     def _request(self) -> Tuple[Optional[QueryMetadata], List[ErrorLogEntry]]:
-        return self._client._auto_request(
+        return self._client.make_request(
             "post",
             "v1/server_errors/query",
-            ErrorLogQueryFilters,
-            None,
             Tuple[Optional[QueryMetadata], List[ErrorLogEntry]],
-            self._query_filters,
-            None,
+            body=self._query_filters,
         )
 
 
@@ -261,12 +255,9 @@ class ServerStatsQueryIterator(QueryIteratorBase):
         QueryIteratorBase.__init__(self, client, query_filters, batch_limit)
 
     def _request(self) -> Tuple[Optional[QueryMetadata], List[ServerStatsEntry]]:
-        return self._client._auto_request(
+        return self._client.make_request(
             "post",
             "v1/server_stats/query",
-            ServerStatsQueryFilters,
-            None,
             Tuple[Optional[QueryMetadata], List[ServerStatsEntry]],
-            self._query_filters,
-            None,
+            body=self._query_filters,
         )

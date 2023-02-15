@@ -45,12 +45,10 @@ class MoleculeQueryIterator(QueryIteratorBase):
         QueryIteratorBase.__init__(self, client, query_filters, api_limit)
 
     def _request(self) -> Tuple[Optional[QueryMetadata], List[Molecule]]:
-        return self._client._auto_request(
+        return self._client.make_request(
             "post",
             "v1/molecules/query",
-            MoleculeQueryFilters,
-            None,
             Tuple[Optional[QueryMetadata], List[Molecule]],
-            self._query_filters,
-            None,
+            body_model=MoleculeQueryFilters,
+            body=self._query_filters,
         )

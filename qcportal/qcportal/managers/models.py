@@ -179,12 +179,9 @@ class ManagerQueryIterator(QueryIteratorBase):
         QueryIteratorBase.__init__(self, client, query_filters, batch_limit)
 
     def _request(self) -> Tuple[Optional[QueryMetadata], List[ComputeManager]]:
-        return self._client._auto_request(
+        return self._client.make_request(
             "post",
             "v1/managers/query",
-            ManagerQueryFilters,
-            None,
             Tuple[Optional[QueryMetadata], List[ComputeManager]],
-            self._query_filters,
-            None,
+            body=self._query_filters,
         )

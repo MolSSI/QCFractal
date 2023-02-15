@@ -68,16 +68,13 @@ class SinglepointDataset(BaseDataset):
         self, name: str, specification: QCSpecification, description: Optional[str] = None
     ) -> InsertMetadata:
 
-        payload = SinglepointDatasetSpecification(name=name, specification=specification, description=description)
+        spec = SinglepointDatasetSpecification(name=name, specification=specification, description=description)
 
-        ret = self._client._auto_request(
+        ret = self._client.make_request(
             "post",
             f"v1/datasets/singlepoint/{self.id}/specifications",
-            List[SinglepointDatasetSpecification],
-            None,
             InsertMetadata,
-            [payload],
-            None,
+            body=[spec],
         )
 
         self._post_add_specification(name)
@@ -88,14 +85,11 @@ class SinglepointDataset(BaseDataset):
     ) -> InsertMetadata:
 
         entries = make_list(entries)
-        ret = self._client._auto_request(
+        ret = self._client.make_request(
             "post",
             f"v1/datasets/singlepoint/{self.id}/entries/bulkCreate",
-            List[SinglepointDatasetNewEntry],
-            None,
             InsertMetadata,
-            entries,
-            None,
+            body=entries,
         )
 
         new_names = [x.name for x in entries]

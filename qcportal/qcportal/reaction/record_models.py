@@ -96,16 +96,13 @@ class ReactionRecord(BaseRecord):
 
     def _fetch_components(self):
         self._assert_online()
-        url_params = {"include": ["*", "singlepoint_record", "optimization_record", "molecule"]}
+        url_params = ProjURLParameters(include=["*", "singlepoint_record", "optimization_record", "molecule"])
 
-        self.components_ = self._client._auto_request(
+        self.components_ = self._client.make_request(
             "get",
             f"v1/records/reaction/{self.id}/components",
-            None,
-            ProjURLParameters,
             List[ReactionComponent],
-            None,
-            url_params,
+            url_params=url_params,
         )
 
         self.propagate_client(self._client)

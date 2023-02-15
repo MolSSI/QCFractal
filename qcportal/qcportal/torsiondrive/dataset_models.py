@@ -67,16 +67,13 @@ class TorsiondriveDataset(BaseDataset):
         self, name: str, specification: TorsiondriveSpecification, description: Optional[str] = None
     ) -> InsertMetadata:
 
-        payload = TorsiondriveDatasetSpecification(name=name, specification=specification, description=description)
+        spec = TorsiondriveDatasetSpecification(name=name, specification=specification, description=description)
 
-        ret = self._client._auto_request(
+        ret = self._client.make_request(
             "post",
             f"v1/datasets/torsiondrive/{self.id}/specifications",
-            List[TorsiondriveDatasetSpecification],
-            None,
             InsertMetadata,
-            [payload],
-            None,
+            body=[spec],
         )
 
         self._post_add_specification(name)
@@ -87,14 +84,11 @@ class TorsiondriveDataset(BaseDataset):
     ) -> InsertMetadata:
 
         entries = make_list(entries)
-        ret = self._client._auto_request(
+        ret = self._client.make_request(
             "post",
             f"v1/datasets/torsiondrive/{self.id}/entries/bulkCreate",
-            List[TorsiondriveDatasetNewEntry],
-            None,
             InsertMetadata,
-            entries,
-            None,
+            body=entries,
         )
 
         new_names = [x.name for x in entries]

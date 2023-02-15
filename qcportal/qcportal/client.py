@@ -68,7 +68,7 @@ from .auth import (
     is_valid_rolename,
     is_valid_groupname,
 )
-from .base_models import CommonBulkGetNamesBody, CommonBulkGetBody, ProjURLParameters
+from .base_models import CommonBulkGetNamesBody, CommonBulkGetBody
 from .client_base import PortalClientBase
 from .dataset_models import (
     BaseDataset,
@@ -246,7 +246,7 @@ class PortalClient(PortalClientBase):
         """
 
         # Request the info, and store here for later use
-        return self._auto_request("get", "v1/information", None, None, Dict[str, Any], None, None)
+        return self.make_request("get", "v1/information", Dict[str, Any])
 
     #################################################
     # Message-of-the-Day (MOTD)
@@ -256,28 +256,20 @@ class PortalClient(PortalClientBase):
         Gets the Message-of-the-Day (MOTD) from the server
         """
 
-        return self._auto_request("get", "v1/motd", None, None, str, None, None)
+        return self.make_request("get", "v1/motd", str)
 
     def set_motd(self, new_motd: str) -> str:
         """
         Sets the Message-of-the-Day (MOTD) on the server
         """
 
-        return self._auto_request("put", "v1/motd", str, None, None, new_motd, None)
+        return self.make_request("put", "v1/motd", None, body=new_motd)
 
     ##############################################################
     # Datasets
     ##############################################################
     def list_datasets(self):
-        return self._auto_request(
-            "get",
-            f"v1/datasets",
-            None,
-            None,
-            List[Dict[str, Any]],
-            None,
-            None,
-        )
+        return self.make_request("get", f"v1/datasets", List[Dict[str, Any]])
 
     def list_datasets_table(self) -> str:
         ds_list = self.list_datasets()
@@ -290,17 +282,8 @@ class PortalClient(PortalClientBase):
 
     def get_dataset(self, dataset_type: str, dataset_name: str):
 
-        payload = DatasetQueryModel(dataset_name=dataset_name, dataset_type=dataset_type)
-
-        ds = self._auto_request(
-            "post",
-            f"v1/datasets/query",
-            DatasetQueryModel,
-            None,
-            Dict[str, Any],
-            payload,
-            None,
-        )
+        body = DatasetQueryModel(dataset_name=dataset_name, dataset_type=dataset_type)
+        ds = self.make_request("post", f"v1/datasets/query", Dict[str, Any], body=body)
 
         return dataset_from_dict(ds, self)
 
@@ -310,46 +293,16 @@ class PortalClient(PortalClientBase):
         dataset_type: Optional[Iterable[str]] = None,
     ):
 
-        payload = {
-            "record_id": make_list(record_id),
-            "dataset_type": dataset_type,
-        }
-
-        return self._auto_request(
-            "post",
-            f"v1/datasets/queryrecords",
-            DatasetQueryRecords,
-            None,
-            List[Dict],
-            payload,
-            None,
-        )
+        body = DatasetQueryRecords(record_id=make_list(record_id), dataset_type=dataset_type)
+        return self.make_request("post", f"v1/datasets/queryrecords", List[Dict], body=body)
 
     def get_dataset_by_id(self, dataset_id: int):
 
-        ds = self._auto_request(
-            "get",
-            f"v1/datasets/{dataset_id}",
-            None,
-            None,
-            Dict[str, Any],
-            None,
-            None,
-        )
-
+        ds = self.make_request("get", f"v1/datasets/{dataset_id}", Dict[str, Any])
         return dataset_from_dict(ds, self)
 
     def get_dataset_status_by_id(self, dataset_id: int) -> Dict[str, Dict[RecordStatusEnum, int]]:
-
-        return self._auto_request(
-            "get",
-            f"v1/datasets/{dataset_id}/status",
-            None,
-            ProjURLParameters,
-            Dict[str, Dict[RecordStatusEnum, int]],
-            None,
-            None,
-        )
+        return self.make_request("get", f"v1/datasets/{dataset_id}/status", Dict[str, Dict[RecordStatusEnum, int]])
 
     def add_dataset(
         self,
@@ -380,7 +333,7 @@ class PortalClient(PortalClientBase):
         if metadata is None:
             metadata = {}
 
-        payload = DatasetAddBody(
+        body = DatasetAddBody(
             name=name,
             description=description,
             tagline=tagline,
@@ -394,14 +347,12 @@ class PortalClient(PortalClientBase):
             owner_group=owner_group,
         )
 
-        ds_id = self._auto_request("post", f"v1/datasets/{dataset_type}", DatasetAddBody, None, int, payload, None)
-
+        ds_id = self.make_request("post", f"v1/datasets/{dataset_type}", int, body=body)
         return self.get_dataset_by_id(ds_id)
 
     def delete_dataset(self, dataset_id: int, delete_records: bool):
         params = DatasetDeleteParams(delete_records=delete_records)
-
-        return self._auto_request("delete", f"v1/datasets/{dataset_id}", None, DatasetDeleteParams, Any, None, params)
+        return self.make_request("delete", f"v1/datasets/{dataset_id}", None, url_params=params)
 
     ##############################################################
     # Molecules
@@ -436,10 +387,8 @@ class PortalClient(PortalClientBase):
         if not molecule_ids:
             return []
 
-        body_data = CommonBulkGetBody(ids=molecule_ids, missing_ok=missing_ok)
-        mols = self._auto_request(
-            "post", "v1/molecules/bulkGet", CommonBulkGetBody, None, List[Optional[Molecule]], body_data, None
-        )
+        body = CommonBulkGetBody(ids=molecule_ids, missing_ok=missing_ok)
+        mols = self.make_request("post", "v1/molecules/bulkGet", List[Optional[Molecule]], body=body)
 
         if is_single:
             return mols[0]
@@ -514,14 +463,8 @@ class PortalClient(PortalClientBase):
                 f"Cannot add {len(molecules)} molecules - over the limit of {self.api_limits['add_molecules']}"
             )
 
-        mols = self._auto_request(
-            "post",
-            "v1/molecules/bulkCreate",
-            List[Molecule],
-            None,
-            Tuple[InsertMetadata, List[int]],
-            make_list(molecules),
-            None,
+        mols = self.make_request(
+            "post", "v1/molecules/bulkCreate", Tuple[InsertMetadata, List[int]], body=make_list(molecules)
         )
         return mols
 
@@ -563,16 +506,11 @@ class PortalClient(PortalClientBase):
             Metadata about the modification/update.
         """
 
-        body = {
-            "name": name,
-            "comment": comment,
-            "identifiers": identifiers,
-            "overwrite_identifiers": overwrite_identifiers,
-        }
-
-        return self._auto_request(
-            "patch", f"v1/molecules/{molecule_id}", MoleculeModifyBody, None, UpdateMetadata, body, None
+        body = MoleculeModifyBody(
+            name=name, comment=comment, identifiers=identifiers, overwrite_identifiers=overwrite_identifiers
         )
+
+        return self.make_request("patch", f"v1/molecules/{molecule_id}", UpdateMetadata, body=body)
 
     def delete_molecules(self, molecule_ids: Union[int, Sequence[int]]) -> DeleteMetadata:
         """Deletes molecules from the server
@@ -594,9 +532,7 @@ class PortalClient(PortalClientBase):
         if not molecule_ids:
             return DeleteMetadata()
 
-        return self._auto_request(
-            "post", "v1/molecules/bulkDelete", List[int], None, DeleteMetadata, molecule_ids, None
-        )
+        return self.make_request("post", "v1/molecules/bulkDelete", DeleteMetadata, body=molecule_ids)
 
     ##############################################################
     # General record functions
@@ -647,18 +583,9 @@ class PortalClient(PortalClientBase):
                 f"Cannot get {len(record_ids)} records - over the limit of {self.api_limits['get_records']}"
             )
 
-        body_data = {"ids": record_ids, "missing_ok": missing_ok}
+        body = CommonBulkGetBody(ids=record_ids, missing_ok=missing_ok)
 
-        record_data = self._auto_request(
-            "post",
-            "v1/records/bulkGet",
-            CommonBulkGetBody,
-            None,
-            List[Optional[Dict[str, Any]]],
-            body_data,
-            None,
-        )
-
+        record_data = self.make_request("post", "v1/records/bulkGet", List[Optional[Dict[str, Any]]], body=body)
         records = records_from_dicts(record_data, self)
 
         if include:
@@ -766,8 +693,8 @@ class PortalClient(PortalClientBase):
         if not record_ids:
             return UpdateMetadata()
 
-        body_data = RecordModifyBody(record_ids=record_ids, status=RecordStatusEnum.waiting)
-        return self._auto_request("patch", "v1/records", RecordModifyBody, None, UpdateMetadata, body_data, None)
+        body = RecordModifyBody(record_ids=record_ids, status=RecordStatusEnum.waiting)
+        return self.make_request("patch", "v1/records", UpdateMetadata, body=body)
 
     def cancel_records(self, record_ids: Union[int, Sequence[int]]) -> UpdateMetadata:
         """
@@ -780,8 +707,8 @@ class PortalClient(PortalClientBase):
         if not record_ids:
             return UpdateMetadata()
 
-        body_data = RecordModifyBody(record_ids=record_ids, status=RecordStatusEnum.cancelled)
-        return self._auto_request("patch", "v1/records", RecordModifyBody, None, UpdateMetadata, body_data, None)
+        body = RecordModifyBody(record_ids=record_ids, status=RecordStatusEnum.cancelled)
+        return self.make_request("patch", "v1/records", UpdateMetadata, body=body)
 
     def invalidate_records(self, record_ids: Union[int, Sequence[int]]) -> UpdateMetadata:
         """
@@ -795,8 +722,8 @@ class PortalClient(PortalClientBase):
         if not record_ids:
             return UpdateMetadata()
 
-        body_data = RecordModifyBody(record_ids=record_ids, status=RecordStatusEnum.invalid)
-        return self._auto_request("patch", "v1/records", RecordModifyBody, None, UpdateMetadata, body_data, None)
+        body = RecordModifyBody(record_ids=record_ids, status=RecordStatusEnum.invalid)
+        return self.make_request("patch", "v1/records", UpdateMetadata, body=body)
 
     def delete_records(
         self, record_ids: Union[int, Sequence[int]], soft_delete=True, delete_children: bool = True
@@ -821,10 +748,8 @@ class PortalClient(PortalClientBase):
         if not record_ids:
             return DeleteMetadata()
 
-        body_data = RecordDeleteBody(record_ids=record_ids, soft_delete=soft_delete, delete_children=delete_children)
-        return self._auto_request(
-            "post", "v1/records/bulkDelete", RecordDeleteBody, None, DeleteMetadata, body_data, None
-        )
+        body = RecordDeleteBody(record_ids=record_ids, soft_delete=soft_delete, delete_children=delete_children)
+        return self.make_request("post", "v1/records/bulkDelete", DeleteMetadata, body=body)
 
     def uninvalidate_records(self, record_ids: Union[int, Sequence[int]]) -> UpdateMetadata:
         """
@@ -835,8 +760,8 @@ class PortalClient(PortalClientBase):
         if not record_ids:
             return UpdateMetadata()
 
-        body_data = RecordRevertBody(record_ids=record_ids, revert_status=RecordStatusEnum.invalid)
-        return self._auto_request("post", "v1/records/revert", RecordRevertBody, None, UpdateMetadata, body_data, None)
+        body = RecordRevertBody(record_ids=record_ids, revert_status=RecordStatusEnum.invalid)
+        return self.make_request("post", "v1/records/revert", UpdateMetadata, body=body)
 
     def uncancel_records(self, record_ids: Union[int, Sequence[int]]) -> UpdateMetadata:
         """
@@ -847,8 +772,8 @@ class PortalClient(PortalClientBase):
         if not record_ids:
             return UpdateMetadata()
 
-        body_data = RecordRevertBody(record_ids=record_ids, revert_status=RecordStatusEnum.cancelled)
-        return self._auto_request("post", "v1/records/revert", RecordRevertBody, None, UpdateMetadata, body_data, None)
+        body = RecordRevertBody(record_ids=record_ids, revert_status=RecordStatusEnum.cancelled)
+        return self.make_request("post", "v1/records/revert", UpdateMetadata, body=body)
 
     def undelete_records(self, record_ids: Union[int, Sequence[int]]) -> UpdateMetadata:
         """
@@ -859,8 +784,8 @@ class PortalClient(PortalClientBase):
         if not record_ids:
             return UpdateMetadata()
 
-        body_data = RecordRevertBody(record_ids=record_ids, revert_status=RecordStatusEnum.deleted)
-        return self._auto_request("post", "v1/records/revert", RecordRevertBody, None, UpdateMetadata, body_data, None)
+        body = RecordRevertBody(record_ids=record_ids, revert_status=RecordStatusEnum.deleted)
+        return self.make_request("post", "v1/records/revert", UpdateMetadata, body=body)
 
     def modify_records(
         self,
@@ -878,8 +803,8 @@ class PortalClient(PortalClientBase):
         if new_tag is None and new_priority is None:
             return UpdateMetadata()
 
-        body_data = RecordModifyBody(record_ids=record_ids, tag=new_tag, priority=new_priority)
-        return self._auto_request("patch", "v1/records", RecordModifyBody, None, UpdateMetadata, body_data, None)
+        body = RecordModifyBody(record_ids=record_ids, tag=new_tag, priority=new_priority)
+        return self.make_request("patch", "v1/records", UpdateMetadata, body=body)
 
     def add_comment(self, record_ids: Union[int, Sequence[int]], comment: str) -> UpdateMetadata:
         """
@@ -903,7 +828,7 @@ class PortalClient(PortalClientBase):
             return UpdateMetadata()
 
         body_data = RecordModifyBody(record_ids=record_ids, comment=comment)
-        return self._auto_request("patch", "v1/records", RecordModifyBody, None, UpdateMetadata, body_data, None)
+        return self.make_request("patch", "v1/records", UpdateMetadata, body=body_data)
 
     ##############################################################
     # Singlepoint calculations
@@ -988,14 +913,9 @@ class PortalClient(PortalClientBase):
         if protocols is not None:
             body_data["specification"]["protocols"] = protocols
 
-        return self._auto_request(
-            "post",
-            "v1/records/singlepoint/bulkCreate",
-            SinglepointAddBody,
-            None,
-            Tuple[InsertMetadata, List[int]],
-            body_data,
-            None,
+        body = SinglepointAddBody(**body_data)
+        return self.make_request(
+            "post", "v1/records/singlepoint/bulkCreate", Tuple[InsertMetadata, List[int]], body=body
         )
 
     def get_singlepoints(
@@ -1039,16 +959,13 @@ class PortalClient(PortalClientBase):
                 f"Cannot get {len(record_ids)} records - over the limit of {self.api_limits['get_records']}"
             )
 
-        body_data = {"ids": record_ids, "missing_ok": missing_ok}
+        body = CommonBulkGetBody(ids=record_ids, missing_ok=missing_ok)
 
-        record_data = self._auto_request(
+        record_data = self.make_request(
             "post",
             "v1/records/singlepoint/bulkGet",
-            CommonBulkGetBody,
-            None,
             List[Optional[Dict[str, Any]]],
-            body_data,
-            None,
+            body=body,
         )
 
         records = [SinglepointRecord(self, **r) if r is not None else None for r in record_data]
@@ -1160,7 +1077,6 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = SinglepointQueryFilters(**filter_dict)
-
         return RecordQueryIterator(self, filter_data, "singlepoint", include)
 
     ##############################################################
@@ -1238,14 +1154,13 @@ class PortalClient(PortalClientBase):
         if protocols is not None:
             body_data["specification"]["protocols"] = protocols
 
-        return self._auto_request(
+        body_data = OptimizationAddBody(**body_data)
+
+        return self.make_request(
             "post",
             "v1/records/optimization/bulkCreate",
-            OptimizationAddBody,
-            None,
             Tuple[InsertMetadata, List[int]],
-            body_data,
-            None,
+            body=body_data,
         )
 
     def get_optimizations(
@@ -1289,16 +1204,13 @@ class PortalClient(PortalClientBase):
                 f"Cannot get {len(record_ids)} records - over the limit of {self.api_limits['get_records']}"
             )
 
-        body_data = {"ids": record_ids, "missing_ok": missing_ok}
+        body = CommonBulkGetBody(ids=record_ids, missing_ok=missing_ok)
 
-        record_data = self._auto_request(
+        record_data = self.make_request(
             "post",
             "v1/records/optimization/bulkGet",
-            CommonBulkGetBody,
-            None,
             List[Optional[Dict[str, Any]]],
-            body_data,
-            None,
+            body=body,
         )
 
         records = [OptimizationRecord(self, **r) if r is not None else None for r in record_data]
@@ -1413,7 +1325,6 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = OptimizationQueryFilters(**filter_dict)
-
         return RecordQueryIterator(self, filter_data, "optimization", include)
 
     ##############################################################
@@ -1484,14 +1395,10 @@ class PortalClient(PortalClientBase):
             "owner_group": owner_group,
         }
 
-        return self._auto_request(
-            "post",
-            "v1/records/torsiondrive/bulkCreate",
-            TorsiondriveAddBody,
-            None,
-            Tuple[InsertMetadata, List[int]],
-            body_data,
-            None,
+        body = TorsiondriveAddBody(**body_data)
+
+        return self.make_request(
+            "post", "v1/records/torsiondrive/bulkCreate", Tuple[InsertMetadata, List[int]], body=body
         )
 
     def get_torsiondrives(
@@ -1535,16 +1442,13 @@ class PortalClient(PortalClientBase):
                 f"Cannot get {len(record_ids)} records - over the limit of {self.api_limits['get_records']}"
             )
 
-        body_data = {"ids": record_ids, "missing_ok": missing_ok}
+        body = CommonBulkGetBody(ids=record_ids, missing_ok=missing_ok)
 
-        record_data = self._auto_request(
+        record_data = self.make_request(
             "post",
             "v1/records/torsiondrive/bulkGet",
-            CommonBulkGetBody,
-            None,
             List[Optional[Dict[str, Any]]],
-            body_data,
-            None,
+            body=body,
         )
 
         records = [TorsiondriveRecord(self, **r) if r is not None else None for r in record_data]
@@ -1659,7 +1563,6 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = TorsiondriveQueryFilters(**filter_dict)
-
         return RecordQueryIterator(self, filter_data, "torsiondrive", include)
 
     ##############################################################
@@ -1730,14 +1633,10 @@ class PortalClient(PortalClientBase):
             "owner_group": owner_group,
         }
 
-        return self._auto_request(
-            "post",
-            "v1/records/gridoptimization/bulkCreate",
-            GridoptimizationAddBody,
-            None,
-            Tuple[InsertMetadata, List[int]],
-            body_data,
-            None,
+        body = GridoptimizationAddBody(**body_data)
+
+        return self.make_request(
+            "post", "v1/records/gridoptimization/bulkCreate", Tuple[InsertMetadata, List[int]], body=body
         )
 
     def get_gridoptimizations(
@@ -1781,16 +1680,13 @@ class PortalClient(PortalClientBase):
                 f"Cannot get {len(record_ids)} records - over the limit of {self.api_limits['get_records']}"
             )
 
-        body_data = {"ids": record_ids, "missing_ok": missing_ok}
+        body = CommonBulkGetBody(ids=record_ids, missing_ok=missing_ok)
 
-        record_data = self._auto_request(
+        record_data = self.make_request(
             "post",
             "v1/records/gridoptimization/bulkGet",
-            CommonBulkGetBody,
-            None,
             List[Optional[Dict[str, Any]]],
-            body_data,
-            None,
+            body=body,
         )
 
         records = [GridoptimizationRecord(self, **r) if r is not None else None for r in record_data]
@@ -1905,7 +1801,6 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = GridoptimizationQueryFilters(**filter_dict)
-
         return RecordQueryIterator(self, filter_data, "gridoptimization", include)
 
     ##############################################################
@@ -1984,15 +1879,9 @@ class PortalClient(PortalClientBase):
             "owner_group": owner_group,
         }
 
-        return self._auto_request(
-            "post",
-            "v1/records/reaction/bulkCreate",
-            ReactionAddBody,
-            None,
-            Tuple[InsertMetadata, List[int]],
-            body_data,
-            None,
-        )
+        body = ReactionAddBody(**body_data)
+
+        return self.make_request("post", "v1/records/reaction/bulkCreate", Tuple[InsertMetadata, List[int]], body=body)
 
     def get_reactions(
         self,
@@ -2035,16 +1924,10 @@ class PortalClient(PortalClientBase):
                 f"Cannot get {len(record_ids)} records - over the limit of {self.api_limits['get_records']}"
             )
 
-        body_data = {"ids": record_ids, "missing_ok": missing_ok}
+        body = CommonBulkGetBody(ids=record_ids, missing_ok=missing_ok)
 
-        record_data = self._auto_request(
-            "post",
-            "v1/records/reaction/bulkGet",
-            CommonBulkGetBody,
-            None,
-            List[Optional[Dict[str, Any]]],
-            body_data,
-            None,
+        record_data = self.make_request(
+            "post", "v1/records/reaction/bulkGet", List[Optional[Dict[str, Any]]], body=body
         )
 
         records = [ReactionRecord(self, **r) if r is not None else None for r in record_data]
@@ -2159,7 +2042,6 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = ReactionQueryFilters(**filter_dict)
-
         return RecordQueryIterator(self, filter_data, "reaction", include)
 
     ##############################################################
@@ -2229,15 +2111,9 @@ class PortalClient(PortalClientBase):
             "owner_group": owner_group,
         }
 
-        return self._auto_request(
-            "post",
-            "v1/records/manybody/bulkCreate",
-            ManybodyAddBody,
-            None,
-            Tuple[InsertMetadata, List[int]],
-            body_data,
-            None,
-        )
+        body = ManybodyAddBody(**body_data)
+
+        return self.make_request("post", "v1/records/manybody/bulkCreate", Tuple[InsertMetadata, List[int]], body=body)
 
     def get_manybodys(
         self,
@@ -2280,16 +2156,10 @@ class PortalClient(PortalClientBase):
                 f"Cannot get {len(record_ids)} records - over the limit of {self.api_limits['get_records']}"
             )
 
-        body_data = {"ids": record_ids, "missing_ok": missing_ok}
+        body = CommonBulkGetBody(ids=record_ids, missing_ok=missing_ok)
 
-        record_data = self._auto_request(
-            "post",
-            "v1/records/manybody/bulkGet",
-            CommonBulkGetBody,
-            None,
-            List[Optional[Dict[str, Any]]],
-            body_data,
-            None,
+        record_data = self.make_request(
+            "post", "v1/records/manybody/bulkGet", List[Optional[Dict[str, Any]]], body=body
         )
 
         records = [ManybodyRecord(self, **r) if r is not None else None for r in record_data]
@@ -2400,7 +2270,6 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = ManybodyQueryFilters(**filter_dict)
-
         return RecordQueryIterator(self, filter_data, "manybody", include)
 
     ##############################################################
@@ -2440,14 +2309,13 @@ class PortalClient(PortalClientBase):
                 f"Cannot add {len(body_data['initial_chains'])} records - over the limit of {self.api_limits['add_records']}"
             )
 
-        return self._auto_request(
+        body = NEBAddBody(**body_data)
+
+        return self.make_request(
             "post",
             "v1/records/neb/bulkCreate",
-            NEBAddBody,
-            None,
             Tuple[InsertMetadata, List[int]],
-            body_data,
-            None,
+            body=body,
         )
 
     def get_nebs(
@@ -2469,16 +2337,13 @@ class PortalClient(PortalClientBase):
                 f"Cannot get {len(record_ids)} records - over the limit of {self.api_limits['get_records']}"
             )
 
-        body_data = {"ids": record_ids, "missing_ok": missing_ok}
+        body = CommonBulkGetBody(ids=record_ids, missing_ok=missing_ok)
 
-        record_data = self._auto_request(
+        record_data = self.make_request(
             "post",
             "v1/records/neb/bulkGet",
-            CommonBulkGetBody,
-            None,
             List[Optional[Dict[str, Any]]],
-            body_data,
-            None,
+            body=body,
         )
 
         records = [NEBRecord(self, **r) if r is not None else None for r in record_data]
@@ -2542,7 +2407,6 @@ class PortalClient(PortalClientBase):
             filter_dict["include"] = include
 
         filter_data = NEBQueryFilters(**filter_dict)
-
         return RecordQueryIterator(self, filter_data, "neb")
 
     ##############################################################
@@ -2553,8 +2417,6 @@ class PortalClient(PortalClientBase):
         self,
         names: Union[str, Sequence[str]],
         missing_ok: bool = False,
-        *,
-        include: Optional[Iterable[str]] = None,
     ) -> Union[Optional[ComputeManager], List[Optional[ComputeManager]]]:
         """Obtain manager information from the server with the specified names
 
@@ -2565,8 +2427,6 @@ class PortalClient(PortalClientBase):
         missing_ok
             If set to True, then missing managers will be tolerated, and the returned
             managers will contain None for the corresponding managers that were not found.
-        include
-            Additional fields to include in the returned managers
 
         Returns
         -------
@@ -2582,11 +2442,9 @@ class PortalClient(PortalClientBase):
         if not names:
             return []
 
-        body_data = CommonBulkGetNamesBody(names=names, missing_ok=missing_ok)
+        body = CommonBulkGetNamesBody(names=names, missing_ok=missing_ok)
 
-        managers = self._auto_request(
-            "post", "v1/managers/bulkGet", CommonBulkGetNamesBody, None, List[Optional[ComputeManager]], body_data, None
-        )
+        managers = self.make_request("post", "v1/managers/bulkGet", List[Optional[ComputeManager]], body=body)
 
         if is_single:
             return managers[0]
@@ -2697,10 +2555,8 @@ class PortalClient(PortalClientBase):
             The number of statistics entries deleted from the server
         """
 
-        body_data = DeleteBeforeDateBody(before=before)
-        return self._auto_request(
-            "post", "v1/server_stats/bulkDelete", DeleteBeforeDateBody, None, int, body_data, None
-        )
+        body = DeleteBeforeDateBody(before=before)
+        return self.make_request("post", "v1/server_stats/bulkDelete", int, body=body)
 
     def query_access_log(
         self,
@@ -2764,8 +2620,8 @@ class PortalClient(PortalClientBase):
             The number of access log entries deleted from the server
         """
 
-        body_data = DeleteBeforeDateBody(before=before)
-        return self._auto_request("post", "v1/access_logs/bulkDelete", DeleteBeforeDateBody, None, int, body_data, None)
+        body = DeleteBeforeDateBody(before=before)
+        return self.make_request("post", "v1/access_logs/bulkDelete", int, body=body)
 
     def query_error_log(
         self,
@@ -2824,17 +2680,15 @@ class PortalClient(PortalClientBase):
         :
             The number of error log entries deleted from the server
         """
-        body_data = DeleteBeforeDateBody(before=before)
-        return self._auto_request(
-            "post", "v1/server_errors/bulkDelete", DeleteBeforeDateBody, None, int, body_data, None
-        )
+        body = DeleteBeforeDateBody(before=before)
+        return self.make_request("post", "v1/server_errors/bulkDelete", int, body=body)
 
     def get_internal_job(self, job_id: int) -> InternalJob:
         """
         Gets information about an internal job on the server
         """
 
-        return self._auto_request("get", f"v1/internal_jobs/{job_id}", None, None, InternalJob, None, None)
+        return self.make_request("get", f"v1/internal_jobs/{job_id}", InternalJob)
 
     def query_internal_jobs(
         self,
@@ -2911,18 +2765,10 @@ class PortalClient(PortalClientBase):
         Cancels (to the best of our ability) an internal job
         """
 
-        return self._auto_request(
-            "put",
-            f"v1/internal_jobs/{job_id}/status",
-            InternalJobStatusEnum,
-            None,
-            None,
-            InternalJobStatusEnum.cancelled,
-            None,
-        )
+        return self.make_request("put", f"v1/internal_jobs/{job_id}/status", None, body=InternalJobStatusEnum.cancelled)
 
     def delete_internal_job(self, job_id: int):
-        return self._auto_request("delete", f"v1/internal_jobs/{job_id}", None, None, None, None, None)
+        return self.make_request("delete", f"v1/internal_jobs/{job_id}", None)
 
     def query_access_summary(
         self,
@@ -2946,20 +2792,10 @@ class PortalClient(PortalClientBase):
             Query for log entries with a timestamp after a specific time
         """
 
-        url_params = {
-            "group_by": group_by,
-            "before": before,
-            "after": after,
-        }
+        url_params = AccessLogSummaryFilters(group_by=group_by, before=before, after=after)
 
-        entries = self._auto_request(
-            "get",
-            "v1/access_logs/summary",
-            None,
-            AccessLogSummaryFilters,
-            Dict[str, List[AccessLogSummaryEntry]],
-            None,
-            url_params,
+        entries = self.make_request(
+            "get", "v1/access_logs/summary", Dict[str, List[AccessLogSummaryEntry]], url_params=url_params
         )
 
         return AccessLogSummary(entries=entries)
@@ -2973,7 +2809,7 @@ class PortalClient(PortalClientBase):
         List all user roles on the server
         """
 
-        return self._auto_request("get", "v1/roles", None, None, List[RoleInfo], None, None)
+        return self.make_request("get", "v1/roles", List[RoleInfo])
 
     def get_role(self, rolename: str) -> RoleInfo:
         """
@@ -2981,7 +2817,7 @@ class PortalClient(PortalClientBase):
         """
 
         is_valid_rolename(rolename)
-        return self._auto_request("get", f"v1/roles/{rolename}", None, None, RoleInfo, None, None)
+        return self.make_request("get", f"v1/roles/{rolename}", RoleInfo)
 
     def add_role(self, role_info: RoleInfo) -> None:
         """
@@ -2991,7 +2827,7 @@ class PortalClient(PortalClientBase):
         """
 
         is_valid_rolename(role_info.rolename)
-        return self._auto_request("post", "v1/roles", RoleInfo, None, None, role_info, None)
+        return self.make_request("post", "v1/roles", None, body=role_info)
 
     def modify_role(self, role_info: RoleInfo) -> RoleInfo:
         """
@@ -3006,7 +2842,7 @@ class PortalClient(PortalClientBase):
         """
 
         is_valid_rolename(role_info.rolename)
-        return self._auto_request("put", f"v1/roles/{role_info.rolename}", RoleInfo, None, RoleInfo, role_info, None)
+        return self.make_request("put", f"v1/roles/{role_info.rolename}", RoleInfo, body=role_info)
 
     def delete_role(self, rolename: str) -> None:
         """
@@ -3023,14 +2859,14 @@ class PortalClient(PortalClientBase):
 
         """
         is_valid_rolename(rolename)
-        return self._auto_request("delete", f"v1/roles/{rolename}", None, None, None, None, None)
+        return self.make_request("delete", f"v1/roles/{rolename}", None)
 
     def list_groups(self) -> List[GroupInfo]:
         """
         List all user groups on the server
         """
 
-        return self._auto_request("get", "v1/groups", None, None, List[GroupInfo], None, None)
+        return self.make_request("get", "v1/groups", List[GroupInfo])
 
     def get_group(self, groupname_or_id: Union[int, str]) -> GroupInfo:
         """
@@ -3040,7 +2876,7 @@ class PortalClient(PortalClientBase):
         if isinstance(groupname_or_id, str):
             is_valid_groupname(groupname_or_id)
 
-        return self._auto_request("get", f"v1/groups/{groupname_or_id}", None, None, GroupInfo, None, None)
+        return self.make_request("get", f"v1/groups/{groupname_or_id}", GroupInfo)
 
     def add_group(self, group_info: GroupInfo) -> None:
         """
@@ -3052,7 +2888,7 @@ class PortalClient(PortalClientBase):
         if group_info.id is not None:
             raise RuntimeError("Cannot add group when group_info contains an id")
 
-        return self._auto_request("post", "v1/groups", GroupInfo, None, None, group_info, None)
+        return self.make_request("post", "v1/groups", None, body=group_info)
 
     def delete_group(self, groupname_or_id: Union[int, str]):
         """
@@ -3064,14 +2900,14 @@ class PortalClient(PortalClientBase):
         if isinstance(groupname_or_id, str):
             is_valid_groupname(groupname_or_id)
 
-        return self._auto_request("delete", f"v1/groups/{groupname_or_id}", None, None, None, None, None)
+        return self.make_request("delete", f"v1/groups/{groupname_or_id}", None)
 
     def list_users(self) -> List[UserInfo]:
         """
         List all user roles on the server
         """
 
-        return self._auto_request("get", "v1/users", None, None, List[UserInfo], None, None)
+        return self.make_request("get", "v1/users", List[UserInfo])
 
     def get_user(self, username_or_id: Optional[Union[int, str]] = None) -> UserInfo:
         """
@@ -3099,7 +2935,7 @@ class PortalClient(PortalClientBase):
         if username_or_id is None:
             raise RuntimeError("Cannot get user - not logged in?")
 
-        return self._auto_request("get", f"v1/users/{username_or_id}", None, None, UserInfo, None, None)
+        return self.make_request("get", f"v1/users/{username_or_id}", UserInfo)
 
     def add_user(self, user_info: UserInfo, password: Optional[str] = None) -> str:
         """
@@ -3126,9 +2962,7 @@ class PortalClient(PortalClientBase):
         if user_info.id is not None:
             raise RuntimeError("Cannot add user when user_info contains an id")
 
-        return self._auto_request(
-            "post", "v1/users", Tuple[UserInfo, Optional[str]], None, str, (user_info, password), None
-        )
+        return self.make_request("post", "v1/users", str, body=(user_info, password))
 
     def modify_user(self, user_info: UserInfo) -> UserInfo:
         """
@@ -3150,7 +2984,7 @@ class PortalClient(PortalClientBase):
             The updated user information as it appears on the server
         """
 
-        return self._auto_request("patch", f"v1/users", UserInfo, None, UserInfo, user_info, None)
+        return self.make_request("patch", f"v1/users", UserInfo, body=user_info)
 
     def change_user_password(
         self, username_or_id: Optional[Union[int, str]] = None, new_password: Optional[str] = None
@@ -3187,8 +3021,8 @@ class PortalClient(PortalClientBase):
         if new_password is not None:
             is_valid_password(new_password)
 
-        return self._auto_request(
-            "put", f"v1/users/{username_or_id}/password", Optional[str], None, str, new_password, None
+        return self.make_request(
+            "put", f"v1/users/{username_or_id}/password", str, body_model=Optional[str], body=new_password
         )
 
     def delete_user(self, username_or_id: Union[int, str]) -> None:
@@ -3199,4 +3033,4 @@ class PortalClient(PortalClientBase):
         if not isinstance(username_or_id, int):
             is_valid_username(username_or_id)
 
-        return self._auto_request("delete", f"v1/users/{username_or_id}", None, None, None, None, None)
+        return self.make_request("delete", f"v1/users/{username_or_id}", None)

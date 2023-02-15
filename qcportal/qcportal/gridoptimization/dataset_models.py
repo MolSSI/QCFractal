@@ -68,16 +68,13 @@ class GridoptimizationDataset(BaseDataset):
         self, name: str, specification: GridoptimizationSpecification, description: Optional[str] = None
     ) -> InsertMetadata:
 
-        payload = GridoptimizationDatasetSpecification(name=name, specification=specification, description=description)
+        spec = GridoptimizationDatasetSpecification(name=name, specification=specification, description=description)
 
-        ret = self._client._auto_request(
+        ret = self._client.make_request(
             "post",
             f"v1/datasets/gridoptimization/{self.id}/specifications",
-            List[GridoptimizationDatasetSpecification],
-            None,
             InsertMetadata,
-            [payload],
-            None,
+            body=[spec],
         )
 
         self._post_add_specification(name)
@@ -88,14 +85,11 @@ class GridoptimizationDataset(BaseDataset):
     ) -> InsertMetadata:
 
         entries = make_list(entries)
-        ret = self._client._auto_request(
+        ret = self._client.make_request(
             "post",
             f"v1/datasets/gridoptimization/{self.id}/entries/bulkCreate",
-            List[GridoptimizationDatasetNewEntry],
-            None,
             InsertMetadata,
-            entries,
-            None,
+            body=entries,
         )
 
         new_names = [x.name for x in entries]

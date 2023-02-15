@@ -381,7 +381,7 @@ def test_user_client_no_other(secure_snowflake: QCATestingSnowflake):
         client.get_user("read_user")
 
     with pytest.raises(PortalRequestError, match=r"Forbidden"):
-        client._auto_request("get", f"v1/users/read_user", None, None, UserInfo, None, None)
+        client.make_request("get", f"v1/users/read_user", UserInfo)
 
     uinfo = UserInfo(id=read_info.id, username="read_user", role="read", fullname="New Full Name", enabled=True)
 
@@ -389,19 +389,19 @@ def test_user_client_no_other(secure_snowflake: QCATestingSnowflake):
         client.modify_user(uinfo)
 
     with pytest.raises(PortalRequestError, match=r"Forbidden"):
-        client._auto_request("patch", f"v1/users", UserInfo, None, UserInfo, uinfo, None)
+        client.make_request("patch", f"v1/users", UserInfo, body=uinfo)
 
     with pytest.raises(PortalRequestError, match=r"Forbidden"):
         client.change_user_password("read_user", "new_password")
 
     with pytest.raises(PortalRequestError, match=r"Forbidden"):
-        client._auto_request("put", f"v1/users/read_user/password", str, None, str, "new_password", None)
+        client.make_request("put", f"v1/users/read_user/password", str, body="new_password")
 
     with pytest.raises(PortalRequestError, match=r"Forbidden"):
         client.change_user_password("read_user", None)
 
     with pytest.raises(PortalRequestError, match=r"Forbidden"):
-        client._auto_request("put", f"v1/users/read_user/password", Optional[str], None, str, None, None)
+        client.make_request("put", f"v1/users/read_user/password", str, body_model=Optional[str], body=None)
 
 
 def test_user_client_no_anonymous(secure_snowflake_allow_read: QCATestingSnowflake):
@@ -417,7 +417,7 @@ def test_user_client_no_anonymous(secure_snowflake_allow_read: QCATestingSnowfla
         client.get_user("read_user")
 
     with pytest.raises(PortalRequestError, match=r"Login is required"):
-        client._auto_request("get", f"v1/users/read_user", None, None, UserInfo, None, None)
+        client.make_request("get", f"v1/users/read_user", UserInfo)
 
     uinfo = UserInfo(username="read_user", role="read", fullname="New Full Name", enabled=True)
 
@@ -425,7 +425,7 @@ def test_user_client_no_anonymous(secure_snowflake_allow_read: QCATestingSnowfla
         client.modify_user(uinfo)
 
     with pytest.raises(PortalRequestError, match=r"Login is required"):
-        client._auto_request("patch", f"v1/users", UserInfo, None, UserInfo, uinfo, None)
+        client.make_request("patch", f"v1/users", UserInfo, body=uinfo)
 
     with pytest.raises(RuntimeError, match=r"not logged in"):
         client.change_user_password(None, "new password")
@@ -434,7 +434,7 @@ def test_user_client_no_anonymous(secure_snowflake_allow_read: QCATestingSnowfla
         client.change_user_password("read_user", "new_password")
 
     with pytest.raises(PortalRequestError, match=r"Login is required"):
-        client._auto_request("put", f"v1/users/read_user/password", str, None, str, "new_password", None)
+        client.make_request("put", f"v1/users/read_user/password", str, body="new_password")
 
     with pytest.raises(RuntimeError, match=r"not logged in"):
         client.change_user_password(None, None)
@@ -443,4 +443,4 @@ def test_user_client_no_anonymous(secure_snowflake_allow_read: QCATestingSnowfla
         client.change_user_password("read_user", None)
 
     with pytest.raises(PortalRequestError, match=r"Login is required"):
-        client._auto_request("put", f"v1/users/read_user/password", Optional[str], None, str, None, None)
+        client.make_request("put", f"v1/users/read_user/password", str, body_model=Optional[str], body=None)

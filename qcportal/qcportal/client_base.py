@@ -276,22 +276,24 @@ class PortalClientBase:
 
         return r
 
-    def _auto_request(
+    def make_request(
         self,
         method: str,
         endpoint: str,
-        body_model: Optional[Type[_T]],
-        url_params_model: Optional[Type[_U]],
         response_model: Optional[Type[_V]],
+        *,
+        body_model: Optional[Type[_T]] = None,
+        url_params_model: Optional[Type[_U]] = None,
         body: Optional[Union[_T, Dict[str, Any]]] = None,
         url_params: Optional[Union[_U, Dict[str, Any]]] = None,
     ) -> _V:
 
+        # If body_model or url_params_model are None, then use the type given
         if body_model is None and body is not None:
-            raise RuntimeError("Body data not specified, but required")
+            body_model = type(body)
 
         if url_params_model is None and url_params is not None:
-            raise RuntimeError("Query parameters not specified, but required")
+            url_params_model = type(url_params)
 
         serialized_body = None
         if body_model is not None:
@@ -300,7 +302,10 @@ class PortalClientBase:
 
         parsed_url_params = None
         if url_params_model is not None:
-            parsed_url_params = pydantic.parse_obj_as(url_params_model, url_params).dict()
+            parsed_url_params = pydantic.parse_obj_as(url_params_model, url_params)
+
+        if isinstance(parsed_url_params, pydantic.BaseModel):
+            parsed_url_params = parsed_url_params.dict()
 
         r = self._request(method, endpoint, body=serialized_body, url_params=parsed_url_params)
         d = deserialize(r.content, r.headers["Content-Type"])
@@ -338,4 +343,4 @@ class PortalClientBase:
         """
 
         # Request the info, and store here for later use
-        return self._auto_request("get", "v1/information", None, None, Dict[str, Any], None, None)
+        return self.make_request("get", "v1/information", Dict[str, Any])
