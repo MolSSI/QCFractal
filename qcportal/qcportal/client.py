@@ -1,16 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import (
-    Any,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    Union,
-    Sequence,
-    Iterable,
-)
+from typing import Any, Dict, List, Optional, Tuple, Union, Sequence, Iterable, TypeVar, Type
 
 from tabulate import tabulate
 
@@ -106,6 +97,8 @@ from .serverinfo import (
     DeleteBeforeDateBody,
 )
 from .utils import make_list
+
+_T = TypeVar("_T", bound=BaseRecord)
 
 
 class PortalClient(PortalClientBase):
@@ -597,6 +590,70 @@ class PortalClient(PortalClientBase):
         else:
             return records
 
+    def _get_records_by_type(
+        self,
+        record_type: Type[_T],
+        record_ids: Union[int, Sequence[int]],
+        missing_ok: bool = False,
+        include: Optional[Iterable[str]] = None,
+    ) -> Union[Optional[Optional[_T]], List[Optional[_T]]]:
+        """
+        Obtain records of a particular type with the specified IDs.
+
+        Records will be returned in the same order as the record ids.
+
+        Parameters
+        ----------
+        record_ids
+            Single ID or sequence/list of records to obtain
+        missing_ok
+            If set to True, then missing records will be tolerated, and the returned
+            records will contain None for the corresponding IDs that were not found.
+        include
+            Additional fields to include in the returned record
+
+        Returns
+        -------
+        :
+            If a single ID was specified, returns just that record. Otherwise, returns
+            a list of records.  If missing_ok was specified, None will be substituted for a record
+            that was not found.
+        """
+
+        is_single = not isinstance(record_ids, Sequence)
+
+        record_ids = make_list(record_ids)
+        if not record_ids:
+            return []
+
+        if len(record_ids) > self.api_limits["get_records"]:
+            raise RuntimeError(
+                f"Cannot get {len(record_ids)} records - over the limit of {self.api_limits['get_records']}"
+            )
+
+        body = CommonBulkGetBody(ids=record_ids, missing_ok=missing_ok)
+
+        # A little hacky
+        record_type_str = record_type.__fields__["record_type"].default
+
+        record_data = self.make_request(
+            "post",
+            f"v1/records/{record_type_str}/bulkGet",
+            List[Optional[Dict[str, Any]]],
+            body=body,
+        )
+
+        records = [record_type(self, **r) if r is not None else None for r in record_data]
+
+        if include:
+            for r in records:
+                r._handle_includes(include)
+
+        if is_single:
+            return records[0]
+        else:
+            return records
+
     def query_records(
         self,
         *,
@@ -948,36 +1005,7 @@ class PortalClient(PortalClientBase):
             that was not found.
         """
 
-        is_single = not isinstance(record_ids, Sequence)
-
-        record_ids = make_list(record_ids)
-        if not record_ids:
-            return []
-
-        if len(record_ids) > self.api_limits["get_records"]:
-            raise RuntimeError(
-                f"Cannot get {len(record_ids)} records - over the limit of {self.api_limits['get_records']}"
-            )
-
-        body = CommonBulkGetBody(ids=record_ids, missing_ok=missing_ok)
-
-        record_data = self.make_request(
-            "post",
-            "v1/records/singlepoint/bulkGet",
-            List[Optional[Dict[str, Any]]],
-            body=body,
-        )
-
-        records = [SinglepointRecord(self, **r) if r is not None else None for r in record_data]
-
-        if include:
-            for r in records:
-                r._handle_includes(include)
-
-        if is_single:
-            return records[0]
-        else:
-            return records
+        return self._get_records_by_type(SinglepointRecord, record_ids, missing_ok, include)
 
     def query_singlepoints(
         self,
@@ -1193,36 +1221,7 @@ class PortalClient(PortalClientBase):
             that was not found.
         """
 
-        is_single = not isinstance(record_ids, Sequence)
-
-        record_ids = make_list(record_ids)
-        if not record_ids:
-            return []
-
-        if len(record_ids) > self.api_limits["get_records"]:
-            raise RuntimeError(
-                f"Cannot get {len(record_ids)} records - over the limit of {self.api_limits['get_records']}"
-            )
-
-        body = CommonBulkGetBody(ids=record_ids, missing_ok=missing_ok)
-
-        record_data = self.make_request(
-            "post",
-            "v1/records/optimization/bulkGet",
-            List[Optional[Dict[str, Any]]],
-            body=body,
-        )
-
-        records = [OptimizationRecord(self, **r) if r is not None else None for r in record_data]
-
-        if include:
-            for r in records:
-                r._handle_includes(include)
-
-        if is_single:
-            return records[0]
-        else:
-            return records
+        return self._get_records_by_type(OptimizationRecord, record_ids, missing_ok, include)
 
     def query_optimizations(
         self,
@@ -1431,36 +1430,7 @@ class PortalClient(PortalClientBase):
             that was not found.
         """
 
-        is_single = not isinstance(record_ids, Sequence)
-
-        record_ids = make_list(record_ids)
-        if not record_ids:
-            return []
-
-        if len(record_ids) > self.api_limits["get_records"]:
-            raise RuntimeError(
-                f"Cannot get {len(record_ids)} records - over the limit of {self.api_limits['get_records']}"
-            )
-
-        body = CommonBulkGetBody(ids=record_ids, missing_ok=missing_ok)
-
-        record_data = self.make_request(
-            "post",
-            "v1/records/torsiondrive/bulkGet",
-            List[Optional[Dict[str, Any]]],
-            body=body,
-        )
-
-        records = [TorsiondriveRecord(self, **r) if r is not None else None for r in record_data]
-
-        if include:
-            for r in records:
-                r._handle_includes(include)
-
-        if is_single:
-            return records[0]
-        else:
-            return records
+        return self._get_records_by_type(TorsiondriveRecord, record_ids, missing_ok, include)
 
     def query_torsiondrives(
         self,
@@ -1669,36 +1639,7 @@ class PortalClient(PortalClientBase):
             that was not found.
         """
 
-        is_single = not isinstance(record_ids, Sequence)
-
-        record_ids = make_list(record_ids)
-        if not record_ids:
-            return []
-
-        if len(record_ids) > self.api_limits["get_records"]:
-            raise RuntimeError(
-                f"Cannot get {len(record_ids)} records - over the limit of {self.api_limits['get_records']}"
-            )
-
-        body = CommonBulkGetBody(ids=record_ids, missing_ok=missing_ok)
-
-        record_data = self.make_request(
-            "post",
-            "v1/records/gridoptimization/bulkGet",
-            List[Optional[Dict[str, Any]]],
-            body=body,
-        )
-
-        records = [GridoptimizationRecord(self, **r) if r is not None else None for r in record_data]
-
-        if include:
-            for r in records:
-                r._handle_includes(include)
-
-        if is_single:
-            return records[0]
-        else:
-            return records
+        return self._get_records_by_type(GridoptimizationRecord, record_ids, missing_ok, include)
 
     def query_gridoptimizations(
         self,
@@ -1913,33 +1854,7 @@ class PortalClient(PortalClientBase):
             that was not found.
         """
 
-        is_single = not isinstance(record_ids, Sequence)
-
-        record_ids = make_list(record_ids)
-        if not record_ids:
-            return []
-
-        if len(record_ids) > self.api_limits["get_records"]:
-            raise RuntimeError(
-                f"Cannot get {len(record_ids)} records - over the limit of {self.api_limits['get_records']}"
-            )
-
-        body = CommonBulkGetBody(ids=record_ids, missing_ok=missing_ok)
-
-        record_data = self.make_request(
-            "post", "v1/records/reaction/bulkGet", List[Optional[Dict[str, Any]]], body=body
-        )
-
-        records = [ReactionRecord(self, **r) if r is not None else None for r in record_data]
-
-        if include:
-            for r in records:
-                r._handle_includes(include)
-
-        if is_single:
-            return records[0]
-        else:
-            return records
+        return self._get_records_by_type(ReactionRecord, record_ids, missing_ok, include)
 
     def query_reactions(
         self,
@@ -2145,33 +2060,7 @@ class PortalClient(PortalClientBase):
             that was not found.
         """
 
-        is_single = not isinstance(record_ids, Sequence)
-
-        record_ids = make_list(record_ids)
-        if not record_ids:
-            return []
-
-        if len(record_ids) > self.api_limits["get_records"]:
-            raise RuntimeError(
-                f"Cannot get {len(record_ids)} records - over the limit of {self.api_limits['get_records']}"
-            )
-
-        body = CommonBulkGetBody(ids=record_ids, missing_ok=missing_ok)
-
-        record_data = self.make_request(
-            "post", "v1/records/manybody/bulkGet", List[Optional[Dict[str, Any]]], body=body
-        )
-
-        records = [ManybodyRecord(self, **r) if r is not None else None for r in record_data]
-
-        if include:
-            for r in records:
-                r._handle_includes(include)
-
-        if is_single:
-            return records[0]
-        else:
-            return records
+        return self._get_records_by_type(ManybodyRecord, record_ids, missing_ok, include)
 
     def query_manybodys(
         self,
@@ -2325,37 +2214,30 @@ class PortalClient(PortalClientBase):
         *,
         include: Optional[Iterable[str]] = None,
     ) -> Union[Optional[NEBRecord], List[Optional[NEBRecord]]]:
+        """
+        Obtain NEB records with the specified IDs.
 
-        is_single = not isinstance(record_ids, Sequence)
+        Records will be returned in the same order as the record ids.
 
-        record_ids = make_list(record_ids)
-        if not record_ids:
-            return []
+        Parameters
+        ----------
+        record_ids
+            Single ID or sequence/list of records to obtain
+        missing_ok
+            If set to True, then missing records will be tolerated, and the returned
+            records will contain None for the corresponding IDs that were not found.
+        include
+            Additional fields to include in the returned record
 
-        if len(record_ids) > self.api_limits["get_records"]:
-            raise RuntimeError(
-                f"Cannot get {len(record_ids)} records - over the limit of {self.api_limits['get_records']}"
-            )
+        Returns
+        -------
+        :
+            If a single ID was specified, returns just that record. Otherwise, returns
+            a list of records.  If missing_ok was specified, None will be substituted for a record
+            that was not found.
+        """
 
-        body = CommonBulkGetBody(ids=record_ids, missing_ok=missing_ok)
-
-        record_data = self.make_request(
-            "post",
-            "v1/records/neb/bulkGet",
-            List[Optional[Dict[str, Any]]],
-            body=body,
-        )
-
-        records = [NEBRecord(self, **r) if r is not None else None for r in record_data]
-
-        if include:
-            for r in records:
-                r._handle_includes(include)
-
-        if is_single:
-            return records[0]
-        else:
-            return records
+        return self._get_records_by_type(NEBRecord, record_ids, missing_ok, include)
 
     def query_nebs(
         self,
