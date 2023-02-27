@@ -42,10 +42,6 @@ def test_baserecord_model_common(
 
     record = snowflake_client.get_records(rec_id, include=includes)
 
-    if includes is not None:
-        record._client = None
-        assert record.offline
-
     assert record.id == rec_id
     assert record.is_service is False
 

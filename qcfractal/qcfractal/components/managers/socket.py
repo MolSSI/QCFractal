@@ -357,3 +357,12 @@ class ManagerSocket:
 
         if dead_managers:
             self._logger.info(f"Deactivated {len(dead_managers)} managers due to missing heartbeats")
+
+    ####################################################
+    # Some stuff to be retrieved for managers
+    ####################################################
+
+    def get_log(self, name: str, *, session: Optional[Session] = None):
+
+        rec = self.get([name], include=["log"], session=session)
+        return rec[0]["log"]

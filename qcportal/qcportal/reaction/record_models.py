@@ -1,9 +1,8 @@
-from typing import List, Union, Optional, Tuple, Set, Iterable
+from typing import List, Union, Optional, Tuple, Iterable
 
-from pydantic import BaseModel, Extra, root_validator, constr, Field
+from pydantic import BaseModel, Extra, root_validator, constr
 from typing_extensions import Literal
 
-from qcportal.base_models import ProjURLParameters
 from qcportal.molecules import Molecule
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
 from ..optimization.record_models import OptimizationRecord, OptimizationSpecification
@@ -80,9 +79,9 @@ class ReactionRecord(BaseRecord):
     total_energy: Optional[float]
 
     ######################################################
-    # Fields not always included when fetching the record
+    # Fields not included when fetching the record
     ######################################################
-    components_: Optional[List[ReactionComponent]] = Field(None, alias="components")
+    components_: Optional[List[ReactionComponent]] = None
 
     def propagate_client(self, client):
         BaseRecord.propagate_client(self, client)
@@ -96,14 +95,32 @@ class ReactionRecord(BaseRecord):
 
     def _fetch_components(self):
         self._assert_online()
-        url_params = ProjURLParameters(include=["*", "singlepoint_record", "optimization_record", "molecule"])
 
         self.components_ = self._client.make_request(
             "get",
             f"v1/records/reaction/{self.id}/components",
             List[ReactionComponent],
-            url_params=url_params,
         )
+
+        # Fetch records & molecules
+        sp_comp = [c for c in self.components_ if c.singlepoint_id is not None]
+        sp_ids = [c.singlepoint_id for c in sp_comp]
+        sp_recs = self._client.get_singlepoints(sp_ids)
+        for c, rec in zip(sp_comp, sp_recs):
+            c.singlepoint_record = rec
+
+        opt_comp = [c for c in self.components_ if c.optimization_id is not None]
+        opt_ids = [c.optimization_id for c in opt_comp]
+        opt_recs = self._client.get_optimizations(opt_ids)
+        for c, rec in zip(opt_comp, opt_recs):
+            assert rec.initial_molecule_id == c.molecule_id
+            c.optimization_record = rec
+
+        mol_ids = [c.molecule_id for c in self.components_]
+        mols = self._client.get_molecules(mol_ids)
+        for c, mol in zip(self.components_, mols):
+            assert mol.id == c.molecule_id
+            c.molecule = mol
 
         self.propagate_client(self._client)
 

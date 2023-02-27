@@ -41,14 +41,14 @@ def test_record_client_get(
     assert len(r)
     assert all_id == [x.id for x in r]
     assert [x.task is None for x in r]
-    assert len(r[0].compute_history) == 1
-    assert len(r[1].compute_history) == 0
+    assert r[0].compute_history_ is None
+    assert r[1].compute_history_ is None
 
-    assert r[0].compute_history[0].outputs is None
     assert [x.task is None for x in r]
 
-    r = snowflake_client.get_records(all_id, include=["outputs", "task"])
-    assert r[0].compute_history[0].outputs is not None
+    r = snowflake_client.get_records(all_id, include=["compute_history", "task"])
+    assert len(r[0].compute_history_) == 1
+    assert len(r[1].compute_history_) == 0
     assert r[0].task is None
     assert r[1].task is not None
 

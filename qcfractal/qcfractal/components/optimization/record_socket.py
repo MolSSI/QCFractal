@@ -12,10 +12,8 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import contains_eager
 
-from qcfractal.components.record_socket import BaseRecordSocket
-from qcfractal.components.singlepoint.record_db_models import SinglepointRecordORM, QCSpecificationORM
-from qcfractal.db_socket.helpers import get_query_proj_options, insert_general
-from qcportal.exceptions import MissingDataError
+from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
+from qcfractal.db_socket.helpers import insert_general
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
 from qcportal.optimization import (
@@ -28,6 +26,7 @@ from qcportal.singlepoint import (
 )
 from qcportal.utils import hash_dict
 from .record_db_models import OptimizationSpecificationORM, OptimizationRecordORM, OptimizationTrajectoryORM
+from ..record_socket import BaseRecordSocket
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -246,58 +245,6 @@ class OptimizationRecordSocket(BaseRecordSocket):
             session=session,
         )
 
-    def get_trajectory_element(
-        self,
-        record_id: int,
-        trajectory_index: int,
-        include: Optional[Sequence[str]] = None,
-        exclude: Optional[Sequence[str]] = None,
-        *,
-        session: Optional[Session] = None,
-    ) -> Dict[str, Any]:
-        """
-        Retrieve a single element of the trajectory
-        """
-
-        proj_options = get_query_proj_options(SinglepointRecordORM, include, exclude)
-
-        with self.root_socket.optional_session(session, True) as session:
-            if trajectory_index < 0:
-                # Find the true index
-                stmt = select(OptimizationTrajectoryORM).where(OptimizationTrajectoryORM.optimization_id == record_id)
-                stmt = stmt.order_by(OptimizationTrajectoryORM.position.asc())
-
-                r = session.execute(stmt).scalars().all()
-
-                # if index == -1, must have one element, -2 must have 2, etc
-                if abs(trajectory_index) > len(r):
-                    raise MissingDataError(
-                        f"Missing trajectory: Either optimization {record_id} does not exist"
-                        f" or does not have trajectory index {trajectory_index}"
-                    )
-
-                true_index = r[trajectory_index].position
-            else:
-                true_index = trajectory_index
-
-            stmt = select(SinglepointRecordORM)
-            stmt = stmt.join(
-                OptimizationTrajectoryORM, OptimizationTrajectoryORM.singlepoint_id == SinglepointRecordORM.id
-            )
-            stmt = stmt.where(OptimizationTrajectoryORM.optimization_id == record_id)
-            stmt = stmt.where(OptimizationTrajectoryORM.position == true_index)
-            stmt = stmt.options(*proj_options)
-
-            r = session.execute(stmt).scalar_one_or_none()
-
-            if r is None:
-                raise MissingDataError(
-                    f"Missing trajectory: Either optimization {record_id} does not exist"
-                    f" or does not have trajectory index {trajectory_index}"
-                )
-
-            return r.model_dict()
-
     def add_internal(
         self,
         initial_molecule_ids: Sequence[int],
@@ -445,3 +392,20 @@ class OptimizationRecordSocket(BaseRecordSocket):
                 )
 
             return self.add_internal(mol_ids, spec_id, tag, priority, owner_user_id, owner_group_id, session=session)
+
+    ####################################################
+    # Some stuff to be retrieved for optimizations
+    ####################################################
+
+    def get_trajectory(
+        self,
+        record_id: int,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[int]:
+        """
+        Retrieve the IDs of the singlepoint computations that form the trajectory
+        """
+
+        rec = self.get([record_id], include=["trajectory"], session=session)
+        return [x["singlepoint_id"] for x in rec[0]["trajectory"]]

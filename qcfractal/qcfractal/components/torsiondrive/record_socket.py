@@ -18,10 +18,8 @@ from qcfractal.components.optimization.record_db_models import (
     OptimizationSpecificationORM,
     OptimizationRecordORM,
 )
-from qcfractal.components.record_socket import BaseRecordSocket
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
-from qcfractal.db_socket.helpers import get_query_proj_options
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
 from qcportal.optimization import OptimizationSpecification
@@ -39,6 +37,7 @@ from .record_db_models import (
     TorsiondriveOptimizationORM,
     TorsiondriveRecordORM,
 )
+from ..record_socket import BaseRecordSocket
 
 # Torsiondrive package is optional
 _td_spec = importlib.util.find_spec("torsiondrive")
@@ -108,7 +107,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
 
         td_orm: TorsiondriveRecordORM = service_orm.record
         specification = TorsiondriveSpecification(**td_orm.specification.model_dict())
-        initial_molecules: List[Dict[str, Any]] = [x.model_dict() for x in td_orm.initial_molecules]
+        initial_molecules: List[Dict[str, Any]] = [x.molecule.model_dict() for x in td_orm.initial_molecules]
         keywords = specification.keywords
 
         # Create a template from the first initial molecule
@@ -461,8 +460,6 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             )
 
         if need_initmol_join:
-            # Don't use the relationship - the initial_molecules relationship goes through a secondary table
-            # just use the secondary table directly
             stmt = stmt.join(
                 TorsiondriveInitialMoleculeORM,
                 TorsiondriveInitialMoleculeORM.torsiondrive_id == TorsiondriveRecordORM.id,
@@ -677,25 +674,59 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                 init_mol_ids, spec_id, as_service, tag, priority, owner_user_id, owner_group_id, session=session
             )
 
-    def get_minimum_optimizations(
+    ####################################################
+    # Some stuff to be retrieved for torsiondrives
+    ####################################################
+
+    def get_initial_molecules_ids(
         self,
-        torsiondrive_id: int,
-        include: Optional[Sequence[str]] = None,
-        exclude: Optional[Sequence[str]] = None,
+        record_id: int,
         *,
         session: Optional[Session] = None,
-    ) -> Dict[str, Dict[str, Any]]:
+    ) -> List[int]:
+        """
+        Obtain the initial molecules of a torsiondrive
+
+        Parameters
+        ----------
+        record_id
+            ID of the torsiondrive to get the minimum optimizations of
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            List of Molecule ids
+        """
+
+        rec = self.get([record_id], include=["initial_molecules"], session=session)
+        return [x["molecule_id"] for x in rec[0]["initial_molecules"]]
+
+    def get_optimizations(
+        self,
+        record_id: int,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[Dict[str, Any]]:
+
+        rec = self.get([record_id], include=["optimizations"], session=session)
+        return rec[0]["optimizations"]
+
+    def get_minimum_optimizations(
+        self,
+        record_id: int,
+        *,
+        session: Optional[Session] = None,
+    ) -> Dict[str, int]:
         """
         Obtain the records for the minimum optimizations for a torsiondrive
 
         Parameters
         ----------
-        torsiondrive_id
+        record_id
             ID of the torsiondrive to get the minimum optimizations of
-        include
-            Which fields of the result to return. Default is to return all fields.
-        exclude
-            Remove these fields from the return. Default is to return all fields.
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -721,24 +752,21 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             .group_by("torsiondrive_id", "key")
         ).cte()
 
-        query_opts = get_query_proj_options(OptimizationRecordORM, include, exclude)
-
         # Select rows with matching minimum energies
         # We order by the optimization id desc to handle the case where multiple records with same final energy
         # Then, the dictionary comprehension at the end last of that energy (lowest id)
         stmt = (
-            select(TorsiondriveOptimizationORM.key, OptimizationRecordORM)
-            .options(*query_opts)
+            select(TorsiondriveOptimizationORM.key, TorsiondriveOptimizationORM.optimization_id)
             .join(energy_cte, energy_cte.c.torsiondrive_id == TorsiondriveOptimizationORM.torsiondrive_id)
             .join(TorsiondriveOptimizationORM.optimization_record)
-            .where(TorsiondriveOptimizationORM.torsiondrive_id == torsiondrive_id)
+            .where(TorsiondriveOptimizationORM.torsiondrive_id == record_id)
             .where(TorsiondriveOptimizationORM.key == energy_cte.c.key)
             .where(OptimizationRecordORM.energies[-1].cast(TEXT).cast(DOUBLE_PRECISION) == energy_cte.c.min_energy)
             .order_by(OptimizationRecordORM.id.desc())
         )
 
         with self.root_socket.optional_session(session, True) as session:
-            r = session.execute(stmt).all()  # List of key: OptimizationRecordORM
+            r = session.execute(stmt).all()  # List of (key, OptimizationRecordORM)
 
             # If multiple records with the same energy are returned, then this will choose the last
-            return {x: y.model_dict() for x, y in r}
+            return {x: y for x, y in r}

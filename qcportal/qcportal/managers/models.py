@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict, Any, List, Iterable, Set, Tuple
+from typing import Optional, Dict, Any, List, Tuple
 
 from dateutil.parser import parse as date_parser
-from pydantic import BaseModel, Field, constr, validator, Extra
+from pydantic import BaseModel, Field, constr, validator, Extra, PrivateAttr
 
 from qcportal.base_models import RestModelBase, QueryProjModelBase
 from ..base_models import QueryIteratorBase
@@ -102,7 +102,30 @@ class ComputeManager(BaseModel):
     manager_version: str
     programs: Dict[str, Any]
 
-    log: Optional[List[ComputeManagerLogEntry]]
+    log_: Optional[List[ComputeManagerLogEntry]] = None
+
+    _client: Any = PrivateAttr(None)
+    _base_url: Optional[str] = PrivateAttr(None)
+
+    def propagate_client(self, client):
+        self._client = client
+        self._base_url = f"v1/managers/{self.name}"
+
+    def _fetch_log(self):
+        if self._client is None:
+            raise RuntimeError("This manager object is not connected to a client")
+
+        self.log_ = self._client.make_request(
+            "get",
+            f"{self._base_url}/log",
+            List[ComputeManagerLogEntry],
+        )
+
+    @property
+    def log(self):
+        if self.log_ is None:
+            self._fetch_log()
+        return self.log_
 
 
 class ManagerActivationBody(RestModelBase):
@@ -179,9 +202,14 @@ class ManagerQueryIterator(QueryIteratorBase):
         QueryIteratorBase.__init__(self, client, query_filters, batch_limit)
 
     def _request(self) -> Tuple[Optional[QueryMetadata], List[ComputeManager]]:
-        return self._client.make_request(
+        managers = self._client.make_request(
             "post",
             "v1/managers/query",
             Tuple[Optional[QueryMetadata], List[ComputeManager]],
             body=self._query_filters,
         )
+
+        for m in managers[1]:
+            m.propagate_client(self._client)
+
+        return managers

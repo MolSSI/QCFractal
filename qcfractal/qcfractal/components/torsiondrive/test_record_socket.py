@@ -40,7 +40,9 @@ def test_torsiondrive_socket_add_get(storage_socket: SQLAlchemySocket, spec: Tor
     time_1 = datetime.utcnow()
     assert meta.success
 
-    recs = storage_socket.records.torsiondrive.get(id, include=["*", "initial_molecules", "service"])
+    recs = storage_socket.records.torsiondrive.get(
+        id, include=["*", "initial_molecules.*", "initial_molecules.molecule", "service"]
+    )
 
     assert len(recs) == 2
     for r in recs:
@@ -59,11 +61,11 @@ def test_torsiondrive_socket_add_get(storage_socket: SQLAlchemySocket, spec: Tor
     assert len(recs[0]["initial_molecules"]) == 1
     assert len(recs[1]["initial_molecules"]) == 2
 
-    assert recs[0]["initial_molecules"][0]["identifiers"]["molecule_hash"] == hooh.get_hash()
+    assert recs[0]["initial_molecules"][0]["molecule"]["identifiers"]["molecule_hash"] == hooh.get_hash()
 
     # Not necessarily in the input order
-    hash1 = recs[1]["initial_molecules"][0]["identifiers"]["molecule_hash"]
-    hash2 = recs[1]["initial_molecules"][1]["identifiers"]["molecule_hash"]
+    hash1 = recs[1]["initial_molecules"][0]["molecule"]["identifiers"]["molecule_hash"]
+    hash2 = recs[1]["initial_molecules"][1]["molecule"]["identifiers"]["molecule_hash"]
     assert {hash1, hash2} == {td_mol_1.get_hash(), td_mol_2.get_hash()}
 
 

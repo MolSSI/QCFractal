@@ -40,16 +40,13 @@ def add_singlepoint_records_v1(body_data: SinglepointAddBody):
 @api_v1.route("/records/singlepoint/<int:record_id>/wavefunction", methods=["GET"])
 @wrap_route("READ")
 def get_singlepoint_wavefunction_v1(record_id: int):
-    rec = storage_socket.records.singlepoint.get([record_id], include=["wavefunction"])
-    return rec[0].get("wavefunction", None)
+    return storage_socket.records.singlepoint.get_wavefunction_metadata(record_id)
 
 
 @api_v1.route("/records/singlepoint/<int:record_id>/wavefunction/data", methods=["GET"])
 @wrap_route("READ")
 def get_singlepoint_wavefunction_data_v1(record_id: int):
-    with storage_socket.session_scope(True) as session:
-        lb_id = storage_socket.records.singlepoint.get_wavefunction_lb_id(record_id, session=session)
-        return storage_socket.largebinary.get_raw(lb_id, session=session)
+    return storage_socket.records.singlepoint.get_wavefunction_rawdata(record_id)
 
 
 @api_v1.route("/records/singlepoint/query", methods=["POST"])

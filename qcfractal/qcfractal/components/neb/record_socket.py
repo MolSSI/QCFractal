@@ -11,15 +11,13 @@ import numpy as np
 import sqlalchemy.orm.attributes
 import tabulate
 from pydantic import BaseModel, Extra
-from sqlalchemy import select, union
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by, DOUBLE_PRECISION, TEXT
 from sqlalchemy.orm import contains_eager
 
 from qcfractal.components.molecules.db_models import MoleculeORM
-from qcfractal.components.record_socket import BaseRecordSocket
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM, SinglepointRecordORM
-from qcfractal.db_socket.helpers import get_query_proj_options
 from qcportal.exceptions import MissingDataError
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
@@ -40,6 +38,7 @@ from .record_db_models import (
     NEBInitialchainORM,
     NEBRecordORM,
 )
+from ..record_socket import BaseRecordSocket
 
 # geometric package is optional
 _geo_spec = importlib.util.find_spec("geometric")
@@ -124,7 +123,7 @@ class NEBRecordSocket(BaseRecordSocket):
         output += tabulate.tabulate(table_rows, headers=["keywords", "value"])
         output += "\n\n"
 
-        initial_chain: List[Dict[str, Any]] = [x.model_dict() for x in neb_orm.initial_chain]
+        initial_chain: List[Dict[str, Any]] = [x.molecule.model_dict() for x in neb_orm.initial_chain]
         output += f"{keywords.get('images', 11)} images will be used to guess a transition state structure.\n"
         output += f"Molecular formula = {Molecule(**initial_chain[0]).get_molecular_formula()}\n"
         molecule_template = Molecule(**initial_chain[0]).dict(encoding="json")
@@ -181,7 +180,7 @@ class NEBRecordSocket(BaseRecordSocket):
         output = ""
         if service_state.iteration == 0:
             service_state.converged = False
-            initial_molecules = [x.to_model(Molecule) for x in neb_orm.initial_chain]
+            initial_molecules = [x.molecule.to_model(Molecule) for x in neb_orm.initial_chain]
 
             if service_state.optimized:
                 # First iteration, but we have been told to optimize the endpoints
@@ -763,20 +762,57 @@ class NEBRecordSocket(BaseRecordSocket):
                 init_molecule_ids, spec_id, tag, priority, owner_user_id, owner_group_id, session=session
             )
 
+    ####################################################
+    # Some stuff to be retrieved for reactions
+    ####################################################
+
+    def get_initial_molecules_ids(
+        self,
+        record_id: int,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[int]:
+        rec = self.get([record_id], include=["initial_chain"], session=session)
+        return [x["molecule_id"] for x in rec[0]["initial_chain"]]
+
+    def get_singlepoints(
+        self,
+        record_id: int,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[Dict[str, Any]]:
+        rec = self.get([record_id], include=["singlepoints"], session=session)
+        return rec[0]["singlepoints"]
+
+    def get_optimizations(
+        self,
+        record_id: int,
+        *,
+        session: Optional[Session] = None,
+    ) -> Dict[str, Dict[str, Any]]:
+
+        rec = self.get([record_id], include=["optimizations"], session=session)
+        ret = {}
+
+        for opt in rec[0]["optimizations"]:
+            if opt["ts"]:
+                ret["transition"] = opt
+            elif opt["position"] == 0:
+                ret["initial"] = opt
+            else:
+                ret["final"] = opt
+
+        return ret
+
     def get_neb_result(
         self,
         neb_id: int,
-        include: Optional[Sequence[str]] = None,
-        exclude: Optional[Sequence[str]] = None,
         *,
         session: Optional[Session] = None,
     ) -> Dict[str, Any]:
 
-        query_mol = get_query_proj_options(MoleculeORM, include, exclude)
-
         stmt = (
             select(MoleculeORM)
-            .options(*query_mol)
             .join(SinglepointRecordORM)
             .join(NEBSinglepointsORM)
             .where(NEBSinglepointsORM.neb_id == neb_id)

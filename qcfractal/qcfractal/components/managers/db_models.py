@@ -84,7 +84,7 @@ class ComputeManagerORM(BaseORM):
     manager_version = Column(String, nullable=False)
     programs = Column(JSON, nullable=False)
 
-    log = relationship(ComputeManagerLogORM, lazy="selectin", order_by=ComputeManagerLogORM.timestamp.desc())
+    log = relationship(ComputeManagerLogORM, order_by=ComputeManagerLogORM.timestamp.desc())
 
     __table_args__ = (
         Index("ix_compute_manager_status", "status"),

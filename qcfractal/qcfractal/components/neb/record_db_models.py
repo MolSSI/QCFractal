@@ -11,7 +11,6 @@ from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.optimization.record_db_models import OptimizationRecordORM
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM, SinglepointRecordORM
-from qcfractal.components.services.db_models import ServiceSubtaskRecordORM
 from qcfractal.db_socket import BaseORM
 
 
@@ -52,6 +51,8 @@ class NEBInitialchainORM(BaseORM):
     neb_id = Column(Integer, ForeignKey("neb_record.id", ondelete="cascade"), primary_key=True)
     molecule_id = Column(Integer, ForeignKey(MoleculeORM.id, ondelete="cascade"), primary_key=True)
     position = Column(Integer, primary_key=True)
+
+    molecule = relationship(MoleculeORM)
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         exclude = self.append_exclude(exclude, "neb_id")
@@ -98,11 +99,7 @@ class NEBRecordORM(BaseRecordORM):
     specification_id = Column(Integer, ForeignKey(NEBSpecificationORM.id), nullable=False)
     specification = relationship(NEBSpecificationORM, lazy="selectin")
 
-    initial_chain = relationship(
-        MoleculeORM,
-        secondary=NEBInitialchainORM.__table__,
-        order_by=NEBInitialchainORM.__table__.c.position,
-    )
+    initial_chain = relationship(NEBInitialchainORM, collection_class=ordering_list("position"))
 
     singlepoints = relationship(
         NEBSinglepointsORM,

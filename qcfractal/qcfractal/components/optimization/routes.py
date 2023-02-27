@@ -4,8 +4,7 @@ from flask import current_app, g
 
 from qcfractal.api_v1.blueprint import api_v1
 from qcfractal.api_v1.helpers import wrap_route
-from qcfractal.flask_app import prefix_projection, storage_socket
-from qcportal.base_models import ProjURLParameters
+from qcfractal.flask_app import storage_socket
 from qcportal.exceptions import LimitExceededError
 from qcportal.optimization import (
     OptimizationDatasetSpecification,
@@ -42,20 +41,8 @@ def add_optimization_records_v1(body_data: OptimizationAddBody):
 
 @api_v1.route("/records/optimization/<int:record_id>/trajectory", methods=["GET"])
 @wrap_route("READ")
-def get_optimization_trajectory_v1(record_id: int, url_params: ProjURLParameters):
-    # adjust the includes/excludes to refer to the trajectory
-    ch_includes, ch_excludes = prefix_projection(url_params, "trajectory")
-    rec = storage_socket.records.optimization.get([record_id], include=ch_includes, exclude=ch_excludes)
-    return rec[0]["trajectory"]
-
-
-@api_v1.route("/records/optimization/<int:record_id>/trajectory/<signed_int:trajectory_index>", methods=["GET"])
-@wrap_route("READ")
-def get_optimization_trajectory_element_v1(record_id: int, trajectory_index: int, url_params: ProjURLParameters):
-    # adjust the includes/excludes to refer to the trajectory
-    return storage_socket.records.optimization.get_trajectory_element(
-        record_id, trajectory_index, url_params.include, url_params.exclude
-    )
+def get_optimization_trajectory_v1(record_id: int):
+    return storage_socket.records.optimization.get_trajectory(record_id)
 
 
 @api_v1.route("/records/optimization/query", methods=["POST"])

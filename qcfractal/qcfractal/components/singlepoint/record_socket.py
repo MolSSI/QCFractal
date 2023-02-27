@@ -8,7 +8,6 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import contains_eager
 
-from qcfractal.components.record_socket import BaseRecordSocket
 from qcfractal.components.wavefunctions.db_models import WavefunctionORM
 from qcfractal.db_socket.helpers import insert_general
 from qcportal.compression import CompressionEnum, compress
@@ -23,6 +22,7 @@ from qcportal.singlepoint import (
 )
 from qcportal.utils import hash_dict
 from .record_db_models import QCSpecificationORM, SinglepointRecordORM
+from ..record_socket import BaseRecordSocket
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -432,19 +432,23 @@ class SinglepointRecordSocket(BaseRecordSocket):
 
             return self.add_internal(mol_ids, spec_id, tag, priority, owner_user_id, owner_group_id, session=session)
 
-    ######################################################
-    # Some common stuff to be retrieved for singlepoints #
-    ######################################################
+    ####################################################
+    # Some stuff to be retrieved for singlepoints
+    ####################################################
 
-    def get_wavefunction_lb_id(self, record_id: int, *, session: Optional[Session] = None):
+    def get_wavefunction_metadata(self, record_id: int, *, session: Optional[Session] = None) -> Dict[str, Any]:
 
-        stmt = select(WavefunctionORM.id)
-        stmt = stmt.where(WavefunctionORM.record_id == record_id)
+        rec = self.get([record_id], include=["wavefunction"], session=session)
+        return rec[0]["wavefunction"]
+
+    def get_wavefunction_rawdata(
+        self, record_id: int, *, session: Optional[Session] = None
+    ) -> Tuple[bytes, CompressionEnum]:
 
         with self.root_socket.optional_session(session, True) as session:
-            lb_id = session.execute(stmt).scalar_one_or_none()
+            wfn_meta = self.get_wavefunction_metadata(record_id, session=session)
 
-            if lb_id is None:
-                raise MissingDataError(f"Wavefunction data does not exist for record {record_id}")
+            if wfn_meta is None:
+                raise MissingDataError(f"Cannot find wavefunction for record {record_id}")
 
-            return lb_id
+            return self.root_socket.largebinary.get_raw(wfn_meta["id"], session=session)

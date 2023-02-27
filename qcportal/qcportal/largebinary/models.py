@@ -24,30 +24,28 @@ class LargeBinary(BaseModel):
     checksum: str
     compression_type: CompressionEnum
 
-    _compressed_data: Optional[bytes] = PrivateAttr(None)
-    _decompressed_data: Optional[Any] = PrivateAttr(None)
+    data_url_: Optional[str] = None  # Typically set in derived classes
+    compressed_data_: Optional[bytes] = None
+    decompressed_data_: Optional[Any] = None
 
-    def _fetch_from_url(self, url: str):
-        if self._compressed_data is None and self._decompressed_data is None:
+    def _fetch_raw_data(self):
+        if self.compressed_data_ is None and self.decompressed_data_ is None:
             cdata, ctype = self._client.make_request(
                 "get",
-                url,
+                self.data_url_,
                 Tuple[bytes, CompressionEnum],
             )
 
             assert self.compression_type == ctype
-            self._compressed_data = cdata
-
-    def fetch(self):
-        raise NotImplementedError("fetch() must be implemented by derived classes")
+            self.compressed_data_ = cdata
 
     @property
     def data(self) -> Any:
-        self.fetch()
+        self._fetch_raw_data()
 
         # Decompress, then remove compressed form
-        if self._decompressed_data is None:
-            self._decompressed_data = decompress(self._compressed_data, self.compression_type)
-            self._compressed_data = None
+        if self.decompressed_data_ is None:
+            self.decompressed_data_ = decompress(self.compressed_data_, self.compression_type)
+            self.compressed_data_ = None
 
-        return self._decompressed_data
+        return self.decompressed_data_

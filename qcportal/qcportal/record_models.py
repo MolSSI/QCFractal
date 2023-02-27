@@ -5,13 +5,12 @@ from enum import Enum
 from typing import Optional, Dict, Any, List, Union, Iterable, Tuple, Type, Sequence, ClassVar
 
 from dateutil.parser import parse as date_parser
-from pydantic import BaseModel, Extra, constr, validator, PrivateAttr, Field
+from pydantic import BaseModel, Extra, constr, validator, PrivateAttr
 from qcelemental.models.results import Provenance
 
 from qcportal.base_models import (
     RestModelBase,
     QueryProjModelBase,
-    ProjURLParameters,
     QueryIteratorBase,
 )
 from qcportal.metadata_models import QueryMetadata
@@ -90,7 +89,30 @@ class ComputeHistory(BaseModel):
     manager_name: Optional[str]
     modified_on: datetime
     provenance: Optional[Provenance]
-    outputs: Optional[Dict[str, OutputStore]]
+    outputs_: Optional[Dict[str, OutputStore]] = None
+
+    _client: Any = PrivateAttr(None)
+    _base_url: Optional[str] = PrivateAttr(None)
+
+    def propagate_client(self, client, record_base_url):
+        self._client = client
+        self._base_url = f"{record_base_url}/compute_history/{self.id}"
+
+    def _fetch_outputs(self):
+        if self._client is None:
+            raise RuntimeError("This compute history is not connected to a client")
+
+        self.outputs_ = self._client.make_request(
+            "get",
+            f"{self._base_url}/outputs",
+            Dict[str, OutputStore],
+        )
+
+    @property
+    def outputs(self) -> Dict[str, OutputStore]:
+        if self.outputs_ is None:
+            self._fetch_outputs()
+        return self.outputs_
 
     def get_output(self, output_type: OutputTypeEnum) -> Optional[Union[str, Dict[str, Any]]]:
         if not self.outputs:
@@ -146,7 +168,6 @@ class ServiceDependency(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    service_id: int
     record_id: int
     extras: Dict[str, Any]
 
@@ -163,7 +184,7 @@ class ServiceRecord(BaseModel):
     created_on: datetime
 
     service_state: Optional[Dict[str, Any]] = None
-    dependencies: Optional[List[ServiceDependency]] = None
+    dependencies: List[ServiceDependency]
 
 
 class BaseRecord(BaseModel):
@@ -188,16 +209,17 @@ class BaseRecord(BaseModel):
     owner_group: Optional[str]
 
     ######################################################
-    # Fields not always included when fetching the record
+    # Fields not included when fetching the record
     ######################################################
-    compute_history_: Optional[List[ComputeHistory]] = Field(None, alias="compute_history")
-    task_: Optional[TaskRecord] = Field(None, alias="task")
-    service_: Optional[ServiceRecord] = Field(None, alias="service")
-    comments_: Optional[List[RecordComment]] = Field(None, alias="comments")
-    native_files_: Optional[Dict[str, NativeFile]] = Field(None, alias="native_files")
+    compute_history_: Optional[List[ComputeHistory]] = None
+    task_: Optional[TaskRecord] = None
+    service_: Optional[ServiceRecord] = None
+    comments_: Optional[List[RecordComment]] = None
+    native_files_: Optional[Dict[str, NativeFile]] = None
 
     # Private non-pydantic fields
     _client: Any = PrivateAttr(None)
+    _base_url: str = PrivateAttr(None)
     """ Client connected to the server that this record belongs to """
 
     # A dictionary of all subclasses (calculation types) to actual class type
@@ -206,10 +228,9 @@ class BaseRecord(BaseModel):
     def __init__(self, client=None, **kwargs):
         BaseModel.__init__(self, **kwargs)
 
-        # Calls derived class propagate_client & make_caches,
+        # Calls derived class propagate_client
         # which should filter down to the ones in this (BaseRecord) class
         self.propagate_client(client)
-        self.make_caches()
 
         assert self._client is client, "Client not set in base record class?"
 
@@ -240,41 +261,36 @@ class BaseRecord(BaseModel):
 
     def propagate_client(self, client):
         """
-        Propagates a client to this record to any fields within this record that need it
+        Propagates a client and related information to this record to any fields within this record that need it
 
         This is expected to be called from derived class propagate_client functions as well
         """
         self._client = client
+        self._base_url = f"v1/records/{self.record_type}/{self.id}"
 
-    def make_caches(self):
-        """
-        Prepare any internal caches
+        if self.compute_history_ is not None:
+            for ch in self.compute_history_:
+                ch.propagate_client(self._client, self._base_url)
 
-        This is expected to be called from derived class make_caches as well
-        """
-        pass
+        if self.native_files_ is not None:
+            for nf in self.native_files_.values():
+                nf.propagate_client(self._client, self._base_url)
 
     def _assert_online(self):
         """Raises an exception if this record does not have an associated client"""
         if self.offline:
             raise RuntimeError("Record is not connected to a client")
 
-    def _fetch_compute_history(self, include_outputs: bool = False):
+    def _fetch_compute_history(self):
         self._assert_online()
-
-        url_params = {}
-
-        if include_outputs:
-            url_params = {"include": ["*", "outputs"]}
-
-        url_params = ProjURLParameters(**url_params)
 
         self.compute_history_ = self._client.make_request(
             "get",
-            f"v1/records/{self.id}/compute_history",
+            f"{self._base_url}/compute_history",
             List[ComputeHistory],
-            url_params=url_params,
         )
+
+        self.propagate_client(self._client)
 
     def _fetch_task(self):
         self._assert_online()
@@ -284,7 +300,7 @@ class BaseRecord(BaseModel):
 
         self.task_ = self._client.make_request(
             "get",
-            f"v1/records/{self.id}/task",
+            f"{self._base_url}/task",
             Optional[TaskRecord],
         )
 
@@ -294,18 +310,14 @@ class BaseRecord(BaseModel):
         if not self.is_service:
             return
 
-        url_params = ProjURLParameters(include=["*", "dependencies"])
-
-        self.service_ = self._client.make_request(
-            "get", f"v1/records/{self.id}/service", Optional[ServiceRecord], url_params=url_params
-        )
+        self.service_ = self._client.make_request("get", f"{self._base_url}/service", Optional[ServiceRecord])
 
     def _fetch_comments(self):
         self._assert_online()
 
         self.comments_ = self._client.make_request(
             "get",
-            f"v1/records/{self.id}/comments",
+            f"{self._base_url}/comments",
             Optional[List[RecordComment]],
         )
 
@@ -314,29 +326,17 @@ class BaseRecord(BaseModel):
 
         self.native_files_ = self._client.make_request(
             "get",
-            f"v1/records/{self.id}/native_files",
+            f"{self._base_url}/native_files",
             Optional[Dict[str, NativeFile]],
         )
 
-    def _get_last_compute_history(self, include_outputs: bool = False) -> Optional[ComputeHistory]:
-        if self.compute_history_ is None:
-            self._fetch_compute_history(include_outputs=include_outputs)
-
-        if not self.compute_history_:
-            return None
-
-        # If we want outputs but we don't have them
-        if include_outputs and not self.compute_history_[-1].outputs:
-            self._fetch_compute_history(include_outputs=include_outputs)
-
-        return self.compute_history_[-1]
+        self.propagate_client(self._client)
 
     def _get_output(self, output_type: OutputTypeEnum) -> Optional[Union[str, Dict[str, Any]]]:
-        last_history = self._get_last_compute_history(include_outputs=True)
-        if last_history is None:
+        history = self.compute_history
+        if not history:
             return None
-
-        return last_history.get_output(output_type)
+        return history[-1].get_output(output_type)
 
     def _handle_includes(self, includes: Optional[Iterable[str]]):
         """
@@ -349,10 +349,8 @@ class BaseRecord(BaseModel):
             self._fetch_task()
         if "service" in includes:
             self._fetch_task()
-        if "compute_history" in includes and "outputs" not in includes:
-            self._fetch_compute_history(False)
-        if "outputs" in includes:
-            self._fetch_compute_history(True)
+        if "compute_history" in includes:
+            self._fetch_compute_history()
         if "comments" in includes:
             self._fetch_comments()
         if "native_files" in includes:
@@ -406,10 +404,10 @@ class BaseRecord(BaseModel):
 
     @property
     def provenance(self) -> Optional[Provenance]:
-        last_history = self._get_last_compute_history(include_outputs=False)
-        if last_history is None:
+        history = self.compute_history
+        if not history:
             return None
-        return last_history.provenance
+        return history[-1].provenance
 
 
 ServiceDependency.update_forward_refs()

@@ -48,7 +48,7 @@ class ServiceDependencyORM(BaseORM):
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "id")
+        exclude = self.append_exclude(exclude, "id", "service_id")
         return BaseORM.model_dict(self, exclude)
 
 
@@ -70,7 +70,7 @@ class ServiceQueueORM(BaseORM):
 
     service_state = Column(PlainMsgpackExt)
 
-    dependencies = relationship(ServiceDependencyORM, cascade="all, delete-orphan")
+    dependencies = relationship(ServiceDependencyORM, lazy="selectin", cascade="all, delete-orphan")
 
     __table_args__ = (
         UniqueConstraint("record_id", name="ux_service_queue_record_id"),

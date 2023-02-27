@@ -53,6 +53,8 @@ class TorsiondriveInitialMoleculeORM(BaseORM):
     torsiondrive_id = Column(Integer, ForeignKey("torsiondrive_record.id", ondelete="cascade"), primary_key=True)
     molecule_id = Column("molecule_id", Integer, ForeignKey(MoleculeORM.id), primary_key=True)
 
+    molecule = relationship(MoleculeORM)
+
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         # Remove fields not present in the model
         exclude = self.append_exclude(exclude, "torsiondrive_id")
@@ -109,7 +111,7 @@ class TorsiondriveRecordORM(BaseRecordORM):
     specification_id = Column(Integer, ForeignKey(TorsiondriveSpecificationORM.id), nullable=False)
     specification = relationship(TorsiondriveSpecificationORM, lazy="selectin")
 
-    initial_molecules = relationship(MoleculeORM, secondary=TorsiondriveInitialMoleculeORM.__table__)
+    initial_molecules = relationship(TorsiondriveInitialMoleculeORM)
 
     optimizations = relationship(
         TorsiondriveOptimizationORM,

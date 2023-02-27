@@ -2334,6 +2334,10 @@ class PortalClient(PortalClientBase):
 
         managers = self.make_request("post", "v1/managers/bulkGet", List[Optional[ComputeManager]], body=body)
 
+        for m in managers:
+            if m is not None:
+                m.propagate_client(self)
+
         if is_single:
             return managers[0]
         else:

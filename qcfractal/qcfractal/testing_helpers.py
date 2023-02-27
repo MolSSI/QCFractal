@@ -7,9 +7,9 @@ from sqlalchemy import select
 
 from qcarchivetesting import geoip_path, test_users, test_groups
 from qcfractal.components.internal_jobs.db_models import InternalJobORM
+from qcfractal.config import update_nested_dict
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.snowflake import FractalSnowflake
-from qcfractal.config import update_nested_dict
 from qcportal import PortalClient, ManagerClient
 from qcportal.auth import UserInfo, GroupInfo
 from qcportal.managers import ManagerName
@@ -83,7 +83,7 @@ class QCATestingSnowflake(FractalSnowflake):
             "manager_tasks_return": 2,
             "get_records": 10,
             "get_dataset_entries": 5,
-            "get_molecules": 10,
+            "get_molecules": 11,
             "get_managers": 10,
             "get_server_stats": 10,
             "get_error_logs": 10,

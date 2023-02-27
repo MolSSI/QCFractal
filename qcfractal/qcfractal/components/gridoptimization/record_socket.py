@@ -14,7 +14,6 @@ from sqlalchemy.orm import contains_eager
 
 from qcfractal import __version__ as qcfractal_version
 from qcfractal.components.optimization.record_db_models import OptimizationSpecificationORM
-from qcfractal.components.record_socket import BaseRecordSocket
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
 from qcfractal.db_socket.helpers import insert_general
@@ -37,6 +36,7 @@ from .record_db_models import (
     GridoptimizationOptimizationORM,
     GridoptimizationRecordORM,
 )
+from ..record_socket import BaseRecordSocket
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -694,3 +694,17 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
             return self.add_internal(
                 init_mol_ids, spec_id, tag, priority, owner_user_id, owner_group_id, session=session
             )
+
+    ####################################################
+    # Some stuff to be retrieved for gridoptimizations
+    ####################################################
+
+    def get_optimizations(
+        self,
+        record_id: int,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[Dict[str, Any]]:
+
+        rec = self.get([record_id], include=["optimizations"], session=session)
+        return rec[0]["optimizations"]

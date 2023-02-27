@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional, Union, Any, List, Dict, Set, Iterable
+from typing import Optional, Union, Any, List, Dict, Iterable
 
 from pydantic import BaseModel, Field, constr, validator, Extra
 from qcelemental.models import Molecule
@@ -58,20 +58,16 @@ class SinglepointRecord(BaseRecord):
     properties: Optional[Dict[str, Any]]
 
     ######################################################
-    # Fields not always included when fetching the record
+    # Fields not included when fetching the record
     ######################################################
-    molecule_: Optional[Molecule] = Field(None, alias="molecule")
-    wavefunction_: Optional[Wavefunction] = Field(None, alias="wavefunction")
+    molecule_: Optional[Molecule] = None
+    wavefunction_: Optional[Wavefunction] = None
 
     def propagate_client(self, client):
         BaseRecord.propagate_client(self, client)
 
         if self.wavefunction_ is not None:
-            self.wavefunction_._client = self._client
-
-        if self.native_files_ is not None:
-            for nf in self.native_files_.values():
-                nf._client = self._client
+            self.wavefunction_.propagate_client(self._client, self._base_url)
 
     def _fetch_molecule(self):
         self._assert_online()

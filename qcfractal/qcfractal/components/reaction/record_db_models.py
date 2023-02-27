@@ -106,10 +106,7 @@ class ReactionRecordORM(BaseRecordORM):
 
     total_energy = Column(DOUBLE_PRECISION, nullable=True)
 
-    components = relationship(
-        ReactionComponentORM,
-        cascade="all, delete-orphan",
-    )
+    components = relationship(ReactionComponentORM, cascade="all, delete-orphan")
 
     __mapper_args__ = {
         "polymorphic_identity": "reaction",

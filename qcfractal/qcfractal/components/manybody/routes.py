@@ -4,8 +4,7 @@ from flask import current_app, g
 
 from qcfractal.api_v1.blueprint import api_v1
 from qcfractal.api_v1.helpers import wrap_route
-from qcfractal.flask_app import prefix_projection, storage_socket
-from qcportal.base_models import ProjURLParameters
+from qcfractal.flask_app import storage_socket
 from qcportal.exceptions import LimitExceededError
 from qcportal.manybody import (
     ManybodyDatasetSpecification,
@@ -40,20 +39,8 @@ def add_manybody_records_v1(body_data: ManybodyAddBody):
 
 @api_v1.route("/records/manybody/<int:record_id>/clusters", methods=["GET"])
 @wrap_route("READ")
-def get_manybody_components_v1(record_id: int, url_params: ProjURLParameters):
-    # adjust the includes/excludes to refer to the components
-    ch_includes, ch_excludes = prefix_projection(url_params, "clusters")
-    rec = storage_socket.records.manybody.get([record_id], include=ch_includes, exclude=ch_excludes)
-    return rec[0]["clusters"]
-
-
-@api_v1.route("/records/manybody/<int:record_id>/initial_molecules", methods=["GET"])
-@wrap_route("READ")
-def get_manybody_molecules_v1(record_id: int, url_params: ProjURLParameters):
-    # adjust the includes/excludes to refer to the molecules
-    ch_includes, ch_excludes = prefix_projection(url_params, "initial_molecules")
-    rec = storage_socket.records.manybody.get([record_id], include=ch_includes, exclude=ch_excludes)
-    return rec[0]["initial_molecules"]
+def get_manybody_clusters_v1(record_id: int):
+    return storage_socket.records.manybody.get_clusters(record_id)
 
 
 @api_v1.route("/records/manybody/query", methods=["POST"])

@@ -92,7 +92,11 @@ class BaseRecordSocket:
         self.root_socket = root_socket
 
         # Make sure these were set by the derived classes
-        assert self.record_orm is not None
+        # But we do instantiate the base class
+        if self.__class__ is BaseRecordSocket:
+            self.record_orm = BaseRecordORM
+        else:
+            assert self.record_orm is not None
 
     @staticmethod
     def get_children_select() -> List[Any]:
@@ -102,7 +106,7 @@ class BaseRecordSocket:
         This is used to construct a CTE. That table consists of two columns - parent_id and child_id,
         which is used in various queries
         """
-        raise NotImplementedError(f"get_children_select not implemented! This is a developer error")
+        return []
 
     @staticmethod
     def create_task(record_orm: BaseRecordORM, tag: str, priority: PriorityEnum) -> None:
@@ -225,6 +229,158 @@ class BaseRecordSocket:
         # By default, return True. Should be overridden by services
         return True
 
+    ###########################################################################################
+    # Getting various fields
+    # The ones here apply to all records
+    ###########################################################################################
+    def get_comments(self, record_id: int, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
+        rec = self.get([record_id], include=["comments"], session=session)
+        return rec[0]["comments"]
+
+    def get_task(
+        self,
+        record_id: int,
+        *,
+        session: Optional[Session] = None,
+    ) -> Dict[str, Any]:
+
+        rec = self.get([record_id], include=["task"], session=session)
+        return rec[0]["task"]
+
+    def get_service(
+        self,
+        record_id: int,
+        *,
+        session: Optional[Session] = None,
+    ) -> Dict[str, Any]:
+
+        rec = self.get([record_id], include=["service"], session=session)
+        return rec[0]["service"]
+
+    def get_all_compute_history(
+        self,
+        record_id: int,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[Dict[str, Any]]:
+
+        rec = self.get([record_id], include=["compute_history"], session=session)
+        return rec[0]["compute_history"]
+
+    def get_single_compute_history(
+        self,
+        record_id: int,
+        history_id: int,
+        *,
+        session: Optional[Session] = None,
+    ) -> Dict[str, Any]:
+
+        # Slightly inefficient, but should be rarely called
+        histories = self.get_all_compute_history(record_id, session=session)
+
+        for h in histories:
+            if h["id"] == history_id:
+                return h
+        else:
+            raise MissingDataError(f"Cannot find compute history {history_id} for record {record_id}")
+
+    def get_all_output_metadata(
+        self,
+        record_id: int,
+        history_id: int,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[Dict[str, Any]]:
+
+        # Outer join with the history and record orm table to ensure ids, types, etc, match
+        stmt = select(self.record_orm.id, OutputStoreORM)
+        stmt = stmt.join(RecordComputeHistoryORM, self.record_orm.id == RecordComputeHistoryORM.record_id, isouter=True)
+        stmt = stmt.join(OutputStoreORM, OutputStoreORM.history_id == RecordComputeHistoryORM.id, isouter=True)
+        stmt = stmt.where(RecordComputeHistoryORM.id == history_id)
+        stmt = stmt.where(self.record_orm.id == record_id)
+
+        with self.root_socket.optional_session(session, True) as session:
+            outputs = session.execute(stmt).all()
+
+            # if empty list, not even the record was found
+            if len(outputs) == 0:
+                raise MissingDataError(f"Cannot find record {record_id}")
+
+            # if the length is one, but the history is None, then record found, but no history
+            elif len(outputs) == 1 and outputs[0][1] is None:
+                return []
+
+            # Otherwise, found some outputs that match the record id/type
+            else:
+                return {o[1].output_type: o[1].model_dict() for o in outputs}
+
+    def get_single_output(
+        self,
+        record_id: int,
+        history_id: int,
+        output_type: str,
+        *,
+        session: Optional[Session] = None,
+    ) -> Dict[str, Any]:
+
+        # Outer join with the history and record orm table to ensure ids, types, etc, match
+        stmt = select(self.record_orm.id, OutputStoreORM)
+        stmt = stmt.join(RecordComputeHistoryORM, self.record_orm.id == RecordComputeHistoryORM.record_id, isouter=True)
+        stmt = stmt.join(OutputStoreORM, OutputStoreORM.history_id == RecordComputeHistoryORM.id, isouter=True)
+        stmt = stmt.where(OutputStoreORM.output_type == output_type)
+        stmt = stmt.where(RecordComputeHistoryORM.id == history_id)
+        stmt = stmt.where(self.record_orm.id == record_id)
+
+        with self.root_socket.optional_session(session, True) as session:
+            outputs = session.execute(stmt).one_or_none()
+
+            if outputs is None:
+                raise MissingDataError(f"Cannot find record {record_id}")
+            elif outputs[1] is None:
+                raise MissingDataError(
+                    f"Cannot find output {output_type} for history {history_id} (record {record_id})"
+                )
+            else:
+                return outputs[1].model_dict()
+
+    def get_all_native_files_metadata(
+        self,
+        record_id: int,
+        *,
+        session: Optional[Session] = None,
+    ) -> Dict[str, Dict[str, Any]]:
+
+        rec = self.get([record_id], include=["native_files"], session=session)
+        return rec[0]["native_files"]
+
+    def get_single_native_file_metadata(
+        self,
+        record_id: int,
+        name: str,
+        *,
+        session: Optional[Session] = None,
+    ) -> Dict[str, Any]:
+
+        # Slightly inefficient, but should be ok
+        all_nf = self.get_all_native_files_metadata(record_id, session=session)
+
+        if not name in all_nf:
+            raise MissingDataError(f"Cannot find native file {name} for record {record_id}")
+        else:
+            return all_nf[name]
+
+    def get_single_native_file_rawdata(
+        self,
+        record_id: int,
+        name: str,
+        *,
+        session: Optional[Session] = None,
+    ) -> Tuple[bytes, CompressionEnum]:
+
+        with self.root_socket.optional_session(session, True) as session:
+            nf_meta = self.get_single_native_file_metadata(record_id, name, session=session)
+            return self.root_socket.largebinary.get_raw(nf_meta["id"], session=session)
+
 
 class RecordSocket:
     """
@@ -248,6 +404,7 @@ class RecordSocket:
         from .manybody.record_socket import ManybodyRecordSocket
         from .neb.record_socket import NEBRecordSocket
 
+        self.base = BaseRecordSocket(root_socket)
         self.service_subtask = ServiceSubtaskRecordSocket(root_socket)
         self.singlepoint = SinglepointRecordSocket(root_socket)
         self.optimization = OptimizationRecordSocket(root_socket)
@@ -258,6 +415,8 @@ class RecordSocket:
         self.neb = NEBRecordSocket(root_socket)
 
         self._handler_map: Dict[str, BaseRecordSocket] = {
+            None: self.base,
+            "base": self.base,
             "servicesubtask": self.service_subtask,
             "singlepoint": self.singlepoint,
             "optimization": self.optimization,
@@ -1466,21 +1625,3 @@ class RecordSocket:
             return self.undelete(record_id)
 
         raise RuntimeError(f"Unknown status to revert: ", revert_status)
-
-    #################################################
-    # Some common stuff to be retrieved for records #
-    #################################################
-
-    def get_native_file_lb_id(self, record_id: int, name: str, *, session: Optional[Session] = None):
-
-        stmt = select(NativeFileORM.id)
-        stmt = stmt.where(NativeFileORM.record_id == record_id)
-        stmt = stmt.where(NativeFileORM.name == name)
-
-        with self.root_socket.optional_session(session, True) as session:
-            lb_id = session.execute(stmt).scalar_one_or_none()
-
-            if lb_id is None:
-                raise MissingDataError(f"Native file {name} does not exist for record {record_id}")
-
-            return lb_id

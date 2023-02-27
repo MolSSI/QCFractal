@@ -62,6 +62,12 @@ def bulk_get_managers_v1(body_data: CommonBulkGetNamesBody):
     return storage_socket.managers.get(body_data.names, body_data.include, body_data.exclude, body_data.missing_ok)
 
 
+@api_v1.route("/managers/<string:name>/log", methods=["GET"])
+@wrap_route("READ")
+def get_manager_log_v1(name: str):
+    return storage_socket.managers.get_log(name)
+
+
 @api_v1.route("/managers/query", methods=["POST"])
 @wrap_route("READ")
 def query_managers_v1(body_data: ManagerQueryFilters):

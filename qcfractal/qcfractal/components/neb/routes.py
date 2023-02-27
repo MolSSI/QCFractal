@@ -5,8 +5,6 @@ from flask import current_app, g
 from qcfractal.api_v1.blueprint import api_v1
 from qcfractal.api_v1.helpers import wrap_route
 from qcfractal.flask_app import storage_socket
-from qcfractal.flask_app.helpers import prefix_projection
-from qcportal.base_models import ProjURLParameters
 from qcportal.exceptions import LimitExceededError
 from qcportal.neb import NEBDatasetSpecification, NEBDatasetNewEntry, NEBAddBody, NEBQueryFilters
 from qcportal.utils import calculate_limit
@@ -34,35 +32,28 @@ def add_neb_records_v1(body_data: NEBAddBody):
     )
 
 
-@api_v1.route("/records/neb/<int:record_id>/singlepoints", methods=["GET"])
-@wrap_route("READ")
-def get_neb_singlepoints_v1(record_id: int, url_params: ProjURLParameters):
-    # adjust the includes/excludes to refer to the singlepoints
-    ch_includes, ch_excludes = prefix_projection(url_params, "singlepoints")
-    rec = storage_socket.records.neb.get([record_id], include=ch_includes, exclude=ch_excludes)
-    return rec[0]["singlepoints"]
-
-
 @api_v1.route("/records/neb/<int:record_id>/neb_result", methods=["GET"])
 @wrap_route("READ")
-def get_neb_result_v1(record_id: int, url_params: ProjURLParameters):
-    return storage_socket.records.neb.get_neb_result(record_id, url_params.include, url_params.exclude)
+def get_neb_result_v1(record_id: int):
+    return storage_socket.records.neb.get_neb_result(record_id)
+
+
+@api_v1.route("/records/neb/<int:record_id>/singlepoints", methods=["GET"])
+@wrap_route("READ")
+def get_neb_singlepoints_v1(record_id: int):
+    return storage_socket.records.neb.get_singlepoints(record_id)
 
 
 @api_v1.route("/records/neb/<int:record_id>/optimizations", methods=["GET"])
 @wrap_route("READ")
-def get_neb_optimizations_v1(record_id: int, url_params: ProjURLParameters):
-    # adjust the includes/excludes to refer to the optimizations
-    ch_includes, ch_excludes = prefix_projection(url_params, "optimizations")
-    rec = storage_socket.records.neb.get([record_id], include=ch_includes, exclude=ch_excludes)
-    return rec[0]["optimizations"]
+def get_neb_optimizations_v1(record_id: int):
+    return storage_socket.records.neb.get_optimizations(record_id)
 
 
 @api_v1.route("/records/neb/<int:record_id>/initial_chain", methods=["GET"])
 @wrap_route("READ")
-def get_neb_initial_chain_v1(record_id: int):
-    rec = storage_socket.records.neb.get([record_id], include=["initial_chain"])
-    return rec[0]["initial_chain"]
+def get_neb_initial_chain_molecule_ids_v1(record_id: int):
+    return storage_socket.records.neb.get_initial_molecules_ids(record_id)
 
 
 @api_v1.route("/records/neb/query", methods=["POST"])

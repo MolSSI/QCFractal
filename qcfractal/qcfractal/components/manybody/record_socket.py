@@ -11,7 +11,6 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import contains_eager
 
 from qcfractal import __version__ as qcfractal_version
-from qcfractal.components.record_socket import BaseRecordSocket
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
 from qcfractal.db_socket.helpers import insert_general
@@ -27,6 +26,7 @@ from qcportal.outputstore import OutputTypeEnum
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.utils import hash_dict
 from .record_db_models import ManybodyClusterORM, ManybodyRecordORM, ManybodySpecificationORM
+from ..record_socket import BaseRecordSocket
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -649,3 +649,16 @@ class ManybodyRecordSocket(BaseRecordSocket):
                 )
 
             return self.add_internal(mol_ids, spec_id, tag, priority, owner_user_id, owner_group_id, session=session)
+
+    ####################################################
+    # Some stuff to be retrieved for manybodys
+    ####################################################
+
+    def get_clusters(
+        self,
+        record_id: int,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[Dict[str, Any]]:
+        rec = self.get([record_id], include=["clusters"], session=session)
+        return rec[0]["clusters"]

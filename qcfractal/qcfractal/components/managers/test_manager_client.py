@@ -230,7 +230,7 @@ def test_manager_mclient_heartbeat(snowflake: QCATestingSnowflake):
     name1 = mname1.fullname
 
     client = snowflake.client()
-    manager = client.get_managers(name1, include=["log"])
+    manager = client.get_managers(name1)
     assert len(manager.log) == 0
 
     # Now do a heartbeat
@@ -240,7 +240,7 @@ def test_manager_mclient_heartbeat(snowflake: QCATestingSnowflake):
 
     time_2 = datetime.utcnow()
 
-    manager = client.get_managers(name1, include=["log"])
+    manager = client.get_managers(name1)
     assert len(manager.log) == 1
 
     # Was the data stored in the manager
@@ -272,7 +272,7 @@ def test_manager_mclient_heartbeat(snowflake: QCATestingSnowflake):
 
     time_3 = datetime.utcnow()
 
-    manager = client.get_managers(name1, include=["log"])
+    manager = client.get_managers(name1)
     assert len(manager.log) == 2
 
     # Was the data stored in the manager

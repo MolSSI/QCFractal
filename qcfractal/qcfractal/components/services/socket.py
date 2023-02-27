@@ -12,7 +12,6 @@ from sqlalchemy.orm import contains_eager, make_transient, aliased, defer, selec
 from qcfractal.components.largebinary.db_models import LargeBinaryORM
 from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.record_db_models import BaseRecordORM, RecordComputeHistoryORM
-from qcfractal.components.record_socket import BaseRecordSocket
 from qcfractal.db_socket.helpers import (
     get_count,
 )
@@ -22,6 +21,7 @@ from qcportal.metadata_models import InsertMetadata
 from qcportal.outputstore import OutputStore, OutputTypeEnum
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from .db_models import ServiceQueueORM, ServiceDependencyORM, ServiceSubtaskRecordORM
+from ..record_socket import BaseRecordSocket
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session

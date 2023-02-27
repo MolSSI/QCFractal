@@ -14,6 +14,6 @@ class Wavefunction(LargeBinary):
 
     record_id: int
 
-    def fetch(self):
-        url = f"v1/records/singlepoint/{self.record_id}/wavefunction/data"
-        self._fetch_from_url(url)
+    def propagate_client(self, client, record_base_url):
+        self._client = client
+        self.data_url_ = f"{record_base_url}/wavefunction/data"

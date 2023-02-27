@@ -14,9 +14,9 @@ class NativeFile(LargeBinary):
     record_id: int
     name: str = Field(..., description="Name of the file")
 
-    def fetch(self):
-        url = f"v1/records/{self.record_id}/native_files/{self.name}"
-        return self._fetch_from_url(url)
+    def propagate_client(self, client, record_base_url):
+        self._client = client
+        self.data_url_ = f"{record_base_url}/native_files/{self.name}/data"
 
     # def save_file(
     #    self, directory: str, new_name: Optional[str] = None, keep_compressed: bool = False, overwrite: bool = False

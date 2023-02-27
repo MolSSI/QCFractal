@@ -4,8 +4,7 @@ from flask import current_app, g
 
 from qcfractal.api_v1.blueprint import api_v1
 from qcfractal.api_v1.helpers import wrap_route
-from qcfractal.flask_app import prefix_projection, storage_socket
-from qcportal.base_models import ProjURLParameters
+from qcfractal.flask_app import storage_socket
 from qcportal.exceptions import LimitExceededError
 from qcportal.torsiondrive import (
     TorsiondriveDatasetSpecification,
@@ -43,27 +42,20 @@ def add_torsiondrive_records_v1(body_data: TorsiondriveAddBody):
 
 @api_v1.route("/records/torsiondrive/<int:record_id>/optimizations", methods=["GET"])
 @wrap_route("READ")
-def get_torsiondrive_optimizations_v1(record_id: int, url_params: ProjURLParameters):
-    # adjust the includes/excludes to refer to the optimizations
-    ch_includes, ch_excludes = prefix_projection(url_params, "optimizations")
-    rec = storage_socket.records.torsiondrive.get([record_id], include=ch_includes, exclude=ch_excludes)
-    return rec[0]["optimizations"]
+def get_torsiondrive_optimizations_v1(record_id: int):
+    return storage_socket.records.torsiondrive.get_optimizations(record_id)
 
 
 @api_v1.route("/records/torsiondrive/<int:record_id>/minimum_optimizations", methods=["GET"])
 @wrap_route("READ")
-def get_torsiondrive_minimum_optimizations_v1(record_id: int, url_params: ProjURLParameters):
-    # adjust the includes/excludes to refer to the optimizations
-    return storage_socket.records.torsiondrive.get_minimum_optimizations(
-        record_id, url_params.include, url_params.exclude
-    )
+def get_torsiondrive_minimum_optimizations_v1(record_id: int):
+    return storage_socket.records.torsiondrive.get_minimum_optimizations(record_id)
 
 
 @api_v1.route("/records/torsiondrive/<int:record_id>/initial_molecules", methods=["GET"])
 @wrap_route("READ")
-def get_torsiondrive_initial_molecules_v1(record_id: int):
-    rec = storage_socket.records.torsiondrive.get([record_id], include=["initial_molecules"])
-    return rec[0]["initial_molecules"]
+def get_torsiondrive_initial_molecules_ids_v1(record_id: int):
+    return storage_socket.records.torsiondrive.get_initial_molecules_ids(record_id)
 
 
 @api_v1.route("/records/torsiondrive/query", methods=["POST"])

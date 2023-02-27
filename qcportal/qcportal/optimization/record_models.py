@@ -1,6 +1,5 @@
-from typing import Optional, Union, Any, List, Dict, Set, Iterable
+from typing import Optional, Union, Any, List, Dict, Iterable
 
-import pydantic
 from pydantic import BaseModel, Field, constr, validator, Extra
 from qcelemental.models import Molecule
 from qcelemental.models.procedures import (
@@ -8,7 +7,6 @@ from qcelemental.models.procedures import (
 )
 from typing_extensions import Literal
 
-from qcportal.base_models import ProjURLParameters
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
 from qcportal.singlepoint import SinglepointProtocols, SinglepointRecord, QCSpecification, SinglepointDriver
 
@@ -28,7 +26,7 @@ class OptimizationSpecification(BaseModel):
     keywords: Dict[str, Any] = Field({})
     protocols: OptimizationProtocols = Field(OptimizationProtocols())
 
-    @pydantic.validator("qc_specification", pre=True)
+    @validator("qc_specification", pre=True)
     def force_qcspec(cls, v):
         if isinstance(v, QCSpecification):
             v = v.dict()
@@ -36,14 +34,6 @@ class OptimizationSpecification(BaseModel):
         v["driver"] = SinglepointDriver.deferred
         v["protocols"] = SinglepointProtocols()
         return v
-
-
-class OptimizationTrajectory(BaseModel):
-    class Config:
-        extra = Extra.forbid
-
-    singlepoint_id: int
-    singlepoint_record: Optional[SinglepointRecord]
 
 
 class OptimizationRecord(BaseRecord):
@@ -55,19 +45,23 @@ class OptimizationRecord(BaseRecord):
     energies: Optional[List[float]]
 
     ######################################################
-    # Fields not always included when fetching the record
+    # Fields not included when fetching the record
     ######################################################
-    initial_molecule_: Optional[Molecule] = Field(None, alias="initial_molecule")
-    final_molecule_: Optional[Molecule] = Field(None, alias="final_molecule")
-    trajectory_: Optional[List[OptimizationTrajectory]] = Field(None, alias="trajectory")
+    initial_molecule_: Optional[Molecule] = None
+    final_molecule_: Optional[Molecule] = None
+    trajectory_ids_: Optional[List[int]] = None
+
+    ########################################
+    # Caches
+    ########################################
+    trajectory_records_: Optional[List[SinglepointRecord]] = None
 
     def propagate_client(self, client):
         BaseRecord.propagate_client(self, client)
 
-        if self.trajectory_ is not None:
-            for sp in self.trajectory_:
-                if sp.singlepoint_record:
-                    sp.singlepoint_record.propagate_client(client)
+        if self.trajectory_records_ is not None:
+            for sp in self.trajectory_records_:
+                sp.propagate_client(client)
 
     def _fetch_initial_molecule(self):
         self._assert_online()
@@ -77,21 +71,17 @@ class OptimizationRecord(BaseRecord):
         self._assert_online()
         if self.final_molecule_id is not None:
             self.final_molecule_ = self._client.get_molecules([self.final_molecule_id])[0]
-        else:
-            self.final_molecule_ = None
 
     def _fetch_trajectory(self):
         self._assert_online()
 
-        url_params = ProjURLParameters(include=["*", "singlepoint_record"])
-
-        self.trajectory_ = self._client.make_request(
+        self.trajectory_ids_ = self._client.make_request(
             "get",
             f"v1/records/optimization/{self.id}/trajectory",
-            List[OptimizationTrajectory],
-            url_params=url_params,
+            List[int],
         )
 
+        self.trajectory_records_ = self._client.get_singlepoints(self.trajectory_ids_)
         self.propagate_client(self._client)
 
     def _handle_includes(self, includes: Optional[Iterable[str]]):
@@ -121,23 +111,31 @@ class OptimizationRecord(BaseRecord):
 
     @property
     def trajectory(self) -> Optional[List[SinglepointRecord]]:
-        if self.trajectory_ is None:
+        if self.trajectory_records_ is None:
             self._fetch_trajectory()
 
-        return [x.singlepoint_record for x in self.trajectory_]
+        return self.trajectory_records_
 
     def trajectory_element(self, trajectory_index: int) -> SinglepointRecord:
-        if self.trajectory_ is not None:
-            return self.trajectory_[trajectory_index].singlepoint_record
+        if self.trajectory_records_ is not None:
+            return self.trajectory_records_[trajectory_index]
         else:
-            sp_rec = self._client.make_request(
-                "get",
-                f"v1/records/optimization/{self.id}/trajectory/{trajectory_index}",
-                SinglepointRecord,
-            )
+            self._assert_online()
 
-            sp_rec.propagate_client(self._client)
-            return sp_rec
+            if self.trajectory_ids_ is None:
+                self.trajectory_ids_ = self._client.make_request(
+                    "get",
+                    f"v1/records/optimization/{self.id}/trajectory",
+                    List[int],
+                )
+
+            if self.trajectory_ids_ is not None:
+                traj_id = self.trajectory_ids_[trajectory_index]
+                sp_rec = self._client.get_singlepoints(traj_id)
+                sp_rec.propagate_client(self._client)
+                return sp_rec
+            else:
+                raise RuntimeError(f"Cannot find trajectory for record {self.id}")
 
 
 class OptimizationQueryFilters(RecordQueryFilters):

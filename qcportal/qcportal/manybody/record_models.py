@@ -1,10 +1,9 @@
 from enum import Enum
-from typing import List, Union, Optional, Dict, Any, Set, Iterable
+from typing import List, Union, Optional, Dict, Any, Iterable
 
-from pydantic import BaseModel, Extra, validator, constr, Field
+from pydantic import BaseModel, Extra, validator, constr
 from typing_extensions import Literal
 
-from qcportal.base_models import ProjURLParameters
 from qcportal.molecules import Molecule
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
 from qcportal.singlepoint.record_models import (
@@ -65,7 +64,7 @@ class ManybodyCluster(BaseModel):
     singlepoint_id: Optional[int]
 
     molecule: Optional[Molecule] = None
-    singlepoint_record: Optional[SinglepointRecord]
+    singlepoint_record: Optional[SinglepointRecord] = None
 
 
 class ManybodyRecord(BaseRecord):
@@ -77,18 +76,18 @@ class ManybodyRecord(BaseRecord):
     initial_molecule_id: int
 
     ######################################################
-    # Fields not always included when fetching the record
+    # Fields not included when fetching the record
     ######################################################
-    initial_molecule_: Optional[Molecule] = Field(None, alias="initial_molecule")
-    clusters_: Optional[List[ManybodyCluster]] = Field(None, alias="clusters")
+    initial_molecule_: Optional[Molecule] = None
+    clusters_: Optional[List[ManybodyCluster]] = None
 
     def propagate_client(self, client):
         BaseRecord.propagate_client(self, client)
 
         if self.clusters_ is not None:
-            for mb in self.clusters_:
-                if mb.singlepoint_record:
-                    mb.singlepoint_record.propagate_client(self._client)
+            for cluster in self.clusters_:
+                if cluster.singlepoint_record:
+                    cluster.singlepoint_record.propagate_client(client)
 
     def _fetch_initial_molecule(self):
         self._assert_online()
@@ -96,14 +95,25 @@ class ManybodyRecord(BaseRecord):
 
     def _fetch_clusters(self):
         self._assert_online()
-        url_params = ProjURLParameters(include=["*", "molecule", "singlepoint_record"])
 
         self.clusters_ = self._client.make_request(
             "get",
             f"v1/records/manybody/{self.id}/clusters",
             List[ManybodyCluster],
-            url_params=url_params,
         )
+
+        # Fetch singlepoint records and molecules
+        sp_ids = [x.singlepoint_id for x in self.clusters_]
+        sp_recs = self._client.get_singlepoints(sp_ids)
+
+        mol_ids = [x.molecule_id for x in self.clusters_]
+        mols = self._client.get_molecules(mol_ids)
+
+        for cluster, sp, mol in zip(self.clusters_, sp_recs, mols):
+            assert sp.id == cluster.singlepoint_id
+            assert sp.molecule_id == mol.id == cluster.molecule_id
+            cluster.singlepoint_record = sp
+            cluster.molecule = mol
 
         self.propagate_client(self._client)
 

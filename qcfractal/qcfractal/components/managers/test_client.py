@@ -64,8 +64,8 @@ def test_manager_client_get(snowflake: QCATestingSnowflake):
     assert manager[0].modified_on < time_2
     assert manager[0].log is not None
 
-    assert manager[2] == manager[1]
-    assert manager[3] == manager[0]
+    assert manager[2].id == manager[1].id
+    assert manager[3].id == manager[0].id
 
 
 def test_manager_client_get_nonexist(snowflake: QCATestingSnowflake, activated_manager_name: ManagerName):
