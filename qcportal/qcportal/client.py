@@ -96,7 +96,7 @@ from .serverinfo import (
     ServerStatsQueryIterator,
     DeleteBeforeDateBody,
 )
-from .utils import make_list
+from .utils import make_list, chunk_list
 
 _T = TypeVar("_T", bound=BaseRecord)
 
@@ -380,13 +380,18 @@ class PortalClient(PortalClientBase):
         if not molecule_ids:
             return []
 
-        body = CommonBulkGetBody(ids=molecule_ids, missing_ok=missing_ok)
-        mols = self.make_request("post", "v1/molecules/bulkGet", List[Optional[Molecule]], body=body)
+        batch_size = self.api_limits["get_molecules"] // 4
+        all_molecules = []
+
+        for mol_id_batch in chunk_list(molecule_ids, batch_size):
+            body = CommonBulkGetBody(ids=mol_id_batch, missing_ok=missing_ok)
+            mol_batch = self.make_request("post", "v1/molecules/bulkGet", List[Optional[Molecule]], body=body)
+            all_molecules.extend(mol_batch)
 
         if is_single:
-            return mols[0]
+            return all_molecules[0]
         else:
-            return mols
+            return all_molecules
 
     def query_molecules(
         self,
@@ -571,24 +576,24 @@ class PortalClient(PortalClientBase):
         if not record_ids:
             return []
 
-        if len(record_ids) > self.api_limits["get_records"]:
-            raise RuntimeError(
-                f"Cannot get {len(record_ids)} records - over the limit of {self.api_limits['get_records']}"
-            )
+        batch_size = self.api_limits["get_records"] // 4
+        all_records = []
 
-        body = CommonBulkGetBody(ids=record_ids, missing_ok=missing_ok)
+        for record_id_batch in chunk_list(record_ids, batch_size):
+            body = CommonBulkGetBody(ids=record_id_batch, missing_ok=missing_ok)
+            record_data = self.make_request("post", "v1/records/bulkGet", List[Optional[Dict[str, Any]]], body=body)
+            record_batch = records_from_dicts(record_data, self)
 
-        record_data = self.make_request("post", "v1/records/bulkGet", List[Optional[Dict[str, Any]]], body=body)
-        records = records_from_dicts(record_data, self)
+            if include:
+                for r in record_batch:
+                    r._handle_includes(include)
 
-        if include:
-            for r in records:
-                r._handle_includes(include)
+            all_records.extend(record_batch)
 
         if is_single:
-            return records[0]
+            return all_records[0]
         else:
-            return records
+            return all_records
 
     def _get_records_by_type(
         self,
@@ -626,33 +631,34 @@ class PortalClient(PortalClientBase):
         if not record_ids:
             return []
 
-        if len(record_ids) > self.api_limits["get_records"]:
-            raise RuntimeError(
-                f"Cannot get {len(record_ids)} records - over the limit of {self.api_limits['get_records']}"
-            )
-
-        body = CommonBulkGetBody(ids=record_ids, missing_ok=missing_ok)
-
         # A little hacky
         record_type_str = record_type.__fields__["record_type"].default
 
-        record_data = self.make_request(
-            "post",
-            f"v1/records/{record_type_str}/bulkGet",
-            List[Optional[Dict[str, Any]]],
-            body=body,
-        )
+        batch_size = self.api_limits["get_records"] // 4
+        all_records = []
 
-        records = [record_type(self, **r) if r is not None else None for r in record_data]
+        for record_id_batch in chunk_list(record_ids, batch_size):
+            body = CommonBulkGetBody(ids=record_id_batch, missing_ok=missing_ok)
 
-        if include:
-            for r in records:
-                r._handle_includes(include)
+            record_data = self.make_request(
+                "post",
+                f"v1/records/{record_type_str}/bulkGet",
+                List[Optional[Dict[str, Any]]],
+                body=body,
+            )
+
+            record_batch = [record_type(self, **r) if r is not None else None for r in record_data]
+
+            if include:
+                for r in record_batch:
+                    r._handle_includes(include)
+
+            all_records.extend(record_batch)
 
         if is_single:
-            return records[0]
+            return all_records[0]
         else:
-            return records
+            return all_records
 
     def query_records(
         self,

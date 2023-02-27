@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from hashlib import sha256
-from typing import Optional, Union, Sequence, List, TypeVar, Any, Dict, Tuple, Iterable
+from typing import Optional, Union, Sequence, List, TypeVar, Any, Dict, Tuple, Iterable, Generator
 
 import numpy as np
 
@@ -44,6 +44,15 @@ def make_str(obj: Optional[Union[_T, Sequence[_T]]]) -> Optional[List[_T]]:
         return tuple(str(i) for i in obj)
     else:
         raise ValueError("`obj` must be `None`, a str, list, tuple, or non-sequence")
+
+
+def chunk_list(lst: List[_T], batch_size: int) -> Generator[_T, None, None]:
+    """
+    Split a list into batches
+    """
+
+    for idx in range(0, len(lst), batch_size):
+        yield lst[idx : idx + batch_size]
 
 
 def recursive_normalizer(value: Any, digits: int = 10, lowercase: bool = True) -> Any:
