@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from hashlib import sha256
-from typing import Optional, Union, Sequence, List, TypeVar, Any, Dict, Tuple, Iterable, Generator
+from typing import Optional, Union, Sequence, List, TypeVar, Any, Dict, Generator
 
 import numpy as np
 
@@ -100,37 +100,6 @@ def recursive_normalizer(value: Any, digits: int = 10, lowercase: bool = True) -
         raise TypeError("Invalid type in recursive normalizer ({type(value)}), only simple Python types are allowed.")
 
     return value
-
-
-def prefix_projection(
-    includes: Optional[Iterable[str]], excludes: Optional[Iterable[str]], prefix: str
-) -> Tuple[Optional[List[str]], Optional[List[str]]]:
-    """
-    Prefixes includes and excludes with a string
-
-    This is used for mapping a set of includes/excludes to a relationship of an ORM. For example,
-    you may have an endpoint for molecules of a computation (/record/1/molecule) which contains
-    include/exclude in its url parameters. This function is used to map those includes/excludes to
-    the "molecule" relationship of the record.
-    """
-
-    ch_includes = list(includes) if includes is not None else None
-    ch_excludes = list(excludes) if excludes is not None else None
-
-    base = prefix.strip(".")
-    p = base + "."
-
-    if ch_includes is None:
-        # If nothing is specified, include the defaults of the child
-        ch_includes = [base]
-    else:
-        # Otherwise, prefix all entries with whatever was specified
-        ch_includes = [p + x for x in ch_includes]
-
-    if ch_excludes:
-        ch_excludes = [p + x for x in ch_excludes]
-
-    return ch_includes, ch_excludes
 
 
 def calculate_limit(max_limit: int, given_limit: Optional[int]) -> int:
