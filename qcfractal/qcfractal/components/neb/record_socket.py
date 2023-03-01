@@ -70,7 +70,6 @@ class NEBServiceState(BaseModel):
     optimized: bool
     tsoptimize: bool
     converged: bool
-    align: bool
     iteration: int
     molecule_template: str
     tshessian: list
@@ -142,7 +141,6 @@ class NEBRecordSocket(BaseRecordSocket):
             optimized=keywords.get("optimize_endpoints"),
             tsoptimize=keywords.get("optimize_ts"),
             converged=False,
-            align=keywords.get("align_chain"),
             tshessian=[],
             molecule_template=molecule_template_str,
         )
@@ -197,12 +195,12 @@ class NEBRecordSocket(BaseRecordSocket):
                 neb_stdout = io.StringIO()
                 logging.captureWarnings(True)
                 with contextlib.redirect_stdout(neb_stdout):
-                    aligned_chain = geometric.neb.arrange(initial_molecules, service_state.align)
+                    respaced_chain = geometric.neb.arrange(initial_molecules)
                 logging.captureWarnings(False)
                 output += "\n" + neb_stdout.getvalue()
 
                 # Submit the first batch of singlepoint calculations
-                self.submit_singlepoints(session, service_state, service_orm, aligned_chain)
+                self.submit_singlepoints(session, service_state, service_orm, respaced_chain)
                 service_state.iteration += 1
 
         else:
@@ -245,7 +243,7 @@ class NEBRecordSocket(BaseRecordSocket):
                         )
                         geometries.append(mol_data[0]["geometry"])
                         energies.append(sp_record.properties["return_energy"])
-                        gradients.append(sp_record.properties["return_gradient"])
+                        gradients.append(convert_numpy_recursive(sp_record.return_result, flatten=True))
                     service_state.nebinfo["geometry"] = convert_numpy_recursive(geometries, flatten=False)
                     service_state.nebinfo["energies"] = energies
                     service_state.nebinfo["gradients"] = gradients
