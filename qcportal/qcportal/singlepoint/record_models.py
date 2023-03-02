@@ -107,7 +107,7 @@ class SinglepointRecord(BaseRecord):
             self._fetch_wavefunction()
 
         if self.wavefunction_ is not None:
-            return WavefunctionProperties(**self.wavefunction_.data)
+            return self.wavefunction_.data
         else:
             return None
 

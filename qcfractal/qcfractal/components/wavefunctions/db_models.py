@@ -1,32 +1,42 @@
 from __future__ import annotations
 
-from sqlalchemy import Column, Integer, ForeignKey, UniqueConstraint, DDL, event
+from typing import TYPE_CHECKING
 
-from qcfractal.components.largebinary.db_models import LargeBinaryORM
+from sqlalchemy import Column, Integer, ForeignKey, UniqueConstraint, DDL, event, LargeBinary, Enum
+from sqlalchemy.orm import deferred
+
+from qcfractal.db_socket import BaseORM
+from qcportal.compression import CompressionEnum
+
+if TYPE_CHECKING:
+    from typing import Dict, Any, Optional, Iterable
 
 
-class WavefunctionORM(LargeBinaryORM):
+class WavefunctionORM(BaseORM):
     """
     Table for storing wavefunction data
     """
 
-    __tablename__ = "wavefunction"
+    __tablename__ = "wavefunction_store"
 
-    id = Column(Integer, ForeignKey(LargeBinaryORM.id, ondelete="cascade"), primary_key=True)
+    id = Column(Integer, primary_key=True)
     record_id = Column(Integer, ForeignKey("singlepoint_record.id", ondelete="cascade"), nullable=False)
 
-    __table_args__ = (UniqueConstraint("record_id", name="ux_wavefunction_record_id"),)
+    compression_type = Column(Enum(CompressionEnum), nullable=False)
+    compression_level = Column(Integer, nullable=False)
+    data = deferred(Column(LargeBinary, nullable=False))
 
-    __mapper_args__ = {"polymorphic_identity": "wavefunction"}
+    __table_args__ = (UniqueConstraint("record_id", name="ux_wavefunction_store_record_id"),)
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "id", "record_id", "compression_level")
+        return BaseORM.model_dict(self, exclude)
 
 
-# Trigger for deleting native files rows when records are deleted
-_del_lb_trigger = DDL(
-    """
-    CREATE TRIGGER qca_wavefunction_delete_lb_tr
-    AFTER DELETE ON wavefunction
-    FOR EACH ROW EXECUTE PROCEDURE qca_largebinary_base_delete();
-    """
+# Mark the storage of the data_local column as external
+event.listen(
+    WavefunctionORM.__table__,
+    "after_create",
+    DDL("ALTER TABLE native_file ALTER COLUMN data SET STORAGE EXTERNAL").execute_if(dialect=("postgresql")),
 )
-
-event.listen(WavefunctionORM.__table__, "after_create", _del_lb_trigger.execute_if(dialect=("postgresql")))

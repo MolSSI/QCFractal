@@ -79,28 +79,13 @@ class SinglepointRecordSocket(BaseRecordSocket):
         Convert a QCElemental wavefunction into a wavefunction ORM
         """
 
-        _wfn_all_fields = set(WavefunctionProperties.__fields__.keys())
-        logger = logging.getLogger(__name__)
-
         if wavefunction is None:
             return None
 
-        wfn_dict = wavefunction.dict()
-        available_keys = set(wfn_dict.keys())
+        wfn_dict = wavefunction.dict(encoding="json")
+        cdata, ctype, clevel = compress(wfn_dict, CompressionEnum.zstd)
 
-        # Extra fields are trimmed as we have a column *per* wavefunction structure.
-        extra_fields = available_keys - _wfn_all_fields
-        if extra_fields:
-            logger.warning(f"Too much wavefunction data for result, removing extra data: {extra_fields}")
-            available_keys &= _wfn_all_fields
-
-        wavefunction_save = {k: wfn_dict[k] for k in available_keys}
-        wfn_prop = WavefunctionProperties(**wavefunction_save)
-
-        cdata, ctype, _ = compress(wfn_prop.dict(encoding="json"), CompressionEnum.zstd)
-
-        wfn_orm = WavefunctionORM()
-        self.root_socket.largebinary.populate_orm(wfn_orm, cdata, ctype, session=session)
+        wfn_orm = WavefunctionORM(compression_type=ctype, compression_level=clevel, data=cdata)
 
         return wfn_orm
 
@@ -445,10 +430,11 @@ class SinglepointRecordSocket(BaseRecordSocket):
         self, record_id: int, *, session: Optional[Session] = None
     ) -> Tuple[bytes, CompressionEnum]:
 
+        stmt = select(WavefunctionORM.data, WavefunctionORM.compression_type)
+        stmt = stmt.where(WavefunctionORM.record_id == record_id)
+
         with self.root_socket.optional_session(session, True) as session:
-            wfn_meta = self.get_wavefunction_metadata(record_id, session=session)
-
-            if wfn_meta is None:
-                raise MissingDataError(f"Cannot find wavefunction for record {record_id}")
-
-            return self.root_socket.largebinary.get_raw(wfn_meta["id"], session=session)
+            wfn_data = session.execute(stmt).one_or_none()
+            if wfn_data is None:
+                raise MissingDataError(f"Record {record_id} does not have a wavefunction (or record does not exist)")
+            return wfn_data[0], wfn_data[1]
