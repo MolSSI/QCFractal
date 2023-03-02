@@ -58,8 +58,6 @@ class NEBKeywords(BaseModel):
         description="Setting it equal to true will perform a transition sate optimization starting with the guessed transition state structure from the NEB calculation result.",
     )
 
-    align_chain: bool = Field(False, description="Aligning the chain after each step (iteration).")
-
     optimize_endpoints: bool = Field(
         False,
         description="Setting it equal to True will optimize two end points of the initial chain before starting NEB.",
