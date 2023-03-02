@@ -377,9 +377,17 @@ class BaseRecordSocket:
         session: Optional[Session] = None,
     ) -> Tuple[bytes, CompressionEnum]:
 
+        stmt = select(NativeFileORM.data, NativeFileORM.compression_type)
+        stmt = stmt.where(NativeFileORM.record_id == record_id)
+        stmt = stmt.where(NativeFileORM.name == name)
+
         with self.root_socket.optional_session(session, True) as session:
-            nf_meta = self.get_single_native_file_metadata(record_id, name, session=session)
-            return self.root_socket.largebinary.get_raw(nf_meta["id"], session=session)
+            nf_data = session.execute(stmt).one_or_none()
+            if nf_data is None:
+                raise MissingDataError(
+                    f'Record {record_id} does not have native file "{name}" (or record does not exist)'
+                )
+            return nf_data[0], nf_data[1]
 
 
 class RecordSocket:
@@ -758,12 +766,13 @@ class RecordSocket:
 
         native_files = {}
         for name, nf_data in compressed_nf.items():
-            # nf_data is a dictionary with keys 'data', 'compression_type'
-            nf_orm = NativeFileORM(name=name)
-            self.root_socket.largebinary.populate_orm(
-                nf_orm, nf_data["data"], nf_data["compression_type"], session=session
+            # nf_data is a dictionary with keys 'data', 'compression_type', "compression_level"
+            nf_orm = NativeFileORM(
+                name=name,
+                compression_type=nf_data["compression_type"],
+                compression_level=nf_data["compression_level"],
+                data=nf_data["data"],
             )
-
             native_files[name] = nf_orm
 
         return native_files

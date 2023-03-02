@@ -8,7 +8,6 @@ from qcelemental.models import AtomicResult, OptimizationResult
 
 from qcportal.compression import CompressionEnum, compress
 from qcportal.generic_result import GenericTaskResult
-from qcportal.outputstore.models import OutputStore, OutputTypeEnum
 
 
 def _compress_common(
@@ -59,9 +58,9 @@ def _compress_native_files(
 
     compressed_nf = {}
     for name, data in result.native_files.items():
-        nf, _, _ = compress(data, CompressionEnum.zstd)
+        nf, ctype, clevel = compress(data, CompressionEnum.zstd)
 
-        compressed_nf[name] = {"compression_type": CompressionEnum.zstd, "data": nf}
+        compressed_nf[name] = {"compression_type": ctype, "compression_level": clevel, "data": nf}
 
     update = {"native_files": {}}
 
