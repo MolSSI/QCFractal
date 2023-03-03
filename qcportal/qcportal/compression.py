@@ -45,12 +45,12 @@ def compress(
     data = msgpack.packb(input_data, use_bin_type=True)
 
     # No compression
-    if compression_type is CompressionEnum.none:
+    if compression_type == CompressionEnum.none:
         compression_level = 0
 
     # LZMA compression
     # By default, use level = 1 for larger data (>15MB or so)
-    elif compression_type is CompressionEnum.lzma:
+    elif compression_type == CompressionEnum.lzma:
         if compression_level is None:
             if len(data) > 15 * 1048576:
                 compression_level = 1
@@ -60,7 +60,7 @@ def compress(
 
     # ZStandard compression
     # By default, use level = 6 for larger data (>15MB or so)
-    elif compression_type is CompressionEnum.zstd:
+    elif compression_type == CompressionEnum.zstd:
         if compression_level is None:
             if len(data) > 15 * 1048576:
                 compression_level = 6

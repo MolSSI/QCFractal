@@ -132,8 +132,7 @@ class NEBRecordSocket(BaseRecordSocket):
         molecule_template.pop("identifiers", None)
         molecule_template.pop("id", None)
 
-        stdout_orm = neb_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
-        stdout_orm.append(output)
+        self.root_socket.records.append_output(session, neb_orm, OutputTypeEnum.stdout, output)
 
         molecule_template_str = json.dumps(molecule_template)
         service_state = NEBServiceState(
@@ -221,8 +220,13 @@ class NEBRecordSocket(BaseRecordSocket):
                     service_state.nebinfo = prev
 
                     # Append the output
-                    stdout = service_orm.dependencies[0].record.compute_history[-1].get_output("stdout")
-                    output += stdout.as_string()
+                    stdout = self.root_socket.records.service_subtask.get_single_output_uncompressed(
+                        service_orm.dependencies[0].record.id,
+                        service_orm.dependencies[0].record.compute_history[-1].id,
+                        OutputTypeEnum.stdout,
+                    )
+
+                    output += stdout
 
                     # Delete the subtask - no longer needed
                     to_delete = service_orm.dependencies.pop()
@@ -310,8 +314,7 @@ class NEBRecordSocket(BaseRecordSocket):
                 finished = True
                 output += "\nNEB calculation is completed with %i iterations" % service_state.iteration
 
-        stdout_orm = neb_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
-        stdout_orm.append(output)
+        self.root_socket.records.append_output(session, neb_orm, OutputTypeEnum.stdout, output)
         service_orm.service_state = service_state.dict()
         sqlalchemy.orm.attributes.flag_modified(service_orm, "service_state")
         return finished

@@ -188,8 +188,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
             f"starting iteration: {iteration}\n"
         )
 
-        stdout_orm = go_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
-        stdout_orm.append(output)
+        self.root_socket.records.append_output(session, go_orm, OutputTypeEnum.stdout, output)
 
         service_state = GridoptimizationServiceState(
             iteration=iteration,
@@ -303,8 +302,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         else:
             output += "Grid optimization finished successfully!"
 
-        stdout_orm = go_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
-        stdout_orm.append(output)
+        self.root_socket.records.append_output(session, go_orm, OutputTypeEnum.stdout, output)
 
         # Set the new service state. We must then mark it as modified
         # so that SQLAlchemy can pick up changes. This is because SQLAlchemy

@@ -7,10 +7,9 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import select, or_
 from sqlalchemy.dialects.postgresql import array_agg
-from sqlalchemy.orm import contains_eager, make_transient, aliased, defer, selectinload, joinedload
+from sqlalchemy.orm import contains_eager, aliased, defer, selectinload, joinedload
 
 from qcfractal.components.largebinary.db_models import LargeBinaryORM
-from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.record_db_models import BaseRecordORM, RecordComputeHistoryORM
 from qcfractal.db_socket.helpers import (
     get_count,
@@ -18,7 +17,7 @@ from qcfractal.db_socket.helpers import (
 from qcportal.compression import CompressionEnum, compress
 from qcportal.generic_result import GenericTaskResult
 from qcportal.metadata_models import InsertMetadata
-from qcportal.outputstore import OutputStore, OutputTypeEnum
+from qcportal.outputstore import OutputTypeEnum
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from .db_models import ServiceQueueORM, ServiceDependencyORM, ServiceSubtaskRecordORM
 from ..record_socket import BaseRecordSocket
@@ -305,34 +304,29 @@ class ServiceSocket:
                 )
 
                 existing_history = service_orm.record.compute_history
-                if len(existing_history) == 0 or existing_history[-1].status != RecordStatusEnum.running:
+                if len(existing_history) == 0:
 
-                    # Add a compute history entry. The iterate functions expect that at least one
-                    # history entry exists
+                    # Add a compute history entry.
+                    # The iterate functions expect that at least one history entry exists
                     # But only add if this wasn't a restart of a running service
 
                     hist = RecordComputeHistoryORM()
                     hist.status = RecordStatusEnum.running
                     hist.modified_on = now
 
-                    if len(existing_history) == 0:
-                        stdout = OutputStore.compress(
-                            OutputTypeEnum.stdout,
-                            f"Starting service: {service_orm.record.record_type} at {now}",
-                            CompressionEnum.zstd,
-                            6,
-                        )
-                        hist.outputs[OutputTypeEnum.stdout] = OutputStoreORM.from_model(stdout)
-
-                    else:  # this was a restart of a not-running (ie, errored) service
-                        stdout_orm = service_orm.record.compute_history[-1].get_output(OutputTypeEnum.stdout)
-                        make_transient(stdout_orm)
-                        stdout_orm.id = None
-                        stdout_orm.history_id = None
-                        stdout_orm.append(f"\nRestarting service: {service_orm.record.record_type} at {now}")
-                        hist.outputs[OutputTypeEnum.stdout] = stdout_orm
+                    stdout_str = f"Starting service: {service_orm.record.record_type} at {now}"
+                    stdout = self.root_socket.records.create_output_orm(session, OutputTypeEnum.stdout, stdout_str)
+                    hist.outputs[OutputTypeEnum.stdout] = stdout
 
                     service_orm.record.compute_history.append(hist)
+
+                else:  # this was (probably) a restart
+                    self.root_socket.records.append_output(
+                        session,
+                        service_orm.record,
+                        OutputTypeEnum.stdout,
+                        f"\nRestarting service: {service_orm.record.record_type} at {now}",
+                    )
 
                 session.commit()
 
@@ -348,6 +342,9 @@ class ServiceSocket:
                 except Exception as err:
                     session.rollback()
 
+                    import traceback
+
+                    traceback.print_exc()
                     error = {
                         "error_type": "service_initialization_error",
                         "error_message": "Error in initialization/iteration of service: " + str(err),

@@ -135,7 +135,7 @@ class TaskSocket:
 
                     # Failed task returning FailedOperation
                     elif result.success is False and isinstance(result, FailedOperation):
-                        self.root_socket.records.update_failed_task(record_orm, result, manager_name)
+                        self.root_socket.records.update_failed_task(session, record_orm, result, manager_name)
                         notify_status = RecordStatusEnum.error
                         tasks_failures.append(task_id)
 
@@ -150,7 +150,7 @@ class TaskSocket:
                         error = {"error_type": "internal_fractal_error", "error_message": msg}
                         failed_op = FailedOperation(error=error, success=False)
 
-                        self.root_socket.records.update_failed_task(record_orm, failed_op, manager_name)
+                        self.root_socket.records.update_failed_task(session, record_orm, failed_op, manager_name)
                         notify_status = RecordStatusEnum.error
 
                         self._logger.error(msg)
@@ -175,7 +175,7 @@ class TaskSocket:
                     error = {"error_type": "internal_fractal_error", "error_message": msg}
                     failed_op = FailedOperation(error=error, success=False)
 
-                    self.root_socket.records.update_failed_task(record_orm, failed_op, manager_name)
+                    self.root_socket.records.update_failed_task(session, record_orm, failed_op, manager_name)
                     notify_status = RecordStatusEnum.error
 
                     self._logger.error(msg)

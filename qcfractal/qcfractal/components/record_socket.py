@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 from datetime import datetime
 from typing import TYPE_CHECKING
@@ -19,10 +20,10 @@ from qcfractal.db_socket.helpers import (
     get_general,
     delete_general,
 )
-from qcportal.compression import CompressionEnum
+from qcportal.compression import CompressionEnum, compress, decompress, decompress_old_string
 from qcportal.exceptions import UserReportableError, MissingDataError
 from qcportal.metadata_models import DeleteMetadata, QueryMetadata, UpdateMetadata
-from qcportal.outputstore import OutputStore, OutputTypeEnum
+from qcportal.outputstore import OutputTypeEnum
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from .record_db_models import RecordComputeHistoryORM, BaseRecordORM, RecordInfoBackupORM, RecordCommentORM
 
@@ -36,48 +37,6 @@ if TYPE_CHECKING:
 
 
 _default_error = {"error_type": "not_supplied", "error_message": "No error message found on task."}
-
-
-def create_compute_history_entry(
-    result: AllResultTypes,
-) -> RecordComputeHistoryORM:
-    """
-    Retrieves status and (possibly compressed) outputs from a result, and creates
-    a record computation history entry
-    """
-    logger = logging.getLogger(__name__)
-
-    history_orm = RecordComputeHistoryORM()
-    history_orm.status = "complete" if result.success else "error"
-    history_orm.provenance = result.provenance.dict()
-    history_orm.modified_on = datetime.utcnow()
-
-    # Get the compressed outputs if they exist
-    compressed_output = result.extras.pop("_qcfractal_compressed_outputs", None)
-
-    if compressed_output is not None:
-        all_outputs = [OutputStore(**x) for x in compressed_output]
-
-    else:
-        all_outputs = []
-
-        # This shouldn't happen, but if they aren't compressed, check for uncompressed
-        if result.stdout is not None:
-            logger.warning(f"Found uncompressed stdout for record id {result.id}")
-            stdout = OutputStore.compress(OutputTypeEnum.stdout, result.stdout, CompressionEnum.zstd)
-            all_outputs.append(stdout)
-        if result.stderr is not None:
-            logger.warning(f"Found uncompressed stderr for record id {result.id}")
-            stderr = OutputStore.compress(OutputTypeEnum.stderr, result.stderr, CompressionEnum.zstd)
-            all_outputs.append(stderr)
-        if result.error is not None:
-            logger.warning(f"Found uncompressed error for record id {result.id}")
-            error = OutputStore.compress(OutputTypeEnum.error, result.error.dict(), CompressionEnum.zstd)
-            all_outputs.append(error)
-
-    history_orm.outputs = {x.output_type: OutputStoreORM.from_model(x) for x in all_outputs}
-
-    return history_orm
 
 
 class BaseRecordSocket:
@@ -290,7 +249,7 @@ class BaseRecordSocket:
         history_id: int,
         *,
         session: Optional[Session] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> Dict[str, Dict[str, Any]]:
 
         # Outer join with the history and record orm table to ensure ids, types, etc, match
         stmt = select(self.record_orm.id, OutputStoreORM)
@@ -308,13 +267,13 @@ class BaseRecordSocket:
 
             # if the length is one, but the history is None, then record found, but no history
             elif len(outputs) == 1 and outputs[0][1] is None:
-                return []
+                return {}
 
             # Otherwise, found some outputs that match the record id/type
             else:
                 return {o[1].output_type: o[1].model_dict() for o in outputs}
 
-    def get_single_output(
+    def get_single_output_metadata(
         self,
         record_id: int,
         history_id: int,
@@ -323,25 +282,70 @@ class BaseRecordSocket:
         session: Optional[Session] = None,
     ) -> Dict[str, Any]:
 
-        # Outer join with the history and record orm table to ensure ids, types, etc, match
-        stmt = select(self.record_orm.id, OutputStoreORM)
-        stmt = stmt.join(RecordComputeHistoryORM, self.record_orm.id == RecordComputeHistoryORM.record_id, isouter=True)
-        stmt = stmt.join(OutputStoreORM, OutputStoreORM.history_id == RecordComputeHistoryORM.id, isouter=True)
+        # Slightly inefficient, but should be ok
+        all_outputs = self.get_all_output_metadata(record_id, history_id, session=session)
+
+        if output_type not in all_outputs:
+            raise MissingDataError(f"Cannot find output {output_type} for record {record_id}/history {history_id}")
+
+        return all_outputs[output_type]
+
+    def get_single_output_rawdata(
+        self,
+        record_id: int,
+        history_id: int,
+        output_type: str,
+        *,
+        session: Optional[Session] = None,
+    ) -> Tuple[bytes, CompressionEnum]:
+
+        stmt = select(OutputStoreORM)
+        stmt = stmt.join(RecordComputeHistoryORM, RecordComputeHistoryORM.id == OutputStoreORM.history_id)
+        stmt = stmt.where(RecordComputeHistoryORM.record_id == record_id)
+        stmt = stmt.where(OutputStoreORM.history_id == history_id)
         stmt = stmt.where(OutputStoreORM.output_type == output_type)
-        stmt = stmt.where(RecordComputeHistoryORM.id == history_id)
-        stmt = stmt.where(self.record_orm.id == record_id)
 
         with self.root_socket.optional_session(session, True) as session:
-            outputs = session.execute(stmt).one_or_none()
-
-            if outputs is None:
-                raise MissingDataError(f"Cannot find record {record_id}")
-            elif outputs[1] is None:
+            output_data = session.execute(stmt).scalar_one_or_none()
+            if output_data is None:
                 raise MissingDataError(
-                    f"Cannot find output {output_type} for history {history_id} (record {record_id})"
+                    f"Record {record_id}/history {history_id} does not have {output_type} output (or record/history does not exist)"
                 )
+
+            # Old way: store a plain string or dict in "value"
+            # Newer way: store (possibly) compressed output in "old_data"
+            # Newest way: store in data
+            # But no matter what, this gets returned in "data"
+            val = output_data.value
+            old_d = output_data.old_data
+            new_d = output_data.data
+
+            # If stored the old way, convert to the new way
+            if new_d is not None:
+                cdata, ctype = new_d, output_data.compression_type
+            elif old_d is not None:
+                # decompress to string first, then see if it's actually json
+                # then recompress server side
+                dstr = decompress_old_string(old_d, output_data.compression_type)
+                if dstr[0] == "{" and "error" in dstr:
+                    cdata, ctype, _ = compress(json.loads(dstr), CompressionEnum.zstd)
+                else:
+                    cdata, ctype, _ = compress(dstr, CompressionEnum.zstd)
             else:
-                return outputs[1].model_dict()
+                # Compress what was in 'value'
+                cdata, ctype, _ = compress(val, CompressionEnum.zstd)
+
+            return cdata, ctype
+
+    def get_single_output_uncompressed(
+        self, record_id: int, history_id: int, output_type: OutputTypeEnum, *, session: Optional[Session] = None
+    ) -> Any:
+        """
+        Get an uncompressed output from a record
+        """
+
+        raw_data, ctype = self.get_single_output_rawdata(record_id, history_id, output_type, session=session)
+        return decompress(raw_data, ctype)
 
     def get_all_native_files_metadata(
         self,
@@ -757,6 +761,53 @@ class RecordSocket:
         record_type = task_orm.record.record_type
         return self._handler_map[record_type].generate_task_specification(task_orm.record)
 
+    def create_compute_history_entry(
+        self,
+        session: Session,
+        result: AllResultTypes,
+    ) -> RecordComputeHistoryORM:
+        """
+        Retrieves status and (possibly compressed) outputs from a result, and creates
+        a record computation history entry
+        """
+        logger = logging.getLogger(__name__)
+
+        history_orm = RecordComputeHistoryORM()
+        history_orm.status = "complete" if result.success else "error"
+        history_orm.provenance = result.provenance.dict()
+        history_orm.modified_on = datetime.utcnow()
+
+        # Get the compressed outputs if they exist
+        compressed_output = result.extras.pop("_qcfractal_compressed_outputs", None)
+
+        if compressed_output is not None:
+            for output_type, data_dict in compressed_output.items():
+                out_orm = OutputStoreORM(
+                    output_type=output_type,
+                    compression_type=data_dict["compression_type"],
+                    compression_level=data_dict["compression_level"],
+                    data=data_dict["data"],
+                )
+
+                history_orm.outputs[output_type] = out_orm
+
+        else:
+            # This generally shouldn't happen, but if they aren't compressed, check for uncompressed
+            if result.stdout is not None:
+                logger.warning(f"Found uncompressed stdout for record id {result.id}")
+                stdout_orm = self.create_output_orm(session, OutputTypeEnum.stdout, result.stdout)
+                history_orm.outputs["stdout"] = stdout_orm
+            if result.stderr is not None:
+                logger.warning(f"Found uncompressed stderr for record id {result.id}")
+                stderr_orm = self.create_output_orm(session, OutputTypeEnum.stderr, result.stderr)
+                history_orm.outputs["stderr"] = stderr_orm
+            if result.error is not None:
+                logger.warning(f"Found uncompressed error for record id {result.id}")
+                error_orm = self.create_output_orm(session, OutputTypeEnum.error, result.error.dict())
+                history_orm.outputs["error"] = error_orm
+
+        return history_orm
+
     def native_files_to_orm(self, session: Session, result: AllResultTypes) -> Dict[str, NativeFileORM]:
         """
         Convert the native files stored in a QCElemental result to an ORM
@@ -776,6 +827,60 @@ class RecordSocket:
             native_files[name] = nf_orm
 
         return native_files
+
+    def create_output_orm(self, session: Session, output_type: OutputTypeEnum, output: Any) -> OutputStoreORM:
+        compressed_out, compression_type, compression_level = compress(output, CompressionEnum.zstd)
+        out_orm = OutputStoreORM(
+            output_type=output_type,
+            compression_type=compression_type,
+            compression_level=compression_level,
+            data=compressed_out,
+        )
+        return out_orm
+
+    def upsert_output(self, session, record_orm: BaseRecordORM, new_output_orm: OutputStoreORM) -> None:
+        """
+        Insert or replace an output in a records history
+
+        Given a new output orm, if it doesn't exist, add it. If an
+        output of the same type already exists, then delete that one and
+        insert the new one.
+        """
+        if len(record_orm.compute_history) == 0:
+            raise MissingDataError(f"Record {record_orm.id} does not have any compute history")
+
+        output_type = new_output_orm.output_type
+        compute_history = record_orm.compute_history[-1]
+
+        if output_type in compute_history.outputs:
+            # TODO - not sure why this is needed. Should be handled by delete-orphan
+            old_orm = compute_history.outputs.pop(output_type)
+            session.delete(old_orm)
+            session.flush()
+
+        compute_history.outputs[output_type] = new_output_orm
+
+    def append_output(self, session: Session, record_orm: BaseRecordORM, output_type: OutputTypeEnum, to_append: str):
+        if not to_append:
+            return
+
+        if len(record_orm.compute_history) == 0:
+            raise MissingDataError(f"Record {record_orm.id} does not have any compute history")
+
+        compute_history = record_orm.compute_history[-1]
+        if output_type in compute_history.outputs:
+            out_orm = compute_history.outputs[output_type]
+            out_str = decompress(out_orm.data, out_orm.compression_type)
+            out_str += to_append
+
+            new_data, new_ctype, new_clevel = compress(out_str, CompressionEnum.zstd)
+            out_orm.data = new_data
+            out_orm.compression_type = new_ctype
+            out_orm.compression_level = new_clevel
+        else:
+            compute_history.outputs[output_type] = self.create_output_orm(session, output_type, to_append)
+
+        session.flush()
 
     def update_completed_task(
         self, session: Session, record_orm: BaseRecordORM, result: AllResultTypes, manager_name: str
@@ -810,7 +915,7 @@ class RecordSocket:
 
         # Do these before calling the record-specific handler
         # (these may pull stuff out of extras)
-        history_orm = create_compute_history_entry(result)
+        history_orm = self.create_compute_history_entry(session, result)
         native_files_orm = self.native_files_to_orm(session, result)
 
         # Update record-specific fields
@@ -829,7 +934,9 @@ class RecordSocket:
         # Delete the task from the task queue since it is completed
         session.delete(record_orm.task)
 
-    def update_failed_task(self, record_orm: BaseRecordORM, failed_result: FailedOperation, manager_name: str):
+    def update_failed_task(
+        self, session: Session, record_orm: BaseRecordORM, failed_result: FailedOperation, manager_name: str
+    ):
         """
         Update a record ORM whose computation has failed, and mark it as errored
 
@@ -851,8 +958,8 @@ class RecordSocket:
         if error is None:
             error = _default_error
 
-        error_obj = OutputStore.compress(OutputTypeEnum.error, error.dict(), CompressionEnum.zstd)
-        all_outputs = [error_obj]
+        error_out_orm = self.create_output_orm(session, OutputTypeEnum.error, error.dict())
+        all_outputs = {OutputTypeEnum.error: error_out_orm}
 
         # Get the rest of the outputs
         # This is stored in "input_data" (I know...)
@@ -862,18 +969,18 @@ class RecordSocket:
             stderr = failed_result.input_data.get("stderr", None)
 
             if stdout is not None:
-                stdout_obj = OutputStore.compress(OutputTypeEnum.stdout, stdout, CompressionEnum.zstd)
-                all_outputs.append(stdout_obj)
+                stdout_orm = self.create_output_orm(session, OutputTypeEnum.stdout, stdout)
+                all_outputs[OutputTypeEnum.stdout] = stdout_orm
             if stderr is not None:
-                stderr_obj = OutputStore.compress(OutputTypeEnum.stderr, stderr, CompressionEnum.zstd)
-                all_outputs.append(stderr_obj)
+                stderr_orm = self.create_output_orm(session, OutputTypeEnum.stderr, stderr)
+                all_outputs[OutputTypeEnum.stderr] = stderr_orm
 
         # Build the history orm
         history_orm = RecordComputeHistoryORM()
         history_orm.status = RecordStatusEnum.error
         history_orm.manager_name = manager_name
         history_orm.modified_on = datetime.utcnow()
-        history_orm.outputs = {x.output_type: OutputStoreORM.from_model(x) for x in all_outputs}
+        history_orm.outputs = all_outputs
 
         record_orm.status = RecordStatusEnum.error
         record_orm.modified_on = history_orm.modified_on
@@ -934,11 +1041,10 @@ class RecordSocket:
         """
         record_orm.status = RecordStatusEnum.error
 
-        error_obj = OutputStore.compress(OutputTypeEnum.error, error_info, CompressionEnum.zstd)
-        error_orm = OutputStoreORM.from_model(error_obj)
+        error_orm = self.create_output_orm(session, OutputTypeEnum.error, error_info)
         record_orm.compute_history[-1].status = RecordStatusEnum.error
 
-        record_orm.compute_history[-1].upsert_output(session, error_orm)
+        self.upsert_output(session, record_orm, error_orm)
         record_orm.compute_history[-1].modified_on = datetime.utcnow()
 
         record_orm.status = RecordStatusEnum.error
@@ -960,7 +1066,7 @@ class RecordSocket:
             # Get the outputs & status, storing in the history orm.
             # Do this before calling the individual record handlers since it modifies extras
             # (looking for compressed outputs and compressed native files)
-            history_orm = create_compute_history_entry(result)
+            history_orm = self.create_compute_history_entry(session, result)
             native_files_orm = self.native_files_to_orm(session, result)
 
             # Now the record-specific stuff

@@ -21,23 +21,23 @@ def _compress_common(
     stderr = result.stderr
     error = result.error
 
-    compressed_outputs = []
+    compressed_outputs = {}
     update = {}
 
     if stdout is not None:
-        new_stdout = OutputStore.compress(OutputTypeEnum.stdout, stdout, CompressionEnum.zstd)
-        compressed_outputs.append(new_stdout)
-        update["stdout"] = None
+        new_stdout, ctype, clevel = compress(stdout, CompressionEnum.zstd)
+        compressed_outputs["stdout"] = {"compression_type": ctype, "compression_level": clevel, "data": new_stdout}
+        update["stderr"] = None
 
     if stderr is not None:
-        new_stderr = OutputStore.compress(OutputTypeEnum.stderr, stderr, CompressionEnum.zstd)
-        compressed_outputs.append(new_stderr)
+        new_stderr, ctype, clevel = compress(stderr, CompressionEnum.zstd)
+        compressed_outputs["stderr"] = {"compression_type": ctype, "compression_level": clevel, "data": new_stderr}
         update["stderr"] = None
 
     if error is not None:
-        new_error = OutputStore.compress(OutputTypeEnum.error, error.dict(), CompressionEnum.zstd)
-        compressed_outputs.append(new_error)
-        update["error"] = None
+        new_error, ctype, clevel = compress(error.dict(), CompressionEnum.zstd)
+        compressed_outputs["error"] = {"compression_type": ctype, "compression_level": clevel, "data": new_error}
+        update["stderr"] = None
 
     update["extras"] = result.extras
     if compressed_outputs:

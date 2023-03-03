@@ -10,7 +10,6 @@ from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service
 from qcportal.auth import UserInfo, GroupInfo
 from qcportal.optimization import OptimizationSpecification, OptimizationProtocols
-from qcportal.outputstore import OutputStore
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification, SinglepointProtocols
 from qcportal.torsiondrive import TorsiondriveSpecification, TorsiondriveKeywords
@@ -350,7 +349,10 @@ def test_torsiondrive_socket_run(
     assert rec[0]["compute_history"][-1]["status"] == RecordStatusEnum.complete
     assert time_0 < rec[0]["compute_history"][-1]["modified_on"] < time_1
     assert rec[0]["service"] is None
-    out = OutputStore(**rec[0]["compute_history"][-1]["outputs"]["stdout"])
-    assert "Job Finished" in out.as_string
+
+    out = storage_socket.records.torsiondrive.get_single_output_uncompressed(
+        rec[0]["id"], rec[0]["compute_history"][-1]["id"], "stdout"
+    )
+    assert "Job Finished" in out
 
     assert len(rec[0]["optimizations"]) == n_optimizations

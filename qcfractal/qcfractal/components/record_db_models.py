@@ -24,8 +24,6 @@ from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.nativefiles.db_models import NativeFileORM
 from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.db_socket import BaseORM, MsgpackExt
-from qcportal.compression import CompressionEnum
-from qcportal.outputstore import OutputTypeEnum, OutputStore
 from qcportal.record_models import RecordStatusEnum
 
 if TYPE_CHECKING:
@@ -112,38 +110,6 @@ class RecordComputeHistoryORM(BaseORM):
 
     __table_args__ = (Index("ix_record_compute_history_record_id", "record_id"),)
 
-    def upsert_output(self, session, new_output_orm: OutputStore) -> None:
-        """
-        Insert or replace an output in this history entry
-
-        Given a new output orm, if it doesn't exist, add it. If an
-        output of the same type already exists, then delete that one and
-        insert the new one.
-        """
-        output_type = new_output_orm.output_type
-
-        if output_type in self.outputs:
-            old_orm = self.outputs.pop(output_type)
-            session.delete(old_orm)
-        session.flush()
-
-        self.outputs[output_type] = new_output_orm
-
-    def get_output(self, output_type: OutputTypeEnum) -> OutputStoreORM:
-        """
-        Get an output of a specific type
-
-        If the output doesn't exist, then it is created.
-        """
-
-        if output_type in self.outputs:
-            return self.outputs[output_type]
-
-        new_output = OutputStore.compress(output_type, "", CompressionEnum.zstd)
-        new_output_orm = OutputStoreORM.from_model(new_output)
-        self.outputs[output_type] = new_output_orm
-        return new_output_orm
-
 
 class BaseRecordORM(BaseORM):
     """
@@ -215,9 +181,7 @@ class BaseRecordORM(BaseORM):
     new_properties = Column(JSONB)
 
     # Native files returned from the computation
-    native_files = relationship(
-        NativeFileORM, collection_class=attribute_mapped_collection("name"), cascade="all, delete-orphan"
-    )
+    native_files = relationship(NativeFileORM, collection_class=attribute_mapped_collection("name"))
 
     __table_args__ = (
         Index("ix_base_record_status", "status"),

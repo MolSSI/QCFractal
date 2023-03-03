@@ -2,7 +2,7 @@ import logging
 
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.config import AutoResetConfig
-from qcportal.outputstore import OutputStore
+from qcportal.compression import decompress
 
 # Map from specific errors to the general error classes
 error_map = {
@@ -36,8 +36,7 @@ def should_reset(record_orm: BaseRecordORM, config: AutoResetConfig) -> bool:
 
     # Kinda wrote myself into a corner with all this compression stuff...
     error_orm = [x.outputs.get("error", None) for x in history]
-    error_obj = [x.to_model(OutputStore) for x in error_orm]
-    error_dict = [x.as_json for x in error_obj]
+    error_dict = [decompress(x.data, x.compression_type) for x in error_orm]
 
     error_types = [x["error_type"] for x in error_dict]
 

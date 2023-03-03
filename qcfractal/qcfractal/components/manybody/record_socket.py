@@ -270,8 +270,8 @@ class ManybodyRecordSocket(BaseRecordSocket):
         table_rows = sorted(table_rows, key=lambda x: (len(x[3]), -x[0], x[2]))
         output += tabulate.tabulate(table_rows, headers=["degeneracy", "molecule", "molecule id", "fragments", "basis"])
         output += "\n\n"
-        stdout_orm = mb_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
-        stdout_orm.append(output)
+
+        self.root_socket.records.append_output(session, mb_orm, OutputTypeEnum.stdout, output)
 
     def iterate_service(
         self,
@@ -375,8 +375,8 @@ class ManybodyRecordSocket(BaseRecordSocket):
                 headers=["\nnbody", "Total Energy  \nthrough n-body", "\nInteraction Energy", "\nContrib to IE"],
                 floatfmt="6.10f",
             )
-        stdout_orm = mb_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
-        stdout_orm.append(output)
+
+        self.root_socket.records.append_output(session, mb_orm, OutputTypeEnum.stdout, output)
 
         return len(mols_to_compute) == 0
 

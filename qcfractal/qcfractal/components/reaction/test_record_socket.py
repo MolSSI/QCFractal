@@ -9,7 +9,6 @@ from qcarchivetesting import load_molecule_data
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service
 from qcportal.auth import UserInfo, GroupInfo
-from qcportal.outputstore import OutputStore
 from qcportal.reaction import ReactionSpecification, ReactionKeywords
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
@@ -153,7 +152,10 @@ def test_reaction_socket_run(
     assert rec[0]["compute_history"][-1]["status"] == RecordStatusEnum.complete
     assert time_0 < rec[0]["compute_history"][-1]["modified_on"] < time_1
     assert rec[0]["service"] is None
-    out = OutputStore(**rec[0]["compute_history"][-1]["outputs"]["stdout"])
-    assert "All reaction components are complete" in out.as_string
+
+    out = storage_socket.records.reaction.get_single_output_uncompressed(
+        rec[0]["id"], rec[0]["compute_history"][-1]["id"], "stdout"
+    )
+    assert "All reaction components are complete" in out
 
     assert rec[0]["total_energy"] < 0.0

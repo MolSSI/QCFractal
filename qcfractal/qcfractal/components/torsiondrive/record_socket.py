@@ -144,9 +144,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         dihedral_template_str = json.dumps(dihedral_template)
         molecule_template_str = json.dumps(molecule_template)
 
-        if stdout:
-            stdout_orm = td_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
-            stdout_orm.append(stdout)
+        self.root_socket.records.append_output(session, td_orm, OutputTypeEnum.stdout, stdout)
 
         service_state = TorsiondriveServiceState(
             torsiondrive_state=td_state,
@@ -230,8 +228,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                 raise RuntimeError("Minimum energies reported by the torsiondrive package do not match ours!")
 
         # append to the existing stdout
-        stdout_orm = td_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
-        stdout_orm.append(stdout_append)
+        self.root_socket.records.append_output(session, td_orm, OutputTypeEnum.stdout, stdout_append)
 
         # Set the new service state. We must then mark it as modified
         # so that SQLAlchemy can pick up changes. This is because SQLAlchemy

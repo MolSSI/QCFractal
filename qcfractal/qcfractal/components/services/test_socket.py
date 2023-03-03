@@ -15,7 +15,6 @@ from qcfractal.components.torsiondrive.testing_helpers import (
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service, DummyJobStatus
 from qcportal.managers import ManagerName
-from qcportal.outputstore import OutputStore, OutputTypeEnum
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 
 if TYPE_CHECKING:
@@ -50,9 +49,11 @@ def test_service_socket_error(storage_socket: SQLAlchemySocket, activated_manage
     assert time_0 < rec[0]["compute_history"][-1]["modified_on"] < time_1
     assert rec[0]["service"] is not None
 
-    outs = rec[0]["compute_history"][-1]["outputs"]
-    out_err = OutputStore(**outs[OutputTypeEnum.error])
-    assert "did not complete successfully" in out_err.as_json["error_message"]
+    err = storage_socket.records.torsiondrive.get_single_output_uncompressed(
+        rec[0]["id"], rec[0]["compute_history"][-1]["id"], "error"
+    )
+
+    assert "did not complete successfully" in err["error_message"]
 
 
 def test_service_socket_iterate_order(storage_socket: SQLAlchemySocket):

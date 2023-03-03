@@ -7,10 +7,9 @@ import pytest
 from qcelemental.models.results import AtomicResultProperties
 
 from qcarchivetesting import load_molecule_data
-from qcportal.compression import decompress_old_string
+from qcportal.compression import decompress
 from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule
-from qcportal.outputstore import OutputStore
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification, SinglepointDriver, SinglepointProtocols
 from qcportal.wavefunctions.models import WavefunctionProperties
@@ -223,6 +222,7 @@ def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket, activated_mana
             "wavefunction",
             "compute_history.*",
             "compute_history.outputs",
+            "compute_history.new_outputs",
             "native_files",
         ],
     )
@@ -258,8 +258,8 @@ def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket, activated_mana
         if wfn is None:
             assert result.wavefunction is None
         else:
-            wfn_data = storage_socket.largebinary.get(wfn["id"])
-            wfn_model = WavefunctionProperties(**wfn_data)
+            wfn_data, wfn_ctype = storage_socket.records.singlepoint.get_wavefunction_rawdata(record["id"])
+            wfn_model = WavefunctionProperties(**decompress(wfn_data, wfn_ctype))
             assert wfn_model.dict(encoding="json") == result.wavefunction.dict(encoding="json")
 
         nf = record.get("native_files", None)
@@ -276,17 +276,19 @@ def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket, activated_mana
 
         avail_outputs = set(outs.keys())
         result_outputs = {x for x in ["stdout", "stderr", "error"] if getattr(result, x, None) is not None}
-        compressed_outputs = result.extras.get("_qcfractal_compressed_outputs", [])
-        result_outputs |= set(x["output_type"] for x in compressed_outputs)
+        compressed_outputs = result.extras.get("_qcfractal_compressed_outputs", {})
+        result_outputs |= set(compressed_outputs.keys())
         assert avail_outputs == result_outputs
 
         # NOTE - this only works for string outputs (not dicts)
         # but those are used for errors, which aren't covered here
-        for o in outs.values():
-            out_obj = OutputStore(**o)
-            co = result.extras["_qcfractal_compressed_outputs"][0]
-            ro = decompress_old_string(co["data"], co["compression"])
-            assert out_obj.as_string == ro
+        for otype in outs.keys():
+            o_str = storage_socket.records.singlepoint.get_single_output_uncompressed(
+                record["id"], record["compute_history"][0]["id"], otype
+            )
+            co = result.extras["_qcfractal_compressed_outputs"][otype]
+            ro = decompress(co["data"], co["compression_type"])
+            assert o_str == ro
 
 
 def test_singlepoint_socket_insert(storage_socket: SQLAlchemySocket):
@@ -333,14 +335,20 @@ def test_singlepoint_socket_insert(storage_socket: SQLAlchemySocket):
     assert arprop1.scf_iterations == arprop2.scf_iterations
     assert arprop1.scf_total_energy == arprop2.scf_total_energy
 
-    wfn_data_1 = storage_socket.largebinary.get(recs[0]["wavefunction"]["id"])
-    wfn_model_1 = WavefunctionProperties(**wfn_data_1)
-    wfn_data_2 = storage_socket.largebinary.get(recs[1]["wavefunction"]["id"])
-    wfn_model_2 = WavefunctionProperties(**wfn_data_2)
+    wfn_data_1, wfn_ctype_1 = storage_socket.records.singlepoint.get_wavefunction_rawdata(recs[0]["id"])
+    wfn_model_1 = WavefunctionProperties(**decompress(wfn_data_1, wfn_ctype_1))
+    wfn_data_2, wfn_ctype_2 = storage_socket.records.singlepoint.get_wavefunction_rawdata(recs[1]["id"])
+    wfn_model_2 = WavefunctionProperties(**decompress(wfn_data_2, wfn_ctype_2))
     assert wfn_model_1.dict(encoding="json") == wfn_model_2.dict(encoding="json")
 
     assert len(recs[0]["compute_history"][0]["outputs"]) == 1
     assert len(recs[1]["compute_history"][0]["outputs"]) == 1
-    outs1 = OutputStore(**recs[0]["compute_history"][0]["outputs"]["stdout"])
-    outs2 = OutputStore(**recs[1]["compute_history"][0]["outputs"]["stdout"])
-    assert outs1.as_string == outs2.as_string
+
+    out_str_1 = storage_socket.records.singlepoint.get_single_output_uncompressed(
+        recs[0]["id"], recs[0]["compute_history"][-1]["id"], "stdout"
+    )
+
+    out_str_2 = storage_socket.records.singlepoint.get_single_output_uncompressed(
+        recs[1]["id"], recs[1]["compute_history"][-1]["id"], "stdout"
+    )
+    assert out_str_1 == out_str_2

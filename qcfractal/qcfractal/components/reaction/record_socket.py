@@ -85,8 +85,7 @@ class ReactionRecordSocket(BaseRecordSocket):
         output += tabulate.tabulate(table_rows, headers=["coefficient", "molecule", "molecule id"])
         output += "\n\n"
 
-        stdout_orm = rxn_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
-        stdout_orm.append(output)
+        self.root_socket.records.append_output(session, rxn_orm, OutputTypeEnum.stdout, output)
 
         # Reactions are simple and don't require a service state
 
@@ -134,6 +133,7 @@ class ReactionRecordSocket(BaseRecordSocket):
         sp_mols_to_compute -= opt_mols_to_compute
 
         service_orm.dependencies = []
+        output = ""
 
         if opt_mols_to_compute:
             opt_spec_id = rxn_orm.specification.optimization_specification_id
@@ -278,8 +278,7 @@ class ReactionRecordSocket(BaseRecordSocket):
 
             rxn_orm.total_energy = total_energy
 
-        stdout_orm = rxn_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
-        stdout_orm.append(output)
+        self.root_socket.records.append_output(session, rxn_orm, OutputTypeEnum.stdout, output)
 
         return not (opt_mols_to_compute or sp_mols_to_compute)
 

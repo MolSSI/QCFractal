@@ -159,7 +159,17 @@ def get_record_outputs_v1(record_id: int, history_id: int, record_type: Optional
 @wrap_route("READ")
 def get_record_outputs_single_v1(record_id: int, history_id: int, output_type: str, record_type: Optional[str] = None):
     record_socket = storage_socket.records.get_socket(record_type)
-    return record_socket.get_single_output(record_id, history_id, output_type)
+    return record_socket.get_single_output_metadata(record_id, history_id, output_type)
+
+
+@api_v1.route(
+    "/records/<string:record_type>/<int:record_id>/compute_history/<int:history_id>/outputs/<string:output_type>/data",
+    methods=["GET"],
+)
+@wrap_route("READ")
+def get_record_outputs_data_v1(record_id: int, history_id: int, output_type: str, record_type: Optional[str] = None):
+    record_socket = storage_socket.records.get_socket(record_type)
+    return record_socket.get_single_output_rawdata(record_id, history_id, output_type)
 
 
 @api_v1.route("/records/<string:record_type>/<int:record_id>/native_files", methods=["GET"])

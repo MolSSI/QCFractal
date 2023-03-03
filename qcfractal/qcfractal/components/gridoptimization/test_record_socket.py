@@ -11,7 +11,6 @@ from qcfractal.testing_helpers import run_service
 from qcportal.auth import UserInfo, GroupInfo
 from qcportal.gridoptimization import GridoptimizationSpecification, GridoptimizationKeywords
 from qcportal.optimization import OptimizationSpecification, OptimizationProtocols
-from qcportal.outputstore import OutputStore
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification, SinglepointProtocols
 from .testing_helpers import compare_gridoptimization_specs, test_specs, load_test_data, generate_task_key
@@ -188,8 +187,11 @@ def test_gridoptimization_socket_run(
     assert rec[0]["compute_history"][-1]["status"] == RecordStatusEnum.complete
     assert time_0 < rec[0]["compute_history"][-1]["modified_on"] < time_1
     assert rec[0]["service"] is None
-    out = OutputStore(**rec[0]["compute_history"][-1]["outputs"]["stdout"])
-    assert "Grid optimization finished successfully!" in out.as_string
+
+    out = storage_socket.records.gridoptimization.get_single_output_uncompressed(
+        rec[0]["id"], rec[0]["compute_history"][-1]["id"], "stdout"
+    )
+    assert "Grid optimization finished successfully!" in out
 
     assert len(rec[0]["optimizations"]) == n_optimizations
 

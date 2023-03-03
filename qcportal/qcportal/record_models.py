@@ -98,6 +98,10 @@ class ComputeHistory(BaseModel):
         self._client = client
         self._base_url = f"{record_base_url}/compute_history/{self.id}"
 
+        if self.outputs_ is not None:
+            for o in self.outputs_.values():
+                o.propagate_client(self._client, self._base_url)
+
     def _fetch_outputs(self):
         if self._client is None:
             raise RuntimeError("This compute history is not connected to a client")
@@ -108,23 +112,24 @@ class ComputeHistory(BaseModel):
             Dict[str, OutputStore],
         )
 
+        for o in self.outputs_.values():
+            o.propagate_client(self._client, self._base_url)
+
     @property
     def outputs(self) -> Dict[str, OutputStore]:
         if self.outputs_ is None:
             self._fetch_outputs()
         return self.outputs_
 
-    def get_output(self, output_type: OutputTypeEnum) -> Optional[Union[str, Dict[str, Any]]]:
+    def get_output(self, output_type: OutputTypeEnum) -> Any:
         if not self.outputs:
             return None
 
         o = self.outputs.get(output_type, None)
         if o is None:
             return None
-        elif o.output_type == OutputTypeEnum.error:
-            return o.as_json
         else:
-            return o.as_string
+            return o.data
 
 
 class RecordInfoBackup(BaseModel):

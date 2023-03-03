@@ -8,13 +8,12 @@ import pytest
 from qcarchivetesting import load_molecule_data
 from qcfractal.components.optimization.testing_helpers import test_specs, load_test_data, run_test_data
 from qcfractal.db_socket import SQLAlchemySocket
-from qcportal.compression import decompress, decompress_old_string
+from qcportal.compression import decompress
 from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule
 from qcportal.optimization import (
     OptimizationSpecification,
 )
-from qcportal.outputstore import OutputStore
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import (
     QCSpecification,
@@ -275,11 +274,13 @@ def test_optimization_socket_run(storage_socket: SQLAlchemySocket, activated_man
 
         # NOTE - this only works for string outputs (not dicts)
         # but those are used for errors, which aren't covered here
-        for o in outs.values():
-            out_obj = OutputStore(**o)
-            co = result.extras["_qcfractal_compressed_outputs"][0]
-            ro = decompress_old_string(co["data"], co["compression"])
-            assert out_obj.as_string == ro
+        for otype in outs.keys():
+            o_str = storage_socket.records.singlepoint.get_single_output_uncompressed(
+                record["id"], record["compute_history"][0]["id"], otype
+            )
+            co = result.extras["_qcfractal_compressed_outputs"][otype]
+            ro = decompress(co["data"], co["compression_type"])
+            assert o_str == ro
 
         # Test the trajectory
         assert len(record["trajectory"]) == len(result.trajectory)

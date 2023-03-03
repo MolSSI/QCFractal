@@ -11,7 +11,7 @@ from qcfractal.components.singlepoint.testing_helpers import (
     submit_test_data as submit_sp_test_data,
 )
 from qcfractal.components.torsiondrive.testing_helpers import submit_test_data as submit_td_test_data
-from qcportal.compression import decompress_old_string
+from qcportal.compression import decompress
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 
 if TYPE_CHECKING:
@@ -51,8 +51,8 @@ def test_baserecord_model_common(
     assert time_0 < record.modified_on < time_1
     assert record.modified_on > record.created_on
 
-    co = result.extras["_qcfractal_compressed_outputs"][0]
-    ro = decompress_old_string(co["data"], co["compression"])
+    co = result.extras["_qcfractal_compressed_outputs"]["stdout"]
+    ro = decompress(co["data"], co["compression_type"])
     assert record.stdout == ro
 
     assert len(record.comments) == 1
@@ -67,7 +67,7 @@ def test_baserecord_model_common(
     assert time_0 < record.compute_history[0].modified_on < time_1
     assert record.compute_history[0].status == RecordStatusEnum.complete
     assert record.compute_history[0].manager_name == activated_manager_name.fullname
-    assert record.compute_history[0].outputs["stdout"].as_string == ro
+    assert record.compute_history[0].outputs["stdout"].data == ro
 
 
 @pytest.mark.parametrize("includes", [None, all_includes])
@@ -90,7 +90,7 @@ def test_baserecord_model_error(
 
     assert record.compute_history[0].status == RecordStatusEnum.error
     assert record.compute_history[0].manager_name == activated_manager_name.fullname
-    err = record.compute_history[0].outputs["error"].as_json
+    err = record.compute_history[0].outputs["error"].data
     assert err["error_type"] == "test_error"
     assert err["error_message"] == "this is just a test error"
 
