@@ -202,7 +202,8 @@ class BaseRecord(BaseModel):
     record_type: str
     is_service: bool
 
-    extras: Optional[Dict[str, Any]] = None
+    properties: Optional[Dict[str, Any]]
+    extras: Optional[Dict[str, Any]]
 
     status: RecordStatusEnum
     manager_name: Optional[str]

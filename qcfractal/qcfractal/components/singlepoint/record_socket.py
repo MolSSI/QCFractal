@@ -94,9 +94,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
     ) -> None:
         # Update the fields themselves
         record_orm.return_result = result.return_result
-        record_orm.properties = result.properties.dict(encoding="json")
         record_orm.wavefunction = self.wavefunction_to_orm(session, result.wavefunction)
-        record_orm.extras = result.extras
 
     def insert_complete_record(
         self,
@@ -129,9 +127,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
         record_orm.molecule_id = mol_ids[0]
         record_orm.status = RecordStatusEnum.complete
         record_orm.return_result = result.return_result
-        record_orm.properties = result.properties.dict(encoding="json")
         record_orm.wavefunction = self.wavefunction_to_orm(session, result.wavefunction)
-        record_orm.extras = result.extras
 
         session.add(record_orm)
         session.flush()

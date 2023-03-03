@@ -39,6 +39,30 @@ if TYPE_CHECKING:
 _default_error = {"error_type": "not_supplied", "error_message": "No error message found on task."}
 
 
+def build_extras_properties(result: AllResultTypes) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    # Gets rid of numpy arrays
+    # Include any of these fields - not all may exist, but pydantic is lenient
+    result_dict = result.dict(include={"return_result", "properties", "extras"}, encoding="json")
+
+    new_prop = {}
+
+    return_result = result_dict.get("return_result", None)
+    if return_result is not None:
+        new_prop["return_result"] = return_result
+
+    extras = result_dict["extras"]
+
+    # Other properties stored in qcvars in extras
+    # Store them with the rest of the properties, and remove them from extras
+    qcvars = extras.pop("qcvars", {})
+    new_prop.update({k.lower(): v for k, v in qcvars.items()})
+
+    properties = result_dict.get("properties", {})
+    new_prop.update(properties)
+
+    return extras, new_prop
+
+
 class BaseRecordSocket:
     """
     Base class for all record sockets
@@ -299,43 +323,20 @@ class BaseRecordSocket:
         session: Optional[Session] = None,
     ) -> Tuple[bytes, CompressionEnum]:
 
-        stmt = select(OutputStoreORM)
+        stmt = select(OutputStoreORM.data, OutputStoreORM.compression_type)
         stmt = stmt.join(RecordComputeHistoryORM, RecordComputeHistoryORM.id == OutputStoreORM.history_id)
         stmt = stmt.where(RecordComputeHistoryORM.record_id == record_id)
         stmt = stmt.where(OutputStoreORM.history_id == history_id)
         stmt = stmt.where(OutputStoreORM.output_type == output_type)
 
         with self.root_socket.optional_session(session, True) as session:
-            output_data = session.execute(stmt).scalar_one_or_none()
+            output_data = session.execute(stmt).one_or_none()
             if output_data is None:
                 raise MissingDataError(
                     f"Record {record_id}/history {history_id} does not have {output_type} output (or record/history does not exist)"
                 )
 
-            # Old way: store a plain string or dict in "value"
-            # Newer way: store (possibly) compressed output in "old_data"
-            # Newest way: store in data
-            # But no matter what, this gets returned in "data"
-            val = output_data.value
-            old_d = output_data.old_data
-            new_d = output_data.data
-
-            # If stored the old way, convert to the new way
-            if new_d is not None:
-                cdata, ctype = new_d, output_data.compression_type
-            elif old_d is not None:
-                # decompress to string first, then see if it's actually json
-                # then recompress server side
-                dstr = decompress_old_string(old_d, output_data.compression_type)
-                if dstr[0] == "{" and "error" in dstr:
-                    cdata, ctype, _ = compress(json.loads(dstr), CompressionEnum.zstd)
-                else:
-                    cdata, ctype, _ = compress(dstr, CompressionEnum.zstd)
-            else:
-                # Compress what was in 'value'
-                cdata, ctype, _ = compress(val, CompressionEnum.zstd)
-
-            return cdata, ctype
+            return output_data[0], output_data[1]
 
     def get_single_output_uncompressed(
         self, record_id: int, history_id: int, output_type: OutputTypeEnum, *, session: Optional[Session] = None
@@ -921,6 +922,11 @@ class RecordSocket:
         # Update record-specific fields
         handler.update_completed_task(session, record_orm, result, manager_name)
 
+        # Now extras and properties
+        extras, properties = build_extras_properties(result)
+        record_orm.extras = extras
+        record_orm.properties = properties
+
         # Now do everything common to all records
         # Get the outputs & status, storing in the history orm
         history_orm.manager_name = manager_name
@@ -1072,6 +1078,11 @@ class RecordSocket:
             # Now the record-specific stuff
             handler = self._handler_map_by_schema[result.schema_name]
             record_orm = handler.insert_complete_record(session, result)
+
+            # Now extras and properties
+            extras, properties = build_extras_properties(result)
+            record_orm.extras = extras
+            record_orm.properties = properties
 
             # Now back to the common modifications
             record_orm.compute_history.append(history_orm)

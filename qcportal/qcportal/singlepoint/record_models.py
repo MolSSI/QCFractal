@@ -54,8 +54,6 @@ class SinglepointRecord(BaseRecord):
     record_type: Literal["singlepoint"] = "singlepoint"
     specification: QCSpecification
     molecule_id: int
-    return_result: Any
-    properties: Optional[Dict[str, Any]]
 
     ######################################################
     # Fields not included when fetching the record
@@ -94,6 +92,11 @@ class SinglepointRecord(BaseRecord):
             self._fetch_molecule()
         if "wavefunction" in includes:
             self._fetch_wavefunction()
+
+    @property
+    def return_result(self) -> Any:
+        # Return result is stored in properties in QCFractal
+        return self.properties.get("return_result", None)
 
     @property
     def molecule(self) -> Molecule:

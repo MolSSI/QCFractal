@@ -23,7 +23,7 @@ from qcfractal.components.auth.db_models import UserORM, GroupORM, UserIDMapSubq
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.nativefiles.db_models import NativeFileORM
 from qcfractal.components.outputstore.db_models import OutputStoreORM
-from qcfractal.db_socket import BaseORM, MsgpackExt
+from qcfractal.db_socket import BaseORM
 from qcportal.record_models import RecordStatusEnum
 
 if TYPE_CHECKING:
@@ -128,10 +128,7 @@ class BaseRecordORM(BaseORM):
     id = Column(Integer, primary_key=True)
 
     # Extra fields
-    extras = Column(MsgpackExt)
-
-    # Temporary - for slow migration
-    new_extras = Column(JSONB)
+    extras = Column(JSONB)
 
     # Compute status
     # (Denormalized from compute history table for faster lookup during manager claiming/returning)
@@ -177,8 +174,8 @@ class BaseRecordORM(BaseORM):
         cascade="all, delete-orphan",
     )
 
-    # For slow migration
-    new_properties = Column(JSONB)
+    # Various computed properties and stuff
+    properties = Column(JSONB)
 
     # Native files returned from the computation
     native_files = relationship(NativeFileORM, collection_class=attribute_mapped_collection("name"))
@@ -202,15 +199,6 @@ class BaseRecordORM(BaseORM):
         exclude = self.append_exclude(exclude, "owner_user_id", "owner_group_id")
 
         d = BaseORM.model_dict(self, exclude)
-
-        new_extras = d.pop("new_extras", None)
-        new_properties = d.pop("new_properties", None)
-
-        if new_extras:
-            d["extras"] = new_extras
-
-        if new_properties:
-            d["properties"] = new_properties
 
         d["owner_user"] = self.owner_user.username if self.owner_user is not None else None
         d["owner_group"] = self.owner_group.groupname if self.owner_group is not None else None

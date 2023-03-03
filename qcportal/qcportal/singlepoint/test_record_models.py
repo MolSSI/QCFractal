@@ -78,6 +78,9 @@ def test_singlepointrecord_model(
     assert record.return_result == result_dict["return_result"]
 
     all_properties = result_dict["properties"]
+    qcvars = result.extras.get("qcvars", {})
+    all_properties.update({k.lower(): v for k, v in qcvars.items()})
+    all_properties["return_result"] = result_dict["return_result"]
     assert record.properties == all_properties
 
     # Wfn always require a client

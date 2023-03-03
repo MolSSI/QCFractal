@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, Enum, LargeBinary, ForeignKey, UniqueConstraint, event, DDL, JSON
+from sqlalchemy import Column, Integer, Enum, LargeBinary, ForeignKey, UniqueConstraint, event, DDL
 from sqlalchemy.orm import deferred
 
 from qcfractal.db_socket import BaseORM
@@ -24,13 +24,9 @@ class OutputStoreORM(BaseORM):
     history_id = Column(Integer, ForeignKey("record_compute_history.id", ondelete="cascade"), nullable=False)
 
     output_type = Column(Enum(OutputTypeEnum), nullable=False)
-    compression_type = Column(Enum(CompressionEnum), nullable=True)
-    compression_level = Column(Integer, nullable=True)
-    data = deferred(Column(LargeBinary, nullable=True))
-
-    # unmigrated data
-    value = deferred(Column(JSON, nullable=True))
-    old_data = deferred(Column(LargeBinary, nullable=True))
+    compression_type = Column(Enum(CompressionEnum), nullable=False)
+    compression_level = Column(Integer, nullable=False)
+    data = deferred(Column(LargeBinary, nullable=False))
 
     __table_args__ = (UniqueConstraint("history_id", "output_type", name="ux_output_store_id_type"),)
 
@@ -38,13 +34,7 @@ class OutputStoreORM(BaseORM):
         # Fields not in model
         exclude = self.append_exclude(exclude, "id", "history_id", "compression_level")
 
-        d = BaseORM.model_dict(self, exclude)
-
-        # TODO - remove after full migration
-        if d.get("compression_type", None) is None:
-            d["compression_type"] = CompressionEnum.none
-
-        return d
+        return BaseORM.model_dict(self, exclude)
 
 
 # Mark the storage of the data column as external

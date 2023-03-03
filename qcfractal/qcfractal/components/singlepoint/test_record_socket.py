@@ -247,12 +247,12 @@ def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket, activated_mana
         assert "_qcfractal_compressed_outputs" not in record["extras"]
         assert "_qcfractal_compressed_native_files" not in record["extras"]
 
-        # assert record["return_result"] == result.return_result
-        arprop = AtomicResultProperties(**record["properties"])
-        assert arprop.nuclear_repulsion_energy == result.properties.nuclear_repulsion_energy
-        assert arprop.return_energy == result.properties.return_energy
-        assert arprop.scf_iterations == result.properties.scf_iterations
-        assert arprop.scf_total_energy == result.properties.scf_total_energy
+        result_dict = result.dict(include={"return_result"}, encoding="json")
+        assert record["properties"].get("nuclear_repulsion_energy") == result.properties.nuclear_repulsion_energy
+        assert record["properties"].get("return_energy") == result.properties.return_energy
+        assert record["properties"].get("scf_iterations") == result.properties.scf_iterations
+        assert record["properties"].get("scf_total_energy") == result.properties.scf_total_energy
+        assert record["properties"].get("return_result") == result_dict["return_result"]
 
         wfn = record.get("wavefunction", None)
         if wfn is None:
@@ -327,13 +327,7 @@ def test_singlepoint_socket_insert(storage_socket: SQLAlchemySocket):
 
     assert recs[0]["compute_history"][0]["provenance"] == recs[1]["compute_history"][0]["provenance"]
 
-    assert recs[0]["return_result"] == recs[1]["return_result"]
-    arprop1 = AtomicResultProperties(**recs[0]["properties"])
-    arprop2 = AtomicResultProperties(**recs[1]["properties"])
-    assert arprop1.nuclear_repulsion_energy == arprop2.nuclear_repulsion_energy
-    assert arprop1.return_energy == arprop2.return_energy
-    assert arprop1.scf_iterations == arprop2.scf_iterations
-    assert arprop1.scf_total_energy == arprop2.scf_total_energy
+    assert recs[0]["properties"] == recs[1]["properties"]
 
     wfn_data_1, wfn_ctype_1 = storage_socket.records.singlepoint.get_wavefunction_rawdata(recs[0]["id"])
     wfn_model_1 = WavefunctionProperties(**decompress(wfn_data_1, wfn_ctype_1))

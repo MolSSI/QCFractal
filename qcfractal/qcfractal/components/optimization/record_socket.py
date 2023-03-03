@@ -106,7 +106,6 @@ class OptimizationRecordSocket(BaseRecordSocket):
         # Update the fields themselves
         record_orm.final_molecule_id = final_mol_id[0]
         record_orm.energies = result.energies
-        record_orm.extras = result.extras
 
     def add_specification(
         self, opt_spec: OptimizationSpecification, *, session: Optional[Session] = None
