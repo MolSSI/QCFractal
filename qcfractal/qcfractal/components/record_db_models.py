@@ -246,6 +246,8 @@ class BaseRecordORM(BaseORM):
 
         if new_extras:
             d["extras"] = new_extras
+
+        if new_properties:
             d["properties"] = new_properties
 
         d["owner_user"] = self.owner_user.username if self.owner_user is not None else None
