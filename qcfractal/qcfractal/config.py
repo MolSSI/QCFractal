@@ -370,7 +370,7 @@ class FractalConfig(ConfigBase):
 
     @validator("geo_file_path")
     def _check_geo_file_path(cls, v, values):
-        return _make_abs_path(v, values["base_folder"], "GeoLite2-City.mmdb")
+        return _make_abs_path(v, values["base_folder"], None)
 
     @validator("homepage_directory")
     def _check_hompepage_directory_path(cls, v, values):
