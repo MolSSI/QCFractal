@@ -224,8 +224,9 @@ def test_neb_client_query(snowflake_client: PortalClient, storage_socket: SQLAlc
     id_4, _ = submit_test_data(storage_socket, "neb_HCN_psi4_b3lyp_opt3")
 
     all_records = snowflake_client.get_nebs([id_1, id_2, id_3, id_4], include=["initial_chain"])
+
     # mol_ids of just first chain (11 images, the other three have 7 images).
-    neb_ids = [x.id for x in all_records]
+    mol_ids = [x.id for x in all_records[1].initial_chain]
 
     query_res = snowflake_client.query_nebs(qc_program=["psi4"])
     assert query_res._current_meta.n_found == 4
@@ -233,8 +234,14 @@ def test_neb_client_query(snowflake_client: PortalClient, storage_socket: SQLAlc
     query_res = snowflake_client.query_nebs(qc_program=["nothing"])
     assert query_res._current_meta.n_found == 0
 
-    # query_res = snowflake_client.query_nebs(initial_chain_id=[neb_ids[0], 9999])
-    # assert query_res._current_meta.n_found == 11
+    query_res = snowflake_client.query_nebs(molecule_id=mol_ids[1])
+    assert query_res._current_meta.n_found == 4
+
+    query_res = snowflake_client.query_nebs(molecule_id=[mol_ids[10]])
+    assert query_res._current_meta.n_found == 4
+
+    query_res = snowflake_client.query_nebs(molecule_id=999999999)
+    assert query_res._current_meta.n_found == 0
 
     query_res = snowflake_client.query_nebs(program=["geometric"])
     assert query_res._current_meta.n_found == 4

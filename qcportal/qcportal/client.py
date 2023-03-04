@@ -2262,7 +2262,7 @@ class PortalClient(PortalClientBase):
         qc_program: Optional[Union[str, Iterable[str]]] = None,
         qc_method: Optional[Union[str, Iterable[str]]] = None,
         qc_basis: Optional[Union[str, Iterable[str]]] = None,
-        initial_chain_id: Optional[Union[int, Iterable[int]]] = None,
+        molecule_id: Optional[Union[int, Iterable[int]]] = None,
         limit: Optional[int] = None,
         owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
@@ -2281,7 +2281,7 @@ class PortalClient(PortalClientBase):
             "qc_program": make_list(qc_program),
             "qc_method": make_list(qc_method),
             "qc_basis": make_list(qc_basis),
-            "initial_chain_id": make_list(initial_chain_id),
+            "molecule_id": make_list(molecule_id),
             "created_before": created_before,
             "created_after": created_after,
             "modified_before": modified_before,
@@ -2291,11 +2291,8 @@ class PortalClient(PortalClientBase):
             "limit": limit,
         }
 
-        if include:
-            filter_dict["include"] = include
-
         filter_data = NEBQueryFilters(**filter_dict)
-        return RecordQueryIterator(self, filter_data, "neb")
+        return RecordQueryIterator(self, filter_data, "neb", include)
 
     ##############################################################
     # Managers

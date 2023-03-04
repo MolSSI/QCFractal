@@ -125,7 +125,7 @@ class NEBQueryFilters(RecordQueryFilters):
     qc_program: Optional[List[constr(to_lower=True)]] = None
     qc_method: Optional[List[constr(to_lower=True)]] = None
     qc_basis: Optional[List[Optional[constr(to_lower=True)]]] = None
-    initial_chain_id: Optional[List[int]] = None
+    molecule_id: Optional[List[int]] = None
 
     @validator("qc_basis")
     def _convert_basis(cls, v):

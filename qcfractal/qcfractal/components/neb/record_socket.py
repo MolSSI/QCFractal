@@ -536,8 +536,8 @@ class NEBRecordSocket(BaseRecordSocket):
         if query_data.program is not None:
             and_query.append(NEBSpecificationORM.program.in_(query_data.program))
             need_nebspec_join = True
-        if query_data.initial_chain_id is not None:
-            and_query.append(NEBInitialchainORM.neb_id.in_(query_data.initial_chain_id))
+        if query_data.molecule_id is not None:
+            and_query.append(NEBInitialchainORM.molecule_id.in_(query_data.molecule_id))
             need_initchain_join = True
 
         stmt = select(NEBRecordORM)
