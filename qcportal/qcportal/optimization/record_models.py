@@ -1,13 +1,17 @@
+from copy import deepcopy
 from typing import Optional, Union, Any, List, Dict, Iterable
 
 from pydantic import BaseModel, Field, constr, validator, Extra
 from qcelemental.models import Molecule
 from qcelemental.models.procedures import (
+    OptimizationResult,
     OptimizationProtocols,
+    QCInputSpecification,
+    Model as AtomicResultModel,
 )
 from typing_extensions import Literal
 
-from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
+from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters, RecordStatusEnum
 from qcportal.singlepoint import SinglepointProtocols, SinglepointRecord, QCSpecification, SinglepointDriver
 
 
@@ -136,6 +140,43 @@ class OptimizationRecord(BaseRecord):
                 return sp_rec
             else:
                 raise RuntimeError(f"Cannot find trajectory for record {self.id}")
+
+    def to_qcschema_result(self) -> OptimizationResult:
+        if self.status != RecordStatusEnum.complete:
+            raise RuntimeError(f"Cannot create QCSchema result from record with status {self.status}")
+
+        extras = deepcopy(self.extras)
+        extras["_qcfractal_modified_on"] = self.compute_history[0].modified_on
+
+        if self.trajectory is not None:
+            trajectory = [x.to_qcschema_result() for x in self.trajectory]
+        else:
+            trajectory = None
+
+        # TODO - correct?
+        new_keywords = deepcopy(self.specification.keywords)
+        new_keywords["program"] = self.specification.qc_specification.program
+
+        return OptimizationResult(
+            initial_molecule=self.initial_molecule,
+            final_molecule=self.final_molecule,
+            trajectory=trajectory,
+            energies=self.energies,
+            keywords=new_keywords,
+            input_specification=QCInputSpecification(
+                driver=SinglepointDriver.gradient,  # forced
+                model=AtomicResultModel(
+                    method=self.specification.qc_specification.method,
+                    basis=self.specification.qc_specification.basis,
+                ),
+                keywords=self.specification.qc_specification.keywords,
+            ),
+            protocols=self.specification.protocols,
+            extras=extras,
+            stdout=self.stdout,
+            provenance=self.provenance,
+            success=True,  # Status has been checked above
+        )
 
 
 class OptimizationQueryFilters(RecordQueryFilters):

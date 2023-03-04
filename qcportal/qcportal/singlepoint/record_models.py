@@ -1,15 +1,19 @@
+from copy import deepcopy
 from enum import Enum
 from typing import Optional, Union, Any, List, Dict, Iterable
 
 from pydantic import BaseModel, Field, constr, validator, Extra
 from qcelemental.models import Molecule
 from qcelemental.models.results import (
+    AtomicResult,
+    Model as AtomicResultModel,
     AtomicResultProtocols as SinglepointProtocols,
+    AtomicResultProperties,
     WavefunctionProperties,
 )
 from typing_extensions import Literal
 
-from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
+from qcportal.record_models import RecordStatusEnum, BaseRecord, RecordAddBodyBase, RecordQueryFilters
 from qcportal.wavefunctions.models import Wavefunction
 
 
@@ -113,6 +117,40 @@ class SinglepointRecord(BaseRecord):
             return self.wavefunction_.data
         else:
             return None
+
+    def to_qcschema_result(self) -> AtomicResult:
+        if self.status != RecordStatusEnum.complete:
+            raise RuntimeError(f"Cannot create QCSchema result from record with status {self.status}")
+
+        extras = deepcopy(self.extras)
+        extras["_qcfractal_modified_on"] = self.compute_history[0].modified_on
+
+        # QCArchive properties include more than AtomicResultProperties
+        if self.properties:
+            prop_fields = AtomicResultProperties.__fields__.keys()
+            new_properties = {k: v for k, v in self.properties.items() if k in prop_fields}
+            extras["extra_properties"] = {k: v for k, v in self.properties.items() if k not in prop_fields}
+        else:
+            new_properties = {}
+
+        return AtomicResult(
+            driver=self.specification.driver,
+            model=AtomicResultModel(
+                method=self.specification.method,
+                basis=self.specification.basis,
+            ),
+            molecule=self.molecule,
+            keywords=self.specification.keywords,
+            properties=AtomicResultProperties(**new_properties),
+            protocols=self.specification.protocols,
+            return_result=self.return_result,
+            extras=extras,
+            stdout=self.stdout,
+            native_files={k: v.data for k, v in self.native_files.items()},
+            wavefunction=self.wavefunction,
+            provenance=self.provenance,
+            success=True,  # Status has been checked above
+        )
 
 
 class SinglepointAddBody(RecordAddBodyBase):
