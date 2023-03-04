@@ -28,7 +28,7 @@ These records have a :attr:`~qcportal.record_models.BaseRecord.task` property, w
 necessary for computation. This data is what is actually sent to the compute manager. Typically, a user does not
 need to access this object, but it can be useful for developers and for debugging purposes.
 
-This :class:`~qcportal.record_models.TaskRecord` also contains the routing tag and priority.
+This :class:`~qcportal.record_models.RecordTask` also contains the routing tag and priority.
 After successful completion, the associated task is removed from the database.
 
 .. image:: ../graphics/tasks_diagram.svg
@@ -49,7 +49,7 @@ Like tasks, services are assigned a tag and priority - the priority determines t
 on the server. Dependencies (new records) created by the services inherit both the tag and priority.
 
 Records that are based on services have a :attr:`~qcportal.record_models.BaseRecord.service` property
-(a :class:`~qcportal.record_models.ServiceRecord`), which contains
+(a :class:`~qcportal.record_models.RecordService`), which contains
 all the information about the service. Like tasks, it is not commonly needed by users, except for debugging.
 
 Unlike task-based records, service-based records often update their output on the server while running, which can
@@ -103,6 +103,6 @@ the date the task was created.
 Tasks and Services API
 ----------------------
 
-.. autopydantic_model:: qcportal.record_models.TaskRecord
+.. autopydantic_model:: qcportal.record_models.RecordTask
 
-.. autopydantic_model:: qcportal.record_models.ServiceRecord
+.. autopydantic_model:: qcportal.record_models.RecordService

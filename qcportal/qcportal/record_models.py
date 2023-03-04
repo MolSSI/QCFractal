@@ -153,7 +153,7 @@ class RecordComment(BaseModel):
     comment: str
 
 
-class TaskRecord(BaseModel):
+class RecordTask(BaseModel):
     class Config:
         extra = Extra.forbid
 
@@ -177,7 +177,7 @@ class ServiceDependency(BaseModel):
     extras: Dict[str, Any]
 
 
-class ServiceRecord(BaseModel):
+class RecordService(BaseModel):
     class Config:
         extra = Extra.forbid
 
@@ -218,8 +218,8 @@ class BaseRecord(BaseModel):
     # Fields not included when fetching the record
     ######################################################
     compute_history_: Optional[List[ComputeHistory]] = None
-    task_: Optional[TaskRecord] = None
-    service_: Optional[ServiceRecord] = None
+    task_: Optional[RecordTask] = None
+    service_: Optional[RecordService] = None
     comments_: Optional[List[RecordComment]] = None
     native_files_: Optional[Dict[str, NativeFile]] = None
 
@@ -307,7 +307,7 @@ class BaseRecord(BaseModel):
         self.task_ = self._client.make_request(
             "get",
             f"{self._base_url}/task",
-            Optional[TaskRecord],
+            Optional[RecordTask],
         )
 
     def _fetch_service(self):
@@ -316,7 +316,7 @@ class BaseRecord(BaseModel):
         if not self.is_service:
             return
 
-        self.service_ = self._client.make_request("get", f"{self._base_url}/service", Optional[ServiceRecord])
+        self.service_ = self._client.make_request("get", f"{self._base_url}/service", Optional[RecordService])
 
     def _fetch_comments(self):
         self._assert_online()
@@ -373,13 +373,13 @@ class BaseRecord(BaseModel):
         return self.compute_history_
 
     @property
-    def task(self) -> Optional[TaskRecord]:
+    def task(self) -> Optional[RecordTask]:
         if self.task_ is None:
             self._fetch_task()
         return self.task_
 
     @property
-    def service(self) -> Optional[ServiceRecord]:
+    def service(self) -> Optional[RecordService]:
         if self.service_ is None:
             self._fetch_service()
         return self.service_
