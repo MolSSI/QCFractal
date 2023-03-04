@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import logging
 from datetime import datetime
 from typing import TYPE_CHECKING
@@ -20,7 +19,7 @@ from qcfractal.db_socket.helpers import (
     get_general,
     delete_general,
 )
-from qcportal.compression import CompressionEnum, compress, decompress, decompress_old_string
+from qcportal.compression import CompressionEnum, compress, decompress
 from qcportal.exceptions import UserReportableError, MissingDataError
 from qcportal.metadata_models import DeleteMetadata, QueryMetadata, UpdateMetadata
 from qcportal.outputstore import OutputTypeEnum
