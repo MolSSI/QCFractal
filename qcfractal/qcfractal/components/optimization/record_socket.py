@@ -396,7 +396,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
     # Some stuff to be retrieved for optimizations
     ####################################################
 
-    def get_trajectory(
+    def get_trajectory_ids(
         self,
         record_id: int,
         *,

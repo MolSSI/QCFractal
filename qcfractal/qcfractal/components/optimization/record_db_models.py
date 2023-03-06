@@ -28,7 +28,6 @@ class OptimizationTrajectoryORM(BaseORM):
     position = Column(Integer, primary_key=True)
 
     singlepoint_record = relationship(SinglepointRecordORM)
-    optimization_record = relationship("OptimizationRecordORM")
 
     __table_args__ = (Index("ix_optimization_trajectory_singlepoint_id", "singlepoint_id"),)
 
@@ -109,7 +108,6 @@ class OptimizationRecordORM(BaseRecordORM):
         OptimizationTrajectoryORM,
         order_by=OptimizationTrajectoryORM.position,
         collection_class=ordering_list("position"),
-        back_populates="optimization_record",
     )
 
     __mapper_args__ = {"polymorphic_identity": "optimization"}

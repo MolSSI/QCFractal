@@ -41,8 +41,8 @@ def add_optimization_records_v1(body_data: OptimizationAddBody):
 
 @api_v1.route("/records/optimization/<int:record_id>/trajectory", methods=["GET"])
 @wrap_route("READ")
-def get_optimization_trajectory_v1(record_id: int):
-    return storage_socket.records.optimization.get_trajectory(record_id)
+def get_optimization_trajectory_ids_v1(record_id: int):
+    return storage_socket.records.optimization.get_trajectory_ids(record_id)
 
 
 @api_v1.route("/records/optimization/query", methods=["POST"])
