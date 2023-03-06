@@ -196,7 +196,8 @@ class BaseRecordORM(BaseORM):
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         # strip user/group ids
-        exclude = self.append_exclude(exclude, "owner_user_id", "owner_group_id")
+        # info_backup is also never part of models
+        exclude = self.append_exclude(exclude, "owner_user_id", "owner_group_id", "info_backup")
 
         d = BaseORM.model_dict(self, exclude)
 
