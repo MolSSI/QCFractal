@@ -540,7 +540,7 @@ def record_from_dict(data: Dict[str, Any], client: Any = None) -> BaseRecord:
 
 def records_from_dicts(
     data: Sequence[Optional[Dict[str, Any]]],
-    client: Any,
+    client: Any = None,
 ) -> List[Optional[BaseRecord]]:
     """
     Create a list of record objects from a sequence of datamodels
