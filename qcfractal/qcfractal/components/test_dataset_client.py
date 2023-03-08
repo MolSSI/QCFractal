@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 
 @pytest.mark.parametrize(
-    "dataset_type", ["singlepoint", "optimization", "torsiondrive", "gridoptimization", "manybody", "reaction"]
+    "dataset_type", ["singlepoint", "optimization", "torsiondrive", "gridoptimization", "manybody", "reaction", "neb"]
 )
 @pytest.mark.parametrize("owner_group", ["group1", None])
 def test_dataset_client_add_get(submitter_client: PortalClient, dataset_type: str, owner_group: Optional[str]):
