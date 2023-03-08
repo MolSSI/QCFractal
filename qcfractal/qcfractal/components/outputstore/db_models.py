@@ -6,7 +6,7 @@ from sqlalchemy import Column, Integer, Enum, LargeBinary, ForeignKey, UniqueCon
 from sqlalchemy.orm import deferred
 
 from qcfractal.db_socket import BaseORM
-from qcportal.compression import CompressionEnum
+from qcportal.compression import CompressionEnum, decompress
 from qcportal.outputstore import OutputTypeEnum
 
 if TYPE_CHECKING:
@@ -29,6 +29,9 @@ class OutputStoreORM(BaseORM):
     data = deferred(Column(LargeBinary, nullable=False))
 
     __table_args__ = (UniqueConstraint("history_id", "output_type", name="ux_output_store_id_type"),)
+
+    def get_output(self) -> Any:
+        return decompress(self.data, self.compression_type)
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         # Fields not in model

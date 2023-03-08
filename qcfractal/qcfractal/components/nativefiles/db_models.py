@@ -6,7 +6,7 @@ from sqlalchemy import Column, String, Integer, Enum, LargeBinary, ForeignKey, U
 from sqlalchemy.orm import deferred
 
 from qcfractal.db_socket import BaseORM
-from qcportal.compression import CompressionEnum
+from qcportal.compression import CompressionEnum, decompress
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Optional, Iterable
@@ -28,6 +28,9 @@ class NativeFileORM(BaseORM):
     data = deferred(Column(LargeBinary, nullable=False))
 
     __table_args__ = (UniqueConstraint("record_id", "name", name="ux_native_file_record_id_name"),)
+
+    def get_file(self) -> Any:
+        return decompress(self.data, self.compression_type)
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         # Remove fields not present in the model

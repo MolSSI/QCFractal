@@ -6,7 +6,8 @@ from sqlalchemy import Column, Integer, ForeignKey, UniqueConstraint, DDL, event
 from sqlalchemy.orm import deferred
 
 from qcfractal.db_socket import BaseORM
-from qcportal.compression import CompressionEnum
+from qcportal.compression import CompressionEnum, decompress
+from qcportal.wavefunctions import WavefunctionProperties
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Optional, Iterable
@@ -27,6 +28,10 @@ class WavefunctionORM(BaseORM):
     data = deferred(Column(LargeBinary, nullable=False))
 
     __table_args__ = (UniqueConstraint("record_id", name="ux_wavefunction_store_record_id"),)
+
+    def get_wavefunction(self) -> WavefunctionProperties:
+        d = decompress(self.data, self.compression_type)
+        return WavefunctionProperties(**d)
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         # Remove fields not present in the model
