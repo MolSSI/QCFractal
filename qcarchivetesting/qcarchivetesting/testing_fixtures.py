@@ -112,6 +112,12 @@ def storage_socket(temporary_database):
     yield socket
 
 
+@pytest.fixture(scope="function")
+def session(storage_socket):
+    with storage_socket.session_scope() as s:
+        yield s
+
+
 @pytest.fixture(scope="function", params=valid_encodings)
 def stopped_snowflake(temporary_database, request):
     """
