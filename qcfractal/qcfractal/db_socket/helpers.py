@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import tuple_, and_, or_, func, select, inspect
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import load_only, selectinload, lazyload
+from sqlalchemy.orm import load_only, selectinload, lazyload, defer
 
 from qcfractal.db_socket import BaseORM
-from qcportal.exceptions import MissingDataError, UserReportableError
+from qcportal.exceptions import MissingDataError
 from qcportal.metadata_models import InsertMetadata, DeleteMetadata
 
 if TYPE_CHECKING:
@@ -35,6 +35,8 @@ if TYPE_CHECKING:
     _T = TypeVar("_T")
     TupleSequence = Union[Sequence[Tuple[_T, ...]], Generator[Tuple[_T, ...], None, None]]
 
+# Which args to lazy= in a relationsip result in lazy loading
+lazy_opts = {"select", "raise", "write_only"}
 
 # A global batch size for all these functions
 batchsize = 200
@@ -52,11 +54,9 @@ def get_count(session, stmt):
     return session.scalar(select(func.count()).select_from(stmt.subquery()))
 
 
-@lru_cache(maxsize=10)
+@lru_cache(maxsize=1000)
 def _get_query_proj_options(
-    orm_type: Type[_ORM_T],
-    include: Optional[Tuple[str, ...]] = None,
-    exclude: Optional[Tuple[str, ...]] = None,
+    orm_type: Type[_ORM_T], include: Optional[Tuple[str, ...]], exclude: Optional[Tuple[str, ...]]
 ) -> List[Any]:
 
     # Adjust include to be the default "None" if only * is specified
@@ -77,110 +77,46 @@ def _get_query_proj_options(
     if exclude is not None:
         exclude_set = set(exclude)
 
-    # Pull out any subrelationships we need to handle
-    # Make a map with the key being the immediate subrelationship
-    # of this orm, and the values being all the columns, subsubrelationships,
-    # etc, of that subrelationship
-    subrel_map: Dict[str, List[str]] = {}
-    if include_set is not None:
-        subrel_include_sets = [x for x in include_set if "." in x]
-
-        for s in subrel_include_sets:
-            base, col = s.split(".", maxsplit=1)
-            subrel_map.setdefault(base, list())
-            subrel_map[base].append(col)
-
-    subrel_bases = set(subrel_map.keys())
-
     mapper = inspect(orm_type)
 
     # We use mapper.mapper. This works for the usual ORM, as well as
     # with_polymorphic objects
+    all_attrs = mapper.mapper.attrs
     columns = set(mapper.mapper.column_attrs.keys())
     relationships = set(mapper.mapper.relationships.keys())
 
+    lazy_relationships = set(k for k, v in mapper.mapper.relationships.items() if v.lazy in lazy_opts)
+    default_relationships = relationships - lazy_relationships
+
     if include_set is None and exclude_set:
-        # no include_set, some exclude_set
+        # no includes, some excludes
         # load only the non-excluded columns
         # skip loading excluded relationships
-        load_columns = columns - exclude_set
-        noload_rels = (relationships & exclude_set) - subrel_bases
+        defer_columns = columns & exclude_set
+        noload_rels = default_relationships & exclude_set
 
-        options = [lazyload(getattr(orm_type, x)) for x in noload_rels]
+        options = [lazyload(all_attrs[x]) for x in noload_rels]
+        options += [defer(all_attrs[x]) for x in defer_columns]
 
-        if load_columns:
-            load_columns_attr = [getattr(orm_type, x) for x in load_columns]
-            options += [load_only(*load_columns_attr)]
+    elif include_set is not None and not exclude_set:
+        # Include, but with no excludes
+        defer_columns = columns - include_set
+        noload_rels = default_relationships - include_set
 
-    elif include_set and "*" in include_set and not exclude_set:
-        # include_set has '*', no exclude_sets
-        # We just have to possibly include_set some new relationships
-        load_rels = relationships & include_set
-        options = [selectinload(getattr(orm_type, x)) for x in load_rels]
+        options = [lazyload(all_attrs[x]) for x in noload_rels]
+        options += [defer(all_attrs[x]) for x in defer_columns]
 
-    elif include_set and "*" in include_set and exclude_set:
-        # include_set has '*', and we have exclude_set
-        # Load only non-excluded columns
-        # Add any relationship specified in include_set (and not in exclude_set)
-        # Skip loading any relationships that are excluded
-        load_columns = columns - exclude_set
-        load_rels = (relationships & include_set) - exclude_set
-        noload_rels = (relationships & exclude_set) - subrel_bases
+    elif include_set is not None and exclude_set:
+        # Both includes and excludes specified
+        defer_columns = (columns - include_set) | (columns & exclude_set)
+        noload_rels = (default_relationships - include_set) | (default_relationships & exclude_set)
 
-        options = [selectinload(getattr(orm_type, x)) for x in load_rels]
-        options += [lazyload(getattr(orm_type, x)) for x in noload_rels]
-
-        if load_columns:
-            load_columns_attr = [getattr(orm_type, x) for x in load_columns]
-            options += [load_only(*load_columns_attr)]
-
-    elif include_set and not exclude_set:
-        # Include, but with no exclude_set
-        load_columns = columns & include_set
-        load_rels = relationships & include_set
-        noload_rels = relationships - include_set - subrel_bases
-
-        options = [selectinload(getattr(orm_type, x)) for x in load_rels]
-        options += [lazyload(getattr(orm_type, x)) for x in noload_rels]
-
-        if load_columns:
-            load_columns_attr = [getattr(orm_type, x) for x in load_columns]
-            options += [load_only(*load_columns_attr)]
-
-    elif include_set and exclude_set:
-        # Both include_set and exclude_set specified
-        # Load only columns that are in include_set and not exclude_set
-        # Load only relationships that are in include_set and not exclude_set
-        # Skip loading any relationships that aren't in include_set (or are excluded)
-
-        load_columns = (columns & include_set) - exclude_set
-        load_rels = (relationships & include_set) - exclude_set
-        noload_rels = ((relationships - include_set) | (relationships & exclude_set)) - subrel_bases
-
-        options = [selectinload(getattr(orm_type, x)) for x in load_rels]
-        options += [lazyload(getattr(orm_type, x)) for x in noload_rels]
-
-        if load_columns:
-            load_columns_attr = [getattr(orm_type, x) for x in load_columns]
-            options += [load_only(*load_columns_attr)]
+        options = [lazyload(all_attrs[x]) for x in noload_rels]
+        options += [defer(all_attrs[x]) for x in defer_columns]
 
     else:
         raise RuntimeError(
             f"QCFractal Developer Error: orm_type={orm_type} include_set={include_set} exclude_set={exclude_set}"
-        )
-
-    # Now handle subrelationships
-    for base, cols in subrel_map.items():
-        sub_orm_relmap = mapper.mapper.relationships.get(base, None)
-        if sub_orm_relmap is not None:
-            sub_orm = sub_orm_relmap.entity.class_
-            subrel_options = _get_query_proj_options(sub_orm, tuple(cols), None)
-            options += [selectinload(getattr(orm_type, base)).options(*subrel_options)]
-
-    if len(options) == 0 and (include_set and "*" not in include_set):
-        raise UserReportableError(
-            "No columns or relationships specified to be loaded."
-            "This is likely due to only including columns that don't exist, or otherwise including nothing"
         )
 
     return options
@@ -191,7 +127,18 @@ def get_query_proj_options(
     include: Optional[Iterable[str]] = None,
     exclude: Optional[Iterable[str]] = None,
 ) -> List[Any]:
-    # TODO - needs some explanation...
+    """
+    Obtain options for an sqlalchemy query
+
+    This function returns a list of objects that can be passed to an sqlalchemy
+    .options() function call (as part of a statement) that implements a projection. That is,
+    the options will select/deselect columns and relationships that are specified as strings
+    to the `include` and `exclude` arguments of this function.
+
+    If `restrict` is true, this function can only be used to remove columns/relationships from
+    the default. If it is false, the additional columns and relationships can be
+    loaded
+    """
 
     # Wrap the include/exclude in tuples for memoization
     if include is not None:
