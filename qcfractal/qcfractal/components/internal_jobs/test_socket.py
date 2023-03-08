@@ -6,12 +6,13 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from qcfractal.components.internal_jobs.db_models import InternalJobORM
 from qcfractal.components.internal_jobs.socket import InternalJobSocket
 from qcportal.internal_jobs import InternalJobStatusEnum
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
-    from qcfractal.db_socket import SQLAlchemySocket
+    from sqlalchemy.orm.session import Session
 
 
 # Add in another function to the internal_jobs socket for testing
@@ -60,7 +61,7 @@ def test_internal_jobs_socket_add_non_unique(storage_socket: SQLAlchemySocket):
     assert len({id_1, id_2, id_3}) == 3
 
 
-def test_internal_jobs_socket_run(storage_socket: SQLAlchemySocket):
+def test_internal_jobs_socket_run(storage_socket: SQLAlchemySocket, session: Session):
     id_1 = storage_socket.internal_jobs.add(
         "dummy_job", datetime.utcnow(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
     )
@@ -76,27 +77,28 @@ def test_internal_jobs_socket_run(storage_socket: SQLAlchemySocket):
     time_1 = datetime.utcnow()
 
     try:
-        job_1 = storage_socket.internal_jobs.get(id_1)
-        assert job_1["status"] == InternalJobStatusEnum.running
-        assert job_1["progress"] > 10
-        assert time_0 < job_1["last_updated"] < time_1
+        job_1 = session.get(InternalJobORM, id_1)
+        assert job_1.status == InternalJobStatusEnum.running
+        assert job_1.progress > 10
+        assert time_0 < job_1.last_updated < time_1
 
         time.sleep(8)
         time_2 = datetime.utcnow()
 
-        job_1 = storage_socket.internal_jobs.get(id_1)
-        assert job_1["status"] == InternalJobStatusEnum.complete
-        assert job_1["progress"] == 100
-        assert job_1["result"] == "Internal job finished"
-        assert time_1 < job_1["ended_date"] < time_2
-        assert time_1 < job_1["last_updated"] < time_2
+        session.expire(job_1)
+        job_1 = session.get(InternalJobORM, id_1)
+        assert job_1.status == InternalJobStatusEnum.complete
+        assert job_1.progress == 100
+        assert job_1.result == "Internal job finished"
+        assert time_1 < job_1.ended_date < time_2
+        assert time_1 < job_1.last_updated < time_2
 
     finally:
         end_event.set()
         th.join()
 
 
-def test_internal_jobs_socket_recover(storage_socket: SQLAlchemySocket):
+def test_internal_jobs_socket_recover(storage_socket: SQLAlchemySocket, session: Session):
     id_1 = storage_socket.internal_jobs.add(
         "dummy_job", datetime.utcnow(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
     )
@@ -114,10 +116,10 @@ def test_internal_jobs_socket_recover(storage_socket: SQLAlchemySocket):
     th.join(20)
     assert not th.is_alive()
 
-    job_1 = storage_socket.internal_jobs.get(id_1)
-    assert job_1["status"] == InternalJobStatusEnum.running
-    assert job_1["progress"] > 10
-    old_uuid = job_1["runner_uuid"]
+    job_1 = session.get(InternalJobORM, id_1)
+    assert job_1.status == InternalJobStatusEnum.running
+    assert job_1.progress > 10
+    old_uuid = job_1.runner_uuid
 
     # Change uuid
     storage_socket.internal_jobs._uuid = str(uuid.uuid4())
@@ -130,11 +132,12 @@ def test_internal_jobs_socket_recover(storage_socket: SQLAlchemySocket):
     time.sleep(15)
 
     try:
-        job_1 = storage_socket.internal_jobs.get(id_1)
-        assert job_1["status"] == InternalJobStatusEnum.complete
-        assert job_1["runner_uuid"] != old_uuid
-        assert job_1["progress"] == 100
-        assert job_1["result"] == "Internal job finished"
+        session.expire(job_1)
+        job_1 = session.get(InternalJobORM, id_1)
+        assert job_1.status == InternalJobStatusEnum.complete
+        assert job_1.runner_uuid != old_uuid
+        assert job_1.progress == 100
+        assert job_1.result == "Internal job finished"
     finally:
         end_event.set()
         th.join()

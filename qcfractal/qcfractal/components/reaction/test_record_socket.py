@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcarchivetesting import load_molecule_data
+from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service
 from qcportal.auth import UserInfo, GroupInfo
@@ -17,16 +18,17 @@ from .testing_helpers import compare_reaction_specs, test_specs, load_test_data,
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
+    from sqlalchemy.orm.session import Session
 
 
 @pytest.mark.parametrize("spec", test_specs)
-def test_reaction_socket_add_get(storage_socket: SQLAlchemySocket, spec: ReactionSpecification):
+def test_reaction_socket_add_get(storage_socket: SQLAlchemySocket, session: Session, spec: ReactionSpecification):
     hooh = load_molecule_data("peroxide2")
     ne4 = load_molecule_data("neon_tetramer")
     water = load_molecule_data("water_dimer_minima")
 
     time_0 = datetime.utcnow()
-    meta, id = storage_socket.records.reaction.add(
+    meta, ids = storage_socket.records.reaction.add(
         [[(1.0, hooh), (2.0, ne4)], [(3.0, hooh), (4.0, water)]],
         spec,
         "tag1",
@@ -37,35 +39,34 @@ def test_reaction_socket_add_get(storage_socket: SQLAlchemySocket, spec: Reactio
     time_1 = datetime.utcnow()
     assert meta.success
 
-    recs = storage_socket.records.reaction.get(id, include=["*", "components.*", "components.molecule", "service"])
-
+    recs = [session.get(BaseRecordORM, i) for i in ids]
     assert len(recs) == 2
 
     for r in recs:
-        assert r["record_type"] == "reaction"
-        assert r["status"] == RecordStatusEnum.waiting
-        assert compare_reaction_specs(spec, r["specification"])
+        assert r.record_type == "reaction"
+        assert r.status == RecordStatusEnum.waiting
+        assert compare_reaction_specs(spec, r.specification.model_dict())
 
         # Service queue entry should exist with the proper tag and priority
-        assert r["service"]["tag"] == "tag1"
-        assert r["service"]["priority"] == PriorityEnum.low
+        assert r.service.tag == "tag1"
+        assert r.service.priority == PriorityEnum.low
 
-        assert time_0 < r["created_on"] < time_1
-        assert time_0 < r["modified_on"] < time_1
-        assert time_0 < r["service"]["created_on"] < time_1
+        assert time_0 < r.created_on < time_1
+        assert time_0 < r.modified_on < time_1
+        assert time_0 < r.service.created_on < time_1
 
-    mol_hash_0 = set(x["molecule"]["identifiers"]["molecule_hash"] for x in recs[0]["components"])
-    mol_hash_1 = set(x["molecule"]["identifiers"]["molecule_hash"] for x in recs[1]["components"])
+    mol_hash_0 = set(x.molecule.identifiers["molecule_hash"] for x in recs[0].components)
+    mol_hash_1 = set(x.molecule.identifiers["molecule_hash"] for x in recs[1].components)
 
     assert mol_hash_0 == {hooh.get_hash(), ne4.get_hash()}
     assert mol_hash_1 == {hooh.get_hash(), water.get_hash()}
 
     expected_coef = {hooh.get_hash(): 1.0, ne4.get_hash(): 2.0}
-    db_coef = {x["molecule"]["identifiers"]["molecule_hash"]: x["coefficient"] for x in recs[0]["components"]}
+    db_coef = {x.molecule.identifiers["molecule_hash"]: x.coefficient for x in recs[0].components}
     assert expected_coef == db_coef
 
     expected_coef = {hooh.get_hash(): 3.0, water.get_hash(): 4.0}
-    db_coef = {x["molecule"]["identifiers"]["molecule_hash"]: x["coefficient"] for x in recs[1]["components"]}
+    db_coef = {x.molecule.identifiers["molecule_hash"]: x.coefficient for x in recs[1].components}
     assert expected_coef == db_coef
 
 
@@ -121,7 +122,7 @@ def test_reaction_socket_add_same_1(storage_socket: SQLAlchemySocket):
     ],
 )
 def test_reaction_socket_run(
-    storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, test_data_name: str
+    storage_socket: SQLAlchemySocket, session: Session, activated_manager_name: ManagerName, test_data_name: str
 ):
     input_spec_1, stoich_1, result_data_1 = load_test_data(test_data_name)
 
@@ -141,21 +142,17 @@ def test_reaction_socket_run(
 
     assert finished is True
 
-    rec = storage_socket.records.reaction.get(
-        id_1, include=["*", "compute_history.*", "compute_history.outputs", "components", "service"]
-    )
+    rec = session.get(BaseRecordORM, id_1)
 
-    assert rec[0]["status"] == RecordStatusEnum.complete
-    assert time_0 < rec[0]["modified_on"] < time_1
-    assert len(rec[0]["compute_history"]) == 1
-    assert len(rec[0]["compute_history"][-1]["outputs"]) == 1
-    assert rec[0]["compute_history"][-1]["status"] == RecordStatusEnum.complete
-    assert time_0 < rec[0]["compute_history"][-1]["modified_on"] < time_1
-    assert rec[0]["service"] is None
+    assert rec.status == RecordStatusEnum.complete
+    assert time_0 < rec.modified_on < time_1
+    assert len(rec.compute_history) == 1
+    assert len(rec.compute_history[-1].outputs) == 1
+    assert rec.compute_history[-1].status == RecordStatusEnum.complete
+    assert time_0 < rec.compute_history[-1].modified_on < time_1
+    assert rec.service is None
 
-    out = storage_socket.records.reaction.get_single_output_uncompressed(
-        rec[0]["id"], rec[0]["compute_history"][-1]["id"], "stdout"
-    )
+    out = rec.compute_history[-1].outputs["stdout"].get_output()
     assert "All reaction components are complete" in out
 
-    assert rec[0]["total_energy"] < 0.0
+    assert rec.total_energy < 0.0

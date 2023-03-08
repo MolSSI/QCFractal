@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Optional
 import pytest
 
 from qcarchivetesting import load_molecule_data
-from qcfractal.db_socket import SQLAlchemySocket
+from qcfractal.components.torsiondrive.record_db_models import TorsiondriveRecordORM
 from qcportal.optimization import OptimizationSpecification
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification
@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal import PortalClient
     from qcportal.managers import ManagerName
+    from sqlalchemy.orm.session import Session
 
 
 @pytest.mark.parametrize("tag", ["*", "tag99"])
@@ -123,13 +124,16 @@ def test_torsiondrive_client_add_existing_molecule(snowflake_client: PortalClien
 
 
 def test_torsiondrive_client_delete(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
+    snowflake_client: PortalClient,
+    storage_socket: SQLAlchemySocket,
+    session: Session,
+    activated_manager_name: ManagerName,
 ):
 
     td_id = run_test_data(storage_socket, activated_manager_name, "td_H2O2_mopac_pm6")
 
-    rec = storage_socket.records.torsiondrive.get([td_id], include=["optimizations"])
-    child_ids = [x["optimization_id"] for x in rec[0]["optimizations"]]
+    rec = session.get(TorsiondriveRecordORM, td_id)
+    child_ids = [x.optimization_id for x in rec.optimizations]
 
     meta = snowflake_client.delete_records(td_id, soft_delete=True, delete_children=False)
     assert meta.success
@@ -166,13 +170,16 @@ def test_torsiondrive_client_delete(
 
 
 def test_torsiondrive_client_harddelete_nochildren(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
+    snowflake_client: PortalClient,
+    storage_socket: SQLAlchemySocket,
+    session: Session,
+    activated_manager_name: ManagerName,
 ):
 
     td_id = run_test_data(storage_socket, activated_manager_name, "td_H2O2_mopac_pm6")
 
-    rec = storage_socket.records.torsiondrive.get([td_id], include=["optimizations"])
-    child_ids = [x["optimization_id"] for x in rec[0]["optimizations"]]
+    rec = session.get(TorsiondriveRecordORM, td_id)
+    child_ids = [x.optimization_id for x in rec.optimizations]
 
     meta = snowflake_client.delete_records(td_id, soft_delete=False, delete_children=False)
     assert meta.success
@@ -187,13 +194,16 @@ def test_torsiondrive_client_harddelete_nochildren(
 
 
 def test_torsiondrive_client_delete_opt_inuse(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
+    snowflake_client: PortalClient,
+    storage_socket: SQLAlchemySocket,
+    session: Session,
+    activated_manager_name: ManagerName,
 ):
 
     td_id = run_test_data(storage_socket, activated_manager_name, "td_H2O2_mopac_pm6")
 
-    rec = storage_socket.records.torsiondrive.get([td_id], include=["optimizations"])
-    child_ids = [x["optimization_id"] for x in rec[0]["optimizations"]]
+    rec = session.get(TorsiondriveRecordORM, td_id)
+    child_ids = [x.optimization_id for x in rec.optimizations]
 
     meta = snowflake_client.delete_records(child_ids[0], soft_delete=False)
     assert meta.success is False

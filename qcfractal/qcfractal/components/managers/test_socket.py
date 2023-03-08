@@ -5,14 +5,16 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerName, ManagerStatusEnum
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
+    from sqlalchemy.orm.session import Session
 
 
-def test_manager_socket_deactivate_before_notasks(storage_socket: SQLAlchemySocket):
+def test_manager_socket_deactivate_before_notasks(storage_socket: SQLAlchemySocket, session: Session):
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
 
     # UUID is different
@@ -20,7 +22,7 @@ def test_manager_socket_deactivate_before_notasks(storage_socket: SQLAlchemySock
 
     time_0 = datetime.utcnow()
 
-    storage_socket.managers.activate(
+    mid1 = storage_socket.managers.activate(
         name_data=mname1,
         manager_version="v2.0",
         username="bill",
@@ -29,7 +31,7 @@ def test_manager_socket_deactivate_before_notasks(storage_socket: SQLAlchemySock
     )
 
     time_1 = datetime.utcnow()
-    storage_socket.managers.activate(
+    mid2 = storage_socket.managers.activate(
         name_data=mname2,
         manager_version="v2.0",
         username="bill",
@@ -46,16 +48,19 @@ def test_manager_socket_deactivate_before_notasks(storage_socket: SQLAlchemySock
     deactivated = storage_socket.managers.deactivate(modified_before=time_1)
     assert deactivated == [name1]
 
-    manager = storage_socket.managers.get([name1, name2])
-    assert manager[0]["status"] == ManagerStatusEnum.inactive
-    assert manager[1]["status"] == ManagerStatusEnum.active
+    manager1 = session.get(ComputeManagerORM, mid1)
+    manager2 = session.get(ComputeManagerORM, mid2)
+    assert manager1.status == ManagerStatusEnum.inactive
+    assert manager2.status == ManagerStatusEnum.active
 
     deactivated = storage_socket.managers.deactivate(modified_before=datetime.utcnow())
     assert deactivated == [name2]
 
-    manager = storage_socket.managers.get([name1, name2])
-    assert manager[0]["status"] == ManagerStatusEnum.inactive
-    assert manager[1]["status"] == ManagerStatusEnum.inactive
+    session.expire_all()
+    manager1 = session.get(ComputeManagerORM, mid1)
+    manager2 = session.get(ComputeManagerORM, mid2)
+    assert manager1.status == ManagerStatusEnum.inactive
+    assert manager2.status == ManagerStatusEnum.inactive
 
 
 def test_manager_socket_get_proj(storage_socket: SQLAlchemySocket):
@@ -94,9 +99,9 @@ def test_manager_socket_get_proj(storage_socket: SQLAlchemySocket):
     assert set(manager[0].keys()) == {"id", "name", "cluster"}  # name & id always returned
     assert set(manager[1].keys()) == {"id", "name", "cluster"}
 
-    manager = storage_socket.managers.get([name1, name2], include=["name", "log"])
-    assert set(manager[0].keys()) == {"id", "name", "log"}
-    assert set(manager[1].keys()) == {"id", "name", "log"}
+    manager = storage_socket.managers.get([name1, name2], include=["name"])
+    assert set(manager[0].keys()) == {"id", "name"}
+    assert set(manager[1].keys()) == {"id", "name"}
 
     # cannot exclude name
     manager = storage_socket.managers.get([name1, name2], exclude=["cluster", "name"])

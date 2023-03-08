@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcarchivetesting import load_molecule_data
+from qcfractal.components.optimization.record_db_models import OptimizationRecordORM
 from qcfractal.components.optimization.testing_helpers import test_specs, load_test_data, run_test_data
 from qcfractal.db_socket import SQLAlchemySocket
 from qcportal.compression import decompress
@@ -23,6 +24,7 @@ from qcportal.singlepoint import (
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
+    from sqlalchemy.orm.session import Session
 
 
 @pytest.mark.parametrize("spec", test_specs)
@@ -224,7 +226,9 @@ def test_optimization_socket_add_same_4(storage_socket: SQLAlchemySocket):
     assert id1 == id2
 
 
-def test_optimization_socket_run(storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName):
+def test_optimization_socket_run(
+    storage_socket: SQLAlchemySocket, session: Session, activated_manager_name: ManagerName
+):
     test_names = [
         "opt_psi4_fluoroethane_notraj",
         "opt_psi4_benzene",
@@ -240,54 +244,44 @@ def test_optimization_socket_run(storage_socket: SQLAlchemySocket, activated_man
         all_results.append(result_data)
         all_id.append(record_id)
 
-    recs = storage_socket.records.optimization.get(
-        all_id,
-        include=[
-            "*",
-            "compute_history.*",
-            "compute_history.outputs",
-            "trajectory.*",
-            "trajectory.singlepoint_record.*",
-            "trajectory.singlepoint_record.molecule",
-        ],
-    )
-
-    for record, result in zip(recs, all_results):
-        assert record["status"] == RecordStatusEnum.complete
-        assert record["specification"]["program"] == result.provenance.creator.lower()
+    for rec_id, result in zip(all_id, all_results):
+        record = session.get(OptimizationRecordORM, rec_id)
+        assert record.status == RecordStatusEnum.complete
+        assert record.specification.program == result.provenance.creator.lower()
 
         kw_no_prog = result.keywords.copy()
         kw_no_prog["program"] = result.keywords["program"]
         assert kw_no_prog == result.keywords
 
         # The singlepoint spec
-        assert record["specification"]["qc_specification"]["program"] == result.keywords["program"]
-        assert record["specification"]["qc_specification"]["method"] == result.input_specification.model.method
-        assert record["specification"]["qc_specification"]["basis"] == result.input_specification.model.basis
-        assert record["specification"]["qc_specification"]["keywords"] == result.input_specification.keywords
+        assert record.specification.qc_specification.program == result.keywords["program"]
+        assert record.specification.qc_specification.method == result.input_specification.model.method
+        assert record.specification.qc_specification.basis == result.input_specification.model.basis
+        assert record.specification.qc_specification.keywords == result.input_specification.keywords
 
-        assert len(record["compute_history"]) == 1
-        assert record["compute_history"][0]["status"] == RecordStatusEnum.complete
-        assert record["compute_history"][0]["provenance"] == result.provenance
+        assert len(record.compute_history) == 1
+        assert record.compute_history[0].status == RecordStatusEnum.complete
+        assert record.compute_history[0].provenance == result.provenance
 
-        outs = record["compute_history"][0]["outputs"]
+        outs = record.compute_history[0].outputs
+
+        avail_outputs = set(outs.keys())
+        result_outputs = {x for x in ["stdout", "stderr", "error"] if getattr(result, x, None) is not None}
+        compressed_outputs = result.extras.get("_qcfractal_compressed_outputs", {})
+        result_outputs |= set(compressed_outputs.keys())
+        assert avail_outputs == result_outputs
 
         # NOTE - this only works for string outputs (not dicts)
         # but those are used for errors, which aren't covered here
-        for otype in outs.keys():
-            o_str = storage_socket.records.singlepoint.get_single_output_uncompressed(
-                record["id"], record["compute_history"][0]["id"], otype
-            )
-            co = result.extras["_qcfractal_compressed_outputs"][otype]
+        for out in outs.values():
+            o_str = out.get_output()
+            co = result.extras["_qcfractal_compressed_outputs"][out.output_type]
             ro = decompress(co["data"], co["compression_type"])
             assert o_str == ro
 
         # Test the trajectory
-        assert len(record["trajectory"]) == len(result.trajectory)
-        for db_traj, res_traj in zip(record["trajectory"], result.trajectory):
-            assert db_traj["singlepoint_record"]["specification"]["program"] == res_traj.provenance.creator.lower()
-            assert db_traj["singlepoint_record"]["specification"]["basis"] == res_traj.model.basis
-            assert (
-                db_traj["singlepoint_record"]["molecule"]["identifiers"]["molecule_hash"]
-                == res_traj.molecule.get_hash()
-            )
+        assert len(record.trajectory) == len(result.trajectory)
+        for db_traj, res_traj in zip(record.trajectory, result.trajectory):
+            assert db_traj.singlepoint_record.specification.program == res_traj.provenance.creator.lower()
+            assert db_traj.singlepoint_record.specification.basis == res_traj.model.basis
+            assert db_traj.singlepoint_record.molecule.identifiers["molecule_hash"] == res_traj.molecule.get_hash()

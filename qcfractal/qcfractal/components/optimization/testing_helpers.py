@@ -7,6 +7,7 @@ import pydantic
 from qcelemental.models import Molecule, FailedOperation, ComputeError, OptimizationResult
 
 from qcarchivetesting.helpers import read_record_data
+from qcfractal.components.optimization.record_db_models import OptimizationRecordORM
 from qcportal.optimization import OptimizationSpecification
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import QCSpecification, SinglepointProtocols
@@ -14,7 +15,6 @@ from qcportal.singlepoint import QCSpecification, SinglepointProtocols
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
-
 
 test_specs = [
     OptimizationSpecification(
@@ -105,8 +105,9 @@ def run_test_data(
     record_id, result = submit_test_data(storage_socket, name, tag, priority)
     time_1 = datetime.utcnow()
 
-    record = storage_socket.records.get([record_id])[0]
-    assert record["status"] == RecordStatusEnum.waiting
+    with storage_socket.session_scope() as session:
+        record = session.get(OptimizationRecordORM, record_id)
+        assert record.status == RecordStatusEnum.waiting
 
     if end_status == RecordStatusEnum.error:
         result = FailedOperation(
@@ -119,13 +120,12 @@ def run_test_data(
     storage_socket.tasks.update_finished(manager_name.fullname, result_dict)
     time_2 = datetime.utcnow()
 
-    record = storage_socket.records.get(
-        [record_id], include=["status", "modified_on", "created_on", "compute_history.*"]
-    )[0]
-    assert record["status"] == end_status
-    assert time_0 < record["created_on"] < time_1
-    assert time_1 < record["modified_on"] < time_2
-    assert time_1 < record["compute_history"][0]["modified_on"] < time_2
+    with storage_socket.session_scope() as session:
+        record = session.get(OptimizationRecordORM, record_id)
+        assert record.status == end_status
+        assert time_0 < record.created_on < time_1
+        assert time_1 < record.modified_on < time_2
+        assert time_1 < record.compute_history[0].modified_on < time_2
 
     return record_id
 

@@ -6,6 +6,7 @@ import pydantic
 from qcelemental.models import Molecule, FailedOperation, ComputeError, AtomicResult
 
 from qcarchivetesting.helpers import read_record_data
+from qcfractal.components.manybody.record_db_models import ManybodyRecordORM
 from qcfractal.testing_helpers import run_service
 from qcportal.manybody import ManybodySpecification, ManybodyKeywords
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
@@ -14,7 +15,6 @@ from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
-
 
 test_specs = [
     ManybodySpecification(
@@ -111,8 +111,9 @@ def run_test_data(
 ):
     record_id, result = submit_test_data(storage_socket, name, tag, priority)
 
-    record = storage_socket.records.get([record_id])[0]
-    assert record["status"] == RecordStatusEnum.waiting
+    with storage_socket.session_scope() as session:
+        record = session.get(ManybodyRecordORM, record_id)
+        assert record.status == RecordStatusEnum.waiting
 
     if end_status == RecordStatusEnum.error:
         failed_op = FailedOperation(
@@ -123,7 +124,8 @@ def run_test_data(
     finished, n_optimizations = run_service(storage_socket, manager_name, record_id, generate_task_key, result, 200)
     assert finished
 
-    record = storage_socket.records.get([record_id], include=["status"])[0]
-    assert record["status"] == end_status
+    with storage_socket.session_scope() as session:
+        record = session.get(ManybodyRecordORM, record_id)
+        assert record.status == end_status
 
     return record_id

@@ -13,6 +13,7 @@ from qcfractal.components.optimization.testing_helpers import (
     run_test_data as run_opt_test_data,
     submit_test_data as submit_opt_test_data,
 )
+from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.singlepoint.testing_helpers import (
     run_test_data as run_sp_test_data,
     submit_test_data as submit_sp_test_data,
@@ -28,6 +29,7 @@ from qcportal.record_models import PriorityEnum, RecordStatusEnum
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal import PortalClient
+    from sqlalchemy.orm.session import Session
 
 
 def test_record_client_get(
@@ -246,18 +248,20 @@ def test_record_client_modify(snowflake_client: PortalClient, storage_socket: SQ
     assert rec[6].task is None
 
 
-def test_record_client_modify_service(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_record_client_modify_service(
+    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, session: Session
+):
 
     svc_id, _ = submit_td_test_data(storage_socket, "td_H2O2_mopac_pm6", "test_tag", PriorityEnum.high)
 
-    with storage_socket.session_scope() as session:
-        storage_socket.services.iterate_services(session, DummyJobStatus())
+    with storage_socket.session_scope() as s:
+        storage_socket.services.iterate_services(s, DummyJobStatus())
 
-    rec = storage_socket.records.get([svc_id], include=["*", "service", "service.dependencies.record.task"])
-    tasks = [x["record"]["task"] for x in rec[0]["service"]["dependencies"]]
+    rec = session.get(BaseRecordORM, svc_id)
+    tasks = [x.record.task for x in rec.service.dependencies]
     assert len(tasks) > 0
-    assert all(x["tag"] == "test_tag" for x in tasks)
-    assert all(x["priority"] == PriorityEnum.high for x in tasks)
+    assert all(x.tag == "test_tag" for x in tasks)
+    assert all(x.priority == PriorityEnum.high for x in tasks)
 
     # Modify service priority and tag
     meta = snowflake_client.modify_records(svc_id, new_tag="new_tag", new_priority=PriorityEnum.low)

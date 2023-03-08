@@ -14,20 +14,24 @@ from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification, SinglepointProtocols
 from qcportal.torsiondrive import TorsiondriveSpecification, TorsiondriveKeywords
 from .testing_helpers import compare_torsiondrive_specs, test_specs, load_test_data, generate_task_key
+from qcfractal.components.torsiondrive.record_db_models import TorsiondriveRecordORM
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
+    from sqlalchemy.orm.session import Session
 
 
 @pytest.mark.parametrize("spec", test_specs)
-def test_torsiondrive_socket_add_get(storage_socket: SQLAlchemySocket, spec: TorsiondriveSpecification):
+def test_torsiondrive_socket_add_get(
+    storage_socket: SQLAlchemySocket, session: Session, spec: TorsiondriveSpecification
+):
     hooh = load_molecule_data("peroxide2")
     td_mol_1 = load_molecule_data("td_C9H11NO2_1")
     td_mol_2 = load_molecule_data("td_C9H11NO2_2")
 
     time_0 = datetime.utcnow()
-    meta, id = storage_socket.records.torsiondrive.add(
+    meta, ids = storage_socket.records.torsiondrive.add(
         [[hooh], [td_mol_1, td_mol_2]],
         spec,
         True,
@@ -39,32 +43,30 @@ def test_torsiondrive_socket_add_get(storage_socket: SQLAlchemySocket, spec: Tor
     time_1 = datetime.utcnow()
     assert meta.success
 
-    recs = storage_socket.records.torsiondrive.get(
-        id, include=["*", "initial_molecules.*", "initial_molecules.molecule", "service"]
-    )
+    recs = [session.get(TorsiondriveRecordORM, i) for i in ids]
 
     assert len(recs) == 2
     for r in recs:
-        assert r["record_type"] == "torsiondrive"
-        assert r["status"] == RecordStatusEnum.waiting
-        assert compare_torsiondrive_specs(spec, r["specification"])
+        assert r.record_type == "torsiondrive"
+        assert r.status == RecordStatusEnum.waiting
+        assert compare_torsiondrive_specs(spec, r.specification.model_dict())
 
         # Service queue entry should exist with the proper tag and priority
-        assert r["service"]["tag"] == "tag1"
-        assert r["service"]["priority"] == PriorityEnum.low
+        assert r.service.tag == "tag1"
+        assert r.service.priority == PriorityEnum.low
 
-        assert time_0 < r["created_on"] < time_1
-        assert time_0 < r["modified_on"] < time_1
-        assert time_0 < r["service"]["created_on"] < time_1
+        assert time_0 < r.created_on < time_1
+        assert time_0 < r.modified_on < time_1
+        assert time_0 < r.service.created_on < time_1
 
-    assert len(recs[0]["initial_molecules"]) == 1
-    assert len(recs[1]["initial_molecules"]) == 2
+    assert len(recs[0].initial_molecules) == 1
+    assert len(recs[1].initial_molecules) == 2
 
-    assert recs[0]["initial_molecules"][0]["molecule"]["identifiers"]["molecule_hash"] == hooh.get_hash()
+    assert recs[0].initial_molecules[0].molecule.identifiers["molecule_hash"] == hooh.get_hash()
 
     # Not necessarily in the input order
-    hash1 = recs[1]["initial_molecules"][0]["molecule"]["identifiers"]["molecule_hash"]
-    hash2 = recs[1]["initial_molecules"][1]["molecule"]["identifiers"]["molecule_hash"]
+    hash1 = recs[1].initial_molecules[0].molecule.identifiers["molecule_hash"]
+    hash2 = recs[1].initial_molecules[1].molecule.identifiers["molecule_hash"]
     assert {hash1, hash2} == {td_mol_1.get_hash(), td_mol_2.get_hash()}
 
 
@@ -306,7 +308,7 @@ def test_torsiondrive_socket_add_different_1(storage_socket: SQLAlchemySocket):
     ],
 )
 def test_torsiondrive_socket_run(
-    storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, test_data_name: str
+    storage_socket: SQLAlchemySocket, session: Session, activated_manager_name: ManagerName, test_data_name: str
 ):
     input_spec_1, molecules_1, result_data_1 = load_test_data(test_data_name)
 
@@ -330,29 +332,17 @@ def test_torsiondrive_socket_run(
     )
     time_1 = datetime.utcnow()
 
-    rec = storage_socket.records.torsiondrive.get(
-        id_1,
-        include=[
-            "*",
-            "compute_history.*",
-            "compute_history.outputs",
-            "optimizations.*",
-            "optimizations.optimization_record",
-            "service",
-        ],
-    )
+    rec = session.get(TorsiondriveRecordORM, id_1)
 
-    assert rec[0]["status"] == RecordStatusEnum.complete
-    assert time_0 < rec[0]["modified_on"] < time_1
-    assert len(rec[0]["compute_history"]) == 1
-    assert len(rec[0]["compute_history"][-1]["outputs"]) == 1
-    assert rec[0]["compute_history"][-1]["status"] == RecordStatusEnum.complete
-    assert time_0 < rec[0]["compute_history"][-1]["modified_on"] < time_1
-    assert rec[0]["service"] is None
+    assert rec.status == RecordStatusEnum.complete
+    assert time_0 < rec.modified_on < time_1
+    assert len(rec.compute_history) == 1
+    assert len(rec.compute_history[-1].outputs) == 1
+    assert rec.compute_history[-1].status == RecordStatusEnum.complete
+    assert time_0 < rec.compute_history[-1].modified_on < time_1
+    assert rec.service is None
 
-    out = storage_socket.records.torsiondrive.get_single_output_uncompressed(
-        rec[0]["id"], rec[0]["compute_history"][-1]["id"], "stdout"
-    )
+    out = rec.compute_history[-1].outputs["stdout"].get_output()
     assert "Job Finished" in out
 
-    assert len(rec[0]["optimizations"]) == n_optimizations
+    assert len(rec.optimizations) == n_optimizations

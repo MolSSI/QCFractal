@@ -7,6 +7,7 @@ from sqlalchemy import select
 
 from qcarchivetesting import geoip_path, test_users, test_groups
 from qcfractal.components.internal_jobs.db_models import InternalJobORM
+from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.config import update_nested_dict
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.snowflake import FractalSnowflake
@@ -234,15 +235,16 @@ def run_service(
     Runs a service
     """
 
-    rec = storage_socket.records.get([record_id], include=["*", "service"])
-    assert rec[0]["status"] in [RecordStatusEnum.waiting, RecordStatusEnum.running]
+    with storage_socket.session_scope() as session:
+        rec = session.get(BaseRecordORM, record_id)
+        assert rec.status in [RecordStatusEnum.waiting, RecordStatusEnum.running]
 
-    owner_user = rec[0]["owner_user"]
-    owner_group = rec[0]["owner_group"]
+        owner_user = rec.owner_user.username if rec.owner_user is not None else None
+        owner_group = rec.owner_group.groupname if rec.owner_group is not None else None
 
-    tag = rec[0]["service"]["tag"]
-    priority = rec[0]["service"]["priority"]
-    service_id = rec[0]["service"]["id"]
+        tag = rec.service.tag
+        priority = rec.service.priority
+        service_id = rec.service.id
 
     n_records = 0
     n_iterations = 0
@@ -267,18 +269,18 @@ def run_service(
                 storage_socket.internal_jobs._run_single(session, job_orm, DummyJobStatus())
                 # The function that iterates a service returns True if it is finished
                 if job_orm.result is True:
-                    rec = storage_socket.records.get([record_id], include=["status", "service.*"])
-                    assert rec[0]["status"] == RecordStatusEnum.complete
-                    assert rec[0]["service"] is None
+
+                    rec = session.get(BaseRecordORM, record_id)
+                    assert rec.status == RecordStatusEnum.complete
+                    assert rec.service is None
                     finished = True
                     break
 
         n_iterations += 1
 
-        rec = storage_socket.records.get(
-            [record_id], include=["*", "service.*", "service.dependencies.*", "service.dependencies.record"]
-        )
-        assert rec[0]["status"] == RecordStatusEnum.running
+        with storage_socket.session_scope() as session:
+            rec = session.get(BaseRecordORM, record_id)
+            assert rec.status == RecordStatusEnum.running
 
         # only do 5 tasks at a time. Tests iteration when stuff is not completed
         manager_tasks = storage_socket.tasks.claim_tasks(manager_name.fullname, limit=5)
@@ -286,11 +288,15 @@ def run_service(
         # Sometimes a task may be duplicated in the service dependencies.
         # The C8H6 test has this "feature"
         ids = set(x["record_id"] for x in manager_tasks)
-        recs = storage_socket.records.get(ids, include=["id", "owner_user", "owner_group", "record_type", "task"])
-        assert all(x["owner_user"] == owner_user for x in recs)
-        assert all(x["owner_group"] == owner_group for x in recs)
-        assert all(x["task"]["priority"] == priority for x in recs)
-        assert all(x["task"]["tag"] == tag for x in recs)
+
+        with storage_socket.session_scope() as session:
+            recs = [session.get(BaseRecordORM, i) for i in ids]
+            all_usernames = [x.owner_user.username if x.owner_user is not None else None for x in recs]
+            all_groupnames = [x.owner_group.groupname if x.owner_group is not None else None for x in recs]
+            assert all(x == owner_user for x in all_usernames)
+            assert all(x == owner_group for x in all_groupnames)
+            assert all(x.task.priority == priority for x in recs)
+            assert all(x.task.tag == tag for x in recs)
 
         manager_ret = {}
         for t in manager_tasks:

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Optional
 import pytest
 
 from qcarchivetesting import load_molecule_data
-from qcfractal.db_socket import SQLAlchemySocket
+from qcfractal.components.neb.record_db_models import NEBRecordORM
 from qcportal.neb import (
     NEBSpecification,
     NEBKeywords,
@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal import PortalClient
     from qcportal.managers import ManagerName
+    from sqlalchemy.orm.session import Session
 
 from qcfractal.components.neb.testing_helpers import (
     compare_neb_specs,
@@ -117,28 +118,23 @@ def test_neb_client_add_existing_chain(snowflake_client: PortalClient):
 
 
 def test_neb_client_delete(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
+    snowflake_client: PortalClient,
+    storage_socket: SQLAlchemySocket,
+    session: Session,
+    activated_manager_name: ManagerName,
 ):
 
     neb_id = run_test_data(storage_socket, activated_manager_name, "neb_HCN_psi4_pbe_opt2")
 
-    rec = storage_socket.records.neb.get(
-        [neb_id],
-        include=[
-            "singlepoints",
-            "optimizations.*",
-            "optimizations.optimization_record.*",
-            "optimizations.optimization_record.trajectory",
-        ],
-    )
+    rec = session.get(NEBRecordORM, neb_id)
 
     # Children are singlepoints, optimizations, and the trajectory of the optimizations (also singlepoints)
-    child_ids = [x["singlepoint_id"] for x in rec[0]["singlepoints"]]
-    opt_ids = [x["optimization_id"] for x in rec[0]["optimizations"]]
+    child_ids = [x.singlepoint_id for x in rec.singlepoints]
+    opt_ids = [x.optimization_id for x in rec.optimizations]
     child_ids.extend(opt_ids)
 
-    for opt in rec[0]["optimizations"]:
-        traj_ids = [x["singlepoint_id"] for x in opt["optimization_record"]["trajectory"]]
+    for opt in rec.optimizations:
+        traj_ids = [x.singlepoint_id for x in opt.optimization_record.trajectory]
         child_ids.extend(traj_ids)
 
     # Some duplicates here
@@ -182,13 +178,16 @@ def test_neb_client_delete(
 
 
 def test_neb_client_harddelete_nochildren(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
+    snowflake_client: PortalClient,
+    storage_socket: SQLAlchemySocket,
+    session: Session,
+    activated_manager_name: ManagerName,
 ):
 
     neb_id = run_test_data(storage_socket, activated_manager_name, "neb_HCN_psi4_pbe_opt2")
 
-    rec = storage_socket.records.neb.get([neb_id], include=["singlepoints"])
-    child_ids = [x["singlepoint_id"] for x in rec[0]["singlepoints"]]
+    rec = session.get(NEBRecordORM, neb_id)
+    child_ids = [x.singlepoint_id for x in rec.singlepoints]
 
     meta = snowflake_client.delete_records(neb_id, soft_delete=False, delete_children=False)
     assert meta.success
@@ -201,13 +200,16 @@ def test_neb_client_harddelete_nochildren(
 
 
 def test_neb_client_delete_opt_inuse(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
+    snowflake_client: PortalClient,
+    storage_socket: SQLAlchemySocket,
+    session: Session,
+    activated_manager_name: ManagerName,
 ):
 
     neb_id = run_test_data(storage_socket, activated_manager_name, "neb_HCN_psi4_pbe_opt2")
 
-    rec = storage_socket.records.neb.get([neb_id], include=["singlepoints"])
-    child_ids = [x["singlepoint_id"] for x in rec[0]["singlepoints"]]
+    rec = session.get(NEBRecordORM, neb_id)
+    child_ids = [x.singlepoint_id for x in rec.singlepoints]
 
     meta = snowflake_client.delete_records(child_ids[0], soft_delete=False)
     assert meta.success is False

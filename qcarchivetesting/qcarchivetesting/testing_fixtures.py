@@ -5,6 +5,7 @@ Contains testing infrastructure for QCFractal.
 import gc
 import logging
 import secrets
+from typing import Tuple
 
 import pytest
 
@@ -195,14 +196,16 @@ def snowflake_client(snowflake):
     yield snowflake.client()
 
 
+
+
 @pytest.fixture(scope="function")
-def activated_manager_name(storage_socket: SQLAlchemySocket) -> ManagerName:
+def activated_manager(storage_socket: SQLAlchemySocket) -> Tuple[ManagerName, int]:
     """
-    An activated manager, returning only its manager name
+    An activated manager, returning only its manager name and id
     """
     mname = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
 
-    storage_socket.managers.activate(
+    mid = storage_socket.managers.activate(
         name_data=mname,
         manager_version="v2.0",
         username="bill",
@@ -225,4 +228,12 @@ def activated_manager_name(storage_socket: SQLAlchemySocket) -> ManagerName:
         tags=["*"],
     )
 
-    yield mname
+    yield mname, mid
+
+@pytest.fixture(scope="function")
+def activated_manager_name(activated_manager) -> ManagerName:
+    """
+    An activated manager, returning only its manager name
+    """
+
+    yield activated_manager[0]

@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Optional
 import pytest
 
 from qcarchivetesting import load_molecule_data
+from qcfractal.components.manybody.record_db_models import ManybodyRecordORM
 from qcfractal.db_socket import SQLAlchemySocket
 from qcportal.manybody import ManybodySpecification, ManybodyKeywords
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
@@ -16,6 +17,7 @@ if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal import PortalClient
     from qcportal.managers import ManagerName
+    from sqlalchemy.orm.session import Session
 
 
 @pytest.mark.parametrize("tag", ["*", "tag99"])
@@ -117,13 +119,16 @@ def test_manybody_client_add_existing_molecule(snowflake_client: PortalClient):
 
 
 def test_manybody_client_delete(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
+    snowflake_client: PortalClient,
+    storage_socket: SQLAlchemySocket,
+    session: Session,
+    activated_manager_name: ManagerName,
 ):
 
     mb_id = run_test_data(storage_socket, activated_manager_name, "mb_none_he4_psi4_mp2")
 
-    rec = storage_socket.records.manybody.get([mb_id], include=["clusters"])
-    child_ids = [x["singlepoint_id"] for x in rec[0]["clusters"]]
+    rec = session.get(ManybodyRecordORM, mb_id)
+    child_ids = [x.singlepoint_id for x in rec.clusters]
 
     meta = snowflake_client.delete_records(mb_id, soft_delete=True, delete_children=False)
     assert meta.success
@@ -160,13 +165,16 @@ def test_manybody_client_delete(
 
 
 def test_manybody_client_harddelete_nochildren(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
+    snowflake_client: PortalClient,
+    storage_socket: SQLAlchemySocket,
+    session: Session,
+    activated_manager_name: ManagerName,
 ):
 
     mb_id = run_test_data(storage_socket, activated_manager_name, "mb_none_he4_psi4_mp2")
 
-    rec = storage_socket.records.manybody.get([mb_id], include=["clusters"])
-    child_ids = [x["singlepoint_id"] for x in rec[0]["clusters"]]
+    rec = session.get(ManybodyRecordORM, mb_id)
+    child_ids = [x.singlepoint_id for x in rec.clusters]
 
     meta = snowflake_client.delete_records(mb_id, soft_delete=False, delete_children=False)
     assert meta.success
@@ -181,13 +189,16 @@ def test_manybody_client_harddelete_nochildren(
 
 
 def test_manybody_client_delete_opt_inuse(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
+    snowflake_client: PortalClient,
+    storage_socket: SQLAlchemySocket,
+    session: Session,
+    activated_manager_name: ManagerName,
 ):
 
     mb_id = run_test_data(storage_socket, activated_manager_name, "mb_none_he4_psi4_mp2")
 
-    rec = storage_socket.records.manybody.get([mb_id], include=["clusters"])
-    child_ids = [x["singlepoint_id"] for x in rec[0]["clusters"]]
+    rec = session.get(ManybodyRecordORM, mb_id)
+    child_ids = [x.singlepoint_id for x in rec.clusters]
 
     meta = snowflake_client.delete_records(child_ids[0], soft_delete=False)
     assert meta.success is False

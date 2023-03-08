@@ -9,6 +9,7 @@ from qcfractal.components.gridoptimization.testing_helpers import (
     submit_test_data as submit_go_test_data,
     generate_task_key as generate_go_task_key,
 )
+from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.torsiondrive.testing_helpers import (
     submit_test_data as submit_td_test_data,
     generate_task_key as generate_td_task_key,
@@ -20,6 +21,7 @@ from qcportal.record_models import RecordStatusEnum, PriorityEnum
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal import PortalClient
+    from sqlalchemy.orm.session import Session
 
 # The slow ones are a bit more thorough - ie, some iterations are mixed complete/incomplete
 test_files = [
@@ -48,6 +50,7 @@ def _get_task_key_generator(name: str):
 def test_record_client_reset_running_service(
     snowflake_client: PortalClient,
     storage_socket: SQLAlchemySocket,
+    session: Session,
     activated_manager_name: ManagerName,
     procedure_file: str,
 ):
@@ -58,25 +61,28 @@ def test_record_client_reset_running_service(
     while not finished:
         snowflake_client.reset_records([svc_id])
 
-        rec = storage_socket.records.get([svc_id], include=["*", "service.dependencies.record"])
-        assert rec[0]["status"] == RecordStatusEnum.waiting
+        session.expire_all()
+        rec = session.get(BaseRecordORM, svc_id)
+        assert rec.status == RecordStatusEnum.waiting
 
         # We should have also reset all the dependencies
-        statuses = [x["record"]["status"] for x in rec[0]["service"]["dependencies"]]
+        statuses = [x.record.status for x in rec.service.dependencies]
         assert all(x in [RecordStatusEnum.waiting, RecordStatusEnum.complete] for x in statuses)
 
         # we need two iterations. The first will move the service to running,
         # the second will actually iterate if necessary
         finished, n_optimizations = run_service(storage_socket, activated_manager_name, svc_id, keygen, result_data, 2)
 
-        rec = storage_socket.records.get([svc_id])
-        assert rec[0]["status"] in [RecordStatusEnum.running, RecordStatusEnum.complete]
+        session.expire(rec)
+        rec = session.get(BaseRecordORM, svc_id)
+        assert rec.status in [RecordStatusEnum.running, RecordStatusEnum.complete]
 
 
 @pytest.mark.parametrize("procedure_file", test_files)
 def test_record_client_reset_error_service(
     snowflake_client: PortalClient,
     storage_socket: SQLAlchemySocket,
+    session: Session,
     activated_manager_name: ManagerName,
     procedure_file: str,
 ):
@@ -95,19 +101,21 @@ def test_record_client_reset_error_service(
     while True:
         snowflake_client.reset_records([svc_id])
 
-        rec = storage_socket.records.get([svc_id], include=["*", "service.dependencies.record"])
-        assert rec[0]["status"] == RecordStatusEnum.waiting
+        session.expire_all()
+        rec = session.get(BaseRecordORM, svc_id)
+        assert rec.status == RecordStatusEnum.waiting
 
         # We should have also reset all the dependencies
-        statuses = [x["record"]["status"] for x in rec[0]["service"]["dependencies"]]
+        statuses = [x.record.status for x in rec.service.dependencies]
         assert all(x in [RecordStatusEnum.waiting, RecordStatusEnum.complete] for x in statuses)
 
         # Move the service to running. This will also use result_data to populate some of the
         # previously-errored (now waiting) dependencies
         run_service(storage_socket, activated_manager_name, svc_id, keygen, result_data, 1)
 
-        rec = storage_socket.records.get([svc_id])
-        assert rec[0]["status"] == RecordStatusEnum.running
+        session.expire(rec)
+        rec = session.get(BaseRecordORM, svc_id)
+        assert rec.status == RecordStatusEnum.running
 
         # Inject an error
         # needs multiple iterations - first generates tasks and submits results
@@ -115,12 +123,13 @@ def test_record_client_reset_error_service(
         # iteration will only happen when all tasks are completed or errored
         run_service(storage_socket, activated_manager_name, svc_id, keygen, failed_data, 200)
 
-        rec = storage_socket.records.get([svc_id], include=["*", "service.dependencies.record"])
-        assert rec[0]["status"] in [RecordStatusEnum.error, RecordStatusEnum.complete]
+        session.expire(rec)
+        rec = session.get(BaseRecordORM, svc_id)
+        assert rec.status in [RecordStatusEnum.error, RecordStatusEnum.complete]
 
         # Should have errored dependencies
-        if rec[0]["status"] != RecordStatusEnum.complete:
-            statuses = [x["record"]["status"] for x in rec[0]["service"]["dependencies"]]
+        if rec.status != RecordStatusEnum.complete:
+            statuses = [x.record.status for x in rec.service.dependencies]
             assert RecordStatusEnum.error in statuses
         else:
             break
@@ -130,6 +139,7 @@ def test_record_client_reset_error_service(
 def test_record_client_cancel_waiting_service(
     snowflake_client: PortalClient,
     storage_socket: SQLAlchemySocket,
+    session: Session,
     activated_manager_name: ManagerName,
     procedure_file: str,
 ):
@@ -138,32 +148,36 @@ def test_record_client_cancel_waiting_service(
 
     snowflake_client.cancel_records([svc_id])
 
-    rec = storage_socket.records.get([svc_id], include=["*", "service"])
-    assert rec[0]["status"] == RecordStatusEnum.cancelled
-    assert rec[0]["service"] is not None
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.cancelled
+    assert rec.service is not None
 
     # Uncancel - will run?
     snowflake_client.uncancel_records([svc_id])
 
-    rec = storage_socket.records.get([svc_id], include=["*", "service"])
-    assert rec[0]["status"] == RecordStatusEnum.waiting
-    assert rec[0]["service"] is not None
-    assert rec[0]["service"]["tag"] == "test_tag"
-    assert rec[0]["service"]["priority"] == PriorityEnum.low
+    session.expire_all()
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.waiting
+    assert rec.service is not None
+    assert rec.service.tag == "test_tag"
+    assert rec.service.priority == PriorityEnum.low
 
     finished, n_optimizations = run_service(storage_socket, activated_manager_name, svc_id, keygen, result_data, 200)
 
     assert finished
-    rec = storage_socket.records.get([svc_id], include=["*", "compute_history.outputs"])
-    assert rec[0]["status"] == RecordStatusEnum.complete
-    assert len(rec[0]["compute_history"]) == 1
-    assert len(rec[0]["compute_history"][0]["outputs"]) == 1
+
+    session.expire_all()
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.complete
+    assert len(rec.compute_history) == 1
+    assert len(rec.compute_history[0].outputs) == 1
 
 
 @pytest.mark.parametrize("procedure_file", test_files)
 def test_record_client_cancel_waiting_service_child(
     snowflake_client: PortalClient,
     storage_socket: SQLAlchemySocket,
+    session: Session,
     activated_manager_name: ManagerName,
     procedure_file: str,
 ):
@@ -173,28 +187,31 @@ def test_record_client_cancel_waiting_service_child(
     run_service(storage_socket, activated_manager_name, svc_id, keygen, result_data, 1)
 
     # Cancel a child
-    with storage_socket.session_scope() as session:
-        ch_ids = storage_socket.records.get_children_ids(session, [svc_id])
+    with storage_socket.session_scope() as s:
+        ch_ids = storage_socket.records.get_children_ids(s, [svc_id])
 
     snowflake_client.cancel_records(ch_ids[0])
 
     # service is cancelled
-    rec = storage_socket.records.get([svc_id])
-    assert rec[0]["status"] == RecordStatusEnum.cancelled
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.cancelled
 
     # Uncancel & continue
     snowflake_client.uncancel_records([svc_id])
 
     finished, n_optimizations = run_service(storage_socket, activated_manager_name, svc_id, keygen, result_data, 200)
     assert finished
-    rec = storage_socket.records.get([svc_id])
-    assert rec[0]["status"] == RecordStatusEnum.complete
+
+    session.expire(rec)
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.complete
 
 
 @pytest.mark.parametrize("procedure_file", test_files)
 def test_record_client_cancel_running_service(
     snowflake_client: PortalClient,
     storage_socket: SQLAlchemySocket,
+    session: Session,
     activated_manager_name: ManagerName,
     procedure_file: str,
 ):
@@ -204,17 +221,19 @@ def test_record_client_cancel_running_service(
     # Get it running
     finished, n_optimizations = run_service(storage_socket, activated_manager_name, svc_id, keygen, result_data, 1)
 
-    rec = storage_socket.records.get([svc_id])
-    assert rec[0]["status"] == RecordStatusEnum.running
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.running
 
     while not finished:
         meta = snowflake_client.cancel_records([svc_id])
         assert meta.n_updated == 1
 
-        rec = storage_socket.records.get([svc_id], include=["*", "service.*", "service.dependencies.record"])
-        assert rec[0]["status"] == RecordStatusEnum.cancelled
-        assert rec[0]["service"] is not None  # service queue data left in place
-        statuses = [x["record"]["status"] for x in rec[0]["service"]["dependencies"]]
+        session.expire(rec)
+        rec = session.get(BaseRecordORM, svc_id)
+
+        assert rec.status == RecordStatusEnum.cancelled
+        assert rec.service is not None  # service queue data left in place
+        statuses = [x.record.status for x in rec.service.dependencies]
         assert all(x in [RecordStatusEnum.complete, RecordStatusEnum.cancelled] for x in statuses)
         changed_count = statuses.count(RecordStatusEnum.cancelled)
         assert meta.n_children_updated == changed_count
@@ -224,11 +243,11 @@ def test_record_client_cancel_running_service(
         assert meta.n_updated == 1
         assert meta.n_children_updated == changed_count
 
-        rec = storage_socket.records.get([svc_id])
-        assert rec[0]["status"] == RecordStatusEnum.waiting
+        session.expire(rec)
+        rec = session.get(BaseRecordORM, svc_id)
+        assert rec.status == RecordStatusEnum.waiting
 
-        rec = storage_socket.records.get([svc_id], include=["*", "service.*", "service.dependencies.record"])
-        statuses = [x["record"]["status"] for x in rec[0]["service"]["dependencies"]]
+        statuses = [x.record.status for x in rec.service.dependencies]
         assert all(x in [RecordStatusEnum.complete, RecordStatusEnum.waiting] for x in statuses)
 
         # we need two iterations. The first will move the service to running,
@@ -239,6 +258,7 @@ def test_record_client_cancel_running_service(
 @pytest.mark.parametrize("procedure_file", test_files)
 def test_record_client_cancel_error_service(
     snowflake_client: PortalClient,
+    session: Session,
     storage_socket: SQLAlchemySocket,
     activated_manager_name: ManagerName,
     procedure_file: str,
@@ -258,10 +278,11 @@ def test_record_client_cancel_error_service(
     while True:
         snowflake_client.cancel_records([svc_id])
 
-        rec = storage_socket.records.get([svc_id], include=["*", "service.*", "service.dependencies.record"])
-        assert rec[0]["status"] == RecordStatusEnum.cancelled
-        assert rec[0]["service"] is not None  # service queue data left in place
-        statuses = [x["record"]["status"] for x in rec[0]["service"]["dependencies"]]
+        session.expire_all()
+        rec = session.get(BaseRecordORM, svc_id)
+        assert rec.status == RecordStatusEnum.cancelled
+        assert rec.service is not None  # service queue data left in place
+        statuses = [x.record.status for x in rec.service.dependencies]
         assert all(
             x in [RecordStatusEnum.complete, RecordStatusEnum.error, RecordStatusEnum.cancelled] for x in statuses
         )
@@ -270,19 +291,21 @@ def test_record_client_cancel_error_service(
         snowflake_client.uncancel_records([svc_id])
         snowflake_client.reset_records([svc_id])
 
-        rec = storage_socket.records.get([svc_id], include=["*", "service.dependencies.record"])
-        assert rec[0]["status"] == RecordStatusEnum.waiting
+        session.expire_all()
+        rec = session.get(BaseRecordORM, svc_id)
+        assert rec.status == RecordStatusEnum.waiting
 
         # We should have also reset all the dependencies
-        statuses = [x["record"]["status"] for x in rec[0]["service"]["dependencies"]]
+        statuses = [x.record.status for x in rec.service.dependencies]
         assert all(x in [RecordStatusEnum.waiting, RecordStatusEnum.complete] for x in statuses)
 
         # Move the service to running. This will also use result_data to populate some of the
         # previously-errored (now waiting) dependencies
         run_service(storage_socket, activated_manager_name, svc_id, keygen, result_data, 1)
 
-        rec = storage_socket.records.get([svc_id])
-        assert rec[0]["status"] == RecordStatusEnum.running
+        session.expire_all()
+        rec = session.get(BaseRecordORM, svc_id)
+        assert rec.status == RecordStatusEnum.running
 
         # Inject an error
         # needs multiple iterations - first generates tasks and submits results
@@ -290,12 +313,13 @@ def test_record_client_cancel_error_service(
         # iteration will only happen when all tasks are completed or errored
         run_service(storage_socket, activated_manager_name, svc_id, keygen, failed_data, 200)
 
-        rec = storage_socket.records.get([svc_id], include=["*", "service.dependencies.record"])
-        assert rec[0]["status"] in [RecordStatusEnum.error, RecordStatusEnum.complete]
+        session.expire_all()
+        rec = session.get(BaseRecordORM, svc_id)
+        assert rec.status in [RecordStatusEnum.error, RecordStatusEnum.complete]
 
         # Should have errored dependencies
-        if rec[0]["status"] != RecordStatusEnum.complete:
-            statuses = [x["record"]["status"] for x in rec[0]["service"]["dependencies"]]
+        if rec.status != RecordStatusEnum.complete:
+            statuses = [x.record.status for x in rec.service.dependencies]
             assert RecordStatusEnum.error in statuses
         else:
             break
@@ -305,6 +329,7 @@ def test_record_client_cancel_error_service(
 def test_record_client_invalidate_completed_service(
     snowflake_client: PortalClient,
     storage_socket: SQLAlchemySocket,
+    session: session,
     activated_manager_name: ManagerName,
     procedure_file: str,
 ):
@@ -315,42 +340,53 @@ def test_record_client_invalidate_completed_service(
     finished, n_optimizations = run_service(storage_socket, activated_manager_name, svc_id, keygen, result_data, 200)
 
     assert finished
-    rec = storage_socket.records.get([svc_id])
-    assert rec[0]["status"] == RecordStatusEnum.complete
+
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.complete
 
     # Mark as invalid
     snowflake_client.invalidate_records([svc_id])
-    rec = storage_socket.records.get([svc_id])
-    assert rec[0]["status"] == RecordStatusEnum.invalid
+
+    session.expire_all()
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.invalid
 
     # Uninvalidate
     snowflake_client.uninvalidate_records([svc_id])
-    rec = storage_socket.records.get([svc_id])
-    assert rec[0]["status"] == RecordStatusEnum.complete
+
+    session.expire_all()
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.complete
 
     # Invalidate a child
-    with storage_socket.session_scope() as session:
-        ch_ids = storage_socket.records.get_children_ids(session, [svc_id])
+    with storage_socket.session_scope() as s:
+        ch_ids = storage_socket.records.get_children_ids(s, [svc_id])
 
     snowflake_client.invalidate_records([ch_ids[0], ch_ids[1]])
-    rec = storage_socket.records.get([svc_id, ch_ids[0], ch_ids[1]])
-    assert rec[0]["status"] == RecordStatusEnum.invalid
-    assert rec[1]["status"] == RecordStatusEnum.invalid
-    assert rec[2]["status"] == RecordStatusEnum.invalid
+
+    session.expire_all()
+    rec = [session.get(BaseRecordORM, i) for i in [svc_id, ch_ids[0], ch_ids[1]]]
+    assert rec[0].status == RecordStatusEnum.invalid
+    assert rec[1].status == RecordStatusEnum.invalid
+    assert rec[2].status == RecordStatusEnum.invalid
 
     # Uninvalidate one child - shouldn't uninvalidate service
     snowflake_client.uninvalidate_records([ch_ids[0]])
-    rec = storage_socket.records.get([svc_id, ch_ids[0], ch_ids[1]])
-    assert rec[0]["status"] == RecordStatusEnum.invalid
-    assert rec[1]["status"] == RecordStatusEnum.complete
-    assert rec[2]["status"] == RecordStatusEnum.invalid
+
+    session.expire_all()
+    rec = [session.get(BaseRecordORM, i) for i in [svc_id, ch_ids[0], ch_ids[1]]]
+    assert rec[0].status == RecordStatusEnum.invalid
+    assert rec[1].status == RecordStatusEnum.complete
+    assert rec[2].status == RecordStatusEnum.invalid
 
     # Uninvalidate service
     snowflake_client.uninvalidate_records([svc_id])
-    rec = storage_socket.records.get([svc_id, ch_ids[0], ch_ids[1]])
-    assert rec[0]["status"] == RecordStatusEnum.complete
-    assert rec[1]["status"] == RecordStatusEnum.complete
-    assert rec[2]["status"] == RecordStatusEnum.complete
+
+    session.expire_all()
+    rec = [session.get(BaseRecordORM, i) for i in [svc_id, ch_ids[0], ch_ids[1]]]
+    assert rec[0].status == RecordStatusEnum.complete
+    assert rec[1].status == RecordStatusEnum.complete
+    assert rec[2].status == RecordStatusEnum.complete
 
 
 def get_children_ids(storage_socket: SQLAlchemySocket, svc_ids):
@@ -363,6 +399,7 @@ def get_children_ids(storage_socket: SQLAlchemySocket, svc_ids):
 def test_record_client_softdelete_service(
     snowflake_client: PortalClient,
     storage_socket: SQLAlchemySocket,
+    session: Session,
     activated_manager_name: ManagerName,
     procedure_file: str,
     delete_children: bool,
@@ -373,41 +410,52 @@ def test_record_client_softdelete_service(
 
     def check_children_deleted():
         ch_ids = get_children_ids(storage_socket, [svc_id])
-        ch = storage_socket.records.get(ch_ids)
+
+        ch = [session.get(BaseRecordORM, i) for i in ch_ids]
         if delete_children:
-            assert all(x["status"] == RecordStatusEnum.deleted for x in ch)
+            assert all(x.status == RecordStatusEnum.deleted for x in ch)
         else:
-            assert all(x["status"] != RecordStatusEnum.deleted for x in ch)
+            assert all(x.status != RecordStatusEnum.deleted for x in ch)
 
     def check_children_undeleted():
         ch_ids = get_children_ids(storage_socket, [svc_id])
-        ch = storage_socket.records.get(ch_ids)
-        assert all(x["status"] != RecordStatusEnum.deleted for x in ch)
+
+        ch = [session.get(BaseRecordORM, i) for i in ch_ids]
+        assert all(x.status != RecordStatusEnum.deleted for x in ch)
 
     # 1. Service is waiting
     snowflake_client.delete_records([svc_id], soft_delete=True, delete_children=delete_children)
-    rec = storage_socket.records.get([svc_id])
-    assert rec[0]["status"] == RecordStatusEnum.deleted
+
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.deleted
 
     snowflake_client.undelete_records([svc_id])
-    rec = storage_socket.records.get([svc_id])
-    assert rec[0]["status"] == RecordStatusEnum.waiting
+
+    session.expire_all()
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.waiting
 
     # 2. running
     run_service(storage_socket, activated_manager_name, svc_id, keygen, result_data, 1)
-    rec = storage_socket.records.get([svc_id])
-    assert rec[0]["status"] == RecordStatusEnum.running
+
+    session.expire_all()
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.running
 
     snowflake_client.delete_records([svc_id], soft_delete=True, delete_children=delete_children)
-    rec = storage_socket.records.get([svc_id], include=["*", "service"])
-    assert rec[0]["status"] == RecordStatusEnum.deleted
-    assert rec[0]["service"] is not None
+
+    session.expire_all()
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.deleted
+    assert rec.service is not None
 
     check_children_deleted()
 
     snowflake_client.undelete_records([svc_id])
-    rec = storage_socket.records.get([svc_id])
-    assert rec[0]["status"] == RecordStatusEnum.waiting  # gets undeleted to "waiting"
+
+    session.expire_all()
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.waiting  # gets undeleted to "waiting"
 
     check_children_undeleted()
 
@@ -417,37 +465,49 @@ def test_record_client_softdelete_service(
     )
     failed_data = {x: failed_op for x in result_data.keys()}
     run_service(storage_socket, activated_manager_name, svc_id, keygen, failed_data, 3)
-    rec = storage_socket.records.get([svc_id])
-    assert rec[0]["status"] == RecordStatusEnum.error
+
+    session.expire_all()
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.error
 
     snowflake_client.delete_records([svc_id], soft_delete=True, delete_children=delete_children)
-    rec = storage_socket.records.get([svc_id], include=["*", "service"])
-    assert rec[0]["status"] == RecordStatusEnum.deleted
-    assert rec[0]["service"] is not None
+
+    session.expire_all()
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.deleted
+    assert rec.service is not None
 
     check_children_deleted()
 
     snowflake_client.undelete_records([svc_id])
-    rec = storage_socket.records.get([svc_id])
-    assert rec[0]["status"] == RecordStatusEnum.error
+
+    session.expire_all()
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.error
 
     check_children_undeleted()
 
     # 4. cancelled
     snowflake_client.cancel_records([svc_id])
-    rec = storage_socket.records.get([svc_id], include=["*", "service"])
-    assert rec[0]["status"] == RecordStatusEnum.cancelled
+
+    session.expire_all()
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.cancelled
 
     snowflake_client.delete_records([svc_id], soft_delete=True, delete_children=delete_children)
-    rec = storage_socket.records.get([svc_id], include=["*", "service"])
-    assert rec[0]["status"] == RecordStatusEnum.deleted
-    assert rec[0]["service"] is not None
+
+    session.expire_all()
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.deleted
+    assert rec.service is not None
 
     check_children_deleted()
 
     snowflake_client.undelete_records([svc_id])
-    rec = storage_socket.records.get([svc_id])
-    assert rec[0]["status"] == RecordStatusEnum.cancelled
+
+    session.expire_all()
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.cancelled
 
     check_children_undeleted()
 
@@ -457,37 +517,49 @@ def test_record_client_softdelete_service(
     snowflake_client.reset_records([svc_id])  # was error
     finished, n_optimizations = run_service(storage_socket, activated_manager_name, svc_id, keygen, result_data, 200)
     assert finished
-    rec = storage_socket.records.get([svc_id], include=["*", "service"])
-    assert rec[0]["status"] == RecordStatusEnum.complete
-    assert rec[0]["service"] is None
+
+    session.expire_all()
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.complete
+    assert rec.service is None
 
     # Now delete
     snowflake_client.delete_records([svc_id], soft_delete=True, delete_children=delete_children)
-    rec = storage_socket.records.get([svc_id], include=["*", "service"])
-    assert rec[0]["status"] == RecordStatusEnum.deleted
+
+    session.expire_all()
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.deleted
 
     check_children_deleted()
 
     snowflake_client.undelete_records([svc_id])
-    rec = storage_socket.records.get([svc_id])
-    assert rec[0]["status"] == RecordStatusEnum.complete
+
+    session.expire_all()
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.complete
 
     check_children_undeleted()
 
     # 6. Invalid
     snowflake_client.invalidate_records([svc_id])
-    rec = storage_socket.records.get([svc_id], include=["*", "service"])
-    assert rec[0]["status"] == RecordStatusEnum.invalid
+
+    session.expire_all()
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.invalid
 
     snowflake_client.delete_records([svc_id], soft_delete=True, delete_children=delete_children)
-    rec = storage_socket.records.get([svc_id], include=["*", "service"])
-    assert rec[0]["status"] == RecordStatusEnum.deleted
+
+    session.expire_all()
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.deleted
 
     check_children_deleted()
 
     snowflake_client.undelete_records([svc_id])
-    rec = storage_socket.records.get([svc_id])
-    assert rec[0]["status"] == RecordStatusEnum.invalid
+
+    session.expire_all()
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.invalid
 
     check_children_undeleted()
 
@@ -497,6 +569,7 @@ def test_record_client_softdelete_service(
 def test_record_client_softdelete_service_child(
     snowflake_client: PortalClient,
     storage_socket: SQLAlchemySocket,
+    session: Session,
     activated_manager_name: ManagerName,
     procedure_file: str,
     delete_children: bool,
@@ -506,26 +579,28 @@ def test_record_client_softdelete_service_child(
     keygen = _get_task_key_generator(procedure_file)
 
     run_service(storage_socket, activated_manager_name, svc_id, keygen, result_data, 3)
-    rec = storage_socket.records.get([svc_id])
-    assert rec[0]["status"] == RecordStatusEnum.running
+
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.running
 
     ch_ids = get_children_ids(storage_socket, [svc_id])
-    snowflake_client.delete_records(ch_ids, soft_delete=True, delete_children=delete_children)
+    snowflake_client.delete_records(ch_ids[0], soft_delete=True, delete_children=delete_children)
 
-    rec = storage_socket.records.get([svc_id], include=["*", "service"])
-    assert rec[0]["status"] == RecordStatusEnum.deleted
+    session.expire_all()
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.deleted
 
-    ch = storage_socket.records.get([ch_ids[0]])
+    ch = [session.get(BaseRecordORM, i) for i in ch_ids]
 
     # which children were deleted
     if delete_children:
-        assert all(x["status"] == RecordStatusEnum.deleted for x in ch)
+        assert all(x.status == RecordStatusEnum.deleted for x in ch)
     else:
         for c in ch:
-            if c["id"] == ch_ids[0]:
-                assert c["status"] == RecordStatusEnum.deleted
+            if c.id == ch_ids[0]:
+                assert c.status == RecordStatusEnum.deleted
             else:
-                assert c["status"] != RecordStatusEnum.deleted
+                assert c.status != RecordStatusEnum.deleted
 
 
 @pytest.mark.parametrize("procedure_file", test_files)
@@ -534,6 +609,7 @@ def test_record_client_softdelete_service_child(
 def test_record_client_harddelete_service(
     snowflake_client: PortalClient,
     storage_socket: SQLAlchemySocket,
+    session: Session,
     activated_manager_name: ManagerName,
     procedure_file: str,
     status: RecordStatusEnum,
@@ -547,10 +623,10 @@ def test_record_client_harddelete_service(
         ch_ids = get_children_ids(storage_socket, [svc_id])
         snowflake_client.delete_records([svc_id], soft_delete=False, delete_children=delete_children)
 
-        rec = storage_socket.records.get([svc_id], missing_ok=True)
-        assert rec == [None]
+        rec = session.get(BaseRecordORM, svc_id)
+        assert rec is None
 
-        ch = storage_socket.records.get(ch_ids, missing_ok=True)
+        ch = [session.get(BaseRecordORM, i) for i in ch_ids]
         if delete_children:
             assert all(x is None for x in ch)
         else:
@@ -558,17 +634,19 @@ def test_record_client_harddelete_service(
         return
 
     run_service(storage_socket, activated_manager_name, svc_id, keygen, result_data, 1)
-    rec = storage_socket.records.get([svc_id])
-    assert rec[0]["status"] == RecordStatusEnum.running
+
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.running
 
     if status == RecordStatusEnum.running:
         ch_ids = get_children_ids(storage_socket, [svc_id])
         snowflake_client.delete_records(svc_id, soft_delete=False, delete_children=delete_children)
 
-        rec = storage_socket.records.get([svc_id], missing_ok=True)
-        assert rec == [None]
+        session.expire_all()
+        rec = session.get(BaseRecordORM, svc_id)
+        assert rec is None
 
-        ch = storage_socket.records.get(ch_ids, missing_ok=True)
+        ch = [session.get(BaseRecordORM, i) for i in ch_ids]
         if delete_children:
             assert all(x is None for x in ch)
         else:
@@ -577,17 +655,20 @@ def test_record_client_harddelete_service(
         return
 
     run_service(storage_socket, activated_manager_name, svc_id, keygen, result_data, 200)
-    rec = storage_socket.records.get([svc_id])
-    assert rec[0]["status"] == RecordStatusEnum.complete
+
+    session.expire_all()
+    rec = session.get(BaseRecordORM, svc_id)
+    assert rec.status == RecordStatusEnum.complete
 
     if status == RecordStatusEnum.complete:
         ch_ids = get_children_ids(storage_socket, [svc_id])
         snowflake_client.delete_records([svc_id], soft_delete=False, delete_children=delete_children)
 
-        rec = storage_socket.records.get([svc_id], missing_ok=True)
-        assert rec == [None]
+        session.expire_all()
+        rec = session.get(BaseRecordORM, svc_id)
+        assert rec is None
 
-        ch = storage_socket.records.get(ch_ids, missing_ok=True)
+        ch = [session.get(BaseRecordORM, i) for i in ch_ids]
         if delete_children:
             assert all(x is None for x in ch)
         else:

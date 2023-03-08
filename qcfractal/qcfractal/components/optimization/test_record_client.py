@@ -133,8 +133,8 @@ def test_optimization_client_delete(
 ):
     opt_id = run_test_data(storage_socket, activated_manager_name, opt_file)
 
-    rec = storage_socket.records.optimization.get([opt_id], include=["trajectory"])
-    child_ids = [x["singlepoint_id"] for x in rec[0]["trajectory"]]
+    rec = snowflake_client.get_optimizations(opt_id)
+    child_ids = [x.id for x in rec.trajectory]
 
     meta = snowflake_client.delete_records(opt_id, soft_delete=True, delete_children=False)
     assert meta.success
@@ -176,8 +176,8 @@ def test_optimization_client_harddelete_nochildren(
 ):
     opt_id = run_test_data(storage_socket, activated_manager_name, "opt_psi4_benzene")
 
-    rec = storage_socket.records.optimization.get([opt_id], include=["trajectory"])
-    child_ids = [x["singlepoint_id"] for x in rec[0]["trajectory"]]
+    rec = snowflake_client.get_optimizations(opt_id)
+    child_ids = [x.id for x in rec.trajectory]
 
     meta = snowflake_client.delete_records(opt_id, soft_delete=False, delete_children=False)
     assert meta.success
@@ -197,8 +197,8 @@ def test_optimization_client_delete_traj_inuse(
 ):
     opt_id = run_test_data(storage_socket, activated_manager_name, opt_file)
 
-    rec = storage_socket.records.optimization.get([opt_id], include=["trajectory"])
-    child_ids = [x["singlepoint_id"] for x in rec[0]["trajectory"]]
+    rec = snowflake_client.get_optimizations(opt_id)
+    child_ids = [x.id for x in rec.trajectory]
 
     meta = snowflake_client.delete_records(child_ids[0], soft_delete=False)
     assert meta.success is False

@@ -4,7 +4,6 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 import pytest
-from qcelemental.models.results import AtomicResultProperties
 
 from qcarchivetesting import load_molecule_data
 from qcportal.compression import decompress
@@ -12,12 +11,12 @@ from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification, SinglepointDriver, SinglepointProtocols
-from qcportal.wavefunctions.models import WavefunctionProperties
 from .record_db_models import SinglepointRecordORM
 from .testing_helpers import test_specs, load_test_data, run_test_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
+    from sqlalchemy.orm.session import Session
 
 
 def coalesce(x):
@@ -197,7 +196,9 @@ def test_singlepoint_socket_add_same_5(storage_socket: SQLAlchemySocket):
     assert id1 == id2
 
 
-def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName):
+def test_singlepoint_socket_run(
+    storage_socket: SQLAlchemySocket, session: Session, activated_manager_name: ManagerName
+):
 
     test_names = [
         "sp_psi4_benzene_energy_1",
@@ -215,64 +216,51 @@ def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket, activated_mana
         all_results.append(result_data)
         all_id.append(record_id)
 
-    recs = storage_socket.records.singlepoint.get(
-        all_id,
-        include=[
-            "*",
-            "wavefunction",
-            "compute_history.*",
-            "compute_history.outputs",
-            "compute_history.new_outputs",
-            "native_files",
-        ],
-    )
-
-    for record, result in zip(recs, all_results):
-        assert record["status"] == RecordStatusEnum.complete
-        assert record["specification"]["program"] == result.provenance.creator.lower()
-        assert record["specification"]["driver"] == result.driver
-        assert record["specification"]["method"] == result.model.method
+    for rec_id, result in zip(all_id, all_results):
+        record = session.get(SinglepointRecordORM, rec_id)
+        assert record.status == RecordStatusEnum.complete
+        assert record.specification.program == result.provenance.creator.lower()
+        assert record.specification.driver == result.driver
+        assert record.specification.method == result.model.method
 
         # some task specs still return NULL/None for basis
-        assert coalesce(record["specification"]["basis"]) == coalesce(result.model.basis)
+        assert coalesce(record.specification.basis) == coalesce(result.model.basis)
 
-        assert record["specification"]["keywords"] == result.keywords
-        assert record["specification"]["protocols"] == result.protocols
+        assert record.specification.keywords == result.keywords
+        assert record.specification.protocols == result.protocols
 
-        assert len(record["compute_history"]) == 1
-        assert record["compute_history"][0]["status"] == RecordStatusEnum.complete
-        assert record["compute_history"][0]["provenance"] == result.provenance
+        assert len(record.compute_history) == 1
+        assert record.compute_history[0].status == RecordStatusEnum.complete
+        assert record.compute_history[0].provenance == result.provenance
 
         # Compressed outputs should have been removed
-        assert "_qcfractal_compressed_outputs" not in record["extras"]
-        assert "_qcfractal_compressed_native_files" not in record["extras"]
+        assert "_qcfractal_compressed_outputs" not in record.extras
+        assert "_qcfractal_compressed_native_files" not in record.extras
 
         result_dict = result.dict(include={"return_result"}, encoding="json")
-        assert record["properties"].get("nuclear_repulsion_energy") == result.properties.nuclear_repulsion_energy
-        assert record["properties"].get("return_energy") == result.properties.return_energy
-        assert record["properties"].get("scf_iterations") == result.properties.scf_iterations
-        assert record["properties"].get("scf_total_energy") == result.properties.scf_total_energy
-        assert record["properties"].get("return_result") == result_dict["return_result"]
+        assert record.properties.get("nuclear_repulsion_energy") == result.properties.nuclear_repulsion_energy
+        assert record.properties.get("return_energy") == result.properties.return_energy
+        assert record.properties.get("scf_iterations") == result.properties.scf_iterations
+        assert record.properties.get("scf_total_energy") == result.properties.scf_total_energy
+        assert record.properties.get("return_result") == result_dict["return_result"]
 
-        wfn = record.get("wavefunction", None)
-        if wfn is None:
+        if record.wavefunction is None:
             assert result.wavefunction is None
         else:
-            wfn_data, wfn_ctype = storage_socket.records.singlepoint.get_wavefunction_rawdata(record["id"])
-            wfn_model = WavefunctionProperties(**decompress(wfn_data, wfn_ctype))
-            assert wfn_model.dict(encoding="json") == result.wavefunction.dict(encoding="json")
+            assert result.wavefunction is not None
+            wfn_prop = record.wavefunction.get_wavefunction()
+            assert wfn_prop.dict(encoding="json") == result.wavefunction.dict(encoding="json")
 
-        nf = record.get("native_files", None)
-        if not nf:
+        if not record.native_files:
             assert not result.native_files
         else:
-            avail_nf = set(record["native_files"].keys())
+            avail_nf = set(record.native_files.keys())
             result_nf = set(result.native_files.keys()) if result.native_files is not None else set()
             compressed_nf = result.extras.get("_qcfractal_compressed_native_files", {})
             result_nf |= set(compressed_nf.keys())
             assert avail_nf == result_nf
 
-        outs = record["compute_history"][0]["outputs"]
+        outs = record.compute_history[0].outputs
 
         avail_outputs = set(outs.keys())
         result_outputs = {x for x in ["stdout", "stderr", "error"] if getattr(result, x, None) is not None}
@@ -282,16 +270,14 @@ def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket, activated_mana
 
         # NOTE - this only works for string outputs (not dicts)
         # but those are used for errors, which aren't covered here
-        for otype in outs.keys():
-            o_str = storage_socket.records.singlepoint.get_single_output_uncompressed(
-                record["id"], record["compute_history"][0]["id"], otype
-            )
-            co = result.extras["_qcfractal_compressed_outputs"][otype]
+        for out in outs.values():
+            o_str = out.get_output()
+            co = result.extras["_qcfractal_compressed_outputs"][out.output_type]
             ro = decompress(co["data"], co["compression_type"])
             assert o_str == ro
 
 
-def test_singlepoint_socket_insert(storage_socket: SQLAlchemySocket):
+def test_singlepoint_socket_insert(storage_socket: SQLAlchemySocket, session: Session):
     input_spec_2, molecule_2, result_data_2 = load_test_data("sp_psi4_peroxide_energy_wfn")
 
     # Need a full copy of results - they can get mutated
@@ -302,47 +288,37 @@ def test_singlepoint_socket_insert(storage_socket: SQLAlchemySocket):
     )
 
     # Typical workflow
-    with storage_socket.session_scope() as session:
-        rec_orm = session.query(SinglepointRecordORM).where(SinglepointRecordORM.id == id2[0]).one()
-        storage_socket.records.update_completed_task(session, rec_orm, result_data_2, None)
+    rec_orm = session.get(SinglepointRecordORM, id2[0])
+    storage_socket.records.update_completed_task(session, rec_orm, result_data_2, None)
 
     # Actually insert the whole thing
-    with storage_socket.session_scope() as session:
-        dup_id = storage_socket.records.insert_complete_record(session, [result_copy])
+    with storage_socket.session_scope() as session2:
+        dup_id = storage_socket.records.insert_complete_record(session2, [result_copy])
 
-    recs = storage_socket.records.singlepoint.get(
-        id2 + dup_id, include=["*", "wavefunction", "compute_history.*", "compute_history.outputs"]
-    )
+    recs = [session.get(SinglepointRecordORM, id2[0]), session.get(SinglepointRecordORM, dup_id)]
 
-    assert recs[0]["id"] != recs[1]["id"]
-    assert recs[0]["status"] == RecordStatusEnum.complete
-    assert recs[1]["status"] == RecordStatusEnum.complete
+    assert recs[0].id != recs[1].id
+    assert recs[0].status == RecordStatusEnum.complete
+    assert recs[1].status == RecordStatusEnum.complete
 
-    assert recs[0]["specification"] == recs[1]["specification"]
+    assert recs[0].specification == recs[1].specification
 
-    assert len(recs[0]["compute_history"]) == 1
-    assert len(recs[1]["compute_history"]) == 1
-    assert recs[0]["compute_history"][0]["status"] == RecordStatusEnum.complete
-    assert recs[1]["compute_history"][0]["status"] == RecordStatusEnum.complete
+    assert len(recs[0].compute_history) == 1
+    assert len(recs[1].compute_history) == 1
+    assert recs[0].compute_history[0].status == RecordStatusEnum.complete
+    assert recs[1].compute_history[0].status == RecordStatusEnum.complete
 
-    assert recs[0]["compute_history"][0]["provenance"] == recs[1]["compute_history"][0]["provenance"]
+    assert recs[0].compute_history[0].provenance == recs[1].compute_history[0].provenance
 
-    assert recs[0]["properties"] == recs[1]["properties"]
+    assert recs[0].properties == recs[1].properties
 
-    wfn_data_1, wfn_ctype_1 = storage_socket.records.singlepoint.get_wavefunction_rawdata(recs[0]["id"])
-    wfn_model_1 = WavefunctionProperties(**decompress(wfn_data_1, wfn_ctype_1))
-    wfn_data_2, wfn_ctype_2 = storage_socket.records.singlepoint.get_wavefunction_rawdata(recs[1]["id"])
-    wfn_model_2 = WavefunctionProperties(**decompress(wfn_data_2, wfn_ctype_2))
+    wfn_model_1 = recs[0].wavefunction.get_wavefunction()
+    wfn_model_2 = recs[1].wavefunction.get_wavefunction()
     assert wfn_model_1.dict(encoding="json") == wfn_model_2.dict(encoding="json")
 
-    assert len(recs[0]["compute_history"][0]["outputs"]) == 1
-    assert len(recs[1]["compute_history"][0]["outputs"]) == 1
+    assert len(recs[0].compute_history[0].outputs) == 1
+    assert len(recs[1].compute_history[0].outputs) == 1
 
-    out_str_1 = storage_socket.records.singlepoint.get_single_output_uncompressed(
-        recs[0]["id"], recs[0]["compute_history"][-1]["id"], "stdout"
-    )
-
-    out_str_2 = storage_socket.records.singlepoint.get_single_output_uncompressed(
-        recs[1]["id"], recs[1]["compute_history"][-1]["id"], "stdout"
-    )
+    out_str_1 = recs[0].compute_history[0].outputs["stdout"].get_output()
+    out_str_2 = recs[1].compute_history[0].outputs["stdout"].get_output()
     assert out_str_1 == out_str_2

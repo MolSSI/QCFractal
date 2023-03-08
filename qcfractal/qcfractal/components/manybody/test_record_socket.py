@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcarchivetesting import load_molecule_data
+from qcfractal.components.manybody.record_db_models import ManybodyRecordORM
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service
 from qcportal.auth import UserInfo, GroupInfo
@@ -17,37 +18,38 @@ from .testing_helpers import compare_manybody_specs, test_specs, load_test_data,
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
+    from sqlalchemy.orm.session import Session
 
 
 @pytest.mark.parametrize("spec", test_specs[:1])
-def test_manybody_socket_add_get(storage_socket: SQLAlchemySocket, spec: ManybodySpecification):
+def test_manybody_socket_add_get(storage_socket: SQLAlchemySocket, session: Session, spec: ManybodySpecification):
     water2 = load_molecule_data("water_dimer_minima")
     water4 = load_molecule_data("water_stacked")
 
     time_0 = datetime.utcnow()
-    meta, id = storage_socket.records.manybody.add([water2, water4], spec, "tag1", PriorityEnum.low, None, None)
+    meta, ids = storage_socket.records.manybody.add([water2, water4], spec, "tag1", PriorityEnum.low, None, None)
     time_1 = datetime.utcnow()
     assert meta.success
 
-    recs = storage_socket.records.manybody.get(id, include=["*", "initial_molecule", "service"])
+    recs = [session.get(ManybodyRecordORM, i) for i in ids]
 
     assert len(recs) == 2
 
     for r in recs:
-        assert r["record_type"] == "manybody"
-        assert r["status"] == RecordStatusEnum.waiting
-        assert compare_manybody_specs(spec, r["specification"])
+        assert r.record_type == "manybody"
+        assert r.status == RecordStatusEnum.waiting
+        assert compare_manybody_specs(spec, r.specification.model_dict())
 
         # Service queue entry should exist with the proper tag and priority
-        assert r["service"]["tag"] == "tag1"
-        assert r["service"]["priority"] == PriorityEnum.low
+        assert r.service.tag == "tag1"
+        assert r.service.priority == PriorityEnum.low
 
-        assert time_0 < r["created_on"] < time_1
-        assert time_0 < r["modified_on"] < time_1
-        assert time_0 < r["service"]["created_on"] < time_1
+        assert time_0 < r.created_on < time_1
+        assert time_0 < r.modified_on < time_1
+        assert time_0 < r.service.created_on < time_1
 
-    assert recs[0]["initial_molecule"]["identifiers"]["molecule_hash"] == water2.get_hash()
-    assert recs[1]["initial_molecule"]["identifiers"]["molecule_hash"] == water4.get_hash()
+    assert recs[0].initial_molecule.identifiers["molecule_hash"] == water2.get_hash()
+    assert recs[1].initial_molecule.identifiers["molecule_hash"] == water4.get_hash()
 
 
 def test_manybody_socket_add_same_1(storage_socket: SQLAlchemySocket):
@@ -87,7 +89,7 @@ def test_manybody_socket_add_same_1(storage_socket: SQLAlchemySocket):
     ],
 )
 def test_manybody_socket_run(
-    storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, test_data_name: str
+    storage_socket: SQLAlchemySocket, session: Session, activated_manager_name: ManagerName, test_data_name: str
 ):
     input_spec_1, molecules_1, result_data_1 = load_test_data(test_data_name)
 
@@ -107,21 +109,17 @@ def test_manybody_socket_run(
 
     assert finished is True
 
-    rec = storage_socket.records.manybody.get(
-        id_1, include=["*", "compute_history.*", "compute_history.outputs", "clusters", "service"]
-    )
+    rec = session.get(ManybodyRecordORM, id_1)
 
-    assert rec[0]["status"] == RecordStatusEnum.complete
-    assert time_0 < rec[0]["modified_on"] < time_1
-    assert len(rec[0]["compute_history"]) == 1
-    assert len(rec[0]["compute_history"][-1]["outputs"]) == 1
-    assert rec[0]["compute_history"][-1]["status"] == RecordStatusEnum.complete
-    assert time_0 < rec[0]["compute_history"][-1]["modified_on"] < time_1
-    assert rec[0]["service"] is None
+    assert rec.status == RecordStatusEnum.complete
+    assert time_0 < rec.modified_on < time_1
+    assert len(rec.compute_history) == 1
+    assert len(rec.compute_history[-1].outputs) == 1
+    assert rec.compute_history[-1].status == RecordStatusEnum.complete
+    assert time_0 < rec.compute_history[-1].modified_on < time_1
+    assert rec.service is None
 
-    out = storage_socket.records.manybody.get_single_output_uncompressed(
-        rec[0]["id"], rec[0]["compute_history"][-1]["id"], "stdout"
-    )
+    out = rec.compute_history[-1].outputs["stdout"].get_output()
     assert "All manybody singlepoint computations are complete" in out
 
-    assert len(rec[0]["clusters"]) == n_singlepoints
+    assert len(rec.clusters) == n_singlepoints

@@ -2,17 +2,25 @@
 Tests the tasks socket with respect to misbehaving managers
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
+from typing import TYPE_CHECKING, Tuple
 
 import pytest
 
 from qcarchivetesting import caplog_handler_at_level
+from qcfractal.components.managers.db_models import ComputeManagerORM
+from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.singlepoint.testing_helpers import load_test_data, submit_test_data
-from qcfractal.db_socket import SQLAlchemySocket
 from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerName
 from qcportal.record_models import RecordStatusEnum
+
+if TYPE_CHECKING:
+    from qcfractal.db_socket import SQLAlchemySocket
+    from sqlalchemy.orm.session import Session
 
 
 def test_task_socket_claim_manager_noexist(storage_socket: SQLAlchemySocket):
@@ -42,7 +50,7 @@ def test_task_socket_claim_manager_inactive(storage_socket: SQLAlchemySocket):
         storage_socket.tasks.claim_tasks(mname1.fullname)
 
 
-def test_task_socket_return_manager_noexist(storage_socket: SQLAlchemySocket):
+def test_task_socket_return_manager_noexist(storage_socket: SQLAlchemySocket, session: Session):
     # Manager that returns data does not exist
 
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
@@ -65,11 +73,11 @@ def test_task_socket_return_manager_noexist(storage_socket: SQLAlchemySocket):
         )
 
     # Task should still be running
-    sp_records = storage_socket.records.get([record_id], include=["*", "task", "compute_history"])
-    assert sp_records[0]["status"] == RecordStatusEnum.running
-    assert sp_records[0]["manager_name"] == mname1.fullname
-    assert sp_records[0]["task"] is not None
-    assert sp_records[0]["compute_history"] == []
+    sp_rec = session.get(BaseRecordORM, record_id)
+    assert sp_rec.status == RecordStatusEnum.running
+    assert sp_rec.manager_name == mname1.fullname
+    assert sp_rec.task is not None
+    assert sp_rec.compute_history == []
 
 
 def test_task_socket_return_manager_inactive(storage_socket: SQLAlchemySocket):
@@ -96,12 +104,12 @@ def test_task_socket_return_manager_inactive(storage_socket: SQLAlchemySocket):
         )
 
 
-def test_task_socket_return_wrongmanager(storage_socket: SQLAlchemySocket):
+def test_task_socket_return_wrongmanager(storage_socket: SQLAlchemySocket, session: Session):
     # Manager returns data for a record that it hasn't claimed (or was stolen from it)
 
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
     mname2 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="2345-6789-0123-4567")
-    storage_socket.managers.activate(
+    mid_1 = storage_socket.managers.activate(
         name_data=mname1,
         manager_version="v2.0",
         username="bill",
@@ -109,7 +117,7 @@ def test_task_socket_return_wrongmanager(storage_socket: SQLAlchemySocket):
         tags=["tag1"],
     )
 
-    storage_socket.managers.activate(
+    mid_2 = storage_socket.managers.activate(
         name_data=mname2,
         manager_version="v2.0",
         username="bill",
@@ -135,29 +143,30 @@ def test_task_socket_return_wrongmanager(storage_socket: SQLAlchemySocket):
 
     # But it didn't do anything
     # Task should still be running
-    sp_records = storage_socket.records.get([record_id], include=["*", "task", "compute_history"])
-    assert sp_records[0]["status"] == RecordStatusEnum.running
-    assert sp_records[0]["manager_name"] == mname1.fullname
-    assert sp_records[0]["task"] is not None
-    assert sp_records[0]["compute_history"] == []
+    sp_rec = session.get(BaseRecordORM, record_id)
+    assert sp_rec.status == RecordStatusEnum.running
+    assert sp_rec.manager_name == mname1.fullname
+    assert sp_rec.task is not None
+    assert sp_rec.compute_history == []
 
     # Make sure manager info was updated
-    manager = storage_socket.managers.get([mname2.fullname])
-    assert manager[0]["successes"] == 0
-    assert manager[0]["failures"] == 0
-    assert manager[0]["rejected"] == 1
+    manager = session.get(ComputeManagerORM, mid_2)
+    assert manager.successes == 0
+    assert manager.failures == 0
+    assert manager.rejected == 1
 
 
 def test_task_socket_return_manager_badid(
-    storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, caplog
+    storage_socket: SQLAlchemySocket, session: Session, activated_manager: Tuple[ManagerName, int], caplog
 ):
     # Manager returns data for a record that doesn't exist
 
     _, _, result_data = load_test_data("sp_psi4_benzene_energy_1")
+    mname, mid = activated_manager
 
     # Should be logged
     with caplog_handler_at_level(caplog, logging.WARNING):
-        rmeta = storage_socket.tasks.update_finished(activated_manager_name.fullname, {123: result_data})
+        rmeta = storage_socket.tasks.update_finished(mname.fullname, {123: result_data})
         assert "does not exist in the task queue" in caplog.text
 
     assert rmeta.n_accepted == 0
@@ -166,17 +175,17 @@ def test_task_socket_return_manager_badid(
     assert rmeta.rejected_info[0][1] == "Task does not exist in the task queue"
 
     # Make sure manager info was updated
-    manager = storage_socket.managers.get([activated_manager_name.fullname])
-    assert manager[0]["successes"] == 0
-    assert manager[0]["failures"] == 0
-    assert manager[0]["rejected"] == 1
+    manager = session.get(ComputeManagerORM, mid)
+    assert manager.successes == 0
+    assert manager.failures == 0
+    assert manager.rejected == 1
 
 
-def test_task_socket_return_manager_badstatus_1(storage_socket: SQLAlchemySocket, caplog):
+def test_task_socket_return_manager_badstatus_1(storage_socket: SQLAlchemySocket, session: Session, caplog):
     # Manager returns data for a record that is not running
 
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
-    storage_socket.managers.activate(
+    mid = storage_socket.managers.activate(
         name_data=mname1,
         manager_version="v2.0",
         username="bill",
@@ -203,24 +212,24 @@ def test_task_socket_return_manager_badstatus_1(storage_socket: SQLAlchemySocket
     assert rmeta.rejected_info[0][1] == "Task is not in a running state"
 
     # Record should still be waiting
-    sp_records = storage_socket.records.get([record_id], include=["*", "task", "compute_history"])
-    assert sp_records[0]["status"] == RecordStatusEnum.waiting
-    assert sp_records[0]["manager_name"] is None
-    assert sp_records[0]["task"] is not None
-    assert sp_records[0]["compute_history"] == []
+    sp_rec = session.get(BaseRecordORM, record_id)
+    assert sp_rec.status == RecordStatusEnum.waiting
+    assert sp_rec.manager_name is None
+    assert sp_rec.task is not None
+    assert sp_rec.compute_history == []
 
     # Make sure manager info was updated
-    manager = storage_socket.managers.get([mname1.fullname])
-    assert manager[0]["successes"] == 0
-    assert manager[0]["failures"] == 0
-    assert manager[0]["rejected"] == 1
+    manager = session.get(ComputeManagerORM, mid)
+    assert manager.successes == 0
+    assert manager.failures == 0
+    assert manager.rejected == 1
 
 
-def test_task_socket_return_manager_badstatus_2(storage_socket: SQLAlchemySocket, caplog):
+def test_task_socket_return_manager_badstatus_2(storage_socket: SQLAlchemySocket, session: Session, caplog):
     # Manager returns data for a record that completed (and therefore not in the task queue)
 
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
-    storage_socket.managers.activate(
+    mid = storage_socket.managers.activate(
         name_data=mname1,
         manager_version="v2.0",
         username="bill",
@@ -252,25 +261,25 @@ def test_task_socket_return_manager_badstatus_2(storage_socket: SQLAlchemySocket
     assert rmeta.rejected_info[0][1] == "Task does not exist in the task queue"
 
     # Record should be complete
-    sp_records = storage_socket.records.get([record_id], include=["*", "task", "compute_history"])
-    assert sp_records[0]["status"] == RecordStatusEnum.complete
-    assert sp_records[0]["manager_name"] == mname1.fullname
-    assert sp_records[0]["task"] is None
-    assert len(sp_records[0]["compute_history"]) == 1
-    assert sp_records[0]["modified_on"] < time_1
+    sp_rec = session.get(BaseRecordORM, record_id)
+    assert sp_rec.status == RecordStatusEnum.complete
+    assert sp_rec.manager_name == mname1.fullname
+    assert sp_rec.task is None
+    assert len(sp_rec.compute_history) == 1
+    assert sp_rec.modified_on < time_1
 
     # Make sure manager info was updated
-    manager = storage_socket.managers.get([mname1.fullname])
-    assert manager[0]["successes"] == 1  # from the first submission
-    assert manager[0]["failures"] == 0
-    assert manager[0]["rejected"] == 1
+    manager = session.get(ComputeManagerORM, mid)
+    assert manager.successes == 1  # from the first submission
+    assert manager.failures == 0
+    assert manager.rejected == 1
 
 
-def test_task_socket_return_manager_badstatus_3(storage_socket: SQLAlchemySocket, caplog):
+def test_task_socket_return_manager_badstatus_3(storage_socket: SQLAlchemySocket, session: Session, caplog):
     # Manager returns data for a record that is cancelled
 
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
-    storage_socket.managers.activate(
+    mid = storage_socket.managers.activate(
         name_data=mname1,
         manager_version="v2.0",
         username="bill",
@@ -299,15 +308,15 @@ def test_task_socket_return_manager_badstatus_3(storage_socket: SQLAlchemySocket
     assert rmeta.rejected_info[0][1] == "Task does not exist in the task queue"
 
     # Record should be cancelled
-    sp_records = storage_socket.records.get([record_id], include=["*", "task", "compute_history"])
-    assert sp_records[0]["status"] == RecordStatusEnum.cancelled
-    assert sp_records[0]["manager_name"] is None
-    assert sp_records[0]["task"] is None
-    assert len(sp_records[0]["compute_history"]) == 0
-    assert sp_records[0]["modified_on"] < time_1
+    sp_rec = session.get(BaseRecordORM, record_id)
+    assert sp_rec.status == RecordStatusEnum.cancelled
+    assert sp_rec.manager_name is None
+    assert sp_rec.task is None
+    assert len(sp_rec.compute_history) == 0
+    assert sp_rec.modified_on < time_1
 
     # Make sure manager info was updated
-    manager = storage_socket.managers.get([mname1.fullname])
-    assert manager[0]["successes"] == 0
-    assert manager[0]["failures"] == 0
-    assert manager[0]["rejected"] == 1
+    manager = session.get(ComputeManagerORM, mid)
+    assert manager.successes == 0
+    assert manager.failures == 0
+    assert manager.rejected == 1

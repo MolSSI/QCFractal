@@ -138,10 +138,10 @@ def test_singlepoint_client_query(snowflake_client: PortalClient, storage_socket
     id_2, _ = submit_test_data(storage_socket, "sp_psi4_peroxide_energy_wfn")
     id_3, _ = submit_test_data(storage_socket, "sp_rdkit_water_energy")
 
-    recs = storage_socket.records.singlepoint.get([id_1, id_2, id_3])
+    recs = snowflake_client.get_singlepoints([id_1, id_2, id_3])
 
     # query for molecule
-    query_res = snowflake_client.query_singlepoints(molecule_id=[recs[1]["molecule_id"]])
+    query_res = snowflake_client.query_singlepoints(molecule_id=[recs[1].molecule_id])
     assert query_res._current_meta.n_found == 1
 
     # query for program

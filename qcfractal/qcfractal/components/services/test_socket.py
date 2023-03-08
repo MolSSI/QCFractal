@@ -8,6 +8,7 @@ from qcelemental.models import FailedOperation
 from qcfractal.components.gridoptimization.testing_helpers import (
     submit_test_data as submit_go_test_data,
 )
+from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.torsiondrive.testing_helpers import (
     submit_test_data as submit_td_test_data,
     generate_task_key as generate_td_task_key,
@@ -19,9 +20,10 @@ from qcportal.record_models import RecordStatusEnum, PriorityEnum
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
+    from sqlalchemy.orm.session import Session
 
 
-def test_service_socket_error(storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName):
+def test_service_socket_error(storage_socket: SQLAlchemySocket, session: Session, activated_manager_name: ManagerName):
     id_1, result_data_1 = submit_td_test_data(storage_socket, "td_H2O2_mopac_pm6", "test_tag", PriorityEnum.low)
 
     # Inject a failed computation
@@ -38,34 +40,28 @@ def test_service_socket_error(storage_socket: SQLAlchemySocket, activated_manage
 
     assert finished is True
 
-    rec = storage_socket.records.torsiondrive.get(
-        [id_1], include=["*", "compute_history.*", "compute_history.outputs", "service"]
-    )
+    rec = session.get(BaseRecordORM, id_1)
 
-    assert rec[0]["status"] == RecordStatusEnum.error
-    assert len(rec[0]["compute_history"]) == 1
-    assert len(rec[0]["compute_history"][-1]["outputs"]) == 2  # stdout and error
-    assert rec[0]["compute_history"][-1]["status"] == RecordStatusEnum.error
-    assert time_0 < rec[0]["compute_history"][-1]["modified_on"] < time_1
-    assert rec[0]["service"] is not None
+    assert rec.status == RecordStatusEnum.error
+    assert len(rec.compute_history) == 1
+    assert len(rec.compute_history[-1].outputs) == 2  # stdout and error
+    assert rec.compute_history[-1].status == RecordStatusEnum.error
+    assert time_0 < rec.compute_history[-1].modified_on < time_1
+    assert rec.service is not None
 
-    err = storage_socket.records.torsiondrive.get_single_output_uncompressed(
-        rec[0]["id"], rec[0]["compute_history"][-1]["id"], "error"
-    )
-
+    err = rec.compute_history[-1].outputs["error"].get_output()
     assert "did not complete successfully" in err["error_message"]
 
 
-def test_service_socket_iterate_order(storage_socket: SQLAlchemySocket):
+def test_service_socket_iterate_order(storage_socket: SQLAlchemySocket, session: Session):
 
     storage_socket.services._max_active_services = 1
 
     id_1, _ = submit_td_test_data(storage_socket, "td_H2O2_mopac_pm6", "*", PriorityEnum.normal)
     id_2, _ = submit_go_test_data(storage_socket, "go_H3NS_psi4_pbe", "*", PriorityEnum.high)
 
-    with storage_socket.session_scope() as session:
-        storage_socket.services.iterate_services(session, DummyJobStatus())
+    with storage_socket.session_scope() as s:
+        storage_socket.services.iterate_services(s, DummyJobStatus())
 
-    recs = storage_socket.records.get([id_1, id_2])
-    assert recs[0]["status"] == RecordStatusEnum.waiting
-    assert recs[1]["status"] == RecordStatusEnum.running
+    assert session.get(BaseRecordORM, id_1).status == RecordStatusEnum.waiting
+    assert session.get(BaseRecordORM, id_2).status == RecordStatusEnum.running

@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from qcelemental.models import FailedOperation, ComputeError
 
 from qcfractal.components.optimization.testing_helpers import load_test_data as load_opt_test_data
+from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.singlepoint.testing_helpers import load_test_data as load_sp_test_data
 from qcfractal.testing_helpers import mname1
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
@@ -99,13 +100,14 @@ def populate_records_status(storage_socket: SQLAlchemySocket):
     meta = storage_socket.records.invalidate(id_6)
     assert meta.n_updated == 1
 
-    rec = storage_socket.records.get(all_id, include=["status"])
-    assert rec[0]["status"] == RecordStatusEnum.waiting
-    assert rec[1]["status"] == RecordStatusEnum.complete
-    assert rec[2]["status"] == RecordStatusEnum.running
-    assert rec[3]["status"] == RecordStatusEnum.error
-    assert rec[4]["status"] == RecordStatusEnum.cancelled
-    assert rec[5]["status"] == RecordStatusEnum.deleted
-    assert rec[6]["status"] == RecordStatusEnum.invalid
+    with storage_socket.session_scope() as session:
+        all_rec = [session.get(BaseRecordORM, i) for i in all_id]
+        assert all_rec[0].status == RecordStatusEnum.waiting
+        assert all_rec[1].status == RecordStatusEnum.complete
+        assert all_rec[2].status == RecordStatusEnum.running
+        assert all_rec[3].status == RecordStatusEnum.error
+        assert all_rec[4].status == RecordStatusEnum.cancelled
+        assert all_rec[5].status == RecordStatusEnum.deleted
+        assert all_rec[6].status == RecordStatusEnum.invalid
 
     return all_id

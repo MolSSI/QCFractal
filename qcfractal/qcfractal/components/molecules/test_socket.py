@@ -9,12 +9,6 @@ if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
 
 
-def to_molecule(mol_dict) -> Molecule:
-    mol_dict = mol_dict.copy()
-    mol_dict = {k: v for k, v in mol_dict.items() if v is not None}
-    return Molecule(**mol_dict)
-
-
 def test_molecules_socket_get_proj(storage_socket: SQLAlchemySocket):
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
@@ -86,7 +80,7 @@ def test_molecules_socket_add_mixed_2(storage_socket: SQLAlchemySocket):
     assert new_ids_2[5] == ids[0]
 
     mols = storage_socket.molecules.get([ids[0], new_ids[0], new_ids[1]], missing_ok=False)
-    mols = [to_molecule(x) for x in mols]
+    mols = [Molecule(**x) for x in mols]
     assert mols[0] == water
     assert mols[1] == hooh
     assert mols[2] == water
