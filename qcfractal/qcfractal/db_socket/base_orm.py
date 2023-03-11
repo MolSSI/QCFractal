@@ -76,13 +76,6 @@ class BaseORM:
             for k in exclude:
                 d.pop(k, None)
 
-        if len(d) == 0:
-            raise RuntimeError(
-                "Dictionary of ORM is empty. It is likely that this ORM object is expired "
-                "(ie, you are calling dict() after a session commit()) or you haven't specified "
-                "any columns to be loaded. This is a QCFractal developer error."
-            )
-
         for k, v in d.items():
             if isinstance(v, BaseORM):
                 d[k] = v.model_dict()

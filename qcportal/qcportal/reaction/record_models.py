@@ -66,7 +66,7 @@ class ReactionComponent(BaseModel):
     singlepoint_id: Optional[int]
     optimization_id: Optional[int]
 
-    molecule: Molecule
+    molecule: Optional[Molecule]
     singlepoint_record: Optional[SinglepointRecord]
     optimization_record: Optional[OptimizationRecord]
 

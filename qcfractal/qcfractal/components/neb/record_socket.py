@@ -13,7 +13,7 @@ import tabulate
 from pydantic import BaseModel, Extra
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by, DOUBLE_PRECISION, TEXT
-from sqlalchemy.orm import contains_eager
+from sqlalchemy.orm import contains_eager, lazyload, joinedload, defer, undefer
 
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
@@ -775,8 +775,18 @@ class NEBRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> List[int]:
-        rec = self.get([record_id], include=["initial_chain"], session=session)
-        return [x["molecule_id"] for x in rec[0]["initial_chain"]]
+
+        options = [
+            lazyload("*"),
+            defer("*"),
+            joinedload(NEBRecordORM.initial_chain).options(undefer(NEBInitialchainORM.molecule_id)),
+        ]
+
+        with self.root_socket.optional_session(session) as session:
+            rec = session.get(NEBRecordORM, record_id, options=options)
+            if rec is None:
+                raise MissingDataError(f"Cannot find record {record_id}")
+            return [x.molecule_id for x in rec.initial_chain]
 
     def get_singlepoints(
         self,
@@ -784,8 +794,14 @@ class NEBRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> List[Dict[str, Any]]:
-        rec = self.get([record_id], include=["singlepoints"], session=session)
-        return rec[0]["singlepoints"]
+
+        options = [lazyload("*"), defer("*"), joinedload(NEBRecordORM.singlepoints).options(undefer("*"))]
+
+        with self.root_socket.optional_session(session) as session:
+            rec = session.get(NEBRecordORM, record_id, options=options)
+            if rec is None:
+                raise MissingDataError(f"Cannot find record {record_id}")
+            return [x.model_dict() for x in rec.singlepoints]
 
     def get_optimizations(
         self,
@@ -794,18 +810,24 @@ class NEBRecordSocket(BaseRecordSocket):
         session: Optional[Session] = None,
     ) -> Dict[str, Dict[str, Any]]:
 
-        rec = self.get([record_id], include=["optimizations"], session=session)
-        ret = {}
+        options = [lazyload("*"), defer("*"), joinedload(NEBRecordORM.optimizations).options(undefer("*"))]
 
-        for opt in rec[0]["optimizations"]:
-            if opt["ts"]:
-                ret["transition"] = opt
-            elif opt["position"] == 0:
-                ret["initial"] = opt
-            else:
-                ret["final"] = opt
+        with self.root_socket.optional_session(session) as session:
+            rec = session.get(NEBRecordORM, record_id, options=options)
+            if rec is None:
+                raise MissingDataError(f"Cannot find record {record_id}")
 
-        return ret
+            ret = {}
+
+            for opt in rec.optimizations:
+                if opt.ts:
+                    ret["transition"] = opt.model_dict()
+                elif opt.position == 0:
+                    ret["initial"] = opt.model_dict()
+                else:
+                    ret["final"] = opt.model_dict()
+
+            return ret
 
     def get_neb_result(
         self,

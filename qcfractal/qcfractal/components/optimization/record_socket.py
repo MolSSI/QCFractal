@@ -10,10 +10,11 @@ from qcelemental.models import (
 from qcelemental.models.procedures import QCInputSpecification as QCEl_QCInputSpecification
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import contains_eager
+from sqlalchemy.orm import contains_eager, lazyload, joinedload, defer, undefer
 
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
 from qcfractal.db_socket.helpers import insert_general
+from qcportal.exceptions import MissingDataError
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
 from qcportal.optimization import (
@@ -406,5 +407,14 @@ class OptimizationRecordSocket(BaseRecordSocket):
         Retrieve the IDs of the singlepoint computations that form the trajectory
         """
 
-        rec = self.get([record_id], include=["trajectory"], session=session)
-        return [x["singlepoint_id"] for x in rec[0]["trajectory"]]
+        options = [
+            lazyload("*"),
+            defer("*"),
+            joinedload(OptimizationRecordORM.trajectory).options(undefer(OptimizationTrajectoryORM.singlepoint_id)),
+        ]
+
+        with self.root_socket.optional_session(session) as session:
+            rec = session.get(OptimizationRecordORM, record_id, options=options)
+            if rec is None:
+                raise MissingDataError(f"Cannot find record {record_id}")
+            return [x.singlepoint_id for x in rec.trajectory]

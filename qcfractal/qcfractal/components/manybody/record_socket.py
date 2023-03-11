@@ -8,12 +8,13 @@ from typing import List, Dict, Tuple, Optional, Sequence, Any, Union, Set, TYPE_
 import tabulate
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import contains_eager
+from sqlalchemy.orm import contains_eager, defer, undefer, lazyload, joinedload
 
 from qcfractal import __version__ as qcfractal_version
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
 from qcfractal.db_socket.helpers import insert_general
+from qcportal.exceptions import MissingDataError
 from qcportal.manybody import (
     BSSECorrectionEnum,
     ManybodyKeywords,
@@ -660,5 +661,11 @@ class ManybodyRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> List[Dict[str, Any]]:
-        rec = self.get([record_id], include=["clusters"], session=session)
-        return rec[0]["clusters"]
+
+        options = [lazyload("*"), defer("*"), joinedload(ManybodyRecordORM.clusters).options(undefer("*"))]
+
+        with self.root_socket.optional_session(session) as session:
+            rec = session.get(ManybodyRecordORM, record_id, options=options)
+            if rec is None:
+                raise MissingDataError(f"Cannot find record {record_id}")
+            return [x.model_dict() for x in rec.clusters]

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from qcelemental.models import FailedOperation
 from sqlalchemy import select, union, or_
-from sqlalchemy.orm import joinedload, selectinload, with_polymorphic, aliased
+from sqlalchemy.orm import joinedload, selectinload, lazyload, defer, undefer, defaultload, with_polymorphic, aliased
 
 from qcfractal.components.auth.db_models import UserIDMapSubquery, GroupIDMapSubquery
 from qcfractal.components.nativefiles.db_models import NativeFileORM
@@ -216,28 +216,58 @@ class BaseRecordSocket:
     # The ones here apply to all records
     ###########################################################################################
     def get_comments(self, record_id: int, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
-        rec = self.get([record_id], include=["comments"], session=session)
-        return rec[0]["comments"]
+
+        options = [
+            lazyload("*"),
+            defer("*"),
+            joinedload(BaseRecordORM.comments).options(undefer("*"), defaultload("*")),
+        ]
+
+        with self.root_socket.optional_session(session) as session:
+            rec = session.get(BaseRecordORM, record_id, options=options)
+            if rec is None:
+                raise MissingDataError(f"Cannot find record {record_id}")
+            return [x.model_dict() for x in rec.comments]
 
     def get_task(
         self,
         record_id: int,
         *,
         session: Optional[Session] = None,
-    ) -> Dict[str, Any]:
+    ) -> Optional[Dict[str, Any]]:
 
-        rec = self.get([record_id], include=["task"], session=session)
-        return rec[0]["task"]
+        options = [lazyload("*"), defer("*"), joinedload(BaseRecordORM.task).options(undefer("*"), defaultload("*"))]
+
+        with self.root_socket.optional_session(session) as session:
+            rec = session.get(BaseRecordORM, record_id, options=options)
+            if rec is None:
+                raise MissingDataError(f"Cannot find record {record_id}")
+            if rec.task is None:
+                return None
+            return rec.task.model_dict()
 
     def get_service(
         self,
         record_id: int,
         *,
         session: Optional[Session] = None,
-    ) -> Dict[str, Any]:
+    ) -> Optional[Dict[str, Any]]:
 
-        rec = self.get([record_id], include=["service"], session=session)
-        return rec[0]["service"]
+        options = [
+            lazyload("*"),
+            defer("*"),
+            joinedload(BaseRecordORM.service).options(
+                undefer("*"), defaultload("*"), joinedload(ServiceQueueORM.dependencies).options(undefer("*"))
+            ),
+        ]
+
+        with self.root_socket.optional_session(session) as session:
+            rec = session.get(BaseRecordORM, record_id, options=options)
+            if rec is None:
+                raise MissingDataError(f"Cannot find record {record_id}")
+            if rec.service is None:
+                return None
+            return rec.service.model_dict()
 
     def get_all_compute_history(
         self,
@@ -246,8 +276,17 @@ class BaseRecordSocket:
         session: Optional[Session] = None,
     ) -> List[Dict[str, Any]]:
 
-        rec = self.get([record_id], include=["compute_history"], session=session)
-        return rec[0]["compute_history"]
+        options = [
+            lazyload("*"),
+            defer("*"),
+            joinedload(BaseRecordORM.compute_history).options(undefer("*"), defaultload("*")),
+        ]
+
+        with self.root_socket.optional_session(session) as session:
+            rec = session.get(BaseRecordORM, record_id, options=options)
+            if rec is None:
+                raise MissingDataError(f"Cannot find record {record_id}")
+            return [x.model_dict() for x in rec.compute_history]
 
     def get_single_compute_history(
         self,
@@ -324,6 +363,7 @@ class BaseRecordSocket:
 
         stmt = select(OutputStoreORM.data, OutputStoreORM.compression_type)
         stmt = stmt.join(RecordComputeHistoryORM, RecordComputeHistoryORM.id == OutputStoreORM.history_id)
+        stmt = stmt.join(self.record_orm, RecordComputeHistoryORM.record_id == self.record_orm.id)
         stmt = stmt.where(RecordComputeHistoryORM.record_id == record_id)
         stmt = stmt.where(OutputStoreORM.history_id == history_id)
         stmt = stmt.where(OutputStoreORM.output_type == output_type)
@@ -354,8 +394,17 @@ class BaseRecordSocket:
         session: Optional[Session] = None,
     ) -> Dict[str, Dict[str, Any]]:
 
-        rec = self.get([record_id], include=["native_files"], session=session)
-        return rec[0]["native_files"]
+        options = [
+            lazyload("*"),
+            defer("*"),
+            joinedload(BaseRecordORM.native_files).options(undefer("*"), defaultload("*")),
+        ]
+
+        with self.root_socket.optional_session(session) as session:
+            rec = session.get(BaseRecordORM, record_id, options=options)
+            if rec is None:
+                raise MissingDataError(f"Cannot find record {record_id}")
+            return rec.native_files.model_dict()
 
     def get_single_native_file_metadata(
         self,
@@ -382,15 +431,16 @@ class BaseRecordSocket:
     ) -> Tuple[bytes, CompressionEnum]:
 
         stmt = select(NativeFileORM.data, NativeFileORM.compression_type)
-        stmt = stmt.where(NativeFileORM.record_id == record_id)
+        stmt = stmt.join(self.record_orm, NativeFileORM.record_id == self.record_orm.id)
         stmt = stmt.where(NativeFileORM.name == name)
 
         with self.root_socket.optional_session(session, True) as session:
             nf_data = session.execute(stmt).one_or_none()
             if nf_data is None:
                 raise MissingDataError(
-                    f'Record {record_id} does not have native file "{name}" (or record does not exist)'
+                    f"Record {record_id} does not have native file {name} (or record does not exist)"
                 )
+
             return nf_data[0], nf_data[1]
 
 

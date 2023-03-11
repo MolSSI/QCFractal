@@ -33,7 +33,7 @@ class ReactionComponentORM(BaseORM):
     singlepoint_id = Column(Integer, ForeignKey(SinglepointRecordORM.id), nullable=True)
     optimization_id = Column(Integer, ForeignKey(OptimizationRecordORM.id), nullable=True)
 
-    molecule = relationship(MoleculeORM, lazy="joined")
+    molecule = relationship(MoleculeORM, lazy="selectin")
     singlepoint_record = relationship(SinglepointRecordORM)
     optimization_record = relationship(OptimizationRecordORM)
 

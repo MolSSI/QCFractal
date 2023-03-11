@@ -12,7 +12,7 @@ import sqlalchemy.orm.attributes
 from pydantic import BaseModel, Extra
 from sqlalchemy import select, func
 from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by, DOUBLE_PRECISION, TEXT
-from sqlalchemy.orm import contains_eager
+from sqlalchemy.orm import contains_eager, lazyload, joinedload, defer, undefer
 
 from qcfractal.components.optimization.record_db_models import (
     OptimizationSpecificationORM,
@@ -20,6 +20,7 @@ from qcfractal.components.optimization.record_db_models import (
 )
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
+from qcportal.exceptions import MissingDataError
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
 from qcportal.optimization import OptimizationSpecification
@@ -698,8 +699,19 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             List of Molecule ids
         """
 
-        rec = self.get([record_id], include=["initial_molecules"], session=session)
-        return [x["molecule_id"] for x in rec[0]["initial_molecules"]]
+        options = [
+            lazyload("*"),
+            defer("*"),
+            joinedload(TorsiondriveRecordORM.initial_molecules).options(
+                undefer(TorsiondriveInitialMoleculeORM.molecule_id)
+            ),
+        ]
+
+        with self.root_socket.optional_session(session) as session:
+            rec = session.get(TorsiondriveRecordORM, record_id, options=options)
+            if rec is None:
+                raise MissingDataError(f"Cannot find record {record_id}")
+            return [x.molecule_id for x in rec.initial_molecules]
 
     def get_optimizations(
         self,
@@ -708,8 +720,13 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         session: Optional[Session] = None,
     ) -> List[Dict[str, Any]]:
 
-        rec = self.get([record_id], include=["optimizations"], session=session)
-        return rec[0]["optimizations"]
+        options = [lazyload("*"), defer("*"), joinedload(TorsiondriveRecordORM.optimizations).options(undefer("*"))]
+
+        with self.root_socket.optional_session(session) as session:
+            rec = session.get(TorsiondriveRecordORM, record_id, options=options)
+            if rec is None:
+                raise MissingDataError(f"Cannot find record {record_id}")
+            return [x.model_dict() for x in rec.optimizations]
 
     def get_minimum_optimizations(
         self,
@@ -763,7 +780,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         )
 
         with self.root_socket.optional_session(session, True) as session:
-            r = session.execute(stmt).all()  # List of (key, OptimizationRecordORM)
+            r = session.execute(stmt).all()  # List of (key, id)
 
             # If multiple records with the same energy are returned, then this will choose the last
             return {x: y for x, y in r}

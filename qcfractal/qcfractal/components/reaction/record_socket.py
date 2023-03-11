@@ -6,12 +6,13 @@ from typing import List, Dict, Tuple, Optional, Iterable, Sequence, Any, Union, 
 import tabulate
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by
-from sqlalchemy.orm import contains_eager
+from sqlalchemy.orm import contains_eager, defer, undefer, joinedload, lazyload
 
 from qcfractal import __version__ as qcfractal_version
 from qcfractal.components.optimization.record_db_models import OptimizationSpecificationORM
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
+from qcportal.exceptions import MissingDataError
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputTypeEnum
@@ -653,5 +654,12 @@ class ReactionRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> List[Dict[str, Any]]:
-        rec = self.get([record_id], include=["components"], session=session)
-        return rec[0]["components"]
+
+        options = [lazyload("*"), defer("*"), joinedload(ReactionRecordORM.components).options(undefer("*"))]
+
+        with self.root_socket.optional_session(session) as session:
+            rec = session.get(ReactionRecordORM, record_id, options=options)
+            if rec is None:
+                raise MissingDataError(f"Cannot find record {record_id}")
+
+            return [x.model_dict() for x in rec.components]

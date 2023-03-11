@@ -10,13 +10,14 @@ import sqlalchemy.orm.attributes
 from pydantic import BaseModel, Extra, parse_obj_as
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import contains_eager
+from sqlalchemy.orm import contains_eager, lazyload, joinedload, undefer, defer
 
 from qcfractal import __version__ as qcfractal_version
 from qcfractal.components.optimization.record_db_models import OptimizationSpecificationORM
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
 from qcfractal.db_socket.helpers import insert_general
+from qcportal.exceptions import MissingDataError
 from qcportal.gridoptimization import (
     serialize_key,
     deserialize_key,
@@ -704,5 +705,10 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         session: Optional[Session] = None,
     ) -> List[Dict[str, Any]]:
 
-        rec = self.get([record_id], include=["optimizations"], session=session)
-        return rec[0]["optimizations"]
+        options = [lazyload("*"), defer("*"), joinedload(GridoptimizationRecordORM.optimizations).options(undefer("*"))]
+
+        with self.root_socket.optional_session(session) as session:
+            rec = session.get(GridoptimizationRecordORM, record_id, options=options)
+            if rec is None:
+                raise MissingDataError(f"Cannot find record {record_id}")
+            return [x.model_dict() for x in rec.optimizations]

@@ -5,10 +5,10 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
 from sqlalchemy import and_, update, select
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, defer, undefer, lazyload, joinedload
 
 from qcfractal.db_socket.helpers import get_query_proj_options, get_count, get_general
-from qcportal.exceptions import ComputeManagerError
+from qcportal.exceptions import MissingDataError, ComputeManagerError
 from qcportal.managers import ManagerStatusEnum, ManagerName, ManagerQueryFilters
 from qcportal.metadata_models import QueryMetadata
 from .db_models import ComputeManagerLogORM, ComputeManagerORM
@@ -362,7 +362,15 @@ class ManagerSocket:
     # Some stuff to be retrieved for managers
     ####################################################
 
-    def get_log(self, name: str, *, session: Optional[Session] = None):
+    def get_log(self, name: str, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
 
-        rec = self.get([name], include=["log"], session=session)
-        return rec[0]["log"]
+        stmt = select(ComputeManagerORM)
+        stmt = stmt.options(defer("*"), lazyload("*"))
+        stmt = stmt.options(joinedload(ComputeManagerORM.log).options(undefer("*")))
+        stmt = stmt.where(ComputeManagerORM.name == name)
+
+        with self.root_socket.optional_session(session) as session:
+            rec = session.execute(stmt).unique().scalar_one_or_none()
+            if rec is None:
+                raise MissingDataError(f"Cannot find manager {name}")
+            return [x.model_dict() for x in rec.log]

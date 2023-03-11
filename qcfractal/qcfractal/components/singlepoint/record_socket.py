@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from qcelemental.models import AtomicInput as QCEl_AtomicInput, AtomicResult as QCEl_AtomicResult
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import contains_eager
+from sqlalchemy.orm import contains_eager, lazyload, joinedload, defer, undefer, defaultload
 
 from qcfractal.components.wavefunctions.db_models import WavefunctionORM
 from qcfractal.db_socket.helpers import insert_general
@@ -419,18 +419,34 @@ class SinglepointRecordSocket(BaseRecordSocket):
 
     def get_wavefunction_metadata(self, record_id: int, *, session: Optional[Session] = None) -> Dict[str, Any]:
 
-        rec = self.get([record_id], include=["wavefunction"], session=session)
-        return rec[0]["wavefunction"]
+        options = [
+            lazyload("*"),
+            defer("*"),
+            joinedload(SinglepointRecordORM.wavefunction).options(
+                undefer("*"), defaultload("*"), defer(WavefunctionORM.data)
+            ),
+        ]
+
+        with self.root_socket.optional_session(session) as session:
+            rec = session.get(SinglepointRecordORM, record_id, options=options)
+            if rec is None:
+                raise MissingDataError(f"Cannot find record {record_id}")
+            return rec.wavefunction.model_dict()
 
     def get_wavefunction_rawdata(
         self, record_id: int, *, session: Optional[Session] = None
     ) -> Tuple[bytes, CompressionEnum]:
 
-        stmt = select(WavefunctionORM.data, WavefunctionORM.compression_type)
-        stmt = stmt.where(WavefunctionORM.record_id == record_id)
+        options = [
+            lazyload("*"),
+            defer("*"),
+            joinedload(SinglepointRecordORM.wavefunction).options(
+                undefer(WavefunctionORM.data), undefer(WavefunctionORM.compression_type)
+            ),
+        ]
 
-        with self.root_socket.optional_session(session, True) as session:
-            wfn_data = session.execute(stmt).one_or_none()
-            if wfn_data is None:
-                raise MissingDataError(f"Record {record_id} does not have a wavefunction (or record does not exist)")
-            return wfn_data[0], wfn_data[1]
+        with self.root_socket.optional_session(session) as session:
+            rec = session.get(SinglepointRecordORM, record_id, options=options)
+            if rec is None:
+                raise MissingDataError(f"Cannot find record {record_id}")
+            return rec.wavefunction.data, rec.wavefunction.compression_type
