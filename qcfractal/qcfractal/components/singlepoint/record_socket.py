@@ -8,7 +8,6 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import lazyload, joinedload, defer, undefer, defaultload
 
-from qcfractal.components.wavefunctions.db_models import WavefunctionORM
 from qcfractal.db_socket.helpers import insert_general
 from qcportal.compression import CompressionEnum, compress
 from qcportal.exceptions import MissingDataError
@@ -21,7 +20,7 @@ from qcportal.singlepoint import (
     SinglepointQueryFilters,
 )
 from qcportal.utils import hash_dict
-from .record_db_models import QCSpecificationORM, SinglepointRecordORM
+from .record_db_models import QCSpecificationORM, SinglepointRecordORM, WavefunctionORM
 from ..record_socket import BaseRecordSocket
 
 if TYPE_CHECKING:

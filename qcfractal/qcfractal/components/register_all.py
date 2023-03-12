@@ -5,7 +5,6 @@
 from .molecules import db_models, routes
 from .outputstore import db_models
 from .largebinary import db_models
-from .wavefunctions import db_models
 from .nativefiles import db_models
 from .auth import db_models, routes
 from .serverinfo import db_models, routes
