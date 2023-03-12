@@ -49,4 +49,4 @@ dependencies:
   # Geometric service
   - pip:
     - scipy
-    - "geometric @ git+https://github.com/hjnpark/geomeTRIC@neb"
+    - "geometric @ git+https://github.com/hjnpark/geomeTRIC@4edcf0ad201420b184887a8c12b3482adf11e0f1"

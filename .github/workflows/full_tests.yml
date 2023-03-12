@@ -49,7 +49,7 @@ jobs:
       - name: Install QCFractal
         shell: bash -l {0}
         run: |
-          pip install -e qcarchive/qcportal/ -e qcarchive/qcfractalcompute/ -e qcarchive/qcfractal/
+          pip install -e ./qcarchive/qcportal -e ./qcarchive/qcfractalcompute -e ./qcarchive/qcfractal
 
       - name: Conda info for the QCFractal server
         shell: bash -l {0}
