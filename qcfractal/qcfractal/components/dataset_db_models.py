@@ -14,7 +14,7 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
-from sqlalchemy.orm.collections import attribute_mapped_collection
+from sqlalchemy.orm.collections import attribute_keyed_dict
 
 from qcfractal.components.auth.db_models import UserIDMapSubquery, GroupIDMapSubquery, UserORM, GroupORM
 from qcfractal.db_socket import BaseORM, MsgpackExt
@@ -69,7 +69,7 @@ class BaseDatasetORM(BaseORM):
     extras = Column(JSON, nullable=False)
 
     contributed_values = relationship(
-        "ContributedValuesORM", collection_class=attribute_mapped_collection("name"), cascade="all, delete-orphan"
+        "ContributedValuesORM", collection_class=attribute_keyed_dict("name"), cascade="all, delete-orphan"
     )
 
     __table_args__ = (
