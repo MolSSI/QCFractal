@@ -8,7 +8,7 @@ import tqdm
 import zstandard
 from sqlalchemy import select, func
 
-from qcfractal.components.outputstore.db_models import OutputStoreORM
+from qcfractal.components.record_db_models import OutputStoreORM
 from qcfractal.config import read_configuration
 from qcfractal.db_socket.socket import SQLAlchemySocket
 from qcportal.compression import CompressionEnum, compress

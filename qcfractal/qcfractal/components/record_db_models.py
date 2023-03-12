@@ -14,17 +14,21 @@ from sqlalchemy import (
     JSON,
     Index,
     Boolean,
+    LargeBinary,
+    UniqueConstraint,
+    DDL,
+    event,
 )
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import relationship
-from sqlalchemy.orm.collections import attribute_mapped_collection
+from sqlalchemy.orm import relationship, deferred
+from sqlalchemy.orm.collections import attribute_keyed_dict
 
 from qcfractal.components.auth.db_models import UserORM, GroupORM, UserIDMapSubquery, GroupIDMapSubquery
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.nativefiles.db_models import NativeFileORM
-from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.db_socket import BaseORM
-from qcportal.record_models import RecordStatusEnum
+from qcportal.compression import CompressionEnum, decompress
+from qcportal.record_models import RecordStatusEnum, OutputTypeEnum
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Optional, Iterable
@@ -85,6 +89,41 @@ class RecordInfoBackupORM(BaseORM):
         return BaseORM.model_dict(self, exclude)
 
 
+class OutputStoreORM(BaseORM):
+    """
+    Table for storing raw computation outputs (text) and errors (json)
+    """
+
+    __tablename__ = "output_store"
+
+    id = Column(Integer, primary_key=True)
+    history_id = Column(Integer, ForeignKey("record_compute_history.id", ondelete="cascade"), nullable=False)
+
+    output_type = Column(Enum(OutputTypeEnum), nullable=False)
+    compression_type = Column(Enum(CompressionEnum), nullable=False)
+    compression_level = Column(Integer, nullable=False)
+    data = deferred(Column(LargeBinary, nullable=False))
+
+    __table_args__ = (UniqueConstraint("history_id", "output_type", name="ux_output_store_id_type"),)
+
+    def get_output(self) -> Any:
+        return decompress(self.data, self.compression_type)
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Fields not in model
+        exclude = self.append_exclude(exclude, "id", "history_id", "compression_level")
+
+        return BaseORM.model_dict(self, exclude)
+
+
+# Mark the storage of the data column as external
+event.listen(
+    OutputStoreORM.__table__,
+    "after_create",
+    DDL("ALTER TABLE output_store ALTER COLUMN data SET STORAGE EXTERNAL").execute_if(dialect=("postgresql")),
+)
+
+
 class RecordComputeHistoryORM(BaseORM):
     """
     Table for storing the computation history of a record
@@ -105,7 +144,7 @@ class RecordComputeHistoryORM(BaseORM):
     provenance = Column(JSON)
 
     outputs = relationship(
-        OutputStoreORM, collection_class=attribute_mapped_collection("output_type"), cascade="all, delete-orphan"
+        OutputStoreORM, collection_class=attribute_keyed_dict("output_type"), cascade="all, delete-orphan"
     )
 
     __table_args__ = (Index("ix_record_compute_history_record_id", "record_id"),)
@@ -178,7 +217,7 @@ class BaseRecordORM(BaseORM):
     properties = Column(JSONB)
 
     # Native files returned from the computation
-    native_files = relationship(NativeFileORM, collection_class=attribute_mapped_collection("name"))
+    native_files = relationship(NativeFileORM, collection_class=attribute_keyed_dict("name"))
 
     __table_args__ = (
         Index("ix_base_record_status", "status"),

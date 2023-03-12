@@ -10,7 +10,6 @@ from sqlalchemy.orm import joinedload, selectinload, lazyload, defer, undefer, d
 
 from qcfractal.components.auth.db_models import UserIDMapSubquery, GroupIDMapSubquery
 from qcfractal.components.nativefiles.db_models import NativeFileORM
-from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.db_socket.helpers import (
@@ -21,9 +20,14 @@ from qcfractal.db_socket.helpers import (
 from qcportal.compression import CompressionEnum, compress, decompress
 from qcportal.exceptions import UserReportableError, MissingDataError
 from qcportal.metadata_models import DeleteMetadata, QueryMetadata, UpdateMetadata
-from qcportal.outputstore import OutputTypeEnum
-from qcportal.record_models import PriorityEnum, RecordStatusEnum
-from .record_db_models import RecordComputeHistoryORM, BaseRecordORM, RecordInfoBackupORM, RecordCommentORM
+from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
+from .record_db_models import (
+    RecordComputeHistoryORM,
+    BaseRecordORM,
+    RecordInfoBackupORM,
+    RecordCommentORM,
+    OutputStoreORM,
+)
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session

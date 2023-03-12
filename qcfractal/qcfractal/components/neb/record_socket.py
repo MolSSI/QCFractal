@@ -26,8 +26,7 @@ from qcportal.neb import (
     NEBQueryFilters,
 )
 from qcportal.optimization import OptimizationSpecification
-from qcportal.outputstore import OutputTypeEnum
-from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
 from qcportal.serialization import convert_numpy_recursive
 from qcportal.singlepoint import QCSpecification
 from qcportal.utils import hash_dict

@@ -23,8 +23,7 @@ from qcportal.manybody import (
 )
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
-from qcportal.outputstore import OutputTypeEnum
-from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
 from qcportal.utils import hash_dict
 from .record_db_models import ManybodyClusterORM, ManybodyRecordORM, ManybodySpecificationORM
 from ..record_socket import BaseRecordSocket

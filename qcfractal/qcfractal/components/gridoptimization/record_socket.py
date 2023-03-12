@@ -29,8 +29,7 @@ from qcportal.gridoptimization import (
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
 from qcportal.optimization import OptimizationSpecification
-from qcportal.outputstore import OutputTypeEnum
-from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
 from qcportal.utils import hash_dict
 from .record_db_models import (
     GridoptimizationSpecificationORM,

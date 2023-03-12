@@ -15,12 +15,11 @@ from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
 from qcportal.exceptions import MissingDataError
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
-from qcportal.outputstore import OutputTypeEnum
 from qcportal.reaction import (
     ReactionSpecification,
     ReactionQueryFilters,
 )
-from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
 from qcportal.utils import hash_dict
 from .record_db_models import ReactionComponentORM, ReactionSpecificationORM, ReactionRecordORM
 from ..record_socket import BaseRecordSocket

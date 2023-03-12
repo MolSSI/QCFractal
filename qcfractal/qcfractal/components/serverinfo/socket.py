@@ -11,8 +11,7 @@ import qcfractal
 from qcfractal.components.auth.db_models import UserIDMapSubquery
 from qcfractal.components.dataset_db_models import BaseDatasetORM
 from qcfractal.components.molecules.db_models import MoleculeORM
-from qcfractal.components.outputstore.db_models import OutputStoreORM
-from qcfractal.components.record_db_models import BaseRecordORM
+from qcfractal.components.record_db_models import BaseRecordORM, OutputStoreORM
 from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.db_socket.helpers import get_query_proj_options, get_count

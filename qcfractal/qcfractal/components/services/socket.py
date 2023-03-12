@@ -17,8 +17,7 @@ from qcfractal.db_socket.helpers import (
 from qcportal.compression import CompressionEnum, compress
 from qcportal.generic_result import GenericTaskResult
 from qcportal.metadata_models import InsertMetadata
-from qcportal.outputstore import OutputTypeEnum
-from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
 from .db_models import ServiceQueueORM, ServiceDependencyORM, ServiceSubtaskRecordORM
 from ..record_socket import BaseRecordSocket
 

@@ -12,8 +12,7 @@ from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.singlepoint.testing_helpers import load_test_data, submit_test_data
 from qcportal.managers import ManagerName
-from qcportal.outputstore import OutputTypeEnum
-from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
