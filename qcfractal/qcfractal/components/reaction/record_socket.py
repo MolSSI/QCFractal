@@ -6,7 +6,7 @@ from typing import List, Dict, Tuple, Optional, Iterable, Sequence, Any, Union, 
 import tabulate
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by
-from sqlalchemy.orm import contains_eager, defer, undefer, joinedload, lazyload
+from sqlalchemy.orm import defer, undefer, joinedload, lazyload
 
 from qcfractal import __version__ as qcfractal_version
 from qcfractal.components.optimization.record_db_models import OptimizationSpecificationORM
@@ -380,7 +380,7 @@ class ReactionRecordSocket(BaseRecordSocket):
         query_data: ReactionQueryFilters,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
+    ) -> Tuple[QueryMetadata, List[int]]:
         """
         Query reaction records
 
@@ -395,7 +395,7 @@ class ReactionRecordSocket(BaseRecordSocket):
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of records (as dictionaries)
+            Metadata about the results of the query, and a list of record ids
             that were found in the database.
         """
 
@@ -424,20 +424,16 @@ class ReactionRecordSocket(BaseRecordSocket):
             and_query.append(ReactionComponentORM.molecule_id.in_(query_data.molecule_id))
             need_component_join = True
 
-        stmt = select(ReactionRecordORM)
+        stmt = select(ReactionRecordORM.id)
 
         if need_spec_join or need_qc_spec_join or need_opt_spec_join:
-            stmt = stmt.join(ReactionRecordORM.specification).options(contains_eager(ReactionRecordORM.specification))
+            stmt = stmt.join(ReactionRecordORM.specification)
 
         if need_qc_spec_join:
-            stmt = stmt.join(ReactionSpecificationORM.singlepoint_specification).options(
-                contains_eager(ReactionRecordORM.specification, ReactionSpecificationORM.singlepoint_specification)
-            )
+            stmt = stmt.join(ReactionSpecificationORM.singlepoint_specification)
 
         if need_opt_spec_join:
-            stmt = stmt.join(ReactionSpecificationORM.optimization_specification).options(
-                contains_eager(ReactionRecordORM.specification, ReactionSpecificationORM.optimization_specification)
-            )
+            stmt = stmt.join(ReactionSpecificationORM.optimization_specification)
 
         if need_component_join:
             # Do not load components as part of the ORM, but join for the query

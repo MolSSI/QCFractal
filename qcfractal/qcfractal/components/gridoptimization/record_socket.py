@@ -10,7 +10,7 @@ import sqlalchemy.orm.attributes
 from pydantic import BaseModel, Extra, parse_obj_as
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import contains_eager, lazyload, joinedload, undefer, defer
+from sqlalchemy.orm import lazyload, joinedload, undefer, defer
 
 from qcfractal import __version__ as qcfractal_version
 from qcfractal.components.optimization.record_db_models import OptimizationSpecificationORM
@@ -479,7 +479,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         query_data: GridoptimizationQueryFilters,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
+    ) -> Tuple[QueryMetadata, List[int]]:
         """
         Query gridoptimization records
 
@@ -494,7 +494,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of records (as dictionaries)
+            Metadata about the results of the query, and a list of record ids
             that were found in the database.
         """
 
@@ -517,27 +517,14 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         if query_data.initial_molecule_id is not None:
             and_query.append(GridoptimizationRecordORM.initial_molecule_id.in_(query_data.initial_molecule_id))
 
-        stmt = select(GridoptimizationRecordORM)
+        stmt = select(GridoptimizationRecordORM.id)
 
         if need_optspec_join or need_spspec_join:
-            stmt = stmt.join(GridoptimizationRecordORM.specification).options(
-                contains_eager(GridoptimizationRecordORM.specification)
-            )
-
-            stmt = stmt.join(GridoptimizationSpecificationORM.optimization_specification).options(
-                contains_eager(
-                    GridoptimizationRecordORM.specification, GridoptimizationSpecificationORM.optimization_specification
-                )
-            )
+            stmt = stmt.join(GridoptimizationRecordORM.specification)
+            stmt = stmt.join(GridoptimizationSpecificationORM.optimization_specification)
 
         if need_spspec_join:
-            stmt = stmt.join(OptimizationSpecificationORM.qc_specification).options(
-                contains_eager(
-                    GridoptimizationRecordORM.specification,
-                    GridoptimizationSpecificationORM.optimization_specification,
-                    OptimizationSpecificationORM.qc_specification,
-                )
-            )
+            stmt = stmt.join(OptimizationSpecificationORM.qc_specification)
 
         stmt = stmt.where(*and_query)
 

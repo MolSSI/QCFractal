@@ -10,7 +10,7 @@ from qcelemental.models import (
 from qcelemental.models.procedures import QCInputSpecification as QCEl_QCInputSpecification
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import contains_eager, lazyload, joinedload, defer, undefer
+from sqlalchemy.orm import lazyload, joinedload, defer, undefer
 
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
 from qcfractal.db_socket.helpers import insert_general
@@ -183,7 +183,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
         query_data: OptimizationQueryFilters,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
+    ) -> Tuple[QueryMetadata, List[int]]:
         """
         Query optimization records
 
@@ -198,7 +198,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of records (as dictionaries)
+            Metadata about the results of the query, and a list of record ids
             that were found in the database.
         """
 
@@ -223,18 +223,14 @@ class OptimizationRecordSocket(BaseRecordSocket):
         if query_data.final_molecule_id is not None:
             and_query.append(OptimizationRecordORM.final_molecule_id.in_(query_data.final_molecule_id))
 
-        stmt = select(OptimizationRecordORM)
+        stmt = select(OptimizationRecordORM.id)
 
         # If we need the singlepoint spec, we also need the optimization spec
         if need_optspec_join or need_spspec_join:
-            stmt = stmt.join(OptimizationRecordORM.specification).options(
-                contains_eager(OptimizationRecordORM.specification)
-            )
+            stmt = stmt.join(OptimizationRecordORM.specification)
 
         if need_spspec_join:
-            stmt = stmt.join(OptimizationSpecificationORM.qc_specification).options(
-                contains_eager(OptimizationRecordORM.specification, OptimizationSpecificationORM.qc_specification)
-            )
+            stmt = stmt.join(OptimizationSpecificationORM.qc_specification)
 
         stmt = stmt.where(*and_query)
 

@@ -14,7 +14,6 @@ from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.db_socket.helpers import (
-    get_query_proj_options,
     get_count,
     get_general,
     delete_general,
@@ -612,7 +611,7 @@ class RecordSocket:
         query_data: RecordQueryFilters,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
+    ) -> Tuple[QueryMetadata, List[int]]:
         """
         Core query functionality of all records
 
@@ -636,11 +635,9 @@ class RecordSocket:
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of records (as dictionaries)
+            Metadata about the results of the query, and a list of record ids
             that were found in the database.
         """
-
-        proj_options = get_query_proj_options(orm_type, query_data.include, query_data.exclude)
 
         and_query = []
         if query_data.record_id is not None:
@@ -699,7 +696,6 @@ class RecordSocket:
 
         with self.root_socket.optional_session(session, True) as session:
             stmt = stmt.where(*and_query)
-            stmt = stmt.options(*proj_options)
 
             if query_data.include_metadata:
                 n_found = get_count(session, stmt)
@@ -709,22 +705,21 @@ class RecordSocket:
 
             stmt = stmt.order_by(orm_type.id.desc())
             stmt = stmt.limit(query_data.limit)
-            results = session.execute(stmt).scalars().unique().all()
-            result_dicts = [x.model_dict() for x in results]
+            record_ids = session.execute(stmt).scalars().unique().all()
 
         if query_data.include_metadata:
             meta = QueryMetadata(n_found=n_found)
         else:
             meta = None
 
-        return meta, result_dicts
+        return meta, record_ids
 
     def query(
         self,
         query_data: RecordQueryFilters,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
+    ) -> Tuple[QueryMetadata, List[int]]:
         """
         Query records of all types based on common fields
 
@@ -739,18 +734,12 @@ class RecordSocket:
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of records (as dictionaries)
+            Metadata about the results of the query, and a list of record ids
             that were found in the database.
         """
 
-        # If all columns are included, then we can load
-        # the data from derived classes as well.
-        if (query_data.include is None or "*" in query_data.include) and not query_data.exclude:
-            wp = with_polymorphic(BaseRecordORM, "*")
-        else:
-            wp = BaseRecordORM
-
-        stmt = select(wp)
+        wp = with_polymorphic(BaseRecordORM, "*")
+        stmt = select(wp.id)
 
         return self.query_base(
             stmt,

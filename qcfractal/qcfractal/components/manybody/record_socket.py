@@ -8,7 +8,7 @@ from typing import List, Dict, Tuple, Optional, Sequence, Any, Union, Set, TYPE_
 import tabulate
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import contains_eager, defer, undefer, lazyload, joinedload
+from sqlalchemy.orm import defer, undefer, lazyload, joinedload
 
 from qcfractal import __version__ as qcfractal_version
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
@@ -452,7 +452,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
         query_data: ManybodyQueryFilters,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
+    ) -> Tuple[QueryMetadata, List[int]]:
         """
         Query manybody records
 
@@ -467,7 +467,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of records (as dictionaries)
+            Metadata about the results of the query, and a list of record ids
             that were found in the database.
         """
 
@@ -490,15 +490,13 @@ class ManybodyRecordSocket(BaseRecordSocket):
         if query_data.initial_molecule_id is not None:
             and_query.append(ManybodyRecordORM.initial_molecule_id.in_(query_data.initial_molecule_id))
 
-        stmt = select(ManybodyRecordORM)
+        stmt = select(ManybodyRecordORM.id)
 
         if need_spec_join or need_qcspec_join:
-            stmt = stmt.join(ManybodyRecordORM.specification).options(contains_eager(ManybodyRecordORM.specification))
+            stmt = stmt.join(ManybodyRecordORM.specification)
 
         if need_qcspec_join:
-            stmt = stmt.join(ManybodySpecificationORM.singlepoint_specification).options(
-                contains_eager(ManybodyRecordORM.specification, ManybodySpecificationORM.singlepoint_specification)
-            )
+            stmt = stmt.join(ManybodySpecificationORM.singlepoint_specification)
 
         stmt = stmt.where(*and_query)
 

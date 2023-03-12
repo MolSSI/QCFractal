@@ -12,7 +12,7 @@ import sqlalchemy.orm.attributes
 from pydantic import BaseModel, Extra
 from sqlalchemy import select, func
 from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by, DOUBLE_PRECISION, TEXT
-from sqlalchemy.orm import contains_eager, lazyload, joinedload, defer, undefer
+from sqlalchemy.orm import lazyload, joinedload, defer, undefer
 
 from qcfractal.components.optimization.record_db_models import (
     OptimizationSpecificationORM,
@@ -392,7 +392,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         query_data: TorsiondriveQueryFilters,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
+    ) -> Tuple[QueryMetadata, List[int]]:
         """
         Query torsiondrive records
 
@@ -407,7 +407,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of records (as dictionaries)
+            Metadata about the results of the query, and a list of record ids
             that were found in the database.
         """
 
@@ -432,30 +432,17 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             and_query.append(TorsiondriveInitialMoleculeORM.molecule_id.in_(query_data.initial_molecule_id))
             need_initmol_join = True
 
-        stmt = select(TorsiondriveRecordORM)
+        stmt = select(TorsiondriveRecordORM.id)
 
         # We don't search for anything td-specification specific, so no need for
         # need_tdspec_join (for now...)
 
         if need_optspec_join or need_spspec_join:
-            stmt = stmt.join(TorsiondriveRecordORM.specification).options(
-                contains_eager(TorsiondriveRecordORM.specification)
-            )
-
-            stmt = stmt.join(TorsiondriveSpecificationORM.optimization_specification).options(
-                contains_eager(
-                    TorsiondriveRecordORM.specification, TorsiondriveSpecificationORM.optimization_specification
-                )
-            )
+            stmt = stmt.join(TorsiondriveRecordORM.specification)
+            stmt = stmt.join(TorsiondriveSpecificationORM.optimization_specification)
 
         if need_spspec_join:
-            stmt = stmt.join(OptimizationSpecificationORM.qc_specification).options(
-                contains_eager(
-                    TorsiondriveRecordORM.specification,
-                    TorsiondriveSpecificationORM.optimization_specification,
-                    OptimizationSpecificationORM.qc_specification,
-                )
-            )
+            stmt = stmt.join(OptimizationSpecificationORM.qc_specification)
 
         if need_initmol_join:
             stmt = stmt.join(

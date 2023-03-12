@@ -10,7 +10,7 @@ from qcelemental.models.results import Provenance
 
 from qcportal.base_models import (
     RestModelBase,
-    QueryProjModelBase,
+    QueryModelBase,
     QueryIteratorBase,
 )
 from qcportal.metadata_models import QueryMetadata
@@ -444,7 +444,7 @@ class RecordRevertBody(RestModelBase):
     record_ids: List[int]
 
 
-class RecordQueryFilters(QueryProjModelBase):
+class RecordQueryFilters(QueryModelBase):
     record_id: Optional[List[int]] = None
     record_type: Optional[List[str]] = None
     manager_name: Optional[List[str]] = None
@@ -502,21 +502,21 @@ class RecordQueryIterator(QueryIteratorBase):
 
     def _request(self) -> Tuple[Optional[QueryMetadata], List[BaseRecord]]:
         if self.record_type is None:
-            meta, raw_data = self._client.make_request(
+            meta, record_ids = self._client.make_request(
                 "post",
                 f"v1/records/query",
-                Tuple[Optional[QueryMetadata], List[Dict[str, Any]]],
+                Tuple[Optional[QueryMetadata], List[int]],
                 body=self._query_filters,
             )
         else:
-            meta, raw_data = self._client.make_request(
+            meta, record_ids = self._client.make_request(
                 "post",
                 f"v1/records/{self.record_type}/query",
-                Tuple[Optional[QueryMetadata], List[Dict[str, Any]]],
+                Tuple[Optional[QueryMetadata], List[int]],
                 body=self._query_filters,
             )
 
-        records = records_from_dicts(raw_data, self._client)
+        records = self._client.get_records(record_ids)
 
         if self.include:
             for r in records:

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from qcelemental.models import AtomicInput as QCEl_AtomicInput, AtomicResult as QCEl_AtomicResult
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import contains_eager, lazyload, joinedload, defer, undefer, defaultload
+from sqlalchemy.orm import lazyload, joinedload, defer, undefer, defaultload
 
 from qcfractal.components.wavefunctions.db_models import WavefunctionORM
 from qcfractal.db_socket.helpers import insert_general
@@ -209,7 +209,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
         query_data: SinglepointQueryFilters,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
+    ) -> Tuple[QueryMetadata, List[int]]:
         """
         Query singlepoint records
 
@@ -224,7 +224,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of records (as dictionaries)
+            Metadata about the results of the query, and a list of records
             that were found in the database.
         """
 
@@ -250,12 +250,10 @@ class SinglepointRecordSocket(BaseRecordSocket):
             and_query.append(QCSpecificationORM.keywords_hash.in_(keywords_hash))
             need_join = True
 
-        stmt = select(SinglepointRecordORM)
+        stmt = select(SinglepointRecordORM.id)
 
         if need_join:
-            stmt = stmt.join(SinglepointRecordORM.specification).options(
-                contains_eager(SinglepointRecordORM.specification)
-            )
+            stmt = stmt.join(SinglepointRecordORM.specification)
 
         stmt = stmt.where(*and_query)
 

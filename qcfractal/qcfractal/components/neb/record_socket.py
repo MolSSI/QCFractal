@@ -13,7 +13,7 @@ import tabulate
 from pydantic import BaseModel, Extra
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by, DOUBLE_PRECISION, TEXT
-from sqlalchemy.orm import contains_eager, lazyload, joinedload, defer, undefer
+from sqlalchemy.orm import lazyload, joinedload, defer, undefer
 
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
@@ -51,9 +51,6 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from typing import List, Dict, Tuple, Optional, Sequence, Any, Union, Iterable
-
-    NEBSpecificationDict = Dict[str, Any]
-    NEBRecordDict = Dict[str, Any]
 
 
 class NEBServiceState(BaseModel):
@@ -500,7 +497,7 @@ class NEBRecordSocket(BaseRecordSocket):
         query_data: NEBQueryFilters,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[NEBRecordDict]]:
+    ) -> Tuple[QueryMetadata, List[int]]:
         """
         Query neb records
 
@@ -515,7 +512,7 @@ class NEBRecordSocket(BaseRecordSocket):
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of records (as dictionaries)
+            Metadata about the results of the query, and a list of record ids
             that were found in the database.
         """
 
@@ -540,15 +537,13 @@ class NEBRecordSocket(BaseRecordSocket):
             and_query.append(NEBInitialchainORM.molecule_id.in_(query_data.molecule_id))
             need_initchain_join = True
 
-        stmt = select(NEBRecordORM)
+        stmt = select(NEBRecordORM.id)
 
         if need_nebspec_join or need_spspec_join:
-            stmt = stmt.join(NEBRecordORM.specification).options(contains_eager(NEBRecordORM.specification))
+            stmt = stmt.join(NEBRecordORM.specification)
 
         if need_spspec_join:
-            stmt = stmt.join(NEBSpecificationORM.singlepoint_specification).options(
-                contains_eager(NEBRecordORM.specification, NEBSpecificationORM.singlepoint_specification)
-            )
+            stmt = stmt.join(NEBSpecificationORM.singlepoint_specification)
 
         if need_initchain_join:
             stmt = stmt.join(
