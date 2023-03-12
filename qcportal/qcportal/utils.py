@@ -46,7 +46,7 @@ def make_str(obj: Optional[Union[_T, Sequence[_T]]]) -> Optional[List[_T]]:
         raise ValueError("`obj` must be `None`, a str, list, tuple, or non-sequence")
 
 
-def chunk_list(lst: List[_T], batch_size: int) -> Generator[_T, None, None]:
+def chunk_list(lst: List[_T], batch_size: int) -> Generator[List[_T], None, None]:
     """
     Split a list into batches
     """
