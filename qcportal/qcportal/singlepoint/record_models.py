@@ -1,8 +1,8 @@
 from copy import deepcopy
 from enum import Enum
-from typing import Optional, Union, Any, List, Dict, Iterable
+from typing import Optional, Union, Any, List, Dict, Iterable, Tuple
 
-from pydantic import BaseModel, Field, constr, validator, Extra
+from pydantic import BaseModel, Field, constr, validator, Extra, PrivateAttr
 from qcelemental.models import Molecule
 from qcelemental.models.results import (
     AtomicResult,
@@ -13,8 +13,8 @@ from qcelemental.models.results import (
 )
 from typing_extensions import Literal
 
+from qcportal.compression import CompressionEnum, decompress
 from qcportal.record_models import RecordStatusEnum, BaseRecord, RecordAddBodyBase, RecordQueryFilters
-from qcportal.wavefunctions.models import Wavefunction
 
 
 class SinglepointDriver(str, Enum):
@@ -52,6 +52,50 @@ class QCSpecification(BaseModel):
         # Convert empty string to None
         # Lowercasing is handled by constr
         return None if v == "" else v
+
+
+class Wavefunction(BaseModel):
+    """
+    Storage of wavefunctions, with compression
+    """
+
+    class Config:
+        extra = Extra.forbid
+
+    compression_type: CompressionEnum
+
+    data_url_: Optional[str] = None
+    compressed_data_: Optional[bytes] = None
+    decompressed_data_: Optional[WavefunctionProperties] = None
+
+    _client: Any = PrivateAttr(None)
+
+    def propagate_client(self, client, record_base_url):
+        self._client = client
+        self.data_url_ = f"{record_base_url}/wavefunction/data"
+
+    def _fetch_raw_data(self):
+        if self.compressed_data_ is None and self.decompressed_data_ is None:
+            cdata, ctype = self._client.make_request(
+                "get",
+                self.data_url_,
+                Tuple[bytes, CompressionEnum],
+            )
+
+            assert self.compression_type == ctype
+            self.compressed_data_ = cdata
+
+    @property
+    def data(self) -> WavefunctionProperties:
+        self._fetch_raw_data()
+
+        # Decompress, then remove compressed form
+        if self.decompressed_data_ is None:
+            wfn_dict = decompress(self.compressed_data_, self.compression_type)
+            self.decompressed_data_ = WavefunctionProperties(**wfn_dict)
+            self.compressed_data_ = None
+
+        return self.decompressed_data_
 
 
 class SinglepointRecord(BaseRecord):
