@@ -10,7 +10,6 @@ from sqlalchemy.sql import select, and_, or_
 
 from qcfractal.db_socket.helpers import (
     get_count,
-    get_query_proj_options,
     insert_general,
     delete_general,
     insert_mixed_general,
@@ -209,7 +208,7 @@ class MoleculeSocket:
         query_data: MoleculeQueryFilters,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[Optional[QueryMetadata], List[Dict[str, Any]]]:
+    ) -> Tuple[Optional[QueryMetadata], List[int]]:
         """
         General query of molecules in the database
 
@@ -227,7 +226,7 @@ class MoleculeSocket:
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of molecules (as dictionaries)
+            Metadata about the results of the query, and a list of molecule ids
             that were found in the database.
         """
 
@@ -260,11 +259,8 @@ class MoleculeSocket:
                     or_query.append(MoleculeORM.identifiers.contains({i_name: v}))
                 and_query.append(or_(False, *or_query))
 
-        proj_options = get_query_proj_options(MoleculeORM, query_data.include, query_data.exclude)
-
         with self.root_socket.optional_session(session, True) as session:
-            stmt = select(MoleculeORM).where(and_(True, *and_query))
-            stmt = stmt.options(*proj_options)
+            stmt = select(MoleculeORM.id).where(and_(True, *and_query))
 
             if query_data.include_metadata:
                 n_found = get_count(session, stmt)
@@ -274,15 +270,14 @@ class MoleculeSocket:
 
             stmt = stmt.order_by(MoleculeORM.id.desc())
             stmt = stmt.limit(query_data.limit)
-            results = session.execute(stmt).scalars().all()
-            result_dicts = [x.model_dict() for x in results]
+            molecule_ids = session.execute(stmt).scalars().all()
 
         if query_data.include_metadata:
             meta = QueryMetadata(n_found=n_found)
         else:
             meta = None
 
-        return meta, result_dicts
+        return meta, molecule_ids
 
     def modify(
         self,

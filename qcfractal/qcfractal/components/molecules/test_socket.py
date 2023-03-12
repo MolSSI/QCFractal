@@ -105,38 +105,6 @@ def test_molecules_socket_add_mixed_bad_1(storage_socket: SQLAlchemySocket):
     assert "MoleculeORM object with id=67890 was not found" in meta.errors[1][1]
 
 
-def test_molecules_socket_query_proj(storage_socket: SQLAlchemySocket):
-    water = load_molecule_data("water_dimer_minima")
-    hooh = load_molecule_data("hooh")
-
-    added_mols = [water, hooh]
-    added_mols = sorted(added_mols, key=lambda x: x.get_hash())
-
-    meta, ids = storage_socket.molecules.add(added_mols)
-
-    #################################################
-    # Note that queries may not be returned in order
-    #################################################
-
-    # Query by hash
-    meta, mols = storage_socket.molecules.query(
-        MoleculeQueryFilters(molecule_hash=[water.get_hash(), hooh.get_hash()], include=["geometry", "symbols"])
-    )
-    assert meta.success
-    assert len(mols) == 2
-    assert set(mols[0].keys()) == {"id", "symbols", "geometry"}
-    assert set(mols[1].keys()) == {"id", "symbols", "geometry"}
-
-    # Query by formula
-    meta, mols = storage_socket.molecules.query(
-        MoleculeQueryFilters(molecular_formula=["H4O2", "H2O2"], exclude=["connectivity"])
-    )
-    assert meta.success
-    assert len(mols) == 2
-    assert set(mols[0].keys()).intersection({"connectivity"}) == set()
-    assert set(mols[1].keys()).intersection({"connectivity"}) == set()
-
-
 def test_molecules_socket_query_metadata(storage_socket: SQLAlchemySocket):
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
