@@ -9,7 +9,6 @@ from sqlalchemy import select, union, or_
 from sqlalchemy.orm import joinedload, selectinload, lazyload, defer, undefer, defaultload, with_polymorphic, aliased
 
 from qcfractal.components.auth.db_models import UserIDMapSubquery, GroupIDMapSubquery
-from qcfractal.components.nativefiles.db_models import NativeFileORM
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.db_socket.helpers import (
@@ -27,6 +26,7 @@ from .record_db_models import (
     RecordInfoBackupORM,
     RecordCommentORM,
     OutputStoreORM,
+    NativeFileORM,
 )
 
 if TYPE_CHECKING:
