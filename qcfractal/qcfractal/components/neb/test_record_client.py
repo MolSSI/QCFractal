@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
@@ -7,6 +8,12 @@ import pytest
 
 from qcarchivetesting import load_molecule_data
 from qcfractal.components.neb.record_db_models import NEBRecordORM
+from qcfractal.components.neb.testing_helpers import (
+    compare_neb_specs,
+    test_specs,
+    submit_test_data,
+    run_test_data,
+)
 from qcportal.neb import (
     NEBSpecification,
     NEBKeywords,
@@ -20,29 +27,29 @@ if TYPE_CHECKING:
     from qcportal.managers import ManagerName
     from sqlalchemy.orm.session import Session
 
-from qcfractal.components.neb.testing_helpers import (
-    compare_neb_specs,
-    test_specs,
-    submit_test_data,
-    run_test_data,
-)
 
-
-@pytest.mark.parametrize("tag", ["*", "tag99"])
-@pytest.mark.parametrize("priority", list(PriorityEnum))
-def test_neb_client_tag_priority(snowflake_client: PortalClient, tag: str, priority: PriorityEnum):
+def test_neb_client_tag_priority(snowflake_client: PortalClient):
     chain = [load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)]
-    meta1, id1 = snowflake_client.add_nebs(
-        [chain],
-        "geometric",
-        QCSpecification(program="psi4", method="hf", basis="sto-3g", driver="gradient"),
-        NEBKeywords(),
-        priority=priority,
-        tag=tag,
-    )
-    rec = snowflake_client.get_records(id1, include=["service"])
-    assert rec[0].service.tag == tag
-    assert rec[0].service.priority == priority
+
+    for tag, priority in itertools.product(["*", "tag99"], list(PriorityEnum)):
+        meta1, id1 = snowflake_client.add_nebs(
+            [chain],
+            "geometric",
+            QCSpecification(
+                program="psi4",
+                method="hf",
+                basis="sto-3g",
+                driver="gradient",
+                keywords={"tag_priority": [tag, priority]},
+            ),
+            NEBKeywords(),
+            priority=priority,
+            tag=tag,
+        )
+        assert meta1.n_inserted == 1
+        rec = snowflake_client.get_records(id1, include=["service"])
+        assert rec[0].service.tag == tag
+        assert rec[0].service.priority == priority
 
 
 @pytest.mark.parametrize("spec", test_specs)

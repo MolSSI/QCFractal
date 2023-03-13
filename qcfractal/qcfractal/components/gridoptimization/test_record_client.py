@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
@@ -21,30 +22,40 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
 
 
-@pytest.mark.parametrize("tag", ["*", "tag99"])
-@pytest.mark.parametrize("priority", list(PriorityEnum))
-def test_gridoptimization_client_tag_priority(snowflake_client: PortalClient, tag: str, priority: PriorityEnum):
+def test_gridoptimization_client_tag_priority(snowflake_client: PortalClient):
+
     peroxide2 = load_molecule_data("peroxide2")
-    meta1, id1 = snowflake_client.add_gridoptimizations(
-        [peroxide2],
-        "gridoptimization",
-        optimization_specification=OptimizationSpecification(
-            program="geometric",
-            qc_specification=QCSpecification(program="psi4", driver="deferred", method="hf", basis="sto-3g"),
-        ),
-        keywords=GridoptimizationKeywords(
-            preoptimization=False,
-            scans=[
-                {"type": "distance", "indices": [1, 2], "steps": [-0.1, 0.0], "step_type": "relative"},
-                {"type": "dihedral", "indices": [0, 1, 2, 3], "steps": [-90, 0], "step_type": "absolute"},
-            ],
-        ),
-        priority=priority,
-        tag=tag,
-    )
-    rec = snowflake_client.get_records(id1, include=["service"])
-    assert rec[0].service.tag == tag
-    assert rec[0].service.priority == priority
+
+    for tag, priority in itertools.product(["*", "tag99"], list(PriorityEnum)):
+        # add tag/priority to keywords to force adding new record
+        meta1, id1 = snowflake_client.add_gridoptimizations(
+            [peroxide2],
+            "gridoptimization",
+            optimization_specification=OptimizationSpecification(
+                program="geometric",
+                qc_specification=QCSpecification(
+                    program="psi4",
+                    driver="deferred",
+                    method="hf",
+                    basis="sto-3g",
+                    keywords={"tag_priority": [tag, priority]},
+                ),
+            ),
+            keywords=GridoptimizationKeywords(
+                preoptimization=False,
+                scans=[
+                    {"type": "distance", "indices": [1, 2], "steps": [-0.1, 0.0], "step_type": "relative"},
+                    {"type": "dihedral", "indices": [0, 1, 2, 3], "steps": [-90, 0], "step_type": "absolute"},
+                ],
+            ),
+            priority=priority,
+            tag=tag,
+        )
+
+        assert meta1.n_inserted == 1
+        rec = snowflake_client.get_records(id1, include=["service"])
+        assert rec[0].service.tag == tag
+        assert rec[0].service.priority == priority
 
 
 @pytest.mark.parametrize("spec", test_specs)

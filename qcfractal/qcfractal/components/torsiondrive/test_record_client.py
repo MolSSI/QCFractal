@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
@@ -20,24 +21,32 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
 
 
-@pytest.mark.parametrize("tag", ["*", "tag99"])
-@pytest.mark.parametrize("priority", list(PriorityEnum))
-def test_torsiondrive_client_tag_priority_as_service(snowflake_client: PortalClient, tag: str, priority: PriorityEnum):
+def test_torsiondrive_client_tag_priority_as_service(snowflake_client: PortalClient):
     peroxide2 = load_molecule_data("peroxide2")
-    meta1, id1 = snowflake_client.add_torsiondrives(
-        [[peroxide2]],
-        "torsiondrive",
-        optimization_specification=OptimizationSpecification(
-            program="geometric",
-            qc_specification=QCSpecification(program="psi4", method="hf", basis="sto-3g", driver="deferred"),
-        ),
-        keywords=TorsiondriveKeywords(dihedrals=[(1, 2, 3, 4)], grid_spacing=[15], energy_upper_limit=0.04),
-        priority=priority,
-        tag=tag,
-    )
-    rec = snowflake_client.get_records(id1, include=["service"])
-    assert rec[0].service.tag == tag
-    assert rec[0].service.priority == priority
+
+    for tag, priority in itertools.product(["*", "tag99"], list(PriorityEnum)):
+        meta1, id1 = snowflake_client.add_torsiondrives(
+            [[peroxide2]],
+            "torsiondrive",
+            optimization_specification=OptimizationSpecification(
+                program="geometric",
+                qc_specification=QCSpecification(
+                    program="psi4",
+                    method="hf",
+                    basis="sto-3g",
+                    driver="deferred",
+                    keywords={"tag_priority": [tag, priority]},
+                ),
+            ),
+            keywords=TorsiondriveKeywords(dihedrals=[(1, 2, 3, 4)], grid_spacing=[15], energy_upper_limit=0.04),
+            priority=priority,
+            tag=tag,
+        )
+
+        assert meta1.n_inserted == 1
+        rec = snowflake_client.get_records(id1, include=["service"])
+        assert rec[0].service.tag == tag
+        assert rec[0].service.priority == priority
 
 
 @pytest.mark.parametrize("spec", test_specs)

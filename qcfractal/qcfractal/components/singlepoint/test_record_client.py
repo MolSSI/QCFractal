@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
@@ -16,16 +17,26 @@ if TYPE_CHECKING:
     from qcportal import PortalClient
 
 
-@pytest.mark.parametrize("tag", ["*", "tag99"])
-@pytest.mark.parametrize("priority", list(PriorityEnum))
-def test_singlepoint_client_tag_priority(snowflake_client: PortalClient, tag: str, priority: PriorityEnum):
+def test_singlepoint_client_tag_priority(snowflake_client: PortalClient):
     water = load_molecule_data("water_dimer_minima")
-    meta1, id1 = snowflake_client.add_singlepoints(
-        [water], "prog", SinglepointDriver.energy, "hf", "sto-3g", None, None, priority=priority, tag=tag
-    )
-    rec = snowflake_client.get_records(id1, include=["task"])
-    assert rec[0].task.tag == tag
-    assert rec[0].task.priority == priority
+
+    for tag, priority in itertools.product(["*", "tag99"], list(PriorityEnum)):
+        meta1, id1 = snowflake_client.add_singlepoints(
+            [water],
+            "prog",
+            SinglepointDriver.energy,
+            "hf",
+            "sto-3g",
+            {"tag_priority": [tag, priority]},
+            None,
+            priority=priority,
+            tag=tag,
+        )
+        assert meta1.n_inserted == 1
+
+        rec = snowflake_client.get_records(id1, include=["task"])
+        assert rec[0].task.tag == tag
+        assert rec[0].task.priority == priority
 
 
 @pytest.mark.parametrize("spec", test_specs)

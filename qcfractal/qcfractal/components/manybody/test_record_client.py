@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
@@ -20,25 +21,26 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
 
 
-@pytest.mark.parametrize("tag", ["*", "tag99"])
-@pytest.mark.parametrize("priority", list(PriorityEnum))
-def test_manybody_client_tag_priority(snowflake_client: PortalClient, tag: str, priority: PriorityEnum):
+def test_manybody_client_tag_priority(snowflake_client: PortalClient):
     water = load_molecule_data("water_dimer_minima")
 
-    sp_spec = QCSpecification(
-        program="prog",
-        driver="energy",
-        method="hf",
-        basis="sto-3g",
-    )
+    for tag, priority in itertools.product(["*", "tag99"], list(PriorityEnum)):
+        sp_spec = QCSpecification(
+            program="prog",
+            driver="energy",
+            method="hf",
+            basis="sto-3g",
+            keywords={"tag_priority": [tag, priority]},
+        )
 
-    kw = ManybodyKeywords(max_nbody=1, bsse_correction="none")
+        kw = ManybodyKeywords(max_nbody=1, bsse_correction="none")
 
-    meta1, id1 = snowflake_client.add_manybodys([water], "manybody", sp_spec, kw, tag=tag, priority=priority)
+        meta1, id1 = snowflake_client.add_manybodys([water], "manybody", sp_spec, kw, tag=tag, priority=priority)
 
-    rec = snowflake_client.get_records(id1, include=["service"])
-    assert rec[0].service.tag == tag
-    assert rec[0].service.priority == priority
+        assert meta1.n_inserted == 1
+        rec = snowflake_client.get_records(id1, include=["service"])
+        assert rec[0].service.tag == tag
+        assert rec[0].service.priority == priority
 
 
 @pytest.mark.parametrize("spec", test_specs)
