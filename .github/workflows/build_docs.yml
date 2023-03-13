@@ -17,7 +17,7 @@ jobs:
         with:
           fetch-depth: 0 # needed for tag/version
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 

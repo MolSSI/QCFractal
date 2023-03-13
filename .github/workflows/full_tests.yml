@@ -25,13 +25,14 @@ jobs:
 
     steps:
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Clone the QCArchive repository
         uses: actions/checkout@v3
         with:
+          fetch-depth: 0
           path: qcarchive
 
 
@@ -39,7 +40,7 @@ jobs:
       # QCFractal Server
       #################################################
       - name: Configure conda for the QCFractal server
-        uses: conda-incubator/setup-miniconda@v2.1.1
+        uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: ${{ matrix.python-version }}
           activate-environment: qcarchive-server
@@ -69,7 +70,7 @@ jobs:
       # QCFractalCompute worker
       #################################################
       - name: Configure conda for QCFractalCompute worker
-        uses: conda-incubator/setup-miniconda@v2.1.1
+        uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: ${{ matrix.python-version }}
           activate-environment: qcarchive-worker
@@ -98,7 +99,7 @@ jobs:
       # QCPortal client
       #################################################
       - name: Configure conda for the QCPortal client
-        uses: conda-incubator/setup-miniconda@v2.1.1
+        uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: ${{ matrix.python-version }}
           activate-environment: qcarchive-portal
