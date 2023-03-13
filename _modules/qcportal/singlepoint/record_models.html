@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.singlepoint.record_models &#8212; QCArchive 0.50b7.post46+g411ac3e7 documentation</title>
+    <title>qcportal.singlepoint.record_models &#8212; QCArchive 0.50b7.post52+gdcdbd261 documentation</title>
   
   
   
@@ -418,9 +418,9 @@ document.write(`
   <h1>Source code for qcportal.singlepoint.record_models</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Tuple</span>
 
-<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">constr</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">Extra</span>
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">constr</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">PrivateAttr</span>
 <span class="kn">from</span> <span class="nn">qcelemental.models</span> <span class="kn">import</span> <span class="n">Molecule</span>
 <span class="kn">from</span> <span class="nn">qcelemental.models.results</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">AtomicResult</span><span class="p">,</span>
@@ -431,8 +431,8 @@ document.write(`
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Literal</span>
 
+<span class="kn">from</span> <span class="nn">qcportal.compression</span> <span class="kn">import</span> <span class="n">CompressionEnum</span><span class="p">,</span> <span class="n">decompress</span>
 <span class="kn">from</span> <span class="nn">qcportal.record_models</span> <span class="kn">import</span> <span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="n">BaseRecord</span><span class="p">,</span> <span class="n">RecordAddBodyBase</span><span class="p">,</span> <span class="n">RecordQueryFilters</span>
-<span class="kn">from</span> <span class="nn">qcportal.wavefunctions.models</span> <span class="kn">import</span> <span class="n">Wavefunction</span>
 
 
 <span class="k">class</span> <span class="nc">SinglepointDriver</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
@@ -470,6 +470,50 @@ document.write(`
         <span class="c1"># Convert empty string to None</span>
         <span class="c1"># Lowercasing is handled by constr</span>
         <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span> <span class="k">else</span> <span class="n">v</span></div>
+
+
+<span class="k">class</span> <span class="nc">Wavefunction</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Storage of wavefunctions, with compression</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
+        <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span>
+
+    <span class="n">compression_type</span><span class="p">:</span> <span class="n">CompressionEnum</span>
+
+    <span class="n">data_url_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">compressed_data_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">decompressed_data_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">WavefunctionProperties</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">_client</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">record_base_url</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="o">=</span> <span class="n">client</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_url_</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">record_base_url</span><span class="si">}</span><span class="s2">/wavefunction/data&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_fetch_raw_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compressed_data_</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">decompressed_data_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cdata</span><span class="p">,</span> <span class="n">ctype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+                <span class="s2">&quot;get&quot;</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data_url_</span><span class="p">,</span>
+                <span class="n">Tuple</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="n">CompressionEnum</span><span class="p">],</span>
+            <span class="p">)</span>
+
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">compression_type</span> <span class="o">==</span> <span class="n">ctype</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compressed_data_</span> <span class="o">=</span> <span class="n">cdata</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WavefunctionProperties</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_raw_data</span><span class="p">()</span>
+
+        <span class="c1"># Decompress, then remove compressed form</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">decompressed_data_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">wfn_dict</span> <span class="o">=</span> <span class="n">decompress</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">compressed_data_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">compression_type</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">decompressed_data_</span> <span class="o">=</span> <span class="n">WavefunctionProperties</span><span class="p">(</span><span class="o">**</span><span class="n">wfn_dict</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compressed_data_</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decompressed_data_</span>
 
 
 <div class="viewcode-block" id="SinglepointRecord"><a class="viewcode-back" href="../../../user_guide/records/singlepoint.html#qcportal.singlepoint.SinglepointRecord">[docs]</a><span class="k">class</span> <span class="nc">SinglepointRecord</span><span class="p">(</span><span class="n">BaseRecord</span><span class="p">):</span>

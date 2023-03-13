@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Base Record &#8212; QCArchive 0.50b7.post46+g411ac3e7 documentation</title>
+    <title>Base Record &#8212; QCArchive 0.50b7.post52+gdcdbd261 documentation</title>
   
   
   
@@ -505,7 +505,7 @@ lots of subrecords of different types (such as a <a class="reference internal" h
 <li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.is_service" title="qcportal.record_models.BaseRecord.is_service"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_service</span> <span class="pre">(bool)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.manager_name" title="qcportal.record_models.BaseRecord.manager_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">manager_name</span> <span class="pre">(Optional[str])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.modified_on" title="qcportal.record_models.BaseRecord.modified_on"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modified_on</span> <span class="pre">(datetime.datetime)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.native_files_" title="qcportal.record_models.BaseRecord.native_files_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">native_files_</span> <span class="pre">(Optional[Dict[str,</span> <span class="pre">qcportal.nativefiles.models.NativeFile]])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.native_files_" title="qcportal.record_models.BaseRecord.native_files_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">native_files_</span> <span class="pre">(Optional[Dict[str,</span> <span class="pre">qcportal.record_models.NativeFile]])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.owner_group" title="qcportal.record_models.BaseRecord.owner_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owner_group</span> <span class="pre">(Optional[str])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.owner_user" title="qcportal.record_models.BaseRecord.owner_user"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owner_user</span> <span class="pre">(Optional[str])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.properties" title="qcportal.record_models.BaseRecord.properties"><code class="xref py py-obj docutils literal notranslate"><span class="pre">properties</span> <span class="pre">(Optional[Dict[str,</span> <span class="pre">Any]])</span></code></a></p></li>
@@ -1080,7 +1080,6 @@ lots of subrecords of different types (such as a <a class="reference internal" h
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Names of entries to fetch. If None, fetch all entries</p></li>
-<li><p><strong>include</strong> – Additional fields/data to include when fetching the entry</p></li>
 <li><p><strong>force_refetch</strong> (<em>bool</em>) – If true, fetch data from the server even if it already exists locally</p></li>
 </ul>
 </dd>

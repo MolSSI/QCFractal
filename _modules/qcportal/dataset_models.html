@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.dataset_models &#8212; QCArchive 0.50b7.post46+g411ac3e7 documentation</title>
+    <title>qcportal.dataset_models &#8212; QCArchive 0.50b7.post52+gdcdbd261 documentation</title>
   
   
   
@@ -418,6 +418,7 @@ document.write(`
   <h1>Source code for qcportal.dataset_models</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">ClassVar</span>
 
@@ -427,11 +428,11 @@ document.write(`
 <span class="kn">from</span> <span class="nn">qcelemental.models.types</span> <span class="kn">import</span> <span class="n">Array</span>
 <span class="kn">from</span> <span class="nn">tabulate</span> <span class="kn">import</span> <span class="n">tabulate</span>
 
-<span class="kn">from</span> <span class="nn">qcportal.base_models</span> <span class="kn">import</span> <span class="n">RestModelBase</span><span class="p">,</span> <span class="n">validate_list_to_single</span>
+<span class="kn">from</span> <span class="nn">qcportal.base_models</span> <span class="kn">import</span> <span class="n">RestModelBase</span><span class="p">,</span> <span class="n">validate_list_to_single</span><span class="p">,</span> <span class="n">CommonBulkGetBody</span>
 <span class="kn">from</span> <span class="nn">qcportal.dataset_view</span> <span class="kn">import</span> <span class="n">DatasetViewWrapper</span>
 <span class="kn">from</span> <span class="nn">qcportal.metadata_models</span> <span class="kn">import</span> <span class="n">DeleteMetadata</span>
 <span class="kn">from</span> <span class="nn">qcportal.record_models</span> <span class="kn">import</span> <span class="n">PriorityEnum</span><span class="p">,</span> <span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="n">BaseRecord</span>
-<span class="kn">from</span> <span class="nn">qcportal.utils</span> <span class="kn">import</span> <span class="n">make_list</span>
+<span class="kn">from</span> <span class="nn">qcportal.utils</span> <span class="kn">import</span> <span class="n">make_list</span><span class="p">,</span> <span class="n">chunk_list</span>
 
 
 <span class="k">class</span> <span class="nc">Citation</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
@@ -864,8 +865,6 @@ document.write(`
 <span class="sd">        ----------</span>
 <span class="sd">        entry_names</span>
 <span class="sd">            Names of entries to fetch. If None, fetch all entries</span>
-<span class="sd">        include</span>
-<span class="sd">            Additional fields/data to include when fetching the entry</span>
 <span class="sd">        force_refetch</span>
 <span class="sd">            If true, fetch data from the server even if it already exists locally</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -887,12 +886,9 @@ document.write(`
         <span class="k">if</span> <span class="ow">not</span> <span class="n">force_refetch</span><span class="p">:</span>
             <span class="n">entry_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">entry_names</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">entries_</span><span class="p">]</span>
 
-        <span class="n">fetch_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_dataset_entries&quot;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span>
-        <span class="n">n_entries</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">entry_names</span><span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">start_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_entries</span><span class="p">,</span> <span class="n">fetch_limit</span><span class="p">):</span>
-            <span class="n">entries_batch</span> <span class="o">=</span> <span class="n">entry_names</span><span class="p">[</span><span class="n">start_idx</span> <span class="p">:</span> <span class="n">start_idx</span> <span class="o">+</span> <span class="n">fetch_limit</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_internal_fetch_entries</span><span class="p">(</span><span class="n">entries_batch</span><span class="p">)</span></div>
+        <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_dataset_entries&quot;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span>
+        <span class="k">for</span> <span class="n">entry_names_batch</span> <span class="ow">in</span> <span class="n">chunk_list</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_internal_fetch_entries</span><span class="p">(</span><span class="n">entry_names_batch</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BaseDataset.get_entry"><a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.get_entry">[docs]</a>    <span class="k">def</span> <span class="nf">get_entry</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -954,26 +950,23 @@ document.write(`
                     <span class="k">yield</span> <span class="n">entry</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Fetch from server</span>
-            <span class="n">fetch_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_dataset_entries&quot;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span>
-            <span class="n">n_entries</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">entry_names</span><span class="p">)</span>
+            <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_dataset_entries&quot;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">entries_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">entries_</span> <span class="o">=</span> <span class="p">{}</span>
 
-            <span class="k">for</span> <span class="n">start_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_entries</span><span class="p">,</span> <span class="n">fetch_limit</span><span class="p">):</span>
-                <span class="n">names_batch</span> <span class="o">=</span> <span class="n">entry_names</span><span class="p">[</span><span class="n">start_idx</span> <span class="p">:</span> <span class="n">start_idx</span> <span class="o">+</span> <span class="n">fetch_limit</span><span class="p">]</span>
-
+            <span class="k">for</span> <span class="n">entry_names_batch</span> <span class="ow">in</span> <span class="n">chunk_list</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
                 <span class="c1"># If forcing refetching, then use the whole batch. Otherwise, strip out</span>
                 <span class="c1"># any existing entries</span>
                 <span class="k">if</span> <span class="n">force_refetch</span><span class="p">:</span>
-                    <span class="n">names_tofetch</span> <span class="o">=</span> <span class="n">names_batch</span>
+                    <span class="n">names_tofetch</span> <span class="o">=</span> <span class="n">entry_names_batch</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">names_tofetch</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">names_batch</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">entries_</span><span class="p">]</span>
+                    <span class="n">names_tofetch</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">entry_names_batch</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">entries_</span><span class="p">]</span>
 
                 <span class="bp">self</span><span class="o">.</span><span class="n">_internal_fetch_entries</span><span class="p">(</span><span class="n">names_tofetch</span><span class="p">)</span>
 
                 <span class="c1"># Loop over the whole batch (not just what we fetched)</span>
-                <span class="k">for</span> <span class="n">entry_name</span> <span class="ow">in</span> <span class="n">names_batch</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">entry_name</span> <span class="ow">in</span> <span class="n">entry_names_batch</span><span class="p">:</span>
                     <span class="n">entry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">entries_</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">entry_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
                     <span class="k">if</span> <span class="n">entry</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1065,15 +1058,17 @@ document.write(`
         <span class="n">record_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
             <span class="s2">&quot;post&quot;</span><span class="p">,</span>
             <span class="sa">f</span><span class="s2">&quot;v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/records/bulkFetch&quot;</span><span class="p">,</span>
-            <span class="n">List</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_record_item_type</span><span class="p">],</span>
+            <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span>  <span class="c1"># (entry_name, spec_name, record_id)</span>
             <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
         <span class="p">)</span>
 
+        <span class="n">record_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">record_info</span><span class="p">]</span>
+        <span class="n">records</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="n">record_ids</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="n">include</span><span class="p">)</span>
+
         <span class="c1"># Update the locally-stored records</span>
-        <span class="k">for</span> <span class="n">rec_item</span> <span class="ow">in</span> <span class="n">record_info</span><span class="p">:</span>
-            <span class="n">rec_item</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">_handle_includes</span><span class="p">(</span><span class="n">include</span><span class="p">)</span>
-            <span class="n">rec_item</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">record_map_</span><span class="p">[(</span><span class="n">rec_item</span><span class="o">.</span><span class="n">entry_name</span><span class="p">,</span> <span class="n">rec_item</span><span class="o">.</span><span class="n">specification_name</span><span class="p">)]</span> <span class="o">=</span> <span class="n">rec_item</span><span class="o">.</span><span class="n">record</span>
+        <span class="k">for</span> <span class="n">rec_item</span><span class="p">,</span> <span class="n">rec</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">record_info</span><span class="p">,</span> <span class="n">records</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="n">rec_item</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">rec</span><span class="o">.</span><span class="n">id</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">record_map_</span><span class="p">[(</span><span class="n">rec_item</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">rec_item</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span> <span class="o">=</span> <span class="n">rec</span>
 
     <span class="k">def</span> <span class="nf">_internal_update_records</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -1094,8 +1089,6 @@ document.write(`
 <span class="sd">            Names of the entries whose records to update. If None, fetch all entries</span>
 <span class="sd">        specification_names</span>
 <span class="sd">            Names of the specifications whose records to update. If None, fetch all specifications</span>
-<span class="sd">        status</span>
-<span class="sd">            Fetch only records with these statuses (only records with the given status on the server will be fetched)</span>
 <span class="sd">        include</span>
 <span class="sd">            Additional fields/data to include when fetch the entry</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1103,40 +1096,54 @@ document.write(`
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">entry_names</span> <span class="ow">and</span> <span class="n">specification_names</span><span class="p">):</span>
             <span class="k">return</span>
 
-        <span class="c1"># Get modified_on field of all the records</span>
-        <span class="n">body</span> <span class="o">=</span> <span class="n">DatasetFetchRecordsBody</span><span class="p">(</span>
-            <span class="n">entry_names</span><span class="o">=</span><span class="n">entry_names</span><span class="p">,</span>
-            <span class="n">specification_names</span><span class="o">=</span><span class="n">specification_names</span><span class="p">,</span>
-            <span class="n">status</span><span class="o">=</span><span class="n">status</span><span class="p">,</span>
-            <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;modified_on&quot;</span><span class="p">],</span>
-        <span class="p">)</span>
+        <span class="c1"># Get all the record ids that we store that correspond to the entries/specs</span>
+        <span class="n">existing_record_ids</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">entry_name</span><span class="p">,</span> <span class="n">spec_name</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">specification_names</span><span class="p">):</span>
+            <span class="n">existing_rec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_map_</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">entry_name</span><span class="p">,</span> <span class="n">spec_name</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">existing_rec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">existing_record_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">existing_rec</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
 
-        <span class="n">modified_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
-            <span class="s2">&quot;post&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/records/bulkFetch&quot;</span><span class="p">,</span>
-            <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
-            <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="c1"># Do a raw call to the records/bulkGet endpoint. This allows us to only get</span>
+        <span class="c1"># the &#39;modified_on&#39; and &#39;status&#39; fields</span>
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_records&quot;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span>
+        <span class="n">minfo_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">record_id_batch</span> <span class="ow">in</span> <span class="n">chunk_list</span><span class="p">(</span><span class="n">existing_record_ids</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="n">CommonBulkGetBody</span><span class="p">(</span><span class="n">ids</span><span class="o">=</span><span class="n">record_id_batch</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;modified_on&quot;</span><span class="p">,</span> <span class="s2">&quot;status&quot;</span><span class="p">])</span>
+
+            <span class="n">modified_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+                <span class="s2">&quot;post&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;v1/records/bulkGet&quot;</span><span class="p">,</span>
+                <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+                <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Too lazy to look up how pydantic stores datetime, so use pydantic to parse it</span>
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">modified_info</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">status</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">m</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">status</span><span class="p">:</span>
+                    <span class="n">minfo_dict</span><span class="p">[</span><span class="n">m</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">parse_obj_as</span><span class="p">(</span><span class="n">datetime</span><span class="p">,</span> <span class="n">m</span><span class="p">[</span><span class="s2">&quot;modified_on&quot;</span><span class="p">])</span>
 
         <span class="c1"># Which ones need to be updated</span>
         <span class="n">need_updating</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">minfo</span> <span class="ow">in</span> <span class="n">modified_info</span><span class="p">:</span>
-            <span class="n">entry_name</span> <span class="o">=</span> <span class="n">minfo</span><span class="p">[</span><span class="s2">&quot;entry_name&quot;</span><span class="p">]</span>
-            <span class="n">spec_name</span> <span class="o">=</span> <span class="n">minfo</span><span class="p">[</span><span class="s2">&quot;specification_name&quot;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">entry_name</span><span class="p">,</span> <span class="n">spec_name</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">specification_names</span><span class="p">):</span>
             <span class="n">existing_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_map_</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">entry_name</span><span class="p">,</span> <span class="n">spec_name</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
 
-            <span class="c1"># Too lazy to look up how pydantic stores datetime, so use pydantic to parse it</span>
-            <span class="n">minfo_mtime</span> <span class="o">=</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">parse_obj_as</span><span class="p">(</span><span class="n">datetime</span><span class="p">,</span> <span class="n">minfo</span><span class="p">[</span><span class="s2">&quot;record&quot;</span><span class="p">][</span><span class="s2">&quot;modified_on&quot;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">existing_record</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
 
-            <span class="c1"># It&#39;s expected that existing_record is not None (ie, that the record had been downloaded already)</span>
-            <span class="c1"># But handle this edge case anyway</span>
-            <span class="k">if</span> <span class="n">existing_record</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">existing_record</span><span class="o">.</span><span class="n">modified_on</span> <span class="o">&lt;</span> <span class="n">minfo_mtime</span><span class="p">:</span>
+            <span class="n">server_rec_mtime</span> <span class="o">=</span> <span class="n">minfo_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">existing_record</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+            <span class="c1"># Maybe mismatched status</span>
+            <span class="k">if</span> <span class="n">server_rec_mtime</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">existing_record</span><span class="o">.</span><span class="n">modified_on</span> <span class="o">&lt;</span> <span class="n">server_rec_mtime</span><span class="p">:</span>
                 <span class="n">need_updating</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">entry_name</span><span class="p">,</span> <span class="n">spec_name</span><span class="p">))</span>
 
         <span class="c1"># Go via one spec at a time</span>
         <span class="k">for</span> <span class="n">spec_name</span> <span class="ow">in</span> <span class="n">specification_names</span><span class="p">:</span>
             <span class="n">entries_to_update</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">need_updating</span> <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">spec_name</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_internal_fetch_records</span><span class="p">(</span><span class="n">entries_to_update</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">entries_to_update</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_internal_fetch_records</span><span class="p">(</span><span class="n">entries_to_update</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
 
 <div class="viewcode-block" id="BaseDataset.fetch_records"><a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.fetch_records">[docs]</a>    <span class="k">def</span> <span class="nf">fetch_records</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -1194,26 +1201,24 @@ document.write(`
         <span class="c1"># Assume there are many more entries than specifications, and that</span>
         <span class="c1"># everything has been submitted</span>
         <span class="c1"># Divide by 4 to go easy on the server</span>
-        <span class="n">fetch_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_records&quot;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span>
+        <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_records&quot;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span>
 
         <span class="n">n_entries</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">entry_names</span><span class="p">)</span>
 
         <span class="c1"># Do all entries for one spec. This simplifies things, especially with handling</span>
         <span class="c1"># existing or update-able records</span>
         <span class="k">for</span> <span class="n">spec_name</span> <span class="ow">in</span> <span class="n">specification_names</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">start_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_entries</span><span class="p">,</span> <span class="n">fetch_limit</span><span class="p">):</span>
-                <span class="n">entries_batch</span> <span class="o">=</span> <span class="n">entry_names</span><span class="p">[</span><span class="n">start_idx</span> <span class="p">:</span> <span class="n">start_idx</span> <span class="o">+</span> <span class="n">fetch_limit</span><span class="p">]</span>
-
+            <span class="k">for</span> <span class="n">entry_names_batch</span> <span class="ow">in</span> <span class="n">chunk_list</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
                 <span class="c1"># Handle existing records that need to be updated</span>
                 <span class="k">if</span> <span class="n">fetch_updated</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_refetch</span><span class="p">:</span>
-                    <span class="n">existing_batch</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">entries_batch</span> <span class="k">if</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">spec_name</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_map_</span><span class="p">]</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_internal_update_records</span><span class="p">(</span><span class="n">existing_batch</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">],</span> <span class="n">status</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_internal_update_records</span><span class="p">(</span><span class="n">entry_names_batch</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">],</span> <span class="n">status</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
 
                 <span class="c1"># Prune records that already exist, and then fetch them</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">force_refetch</span><span class="p">:</span>
-                    <span class="n">entries_batch</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">entries_batch</span> <span class="k">if</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">spec_name</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_map_</span><span class="p">]</span>
+                    <span class="n">entry_names_batch</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">entry_names_batch</span> <span class="k">if</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">spec_name</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_map_</span><span class="p">]</span>
 
-                <span class="bp">self</span><span class="o">.</span><span class="n">_internal_fetch_records</span><span class="p">(</span><span class="n">entries_batch</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">],</span> <span class="n">status</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
+                <span class="k">if</span> <span class="n">entry_names_batch</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_internal_fetch_records</span><span class="p">(</span><span class="n">entry_names_batch</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">],</span> <span class="n">status</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BaseDataset.get_record"><a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.get_record">[docs]</a>    <span class="k">def</span> <span class="nf">get_record</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -1601,7 +1606,6 @@ document.write(`
 
 <span class="k">class</span> <span class="nc">DatasetFetchEntryBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
     <span class="n">names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
-    <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">missing_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 
 
@@ -1628,7 +1632,6 @@ document.write(`
     <span class="n">entry_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">specification_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
 
 
 <span class="k">class</span> <span class="nc">DatasetSubmitBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
