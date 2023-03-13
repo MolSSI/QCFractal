@@ -919,7 +919,7 @@ def main():
         if settings.cluster.scheduler.lower() != "local":
             common_parsl_provider_construct["walltime"] = settings.cluster.walltime
             common_parsl_provider_construct["scheduler_options"] = (
-                f"{provider_header} " + f"\n{provider_header} ".join(scheduler_opts) + "\n",
+                f"{provider_header} " + f"\n{provider_header} ".join(scheduler_opts) + "\n"
             )
 
         if settings.cluster.scheduler.lower() == "slurm" and "cores_per_node" not in common_parsl_provider_construct:
