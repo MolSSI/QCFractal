@@ -4,7 +4,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select, delete, func, union
-from sqlalchemy.orm import load_only, lazyload, joinedload, selectinload, with_polymorphic
+from sqlalchemy.orm import load_only, lazyload, joinedload, with_polymorphic
 
 from qcfractal.components.dataset_db_models import BaseDatasetORM, ContributedValuesORM
 from qcfractal.components.record_db_models import BaseRecordORM
@@ -833,13 +833,11 @@ class BaseDatasetSocket:
         entry_names: Optional[Iterable[str]] = None,
         specification_names: Optional[Iterable[str]] = None,
         status: Optional[Iterable[RecordStatusEnum]] = None,
-        include: Optional[Iterable[str]] = None,
-        exclude: Optional[Iterable[str]] = None,
         *,
         session: Optional[Session] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> List[Tuple[str, str, int]]:
         """
-        Obtain records for a dataset from the database
+        Obtain record ids for a dataset from the database
 
         The returned list is in an indeterminant order
 
@@ -853,10 +851,6 @@ class BaseDatasetSocket:
             Fetch records belonging to these specifications. If None, fetch records belonging to any specification.
         status
             Fetch records whose status is in the given list (or other iterable) of statuses
-        include
-            Which fields of the result to return. Default is to return all fields.
-        exclude
-            Remove these fields from the return. Default is to return all fields.
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -864,7 +858,7 @@ class BaseDatasetSocket:
         Returns
         -------
         :
-            Entries matching the given criteria
+            A list of record information in the form (entry_name, specification_name, record_id)
         """
 
         stmt = select(self.record_item_orm)
@@ -878,15 +872,9 @@ class BaseDatasetSocket:
             stmt = stmt.join(self.record_item_orm.record)
             stmt = stmt.where(self.record_orm.status.in_(status))
 
-        query_opts = []
-        if include or exclude:
-            query_opts = get_query_proj_options(self.record_orm, include, exclude)
-
-        stmt = stmt.options(selectinload(self.record_item_orm.record).options(*query_opts))
-
         with self.root_socket.optional_session(session, True) as session:
-            records = session.execute(stmt).scalars().all()
-            return [x.model_dict() for x in records]
+            record_items = session.execute(stmt).scalars().all()
+            return [(x.entry_name, x.specification_name, x.record_id) for x in record_items]
 
     def remove_records(
         self,

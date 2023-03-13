@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 from datetime import datetime
 from typing import Optional, Dict, Any, List, Iterable, Type, Tuple, Union, Callable, ClassVar
 
@@ -9,11 +10,11 @@ from pydantic import BaseModel, Extra, validator, PrivateAttr, Field
 from qcelemental.models.types import Array
 from tabulate import tabulate
 
-from qcportal.base_models import RestModelBase, validate_list_to_single
+from qcportal.base_models import RestModelBase, validate_list_to_single, CommonBulkGetBody
 from qcportal.dataset_view import DatasetViewWrapper
 from qcportal.metadata_models import DeleteMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, BaseRecord
-from qcportal.utils import make_list
+from qcportal.utils import make_list, chunk_list
 
 
 class Citation(BaseModel):
@@ -446,8 +447,6 @@ class BaseDataset(BaseModel):
         ----------
         entry_names
             Names of entries to fetch. If None, fetch all entries
-        include
-            Additional fields/data to include when fetching the entry
         force_refetch
             If true, fetch data from the server even if it already exists locally
         """
@@ -469,12 +468,9 @@ class BaseDataset(BaseModel):
         if not force_refetch:
             entry_names = [x for x in entry_names if x not in self.entries_]
 
-        fetch_limit: int = self._client.api_limits["get_dataset_entries"] // 4
-        n_entries = len(entry_names)
-
-        for start_idx in range(0, n_entries, fetch_limit):
-            entries_batch = entry_names[start_idx : start_idx + fetch_limit]
-            self._internal_fetch_entries(entries_batch)
+        batch_size: int = self._client.api_limits["get_dataset_entries"] // 4
+        for entry_names_batch in chunk_list(entry_names, batch_size):
+            self._internal_fetch_entries(entry_names_batch)
 
     def get_entry(
         self,
@@ -536,26 +532,23 @@ class BaseDataset(BaseModel):
                     yield entry
         else:
             # Fetch from server
-            fetch_limit: int = self._client.api_limits["get_dataset_entries"] // 4
-            n_entries = len(entry_names)
+            batch_size: int = self._client.api_limits["get_dataset_entries"] // 4
 
             if self.entries_ is None:
                 self.entries_ = {}
 
-            for start_idx in range(0, n_entries, fetch_limit):
-                names_batch = entry_names[start_idx : start_idx + fetch_limit]
-
+            for entry_names_batch in chunk_list(entry_names, batch_size):
                 # If forcing refetching, then use the whole batch. Otherwise, strip out
                 # any existing entries
                 if force_refetch:
-                    names_tofetch = names_batch
+                    names_tofetch = entry_names_batch
                 else:
-                    names_tofetch = [x for x in names_batch if x not in self.entries_]
+                    names_tofetch = [x for x in entry_names_batch if x not in self.entries_]
 
                 self._internal_fetch_entries(names_tofetch)
 
                 # Loop over the whole batch (not just what we fetched)
-                for entry_name in names_batch:
+                for entry_name in entry_names_batch:
                     entry = self.entries_.get(entry_name, None)
 
                     if entry is not None:
@@ -647,15 +640,17 @@ class BaseDataset(BaseModel):
         record_info = self._client.make_request(
             "post",
             f"v1/datasets/{self.dataset_type}/{self.id}/records/bulkFetch",
-            List[self._record_item_type],
+            List[Tuple[str, str, int]],  # (entry_name, spec_name, record_id)
             body=body,
         )
 
+        record_ids = [x[2] for x in record_info]
+        records = self._client.get_records(record_ids, include=include)
+
         # Update the locally-stored records
-        for rec_item in record_info:
-            rec_item.record._handle_includes(include)
-            rec_item.record.propagate_client(self._client)
-            self.record_map_[(rec_item.entry_name, rec_item.specification_name)] = rec_item.record
+        for rec_item, rec in zip(record_info, records):
+            assert rec_item[2] == rec.id
+            self.record_map_[(rec_item[0], rec_item[1])] = rec
 
     def _internal_update_records(
         self,
@@ -676,8 +671,6 @@ class BaseDataset(BaseModel):
             Names of the entries whose records to update. If None, fetch all entries
         specification_names
             Names of the specifications whose records to update. If None, fetch all specifications
-        status
-            Fetch only records with these statuses (only records with the given status on the server will be fetched)
         include
             Additional fields/data to include when fetch the entry
         """
@@ -685,40 +678,54 @@ class BaseDataset(BaseModel):
         if not (entry_names and specification_names):
             return
 
-        # Get modified_on field of all the records
-        body = DatasetFetchRecordsBody(
-            entry_names=entry_names,
-            specification_names=specification_names,
-            status=status,
-            include=["modified_on"],
-        )
+        # Get all the record ids that we store that correspond to the entries/specs
+        existing_record_ids = []
+        for entry_name, spec_name in itertools.product(entry_names, specification_names):
+            existing_rec = self.record_map_.get((entry_name, spec_name), None)
+            if existing_rec is not None:
+                existing_record_ids.append(existing_rec.id)
 
-        modified_info = self._client.make_request(
-            "post",
-            f"v1/datasets/{self.dataset_type}/{self.id}/records/bulkFetch",
-            List[Dict[str, Any]],
-            body=body,
-        )
+        # Do a raw call to the records/bulkGet endpoint. This allows us to only get
+        # the 'modified_on' and 'status' fields
+        batch_size = self._client.api_limits["get_records"] // 4
+        minfo_dict = {}
+        for record_id_batch in chunk_list(existing_record_ids, batch_size):
+            body = CommonBulkGetBody(ids=record_id_batch, include=["modified_on", "status"])
+
+            modified_info = self._client.make_request(
+                "post",
+                f"v1/records/bulkGet",
+                List[Dict[str, Any]],
+                body=body,
+            )
+
+            # Too lazy to look up how pydantic stores datetime, so use pydantic to parse it
+            for m in modified_info:
+                if status is None or m["status"] in status:
+                    minfo_dict[m["id"]] = pydantic.parse_obj_as(datetime, m["modified_on"])
 
         # Which ones need to be updated
         need_updating = []
-        for minfo in modified_info:
-            entry_name = minfo["entry_name"]
-            spec_name = minfo["specification_name"]
+        for entry_name, spec_name in itertools.product(entry_names, specification_names):
             existing_record = self.record_map_.get((entry_name, spec_name), None)
 
-            # Too lazy to look up how pydantic stores datetime, so use pydantic to parse it
-            minfo_mtime = pydantic.parse_obj_as(datetime, minfo["record"]["modified_on"])
+            if existing_record is None:
+                continue
 
-            # It's expected that existing_record is not None (ie, that the record had been downloaded already)
-            # But handle this edge case anyway
-            if existing_record is None or existing_record.modified_on < minfo_mtime:
+            server_rec_mtime = minfo_dict.get(existing_record.id, None)
+
+            # Maybe mismatched status
+            if server_rec_mtime is None:
+                continue
+
+            if existing_record.modified_on < server_rec_mtime:
                 need_updating.append((entry_name, spec_name))
 
         # Go via one spec at a time
         for spec_name in specification_names:
             entries_to_update = [x[0] for x in need_updating if x[1] == spec_name]
-            self._internal_fetch_records(entries_to_update, [spec_name], None, include)
+            if entries_to_update:
+                self._internal_fetch_records(entries_to_update, [spec_name], None, include)
 
     def fetch_records(
         self,
@@ -776,26 +783,24 @@ class BaseDataset(BaseModel):
         # Assume there are many more entries than specifications, and that
         # everything has been submitted
         # Divide by 4 to go easy on the server
-        fetch_limit: int = self._client.api_limits["get_records"] // 4
+        batch_size: int = self._client.api_limits["get_records"] // 4
 
         n_entries = len(entry_names)
 
         # Do all entries for one spec. This simplifies things, especially with handling
         # existing or update-able records
         for spec_name in specification_names:
-            for start_idx in range(0, n_entries, fetch_limit):
-                entries_batch = entry_names[start_idx : start_idx + fetch_limit]
-
+            for entry_names_batch in chunk_list(entry_names, batch_size):
                 # Handle existing records that need to be updated
                 if fetch_updated and not force_refetch:
-                    existing_batch = [x for x in entries_batch if (x, spec_name) in self.record_map_]
-                    self._internal_update_records(existing_batch, [spec_name], status, include)
+                    self._internal_update_records(entry_names_batch, [spec_name], status, include)
 
                 # Prune records that already exist, and then fetch them
                 if not force_refetch:
-                    entries_batch = [x for x in entries_batch if (x, spec_name) not in self.record_map_]
+                    entry_names_batch = [x for x in entry_names_batch if (x, spec_name) not in self.record_map_]
 
-                self._internal_fetch_records(entries_batch, [spec_name], status, include)
+                if entry_names_batch:
+                    self._internal_fetch_records(entry_names_batch, [spec_name], status, include)
 
     def get_record(
         self,
@@ -1183,7 +1188,6 @@ class DatasetQueryModel(RestModelBase):
 
 class DatasetFetchEntryBody(RestModelBase):
     names: List[str]
-    include: Optional[List[str]] = None
     missing_ok: bool = False
 
 
@@ -1210,7 +1214,6 @@ class DatasetFetchRecordsBody(RestModelBase):
     entry_names: List[str]
     specification_names: List[str]
     status: Optional[List[RecordStatusEnum]] = None
-    include: Optional[List[str]] = None
 
 
 class DatasetSubmitBody(RestModelBase):

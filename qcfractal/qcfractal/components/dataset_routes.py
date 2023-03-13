@@ -216,7 +216,6 @@ def fetch_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: Data
     return ds_socket.fetch_entries(
         dataset_id,
         entry_names=body_data.names,
-        include=body_data.include,
         missing_ok=body_data.missing_ok,
     )
 
@@ -247,7 +246,6 @@ def fetch_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: Data
         entry_names=body_data.entry_names,
         specification_names=body_data.specification_names,
         status=body_data.status,
-        include=body_data.include,
     )
 
 
