@@ -76,9 +76,10 @@ def upgrade():
         extras = convert_numpy(br.extras)
 
         # Add qcvars from extras (and remove from extras)
-        qcvars = extras.pop("qcvars", {})
-        if qcvars:
-            new_properties.update({k.lower(): v for k, v in qcvars.items()})
+        if extras is not None:
+            qcvars = extras.pop("qcvars", {})
+            if qcvars:
+                new_properties.update({k.lower(): v for k, v in qcvars.items()})
 
         session.execute(
             sa.update(base_table)
