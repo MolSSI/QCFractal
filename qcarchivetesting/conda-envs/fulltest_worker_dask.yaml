@@ -1,8 +1,8 @@
-name: qcarchive
+name: qcarchive-worker
 channels:
-  - defaults
-  - psi4/label/dev
+  - psi4
   - conda-forge
+  - defaults
 
 dependencies:
   - pip
@@ -25,11 +25,8 @@ dependencies:
   - pandas
 
   # Specific codes below
-  - psi4
-
-  # Pins for https://github.com/conda-forge/rdkit-feedstock/issues/111
-  - rdkit==2022.03.5
-  - boost-cpp==1.74.0
+  - psi4>=1.7
+  - rdkit
 
   # Adapter
   - dask-jobqueue>=0.8

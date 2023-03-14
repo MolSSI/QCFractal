@@ -37,7 +37,9 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: ${{ matrix.python-version }}
-          activate-environment: qcarchive-all
+          miniforge-variant: Mambaforge
+          miniforge-version: latest
+          activate-environment: qcarchive-snowflake
           environment-file: qcarchivetesting/conda-envs/fulltest_snowflake.yaml
           auto-activate-base: false
 
@@ -45,6 +47,7 @@ jobs:
         shell: bash -l {0}
         run: |
           conda info
+          conda list
 
       - name: Install All QCArchive packages
         shell: bash -l {0}

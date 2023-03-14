@@ -43,6 +43,8 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: ${{ matrix.python-version }}
+          miniforge-variant: Mambaforge
+          miniforge-version: latest
           activate-environment: qcarchive-server
           environment-file: qcarchive/qcarchivetesting/conda-envs/fulltest_server.yaml
           auto-activate-base: false
@@ -56,6 +58,7 @@ jobs:
         shell: bash -l {0}
         run: |
           conda info
+          conda list
 
       - name: Start the QCFractal server
         shell: bash -l {0}
@@ -73,6 +76,8 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: ${{ matrix.python-version }}
+          miniforge-variant: Mambaforge
+          miniforge-version: latest
           activate-environment: qcarchive-worker
           environment-file: qcarchive/qcarchivetesting/conda-envs/fulltest_worker_${{ matrix.adapter }}.yaml
           auto-activate-base: false
@@ -86,6 +91,7 @@ jobs:
         shell: bash -l {0}
         run: |
           conda info
+          conda list
 
       - name: Start the QCFractalCompute worker
         shell: bash -l {0}
@@ -102,7 +108,9 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: ${{ matrix.python-version }}
-          activate-environment: qcarchive-portal
+          miniforge-variant: Mambaforge
+          miniforge-version: latest
+          activate-environment: qcarchive-qcportal
           environment-file: qcarchive/qcarchivetesting/conda-envs/fulltest_qcportal.yaml
           auto-activate-base: false
 
@@ -116,6 +124,7 @@ jobs:
         shell: bash -l {0}
         run: |
           conda info
+          conda list
 
 
       #################################################

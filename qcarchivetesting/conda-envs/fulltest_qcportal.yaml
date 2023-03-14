@@ -1,4 +1,4 @@
-name: qcarchive
+name: qcarchive-qcportal
 channels:
   - defaults
   - conda-forge
