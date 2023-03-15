@@ -702,14 +702,16 @@ class RecordSocket:
             stmt = stmt.where(*and_query)
 
             if query_data.include_metadata:
-                n_found = get_count(session, stmt)
+                count_stmt = stmt.order_by(orm_type.id.desc()).distinct(orm_type.id)
+                n_found = get_count(session, count_stmt)
 
             if query_data.cursor is not None:
                 stmt = stmt.where(orm_type.id < query_data.cursor)
 
             stmt = stmt.order_by(orm_type.id.desc())
             stmt = stmt.limit(query_data.limit)
-            record_ids = session.execute(stmt).scalars().unique().all()
+            stmt = stmt.distinct(orm_type.id)
+            record_ids = session.execute(stmt).scalars().all()
 
         if query_data.include_metadata:
             meta = QueryMetadata(n_found=n_found)

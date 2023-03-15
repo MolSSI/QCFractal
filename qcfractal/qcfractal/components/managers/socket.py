@@ -316,13 +316,15 @@ class ManagerSocket:
             stmt = stmt.options(*proj_options)
 
             if query_data.include_metadata:
-                n_found = get_count(session, stmt)
+                count_stmt = stmt.order_by(ComputeManagerORM.id.desc()).distinct(ComputeManagerORM.id)
+                n_found = get_count(session, count_stmt)
 
             if query_data.cursor is not None:
                 stmt = stmt.where(ComputeManagerORM.id < query_data.cursor)
 
             stmt = stmt.order_by(ComputeManagerORM.id.desc())
             stmt = stmt.limit(query_data.limit)
+            stmt = stmt.distinct(ComputeManagerORM.id)
 
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.model_dict() for x in results]

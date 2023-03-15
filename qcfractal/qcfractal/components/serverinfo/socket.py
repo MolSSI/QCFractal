@@ -340,16 +340,19 @@ class ServerInfoSocket:
             and_query.append(or_(UserIDMapSubquery.username.in_(str_names), UserIDMapSubquery.id.in_(int_ids)))
 
         with self.root_socket.optional_session(session, True) as session:
-            stmt = stmt.where(and_(True, *and_query)).order_by(AccessLogORM.access_date.desc())
+            stmt = stmt.where(and_(True, *and_query))
             stmt = stmt.options(*proj_options)
 
             if query_data.include_metadata:
-                n_found = get_count(session, stmt)
+                count_stmt = stmt.distinct(AccessLogORM.id)
+                n_found = get_count(session, count_stmt)
 
             if query_data.cursor is not None:
                 stmt = stmt.where(AccessLogORM.id < query_data.cursor)
 
+            stmt = stmt.order_by(AccessLogORM.id.desc())
             stmt = stmt.limit(query_data.limit)
+            stmt = stmt.distinct(AccessLogORM.id)
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.model_dict() for x in results]
 
@@ -504,15 +507,18 @@ class ServerInfoSocket:
             and_query.append(or_(UserIDMapSubquery.username.in_(str_names), UserIDMapSubquery.id.in_(int_ids)))
 
         with self.root_socket.optional_session(session, True) as session:
-            stmt = stmt.where(and_(True, *and_query)).order_by(InternalErrorLogORM.error_date.desc())
+            stmt = stmt.where(and_(True, *and_query))
 
             if query_data.include_metadata:
-                n_found = get_count(session, stmt)
+                count_stmt = stmt.distinct(InternalErrorLogORM.id)
+                n_found = get_count(session, count_stmt)
 
             if query_data.cursor is not None:
                 stmt = stmt.where(InternalErrorLogORM.id < query_data.cursor)
 
+            stmt = stmt.order_by(InternalErrorLogORM.id.desc())
             stmt = stmt.limit(query_data.limit)
+            stmt = stmt.distinct(InternalErrorLogORM.id)
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.model_dict() for x in results]
 
@@ -557,15 +563,18 @@ class ServerInfoSocket:
             and_query.append(ServerStatsLogORM.timestamp >= query_data.after)
 
         with self.root_socket.optional_session(session, True) as session:
-            stmt = select(ServerStatsLogORM).filter(and_(True, *and_query)).order_by(ServerStatsLogORM.timestamp.desc())
+            stmt = select(ServerStatsLogORM).filter(and_(True, *and_query))
 
             if query_data.include_metadata:
-                n_found = get_count(session, stmt)
+                count_stmt = stmt.distinct(ServerStatsLogORM.id)
+                n_found = get_count(session, count_stmt)
 
             if query_data.cursor is not None:
                 stmt = stmt.where(ServerStatsLogORM.id < query_data.cursor)
 
+            stmt = stmt.order_by(ServerStatsLogORM.id.desc())
             stmt = stmt.limit(query_data.limit)
+            stmt = stmt.distinct(ServerStatsLogORM.id)
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.model_dict() for x in results]
 

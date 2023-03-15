@@ -263,13 +263,15 @@ class MoleculeSocket:
             stmt = select(MoleculeORM.id).where(and_(True, *and_query))
 
             if query_data.include_metadata:
-                n_found = get_count(session, stmt)
+                count_stmt = stmt.order_by(MoleculeORM.id.desc()).distinct(MoleculeORM.id)
+                n_found = get_count(session, count_stmt)
 
             if query_data.cursor is not None:
                 stmt = stmt.where(MoleculeORM.id < query_data.cursor)
 
             stmt = stmt.order_by(MoleculeORM.id.desc())
             stmt = stmt.limit(query_data.limit)
+            stmt = stmt.distinct(MoleculeORM.id)
             molecule_ids = session.execute(stmt).scalars().all()
 
         if query_data.include_metadata:

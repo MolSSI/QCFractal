@@ -241,13 +241,15 @@ class InternalJobSocket:
             stmt = stmt.options(*proj_options)
 
             if query_data.include_metadata:
-                n_found = get_count(session, stmt)
+                count_stmt = stmt.order_by(InternalJobORM.id.desc()).distinct(InternalJobORM.id)
+                n_found = get_count(session, count_stmt)
 
             if query_data.cursor is not None:
                 stmt = stmt.where(InternalJobORM.id < query_data.cursor)
 
             stmt = stmt.order_by(InternalJobORM.id.desc())
             stmt = stmt.limit(query_data.limit)
+            stmt = stmt.distinct(InternalJobORM.id)
 
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.model_dict() for x in results]

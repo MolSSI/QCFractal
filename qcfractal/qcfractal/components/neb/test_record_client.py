@@ -246,6 +246,10 @@ def test_neb_client_query(snowflake_client: PortalClient, storage_socket: SQLAlc
     query_res = snowflake_client.query_nebs(molecule_id=mol_ids[1])
     assert query_res._current_meta.n_found == 4
 
+    # Multiple molecules that belong to the same NEB calculation
+    query_res = snowflake_client.query_nebs(molecule_id=mol_ids[1:4])
+    assert query_res._current_meta.n_found == 4
+
     query_res = snowflake_client.query_nebs(molecule_id=[mol_ids[10]])
     assert query_res._current_meta.n_found == 4
 
