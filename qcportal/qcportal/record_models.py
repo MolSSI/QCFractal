@@ -185,6 +185,18 @@ class ComputeHistory(BaseModel):
         else:
             return o.data
 
+    @property
+    def stdout(self) -> Any:
+        return self.get_output("stdout")
+
+    @property
+    def stderr(self) -> Any:
+        return self.get_output("stderr")
+
+    @property
+    def error(self) -> Any:
+        return self.get_output("error")
+
 
 class NativeFile(BaseModel):
     """
