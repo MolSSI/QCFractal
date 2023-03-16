@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.dataset_models &#8212; QCArchive 0.50b8.post5+g6dac14ee documentation</title>
+    <title>qcportal.dataset_models &#8212; QCArchive 0.50b8.post7+gb65c4dba documentation</title>
   
   
   
@@ -1202,8 +1202,6 @@ document.write(`
         <span class="c1"># everything has been submitted</span>
         <span class="c1"># Divide by 4 to go easy on the server</span>
         <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_records&quot;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span>
-
-        <span class="n">n_entries</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">entry_names</span><span class="p">)</span>
 
         <span class="c1"># Do all entries for one spec. This simplifies things, especially with handling</span>
         <span class="c1"># existing or update-able records</span>
