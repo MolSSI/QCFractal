@@ -785,8 +785,6 @@ class BaseDataset(BaseModel):
         # Divide by 4 to go easy on the server
         batch_size: int = self._client.api_limits["get_records"] // 4
 
-        n_entries = len(entry_names)
-
         # Do all entries for one spec. This simplifies things, especially with handling
         # existing or update-able records
         for spec_name in specification_names:
