@@ -24,9 +24,9 @@ class AccessLogORM(BaseORM):
     access_type = Column(String, nullable=False)
     full_uri = Column(String, nullable=True)
 
-    request_duration = Column(Float)
-    request_bytes = Column(BigInteger)
-    response_bytes = Column(BigInteger)
+    request_duration = Column(Float, nullable=False)
+    request_bytes = Column(BigInteger, nullable=False)
+    response_bytes = Column(BigInteger, nullable=False)
 
     user_id = Column(Integer, ForeignKey(UserORM.id), nullable=True)
 

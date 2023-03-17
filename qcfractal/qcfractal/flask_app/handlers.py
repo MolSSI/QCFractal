@@ -69,12 +69,12 @@ def after_request_func(response: Response):
 
         log["user_agent"] = request.headers["User-Agent"]
 
-        log["request_bytes"] = g.request_bytes
+        log["request_bytes"] = 0 if g.request_bytes is None else g.request_bytes
         log["request_duration"] = request_duration
         log["user_id"] = g.get("user_id", None)
 
         response_bytes = response.content_length
-        log["response_bytes"] = response_bytes
+        log["response_bytes"] = 0 if response_bytes is None else response_bytes
 
         storage_socket.serverinfo.save_access(log)
         current_app.logger.debug(
