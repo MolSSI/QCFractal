@@ -2,7 +2,19 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select, UniqueConstraint, Index, CheckConstraint, Column, Integer, ForeignKey, String, JSON
+from sqlalchemy import (
+    select,
+    UniqueConstraint,
+    Index,
+    CheckConstraint,
+    Column,
+    Integer,
+    ForeignKey,
+    String,
+    JSON,
+    event,
+    DDL,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship, column_property
 
@@ -101,10 +113,7 @@ class GridoptimizationRecordORM(BaseRecordORM):
 
     starting_grid = Column(JSON)  # tuple
 
-    optimizations = relationship(
-        GridoptimizationOptimizationORM,
-        cascade="all, delete-orphan",
-    )
+    optimizations = relationship(GridoptimizationOptimizationORM, cascade="all, delete-orphan", passive_deletes=True)
 
     __mapper_args__ = {
         "polymorphic_identity": "gridoptimization",
@@ -114,3 +123,17 @@ class GridoptimizationRecordORM(BaseRecordORM):
         # Remove fields not present in the model
         exclude = self.append_exclude(exclude, "specification_id")
         return BaseRecordORM.model_dict(self, exclude)
+
+
+# Delete base record if this record is deleted
+_del_baserecord_trigger = DDL(
+    """
+    CREATE TRIGGER qca_gridoptimization_record_delete_base_tr
+    AFTER DELETE ON gridoptimization_record
+    FOR EACH ROW EXECUTE PROCEDURE qca_base_record_delete();
+    """
+)
+
+event.listen(
+    GridoptimizationRecordORM.__table__, "after_create", _del_baserecord_trigger.execute_if(dialect=("postgresql"))
+)

@@ -114,7 +114,7 @@ class SinglepointRecordORM(BaseRecordORM):
     molecule_id = Column(Integer, ForeignKey(MoleculeORM.id), nullable=False)
     molecule = relationship(MoleculeORM)
 
-    wavefunction = relationship(WavefunctionORM, uselist=False)
+    wavefunction = relationship(WavefunctionORM, uselist=False, cascade="all, delete-orphan", passive_deletes=True)
 
     __table_args__ = (
         Index("ix_singlepoint_record_molecule_id", "molecule_id"),
@@ -141,3 +141,15 @@ event.listen(
     "after_create",
     DDL("ALTER TABLE native_file ALTER COLUMN data SET STORAGE EXTERNAL").execute_if(dialect=("postgresql")),
 )
+
+
+# Delete base record if this record is deleted
+_del_baserecord_trigger = DDL(
+    """
+    CREATE TRIGGER qca_singlepoint_record_delete_base_tr
+    AFTER DELETE ON singlepoint_record
+    FOR EACH ROW EXECUTE PROCEDURE qca_base_record_delete();
+    """
+)
+
+event.listen(SinglepointRecordORM.__table__, "after_create", _del_baserecord_trigger.execute_if(dialect=("postgresql")))

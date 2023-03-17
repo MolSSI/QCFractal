@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, ForeignKey, String, JSON, Index, CheckConstraint, UniqueConstraint
+from sqlalchemy import Column, Integer, ForeignKey, String, JSON, Index, CheckConstraint, UniqueConstraint, event, DDL
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.orm import relationship
@@ -108,6 +108,8 @@ class OptimizationRecordORM(BaseRecordORM):
         OptimizationTrajectoryORM,
         order_by=OptimizationTrajectoryORM.position,
         collection_class=ordering_list("position"),
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     __mapper_args__ = {"polymorphic_identity": "optimization"}
@@ -126,3 +128,17 @@ class OptimizationRecordORM(BaseRecordORM):
     @property
     def required_programs(self) -> Dict[str, Optional[str]]:
         return self.specification.required_programs
+
+
+# Delete base record if this record is deleted
+_del_baserecord_trigger = DDL(
+    """
+    CREATE TRIGGER qca_optimization_record_delete_base_tr
+    AFTER DELETE ON optimization_record
+    FOR EACH ROW EXECUTE PROCEDURE qca_base_record_delete();
+    """
+)
+
+event.listen(
+    OptimizationRecordORM.__table__, "after_create", _del_baserecord_trigger.execute_if(dialect=("postgresql"))
+)

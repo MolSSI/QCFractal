@@ -74,7 +74,7 @@ class NEBDatasetEntryORM(BaseORM):
         lazy="selectin",
     )
 
-    initial_chain_assoc = relationship(NEBDatasetInitialMoleculeORM)
+    initial_chain_assoc = relationship(NEBDatasetInitialMoleculeORM, cascade="all, delete-orphan", passive_deletes=True)
 
     __table_args__ = (
         Index("ix_neb_dataset_entry_dataset_id", "dataset_id"),

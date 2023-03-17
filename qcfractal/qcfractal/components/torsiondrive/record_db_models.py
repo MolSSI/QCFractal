@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select, Column, Integer, ForeignKey, String, UniqueConstraint, Index, CheckConstraint
+from sqlalchemy import select, Column, Integer, ForeignKey, String, UniqueConstraint, Index, CheckConstraint, event, DDL
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.orm import relationship, column_property
@@ -111,13 +111,14 @@ class TorsiondriveRecordORM(BaseRecordORM):
     specification_id = Column(Integer, ForeignKey(TorsiondriveSpecificationORM.id), nullable=False)
     specification = relationship(TorsiondriveSpecificationORM, lazy="selectin")
 
-    initial_molecules = relationship(TorsiondriveInitialMoleculeORM)
+    initial_molecules = relationship(TorsiondriveInitialMoleculeORM, cascade="all, delete-orphan", passive_deletes=True)
 
     optimizations = relationship(
         TorsiondriveOptimizationORM,
         order_by=TorsiondriveOptimizationORM.position,
         collection_class=ordering_list("position"),
         cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     __mapper_args__ = {
@@ -128,3 +129,17 @@ class TorsiondriveRecordORM(BaseRecordORM):
         # Remove fields not present in the model
         exclude = self.append_exclude(exclude, "specification_id")
         return BaseRecordORM.model_dict(self, exclude)
+
+
+# Delete base record if this record is deleted
+_del_baserecord_trigger = DDL(
+    """
+    CREATE TRIGGER qca_torsiondrive_record_delete_base_tr
+    AFTER DELETE ON torsiondrive_record
+    FOR EACH ROW EXECUTE PROCEDURE qca_base_record_delete();
+    """
+)
+
+event.listen(
+    TorsiondriveRecordORM.__table__, "after_create", _del_baserecord_trigger.execute_if(dialect=("postgresql"))
+)

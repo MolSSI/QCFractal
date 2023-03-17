@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, Optional, Iterable, Any
 
-from sqlalchemy import Column, Integer, ForeignKey, String, UniqueConstraint, Index, Boolean
+from sqlalchemy import Column, Integer, ForeignKey, String, UniqueConstraint, Index, Boolean, event, DDL
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.orm import relationship
@@ -99,13 +99,19 @@ class NEBRecordORM(BaseRecordORM):
     specification_id = Column(Integer, ForeignKey(NEBSpecificationORM.id), nullable=False)
     specification = relationship(NEBSpecificationORM, lazy="selectin")
 
-    initial_chain = relationship(NEBInitialchainORM, collection_class=ordering_list("position"))
+    initial_chain = relationship(
+        NEBInitialchainORM,
+        collection_class=ordering_list("position"),
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
     singlepoints = relationship(
         NEBSinglepointsORM,
         order_by=[NEBSinglepointsORM.chain_iteration, NEBSinglepointsORM.position],
         collection_class=ordering_list("position"),
         cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     optimizations = relationship(
@@ -113,6 +119,7 @@ class NEBRecordORM(BaseRecordORM):
         order_by=NEBOptimizationsORM.position,
         collection_class=ordering_list("position"),
         cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     __mapper_args__ = {
@@ -122,3 +129,15 @@ class NEBRecordORM(BaseRecordORM):
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         exclude = self.append_exclude(exclude, "specification_id")
         return BaseRecordORM.model_dict(self, exclude)
+
+
+# Delete base record if this record is deleted
+_del_baserecord_trigger = DDL(
+    """
+    CREATE TRIGGER qca_neb_record_delete_base_tr
+    AFTER DELETE ON neb_record
+    FOR EACH ROW EXECUTE PROCEDURE qca_base_record_delete();
+    """
+)
+
+event.listen(NEBRecordORM.__table__, "after_create", _del_baserecord_trigger.execute_if(dialect=("postgresql")))

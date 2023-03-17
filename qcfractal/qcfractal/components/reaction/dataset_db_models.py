@@ -55,7 +55,9 @@ class ReactionDatasetEntryORM(BaseORM):
     additional_keywords = Column(JSONB, nullable=True)
     attributes = Column(JSONB, nullable=False)
 
-    stoichiometries = relationship(ReactionDatasetStoichiometryORM, lazy="selectin")
+    stoichiometries = relationship(
+        ReactionDatasetStoichiometryORM, lazy="selectin", cascade="all, delete-orphan", passive_deletes=True
+    )
 
     __table_args__ = (
         Index("ix_reaction_dataset_entry_dataset_id", "dataset_id"),

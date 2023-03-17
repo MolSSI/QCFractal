@@ -177,7 +177,10 @@ class RecordComputeHistoryORM(BaseORM):
     provenance = Column(JSON)
 
     outputs = relationship(
-        OutputStoreORM, collection_class=attribute_keyed_dict("output_type"), cascade="all, delete-orphan"
+        OutputStoreORM,
+        collection_class=attribute_keyed_dict("output_type"),
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     __table_args__ = (Index("ix_record_compute_history_record_id", "record_id"),)
@@ -229,28 +232,42 @@ class BaseRecordORM(BaseORM):
     )
 
     # Full compute history
-    compute_history = relationship(RecordComputeHistoryORM, order_by=RecordComputeHistoryORM.modified_on.asc())
+    compute_history = relationship(
+        RecordComputeHistoryORM,
+        order_by=RecordComputeHistoryORM.modified_on.asc(),
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
-    comments = relationship(RecordCommentORM, order_by=RecordCommentORM.timestamp.asc())
+    comments = relationship(
+        RecordCommentORM, order_by=RecordCommentORM.timestamp.asc(), cascade="all, delete-orphan", passive_deletes=True
+    )
 
     # Related task. The foreign key is in the task_queue table
-    task = relationship("TaskQueueORM", back_populates="record", uselist=False)
+    task = relationship(
+        "TaskQueueORM", back_populates="record", uselist=False, cascade="all, delete-orphan", passive_deletes=True
+    )
 
     # Related service. The foreign key is in the service_queue table
-    service = relationship("ServiceQueueORM", back_populates="record", uselist=False)
+    service = relationship(
+        "ServiceQueueORM", back_populates="record", uselist=False, cascade="all, delete-orphan", passive_deletes=True
+    )
 
     # Backed-up info (used for undelete, etc)
     info_backup = relationship(
         RecordInfoBackupORM,
         order_by=RecordInfoBackupORM.modified_on.asc(),
         cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     # Various computed properties and stuff
     properties = Column(JSONB)
 
     # Native files returned from the computation
-    native_files = relationship(NativeFileORM, collection_class=attribute_keyed_dict("name"))
+    native_files = relationship(
+        NativeFileORM, collection_class=attribute_keyed_dict("name"), cascade="all, delete-orphan", passive_deletes=True
+    )
 
     __table_args__ = (
         Index("ix_base_record_status", "status"),
@@ -277,3 +294,22 @@ class BaseRecordORM(BaseORM):
         d["owner_group"] = self.owner_group.groupname if self.owner_group is not None else None
 
         return d
+
+
+# Function for deleting large binary when derived classes are deleted
+_del_baserecord_triggerfunc = DDL(
+    """
+    CREATE OR REPLACE FUNCTION public.qca_base_record_delete()
+    RETURNS trigger
+    LANGUAGE plpgsql
+    AS $_$
+        BEGIN
+          DELETE FROM base_record WHERE base_record.id = OLD.id;
+          RETURN OLD;
+        END
+        $_$
+    ;
+"""
+)
+
+event.listen(BaseRecordORM.__table__, "after_create", _del_baserecord_triggerfunc.execute_if(dialect=("postgresql")))

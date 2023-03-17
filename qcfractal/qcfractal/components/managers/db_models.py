@@ -31,7 +31,7 @@ class ComputeManagerLogORM(BaseORM):
     __tablename__ = "compute_manager_log"
 
     id = Column(Integer, primary_key=True)
-    manager_id = Column(Integer, ForeignKey("compute_manager.id"), nullable=False)
+    manager_id = Column(Integer, ForeignKey("compute_manager.id", ondelete="cascade"), nullable=False)
 
     timestamp = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
 
@@ -84,7 +84,12 @@ class ComputeManagerORM(BaseORM):
     manager_version = Column(String, nullable=False)
     programs = Column(JSON, nullable=False)
 
-    log = relationship(ComputeManagerLogORM, order_by=ComputeManagerLogORM.timestamp.desc())
+    log = relationship(
+        ComputeManagerLogORM,
+        order_by=ComputeManagerLogORM.timestamp.desc(),
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
     __table_args__ = (
         Index("ix_compute_manager_status", "status"),

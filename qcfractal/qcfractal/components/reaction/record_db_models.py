@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, String, Integer, ForeignKey, CheckConstraint, Index, UniqueConstraint
+from sqlalchemy import Column, String, Integer, ForeignKey, CheckConstraint, Index, UniqueConstraint, event, DDL
 from sqlalchemy.dialects.postgresql import DOUBLE_PRECISION, JSONB
 from sqlalchemy.orm import relationship
 
@@ -106,7 +106,7 @@ class ReactionRecordORM(BaseRecordORM):
 
     total_energy = Column(DOUBLE_PRECISION, nullable=True)
 
-    components = relationship(ReactionComponentORM, cascade="all, delete-orphan")
+    components = relationship(ReactionComponentORM, cascade="all, delete-orphan", passive_deletes=True)
 
     __mapper_args__ = {
         "polymorphic_identity": "reaction",
@@ -116,3 +116,15 @@ class ReactionRecordORM(BaseRecordORM):
         # Remove fields not present in the model
         exclude = self.append_exclude(exclude, "specification_id")
         return BaseRecordORM.model_dict(self, exclude)
+
+
+# Delete base record if this record is deleted
+_del_baserecord_trigger = DDL(
+    """
+    CREATE TRIGGER qca_reaction_record_delete_base_tr
+    AFTER DELETE ON reaction_record
+    FOR EACH ROW EXECUTE PROCEDURE qca_base_record_delete();
+    """
+)
+
+event.listen(ReactionRecordORM.__table__, "after_create", _del_baserecord_trigger.execute_if(dialect=("postgresql")))

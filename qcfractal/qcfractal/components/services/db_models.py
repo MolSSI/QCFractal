@@ -70,7 +70,9 @@ class ServiceQueueORM(BaseORM):
 
     service_state = Column(PlainMsgpackExt)
 
-    dependencies = relationship(ServiceDependencyORM, lazy="selectin", cascade="all, delete-orphan")
+    dependencies = relationship(
+        ServiceDependencyORM, lazy="selectin", cascade="all, delete-orphan", passive_deletes=True
+    )
 
     __table_args__ = (
         UniqueConstraint("record_id", name="ux_service_queue_record_id"),

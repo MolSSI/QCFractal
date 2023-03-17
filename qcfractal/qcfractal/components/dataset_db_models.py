@@ -69,7 +69,10 @@ class BaseDatasetORM(BaseORM):
     extras = Column(JSON, nullable=False)
 
     contributed_values = relationship(
-        "ContributedValuesORM", collection_class=attribute_keyed_dict("name"), cascade="all, delete-orphan"
+        "ContributedValuesORM",
+        collection_class=attribute_keyed_dict("name"),
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     __table_args__ = (

@@ -67,7 +67,9 @@ class TorsiondriveDatasetEntryORM(BaseORM):
         MoleculeORM, secondary=TorsiondriveDatasetMoleculeORM.__tablename__, lazy="selectin", viewonly=True
     )
 
-    initial_molecules_assoc = relationship(TorsiondriveDatasetMoleculeORM)
+    initial_molecules_assoc = relationship(
+        TorsiondriveDatasetMoleculeORM, cascade="all, delete-orphan", passive_deletes=True
+    )
 
     __table_args__ = (
         Index("ix_torsiondrive_dataset_entry_dataset_id", "dataset_id"),
