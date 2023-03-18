@@ -89,6 +89,10 @@ class NEBSpecificationORM(BaseORM):
         exclude = self.append_exclude(exclude, "id", "keywords_hash", "singlepoint_specification_id")
         return BaseORM.model_dict(self, exclude)
 
+    @property
+    def short_description(self) -> str:
+        return f"{self.program}~{self.singlepoint_specification.short_description}"
+
 
 class NEBRecordORM(BaseRecordORM):
 
@@ -129,6 +133,11 @@ class NEBRecordORM(BaseRecordORM):
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         exclude = self.append_exclude(exclude, "specification_id")
         return BaseRecordORM.model_dict(self, exclude)
+
+    @property
+    def short_description(self) -> str:
+        n_mols = len(self.initial_chain)
+        return f'{n_mols}*{self.initial_chain[0].molecule.identifiers["molecular_formula"]} {self.specification.short_description}'
 
 
 # Delete base record if this record is deleted

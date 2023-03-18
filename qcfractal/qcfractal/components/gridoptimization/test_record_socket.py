@@ -191,6 +191,15 @@ def test_gridoptimization_socket_run(
     assert time_0 < rec.compute_history[-1].modified_on < time_1
     assert rec.service is None
 
+    desc_info = storage_socket.records.get_short_descriptions(id_1)[0]
+    short_desc = desc_info["description"]
+    assert desc_info["record_type"] == rec.record_type
+    assert desc_info["created_on"] == rec.created_on
+    assert rec.specification.program in short_desc
+    assert rec.specification.optimization_specification.program in short_desc
+    assert rec.specification.optimization_specification.qc_specification.program in short_desc
+    assert rec.specification.optimization_specification.qc_specification.method in short_desc
+
     out = rec.compute_history[-1].outputs["stdout"].get_output()
     assert "Grid optimization finished successfully!" in out
 

@@ -98,6 +98,10 @@ class QCSpecificationORM(BaseORM):
     def required_programs(self) -> Dict[str, Optional[str]]:
         return {self.program: None}
 
+    @property
+    def short_description(self) -> str:
+        return f'{self.program}/{self.method or "(none)"}/{self.basis or "(none)"}'
+
 
 class SinglepointRecordORM(BaseRecordORM):
     """
@@ -133,6 +137,10 @@ class SinglepointRecordORM(BaseRecordORM):
     @property
     def required_programs(self) -> Dict[str, Optional[str]]:
         return self.specification.required_programs
+
+    @property
+    def short_description(self) -> str:
+        return f'{self.molecule.identifiers["molecular_formula"]} {self.specification.short_description}'
 
 
 # Mark the storage of the wavefunction data_local column as external

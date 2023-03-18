@@ -80,6 +80,10 @@ class ManybodySpecificationORM(BaseORM):
         exclude = self.append_exclude(exclude, "id", "keywords_hash", "singlepoint_specification_id")
         return BaseORM.model_dict(self, exclude)
 
+    @property
+    def short_description(self) -> str:
+        return f"{self.program}~{self.singlepoint_specification.short_description}"
+
 
 class ManybodyRecordORM(BaseRecordORM):
     """
@@ -107,6 +111,10 @@ class ManybodyRecordORM(BaseRecordORM):
         # Remove fields not present in the model
         exclude = self.append_exclude(exclude, "specification_id")
         return BaseRecordORM.model_dict(self, exclude)
+
+    @property
+    def short_description(self) -> str:
+        return f'{self.initial_molecule.identifiers["molecular_formula"]} {self.specification.short_description}'
 
 
 # Delete base record if this record is deleted

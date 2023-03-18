@@ -113,6 +113,11 @@ class ServiceSubtaskRecordORM(BaseRecordORM):
         "inherit_condition": (id == BaseRecordORM.id),
     }
 
+    @property
+    def short_description(self) -> str:
+        progs = ",".join(self.required_programs.keys())
+        return f"{self.function} [{progs}]"
+
 
 # Trigger for deleting largebinary_store rows when rows of service_subtask_record are deleted
 _del_lb_trigger = DDL(

@@ -558,6 +558,36 @@ class RecordSocket:
 
         return all_children_ids
 
+    def get_short_descriptions(
+        self, record_ids: Iterable[int], *, session: Optional[Session] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Obtain short descriptions of records
+        """
+
+        stmt = select(BaseRecordORM)
+        stmt = stmt.options(defer(BaseRecordORM.properties))  # no need to load these, and they can be big
+        stmt = stmt.where(BaseRecordORM.id.in_(record_ids))
+
+        with self.root_socket.optional_session(session, True) as session:
+            record_orms = session.execute(stmt).scalars().all()
+
+            found_ids = {r.id for r in record_orms}
+            if found_ids != set(record_ids):
+                raise MissingDataError("Cannot find all record ids")
+
+            desc_map = {}
+            for r in record_orms:
+                desc_map[r.id] = {
+                    "record_type": r.record_type,
+                    "status": r.status,
+                    "created_on": r.created_on,
+                    "modified_on": r.modified_on,
+                    "description": r.short_description,
+                }
+
+            return [desc_map[i] for i in record_ids]
+
     def get_parent_ids(self, session: Session, record_ids: Iterable[int]) -> List[int]:
         """
         Recursively obtain the IDs of all parent records of the given records

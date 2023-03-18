@@ -295,6 +295,14 @@ class BaseRecordORM(BaseORM):
 
         return d
 
+    @property
+    def short_description(self) -> str:
+        """
+        Returns a short string describing the record
+        """
+
+        return f"short_description not implemented for {self.record_type}"
+
 
 # Function for deleting large binary when derived classes are deleted
 _del_baserecord_triggerfunc = DDL(

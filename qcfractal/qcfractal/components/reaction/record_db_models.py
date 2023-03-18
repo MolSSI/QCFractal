@@ -91,6 +91,20 @@ class ReactionSpecificationORM(BaseORM):
         )
         return BaseORM.model_dict(self, exclude)
 
+    @property
+    def short_description(self) -> str:
+        sp_desc = (
+            self.singlepoint_specification.short_description
+            if self.singlepoint_specification_id is not None
+            else "(none)"
+        )
+        opt_desc = (
+            self.optimization_specification.short_description
+            if self.optimization_specification_id is not None
+            else "(none)"
+        )
+        return f"{self.program}~[{sp_desc} | {opt_desc}]"
+
 
 class ReactionRecordORM(BaseRecordORM):
     """
@@ -116,6 +130,11 @@ class ReactionRecordORM(BaseRecordORM):
         # Remove fields not present in the model
         exclude = self.append_exclude(exclude, "specification_id")
         return BaseRecordORM.model_dict(self, exclude)
+
+    @property
+    def short_description(self) -> str:
+        rxn_mols = ",".join(x.molecule.identifiers["molecular_formula"] for x in self.components)
+        return f"[{rxn_mols}] {self.specification.short_description}"
 
 
 # Delete base record if this record is deleted

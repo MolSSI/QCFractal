@@ -83,6 +83,10 @@ class OptimizationSpecificationORM(BaseORM):
         r.update(self.qc_specification.required_programs)
         return r
 
+    @property
+    def short_description(self) -> str:
+        return f"{self.program}+{self.qc_specification.short_description}"
+
 
 class OptimizationRecordORM(BaseRecordORM):
     """
@@ -128,6 +132,10 @@ class OptimizationRecordORM(BaseRecordORM):
     @property
     def required_programs(self) -> Dict[str, Optional[str]]:
         return self.specification.required_programs
+
+    @property
+    def short_description(self) -> str:
+        return f'{self.initial_molecule.identifiers["molecular_formula"]} {self.specification.short_description}'
 
 
 # Delete base record if this record is deleted

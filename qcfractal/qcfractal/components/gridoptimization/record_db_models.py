@@ -92,6 +92,10 @@ class GridoptimizationSpecificationORM(BaseORM):
         exclude = self.append_exclude(exclude, "id", "keywords_hash", "optimization_specification_id")
         return BaseORM.model_dict(self, exclude)
 
+    @property
+    def short_description(self) -> str:
+        return f"{self.program}~{self.optimization_specification.short_description}"
+
 
 class GridoptimizationRecordORM(BaseRecordORM):
     """
@@ -123,6 +127,10 @@ class GridoptimizationRecordORM(BaseRecordORM):
         # Remove fields not present in the model
         exclude = self.append_exclude(exclude, "specification_id")
         return BaseRecordORM.model_dict(self, exclude)
+
+    @property
+    def short_description(self) -> str:
+        return f'{self.initial_molecule.identifiers["molecular_formula"]} {self.specification.short_description}'
 
 
 # Delete base record if this record is deleted

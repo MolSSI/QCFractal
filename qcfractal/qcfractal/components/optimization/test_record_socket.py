@@ -263,6 +263,14 @@ def test_optimization_socket_run(
         assert record.compute_history[0].status == RecordStatusEnum.complete
         assert record.compute_history[0].provenance == result.provenance
 
+        desc_info = storage_socket.records.get_short_descriptions([rec_id])[0]
+        short_desc = desc_info["description"]
+        assert desc_info["record_type"] == record.record_type
+        assert desc_info["created_on"] == record.created_on
+        assert record.specification.program in short_desc
+        assert record.specification.qc_specification.program in short_desc
+        assert record.specification.qc_specification.method in short_desc
+
         outs = record.compute_history[0].outputs
 
         avail_outputs = set(outs.keys())
