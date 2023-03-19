@@ -579,6 +579,7 @@ class RecordSocket:
             desc_map = {}
             for r in record_orms:
                 desc_map[r.id] = {
+                    "id": r.id,
                     "record_type": r.record_type,
                     "status": r.status,
                     "created_on": r.created_on,
