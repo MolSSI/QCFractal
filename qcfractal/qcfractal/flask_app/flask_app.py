@@ -65,6 +65,7 @@ def create_flask_app(qcfractal_config: FractalConfig, init_storage: bool = True)
     app.config["JWT_SECRET_KEY"] = qcfractal_config.api.jwt_secret_key
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = qcfractal_config.api.jwt_access_token_expires
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = qcfractal_config.api.jwt_refresh_token_expires
+    app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies"]
 
     # Any additional configuration
     if qcfractal_config.api.extra_flask_options:

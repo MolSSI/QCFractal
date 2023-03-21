@@ -1,11 +1,20 @@
+import datetime
 import time
 import traceback
 from typing import Dict, Any
 
 from flask import g, request, current_app, jsonify, Response
+from flask_jwt_extended import (
+    get_jwt,
+    get_jwt_identity,
+    set_access_cookies,
+    get_jwt_request_location,
+)
 from werkzeug.exceptions import InternalServerError, HTTPException
 
+from qcfractal.auth_v1.helpers import access_token_from_user
 from qcfractal.flask_app import storage_socket, get_url_major_component
+from qcportal.auth import UserInfo, RoleInfo
 from qcportal.exceptions import UserReportableError, AuthenticationFailure, ComputeManagerError
 from .home import home_blueprint
 
@@ -80,6 +89,31 @@ def after_request_func(response: Response):
         current_app.logger.debug(
             f"{access_method} {access_type}: {g.request_bytes} -> {response_bytes} [{request_duration*1000:.1f}ms]"
         )
+
+        # Basically taken from the flask-jwt-extended docs
+        # If there is a jwt and it comes from cookies (ie, being accessed by a browser), then
+        # automatically refresh if necessary
+        jwt_loc = get_jwt_request_location()
+        if jwt_loc == "cookies":
+            expires_timestamp = get_jwt()["exp"]
+            now = datetime.datetime.now(datetime.timezone.utc)
+            target_timestamp = datetime.datetime.timestamp(now + datetime.timedelta(minutes=10))
+
+            # print("JWT EXPIRES: ", datetime.datetime.fromtimestamp(expires_timestamp))
+            # print("TARGET: ", datetime.datetime.fromtimestamp(target_timestamp))
+
+            # is users token expiring in the next 10 minutes?
+            if target_timestamp > expires_timestamp:
+                user_id = get_jwt_identity()
+
+                user_dict = storage_socket.users.get(user_id)
+                role_dict = storage_socket.roles.get(user_dict["role"])
+                user_info = UserInfo(**user_dict)
+                role_info = RoleInfo(**role_dict)
+
+                access_token = access_token_from_user(user_info, role_info)
+                set_access_cookies(response, access_token)
+        return response
 
     return response
 
