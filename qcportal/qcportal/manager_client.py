@@ -54,7 +54,7 @@ class ManagerClient(PortalClientBase):
     def activate(
         self,
         manager_version: str,
-        programs: Dict[str, Any],
+        programs: Dict[str, List[str]],
         tags: List[str],
     ) -> None:
         """Registers/Activates a manager for use on the server

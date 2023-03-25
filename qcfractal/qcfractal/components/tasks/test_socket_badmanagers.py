@@ -40,7 +40,7 @@ def test_task_socket_claim_manager_inactive(storage_socket: SQLAlchemySocket):
         name_data=mname1,
         manager_version="v2.0",
         username="bill",
-        programs={"qcengine": None, "psi4": None, "qchem": "v3.0"},
+        programs={"qcengine": ["unknown"], "psi4": ["unknown"], "qchem": ["v3.0"]},
         tags=["tag1"],
     )
 
@@ -58,7 +58,7 @@ def test_task_socket_return_manager_noexist(storage_socket: SQLAlchemySocket, se
         name_data=mname1,
         manager_version="v2.0",
         username="bill",
-        programs={"qcengine": None, "psi4": None, "qchem": "v3.0"},
+        programs={"qcengine": ["unknown"], "psi4": ["unknown"], "qchem": ["v3.0"]},
         tags=["tag1"],
     )
 
@@ -88,7 +88,7 @@ def test_task_socket_return_manager_inactive(storage_socket: SQLAlchemySocket):
         name_data=mname1,
         manager_version="v2.0",
         username="bill",
-        programs={"qcengine": None, "psi4": None, "qchem": "v3.0"},
+        programs={"qcengine": ["unknown"], "psi4": ["unknown"], "qchem": ["v3.0"]},
         tags=["tag1"],
     )
 
@@ -113,7 +113,7 @@ def test_task_socket_return_wrongmanager(storage_socket: SQLAlchemySocket, sessi
         name_data=mname1,
         manager_version="v2.0",
         username="bill",
-        programs={"qcengine": None, "psi4": None, "qchem": "v3.0"},
+        programs={"qcengine": ["unknown"], "psi4": ["unknown"], "qchem": ["v3.0"]},
         tags=["tag1"],
     )
 
@@ -121,7 +121,7 @@ def test_task_socket_return_wrongmanager(storage_socket: SQLAlchemySocket, sessi
         name_data=mname2,
         manager_version="v2.0",
         username="bill",
-        programs={"qcengine": None, "psi4": None, "qchem": "v3.0"},
+        programs={"qcengine": ["unknown"], "psi4": ["unknown"], "qchem": ["v3.0"]},
         tags=["tag1"],
     )
 
@@ -189,7 +189,7 @@ def test_task_socket_return_manager_badstatus_1(storage_socket: SQLAlchemySocket
         name_data=mname1,
         manager_version="v2.0",
         username="bill",
-        programs={"qcengine": None, "psi4": None, "qchem": "v3.0"},
+        programs={"qcengine": ["unknown"], "psi4": ["unknown"], "qchem": ["v3.0"]},
         tags=["tag1"],
     )
 
@@ -233,7 +233,7 @@ def test_task_socket_return_manager_badstatus_2(storage_socket: SQLAlchemySocket
         name_data=mname1,
         manager_version="v2.0",
         username="bill",
-        programs={"qcengine": None, "psi4": None, "qchem": "v3.0"},
+        programs={"qcengine": ["unknown"], "psi4": ["unknown"], "qchem": ["v3.0"]},
         tags=["tag1"],
     )
 
@@ -283,7 +283,7 @@ def test_task_socket_return_manager_badstatus_3(storage_socket: SQLAlchemySocket
         name_data=mname1,
         manager_version="v2.0",
         username="bill",
-        programs={"qcengine": None, "psi4": None, "qchem": "v3.0"},
+        programs={"qcengine": ["unknown"], "psi4": ["unknown"], "qchem": ["v3.0"]},
         tags=["tag1"],
     )
 

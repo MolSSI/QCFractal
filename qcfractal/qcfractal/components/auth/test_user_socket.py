@@ -276,7 +276,6 @@ def test_user_socket_password_generation(storage_socket: SQLAlchemySocket):
 
 @pytest.mark.parametrize("as_admin", [True, False])
 def test_user_socket_no_modify_username(storage_socket: SQLAlchemySocket, as_admin: bool):
-
     uinfo = UserInfo(
         username="george",
         role="read",

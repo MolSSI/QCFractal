@@ -48,7 +48,7 @@ def test_periodics_manager_heartbeats(snowflake: QCATestingSnowflake, storage_so
         name_data=mname1,
         manager_version="v2.0",
         username="bill",
-        programs={"qcengine": None, "psi4": None, "qchem": "v3.0"},
+        programs={"qcengine": ["unknown"], "psi4": ["unknown"], "qchem": ["v3.0"]},
         tags=["tag1"],
     )
 

@@ -291,7 +291,6 @@ def test_user_client_modify_badgroup(secure_snowflake: QCATestingSnowflake):
 
 
 def test_user_client_change_password(secure_snowflake: QCATestingSnowflake):
-
     # First, make sure read user is denied
     with pytest.raises(AuthenticationFailure):
         secure_snowflake.client("read_user", "a_new_password1234")
@@ -308,7 +307,6 @@ def test_user_client_change_password(secure_snowflake: QCATestingSnowflake):
 
 
 def test_user_client_change_password_self(secure_snowflake: QCATestingSnowflake):
-
     client = secure_snowflake.client("read_user", test_users["read_user"]["pw"])
 
     new_pw = client.change_user_password(None, "a_new_password1234")

@@ -26,7 +26,13 @@ def populate_records_status(storage_socket: SQLAlchemySocket):
         name_data=mname1,
         manager_version="v2.0",
         username="bill",
-        programs={"qcengine": None, "psi4": None, "qchem": "v3.0", "rdkit": None, "geometric": None},
+        programs={
+            "qcengine": ["unknown"],
+            "psi4": ["unknown"],
+            "qchem": ["v3.0"],
+            "rdkit": ["unknown"],
+            "geometric": ["unknown"],
+        },
         tags=["tag1", "tag2", "tag3", "tag6"],
     )
 

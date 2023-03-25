@@ -196,8 +196,6 @@ def snowflake_client(snowflake):
     yield snowflake.client()
 
 
-
-
 @pytest.fixture(scope="function")
 def activated_manager(storage_socket: SQLAlchemySocket) -> Tuple[ManagerName, int]:
     """
@@ -210,25 +208,26 @@ def activated_manager(storage_socket: SQLAlchemySocket) -> Tuple[ManagerName, in
         manager_version="v2.0",
         username="bill",
         programs={
-            "qcengine": None,
-            "psi4": None,
-            "qchem": None,
-            "geometric": None,
-            "rdkit": None,
-            "mopac": None,
-            "prog1": None,
-            "prog2": None,
-            "prog3": None,
-            "prog4": None,
-            "optprog1": None,
-            "optprog2": None,
-            "optprog3": None,
-            "optprog4": None,
+            "qcengine": ["unknown"],
+            "psi4": ["unknown"],
+            "qchem": ["unknown"],
+            "geometric": ["unknown"],
+            "rdkit": ["unknown"],
+            "mopac": ["unknown"],
+            "prog1": ["unknown"],
+            "prog2": ["unknown"],
+            "prog3": ["unknown"],
+            "prog4": ["unknown"],
+            "optprog1": ["unknown"],
+            "optprog2": ["unknown"],
+            "optprog3": ["unknown"],
+            "optprog4": ["unknown"],
         },
         tags=["*"],
     )
 
     yield mname, mid
+
 
 @pytest.fixture(scope="function")
 def activated_manager_name(activated_manager) -> ManagerName:

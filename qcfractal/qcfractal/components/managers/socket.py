@@ -86,7 +86,7 @@ class ManagerSocket:
         name_data: ManagerName,
         manager_version: str,
         username: Optional[str],
-        programs: Dict[str, Optional[str]],
+        programs: Dict[str, List[str]],
         tags: List[str],
         *,
         session: Optional[Session] = None,

@@ -24,7 +24,7 @@ def queryable_managers_client(module_temporary_database):
                     mclient = server.manager_client(mname)
                     mclient.activate(
                         manager_version="v2.0",
-                        programs={"qcengine": None, "qcprog": None, "qcprog2": "v3.0"},
+                        programs={"qcengine": ["unknown"], "qcprog": ["unknown"], "qcprog2": ["v3.0"]},
                         tags=[f"tag_{cluster_i}", "tag2"],
                     )
 

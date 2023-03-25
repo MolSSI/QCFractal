@@ -246,7 +246,7 @@ class ComputeManager:
 
         # All available programs
         # Add qcengine, with the version
-        self.all_program_info = {"qcengine": qcng.__version__}
+        self.all_program_info: Dict[str, List[str]] = {"qcengine": [qcng.__version__]}
 
         # What do we get from qcengine
         qcng_programs = qcng.list_available_programs()
@@ -254,8 +254,8 @@ class ComputeManager:
 
         # QCFractal treats procedures and programs as being the same
         # TODO - get version information
-        self.all_program_info.update({x: None for x in qcng_programs})
-        self.all_program_info.update({x: None for x in qcng_procedures})
+        self.all_program_info.update({x: ["unknown"] for x in qcng_programs})
+        self.all_program_info.update({x: ["unknown"] for x in qcng_procedures})
 
         # Display a warning if there are non-node-parallel programs and >1 node_per_task
         if self.nodes_per_task > 1:

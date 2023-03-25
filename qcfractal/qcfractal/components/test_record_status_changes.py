@@ -29,14 +29,14 @@ def test_record_socket_reset_assigned_manager(storage_socket: SQLAlchemySocket, 
         name_data=mname1,
         manager_version="v2.0",
         username="bill",
-        programs={"qcengine": None, "psi4": None, "geometric": "v3.0"},
+        programs={"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"]},
         tags=["tag1"],
     )
     storage_socket.managers.activate(
         name_data=mname2,
         manager_version="v2.0",
         username="bill",
-        programs={"qcengine": None, "psi4": None, "geometric": "v3.0"},
+        programs={"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"]},
         tags=["tag2"],
     )
 

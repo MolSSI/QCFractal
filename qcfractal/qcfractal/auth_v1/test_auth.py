@@ -27,7 +27,6 @@ def authtest_snowflake(temporary_database, request):
 
 
 def test_auth_allow_deny_read(authtest_snowflake):
-
     # add a test role. Can only access molecule
     rinfo = RoleInfo(
         rolename="test_role",
@@ -148,7 +147,6 @@ def test_auth_allow_deny_write(authtest_snowflake):
 
 
 def test_auth_allow_deny_delete(authtest_snowflake):
-
     # add a test role. Can only access molecule
     rinfo = RoleInfo(
         rolename="test_role",
@@ -274,7 +272,7 @@ def test_auth_default_role_read(secure_snowflake):
     # Can't activate a manager
     mclient = secure_snowflake.manager_client(mname1, "read_user", test_users["read_user"]["pw"])
     with pytest.raises(PortalRequestError, match="Forbidden"):
-        mclient.activate("1.23", {"prog": "1.23"}, ["*"])
+        mclient.activate("1.23", {"prog": ["1.23"]}, ["*"])
 
     # Can access own user, and modify it
     uinfo = client.get_user()
@@ -337,7 +335,7 @@ def test_auth_default_role_submit(secure_snowflake):
     # Can't activate a manager
     mclient = secure_snowflake.manager_client(mname1, "submit_user", test_users["submit_user"]["pw"])
     with pytest.raises(PortalRequestError, match="Forbidden"):
-        mclient.activate("1.23", {"prog": "1.23"}, ["*"])
+        mclient.activate("1.23", {"prog": ["1.23"]}, ["*"])
 
     # Can access own user, and modify it
     uinfo = client.get_user()
@@ -406,7 +404,7 @@ def test_auth_default_role_monitor(secure_snowflake):
     # Can't activate a manager
     mclient = secure_snowflake.manager_client(mname1, "monitor_user", test_users["monitor_user"]["pw"])
     with pytest.raises(PortalRequestError, match="Forbidden"):
-        mclient.activate("1.23", {"prog": "1.23"}, ["*"])
+        mclient.activate("1.23", {"prog": ["1.23"]}, ["*"])
 
     # Can access own user, and modify it
     uinfo = client.get_user()
@@ -482,7 +480,7 @@ def test_auth_default_role_compute(secure_snowflake):
 
     # Can activate a manager
     mclient = secure_snowflake.manager_client(mname1, "compute_user", test_users["compute_user"]["pw"])
-    mclient.activate("1.23", {"prog": "1.23"}, ["*"])
+    mclient.activate("1.23", {"prog": ["1.23"]}, ["*"])
 
     # Can access own user, and modify it
     uinfo = client.get_user()

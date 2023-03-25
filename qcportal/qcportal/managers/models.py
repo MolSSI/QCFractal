@@ -100,7 +100,7 @@ class ComputeManager(BaseModel):
     modified_on: datetime
 
     manager_version: str
-    programs: Dict[str, Any]
+    programs: Dict[str, List[str]]
 
     log_: Optional[List[ComputeManagerLogEntry]] = None
 
@@ -132,7 +132,7 @@ class ManagerActivationBody(RestModelBase):
     name_data: ManagerName = Field(..., description="Name information about this manager")
     manager_version: str = Field(..., description="Version of the manager itself")
     username: Optional[str] = Field(..., description="Username this manager is connected with")
-    programs: Dict[constr(to_lower=True), Optional[str]] = Field(..., description="Programs available on this manager")
+    programs: Dict[constr(to_lower=True), List[str]] = Field(..., description="Programs available on this manager")
     tags: List[constr(to_lower=True)] = Field(..., description="Tags this manager will compute for")
 
     @validator("tags")
