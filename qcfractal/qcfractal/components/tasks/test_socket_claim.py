@@ -90,29 +90,29 @@ def test_task_socket_claim_mixed(storage_socket: SQLAlchemySocket, session: Sess
     # claim up to two tasks
     # should find the high and normal priority one, but not the one
     # requiring rdkit
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, 2)
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, ["tag1"], 2)
     assert len(tasks) == 2
     assert tasks[0]["id"] == recs[2].task.id
     assert tasks[1]["id"] == recs[4].task.id
 
     # manager 4 should find tag3, and then #6 (highest priority left)
-    tasks = storage_socket.tasks.claim_tasks(mname4.fullname, 2)
+    tasks = storage_socket.tasks.claim_tasks(mname4.fullname, ["tag3", "*"], 2)
     assert len(tasks) == 2
     assert tasks[0]["id"] == recs[3].task.id
     assert tasks[1]["id"] == recs[5].task.id
 
     # manager3 should find the only remaining tag1 that isn't rdkit
-    tasks = storage_socket.tasks.claim_tasks(mname3.fullname, 2)
+    tasks = storage_socket.tasks.claim_tasks(mname3.fullname, ["tag3", "tag1"])
     assert len(tasks) == 1
     assert tasks[0]["id"] == recs[0].task.id
 
     # manager 2 only finds #2 - doesn't have rdkit
-    tasks = storage_socket.tasks.claim_tasks(mname2.fullname, 20)
+    tasks = storage_socket.tasks.claim_tasks(mname2.fullname, ["*"], 20)
     assert len(tasks) == 1
     assert tasks[0]["id"] == recs[1].task.id
 
     # manager 4 can finally get the last one
-    tasks = storage_socket.tasks.claim_tasks(mname4.fullname, 20)
+    tasks = storage_socket.tasks.claim_tasks(mname4.fullname, ["tag3", "*"], 20)
     assert len(tasks) == 1
     assert tasks[0]["id"] == recs[6].task.id
 
@@ -173,14 +173,14 @@ def test_task_socket_claim_priority(storage_socket: SQLAlchemySocket, session: S
         recs.append(rec)
 
     # highest priority should be first, then by modified date
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, 3)
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, ["tag1"], 3)
     assert len(tasks) == 3
     assert tasks[0]["id"] == recs[2].task.id
     assert tasks[1]["id"] == recs[5].task.id
     assert tasks[2]["id"] == recs[1].task.id
 
     # Now normal then low
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, 3)
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, ["tag1"], 3)
     assert len(tasks) == 3
     assert tasks[0]["id"] == recs[3].task.id
     assert tasks[1]["id"] == recs[4].task.id
@@ -220,12 +220,12 @@ def test_task_socket_claim_tag(storage_socket: SQLAlchemySocket, session: Sessio
         recs.append(rec)
 
     # tag3 should be first, then tag1
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, 2)
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, ["tag3", "tag1"], 2)
     assert len(tasks) == 2
     assert tasks[0]["id"] == recs[3].task.id
     assert tasks[1]["id"] == recs[0].task.id
 
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, 3)
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, ["tag3", "tag1"], 3)
     assert len(tasks) == 1
     assert tasks[0]["id"] == recs[4].task.id
 
@@ -263,12 +263,12 @@ def test_task_socket_claim_tag_wildcard(storage_socket: SQLAlchemySocket, sessio
         recs.append(rec)
 
     # tag3 should be first, then any task (in order)
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, 2)
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, ["tag3", "*"], 2)
     assert len(tasks) == 2
     assert tasks[0]["id"] == recs[3].task.id
     assert tasks[1]["id"] == recs[0].task.id
 
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, 3)
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, ["tag3", "*"], 3)
     assert len(tasks) == 3
     assert tasks[0]["id"] == recs[1].task.id
     assert tasks[1]["id"] == recs[2].task.id
@@ -302,7 +302,7 @@ def test_task_socket_claim_program(storage_socket: SQLAlchemySocket, session: Se
         recs.append(rec)
 
     # claim all tasks. But it should claim #7
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, 100)
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, ["*"], 100)
     assert len(tasks) == 2
     assert tasks[0]["id"] == recs[1].task.id
     assert tasks[1]["id"] == recs[2].task.id

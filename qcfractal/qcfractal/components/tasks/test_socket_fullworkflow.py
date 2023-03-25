@@ -31,7 +31,7 @@ def test_task_socket_fullworkflow_success(
 
     result_map = {id1: result_data1, id2: result_data2}
 
-    tasks = storage_socket.tasks.claim_tasks(mname.fullname)
+    tasks = storage_socket.tasks.claim_tasks(mname.fullname, ["*"])
 
     # Should be claimed in the manager table
     manager = session.get(ComputeManagerORM, mid)
@@ -96,7 +96,7 @@ def test_task_socket_fullworkflow_error(
 
     time_1 = datetime.utcnow()
 
-    tasks = storage_socket.tasks.claim_tasks(mname.fullname)
+    tasks = storage_socket.tasks.claim_tasks(mname.fullname, ["*"])
 
     fop = FailedOperation(error=ComputeError(error_type="test_error", error_message="this is a test error"))
 
@@ -154,23 +154,23 @@ def test_task_socket_fullworkflow_error_retry(
 
     # Sends back an error. Do it a few times
     time_0 = datetime.utcnow()
-    tasks = storage_socket.tasks.claim_tasks(mname.fullname)
+    tasks = storage_socket.tasks.claim_tasks(mname.fullname, ["*"])
     storage_socket.tasks.update_finished(mname.fullname, {tasks[0]["id"]: fop})
     storage_socket.records.reset(id1)
 
     time_1 = datetime.utcnow()
-    tasks = storage_socket.tasks.claim_tasks(mname.fullname)
+    tasks = storage_socket.tasks.claim_tasks(mname.fullname, ["*"])
     storage_socket.tasks.update_finished(mname.fullname, {tasks[0]["id"]: fop})
     storage_socket.records.reset(id1)
 
     time_2 = datetime.utcnow()
-    tasks = storage_socket.tasks.claim_tasks(mname.fullname)
+    tasks = storage_socket.tasks.claim_tasks(mname.fullname, ["*"])
     storage_socket.tasks.update_finished(mname.fullname, {tasks[0]["id"]: fop})
     storage_socket.records.reset(id1)
 
     # Now succeed
     time_3 = datetime.utcnow()
-    tasks = storage_socket.tasks.claim_tasks(mname.fullname)
+    tasks = storage_socket.tasks.claim_tasks(mname.fullname, ["*"])
     storage_socket.tasks.update_finished(mname.fullname, {tasks[0]["id"]: result_data1})
     time_4 = datetime.utcnow()
 
@@ -223,7 +223,7 @@ def test_task_socket_fullworkflow_error_autoreset(
     fop_r = FailedOperation(error=ComputeError(error_type="random_error", error_message="this is a test error"))
 
     # Sends back an error
-    tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname)
+    tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, ["*"])
     storage_socket.tasks.update_finished(activated_manager_name.fullname, {tasks[0]["id"]: fop_r})
 
     # task should be waiting
@@ -232,7 +232,7 @@ def test_task_socket_fullworkflow_error_autoreset(
     assert len(rec.compute_history) == 1
 
     # Claim again, and return a different error
-    tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname)
+    tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, ["*"])
     storage_socket.tasks.update_finished(activated_manager_name.fullname, {tasks[0]["id"]: fop_u})
 
     # waiting again...
@@ -241,7 +241,7 @@ def test_task_socket_fullworkflow_error_autoreset(
     assert len(rec.compute_history) == 2
 
     # Claim again, and return an unknown error. Should stay in errored state now
-    tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname)
+    tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, ["*"])
     storage_socket.tasks.update_finished(activated_manager_name.fullname, {tasks[0]["id"]: fop_u})
 
     session.expire(rec)

@@ -39,7 +39,7 @@ def test_singlepoint_socket_task_spec(
     time_1 = datetime.utcnow()
     assert meta.success
 
-    tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname)
+    tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, ["*"])
 
     assert len(tasks) == 3
     for t in tasks:

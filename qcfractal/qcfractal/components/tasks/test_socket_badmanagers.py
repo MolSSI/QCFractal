@@ -29,7 +29,7 @@ def test_task_socket_claim_manager_noexist(storage_socket: SQLAlchemySocket):
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
 
     with pytest.raises(ComputeManagerError, match="does not exist") as err:
-        storage_socket.tasks.claim_tasks(mname1.fullname)
+        storage_socket.tasks.claim_tasks(mname1.fullname, ["tag1"])
 
 
 def test_task_socket_claim_manager_inactive(storage_socket: SQLAlchemySocket):
@@ -47,7 +47,7 @@ def test_task_socket_claim_manager_inactive(storage_socket: SQLAlchemySocket):
     storage_socket.managers.deactivate([mname1.fullname])
 
     with pytest.raises(ComputeManagerError, match="is not active"):
-        storage_socket.tasks.claim_tasks(mname1.fullname)
+        storage_socket.tasks.claim_tasks(mname1.fullname, ["tag1"])
 
 
 def test_task_socket_return_manager_noexist(storage_socket: SQLAlchemySocket, session: Session):
@@ -64,7 +64,7 @@ def test_task_socket_return_manager_noexist(storage_socket: SQLAlchemySocket, se
 
     record_id, result_data = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
 
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, ["tag1"])
 
     with pytest.raises(ComputeManagerError, match="does not exist"):
         storage_socket.tasks.update_finished(
@@ -93,7 +93,7 @@ def test_task_socket_return_manager_inactive(storage_socket: SQLAlchemySocket):
     )
 
     record_id, result_data = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, ["tag1"])
 
     storage_socket.managers.deactivate([mname1.fullname])
 
@@ -128,7 +128,7 @@ def test_task_socket_return_wrongmanager(storage_socket: SQLAlchemySocket, sessi
     record_id, result_data = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
 
     # Manager 1 claims tasks
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, ["tag1"])
 
     # Manager 2 tries to return it
     rmeta = storage_socket.tasks.update_finished(
@@ -195,7 +195,7 @@ def test_task_socket_return_manager_badstatus_1(storage_socket: SQLAlchemySocket
 
     record_id, result_data = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
 
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, ["tag1"])
 
     storage_socket.records.reset([record_id])
 
@@ -239,7 +239,7 @@ def test_task_socket_return_manager_badstatus_2(storage_socket: SQLAlchemySocket
 
     record_id, result_data = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
 
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, ["tag1"])
 
     storage_socket.tasks.update_finished(
         mname1.fullname,
@@ -289,7 +289,7 @@ def test_task_socket_return_manager_badstatus_3(storage_socket: SQLAlchemySocket
 
     record_id, result_data = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
 
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, ["tag1"])
 
     storage_socket.records.cancel([record_id])
 

@@ -96,7 +96,7 @@ def run_test_data(
             error=ComputeError(error_type="test_error", error_message="this is just a test error"),
         )
 
-    tasks = storage_socket.tasks.claim_tasks(manager_name.fullname, limit=100)
+    tasks = storage_socket.tasks.claim_tasks(manager_name.fullname, [tag], limit=100)
     assert len(tasks) == 1
     result_dict = {tasks[0]["id"]: result}
 

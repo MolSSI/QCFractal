@@ -216,6 +216,7 @@ class TaskSocket:
     def claim_tasks(
         self,
         manager_name: str,
+        tags: List[str],
         limit: Optional[int] = None,
         *,
         session: Optional[Session] = None,
@@ -229,6 +230,8 @@ class TaskSocket:
         ----------
         manager_name
             Name of the manager requesting tasks
+        tags
+            Subset of tags to claim tasks for
         limit
             Maximum number of tasks that the manager can claim
         session
@@ -255,7 +258,9 @@ class TaskSocket:
             manager_programs = array(manager.programs.keys())
             found: List[Dict[str, Any]] = []
 
-            for tag in manager.tags:
+            # Remove tags that we didn't say we handled, but keep the order
+            search_tags = [x for x in tags if x in manager.tags]
+            for tag in search_tags:
 
                 new_limit = limit - len(found)
 

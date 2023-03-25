@@ -624,7 +624,7 @@ class ComputeManager:
 
         if new_tasks is True and open_slots > 0:
             try:
-                new_tasks = self.client.claim(open_slots)
+                new_tasks = self.client.claim(self.queue_tag, open_slots)
             except ConnectionError as ex:
                 self.logger.warning(f"Acquisition of new tasks failed: {str(ex).strip()}")
                 return

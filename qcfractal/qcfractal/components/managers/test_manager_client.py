@@ -169,7 +169,7 @@ def test_manager_mclient_deactivate(snowflake: QCATestingSnowflake):
     name2 = mname2.fullname
 
     # client2 claims tasks
-    mclient2.claim(1)
+    mclient2.claim(["tag1"], 1)
     mclient2.deactivate(
         total_worker_walltime=1.0, total_task_walltime=2.0, active_tasks=1, active_cores=2, active_memory=7.0
     )

@@ -73,7 +73,7 @@ def populate_records_status(storage_socket: SQLAlchemySocket):
 
     # claim only the ones we want to be complete, running, or error (1, 2, 3, 6)
     # 6 needs to be complete to be invalidated
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, limit=4)
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, ["tag1", "tag2", "tag3", "tag6"], limit=4)
     assert len(tasks) == 4
 
     fop = FailedOperation(error=ComputeError(error_type="test_error", error_message="this is a test error"))
@@ -93,7 +93,7 @@ def populate_records_status(storage_socket: SQLAlchemySocket):
     for i in range(4):
         meta = storage_socket.records.reset(id_3)
         assert meta.success
-        tasks = storage_socket.tasks.claim_tasks(mname1.fullname, limit=1)
+        tasks = storage_socket.tasks.claim_tasks(mname1.fullname, ["tag1", "tag2", "tag3", "tag6"], limit=1)
         assert len(tasks) == 1
         assert tasks[0]["tag"] == "tag3"
 

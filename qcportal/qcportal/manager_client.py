@@ -116,9 +116,9 @@ class ManagerClient(PortalClientBase):
 
         return self._update_on_server(manager_update)
 
-    def claim(self, limit: int) -> List[Dict[str, Any]]:
+    def claim(self, tags: List[str], limit: int) -> List[Dict[str, Any]]:
 
-        body = TaskClaimBody(name_data=self.manager_name_data, limit=limit)
+        body = TaskClaimBody(name_data=self.manager_name_data, tags=tags, limit=limit)
 
         return self.make_request("post", "v1/tasks/claim", List[Dict[str, Any]], body=body)
 

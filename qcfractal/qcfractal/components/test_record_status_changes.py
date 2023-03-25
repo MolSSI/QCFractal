@@ -48,8 +48,8 @@ def test_record_socket_reset_assigned_manager(storage_socket: SQLAlchemySocket, 
     id_6, result_data_6 = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_2", "tag1")
     all_id = [id_1, id_2, id_3, id_4, id_5, id_6]
 
-    tasks_1 = storage_socket.tasks.claim_tasks(mname1.fullname)
-    tasks_2 = storage_socket.tasks.claim_tasks(mname2.fullname)
+    tasks_1 = storage_socket.tasks.claim_tasks(mname1.fullname, ["tag1"])
+    tasks_2 = storage_socket.tasks.claim_tasks(mname2.fullname, ["tag2"])
 
     assert len(tasks_1) == 4
     assert len(tasks_2) == 2
