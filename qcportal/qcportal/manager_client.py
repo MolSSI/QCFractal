@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict
 
 from .all_results import AllResultTypes
 from .client_base import PortalClientBase
@@ -9,7 +9,7 @@ from .managers import (
     ManagerStatusEnum,
 )
 from .metadata_models import TaskReturnMetadata
-from .tasks import TaskClaimBody, TaskReturnBody
+from .tasks import TaskClaimBody, TaskReturnBody, TaskInformation
 
 
 class ManagerClient(PortalClientBase):
@@ -116,11 +116,11 @@ class ManagerClient(PortalClientBase):
 
         return self._update_on_server(manager_update)
 
-    def claim(self, tags: List[str], limit: int) -> List[Dict[str, Any]]:
+    def claim(self, tags: List[str], limit: int) -> List[TaskInformation]:
 
         body = TaskClaimBody(name_data=self.manager_name_data, tags=tags, limit=limit)
 
-        return self.make_request("post", "v1/tasks/claim", List[Dict[str, Any]], body=body)
+        return self.make_request("post", "v1/tasks/claim", List[TaskInformation], body=body)
 
     def return_finished(self, results: Dict[int, AllResultTypes]) -> TaskReturnMetadata:
 

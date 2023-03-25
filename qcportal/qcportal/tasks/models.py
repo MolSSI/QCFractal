@@ -1,10 +1,11 @@
-from typing import Dict, List
+from typing import Dict, List, Any, Optional
 
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 from qcportal.all_results import AllResultTypes
 from qcportal.base_models import RestModelBase
 from qcportal.managers import ManagerName
+from qcportal.record_models import PriorityEnum
 
 
 class TaskClaimBody(RestModelBase):
@@ -16,3 +17,15 @@ class TaskClaimBody(RestModelBase):
 class TaskReturnBody(RestModelBase):
     name_data: ManagerName = Field(..., description="Name information about this manager")
     results: Dict[int, AllResultTypes]
+
+
+class TaskInformation(BaseModel):
+    id: int
+    record_id: int
+    required_programs: List[str]
+    priority: PriorityEnum
+    tag: str
+
+    function: str
+    function_kwargs: Dict[str, Any]
+    function_kwargs_lbid: Optional[int]
