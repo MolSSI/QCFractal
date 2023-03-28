@@ -34,8 +34,7 @@ def update_manager_v1(name: str, body_data: ManagerUpdateBody):
     # Will raise an exception if manager is not active
     storage_socket.managers.update_resource_stats(
         name=name,
-        total_worker_walltime=body_data.total_worker_walltime,
-        total_task_walltime=body_data.total_task_walltime,
+        total_cpu_hours=body_data.total_cpu_hours,
         active_tasks=body_data.active_tasks,
         active_cores=body_data.active_cores,
         active_memory=body_data.active_memory,

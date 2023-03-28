@@ -115,8 +115,7 @@ def test_manager_socket_update_resource_stats_nonexist(storage_socket: SQLAlchem
     with pytest.raises(ComputeManagerError, match=r"does not exist"):
         storage_socket.managers.update_resource_stats(
             "no_manager_name",
-            total_worker_walltime=1.234,
-            total_task_walltime=5.678,
+            total_cpu_hours=1.234,
             active_tasks=3,
             active_cores=10,
             active_memory=3.45,

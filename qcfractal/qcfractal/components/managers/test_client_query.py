@@ -29,7 +29,7 @@ def queryable_managers_client(module_temporary_database):
                     )
 
                     if uuid_i == 0:
-                        mclient.deactivate(1.0, 1.0, 1, 1, 1.0)
+                        mclient.deactivate(1, 1, 1.0, 1.0)
 
         yield server.client()
 

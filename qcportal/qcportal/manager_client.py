@@ -79,39 +79,35 @@ class ManagerClient(PortalClientBase):
 
     def deactivate(
         self,
-        total_worker_walltime: float,
-        total_task_walltime: float,
         active_tasks: int,
         active_cores: int,
         active_memory: float,
+        total_cpu_hours: float,
     ) -> None:
         manager_update = ManagerUpdateBody(
             status=ManagerStatusEnum.inactive,
-            total_worker_walltime=total_worker_walltime,
-            total_task_walltime=total_task_walltime,
             active_tasks=active_tasks,
             active_cores=active_cores,
             active_memory=active_memory,
+            total_cpu_hours=total_cpu_hours,
         )
 
         return self._update_on_server(manager_update)
 
     def heartbeat(
         self,
-        total_worker_walltime: float,
-        total_task_walltime: float,
         active_tasks: int,
         active_cores: int,
         active_memory: float,
+        total_cpu_hours: float,
     ) -> None:
 
         manager_update = ManagerUpdateBody(
             status=ManagerStatusEnum.active,
-            total_worker_walltime=total_worker_walltime,
-            total_task_walltime=total_task_walltime,
             active_tasks=active_tasks,
             active_cores=active_cores,
             active_memory=active_memory,
+            total_cpu_hours=total_cpu_hours,
         )
 
         return self._update_on_server(manager_update)

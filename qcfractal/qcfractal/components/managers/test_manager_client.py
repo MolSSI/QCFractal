@@ -170,17 +170,14 @@ def test_manager_mclient_deactivate(snowflake: QCATestingSnowflake):
 
     # client2 claims tasks
     mclient2.claim(["tag1"], 1)
-    mclient2.deactivate(
-        total_worker_walltime=1.0, total_task_walltime=2.0, active_tasks=1, active_cores=2, active_memory=7.0
-    )
+    mclient2.deactivate(total_cpu_hours=1.0, active_tasks=1, active_cores=2, active_memory=7.0)
 
     manager = client.get_managers([name1, name2])
     assert manager[0].name == name1
     assert manager[0].status == ManagerStatusEnum.active
     assert manager[1].name == name2
     assert manager[1].status == ManagerStatusEnum.inactive
-    assert manager[1].total_worker_walltime == 1.0
-    assert manager[1].total_task_walltime == 2.0
+    assert manager[1].total_cpu_hours == 1.0
     assert manager[1].active_tasks == 1
     assert manager[1].active_cores == 2
     assert manager[1].active_memory == 7.0
@@ -203,14 +200,10 @@ def test_manager_mclient_deactivate_deactivated(snowflake: QCATestingSnowflake):
         tags=["tag1", "tag2"],
     )
 
-    mclient1.deactivate(
-        total_worker_walltime=1.0, total_task_walltime=2.0, active_tasks=1, active_cores=2, active_memory=7.0
-    )
+    mclient1.deactivate(total_cpu_hours=2.0, active_tasks=1, active_cores=2, active_memory=7.0)
 
     with pytest.raises(PortalRequestError, match=r"is not active") as err:
-        mclient1.deactivate(
-            total_worker_walltime=1.0, total_task_walltime=2.0, active_tasks=1, active_cores=2, active_memory=7.0
-        )
+        mclient1.deactivate(total_cpu_hours=2.0, active_tasks=1, active_cores=2, active_memory=7.0)
 
 
 def test_manager_mclient_heartbeat(snowflake: QCATestingSnowflake):
@@ -234,9 +227,7 @@ def test_manager_mclient_heartbeat(snowflake: QCATestingSnowflake):
     assert len(manager.log) == 0
 
     # Now do a heartbeat
-    mclient1.heartbeat(
-        total_worker_walltime=1.234, total_task_walltime=5.678, active_tasks=3, active_cores=10, active_memory=3.45
-    )
+    mclient1.heartbeat(total_cpu_hours=5.678, active_tasks=3, active_cores=10, active_memory=3.45)
 
     time_2 = datetime.utcnow()
 
@@ -244,8 +235,7 @@ def test_manager_mclient_heartbeat(snowflake: QCATestingSnowflake):
     assert len(manager.log) == 1
 
     # Was the data stored in the manager
-    assert manager.total_worker_walltime == 1.234
-    assert manager.total_task_walltime == 5.678
+    assert manager.total_cpu_hours == 5.678
     assert manager.active_tasks == 3
     assert manager.active_cores == 10
     assert manager.active_memory == 3.45
@@ -254,8 +244,7 @@ def test_manager_mclient_heartbeat(snowflake: QCATestingSnowflake):
 
     # and the log
     log = manager.log[0]
-    assert log.total_worker_walltime == 1.234
-    assert log.total_task_walltime == 5.678
+    assert log.total_cpu_hours == 5.678
     assert log.active_tasks == 3
     assert log.active_cores == 10
     assert log.active_memory == 3.45
@@ -263,8 +252,7 @@ def test_manager_mclient_heartbeat(snowflake: QCATestingSnowflake):
 
     # Now do another heartbeat
     mclient1.heartbeat(
-        total_worker_walltime=2 * 1.234,
-        total_task_walltime=2 * 5.678,
+        total_cpu_hours=2 * 5.678,
         active_tasks=2 * 3,
         active_cores=2 * 10,
         active_memory=2 * 3.45,
@@ -276,8 +264,7 @@ def test_manager_mclient_heartbeat(snowflake: QCATestingSnowflake):
     assert len(manager.log) == 2
 
     # Was the data stored in the manager
-    assert manager.total_worker_walltime == 2 * 1.234
-    assert manager.total_task_walltime == 2 * 5.678
+    assert manager.total_cpu_hours == 2 * 5.678
     assert manager.active_tasks == 2 * 3
     assert manager.active_cores == 2 * 10
     assert manager.active_memory == 2 * 3.45
@@ -286,8 +273,7 @@ def test_manager_mclient_heartbeat(snowflake: QCATestingSnowflake):
 
     # and the log
     log = manager.log[0]
-    assert log.total_worker_walltime == 2 * 1.234
-    assert log.total_task_walltime == 2 * 5.678
+    assert log.total_cpu_hours == 2 * 5.678
     assert log.active_tasks == 2 * 3
     assert log.active_cores == 2 * 10
     assert log.active_memory == 2 * 3.45
@@ -305,11 +291,7 @@ def test_manager_mclient_heartbeat_deactivated(snowflake: QCATestingSnowflake):
         tags=["tag1", "tag2"],
     )
 
-    mclient1.deactivate(
-        total_worker_walltime=1.0, total_task_walltime=2.0, active_tasks=1, active_cores=2, active_memory=7.0
-    )
+    mclient1.deactivate(total_cpu_hours=2.0, active_tasks=1, active_cores=2, active_memory=7.0)
 
     with pytest.raises(PortalRequestError, match=r"is not active") as err:
-        mclient1.heartbeat(
-            total_worker_walltime=1.234, total_task_walltime=5.678, active_tasks=3, active_cores=10, active_memory=3.45
-        )
+        mclient1.heartbeat(total_cpu_hours=5.678, active_tasks=3, active_cores=10, active_memory=3.45)

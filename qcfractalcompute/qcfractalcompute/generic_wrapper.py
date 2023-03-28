@@ -11,7 +11,9 @@ from qcfractalcompute import __version__
 from qcportal.generic_result import GenericTaskResult
 
 
-def wrap_generic_function(task_info: Dict[str, Any]) -> Union[GenericTaskResult, FailedOperation]:
+def wrap_generic_function(
+    record_id: int, function: str, function_kwargs: Dict[str, Any]
+) -> Union[GenericTaskResult, FailedOperation]:
     """
     Wraps a generic function call to return a GenericTaskResult (or FailedOperation)
 
@@ -19,7 +21,7 @@ def wrap_generic_function(task_info: Dict[str, Any]) -> Union[GenericTaskResult,
     the origin task_info (basically TaskQueueORM as a dictionary) and runs the specified function
     """
 
-    module_name, func_name = task_info["function"].split(".", 1)
+    module_name, func_name = function.split(".", 1)
     module = importlib.import_module(module_name)
     func = operator.attrgetter(func_name)(module)
 
@@ -27,13 +29,13 @@ def wrap_generic_function(task_info: Dict[str, Any]) -> Union[GenericTaskResult,
         with redirect_stderr(io.StringIO()) as rderr:
             start_time = time.time()
             try:
-                results = func(**task_info["function_kwargs"])
+                results = func(**function_kwargs)
             except Exception as e:
                 err = ComputeError(
                     error_type=type(e).__name__,
                     error_message=str(e),
                 )
-                return FailedOperation(id=task_info["record_id"], error=err)
+                return FailedOperation(id=record_id, error=err)
 
             end_time = time.time()
 
@@ -41,7 +43,7 @@ def wrap_generic_function(task_info: Dict[str, Any]) -> Union[GenericTaskResult,
     stderr = rderr.getvalue()
 
     ret = GenericTaskResult(
-        id=task_info["record_id"],
+        id=record_id,
         success=True,
         stdout=stdout if stdout else None,  # convert empty string to None
         stderr=stderr if stderr else None,

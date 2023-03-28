@@ -40,11 +40,10 @@ class ComputeManagerLogORM(BaseORM):
     failures = Column(Integer, nullable=False)
     rejected = Column(Integer, nullable=False)
 
-    total_worker_walltime = Column(Float, nullable=False, default=0.0)
-    total_task_walltime = Column(Float, nullable=False, default=0.0)
     active_tasks = Column(Integer, nullable=False, default=0)
     active_cores = Column(Integer, nullable=False, default=0)
     active_memory = Column(Float, nullable=False, default=0.0)
+    total_cpu_hours = Column(Float, nullable=False, default=0.0)
 
     __table_args__ = (Index("ix_compute_manager_log_timestamp", "timestamp", postgresql_using="brin"),)
 
@@ -70,11 +69,10 @@ class ComputeManagerORM(BaseORM):
     failures = Column(Integer, nullable=False, default=0)
     rejected = Column(Integer, nullable=False, default=0)
 
-    total_worker_walltime = Column(Float, nullable=False, default=0.0)
-    total_task_walltime = Column(Float, nullable=False, default=0.0)
     active_tasks = Column(Integer, nullable=False, default=0)
     active_cores = Column(Integer, nullable=False, default=0)
     active_memory = Column(Float, nullable=False, default=0.0)
+    total_cpu_hours = Column(Float, nullable=False, default=0.0)
 
     status = Column(Enum(ManagerStatusEnum), nullable=False)
 

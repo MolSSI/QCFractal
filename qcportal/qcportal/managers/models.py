@@ -64,8 +64,7 @@ class ComputeManagerLogEntry(BaseModel):
     failures: int
     rejected: int
 
-    total_worker_walltime: float
-    total_task_walltime: float
+    total_cpu_hours: float
     active_tasks: int
     active_cores: int
     active_memory: float
@@ -89,8 +88,7 @@ class ComputeManager(BaseModel):
     failures: int
     rejected: int
 
-    total_worker_walltime: float
-    total_task_walltime: float
+    total_cpu_hours: float
     active_tasks: int
     active_cores: int
     active_memory: float
@@ -155,11 +153,10 @@ class ManagerActivationBody(RestModelBase):
 
 class ManagerUpdateBody(RestModelBase):
     status: ManagerStatusEnum
-    total_worker_walltime: float
-    total_task_walltime: float
     active_tasks: int
     active_cores: int
     active_memory: float
+    total_cpu_hours: float
 
 
 class ManagerQueryFilters(QueryProjModelBase):

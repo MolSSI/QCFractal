@@ -168,7 +168,11 @@ class BaseAdapter(abc.ABC):
                 wrapper_spec = {
                     "id": task_spec["id"],
                     "function": "qcfractalcompute.wrap_generic_function",
-                    "function_kwargs": {"task_info": task_spec},
+                    "function_kwargs": {
+                        "record_id": task_spec["record_id"],
+                        "function": task_spec["function"],
+                        "function_kwargs": task_spec["function_kwargs"],
+                    },
                 }
                 queue_key, task = self._submit_task(wrapper_spec)
 

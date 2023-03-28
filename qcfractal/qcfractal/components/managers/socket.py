@@ -71,11 +71,10 @@ class ManagerSocket:
             successes=orm.successes,
             failures=orm.failures,
             rejected=orm.rejected,
-            total_worker_walltime=orm.total_worker_walltime,
-            total_task_walltime=orm.total_task_walltime,
             active_tasks=orm.active_tasks,
             active_cores=orm.active_cores,
             active_memory=orm.active_memory,
+            total_cpu_hours=orm.total_cpu_hours,
             timestamp=orm.modified_on,
         )
 
@@ -132,11 +131,10 @@ class ManagerSocket:
     def update_resource_stats(
         self,
         name: str,
-        total_worker_walltime: float,
-        total_task_walltime: float,
         active_tasks: int,
         active_cores: int,
         active_memory: float,
+        total_cpu_hours: float,
         *,
         session: Optional[Session] = None,
     ):
@@ -158,11 +156,10 @@ class ManagerSocket:
             if manager.status != ManagerStatusEnum.active:
                 raise ComputeManagerError(f"Cannot update resource stats for manager {name} - is not active")
 
-            manager.total_worker_walltime = total_worker_walltime
-            manager.total_task_walltime = (total_task_walltime,)
             manager.active_tasks = active_tasks
             manager.active_cores = active_cores
             manager.active_memory = active_memory
+            manager.total_cpu_hours = total_cpu_hours
             manager.modified_on = datetime.utcnow()
 
             self.save_snapshot(manager)

@@ -372,8 +372,7 @@ class ComputeManager:
 
         try:
             self.client.heartbeat(
-                total_worker_walltime=self.statistics.total_worker_walltime,
-                total_task_walltime=self.statistics.total_task_walltime,
+                total_cpu_hours=self.statistics.total_task_walltime,
                 active_tasks=self.statistics.active_task_slots,
                 active_cores=self.statistics.active_cores,
                 active_memory=self.statistics.active_memory,
@@ -389,8 +388,7 @@ class ComputeManager:
         try:
             # Notify the server of shutdown
             self.client.deactivate(
-                total_worker_walltime=self.statistics.total_worker_walltime,
-                total_task_walltime=self.statistics.total_task_walltime,
+                total_cpu_hours=self.statistics.total_task_walltime,
                 active_tasks=self.statistics.active_task_slots,
                 active_cores=self.statistics.active_cores,
                 active_memory=self.statistics.active_memory,
