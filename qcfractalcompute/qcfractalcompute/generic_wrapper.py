@@ -1,6 +1,7 @@
 import importlib
 import io
 import operator
+import os
 import time
 from contextlib import redirect_stdout, redirect_stderr
 from typing import Dict, Any, Union
@@ -9,6 +10,9 @@ from qcelemental.models import Provenance, FailedOperation, ComputeError
 
 from qcfractalcompute import __version__
 from qcportal.generic_result import GenericTaskResult
+
+_this_dir = os.path.abspath(os.path.dirname(__file__))
+_script_path = os.path.join(_this_dir, "run_scripts/generic_script.py")
 
 
 def wrap_generic_function(

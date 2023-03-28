@@ -1,0 +1,607 @@
+from __future__ import annotations
+
+import logging
+import sched
+import socket
+import threading
+import time
+import traceback
+import uuid
+from collections import defaultdict
+from typing import TYPE_CHECKING, Dict, List, Any
+
+import parsl.executors.high_throughput.interchange
+from parsl.config import Config as ParslConfig
+from parsl.dataflow.dflow import DataFlowKernel
+from parsl.dataflow.futures import Future as ParslFuture
+from parsl.executors import HighThroughputExecutor, ThreadPoolExecutor
+from pydantic import BaseModel, Extra, Field, parse_obj_as
+from qcelemental.models import FailedOperation, ComputeError
+from requests.exceptions import Timeout
+
+from qcfractalcompute.apps.app_manager import AppManager
+from qcportal import ManagerClient
+from qcportal.all_results import AllResultTypes
+from qcportal.managers import ManagerName
+from qcportal.metadata_models import TaskReturnMetadata
+from qcportal.tasks import TaskInformation
+from . import __version__
+from .compress import compress_results
+from .config import FractalComputeConfig
+from .executors import build_executor
+
+if TYPE_CHECKING:
+    from parsl.executors.base import ParslExecutor
+
+
+class InterruptableScheduler(sched.scheduler):
+    """
+    A scheduler that can be interrupted
+    """
+
+    def __init__(self):
+        self._int_event = threading.Event()
+        super().__init__(time.monotonic, self._int_event.wait)
+
+    def interrupt(self):
+        # Clear all events in the queue, then interrupt the current sleep period
+        for event in self.queue:
+            self.cancel(event)
+
+        self._int_event.set()
+
+
+class ManagerStatistics(BaseModel):
+    """
+    Manager statistics
+    """
+
+    class Config(BaseModel.Config):
+        extra = Extra.forbid
+
+    last_update_time: float = Field(default_factory=time.time)
+
+    active_tasks: int = 0
+    active_cores: int = 0
+    active_memory: float = 0.0
+    total_cpu_hours: float = 0.0
+
+    total_successful_tasks: int = 0
+    total_failed_tasks: int = 0
+    total_rejected_tasks: int = 0
+
+    @property
+    def total_finished_tasks(self) -> int:
+        return self.total_successful_tasks + self.total_failed_tasks
+
+
+class ComputeManager:
+    """
+    This object maintains a computational queue and watches for finished tasks for different
+    queue backends. Finished tasks are added to the database and removed from the queue.
+    """
+
+    def __init__(self, config: FractalComputeConfig):
+        # Setup logging
+        self.logger = logging.getLogger("ComputeManager")
+
+        self.name_data = ManagerName(cluster=config.cluster, hostname=socket.gethostname(), uuid=str(uuid.uuid4()))
+
+        self.client = ManagerClient(
+            name_data=self.name_data,
+            address=config.server.fractal_uri,
+            username=config.server.username,
+            password=config.server.password,
+            verify=config.server.verify,
+        )
+
+        # Load the executors
+        self.manager_config = config
+
+        self.statistics = ManagerStatistics()
+
+        self.scheduler = InterruptableScheduler()
+
+        # Server response/stale job handling
+        self.server_error_retries = self.manager_config.server_error_retries
+        self.deferred_task_limit = self.manager_config.deferred_task_limit
+
+        # key = number of retries. value = dict of (task_id, result)
+        self._deferred_tasks: Dict[int, Dict[int, AllResultTypes]] = defaultdict(dict)
+
+        # key = executor label, value = (key = task_id, value = parsl future)
+        self._task_futures: Dict[str, Dict[int, ParslFuture]] = {exl: {} for exl in config.executors.keys()}
+
+        self.all_queue_tags = []
+        for ex_config in config.executors.values():
+            self.all_queue_tags.extend(ex_config.queue_tags)
+
+        # These are more properly set up in the start() method
+        self.parsl_config = None
+        self.dflow_kernel = None
+
+        # Set up the app manager
+        self.app_manager = AppManager(self.manager_config)
+        self.all_program_info = self.app_manager.all_program_info()
+
+        self.logger.info("-" * 80)
+        self.logger.info("QCFractal Compute Manager:")
+        self.logger.info("    Version:     {}".format(__version__))
+        self.logger.info("    Base folder: {}".format(self.manager_config.base_folder))
+        self.logger.info("    Cluster:     {}".format(self.name_data.cluster))
+        self.logger.info("    Hostname:    {}".format(self.name_data.hostname))
+        self.logger.info("    UUID:        {}".format(self.name_data.uuid))
+
+        self.logger.info("\n")
+
+        self.logger.info("    Parsl Executors:")
+        for label, ex_config in config.executors.items():
+            self.logger.info("    {}:".format(label))
+            self.logger.info("                    Type: {}".format(ex_config.type))
+            self.logger.info("              Queue Tags: {}".format(ex_config.queue_tags))
+            self.logger.info("                Programs:")
+            executor_programs = self.app_manager.all_program_info(label)
+            for program, info in executor_programs.items():
+                self.logger.info("                    {}: {}".format(program, info))
+
+        self.logger.info("\n")
+
+        # Pull server info
+        self.server_info = self.client.get_server_information()
+        self.heartbeat_frequency = self.server_info["manager_heartbeat_frequency"]
+
+        self.client.activate(__version__, self.all_program_info, tags=self.all_queue_tags)
+
+        self.logger.info("    Connected to:")
+        self.logger.info("        Address:     {}".format(self.client.address))
+        self.logger.info("        Name:        {}".format(self.server_info["name"]))
+        self.logger.info("        Version:     {}".format(self.server_info["version"]))
+        self.logger.info("        Username:    {}".format(self.client.username))
+        self.logger.info("        Heartbeat:   {}".format(self.heartbeat_frequency))
+        self.logger.info("-" * 80)
+
+        # Is this manager in the process of shutting down?
+        # This is used to prevent the manager from starting new tasks in the scheduler
+        self._is_stopping = False
+
+        # Number of failed heartbeats. After missing a bunch, we will shutdown
+        self._failed_heartbeats = 0
+
+    @staticmethod
+    def _get_max_workers(executor: ParslExecutor) -> int:
+        """
+        Obtain the maximum number of tasks that can be run on an executor
+        """
+
+        ####################################################################################
+        # This function is broken out slightly, as there are some combinations
+        # of executors and providers that are not yet supported (but may be in the future)
+        ####################################################################################
+
+        if isinstance(executor, ThreadPoolExecutor):
+            return executor.max_threads
+
+        if isinstance(executor, HighThroughputExecutor):
+            prov = executor.provider
+
+            # The maximum number of workers are there on a single node
+            # (this is somewhat misnamed sometimes. The 'max_workers' also represents
+            # the maximum number of workers *per node*, which is set by the user. The
+            # 'workers_per_node' is calculated by the executor and takes into account
+            # memory and cpu limitations
+            workers_per_node = executor.workers_per_node
+
+            # Block information comes from the provider
+            # I *think* all providers have a max_blocks and nodes_per_block
+            max_blocks = prov.max_blocks
+            nodes_per_block = prov.nodes_per_block
+
+            max_tasks = workers_per_node * nodes_per_block * max_blocks
+            return max_tasks
+
+        raise ValueError(f"Executor type not supported: {type(executor)}")
+
+    @property
+    def name(self) -> str:
+        """
+        Returns this manager's full name.
+        """
+        return self.name_data.fullname
+
+    @property
+    def n_active_tasks(self) -> Dict[str, int]:
+        return {
+            ex_label: sum(0 if task.done() else 1 for task in self._task_futures[ex_label].values())
+            for ex_label in self._task_futures.keys()
+        }
+
+    @property
+    def n_total_active_tasks(self) -> int:
+        return sum(self.n_active_tasks.values())
+
+    @property
+    def n_deferred_tasks(self) -> int:
+        return sum(len(x) for x in self._deferred_tasks.values())
+
+    def start(self):
+        """
+        Starts the manager
+
+        This will block until stop() is called
+        """
+
+        ###########################################
+        # Set up Parsl executors and DataFlowKernel
+        ###########################################
+        self.parsl_config = ParslConfig(
+            executors=[], initialize_logging=False, run_dir=self.manager_config.parsl_run_dir
+        )
+        self.dflow_kernel = DataFlowKernel(self.parsl_config)
+
+        for ex_label, ex_config in self.manager_config.executors.items():
+            # Don't add dummy executors to the dataflow
+            if ex_config.type == "dummy":
+                continue
+
+            ex = build_executor(ex_label, ex_config)
+            self.dflow_kernel.add_executors([ex])
+
+        def scheduler_update():
+            self._update(new_tasks=True)
+            if not self._is_stopping:
+                self.scheduler.enter(self.manager_config.update_frequency, 1, scheduler_update)
+
+        def scheduler_heartbeat():
+            self.heartbeat()
+            if not self._is_stopping:
+                self.scheduler.enter(self.heartbeat_frequency, 1, scheduler_heartbeat)
+
+        self.logger.info("Compute Manager successfully started.")
+
+        self._failed_heartbeats = 0
+        self.scheduler.enter(0, 1, scheduler_update)
+        self.scheduler.enter(0, 2, scheduler_heartbeat)
+
+        # Blocks until the ComputeManager.stop() method is called
+        self.scheduler.run(blocking=True)
+
+        #############################################
+        # If we got here, the scheduler has stopped
+        # Now handle the shutdown
+        #############################################
+        self._update(new_tasks=False)
+
+        try:
+            # Notify the server of shutdown
+            self.client.deactivate(
+                active_tasks=self.statistics.active_tasks,
+                active_cores=self.statistics.active_cores,
+                active_memory=self.statistics.active_memory,
+                total_cpu_hours=self.statistics.total_cpu_hours,
+            )
+
+            shutdown_str = "Shutdown was successful, {} tasks returned to the fractal server"
+
+        except Exception as ex:
+            self.logger.warning(f"Deactivation failed: {str(ex).strip()}")
+            shutdown_str = "Shutdown was not successful, {} tasks not returned."
+
+        shutdown_str = shutdown_str.format(f"{self.n_total_active_tasks} active and {self.n_deferred_tasks} stale")
+        self.logger.info(shutdown_str)
+
+        # Close down the parsl stuff. Can sometimes get called after the
+        # DataFlowKernel atexit handler has been called
+        if not self.dflow_kernel.cleanup_called:
+            self.dflow_kernel.cleanup()
+
+        self.dflow_kernel = None
+        self.parsl_config = None
+
+        self.logger.info("Compute manager stopping gracefully.")
+
+    def stop(self) -> None:
+        """
+        Interrupts a running worker, causing it to shut down
+        """
+        self.logger.info("Manager stopping")
+
+        self._is_stopping = True
+
+        # This interrupts the scheduler, which will cause the rest of the start() method to run
+        self.scheduler.interrupt()
+
+    def heartbeat(self) -> None:
+        """
+        Provides a heartbeat to the connected Server.
+        """
+
+        try:
+            self.client.heartbeat(
+                active_tasks=self.statistics.active_tasks,
+                active_cores=self.statistics.active_cores,
+                active_memory=self.statistics.active_memory,
+                total_cpu_hours=self.statistics.total_cpu_hours,
+            )
+            self._failed_heartbeats = 0
+
+        except (ConnectionError, Timeout) as ex:
+            self._failed_heartbeats += 1
+            self.logger.warning(f"Heartbeat failed: {str(ex).strip()}. QCFractal server down?")
+            self.logger.warning(f"Missed {self._failed_heartbeats} heartbeats so far")
+            if self._failed_heartbeats > self.client.server_info["manager_heartbeat_max_missed"]:
+                self.logger.warning("Too many failed heartbeats, shutting down.")
+                self.stop()
+
+    def _acquire_complete_tasks(self) -> Dict[str, Dict[int, Any]]:
+        ret = {}
+        for executor_label, task_futures in self._task_futures.items():
+            ret.setdefault(executor_label, {})
+            finished = []
+
+            for task_id, task in task_futures.items():
+                if task.done():
+                    try:
+                        result = task.result()
+                        ret[executor_label][task_id] = parse_obj_as(AllResultTypes, result)
+
+                    except parsl.executors.high_throughput.interchange.ManagerLost as e:
+                        msg = "Compute worker lost:\n" + traceback.format_exc()
+                        ret[executor_label][task_id] = FailedOperation(
+                            success=False, error=ComputeError(error_type=e.__class__.__name__, error_message=msg)
+                        )
+
+                    except Exception as e:
+                        msg = "Error getting task result:\n" + traceback.format_exc()
+                        ret[executor_label][task_id] = FailedOperation(
+                            success=False, error=ComputeError(error_type=e.__class__.__name__, error_message=msg)
+                        )
+
+                    finished.append(task_id)
+
+            for task_id in finished:
+                del task_futures[task_id]
+
+        return ret
+
+    def _submit_tasks(self, executor_label: str, tasks: List[TaskInformation]):
+        """
+        Submits tasks to the parsl queue to be run
+        """
+
+        for task in tasks:
+            task_app = self.app_manager.get_app(self.dflow_kernel, executor_label, task)
+            task_future = task_app(
+                task.record_id, task.function_kwargs, executor_config=self.manager_config.executors[executor_label]
+            )
+            self._task_futures[executor_label][task.id] = task_future
+
+    def _return_finished(self, results: Dict[int, AllResultTypes]) -> TaskReturnMetadata:
+        # Handling of exceptions is expected to be done in the calling function
+
+        return_meta = self.client.return_finished(results)
+        self.logger.info(f"Successfully return tasks to the fractal server")
+        if return_meta.accepted_ids:
+            self.logger.info(f"Accepted task ids: " + " ".join(str(x) for x in return_meta.accepted_ids))
+        if return_meta.rejected_ids:
+            self.logger.info(f"Rejected task ids: ")
+            for tid, reason in return_meta.rejected_info:
+                self.logger.warning(f"    Task id {tid}: {reason}")
+
+            # Update the rejected stats here - no where else knows about them
+            self.statistics.total_rejected_tasks += len(return_meta.rejected_ids)
+
+        if not return_meta.success:
+            self.logger.warning(f"Error in returning tasks: {str(return_meta.error_string)}")
+        return return_meta
+
+    def _update_deferred_tasks(self) -> None:
+        """
+        Attempt to post the previous payload failures
+        """
+        new_deferred_tasks = defaultdict(dict)
+
+        for attempts, results in self._deferred_tasks.items():
+            try:
+                return_meta = self._return_finished(results)
+                if return_meta.success:
+                    self.logger.info(f"Successfully pushed jobs from {attempts+1} updates ago")
+                else:
+                    self.logger.warning(
+                        f"Did not successfully push jobs from {attempts+1} updates ago. Error: {return_meta.error_string}"
+                    )
+
+            except (Timeout, ConnectionError):
+                # Tried and failed
+                attempts += 1
+
+                # Case: Still within the retry limit
+                if self.server_error_retries is None or attempts < self.server_error_retries:
+                    new_deferred_tasks[attempts] = results
+                    self.logger.warning(
+                        f"Could not post jobs from {attempts-1} updates ago, will retry on next update."
+                    )
+
+                # Case: Over limit
+                else:
+                    self.logger.warning(
+                        f"Could not post {len(results)} tasks from {attempts-1} updates ago and over attempt limit. Dropping"
+                    )
+
+        self._deferred_tasks = new_deferred_tasks
+
+    def _update(self, new_tasks) -> None:
+        """Examines the queue for completed tasks and adds successful completions to the database
+        while unsuccessful are logged for future inspection.
+
+        Parameters
+        ----------
+        new_tasks
+            Try to get new tasks from the server
+        """
+
+        # First, try pushing back any stale results
+        self._update_deferred_tasks()
+
+        results = self._acquire_complete_tasks()
+
+        # Compress the stdout/stderr/error outputs, and native files
+        results = {ex_label: compress_results(ex_results) for ex_label, ex_results in results.items()}
+
+        # Any post-processing tasks
+        # Sometimes used for saving data for later
+        self.postprocess_results(results)
+
+        server_up = True
+
+        # Return results to the server (per executor)
+        for executor_label, executor_results in results.items():
+            n_success = 0
+            n_result = len(executor_results)
+
+            failure_messages = {}
+
+            if n_result:
+                try:
+                    return_meta = self._return_finished(executor_results)
+                    task_status = {k: "sent" for k in executor_results.keys() if k in return_meta.accepted_ids}
+                    task_status.update(
+                        {k: "rejected" for k in executor_results.keys() if k in return_meta.rejected_ids}
+                    )
+                except (ConnectionError, Timeout):
+                    if self.server_error_retries is None or self.server_error_retries > 0:
+                        self.logger.warning("Returning complete tasks failed. Attempting again on next update.")
+                        self._deferred_tasks[0].update(executor_results)
+                        task_status = {k: "deferred" for k in executor_results.keys()}
+                        server_up = False
+                    else:
+                        self.logger.warning("Returning complete tasks failed. Data may be lost.")
+                        task_status = {k: "unknown_error" for k in executor_results.keys()}
+                        server_up = False
+
+                for key, result in executor_results.items():
+                    wall_time_seconds = 0.0
+
+                    if result.success:
+                        n_success += 1
+                        if hasattr(result.provenance, "wall_time"):
+                            wall_time_seconds = float(result.provenance.wall_time)
+
+                        task_status[key] += " / success"
+                    else:
+                        assert isinstance(result, FailedOperation)
+
+                        task_status[key] += f" / failed: {result.error.error_type}"
+                        failure_messages[key] = result.error
+
+                        # Try to get the wall time in the most fault-tolerant way
+                        try:
+                            if (
+                                result.input_data is not None
+                                and result.input_data.provenance is not None
+                                and hasattr(result.input_data.provenance, "wall_time")
+                            ):
+                                wall_time_seconds = float(result.input_data.provenance.wall_time)
+                        except (AttributeError, TypeError):
+                            # Type error may happen if wall_time is None
+                            pass
+
+                    cores_per_worker = self.manager_config.executors[executor_label].cores_per_worker
+                    self.statistics.total_cpu_hours += wall_time_seconds * cores_per_worker / 3600
+
+                n_fail = n_result - n_success
+
+                self.logger.info(
+                    f"Executor {executor_label}: Processed {n_result} tasks: {n_success} success / {n_fail} failed"
+                )
+                self.logger.info(f"Executor {executor_label}: Task ids, submission status, calculation status below")
+                for task_id, status_msg in task_status.items():
+                    self.logger.info(f"    Task {task_id} : {status_msg}")
+                if n_fail:
+                    self.logger.debug("The following tasks failed with the errors:")
+                    for task_id, error_info in failure_messages.items():
+                        self.logger.debug(f"Error for task id {task_id}: {error_info.error_type}")
+                        self.logger.debug("    Backtrace: \n" + str(error_info.error_message))
+
+                # Update the statistics
+                self.statistics.total_successful_tasks += n_success
+                self.statistics.total_failed_tasks += n_fail
+
+        ########################################################################
+        # Update a few more statistics
+        # total_successful_tasks/n_failed_tasks are updated above, per executor
+        ########################################################################
+
+        n_active_tasks = self.n_active_tasks
+
+        # Active cores - active tasks * cores per task (worker) for each executor
+        self.statistics.active_cores = sum(
+            n_active_tasks[ex_label] * ex_config.cores_per_worker
+            for ex_label, ex_config in self.manager_config.executors.items()
+        )
+
+        # Same as above, but for memory
+        self.statistics.active_memory = sum(
+            n_active_tasks[ex_label] * ex_config.memory_per_worker
+            for ex_label, ex_config in self.manager_config.executors.items()
+        )
+
+        ###########################################
+        # Write statistics to the log
+        #######################################
+        task_stats_str = (
+            f"Task Stats: Total finished={self.statistics.total_finished_tasks}, "
+            f"Failed={self.statistics.total_failed_tasks}, "
+            f"Success={self.statistics.total_successful_tasks}, "
+            f"Rejected={self.statistics.total_rejected_tasks}"
+        )
+
+        worker_stats_str = f"Worker Stats (est.): Core Hours Used={self.statistics.total_cpu_hours:,.2f}"
+
+        self.logger.info(task_stats_str)
+        self.logger.info(worker_stats_str)
+        self.statistics.last_update_time = time.time()
+
+        if new_tasks and server_up:
+            # What do we have for each executor?
+            active_tasks = self.n_active_tasks
+
+            for executor_label, executor_config in self.manager_config.executors.items():
+                executor = self.dflow_kernel.executors[executor_label]
+
+                # How many slots do we have?
+                # TODO - intelligently figure out the number tasks to claim over the number of slots
+                open_slots = (3 * self._get_max_workers(executor)) - active_tasks[executor_label]
+
+                self.logger.info(
+                    f"Executor {executor_label} has {active_tasks[executor_label]} active tasks and {open_slots} open slots"
+                )
+
+                if open_slots > 0:
+                    try:
+                        executor_programs = self.app_manager.all_program_info(executor_label)
+                        new_tasks = self.client.claim(executor_programs, executor_config.queue_tags, open_slots)
+                    except (Timeout, ConnectionError) as ex:
+                        self.logger.warning(f"Acquisition of new tasks failed: {str(ex).strip()}")
+                        return
+
+                    self.logger.info("Acquired {} new tasks.".format(len(new_tasks)))
+
+                    # Add new tasks to queue
+                    self.preprocess_new_tasks(new_tasks)
+                    self._submit_tasks(executor_label, new_tasks)
+
+    def preprocess_new_tasks(self, new_tasks: List[TaskInformation]):
+        """
+        Any processing to do to the new tasks
+
+        To be overridden by a derived class. Sometimes used to save the results for testing
+        """
+        pass
+
+    def postprocess_results(self, results):
+        """
+        Any processing to do to the results
+
+        To be overridden by a derived class. Sometimes used to save the results for testing
+        """
+        pass
