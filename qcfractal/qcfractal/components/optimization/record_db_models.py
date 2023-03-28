@@ -131,7 +131,9 @@ class OptimizationRecordORM(BaseRecordORM):
 
     @property
     def required_programs(self) -> Dict[str, Optional[str]]:
-        return self.specification.required_programs
+        programs = self.specification.required_programs
+        programs["qcengine"] = None
+        return programs
 
     @property
     def short_description(self) -> str:

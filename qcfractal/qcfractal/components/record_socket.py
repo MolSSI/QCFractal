@@ -99,12 +99,7 @@ class BaseRecordSocket:
         Create an entry in the task queue, and attach it to the given record ORM
         """
 
-        # TODO - eventually, we may have other ways to run things. But for now,
-        # just put qcengine into the required programs
-        required_programs = record_orm.required_programs
-        required_programs["qcengine"] = None
-
-        record_orm.task = TaskQueueORM(tag=tag, priority=priority, required_programs=required_programs)
+        record_orm.task = TaskQueueORM(tag=tag, priority=priority, required_programs=record_orm.required_programs)
 
     @staticmethod
     def create_service(record_orm: BaseRecordORM, tag: str, priority: PriorityEnum) -> None:
