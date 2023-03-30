@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import multiprocessing
 import select as io_select
 import uuid
 from datetime import datetime, timedelta
@@ -36,8 +35,6 @@ class InternalJobSocket:
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
 
-        self._nproc = root_socket.qcf_config.internal_job_processes
-        self._enabled = self._nproc > 0
         self._hostname = gethostname()
 
         # How often to update progress (in seconds)
@@ -396,7 +393,7 @@ class InternalJobSocket:
                         return
                     total_waited += to_wait
 
-    def _run_loop(self, end_event):
+    def run_loop(self, end_event):
         """
         Runs in an infinite loop, checking for jobs and running them
 
@@ -474,23 +471,3 @@ class InternalJobSocket:
         session_main.close()
         session_status.close()
         conn.close()
-
-    def run_processes(self, end_event):
-        """
-        Run multiple processes for handling the internal job queue
-
-        Parameters
-        ----------
-        end_event
-            An event (threading.Event, multiprocessing.Event) that, when set, will
-            stop all the processes
-        """
-
-        procs = []
-        for _ in range(self._nproc):
-            p = multiprocessing.Process(target=self._run_loop, args=(end_event,))
-            p.start()
-            procs.append(p)
-
-        for p in procs:
-            p.join()

@@ -71,7 +71,7 @@ def test_internal_jobs_socket_run(storage_socket: SQLAlchemySocket, session: Ses
 
     time_0 = datetime.utcnow()
     end_event = threading.Event()
-    th = threading.Thread(target=storage_socket.internal_jobs._run_loop, args=(end_event,))
+    th = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
     th.start()
     time.sleep(6)
     time_1 = datetime.utcnow()
@@ -107,7 +107,7 @@ def test_internal_jobs_socket_recover(storage_socket: SQLAlchemySocket, session:
     storage_socket.internal_jobs._update_frequency = 1
 
     end_event = threading.Event()
-    th = threading.Thread(target=storage_socket.internal_jobs._run_loop, args=(end_event,))
+    th = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
     th.start()
     time.sleep(3)
 
@@ -127,7 +127,7 @@ def test_internal_jobs_socket_recover(storage_socket: SQLAlchemySocket, session:
     # Job is now running but orphaned. Should be picked up next time
     time.sleep(15)
     end_event = threading.Event()
-    th = threading.Thread(target=storage_socket.internal_jobs._run_loop, args=(end_event,))
+    th = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
     th.start()
     time.sleep(15)
 

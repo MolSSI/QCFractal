@@ -2,16 +2,16 @@ from __future__ import annotations
 
 import importlib
 import logging
-import multiprocessing
-import sys
+import queue
+import threading
 from typing import TYPE_CHECKING
 
 from flask import Flask
 from flask_jwt_extended import JWTManager
 from werkzeug.routing import IntegerConverter
+from werkzeug.serving import make_server
 
 from qcfractal.db_socket.socket import SQLAlchemySocket
-from qcfractal.process_runner import ProcessBase
 from .home import home_blueprint
 from ..api_v1.blueprint import api_v1
 from ..auth_v1.blueprint import auth_v1
@@ -110,45 +110,30 @@ def create_flask_app_dummy():
     return create_flask_app(qcf_cfg, init_storage=False)
 
 
-class FlaskProcess(ProcessBase):
-    """
-    Flask running in a separate process
-    """
-
+# From https://stackoverflow.com/questions/15562446/how-to-stop-flask-application-without-using-ctrl-c/45017691#45017691
+class SimpleFlask:
     def __init__(
         self,
         qcf_config: FractalConfig,
-        finished_queue: Optional[multiprocessing.Queue] = None,
-        running_event: Optional[multiprocessing.synchronize.Event] = None,
+        finished_queue: Optional[queue.Queue] = None,
+        started_event: Optional[threading.Event] = None,
     ):
-        self._qcf_config = qcf_config
-        self._finished_queue = finished_queue
-        self._running_event = running_event
+        self.started_event = started_event
+        self.app = create_flask_app(qcf_config)
 
-    def setup(self):
-        self._flask_app = create_flask_app(self._qcf_config)
+        if finished_queue is not None:
+            storage_socket.set_finished_watch(finished_queue)
 
-        # Get the global storage socket and set up the queue
-        storage_socket.set_finished_watch(self._finished_queue)
+        self.server = make_server(qcf_config.api.host, qcf_config.api.port, self.app)
+        self.ctx = self.app.app_context()
+        self.ctx.push()
 
-        from flask import cli
+    def start(self):
+        if self.started_event is not None:
+            with self.app.app_context():
+                self.started_event.set()
 
-        cli.show_server_banner = lambda *_: None
+        self.server.serve_forever()
 
-        # Get the werkzeug logger to shut up by setting its level to the root level
-        # I don't know what flask does but it seems to override it to INFO if not set
-        # on this particular logger
-        logging.getLogger("werkzeug").setLevel(logging.getLogger().level)
-
-    def run(self):
-        # see https://stackoverflow.com/a/55573732
-        with self._flask_app.app_context():
-            if self._running_event is not None:
-                self._running_event.set()
-
-        self._flask_app.run(host=self._qcf_config.api.host, port=self._qcf_config.api.port)
-
-    def interrupt(self) -> None:
-        # We got here via SIGINT or SIGTERM. Convert both to SIGTERM and let flask handle it
-        logging.getLogger(__name__).debug("Exiting flask process")
-        sys.exit(0)
+    def stop(self):
+        self.server.shutdown()

@@ -7,12 +7,11 @@ dead managers, and updating statistics.
 
 from __future__ import annotations
 
-import logging
 import multiprocessing
+import threading
 from typing import TYPE_CHECKING, Optional
 
 from .db_socket.socket import SQLAlchemySocket
-from .process_runner import ProcessBase
 
 if TYPE_CHECKING:
     from .config import FractalConfig
@@ -28,7 +27,6 @@ class FractalJobRunner:
     def __init__(
         self,
         qcf_config: FractalConfig,
-        end_event,
         finished_queue: Optional[multiprocessing.Queue] = None,
     ):
         """
@@ -40,9 +38,7 @@ class FractalJobRunner:
 
         self.storage_socket = SQLAlchemySocket(qcf_config)
         self.storage_socket.set_finished_watch(finished_queue)
-
-        self.logger = logging.getLogger("qcfractal_internal_jobs")
-        self._end_event = end_event
+        self._end_event = threading.Event()
 
     def start(self) -> None:
         """
@@ -51,37 +47,11 @@ class FractalJobRunner:
         This function will block until interrupted
         """
 
-        self.storage_socket.internal_jobs.run_processes(self._end_event)
+        self.storage_socket.internal_jobs.run_loop(self._end_event)
 
+    def stop(self) -> None:
+        """
+        Stop running the periodic tasks
+        """
 
-class FractalJobRunnerProcess(ProcessBase):
-    """
-    Enable running periodics in a separate process
-
-    This is used with :class:`process_runner.ProcessRunner` to run all periodic tasks in a separate process
-    """
-
-    def __init__(
-        self,
-        qcf_config: FractalConfig,
-        finished_queue: Optional[multiprocessing.Queue] = None,
-    ):
-        ProcessBase.__init__(self)
-        self._qcf_config = qcf_config
-        self._end_event = multiprocessing.Event()
-        self._finished_queue = finished_queue
-
-        # ---------------------------------------------------------------
-        # We should not instantiate the FractalJobRunner class here.
-        # The setup and run functions will be run in a separate process
-        # and so instantiation should happen there
-        # ---------------------------------------------------------------
-
-    def setup(self) -> None:
-        self._runner = FractalJobRunner(self._qcf_config, self._end_event, self._finished_queue)
-
-    def run(self) -> None:
-        self._runner.start()
-
-    def interrupt(self) -> None:
         self._end_event.set()

@@ -8,53 +8,63 @@ import secrets
 import tempfile
 import time
 import weakref
-from multiprocessing.pool import Pool
 from queue import Empty  # Just for exception handling
 from typing import TYPE_CHECKING
 
 import requests
 
-from qcfractalcompute import ComputeManager, _initialize_signals_process_pool
+from qcfractalcompute.compute_manager import ComputeManager
+from qcfractalcompute.config import FractalComputeConfig, FractalServerSettings, LocalExecutorConfig
 from qcportal import PortalClient
 from qcportal.record_models import RecordStatusEnum
 from .config import FractalConfig, DatabaseConfig, update_nested_dict
-from .flask_app.flask_app import FlaskProcess
-from .job_runner import FractalJobRunnerProcess
+from .flask_app import SimpleFlask
+from .job_runner import FractalJobRunner
 from .port_util import find_open_port
 from .postgres_harness import TemporaryPostgres
-from .process_runner import ProcessBase, ProcessRunner
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Sequence, Optional, Set
 
 
-class SnowflakeComputeProcess(ProcessBase):
-    """
-    Runs  a compute manager in a separate process
-    """
+def _flask_process(
+    qcf_config: FractalConfig,
+    finished_queue: Optional[multiprocessing.Queue] = None,
+    started_event: Optional[multiprocessing.Event] = None,
+) -> None:
 
-    def __init__(self, qcf_config: FractalConfig, compute_workers: int = 2):
-        self._qcf_config = qcf_config
-        self._compute_workers = compute_workers
+    flask = SimpleFlask(qcf_config, finished_queue, started_event)
+    flask.start()
 
-        # Don't initialize the worker pool here. It must be done in setup(), because
-        # that is run in the separate process
 
-    def setup(self) -> None:
-        host = self._qcf_config.api.host
-        port = self._qcf_config.api.port
-        uri = f"http://{host}:{port}"
+def _compute_process(compute_config: FractalComputeConfig) -> None:
 
-        self._worker_pool = Pool(processes=self._compute_workers, initializer=_initialize_signals_process_pool)
-        self._queue_manager = ComputeManager(self._worker_pool, fractal_uri=uri, manager_name="snowflake_compute")
+    import signal
 
-    def run(self) -> None:
-        self._queue_manager.start()
+    compute = ComputeManager(compute_config)
 
-    def interrupt(self) -> None:
-        self._queue_manager.stop()
-        self._worker_pool.terminate()
-        self._worker_pool.join()
+    def signal_handler(signum, frame):
+        compute.stop()
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+    compute.start()
+
+
+def _job_runner_process(qcf_config: FractalConfig) -> None:
+
+    import signal
+
+    job_runner = FractalJobRunner(qcf_config, None)
+
+    def signal_handler(signum, frame):
+        job_runner.stop()
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+    job_runner.start()
 
 
 class FractalSnowflake:
@@ -62,7 +72,6 @@ class FractalSnowflake:
         self,
         start: bool = True,
         compute_workers: int = 2,
-        enable_watching: bool = True,
         database_config: Optional[DatabaseConfig] = None,
         extra_config: Optional[Dict[str, Any]] = None,
     ):
@@ -106,55 +115,121 @@ class FractalSnowflake:
         qcf_cfg["base_folder"] = self._tmpdir.name
         qcf_cfg["loglevel"] = logging.getLevelName(loglevel)
         qcf_cfg["database"] = db_config.dict()
+        qcf_cfg["enable_security"] = False
+        qcf_cfg["hide_internal_errors"] = False
+        qcf_cfg["service_frequency"] = 10
+        qcf_cfg["heartbeat_frequency"] = 5
         qcf_cfg["api"] = {
             "host": fractal_host,
             "port": fractal_port,
             "secret_key": secrets.token_urlsafe(32),
             "jwt_secret_key": secrets.token_urlsafe(32),
         }
-        qcf_cfg["enable_security"] = False
-        qcf_cfg["hide_internal_errors"] = False
-        qcf_cfg["service_frequency"] = 10
 
         # Add in any options passed to this Snowflake
         if extra_config is not None:
             update_nested_dict(qcf_cfg, extra_config)
 
         self._qcf_config = FractalConfig(**qcf_cfg)
-        self._compute_workers = compute_workers
-
-        # Do we want to enable watching/waiting for finished tasks?
-        self._finished_queue = None
-        if enable_watching:
-            # We use fork inside ProcessRunner, so we must use for here to set up the Queues
-            # This must be changed if the ProcessRunner is ever changed to use seomthing else
-            mp_ctx = multiprocessing.get_context("fork")
-            self._finished_queue = mp_ctx.Queue()
-            self._all_completed: Set[int] = set()
 
         ######################################
-        # Now start the various subprocesses #
+        # Set up the various components      #
         ######################################
-        # For notification that flask is now ready to accept connections
+        # Multiprocessing context - generally use fork
+        self._mp_context = multiprocessing.get_context("fork")
+
+        # For Flask
         self._flask_started = multiprocessing.Event()
-        flask = FlaskProcess(self._qcf_config, self._finished_queue, self._flask_started)
+        self._finished_queue = self._mp_context.Queue()
+        self._all_completed: Set[int] = set()
+        self._flask_proc = None
 
-        job_runner = FractalJobRunnerProcess(self._qcf_config, self._finished_queue)
+        # For the compute manager
+        uri = f"http://{self._qcf_config.api.host}:{self._qcf_config.api.port}"
+        self._compute_config = FractalComputeConfig(
+            base_folder=self._tmpdir.name,
+            cluster="snowflake_compute",
+            update_frequency=5,
+            server=FractalServerSettings(
+                fractal_uri=uri,
+                verify=False,
+            ),
+            executors={
+                "local": LocalExecutorConfig(
+                    cores_per_worker=1, memory_per_worker=1, max_workers=compute_workers, queue_tags=["*"]
+                )
+            },
+        )
+        self._compute_enabled = compute_workers > 0
+        self._compute_proc = None
 
-        # Don't auto start here. we will handle it later
-        self._flask_proc = ProcessRunner("snowflake_flask", flask, False)
+        # Job runner
+        self._job_runner_proc = None
 
-        self._job_runner_proc = ProcessRunner("snowflake_job_runner", job_runner, False)
-
-        compute = SnowflakeComputeProcess(self._qcf_config, self._compute_workers)
-        self._compute_proc = ProcessRunner("snowflake_compute", compute, False)
+        # This is updated when starting components
+        self._finalizer = None
 
         if start:
             self.start()
 
+    def _update_finalizer(self):
+        if self._finalizer is not None:
+            self._finalizer.detach()
+
         self._finalizer = weakref.finalize(
-            self, self._stop, self._compute_proc, self._flask_proc, self._job_runner_proc
+            self,
+            self._stop,
+            self._compute_proc,
+            self._flask_proc,
+            self._job_runner_proc,
         )
+
+    def _start_flask(self):
+        if self._flask_proc is None:
+            self._flask_proc = self._mp_context.Process(
+                target=_flask_process, args=(self._qcf_config, self._finished_queue, self._flask_started)
+            )
+            self._flask_proc.start()
+
+        self._update_finalizer()
+        self.wait_for_flask()
+
+    def _stop_flask(self):
+        if self._flask_proc is not None:
+            self._flask_proc.terminate()
+            self._flask_proc.join()
+            self._flask_proc = None
+            self._flask_started.clear()
+            self._update_finalizer()
+
+    def _start_compute(self):
+        if not self._compute_enabled:
+            return
+
+        if self._compute_proc is None:
+            self._compute_proc = self._mp_context.Process(target=_compute_process, args=(self._compute_config,))
+            self._compute_proc.start()
+            self._update_finalizer()
+
+    def _stop_compute(self):
+        if self._compute_proc is not None:
+            self._compute_proc.terminate()
+            self._compute_proc.join()
+            self._compute_proc = None
+            self._update_finalizer()
+
+    def _start_job_runner(self):
+        if self._job_runner_proc is None:
+            self._job_runner_proc = self._mp_context.Process(target=_job_runner_process, args=(self._qcf_config,))
+            self._job_runner_proc.start()
+            self._update_finalizer()
+
+    def _stop_job_runner(self):
+        if self._job_runner_proc is not None:
+            self._job_runner_proc.terminate()
+            self._job_runner_proc.join()
+            self._job_runner_proc = None
+            self._update_finalizer()
 
     @classmethod
     def _stop(cls, compute_proc, flask_proc, job_runner_proc):
@@ -165,9 +240,19 @@ class FractalSnowflake:
         # Stop these in a particular order
         # First the compute, since it will communicate its demise to the api server
         # Flask must be last. It was started first and owns the db
-        compute_proc.stop()
-        job_runner_proc.stop()
-        flask_proc.stop()
+
+        # First, stop all, then join all for better performance
+        if compute_proc is not None:
+            compute_proc.terminate()
+            compute_proc.join()
+
+        if job_runner_proc is not None:
+            job_runner_proc.terminate()
+            job_runner_proc.join()
+
+        if flask_proc is not None:
+            flask_proc.terminate()
+            flask_proc.join()
 
     def wait_for_flask(self):
         """
@@ -201,28 +286,26 @@ class FractalSnowflake:
                 if iter >= max_iter:
                     raise
 
-    def stop(self):
-        """
-        Stops the server
-        """
-
-        self._stop(self._compute_proc, self._flask_proc, self._job_runner_proc)
-        self._flask_started.clear()
-
     def start(self):
         """
-        Starts the server
+        Starts all the components of the snowflake
         """
 
-        if not self._flask_proc.is_alive():
-            self._flask_proc.start()
+        self._start_flask()
+        self._start_compute()
+        self._start_job_runner()
 
-        self.wait_for_flask()
+    def stop(self):
+        """
+        Stops all components of the snowflake
+        """
 
-        if not self._job_runner_proc.is_alive():
-            self._job_runner_proc.start()
-        if self._compute_workers > 0 and not self._compute_proc.is_alive():
-            self._compute_proc.start()
+        if self._finalizer is not None:
+            self._finalizer()
+
+        self._flask_proc = None
+        self._compute_proc = None
+        self._job_runner_proc = None
 
     def get_uri(self) -> str:
         """
@@ -260,11 +343,6 @@ class FractalSnowflake:
             True if all the results were received, False if timeout has elapsed without receiving a completed computation
         """
         logger = logging.getLogger(__name__)
-
-        if self._finished_queue is None:
-            raise RuntimeError(
-                "Cannot wait for results when the completed queue is not enabled. See the 'enable_watching' argument to the constructor"
-            )
 
         if ids is None:
             c = self.client()
@@ -307,7 +385,10 @@ class FractalSnowflake:
         Obtain a PortalClient connected to this server
         """
 
-        return PortalClient(self.get_uri())
+        # Shorten the timeout parameter - should be pretty quick in a snowflake
+        c = PortalClient(self.get_uri())
+        c._timeout = 2
+        return c
 
     def __enter__(self):
         return self

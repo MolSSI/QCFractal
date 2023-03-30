@@ -24,10 +24,9 @@ from qcfractal import __version__
 from qcportal.auth import RoleInfo, UserInfo
 from .config import read_configuration, write_initial_configuration, FractalConfig, WebAPIConfig
 from .db_socket.socket import SQLAlchemySocket
-from .flask_app.gunicorn_app import GunicornProcess
-from .job_runner import FractalJobRunnerProcess
+from .flask_app.gunicorn_app import FractalGunicornApp
+from .job_runner import FractalJobRunner
 from .postgres_harness import PostgresHarness
-from .process_runner import ProcessRunner
 
 if TYPE_CHECKING:
     from typing import Tuple
@@ -416,10 +415,14 @@ def server_start(config):
     start_database(config)
 
     # Start up the gunicorn and job runner
-    gunicorn = GunicornProcess(config)
-    job_runner = FractalJobRunnerProcess(config)
-    gunicorn_proc = ProcessRunner("gunicorn", gunicorn)
-    job_runner_proc = ProcessRunner("job_runner", job_runner)
+    gunicorn_app = FractalGunicornApp(config)
+    gunicorn_proc = multiprocessing.Process(target=gunicorn_app.run)
+    gunicorn_proc.start()
+
+    job_runners = [FractalJobRunner(config) for _ in range(config.internal_job_processes)]
+    job_runner_procs = [multiprocessing.Process(target=jr.start) for jr in job_runners]
+    for p in job_runner_procs:
+        p.start()
 
     def _cleanup(sig, frame):
         signame = signal.Signals(sig).name
@@ -435,8 +438,9 @@ def server_start(config):
             time.sleep(15)
             if not gunicorn_proc.is_alive():
                 raise RuntimeError("Gunicorn process died! Check the logs")
-            if not job_runner_proc.is_alive():
-                raise RuntimeError("Job runner died! Check the logs")
+            if not all([p.is_alive() for p in job_runner_procs]):
+                raise RuntimeError("A Job runner died! Check the logs")
+
     except EndProcess as e:
         if not stdout_logging:
             # Start logging to the screen again
@@ -462,8 +466,13 @@ def server_start(config):
         logger.critical(f"Exception while running QCFractal server:\n{tb}")
         exitcode = 1
 
-    gunicorn_proc.stop()
-    job_runner_proc.stop()
+    # Gunicorn has its own sigal handling
+    gunicorn_proc.terminate()
+    gunicorn_proc.join()
+
+    for p in job_runner_procs:
+        p.terminate()
+        p.join()
 
     sys.exit(exitcode)
 
@@ -483,18 +492,16 @@ def server_start_job_runner(config):
     # even if we don't own the db (which we shouldn't)
     start_database(config)
 
-    end_event = multiprocessing.Event()
+    # Now just run the job runner directly
+    job_runner = FractalJobRunner(config)
+    job_runner.start()
 
     def _cleanup(sig, frame):
         logger.debug("In cleanup of job runner")
-        end_event.set()
+        job_runner.stop()
 
     signal.signal(signal.SIGINT, _cleanup)
     signal.signal(signal.SIGTERM, _cleanup)
-
-    # Now just run the job runner directly
-    job_runner = FractalJobRunner(config, end_event)
-    job_runner.start()
 
     exit(0)
 

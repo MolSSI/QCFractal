@@ -51,7 +51,7 @@ def test_internal_jobs_client_error(snowflake_client: PortalClient, storage_sock
 
     time_0 = datetime.utcnow()
     end_event = threading.Event()
-    th = threading.Thread(target=storage_socket.internal_jobs._run_loop, args=(end_event,))
+    th = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
     th.start()
     time.sleep(3)
     time_1 = datetime.utcnow()
@@ -89,7 +89,7 @@ def test_internal_jobs_client_cancel_running(snowflake_client: PortalClient, sto
     storage_socket.internal_jobs._update_frequency = 1
 
     end_event = threading.Event()
-    th = threading.Thread(target=storage_socket.internal_jobs._run_loop, args=(end_event,))
+    th = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
     th.start()
     time.sleep(4)
 
@@ -131,7 +131,7 @@ def test_internal_jobs_client_delete_running(snowflake_client: PortalClient, sto
     storage_socket.internal_jobs._update_frequency = 1
 
     end_event = threading.Event()
-    th = threading.Thread(target=storage_socket.internal_jobs._run_loop, args=(end_event,))
+    th = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
     th.start()
     time.sleep(4)
 
@@ -168,7 +168,7 @@ def test_internal_jobs_client_query(secure_snowflake: QCATestingSnowflake):
     storage_socket.internal_jobs._update_frequency = 1
 
     end_event = threading.Event()
-    th = threading.Thread(target=storage_socket.internal_jobs._run_loop, args=(end_event,))
+    th = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
     th.start()
     time.sleep(4)
     time_2 = datetime.utcnow()

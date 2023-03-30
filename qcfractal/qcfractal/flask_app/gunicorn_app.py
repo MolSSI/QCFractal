@@ -2,14 +2,12 @@ from __future__ import annotations
 
 import logging
 import logging.handlers
-import sys
 from typing import TYPE_CHECKING
 
 import gunicorn.app.base
 from gunicorn.glogging import Logger as GLogger
 
 from .flask_app import create_flask_app, storage_socket
-from ..process_runner import ProcessBase
 
 if TYPE_CHECKING:
     from ..config import FractalConfig
@@ -77,25 +75,3 @@ class FractalGunicornApp(gunicorn.app.base.BaseApplication):
 
         for key, value in config.items():
             self.cfg.set(key.lower(), value)
-
-
-class GunicornProcess(ProcessBase):
-    """
-    Gunicorn running in a separate process
-    """
-
-    def __init__(self, qcf_config: FractalConfig):
-        ProcessBase.__init__(self)
-        self.config = qcf_config
-
-    def setup(self) -> None:
-        self._gunicorn_app = FractalGunicornApp(self.config)
-
-    def run(self) -> None:
-        self._gunicorn_app.run()
-
-    def interrupt(self) -> None:
-        # Normally not reachable as gunicorn uses its own signal handlers. However,
-        # may be reached if the process is interrupted during setup
-        logging.getLogger(__name__).debug("Exiting gunicorn process")
-        sys.exit(0)
