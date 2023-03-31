@@ -24,6 +24,7 @@ def get_information():
     public_info = {
         "name": qcf_cfg.name,
         "manager_heartbeat_frequency": qcf_cfg.heartbeat_frequency,
+        "manager_heartbeat_max_missed": qcf_cfg.heartbeat_max_missed,
         "version": qcfractal_version,
         "api_limits": qcf_cfg.api_limits.dict(),
         "client_version_lower_limit": client_version_lower_limit,
