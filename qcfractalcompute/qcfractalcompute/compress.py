@@ -88,7 +88,7 @@ def _compress_optimizationresult(
 
 
 def compress_results(
-    results: Dict[str, Any],
+    results: Dict[int, Any],
 ):
     """
     Compress outputs and native files inside results, storing them in extras
