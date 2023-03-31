@@ -78,7 +78,7 @@ class JobStatus:
         thread.join()
 
     def stop(self):
-        self._stop_thread(self._th_cancel, self._th)
+        self._finalizer()
 
     def update_progress(self, progress: int):
         self._progress = progress
