@@ -119,6 +119,7 @@ class FractalSnowflake:
         qcf_cfg["hide_internal_errors"] = False
         qcf_cfg["service_frequency"] = 10
         qcf_cfg["heartbeat_frequency"] = 5
+        qcf_cfg["heartbeat_max_missed"] = 3
         qcf_cfg["api"] = {
             "host": fractal_host,
             "port": fractal_port,

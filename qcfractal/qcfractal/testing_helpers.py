@@ -114,7 +114,6 @@ class QCATestingSnowflake(FractalSnowflake):
             self,
             start=False,
             compute_workers=0,
-            enable_watching=True,
             database_config=database_config,
             extra_config=qcf_config,
         )
@@ -148,33 +147,27 @@ class QCATestingSnowflake(FractalSnowflake):
 
     def start_flask(self) -> None:
         """
-        Starts the flask subprocess
+        Starts the flask thread
         """
-        if not self._flask_proc.is_alive():
-            self._flask_proc.start()
-            self.wait_for_flask()
+        self._start_flask()
 
     def stop_flask(self) -> None:
         """
-        Stops the flask subprocess
+        Stops the flask thread
         """
-        if self._flask_proc.is_alive():
-            self._flask_proc.stop()
-            self._flask_started.clear()
+        self._stop_flask()
 
     def start_job_runner(self) -> None:
         """
-        Starts the job runner subprocess
+        Starts the job runner thread
         """
-        if not self._job_runner_proc.is_alive():
-            self._job_runner_proc.start()
+        self._start_job_runner()
 
     def stop_job_runner(self) -> None:
         """
-        Stops the job_runner subprocess
+        Stops the job_runner thread
         """
-        if self._job_runner_proc.is_alive():
-            self._job_runner_proc.stop()
+        self._stop_job_runner()
 
     def client(self, username=None, password=None) -> PortalClient:
         """
