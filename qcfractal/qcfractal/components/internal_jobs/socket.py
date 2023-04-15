@@ -419,8 +419,7 @@ class InternalJobSocket:
 
         # Set up the listener for postgres. This will be notified when something is
         # added to the internal job queue
-        conn = self.root_socket.get_connection()
-        conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+        conn = self.root_socket.engine.raw_connection()
         cursor = conn.cursor()
         cursor.execute("LISTEN check_internal_jobs;")
 

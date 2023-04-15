@@ -59,6 +59,10 @@ class SQLAlchemySocket:
             "Connected SQLAlchemy to DB dialect {} with driver {}".format(self.engine.dialect.name, self.engine.driver)
         )
 
+        # Create an equivalent engine with autocommit
+        # See https://docs.sqlalchemy.org/en/20/orm/session_transaction.html#session-transaction-isolation
+        self.autocommit_engine = self.engine.execution_options(isolation_level="AUTOCOMMIT")
+
         # Handle multiprocessing w/ sqlalchemy
         # https://docs.sqlalchemy.org/en/14/core/pooling.html#using-connection-pools-with-multiprocessing-or-os-fork
         @event.listens_for(self.engine, "connect")
@@ -256,13 +260,6 @@ class SQLAlchemySocket:
         finally:
             conn.close()
 
-    def get_connection(self):
-        """
-        Retrieve a raw connection object from the database engine
-        """
-
-        return self.engine.raw_connection()
-
     @contextmanager
     def session_scope(self, read_only: bool = False):
         """Provide a session as a context manager
@@ -272,7 +269,10 @@ class SQLAlchemySocket:
         and then closed. On exception, the session is rolled back.
         """
 
-        session = self.Session()
+        if read_only:
+            session = self.Session(bind=self.autocommit_engine)
+        else:
+            session = self.Session(bind=self.engine)
         try:
             yield session
 
