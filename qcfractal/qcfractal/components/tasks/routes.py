@@ -21,6 +21,7 @@ def claim_tasks_v1(body_data: TaskClaimBody):
     return storage_socket.tasks.claim_tasks(
         manager_name=body_data.name_data.fullname,
         tags=body_data.tags,
+        programs=body_data.programs,
         limit=calculate_limit(max_limit, body_data.limit),
     )
 

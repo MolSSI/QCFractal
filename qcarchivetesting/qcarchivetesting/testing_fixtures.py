@@ -196,6 +196,24 @@ def snowflake_client(snowflake):
     yield snowflake.client()
 
 
+_activated_manager_programs = {
+    "qcengine": ["unknown"],
+    "psi4": ["unknown"],
+    "qchem": ["unknown"],
+    "geometric": ["unknown"],
+    "rdkit": ["unknown"],
+    "mopac": ["unknown"],
+    "prog1": ["unknown"],
+    "prog2": ["unknown"],
+    "prog3": ["unknown"],
+    "prog4": ["unknown"],
+    "optprog1": ["unknown"],
+    "optprog2": ["unknown"],
+    "optprog3": ["unknown"],
+    "optprog4": ["unknown"],
+}
+
+
 @pytest.fixture(scope="function")
 def activated_manager(storage_socket: SQLAlchemySocket) -> Tuple[ManagerName, int]:
     """
@@ -207,22 +225,7 @@ def activated_manager(storage_socket: SQLAlchemySocket) -> Tuple[ManagerName, in
         name_data=mname,
         manager_version="v2.0",
         username="bill",
-        programs={
-            "qcengine": ["unknown"],
-            "psi4": ["unknown"],
-            "qchem": ["unknown"],
-            "geometric": ["unknown"],
-            "rdkit": ["unknown"],
-            "mopac": ["unknown"],
-            "prog1": ["unknown"],
-            "prog2": ["unknown"],
-            "prog3": ["unknown"],
-            "prog4": ["unknown"],
-            "optprog1": ["unknown"],
-            "optprog2": ["unknown"],
-            "optprog3": ["unknown"],
-            "optprog4": ["unknown"],
-        },
+        programs=_activated_manager_programs,
         tags=["*"],
     )
 
@@ -236,3 +239,11 @@ def activated_manager_name(activated_manager) -> ManagerName:
     """
 
     yield activated_manager[0]
+
+@pytest.fixture(scope="function")
+def activated_manager_programs(activated_manager) -> ManagerName:
+    """
+    An activated manager, returning only its programs
+    """
+
+    yield _activated_manager_programs

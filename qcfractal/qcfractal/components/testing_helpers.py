@@ -22,17 +22,19 @@ def populate_records_status(storage_socket: SQLAlchemySocket):
     Populates the db with tasks in all statuses
     """
 
+    manager_programs = {
+        "qcengine": ["unknown"],
+        "psi4": ["unknown"],
+        "qchem": ["v3.0"],
+        "rdkit": ["unknown"],
+        "geometric": ["unknown"],
+    }
+
     storage_socket.managers.activate(
         name_data=mname1,
         manager_version="v2.0",
         username="bill",
-        programs={
-            "qcengine": ["unknown"],
-            "psi4": ["unknown"],
-            "qchem": ["v3.0"],
-            "rdkit": ["unknown"],
-            "geometric": ["unknown"],
-        },
+        programs=manager_programs,
         tags=["tag1", "tag2", "tag3", "tag6"],
     )
 
@@ -73,7 +75,9 @@ def populate_records_status(storage_socket: SQLAlchemySocket):
 
     # claim only the ones we want to be complete, running, or error (1, 2, 3, 6)
     # 6 needs to be complete to be invalidated
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, ["tag1", "tag2", "tag3", "tag6"], limit=4)
+    tasks = storage_socket.tasks.claim_tasks(
+        mname1.fullname, manager_programs, ["tag1", "tag2", "tag3", "tag6"], limit=4
+    )
     assert len(tasks) == 4
 
     fop = FailedOperation(error=ComputeError(error_type="test_error", error_message="this is a test error"))
@@ -93,7 +97,9 @@ def populate_records_status(storage_socket: SQLAlchemySocket):
     for i in range(4):
         meta = storage_socket.records.reset(id_3)
         assert meta.success
-        tasks = storage_socket.tasks.claim_tasks(mname1.fullname, ["tag1", "tag2", "tag3", "tag6"], limit=1)
+        tasks = storage_socket.tasks.claim_tasks(
+            mname1.fullname, manager_programs, ["tag1", "tag2", "tag3", "tag6"], limit=1
+        )
         assert len(tasks) == 1
         assert tasks[0]["tag"] == "tag3"
 

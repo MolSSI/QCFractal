@@ -17,6 +17,7 @@ from .testing_helpers import test_specs, load_test_data, run_test_data
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from sqlalchemy.orm.session import Session
+    from typing import Dict, List
 
 
 def coalesce(x):
@@ -27,7 +28,10 @@ def coalesce(x):
 
 @pytest.mark.parametrize("spec", test_specs)
 def test_singlepoint_socket_task_spec(
-    storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, spec: QCSpecification
+    storage_socket: SQLAlchemySocket,
+    spec: QCSpecification,
+    activated_manager_name: ManagerName,
+    activated_manager_programs: Dict[str, List[str]],
 ):
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
@@ -39,7 +43,7 @@ def test_singlepoint_socket_task_spec(
     time_1 = datetime.utcnow()
     assert meta.success
 
-    tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, ["*"])
+    tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, activated_manager_programs, ["*"])
 
     assert len(tasks) == 3
     for t in tasks:

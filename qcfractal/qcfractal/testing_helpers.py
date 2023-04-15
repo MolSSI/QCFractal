@@ -283,7 +283,8 @@ def run_service(
             assert rec.status == RecordStatusEnum.running
 
         # only do 5 tasks at a time. Tests iteration when stuff is not completed
-        manager_tasks = storage_socket.tasks.claim_tasks(manager_name.fullname, ["*"], limit=5)
+        manager_programs = storage_socket.managers.get([manager_name.fullname])[0]["programs"]
+        manager_tasks = storage_socket.tasks.claim_tasks(manager_name.fullname, manager_programs, ["*"], limit=5)
 
         # Sometimes a task may be duplicated in the service dependencies.
         # The C8H6 test has this "feature"

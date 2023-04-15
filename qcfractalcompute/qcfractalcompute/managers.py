@@ -622,7 +622,7 @@ class ComputeManager:
 
         if new_tasks is True and open_slots > 0:
             try:
-                new_tasks = self.client.claim(self.queue_tag, open_slots)
+                new_tasks = self.client.claim(self.all_program_info, self.queue_tag, open_slots)
 
                 # We don't need to deal with task objects, that for manager v2
                 new_tasks = [x.dict() for x in new_tasks]

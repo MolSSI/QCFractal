@@ -30,32 +30,38 @@ def test_task_socket_claim_mixed(storage_socket: SQLAlchemySocket, session: Sess
     mname2 = ManagerName(cluster="test_cluster", hostname="a_host2", uuid="2234-5678-1234-5678")
     mname3 = ManagerName(cluster="test_cluster", hostname="a_host3", uuid="3234-5678-1234-5678")
     mname4 = ManagerName(cluster="test_cluster", hostname="a_host4", uuid="4234-5678-1234-5678")
+
+    mprog1 = {"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"]}
+    mprog2 = {"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"]}
+    mprog3 = {"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"]}
+    mprog4 = {"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"], "rdkit": ["v1.0"]}
+
     mid_1 = storage_socket.managers.activate(
         name_data=mname1,
         manager_version="v2.0",
         username="bill",
-        programs={"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"]},
+        programs=mprog1,
         tags=["tag1"],
     )
     mid_2 = storage_socket.managers.activate(
         name_data=mname2,
         manager_version="v2.0",
         username="bill",
-        programs={"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"]},
+        programs=mprog2,
         tags=["*"],
     )
     mid_3 = storage_socket.managers.activate(
         name_data=mname3,
         manager_version="v2.0",
         username="bill",
-        programs={"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"]},
+        programs=mprog3,
         tags=["tag3", "tag1"],
     )
     mid_4 = storage_socket.managers.activate(
         name_data=mname4,
         manager_version="v2.0",
         username="bill",
-        programs={"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"], "rdkit": ["v1.0"]},
+        programs=mprog4,
         tags=["tag3", "*"],
     )
 
@@ -90,29 +96,29 @@ def test_task_socket_claim_mixed(storage_socket: SQLAlchemySocket, session: Sess
     # claim up to two tasks
     # should find the high and normal priority one, but not the one
     # requiring rdkit
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, ["tag1"], 2)
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, mprog1, ["tag1"], 2)
     assert len(tasks) == 2
     assert tasks[0]["id"] == recs[2].task.id
     assert tasks[1]["id"] == recs[4].task.id
 
     # manager 4 should find tag3, and then #6 (highest priority left)
-    tasks = storage_socket.tasks.claim_tasks(mname4.fullname, ["tag3", "*"], 2)
+    tasks = storage_socket.tasks.claim_tasks(mname4.fullname, mprog4, ["tag3", "*"], 2)
     assert len(tasks) == 2
     assert tasks[0]["id"] == recs[3].task.id
     assert tasks[1]["id"] == recs[5].task.id
 
     # manager3 should find the only remaining tag1 that isn't rdkit
-    tasks = storage_socket.tasks.claim_tasks(mname3.fullname, ["tag3", "tag1"])
+    tasks = storage_socket.tasks.claim_tasks(mname3.fullname, mprog3, ["tag3", "tag1"])
     assert len(tasks) == 1
     assert tasks[0]["id"] == recs[0].task.id
 
     # manager 2 only finds #2 - doesn't have rdkit
-    tasks = storage_socket.tasks.claim_tasks(mname2.fullname, ["*"], 20)
+    tasks = storage_socket.tasks.claim_tasks(mname2.fullname, mprog2, ["*"], 20)
     assert len(tasks) == 1
     assert tasks[0]["id"] == recs[1].task.id
 
     # manager 4 can finally get the last one
-    tasks = storage_socket.tasks.claim_tasks(mname4.fullname, ["tag3", "*"], 20)
+    tasks = storage_socket.tasks.claim_tasks(mname4.fullname, mprog4, ["tag3", "*"], 20)
     assert len(tasks) == 1
     assert tasks[0]["id"] == recs[6].task.id
 
@@ -139,11 +145,12 @@ def test_task_socket_claim_mixed(storage_socket: SQLAlchemySocket, session: Sess
 
 def test_task_socket_claim_priority(storage_socket: SQLAlchemySocket, session: Session):
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host1", uuid="1234-5678-1234-5678")
+    mprog1 = {"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"]}
     storage_socket.managers.activate(
         name_data=mname1,
         manager_version="v2.0",
         username="bill",
-        programs={"qcengine": ["unknown"], "Psi4": ["unknown"], "geometric": ["v3.0"]},
+        programs=mprog1,
         tags=["tag1"],
     )
 
@@ -173,14 +180,14 @@ def test_task_socket_claim_priority(storage_socket: SQLAlchemySocket, session: S
         recs.append(rec)
 
     # highest priority should be first, then by modified date
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, ["tag1"], 3)
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, mprog1, ["tag1"], 3)
     assert len(tasks) == 3
     assert tasks[0]["id"] == recs[2].task.id
     assert tasks[1]["id"] == recs[5].task.id
     assert tasks[2]["id"] == recs[1].task.id
 
     # Now normal then low
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, ["tag1"], 3)
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, mprog1, ["tag1"], 3)
     assert len(tasks) == 3
     assert tasks[0]["id"] == recs[3].task.id
     assert tasks[1]["id"] == recs[4].task.id
@@ -189,11 +196,12 @@ def test_task_socket_claim_priority(storage_socket: SQLAlchemySocket, session: S
 
 def test_task_socket_claim_tag(storage_socket: SQLAlchemySocket, session: Session):
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host1", uuid="1234-5678-1234-5678")
+    mprog1 = {"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"]}
     storage_socket.managers.activate(
         name_data=mname1,
         manager_version="v2.0",
         username="bill",
-        programs={"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"]},
+        programs=mprog1,
         tags=["tag3", "tag1"],
     )
 
@@ -220,23 +228,24 @@ def test_task_socket_claim_tag(storage_socket: SQLAlchemySocket, session: Sessio
         recs.append(rec)
 
     # tag3 should be first, then tag1
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, ["tag3", "tag1"], 2)
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, mprog1, ["tag3", "tag1"], 2)
     assert len(tasks) == 2
     assert tasks[0]["id"] == recs[3].task.id
     assert tasks[1]["id"] == recs[0].task.id
 
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, ["tag3", "tag1"], 3)
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, mprog1, ["tag3", "tag1"], 3)
     assert len(tasks) == 1
     assert tasks[0]["id"] == recs[4].task.id
 
 
 def test_task_socket_claim_tag_wildcard(storage_socket: SQLAlchemySocket, session: Session):
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host1", uuid="1234-5678-1234-5678")
+    mprog1 = {"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"]}
     storage_socket.managers.activate(
         name_data=mname1,
         manager_version="v2.0",
         username="bill",
-        programs={"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"]},
+        programs=mprog1,
         tags=["TAG3", "*"],
     )
 
@@ -263,12 +272,12 @@ def test_task_socket_claim_tag_wildcard(storage_socket: SQLAlchemySocket, sessio
         recs.append(rec)
 
     # tag3 should be first, then any task (in order)
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, ["tag3", "*"], 2)
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, mprog1, ["tag3", "*"], 2)
     assert len(tasks) == 2
     assert tasks[0]["id"] == recs[3].task.id
     assert tasks[1]["id"] == recs[0].task.id
 
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, ["tag3", "*"], 3)
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, mprog1, ["tag3", "*"], 3)
     assert len(tasks) == 3
     assert tasks[0]["id"] == recs[1].task.id
     assert tasks[1]["id"] == recs[2].task.id
@@ -277,11 +286,12 @@ def test_task_socket_claim_tag_wildcard(storage_socket: SQLAlchemySocket, sessio
 
 def test_task_socket_claim_program(storage_socket: SQLAlchemySocket, session: Session):
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host1", uuid="1234-5678-1234-5678")
+    mprog1 = {"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"]}
     storage_socket.managers.activate(
         name_data=mname1,
         manager_version="v2.0",
         username="bill",
-        programs={"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"]},
+        programs=mprog1,
         tags=["*"],
     )
 
@@ -301,8 +311,49 @@ def test_task_socket_claim_program(storage_socket: SQLAlchemySocket, session: Se
         rec = session.get(BaseRecordORM, rid)
         recs.append(rec)
 
-    # claim all tasks. But it should claim #7
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, ["*"], 100)
+    # claim all tasks. But it shouldn't claim #7
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, mprog1, ["*"], 100)
     assert len(tasks) == 2
     assert tasks[0]["id"] == recs[1].task.id
     assert tasks[1]["id"] == recs[2].task.id
+
+
+def test_task_socket_claim_program_subset(storage_socket: SQLAlchemySocket, session: Session):
+    mname1 = ManagerName(cluster="test_cluster", hostname="a_host1", uuid="1234-5678-1234-5678")
+    mprog1 = {"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"], "rdkit": ["unknown"]}
+    storage_socket.managers.activate(
+        name_data=mname1,
+        manager_version="v2.0",
+        username="bill",
+        programs=mprog1,
+        tags=["*"],
+    )
+
+    meta, id_7 = storage_socket.records.singlepoint.add(
+        [molecule_7], input_spec_7, "tag1", PriorityEnum.normal, None, None
+    )
+    meta, id_1 = storage_socket.records.singlepoint.add(
+        [molecule_1], input_spec_1, "tag1", PriorityEnum.normal, None, None
+    )
+    meta, id_2 = storage_socket.records.singlepoint.add(
+        [molecule_2], input_spec_2, "tag1", PriorityEnum.normal, None, None
+    )
+
+    all_id = id_7 + id_1 + id_2
+    recs = []
+    for rid in all_id:
+        rec = session.get(BaseRecordORM, rid)
+        recs.append(rec)
+
+    # claim all tasks. Shouldn't claim #7 (rdkit not included)
+    claim_prog = {"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"]}
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, claim_prog, ["*"], 100)
+    assert len(tasks) == 2
+    assert tasks[0]["id"] == recs[1].task.id
+    assert tasks[1]["id"] == recs[2].task.id
+
+    # now claim the rdkit task
+    claim_prog = {"qcengine": ["unknown"], "rdkit": ["unknown"]}
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, claim_prog, ["*"], 100)
+    assert len(tasks) == 1
+    assert tasks[0]["id"] == recs[0].task.id

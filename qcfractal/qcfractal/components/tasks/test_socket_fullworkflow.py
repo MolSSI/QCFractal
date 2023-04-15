@@ -4,7 +4,7 @@ Tests the tasks socket (claiming & returning data)
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING, Tuple, Dict, List
 
 from qcelemental.models import ComputeError, FailedOperation
 
@@ -20,7 +20,10 @@ if TYPE_CHECKING:
 
 
 def test_task_socket_fullworkflow_success(
-    storage_socket: SQLAlchemySocket, session: Session, activated_manager: Tuple[ManagerName, int]
+    storage_socket: SQLAlchemySocket,
+    session: Session,
+    activated_manager: Tuple[ManagerName, int],
+    activated_manager_programs: Dict[str, List[str]],
 ):
     id1, result_data1 = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1", PriorityEnum.normal)
     id2, result_data2 = submit_test_data(storage_socket, "sp_psi4_fluoroethane_wfn", "tag1", PriorityEnum.normal)
@@ -31,7 +34,7 @@ def test_task_socket_fullworkflow_success(
 
     result_map = {id1: result_data1, id2: result_data2}
 
-    tasks = storage_socket.tasks.claim_tasks(mname.fullname, ["*"])
+    tasks = storage_socket.tasks.claim_tasks(mname.fullname, activated_manager_programs, ["*"])
 
     # Should be claimed in the manager table
     manager = session.get(ComputeManagerORM, mid)
@@ -87,7 +90,10 @@ def test_task_socket_fullworkflow_success(
 
 
 def test_task_socket_fullworkflow_error(
-    storage_socket: SQLAlchemySocket, session: Session, activated_manager: Tuple[ManagerName, int]
+    storage_socket: SQLAlchemySocket,
+    session: Session,
+    activated_manager: Tuple[ManagerName, int],
+    activated_manager_programs: Dict[str, List[str]],
 ):
     id1, _ = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1")
     id2, _ = submit_test_data(storage_socket, "sp_psi4_fluoroethane_wfn")
@@ -96,7 +102,7 @@ def test_task_socket_fullworkflow_error(
 
     time_1 = datetime.utcnow()
 
-    tasks = storage_socket.tasks.claim_tasks(mname.fullname, ["*"])
+    tasks = storage_socket.tasks.claim_tasks(mname.fullname, activated_manager_programs, ["*"])
 
     fop = FailedOperation(error=ComputeError(error_type="test_error", error_message="this is a test error"))
 
@@ -140,7 +146,10 @@ def test_task_socket_fullworkflow_error(
 
 
 def test_task_socket_fullworkflow_error_retry(
-    storage_socket: SQLAlchemySocket, session: Session, activated_manager: Tuple[ManagerName, int]
+    storage_socket: SQLAlchemySocket,
+    session: Session,
+    activated_manager: Tuple[ManagerName, int],
+    activated_manager_programs: Dict[str, List[str]],
 ):
     input_spec1, molecule1, result_data1 = load_test_data("sp_psi4_benzene_energy_1")
 
@@ -154,23 +163,23 @@ def test_task_socket_fullworkflow_error_retry(
 
     # Sends back an error. Do it a few times
     time_0 = datetime.utcnow()
-    tasks = storage_socket.tasks.claim_tasks(mname.fullname, ["*"])
+    tasks = storage_socket.tasks.claim_tasks(mname.fullname, activated_manager_programs, ["*"])
     storage_socket.tasks.update_finished(mname.fullname, {tasks[0]["id"]: fop})
     storage_socket.records.reset(id1)
 
     time_1 = datetime.utcnow()
-    tasks = storage_socket.tasks.claim_tasks(mname.fullname, ["*"])
+    tasks = storage_socket.tasks.claim_tasks(mname.fullname, activated_manager_programs, ["*"])
     storage_socket.tasks.update_finished(mname.fullname, {tasks[0]["id"]: fop})
     storage_socket.records.reset(id1)
 
     time_2 = datetime.utcnow()
-    tasks = storage_socket.tasks.claim_tasks(mname.fullname, ["*"])
+    tasks = storage_socket.tasks.claim_tasks(mname.fullname, activated_manager_programs, ["*"])
     storage_socket.tasks.update_finished(mname.fullname, {tasks[0]["id"]: fop})
     storage_socket.records.reset(id1)
 
     # Now succeed
     time_3 = datetime.utcnow()
-    tasks = storage_socket.tasks.claim_tasks(mname.fullname, ["*"])
+    tasks = storage_socket.tasks.claim_tasks(mname.fullname, activated_manager_programs, ["*"])
     storage_socket.tasks.update_finished(mname.fullname, {tasks[0]["id"]: result_data1})
     time_4 = datetime.utcnow()
 
@@ -206,7 +215,10 @@ def test_task_socket_fullworkflow_error_retry(
 
 
 def test_task_socket_fullworkflow_error_autoreset(
-    storage_socket: SQLAlchemySocket, session: Session, activated_manager_name: ManagerName
+    storage_socket: SQLAlchemySocket,
+    session: Session,
+    activated_manager_name: ManagerName,
+    activated_manager_programs: Dict[str, List[str]],
 ):
     # Change the socket config
     storage_socket.qcf_config.auto_reset.enabled = True
@@ -223,7 +235,7 @@ def test_task_socket_fullworkflow_error_autoreset(
     fop_r = FailedOperation(error=ComputeError(error_type="random_error", error_message="this is a test error"))
 
     # Sends back an error
-    tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, ["*"])
+    tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, activated_manager_programs, ["*"])
     storage_socket.tasks.update_finished(activated_manager_name.fullname, {tasks[0]["id"]: fop_r})
 
     # task should be waiting
@@ -232,7 +244,7 @@ def test_task_socket_fullworkflow_error_autoreset(
     assert len(rec.compute_history) == 1
 
     # Claim again, and return a different error
-    tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, ["*"])
+    tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, activated_manager_programs, ["*"])
     storage_socket.tasks.update_finished(activated_manager_name.fullname, {tasks[0]["id"]: fop_u})
 
     # waiting again...
@@ -241,7 +253,7 @@ def test_task_socket_fullworkflow_error_autoreset(
     assert len(rec.compute_history) == 2
 
     # Claim again, and return an unknown error. Should stay in errored state now
-    tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, ["*"])
+    tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, activated_manager_programs, ["*"])
     storage_socket.tasks.update_finished(activated_manager_name.fullname, {tasks[0]["id"]: fop_u})
 
     session.expire(rec)

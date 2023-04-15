@@ -25,18 +25,19 @@ def test_record_socket_reset_assigned_manager(storage_socket: SQLAlchemySocket, 
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
     mname2 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="9876-5432-1098-7654")
 
+    manager_programs = {"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"]}
     storage_socket.managers.activate(
         name_data=mname1,
         manager_version="v2.0",
         username="bill",
-        programs={"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"]},
+        programs=manager_programs,
         tags=["tag1"],
     )
     storage_socket.managers.activate(
         name_data=mname2,
         manager_version="v2.0",
         username="bill",
-        programs={"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"]},
+        programs=manager_programs,
         tags=["tag2"],
     )
 
@@ -48,8 +49,8 @@ def test_record_socket_reset_assigned_manager(storage_socket: SQLAlchemySocket, 
     id_6, result_data_6 = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_2", "tag1")
     all_id = [id_1, id_2, id_3, id_4, id_5, id_6]
 
-    tasks_1 = storage_socket.tasks.claim_tasks(mname1.fullname, ["tag1"])
-    tasks_2 = storage_socket.tasks.claim_tasks(mname2.fullname, ["tag2"])
+    tasks_1 = storage_socket.tasks.claim_tasks(mname1.fullname, manager_programs, ["tag1"])
+    tasks_2 = storage_socket.tasks.claim_tasks(mname2.fullname, manager_programs, ["tag2"])
 
     assert len(tasks_1) == 4
     assert len(tasks_2) == 2

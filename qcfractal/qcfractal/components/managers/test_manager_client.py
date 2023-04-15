@@ -146,22 +146,24 @@ def test_manager_mclient_deactivate(snowflake: QCATestingSnowflake):
     id1, _ = submit_test_data(snowflake.get_storage_socket(), "sp_psi4_benzene_energy_1", "tag1")
 
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
+    mprog1 = {"qcengine": ["unknown"], "psi4": ["v3.0"]}
 
     # UUID is different
     mname2 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5679")
+    mprog2 = {"qcengine": ["unknown"], "psi4": ["v3.0"]}
 
     mclient1 = snowflake.manager_client(mname1)
     mclient2 = snowflake.manager_client(mname2)
 
     mclient1.activate(
         manager_version="v2.0",
-        programs={"qcengine": ["unknown"], "psi4": ["v3.0"]},
+        programs=mprog1,
         tags=["tag1", "tag2"],
     )
 
     mclient2.activate(
         manager_version="v2.0",
-        programs={"qcengine": ["unknown"], "psi4": ["v3.0"]},
+        programs=mprog2,
         tags=["tag1"],
     )
 
@@ -169,7 +171,7 @@ def test_manager_mclient_deactivate(snowflake: QCATestingSnowflake):
     name2 = mname2.fullname
 
     # client2 claims tasks
-    mclient2.claim(["tag1"], 1)
+    mclient2.claim(mprog2, ["tag1"], 1)
     mclient2.deactivate(total_cpu_hours=1.0, active_tasks=1, active_cores=2, active_memory=7.0)
 
     manager = client.get_managers([name1, name2])

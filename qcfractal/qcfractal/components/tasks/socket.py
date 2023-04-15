@@ -216,6 +216,7 @@ class TaskSocket:
     def claim_tasks(
         self,
         manager_name: str,
+        programs: Dict[str, List[str]],
         tags: List[str],
         limit: Optional[int] = None,
         *,
@@ -255,7 +256,7 @@ class TaskSocket:
                 self._logger.warning(f"Manager {manager_name} exists but is not active! Will not give it tasks")
                 raise ComputeManagerError("Manager is not active!")
 
-            manager_programs = array(manager.programs.keys())
+            manager_programs = array(programs.keys())
             found: List[Dict[str, Any]] = []
 
             # Remove tags that we didn't say we handled, but keep the order
