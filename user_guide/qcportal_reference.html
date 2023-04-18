@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>QCPortal API Reference &#8212; QCArchive 0.50b8.post21+g50f68399 documentation</title>
+    <title>QCPortal API Reference &#8212; QCArchive 0.50b9.post2+g2d814ec9 documentation</title>
   
   
   
@@ -31,7 +31,7 @@
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -39,9 +39,6 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/design-tabs.js"></script>
@@ -558,8 +555,8 @@ SSL keys.</p></li>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>record_id</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>dataset_type</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>record_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>]</em>) – </p></li>
+<li><p><strong>dataset_type</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
 </ul>
 </dd>
 </dl>
@@ -596,16 +593,16 @@ SSL keys.</p></li>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dataset_type</strong> (<em>str</em>) – </p></li>
 <li><p><strong>name</strong> (<em>str</em>) – </p></li>
-<li><p><strong>description</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
-<li><p><strong>tagline</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
-<li><p><strong>tags</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>group</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
-<li><p><strong>provenance</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>description</strong> (<em>str</em><em> | </em><em>None</em>) – </p></li>
+<li><p><strong>tagline</strong> (<em>str</em><em> | </em><em>None</em>) – </p></li>
+<li><p><strong>tags</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>group</strong> (<em>str</em><em> | </em><em>None</em>) – </p></li>
+<li><p><strong>provenance</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>) – </p></li>
 <li><p><strong>visibility</strong> (<em>bool</em>) – </p></li>
 <li><p><strong>default_tag</strong> (<em>str</em>) – </p></li>
 <li><p><strong>default_priority</strong> (<a class="reference internal" href="records/base.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a>) – </p></li>
-<li><p><strong>metadata</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>metadata</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>owner_group</strong> (<em>str</em><em> | </em><em>None</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -634,7 +631,7 @@ SSL keys.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>molecule_ids</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em>) – A single molecule ID, or a list (or other sequence) of molecule IDs</p></li>
+<li><p><strong>molecule_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – A single molecule ID, or a list (or other sequence) of molecule IDs</p></li>
 <li><p><strong>missing_ok</strong> (<em>bool</em>) – If set to True, then missing molecules will be tolerated, and the returned list of
 Molecules will contain None for the corresponding IDs that were not found.</p></li>
 </ul>
@@ -645,7 +642,7 @@ If given a sequence of ids, the return value will be a list.
 Otherwise, it will be a single Molecule.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Union</em>[<em>Molecule</em>, None, <em>List</em>[<em>Optional</em>[<em>Molecule</em>]]]</p>
+<dd class="field-odd"><p><em>Molecule</em> | None | <em>List</em>[<em>Molecule</em> | None]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -658,11 +655,11 @@ Otherwise, it will be a single Molecule.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>molecule_hash</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Queries molecules by hash</p></li>
-<li><p><strong>molecular_formula</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Queries molecules by molecular formula.
+<li><p><strong>molecule_hash</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Queries molecules by hash</p></li>
+<li><p><strong>molecular_formula</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Queries molecules by molecular formula.
 Molecular formulas are not order-sensitive (e.g. “H2O == OH2 != Oh2”).</p></li>
-<li><p><strong>identifiers</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Additional identifiers to search for (smiles, etc)</p></li>
-<li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of Molecules to return. Note that the server limit is always obeyed.</p></li>
+<li><p><strong>identifiers</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Additional identifiers to search for (smiles, etc)</p></li>
+<li><p><strong>limit</strong> (<em>int</em><em> | </em><em>None</em>) – The maximum number of Molecules to return. Note that the server limit is always obeyed.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -705,9 +702,9 @@ and molecular formula).</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>molecule_id</strong> (<em>int</em>) – ID of the molecule to modify</p></li>
-<li><p><strong>name</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – New name for the molecule. If None, name is not changed.</p></li>
-<li><p><strong>comment</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – New comment for the molecule. If None, comment is not changed</p></li>
-<li><p><strong>identifiers</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>, </em><em>Identifiers</em><em>]</em><em>]</em>) – A new set of identifiers for the molecule</p></li>
+<li><p><strong>name</strong> (<em>str</em><em> | </em><em>None</em>) – New name for the molecule. If None, name is not changed.</p></li>
+<li><p><strong>comment</strong> (<em>str</em><em> | </em><em>None</em>) – New comment for the molecule. If None, comment is not changed</p></li>
+<li><p><strong>identifiers</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>Identifiers</em><em> | </em><em>None</em>) – A new set of identifiers for the molecule</p></li>
 <li><p><strong>overwrite_identifiers</strong> (<em>bool</em>) – If True, the identifiers of the molecule are set to be those given exactly (ie, identifiers
 that exist in the DB but not in the new set will be removed). Otherwise, the new set of
 identifiers is merged into the existing ones. Note that molecule_hash and molecular_formula
@@ -730,7 +727,7 @@ are never removed.</p></li>
 <p>This will not delete any molecules that are in use</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>molecule_ids</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em>) – An id or list of ids to query.</p>
+<dd class="field-odd"><p><strong>molecule_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – An id or list of ids to query.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Metadata about what was deleted</p>
@@ -752,10 +749,10 @@ have the same ID as a singlepoint).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>record_ids</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em>) – Single ID or sequence/list of records to obtain</p></li>
+<li><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – Single ID or sequence/list of records to obtain</p></li>
 <li><p><strong>missing_ok</strong> (<em>bool</em>) – If set to True, then missing records will be tolerated, and the returned
 records will contain None for the corresponding IDs that were not found.</p></li>
-<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Additional fields to include in the returned record</p></li>
+<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Additional fields to include in the returned record</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -764,7 +761,7 @@ a list of records.  If missing_ok was specified, None will be substituted for a 
 that was not found.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Optional</em>[<em>Union</em>[<em>List</em>[<em>Optional</em>[<a class="reference internal" href="records/base.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><em>BaseRecord</em></a>]], <a class="reference internal" href="records/base.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><em>BaseRecord</em></a>]]</p>
+<dd class="field-odd"><p><em>List</em>[<a class="reference internal" href="records/base.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><em>BaseRecord</em></a> | None] | <a class="reference internal" href="records/base.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><em>BaseRecord</em></a> | None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -779,21 +776,21 @@ that are common among all records.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>record_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records whose ID is in the given list</p></li>
-<li><p><strong>record_type</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose type is in the given list</p></li>
-<li><p><strong>manager_name</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records that were completed (or are currently runnning) on a manager is in the given list</p></li>
-<li><p><strong>status</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>]</em><em>]</em><em>]</em>) – Query records whose status is in the given list</p></li>
-<li><p><strong>dataset_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that are part of a dataset is in the given list</p></li>
-<li><p><strong>parent_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that have a parent is in the given list</p></li>
-<li><p><strong>child_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that have a child is in the given list</p></li>
-<li><p><strong>created_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created before the given date/time</p></li>
-<li><p><strong>created_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created after the given date/time</p></li>
-<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified before the given date/time</p></li>
-<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified after the given date/time</p></li>
-<li><p><strong>owner_user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a user in the given list (usernames or IDs)</p></li>
-<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a group in the given list (group names or IDS)</p></li>
-<li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of records to return. Note that the server limit is always obeyed.</p></li>
-<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Additional fields to include in the returned record</p></li>
+<li><p><strong>record_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records whose ID is in the given list</p></li>
+<li><p><strong>record_type</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records whose type is in the given list</p></li>
+<li><p><strong>manager_name</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records that were completed (or are currently runnning) on a manager is in the given list</p></li>
+<li><p><strong>status</strong> (<a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em> | </em><em>Iterable</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>] </em><em>| </em><em>None</em>) – Query records whose status is in the given list</p></li>
+<li><p><strong>dataset_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records that are part of a dataset is in the given list</p></li>
+<li><p><strong>parent_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records that have a parent is in the given list</p></li>
+<li><p><strong>child_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records that have a child is in the given list</p></li>
+<li><p><strong>created_before</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were created before the given date/time</p></li>
+<li><p><strong>created_after</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were created after the given date/time</p></li>
+<li><p><strong>modified_before</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were modified before the given date/time</p></li>
+<li><p><strong>modified_after</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were modified after the given date/time</p></li>
+<li><p><strong>owner_user</strong> (<em>int</em><em> | </em><em>str</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em> | </em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records owned by a user in the given list (usernames or IDs)</p></li>
+<li><p><strong>owner_group</strong> (<em>int</em><em> | </em><em>str</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em> | </em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records owned by a group in the given list (group names or IDS)</p></li>
+<li><p><strong>limit</strong> (<em>int</em><em> | </em><em>None</em>) – The maximum number of records to return. Note that the server limit is always obeyed.</p></li>
+<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Additional fields to include in the returned record</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -811,7 +808,7 @@ that are common among all records.</p>
 <dd><p>Resets running or errored records to be waiting again</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>record_ids</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em>) – </p>
+<dd class="field-odd"><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – </p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="metadata.html#qcportal.metadata_models.UpdateMetadata" title="qcportal.metadata_models.UpdateMetadata"><em>UpdateMetadata</em></a></p>
@@ -826,7 +823,7 @@ that are common among all records.</p>
 <p>A cancelled record will not be picked up by a manager.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>record_ids</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em>) – </p>
+<dd class="field-odd"><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – </p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="metadata.html#qcportal.metadata_models.UpdateMetadata" title="qcportal.metadata_models.UpdateMetadata"><em>UpdateMetadata</em></a></p>
@@ -842,7 +839,7 @@ that are common among all records.</p>
 is not correct.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>record_ids</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em>) – </p>
+<dd class="field-odd"><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – </p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="metadata.html#qcportal.metadata_models.UpdateMetadata" title="qcportal.metadata_models.UpdateMetadata"><em>UpdateMetadata</em></a></p>
@@ -859,7 +856,7 @@ happen later. Soft delete can be undone with undelete</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>record_ids</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em>) – Reset the status of these record ids</p></li>
+<li><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – Reset the status of these record ids</p></li>
 <li><p><strong>soft_delete</strong> – Don’t actually delete the record, just mark it for later deletion</p></li>
 <li><p><strong>delete_children</strong> (<em>bool</em>) – If True, attempt to delete child records as well</p></li>
 </ul>
@@ -876,7 +873,7 @@ happen later. Soft delete can be undone with undelete</p>
 <dd><p>Undo the invalidation of records</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>record_ids</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em>) – </p>
+<dd class="field-odd"><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – </p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="metadata.html#qcportal.metadata_models.UpdateMetadata" title="qcportal.metadata_models.UpdateMetadata"><em>UpdateMetadata</em></a></p>
@@ -890,7 +887,7 @@ happen later. Soft delete can be undone with undelete</p>
 <dd><p>Undo the cancellation of records</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>record_ids</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em>) – </p>
+<dd class="field-odd"><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – </p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="metadata.html#qcportal.metadata_models.UpdateMetadata" title="qcportal.metadata_models.UpdateMetadata"><em>UpdateMetadata</em></a></p>
@@ -904,7 +901,7 @@ happen later. Soft delete can be undone with undelete</p>
 <dd><p>Undo the (soft) deletion of records</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>record_ids</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em>) – </p>
+<dd class="field-odd"><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – </p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="metadata.html#qcportal.metadata_models.UpdateMetadata" title="qcportal.metadata_models.UpdateMetadata"><em>UpdateMetadata</em></a></p>
@@ -919,9 +916,9 @@ happen later. Soft delete can be undone with undelete</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>record_ids</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>new_tag</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
-<li><p><strong>new_priority</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a><em>]</em>) – </p></li>
+<li><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – </p></li>
+<li><p><strong>new_tag</strong> (<em>str</em><em> | </em><em>None</em>) – </p></li>
+<li><p><strong>new_priority</strong> (<a class="reference internal" href="records/base.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a><em> | </em><em>None</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -937,7 +934,7 @@ happen later. Soft delete can be undone with undelete</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>record_ids</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em>) – The record or records to add the comments to</p></li>
+<li><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – The record or records to add the comments to</p></li>
 <li><p><strong>comment</strong> (<em>str</em>) – The comment string to add. Your username will be added automatically</p></li>
 </ul>
 </dd>
@@ -960,16 +957,16 @@ the existing id, otherwise it will insert it and return the new id.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>molecules</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Molecule</em><em>, </em><em>List</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Molecule</em><em>]</em><em>]</em><em>]</em>) – The Molecules or Molecule ids to compute with the above methods</p></li>
+<li><p><strong>molecules</strong> (<em>int</em><em> | </em><em>Molecule</em><em> | </em><em>List</em><em>[</em><em>int</em><em> | </em><em>Molecule</em><em>]</em>) – The Molecules or Molecule ids to compute with the above methods</p></li>
 <li><p><strong>program</strong> (<em>str</em>) – The computational program to execute the result with (e.g., “rdkit”, “psi4”).</p></li>
 <li><p><strong>driver</strong> (<em>str</em>) – The primary result that the compute will acquire {“energy”, “gradient”, “hessian”, “properties”}</p></li>
 <li><p><strong>method</strong> (<em>str</em>) – The computational method to use (e.g., “B3LYP”, “PBE”)</p></li>
-<li><p><strong>basis</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The basis to apply to the computation (e.g., “cc-pVDZ”, “6-31G”)</p></li>
-<li><p><strong>keywords</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – The program-specific keywords for the computation</p></li>
-<li><p><strong>protocols</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>AtomicResultProtocols</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em><em>]</em>) – Protocols for storing more/less data for each computation</p></li>
+<li><p><strong>basis</strong> (<em>str</em><em> | </em><em>None</em>) – The basis to apply to the computation (e.g., “cc-pVDZ”, “6-31G”)</p></li>
+<li><p><strong>keywords</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>) – The program-specific keywords for the computation</p></li>
+<li><p><strong>protocols</strong> (<em>AtomicResultProtocols</em><em> | </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>) – Protocols for storing more/less data for each computation</p></li>
 <li><p><strong>tag</strong> (<em>str</em>) – The tag for the task. This will assist in routing to appropriate compute managers.</p></li>
 <li><p><strong>priority</strong> (<a class="reference internal" href="records/base.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a>) – The priority of the job (high, normal, low). Default is normal.</p></li>
-<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Group with additional permission for these records</p></li>
+<li><p><strong>owner_group</strong> (<em>str</em><em> | </em><em>None</em>) – Group with additional permission for these records</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -990,10 +987,10 @@ order of the input molecules</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>record_ids</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em>) – Single ID or sequence/list of records to obtain</p></li>
+<li><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – Single ID or sequence/list of records to obtain</p></li>
 <li><p><strong>missing_ok</strong> (<em>bool</em>) – If set to True, then missing records will be tolerated, and the returned
 records will contain None for the corresponding IDs that were not found.</p></li>
-<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Additional fields to include in the returned record</p></li>
+<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Additional fields to include in the returned record</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1002,7 +999,7 @@ a list of records.  If missing_ok was specified, None will be substituted for a 
 that was not found.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Union</em>[<a class="reference internal" href="records/singlepoint.html#qcportal.singlepoint.SinglepointRecord" title="qcportal.singlepoint.record_models.SinglepointRecord"><em>SinglepointRecord</em></a>, None, <em>List</em>[<em>Optional</em>[<a class="reference internal" href="records/singlepoint.html#qcportal.singlepoint.SinglepointRecord" title="qcportal.singlepoint.record_models.SinglepointRecord"><em>SinglepointRecord</em></a>]]]</p>
+<dd class="field-odd"><p><a class="reference internal" href="records/singlepoint.html#qcportal.singlepoint.SinglepointRecord" title="qcportal.singlepoint.record_models.SinglepointRecord"><em>SinglepointRecord</em></a> | None | <em>List</em>[<a class="reference internal" href="records/singlepoint.html#qcportal.singlepoint.SinglepointRecord" title="qcportal.singlepoint.record_models.SinglepointRecord"><em>SinglepointRecord</em></a> | None]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1015,26 +1012,26 @@ that was not found.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>record_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records whose ID is in the given list</p></li>
-<li><p><strong>manager_name</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records that were completed (or are currently runnning) on a manager is in the given list</p></li>
-<li><p><strong>status</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>]</em><em>]</em><em>]</em>) – Query records whose status is in the given list</p></li>
-<li><p><strong>dataset_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that are part of a dataset is in the given list</p></li>
-<li><p><strong>parent_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that have a parent is in the given list</p></li>
-<li><p><strong>created_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created before the given date/time</p></li>
-<li><p><strong>created_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created after the given date/time</p></li>
-<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified before the given date/time</p></li>
-<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified after the given date/time</p></li>
-<li><p><strong>program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose program is in the given list</p></li>
-<li><p><strong>driver</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>SinglepointDriver</em><em>, </em><em>Iterable</em><em>[</em><em>SinglepointDriver</em><em>]</em><em>]</em><em>]</em>) – Query records whose driver is in the given list</p></li>
-<li><p><strong>method</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose method is in the given list</p></li>
-<li><p><strong>basis</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Optional</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records whose basis is in the given list</p></li>
-<li><p><strong>keywords</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>, </em><em>Iterable</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records with these keywords (exact match)</p></li>
-<li><p><strong>molecule_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records whose molecule (id) is in the given list</p></li>
-<li><p><strong>owner_user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a user in the given list</p></li>
+<li><p><strong>record_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records whose ID is in the given list</p></li>
+<li><p><strong>manager_name</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records that were completed (or are currently runnning) on a manager is in the given list</p></li>
+<li><p><strong>status</strong> (<a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em> | </em><em>Iterable</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>] </em><em>| </em><em>None</em>) – Query records whose status is in the given list</p></li>
+<li><p><strong>dataset_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records that are part of a dataset is in the given list</p></li>
+<li><p><strong>parent_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records that have a parent is in the given list</p></li>
+<li><p><strong>created_before</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were created before the given date/time</p></li>
+<li><p><strong>created_after</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were created after the given date/time</p></li>
+<li><p><strong>modified_before</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were modified before the given date/time</p></li>
+<li><p><strong>modified_after</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were modified after the given date/time</p></li>
+<li><p><strong>program</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records whose program is in the given list</p></li>
+<li><p><strong>driver</strong> (<em>SinglepointDriver</em><em> | </em><em>Iterable</em><em>[</em><em>SinglepointDriver</em><em>] </em><em>| </em><em>None</em>) – Query records whose driver is in the given list</p></li>
+<li><p><strong>method</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records whose method is in the given list</p></li>
+<li><p><strong>basis</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em> | </em><em>None</em><em>] </em><em>| </em><em>None</em>) – Query records whose basis is in the given list</p></li>
+<li><p><strong>keywords</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>Iterable</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Query records with these keywords (exact match)</p></li>
+<li><p><strong>molecule_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records whose molecule (id) is in the given list</p></li>
+<li><p><strong>owner_user</strong> (<em>int</em><em> | </em><em>str</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em> | </em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records owned by a user in the given list</p></li>
 <li><p><strong>owner_user</strong> – Query records owned by a group in the given list</p></li>
-<li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of records to return. Note that the server limit is always obeyed.</p></li>
-<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Additional fields to include in the returned record</p></li>
-<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>limit</strong> (<em>int</em><em> | </em><em>None</em>) – The maximum number of records to return. Note that the server limit is always obeyed.</p></li>
+<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Additional fields to include in the returned record</p></li>
+<li><p><strong>owner_group</strong> (<em>int</em><em> | </em><em>str</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em> | </em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1056,14 +1053,14 @@ the existing id, otherwise it will insert it and return the new id.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>initial_molecules</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Molecule</em><em>, </em><em>List</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Molecule</em><em>]</em><em>]</em><em>]</em>) – Initial molecule/geometry to optimize</p></li>
+<li><p><strong>initial_molecules</strong> (<em>int</em><em> | </em><em>Molecule</em><em> | </em><em>List</em><em>[</em><em>int</em><em> | </em><em>Molecule</em><em>]</em>) – Initial molecule/geometry to optimize</p></li>
 <li><p><strong>program</strong> (<em>str</em>) – Which program to use for the optimization (ie, geometric)</p></li>
 <li><p><strong>qc_specification</strong> (<a class="reference internal" href="records/singlepoint.html#qcportal.singlepoint.QCSpecification" title="qcportal.singlepoint.record_models.QCSpecification"><em>QCSpecification</em></a>) – The method, basis, etc, to optimize the geometry with</p></li>
-<li><p><strong>keywords</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – Program-specific keywords for the optimization program (not the qc program)</p></li>
-<li><p><strong>protocols</strong> (<em>Optional</em><em>[</em><em>OptimizationProtocols</em><em>]</em>) – Protocols for storing more/less data for each computation (for the optimization)</p></li>
+<li><p><strong>keywords</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>) – Program-specific keywords for the optimization program (not the qc program)</p></li>
+<li><p><strong>protocols</strong> (<em>OptimizationProtocols</em><em> | </em><em>None</em>) – Protocols for storing more/less data for each computation (for the optimization)</p></li>
 <li><p><strong>tag</strong> (<em>str</em>) – The tag for the task. This will assist in routing to appropriate compute managers.</p></li>
 <li><p><strong>priority</strong> (<a class="reference internal" href="records/base.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a>) – The priority of the job (high, normal, low). Default is normal.</p></li>
-<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Group with additional permission for these records</p></li>
+<li><p><strong>owner_group</strong> (<em>str</em><em> | </em><em>None</em>) – Group with additional permission for these records</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1084,10 +1081,10 @@ order of the input molecules</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>record_ids</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em>) – Single ID or sequence/list of records to obtain</p></li>
+<li><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – Single ID or sequence/list of records to obtain</p></li>
 <li><p><strong>missing_ok</strong> (<em>bool</em>) – If set to True, then missing records will be tolerated, and the returned
 records will contain None for the corresponding IDs that were not found.</p></li>
-<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Additional fields to include in the returned record</p></li>
+<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Additional fields to include in the returned record</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1096,7 +1093,7 @@ a list of records.  If missing_ok was specified, None will be substituted for a 
 that was not found.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Union</em>[<a class="reference internal" href="records/optimization.html#qcportal.optimization.OptimizationRecord" title="qcportal.optimization.record_models.OptimizationRecord"><em>OptimizationRecord</em></a>, None, <em>List</em>[<em>Optional</em>[<a class="reference internal" href="records/optimization.html#qcportal.optimization.OptimizationRecord" title="qcportal.optimization.record_models.OptimizationRecord"><em>OptimizationRecord</em></a>]]]</p>
+<dd class="field-odd"><p><a class="reference internal" href="records/optimization.html#qcportal.optimization.OptimizationRecord" title="qcportal.optimization.record_models.OptimizationRecord"><em>OptimizationRecord</em></a> | None | <em>List</em>[<a class="reference internal" href="records/optimization.html#qcportal.optimization.OptimizationRecord" title="qcportal.optimization.record_models.OptimizationRecord"><em>OptimizationRecord</em></a> | None]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1109,27 +1106,27 @@ that was not found.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>record_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records whose ID is in the given list</p></li>
-<li><p><strong>manager_name</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records that were completed (or are currently runnning) on a manager is in the given list</p></li>
-<li><p><strong>status</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>]</em><em>]</em><em>]</em>) – Query records whose status is in the given list</p></li>
-<li><p><strong>dataset_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that are part of a dataset is in the given list</p></li>
-<li><p><strong>parent_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that have a parent is in the given list</p></li>
-<li><p><strong>child_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that have a child (singlepoint calculation) is in the given list</p></li>
-<li><p><strong>created_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created before the given date/time</p></li>
-<li><p><strong>created_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created after the given date/time</p></li>
-<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified before the given date/time</p></li>
-<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified after the given date/time</p></li>
-<li><p><strong>program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose optimization program is in the given list</p></li>
-<li><p><strong>qc_program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose qc program is in the given list</p></li>
-<li><p><strong>qc_method</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose method is in the given list</p></li>
-<li><p><strong>qc_basis</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Optional</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records whose basis is in the given list</p></li>
-<li><p><strong>initial_molecule_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records whose initial molecule (id) is in the given list</p></li>
-<li><p><strong>final_molecule_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records whose final molecule (id) is in the given list</p></li>
-<li><p><strong>owner_user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a user in the given list</p></li>
+<li><p><strong>record_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records whose ID is in the given list</p></li>
+<li><p><strong>manager_name</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records that were completed (or are currently runnning) on a manager is in the given list</p></li>
+<li><p><strong>status</strong> (<a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em> | </em><em>Iterable</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>] </em><em>| </em><em>None</em>) – Query records whose status is in the given list</p></li>
+<li><p><strong>dataset_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records that are part of a dataset is in the given list</p></li>
+<li><p><strong>parent_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records that have a parent is in the given list</p></li>
+<li><p><strong>child_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records that have a child (singlepoint calculation) is in the given list</p></li>
+<li><p><strong>created_before</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were created before the given date/time</p></li>
+<li><p><strong>created_after</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were created after the given date/time</p></li>
+<li><p><strong>modified_before</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were modified before the given date/time</p></li>
+<li><p><strong>modified_after</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were modified after the given date/time</p></li>
+<li><p><strong>program</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records whose optimization program is in the given list</p></li>
+<li><p><strong>qc_program</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records whose qc program is in the given list</p></li>
+<li><p><strong>qc_method</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records whose method is in the given list</p></li>
+<li><p><strong>qc_basis</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em> | </em><em>None</em><em>] </em><em>| </em><em>None</em>) – Query records whose basis is in the given list</p></li>
+<li><p><strong>initial_molecule_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records whose initial molecule (id) is in the given list</p></li>
+<li><p><strong>final_molecule_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records whose final molecule (id) is in the given list</p></li>
+<li><p><strong>owner_user</strong> (<em>int</em><em> | </em><em>str</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em> | </em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records owned by a user in the given list</p></li>
 <li><p><strong>owner_user</strong> – Query records owned by a group in the given list</p></li>
-<li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of records to return. Note that the server limit is always obeyed.</p></li>
-<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Additional fields to include in the returned record</p></li>
-<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>limit</strong> (<em>int</em><em> | </em><em>None</em>) – The maximum number of records to return. Note that the server limit is always obeyed.</p></li>
+<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Additional fields to include in the returned record</p></li>
+<li><p><strong>owner_group</strong> (<em>int</em><em> | </em><em>str</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em> | </em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1151,14 +1148,14 @@ the existing id, otherwise it will insert it and return the new id.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>initial_molecules</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Molecule</em><em>]</em><em>]</em><em>]</em>) – Molecules to start the torsiondrives. Each torsiondrive can start with
+<li><p><strong>initial_molecules</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>int</em><em> | </em><em>Molecule</em><em>]</em><em>]</em>) – Molecules to start the torsiondrives. Each torsiondrive can start with
 multiple molecules, so this is a nested list</p></li>
 <li><p><strong>program</strong> (<em>str</em>) – The program to run the torsiondrive computation with (“torsiondrive”)</p></li>
 <li><p><strong>optimization_specification</strong> (<a class="reference internal" href="records/optimization.html#qcportal.optimization.OptimizationSpecification" title="qcportal.optimization.record_models.OptimizationSpecification"><em>OptimizationSpecification</em></a>) – Specification of how each optimization of the torsiondrive should be run</p></li>
-<li><p><strong>keywords</strong> (<em>Union</em><em>[</em><em>TorsiondriveKeywords</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – The torsiondrive keywords for the computation</p></li>
+<li><p><strong>keywords</strong> (<em>TorsiondriveKeywords</em><em> | </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – The torsiondrive keywords for the computation</p></li>
 <li><p><strong>tag</strong> (<em>str</em>) – The tag for the task. This will assist in routing to appropriate compute managers.</p></li>
 <li><p><strong>priority</strong> (<a class="reference internal" href="records/base.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a>) – The priority of the job (high, normal, low). Default is normal.</p></li>
-<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Group with additional permission for these records</p></li>
+<li><p><strong>owner_group</strong> (<em>str</em><em> | </em><em>None</em>) – Group with additional permission for these records</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1179,10 +1176,10 @@ order of the input molecules</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>record_ids</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em>) – Single ID or sequence/list of records to obtain</p></li>
+<li><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – Single ID or sequence/list of records to obtain</p></li>
 <li><p><strong>missing_ok</strong> (<em>bool</em>) – If set to True, then missing records will be tolerated, and the returned
 records will contain None for the corresponding IDs that were not found.</p></li>
-<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Additional fields to include in the returned record</p></li>
+<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Additional fields to include in the returned record</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1191,7 +1188,7 @@ a list of records.  If missing_ok was specified, None will be substituted for a 
 that was not found.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Union</em>[<a class="reference internal" href="records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord" title="qcportal.torsiondrive.record_models.TorsiondriveRecord"><em>TorsiondriveRecord</em></a>, None, <em>List</em>[<em>Optional</em>[<a class="reference internal" href="records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord" title="qcportal.torsiondrive.record_models.TorsiondriveRecord"><em>TorsiondriveRecord</em></a>]]]</p>
+<dd class="field-odd"><p><a class="reference internal" href="records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord" title="qcportal.torsiondrive.record_models.TorsiondriveRecord"><em>TorsiondriveRecord</em></a> | None | <em>List</em>[<a class="reference internal" href="records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord" title="qcportal.torsiondrive.record_models.TorsiondriveRecord"><em>TorsiondriveRecord</em></a> | None]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1204,27 +1201,27 @@ that was not found.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>record_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records whose ID is in the given list</p></li>
-<li><p><strong>manager_name</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records that were completed (or are currently runnning) on a manager is in the given list</p></li>
-<li><p><strong>status</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>]</em><em>]</em><em>]</em>) – Query records whose status is in the given list</p></li>
-<li><p><strong>dataset_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that are part of a dataset is in the given list</p></li>
-<li><p><strong>parent_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that have a parent is in the given list</p></li>
-<li><p><strong>child_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that have a child (optimization calculation) is in the given list</p></li>
-<li><p><strong>created_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created before the given date/time</p></li>
-<li><p><strong>created_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created after the given date/time</p></li>
-<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified before the given date/time</p></li>
-<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified after the given date/time</p></li>
-<li><p><strong>program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose torsiondrive program is in the given list</p></li>
-<li><p><strong>optimization_program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose optimization program is in the given list</p></li>
-<li><p><strong>qc_program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose qc program is in the given list</p></li>
-<li><p><strong>qc_method</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose method is in the given list</p></li>
-<li><p><strong>qc_basis</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose basis is in the given list</p></li>
-<li><p><strong>initial_molecule_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records whose initial molecule (id) is in the given list</p></li>
-<li><p><strong>owner_user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a user in the given list</p></li>
+<li><p><strong>record_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records whose ID is in the given list</p></li>
+<li><p><strong>manager_name</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records that were completed (or are currently runnning) on a manager is in the given list</p></li>
+<li><p><strong>status</strong> (<a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em> | </em><em>Iterable</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>] </em><em>| </em><em>None</em>) – Query records whose status is in the given list</p></li>
+<li><p><strong>dataset_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records that are part of a dataset is in the given list</p></li>
+<li><p><strong>parent_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records that have a parent is in the given list</p></li>
+<li><p><strong>child_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records that have a child (optimization calculation) is in the given list</p></li>
+<li><p><strong>created_before</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were created before the given date/time</p></li>
+<li><p><strong>created_after</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were created after the given date/time</p></li>
+<li><p><strong>modified_before</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were modified before the given date/time</p></li>
+<li><p><strong>modified_after</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were modified after the given date/time</p></li>
+<li><p><strong>program</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records whose torsiondrive program is in the given list</p></li>
+<li><p><strong>optimization_program</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records whose optimization program is in the given list</p></li>
+<li><p><strong>qc_program</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records whose qc program is in the given list</p></li>
+<li><p><strong>qc_method</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records whose method is in the given list</p></li>
+<li><p><strong>qc_basis</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records whose basis is in the given list</p></li>
+<li><p><strong>initial_molecule_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records whose initial molecule (id) is in the given list</p></li>
+<li><p><strong>owner_user</strong> (<em>int</em><em> | </em><em>str</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em> | </em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records owned by a user in the given list</p></li>
 <li><p><strong>owner_user</strong> – Query records owned by a group in the given list</p></li>
-<li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of records to return. Note that the server limit is always obeyed.</p></li>
-<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Additional fields to include in the returned record</p></li>
-<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>limit</strong> (<em>int</em><em> | </em><em>None</em>) – The maximum number of records to return. Note that the server limit is always obeyed.</p></li>
+<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Additional fields to include in the returned record</p></li>
+<li><p><strong>owner_group</strong> (<em>int</em><em> | </em><em>str</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em> | </em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1246,17 +1243,17 @@ the existing id, otherwise it will insert it and return the new id.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>initial_molecules</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Molecule</em><em>, </em><em>Sequence</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Molecule</em><em>]</em><em>]</em><em>]</em>) – <dl class="simple">
+<li><p><strong>initial_molecules</strong> (<em>int</em><em> | </em><em>Molecule</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em> | </em><em>Molecule</em><em>]</em>) – <dl class="simple">
 <dt>Molecules to start the gridoptimizations. Each gridoptimization starts with</dt><dd><p>a single molecule.</p>
 </dd>
 </dl>
 </p></li>
 <li><p><strong>program</strong> (<em>str</em>) – The program to run the gridoptimization computation with (“gridoptimization”)</p></li>
 <li><p><strong>optimization_specification</strong> (<a class="reference internal" href="records/optimization.html#qcportal.optimization.OptimizationSpecification" title="qcportal.optimization.record_models.OptimizationSpecification"><em>OptimizationSpecification</em></a>) – Specification of how each optimization of the gridoptimization should be run</p></li>
-<li><p><strong>keywords</strong> (<em>Union</em><em>[</em><em>GridoptimizationKeywords</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – The gridoptimization keywords for the computation</p></li>
+<li><p><strong>keywords</strong> (<em>GridoptimizationKeywords</em><em> | </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – The gridoptimization keywords for the computation</p></li>
 <li><p><strong>tag</strong> (<em>str</em>) – The tag for the task. This will assist in routing to appropriate compute managers.</p></li>
 <li><p><strong>priority</strong> (<a class="reference internal" href="records/base.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a>) – The priority of the job (high, normal, low). Default is normal.</p></li>
-<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Group with additional permission for these records</p></li>
+<li><p><strong>owner_group</strong> (<em>str</em><em> | </em><em>None</em>) – Group with additional permission for these records</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1277,10 +1274,10 @@ order of the input molecules</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>record_ids</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em>) – Single ID or sequence/list of records to obtain</p></li>
+<li><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – Single ID or sequence/list of records to obtain</p></li>
 <li><p><strong>missing_ok</strong> (<em>bool</em>) – If set to True, then missing records will be tolerated, and the returned
 records will contain None for the corresponding IDs that were not found.</p></li>
-<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Additional fields to include in the returned record</p></li>
+<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Additional fields to include in the returned record</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1289,7 +1286,7 @@ a list of records.  If missing_ok was specified, None will be substituted for a 
 that was not found.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Union</em>[<a class="reference internal" href="records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord" title="qcportal.gridoptimization.record_models.GridoptimizationRecord"><em>GridoptimizationRecord</em></a>, None, <em>List</em>[<em>Optional</em>[<a class="reference internal" href="records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord" title="qcportal.gridoptimization.record_models.GridoptimizationRecord"><em>GridoptimizationRecord</em></a>]]]</p>
+<dd class="field-odd"><p><a class="reference internal" href="records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord" title="qcportal.gridoptimization.record_models.GridoptimizationRecord"><em>GridoptimizationRecord</em></a> | None | <em>List</em>[<a class="reference internal" href="records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord" title="qcportal.gridoptimization.record_models.GridoptimizationRecord"><em>GridoptimizationRecord</em></a> | None]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1302,27 +1299,27 @@ that was not found.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>record_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records whose ID is in the given list</p></li>
-<li><p><strong>manager_name</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records that were completed (or are currently runnning) on a manager is in the given list</p></li>
-<li><p><strong>status</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>]</em><em>]</em><em>]</em>) – Query records whose status is in the given list</p></li>
-<li><p><strong>dataset_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that are part of a dataset is in the given list</p></li>
-<li><p><strong>parent_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that have a parent is in the given list</p></li>
-<li><p><strong>child_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that have a child (optimization calculation) is in the given list</p></li>
-<li><p><strong>created_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created before the given date/time</p></li>
-<li><p><strong>created_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created after the given date/time</p></li>
-<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified before the given date/time</p></li>
-<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified after the given date/time</p></li>
-<li><p><strong>program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose gridoptimization program is in the given list</p></li>
-<li><p><strong>optimization_program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose optimization program is in the given list</p></li>
-<li><p><strong>qc_program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose qc program is in the given list</p></li>
-<li><p><strong>qc_method</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose method is in the given list</p></li>
-<li><p><strong>qc_basis</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Optional</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records whose basis is in the given list</p></li>
-<li><p><strong>initial_molecule_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records whose initial molecule (id) is in the given list</p></li>
-<li><p><strong>owner_user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a user in the given list</p></li>
+<li><p><strong>record_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records whose ID is in the given list</p></li>
+<li><p><strong>manager_name</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records that were completed (or are currently runnning) on a manager is in the given list</p></li>
+<li><p><strong>status</strong> (<a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em> | </em><em>Iterable</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>] </em><em>| </em><em>None</em>) – Query records whose status is in the given list</p></li>
+<li><p><strong>dataset_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records that are part of a dataset is in the given list</p></li>
+<li><p><strong>parent_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records that have a parent is in the given list</p></li>
+<li><p><strong>child_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records that have a child (optimization calculation) is in the given list</p></li>
+<li><p><strong>created_before</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were created before the given date/time</p></li>
+<li><p><strong>created_after</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were created after the given date/time</p></li>
+<li><p><strong>modified_before</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were modified before the given date/time</p></li>
+<li><p><strong>modified_after</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were modified after the given date/time</p></li>
+<li><p><strong>program</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records whose gridoptimization program is in the given list</p></li>
+<li><p><strong>optimization_program</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records whose optimization program is in the given list</p></li>
+<li><p><strong>qc_program</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records whose qc program is in the given list</p></li>
+<li><p><strong>qc_method</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records whose method is in the given list</p></li>
+<li><p><strong>qc_basis</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em> | </em><em>None</em><em>] </em><em>| </em><em>None</em>) – Query records whose basis is in the given list</p></li>
+<li><p><strong>initial_molecule_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records whose initial molecule (id) is in the given list</p></li>
+<li><p><strong>owner_user</strong> (<em>int</em><em> | </em><em>str</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em> | </em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records owned by a user in the given list</p></li>
 <li><p><strong>owner_user</strong> – Query records owned by a group in the given list</p></li>
-<li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of records to return. Note that the server limit is always obeyed.</p></li>
-<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Additional fields to include in the returned record</p></li>
-<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>limit</strong> (<em>int</em><em> | </em><em>None</em>) – The maximum number of records to return. Note that the server limit is always obeyed.</p></li>
+<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Additional fields to include in the returned record</p></li>
+<li><p><strong>owner_group</strong> (<em>int</em><em> | </em><em>str</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em> | </em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1377,10 +1374,10 @@ order of the input molecules</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>record_ids</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em>) – Single ID or sequence/list of records to obtain</p></li>
+<li><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – Single ID or sequence/list of records to obtain</p></li>
 <li><p><strong>missing_ok</strong> (<em>bool</em>) – If set to True, then missing records will be tolerated, and the returned
 records will contain None for the corresponding IDs that were not found.</p></li>
-<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Additional fields to include in the returned record</p></li>
+<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Additional fields to include in the returned record</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1389,7 +1386,7 @@ a list of records.  If missing_ok was specified, None will be substituted for a 
 that was not found.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Union</em>[<a class="reference internal" href="records/reaction.html#qcportal.reaction.ReactionRecord" title="qcportal.reaction.record_models.ReactionRecord"><em>ReactionRecord</em></a>, None, <em>List</em>[<em>Optional</em>[<a class="reference internal" href="records/reaction.html#qcportal.reaction.ReactionRecord" title="qcportal.reaction.record_models.ReactionRecord"><em>ReactionRecord</em></a>]]]</p>
+<dd class="field-odd"><p><a class="reference internal" href="records/reaction.html#qcportal.reaction.ReactionRecord" title="qcportal.reaction.record_models.ReactionRecord"><em>ReactionRecord</em></a> | None | <em>List</em>[<a class="reference internal" href="records/reaction.html#qcportal.reaction.ReactionRecord" title="qcportal.reaction.record_models.ReactionRecord"><em>ReactionRecord</em></a> | None]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1402,27 +1399,27 @@ that was not found.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>record_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records whose ID is in the given list</p></li>
-<li><p><strong>manager_name</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records that were completed (or are currently runnning) on a manager is in the given list</p></li>
-<li><p><strong>status</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>]</em><em>]</em><em>]</em>) – Query records whose status is in the given list</p></li>
-<li><p><strong>dataset_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that are part of a dataset is in the given list</p></li>
-<li><p><strong>parent_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that have a parent is in the given list</p></li>
-<li><p><strong>child_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that have a child (optimization calculation) is in the given list</p></li>
-<li><p><strong>created_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created before the given date/time</p></li>
-<li><p><strong>created_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created after the given date/time</p></li>
-<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified before the given date/time</p></li>
-<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified after the given date/time</p></li>
-<li><p><strong>program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose reaction program is in the given list</p></li>
-<li><p><strong>optimization_program</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>Optional</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose optimization program is in the given list</p></li>
-<li><p><strong>qc_program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose qc program is in the given list</p></li>
-<li><p><strong>qc_method</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose method is in the given list</p></li>
-<li><p><strong>qc_basis</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose basis is in the given list</p></li>
-<li><p><strong>molecule_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query reactions that contain a molecule (id) is in the given list</p></li>
-<li><p><strong>owner_user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a user in the given list</p></li>
+<li><p><strong>record_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records whose ID is in the given list</p></li>
+<li><p><strong>manager_name</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records that were completed (or are currently runnning) on a manager is in the given list</p></li>
+<li><p><strong>status</strong> (<a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em> | </em><em>Iterable</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>] </em><em>| </em><em>None</em>) – Query records whose status is in the given list</p></li>
+<li><p><strong>dataset_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records that are part of a dataset is in the given list</p></li>
+<li><p><strong>parent_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records that have a parent is in the given list</p></li>
+<li><p><strong>child_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records that have a child (optimization calculation) is in the given list</p></li>
+<li><p><strong>created_before</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were created before the given date/time</p></li>
+<li><p><strong>created_after</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were created after the given date/time</p></li>
+<li><p><strong>modified_before</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were modified before the given date/time</p></li>
+<li><p><strong>modified_after</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were modified after the given date/time</p></li>
+<li><p><strong>program</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records whose reaction program is in the given list</p></li>
+<li><p><strong>optimization_program</strong> (<em>Iterable</em><em>[</em><em>str</em><em> | </em><em>None</em><em>] </em><em>| </em><em>None</em>) – Query records whose optimization program is in the given list</p></li>
+<li><p><strong>qc_program</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records whose qc program is in the given list</p></li>
+<li><p><strong>qc_method</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records whose method is in the given list</p></li>
+<li><p><strong>qc_basis</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records whose basis is in the given list</p></li>
+<li><p><strong>molecule_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query reactions that contain a molecule (id) is in the given list</p></li>
+<li><p><strong>owner_user</strong> (<em>int</em><em> | </em><em>str</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em> | </em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records owned by a user in the given list</p></li>
 <li><p><strong>owner_user</strong> – Query records owned by a group in the given list</p></li>
-<li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of records to return. Note that the server limit is always obeyed.</p></li>
-<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Additional fields to include in the returned record</p></li>
-<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>limit</strong> (<em>int</em><em> | </em><em>None</em>) – The maximum number of records to return. Note that the server limit is always obeyed.</p></li>
+<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Additional fields to include in the returned record</p></li>
+<li><p><strong>owner_group</strong> (<em>int</em><em> | </em><em>str</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em> | </em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1444,13 +1441,13 @@ the existing id, otherwise it will insert it and return the new id.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>initial_molecules</strong> (<em>Sequence</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Molecule</em><em>]</em><em>]</em>) – Initial molecules for the manybody expansion. Must have &gt; 1 fragments.</p></li>
+<li><p><strong>initial_molecules</strong> (<em>Sequence</em><em>[</em><em>int</em><em> | </em><em>Molecule</em><em>]</em>) – Initial molecules for the manybody expansion. Must have &gt; 1 fragments.</p></li>
 <li><p><strong>program</strong> (<em>str</em>) – The program to run the manybody computation with (“manybody”)</p></li>
 <li><p><strong>singlepoint_specification</strong> (<a class="reference internal" href="records/singlepoint.html#qcportal.singlepoint.QCSpecification" title="qcportal.singlepoint.record_models.QCSpecification"><em>QCSpecification</em></a>) – Specification for the singlepoint calculations done in the expansion</p></li>
 <li><p><strong>keywords</strong> (<em>ManybodyKeywords</em>) – The keywords for the manybody program</p></li>
 <li><p><strong>tag</strong> (<em>str</em>) – The tag for the task. This will assist in routing to appropriate compute managers.</p></li>
 <li><p><strong>priority</strong> (<a class="reference internal" href="records/base.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a>) – The priority of the job (high, normal, low). Default is normal.</p></li>
-<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Group with additional permission for these records</p></li>
+<li><p><strong>owner_group</strong> (<em>str</em><em> | </em><em>None</em>) – Group with additional permission for these records</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1471,10 +1468,10 @@ order of the input molecules</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>record_ids</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em>) – Single ID or sequence/list of records to obtain</p></li>
+<li><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – Single ID or sequence/list of records to obtain</p></li>
 <li><p><strong>missing_ok</strong> (<em>bool</em>) – If set to True, then missing records will be tolerated, and the returned
 records will contain None for the corresponding IDs that were not found.</p></li>
-<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Additional fields to include in the returned record</p></li>
+<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Additional fields to include in the returned record</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1483,7 +1480,7 @@ a list of records.  If missing_ok was specified, None will be substituted for a 
 that was not found.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Union</em>[<a class="reference internal" href="records/manybody.html#qcportal.manybody.ManybodyRecord" title="qcportal.manybody.record_models.ManybodyRecord"><em>ManybodyRecord</em></a>, None, <em>List</em>[<em>Optional</em>[<a class="reference internal" href="records/manybody.html#qcportal.manybody.ManybodyRecord" title="qcportal.manybody.record_models.ManybodyRecord"><em>ManybodyRecord</em></a>]]]</p>
+<dd class="field-odd"><p><a class="reference internal" href="records/manybody.html#qcportal.manybody.ManybodyRecord" title="qcportal.manybody.record_models.ManybodyRecord"><em>ManybodyRecord</em></a> | None | <em>List</em>[<a class="reference internal" href="records/manybody.html#qcportal.manybody.ManybodyRecord" title="qcportal.manybody.record_models.ManybodyRecord"><em>ManybodyRecord</em></a> | None]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1496,26 +1493,26 @@ that was not found.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>record_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records whose ID is in the given list</p></li>
-<li><p><strong>manager_name</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records that were completed (or are currently runnning) on a manager is in the given list</p></li>
-<li><p><strong>status</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>]</em><em>]</em><em>]</em>) – Query records whose status is in the given list</p></li>
-<li><p><strong>dataset_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that are part of a dataset is in the given list</p></li>
-<li><p><strong>parent_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that have a parent is in the given list</p></li>
-<li><p><strong>child_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that have a child (optimization calculation) is in the given list</p></li>
-<li><p><strong>created_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created before the given date/time</p></li>
-<li><p><strong>created_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created after the given date/time</p></li>
-<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified before the given date/time</p></li>
-<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified after the given date/time</p></li>
-<li><p><strong>program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose reaction program is in the given list</p></li>
-<li><p><strong>qc_program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose qc program is in the given list</p></li>
-<li><p><strong>qc_method</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose qc method is in the given list</p></li>
-<li><p><strong>qc_basis</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose qc basis is in the given list</p></li>
-<li><p><strong>initial_molecule_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query manybody calculations that contain an initial molecule (id) is in the given list</p></li>
-<li><p><strong>owner_user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a user in the given list</p></li>
+<li><p><strong>record_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records whose ID is in the given list</p></li>
+<li><p><strong>manager_name</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records that were completed (or are currently runnning) on a manager is in the given list</p></li>
+<li><p><strong>status</strong> (<a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em> | </em><em>Iterable</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>] </em><em>| </em><em>None</em>) – Query records whose status is in the given list</p></li>
+<li><p><strong>dataset_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records that are part of a dataset is in the given list</p></li>
+<li><p><strong>parent_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records that have a parent is in the given list</p></li>
+<li><p><strong>child_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query records that have a child (optimization calculation) is in the given list</p></li>
+<li><p><strong>created_before</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were created before the given date/time</p></li>
+<li><p><strong>created_after</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were created after the given date/time</p></li>
+<li><p><strong>modified_before</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were modified before the given date/time</p></li>
+<li><p><strong>modified_after</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query records that were modified after the given date/time</p></li>
+<li><p><strong>program</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records whose reaction program is in the given list</p></li>
+<li><p><strong>qc_program</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records whose qc program is in the given list</p></li>
+<li><p><strong>qc_method</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records whose qc method is in the given list</p></li>
+<li><p><strong>qc_basis</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records whose qc basis is in the given list</p></li>
+<li><p><strong>initial_molecule_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Query manybody calculations that contain an initial molecule (id) is in the given list</p></li>
+<li><p><strong>owner_user</strong> (<em>int</em><em> | </em><em>str</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em> | </em><em>str</em><em>] </em><em>| </em><em>None</em>) – Query records owned by a user in the given list</p></li>
 <li><p><strong>owner_user</strong> – Query records owned by a group in the given list</p></li>
-<li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of records to return. Note that the server limit is always obeyed.</p></li>
-<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Additional fields to include in the returned record</p></li>
-<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>limit</strong> (<em>int</em><em> | </em><em>None</em>) – The maximum number of records to return. Note that the server limit is always obeyed.</p></li>
+<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Additional fields to include in the returned record</p></li>
+<li><p><strong>owner_group</strong> (<em>int</em><em> | </em><em>str</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em> | </em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1534,13 +1531,13 @@ that was not found.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>initial_chains</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Molecule</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>initial_chains</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>int</em><em> | </em><em>Molecule</em><em>]</em><em>]</em>) – </p></li>
 <li><p><strong>program</strong> (<em>str</em>) – </p></li>
 <li><p><strong>singlepoint_specification</strong> (<a class="reference internal" href="records/singlepoint.html#qcportal.singlepoint.QCSpecification" title="qcportal.singlepoint.record_models.QCSpecification"><em>QCSpecification</em></a>) – </p></li>
-<li><p><strong>keywords</strong> (<em>Union</em><em>[</em><em>NEBKeywords</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>keywords</strong> (<em>NEBKeywords</em><em> | </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p></li>
 <li><p><strong>tag</strong> (<em>str</em>) – </p></li>
 <li><p><strong>priority</strong> (<a class="reference internal" href="records/base.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a>) – </p></li>
-<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>owner_group</strong> (<em>str</em><em> | </em><em>None</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1557,10 +1554,10 @@ that was not found.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>record_ids</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em>) – Single ID or sequence/list of records to obtain</p></li>
+<li><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – Single ID or sequence/list of records to obtain</p></li>
 <li><p><strong>missing_ok</strong> (<em>bool</em>) – If set to True, then missing records will be tolerated, and the returned
 records will contain None for the corresponding IDs that were not found.</p></li>
-<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Additional fields to include in the returned record</p></li>
+<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Additional fields to include in the returned record</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1569,7 +1566,7 @@ a list of records.  If missing_ok was specified, None will be substituted for a 
 that was not found.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Union</em>[<a class="reference internal" href="records/neb.html#qcportal.neb.NEBRecord" title="qcportal.neb.record_models.NEBRecord"><em>NEBRecord</em></a>, None, <em>List</em>[<em>Optional</em>[<a class="reference internal" href="records/neb.html#qcportal.neb.NEBRecord" title="qcportal.neb.record_models.NEBRecord"><em>NEBRecord</em></a>]]]</p>
+<dd class="field-odd"><p><a class="reference internal" href="records/neb.html#qcportal.neb.NEBRecord" title="qcportal.neb.record_models.NEBRecord"><em>NEBRecord</em></a> | None | <em>List</em>[<a class="reference internal" href="records/neb.html#qcportal.neb.NEBRecord" title="qcportal.neb.record_models.NEBRecord"><em>NEBRecord</em></a> | None]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1581,25 +1578,25 @@ that was not found.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>record_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>manager_name</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>status</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>dataset_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>parent_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>child_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>created_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>created_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>qc_program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>qc_method</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>qc_basis</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>molecule_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – </p></li>
-<li><p><strong>owner_user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>record_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>manager_name</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>status</strong> (<a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em> | </em><em>Iterable</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>dataset_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>parent_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>child_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>created_before</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – </p></li>
+<li><p><strong>created_after</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – </p></li>
+<li><p><strong>modified_before</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – </p></li>
+<li><p><strong>modified_after</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – </p></li>
+<li><p><strong>program</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>qc_program</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>qc_method</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>qc_basis</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>molecule_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>limit</strong> (<em>int</em><em> | </em><em>None</em>) – </p></li>
+<li><p><strong>owner_user</strong> (<em>int</em><em> | </em><em>str</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em> | </em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>owner_group</strong> (<em>int</em><em> | </em><em>str</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em> | </em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1615,7 +1612,7 @@ that was not found.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>names</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Sequence</em><em>[</em><em>str</em><em>]</em><em>]</em>) – A manager name or list of names</p></li>
+<li><p><strong>names</strong> (<em>str</em><em> | </em><em>Sequence</em><em>[</em><em>str</em><em>]</em>) – A manager name or list of names</p></li>
 <li><p><strong>missing_ok</strong> (<em>bool</em>) – If set to True, then missing managers will be tolerated, and the returned
 managers will contain None for the corresponding managers that were not found.</p></li>
 </ul>
@@ -1626,7 +1623,7 @@ a list of managers.  If missing_ok was specified, None will be substituted for a
 that was not found.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Union</em>[<em>ComputeManager</em>, None, <em>List</em>[<em>Optional</em>[<em>ComputeManager</em>]]]</p>
+<dd class="field-odd"><p><em>ComputeManager</em> | None | <em>List</em>[<em>ComputeManager</em> | None]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1638,14 +1635,14 @@ that was not found.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>manager_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – ID assigned to the manager (this is not the UUID. This should be used very rarely).</p></li>
-<li><p><strong>name</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Queries managers whose name is in the given list</p></li>
-<li><p><strong>cluster</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Queries managers whose assigned cluster is in the given list</p></li>
-<li><p><strong>hostname</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Queries managers whose hostname is in the given list</p></li>
-<li><p><strong>status</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>]</em><em>]</em><em>]</em>) – Queries managers whose status is in the given list</p></li>
-<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query for managers last modified before a certain time</p></li>
-<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query for managers last modified after a certain time</p></li>
-<li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of managers to return. Note that the server limit is always obeyed.</p></li>
+<li><p><strong>manager_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – ID assigned to the manager (this is not the UUID. This should be used very rarely).</p></li>
+<li><p><strong>name</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Queries managers whose name is in the given list</p></li>
+<li><p><strong>cluster</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Queries managers whose assigned cluster is in the given list</p></li>
+<li><p><strong>hostname</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Queries managers whose hostname is in the given list</p></li>
+<li><p><strong>status</strong> (<a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em> | </em><em>Iterable</em><em>[</em><a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>] </em><em>| </em><em>None</em>) – Queries managers whose status is in the given list</p></li>
+<li><p><strong>modified_before</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query for managers last modified before a certain time</p></li>
+<li><p><strong>modified_after</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query for managers last modified after a certain time</p></li>
+<li><p><strong>limit</strong> (<em>int</em><em> | </em><em>None</em>) – The maximum number of managers to return. Note that the server limit is always obeyed.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1666,9 +1663,9 @@ as they are not deleted)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Return statistics captured before the specified date/time</p></li>
-<li><p><strong>after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Return statistics captured after the specified date/time</p></li>
-<li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of statistics entries to return. Note that the server limit is always obeyed.</p></li>
+<li><p><strong>before</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Return statistics captured before the specified date/time</p></li>
+<li><p><strong>after</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Return statistics captured after the specified date/time</p></li>
+<li><p><strong>limit</strong> (<em>int</em><em> | </em><em>None</em>) – The maximum number of statistics entries to return. Note that the server limit is always obeyed.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1705,12 +1702,12 @@ as they are not deleted)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>access_type</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Return log entries whose access_type is in the given list</p></li>
-<li><p><strong>access_method</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Return log entries whose access_method is in the given list</p></li>
-<li><p><strong>before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Return log entries captured before the specified date/time</p></li>
-<li><p><strong>after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Return log entries captured after the specified date/time</p></li>
-<li><p><strong>user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – User name or ID associated with the log entry</p></li>
-<li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of log entries to return. Note that the server limit is always obeyed.</p></li>
+<li><p><strong>access_type</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Return log entries whose access_type is in the given list</p></li>
+<li><p><strong>access_method</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Return log entries whose access_method is in the given list</p></li>
+<li><p><strong>before</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Return log entries captured before the specified date/time</p></li>
+<li><p><strong>after</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Return log entries captured after the specified date/time</p></li>
+<li><p><strong>user</strong> (<em>int</em><em> | </em><em>str</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em> | </em><em>str</em><em>] </em><em>| </em><em>None</em>) – User name or ID associated with the log entry</p></li>
+<li><p><strong>limit</strong> (<em>int</em><em> | </em><em>None</em>) – The maximum number of log entries to return. Note that the server limit is always obeyed.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1747,11 +1744,11 @@ as they are not deleted)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>error_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Return error log entries whose id is in the list</p></li>
-<li><p><strong>user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Return error log entries whose user name or ID is in the list</p></li>
-<li><p><strong>before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Return error log entries captured before the specified date/time</p></li>
-<li><p><strong>after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Return error log entries captured after the specified date/time</p></li>
-<li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of log entries to return. Note that the server limit is always obeyed.</p></li>
+<li><p><strong>error_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Return error log entries whose id is in the list</p></li>
+<li><p><strong>user</strong> (<em>int</em><em> | </em><em>str</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em> | </em><em>str</em><em>] </em><em>| </em><em>None</em>) – Return error log entries whose user name or ID is in the list</p></li>
+<li><p><strong>before</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Return error log entries captured before the specified date/time</p></li>
+<li><p><strong>after</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Return error log entries captured after the specified date/time</p></li>
+<li><p><strong>limit</strong> (<em>int</em><em> | </em><em>None</em>) – The maximum number of log entries to return. Note that the server limit is always obeyed.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1855,8 +1852,8 @@ log entries and do it yourself.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>group_by</strong> (<em>str</em>) – How to group the data. Valid options are “user”, “hour”, “day”, “country”, “subdivision”</p></li>
-<li><p><strong>before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query for log entries with a timestamp before a specific time</p></li>
-<li><p><strong>after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query for log entries with a timestamp after a specific time</p></li>
+<li><p><strong>before</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query for log entries with a timestamp before a specific time</p></li>
+<li><p><strong>after</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Query for log entries with a timestamp after a specific time</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1956,7 +1953,7 @@ log entries and do it yourself.</p>
 <dd><p>Get information about a group on the server</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>groupname_or_id</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em>) – </p>
+<dd class="field-odd"><p><strong>groupname_or_id</strong> (<em>int</em><em> | </em><em>str</em>) – </p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>GroupInfo</em></p>
@@ -1986,7 +1983,7 @@ log entries and do it yourself.</p>
 <p>Deleted groups will be removed from all users groups list</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>groupname_or_id</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em>) – </p>
+<dd class="field-odd"><p><strong>groupname_or_id</strong> (<em>int</em><em> | </em><em>str</em>) – </p>
 </dd>
 </dl>
 </dd></dl>
@@ -2009,7 +2006,7 @@ log entries and do it yourself.</p>
 <p>If the username is not supplied, then info about the currently logged-in user is obtained.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>username_or_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>) – The username or ID to get info about</p>
+<dd class="field-odd"><p><strong>username_or_id</strong> (<em>int</em><em> | </em><em>str</em><em> | </em><em>None</em>) – The username or ID to get info about</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Information about the user</p>
@@ -2028,7 +2025,7 @@ log entries and do it yourself.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>user_info</strong> (<em>UserInfo</em>) – Info about the user to add</p></li>
-<li><p><strong>password</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The user’s password. If None, then one will be generated</p></li>
+<li><p><strong>password</strong> (<em>str</em><em> | </em><em>None</em>) – The user’s password. If None, then one will be generated</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -2070,8 +2067,8 @@ and username are checked for consistency.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>username_or_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>) – The name or ID of the user whose password to change. If None, then use the currently logged-in user</p></li>
-<li><p><strong>new_password</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Password to change to. If None, let the server generate one.</p></li>
+<li><p><strong>username_or_id</strong> (<em>int</em><em> | </em><em>str</em><em> | </em><em>None</em>) – The name or ID of the user whose password to change. If None, then use the currently logged-in user</p></li>
+<li><p><strong>new_password</strong> (<em>str</em><em> | </em><em>None</em>) – Password to change to. If None, let the server generate one.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -2089,7 +2086,7 @@ and username are checked for consistency.</p>
 <dd><p>Delete a user from the server</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>username_or_id</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em>) – </p>
+<dd class="field-odd"><p><strong>username_or_id</strong> (<em>int</em><em> | </em><em>str</em>) – </p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
@@ -2111,8 +2108,8 @@ are searched for “qcportal_config.yaml”</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>server_name</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Name/alias of the server in the yaml file</p></li>
-<li><p><strong>config_path</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Full path to a configuration file, or a directory containing “qcportal_config.yaml”.</p></li>
+<li><p><strong>server_name</strong> (<em>str</em><em> | </em><em>None</em>) – Name/alias of the server in the yaml file</p></li>
+<li><p><strong>config_path</strong> (<em>str</em><em> | </em><em>None</em>) – Full path to a configuration file, or a directory containing “qcportal_config.yaml”.</p></li>
 </ul>
 </dd>
 </dl>
@@ -2126,11 +2123,11 @@ are searched for “qcportal_config.yaml”</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>method</strong> (<em>str</em>) – </p></li>
 <li><p><strong>endpoint</strong> (<em>str</em>) – </p></li>
-<li><p><strong>response_model</strong> (<em>Optional</em><em>[</em><em>Type</em><em>[</em><em>_V</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>body_model</strong> (<em>Optional</em><em>[</em><em>Type</em><em>[</em><em>_T</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>url_params_model</strong> (<em>Optional</em><em>[</em><em>Type</em><em>[</em><em>_U</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>body</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>_T</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>url_params</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>_U</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>response_model</strong> (<em>Type</em><em>[</em><em>_V</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>body_model</strong> (<em>Type</em><em>[</em><em>_T</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>url_params_model</strong> (<em>Type</em><em>[</em><em>_U</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>body</strong> (<em>_T</em><em> | </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>url_params</strong> (<em>_U</em><em> | </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -2377,7 +2374,7 @@ of a molecule query.</p>
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 6.1.3.<br>
         </p>
         
 

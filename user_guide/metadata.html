@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Interpreting metadata &#8212; QCArchive 0.50b8.post21+g50f68399 documentation</title>
+    <title>Interpreting metadata &#8212; QCArchive 0.50b9.post2+g2d814ec9 documentation</title>
   
   
   
@@ -31,7 +31,7 @@
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -39,9 +39,6 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/design-tabs.js"></script>
@@ -491,7 +488,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>error_description</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>error_description</strong> (<em>str</em><em> | </em><em>None</em>) – </p></li>
 <li><p><strong>errors</strong> (<em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>) – </p></li>
 <li><p><strong>inserted_idx</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – </p></li>
 <li><p><strong>existing_idx</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – </p></li>
@@ -500,7 +497,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.error_description">
-<span class="sig-name descname"><span class="pre">error_description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.error_description" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">error_description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.error_description" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -579,7 +576,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>error_description</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>error_description</strong> (<em>str</em><em> | </em><em>None</em>) – </p></li>
 <li><p><strong>errors</strong> (<em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>) – </p></li>
 <li><p><strong>deleted_idx</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – </p></li>
 <li><p><strong>n_children_deleted</strong> (<em>int</em>) – </p></li>
@@ -588,7 +585,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata.error_description">
-<span class="sig-name descname"><span class="pre">error_description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.error_description" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">error_description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.error_description" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -662,7 +659,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>error_description</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>error_description</strong> (<em>str</em><em> | </em><em>None</em>) – </p></li>
 <li><p><strong>errors</strong> (<em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>) – </p></li>
 <li><p><strong>updated_idx</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – </p></li>
 <li><p><strong>n_children_updated</strong> (<em>int</em>) – </p></li>
@@ -671,7 +668,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata.error_description">
-<span class="sig-name descname"><span class="pre">error_description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.error_description" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">error_description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.error_description" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -745,7 +742,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>error_description</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>error_description</strong> (<em>str</em><em> | </em><em>None</em>) – </p></li>
 <li><p><strong>errors</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – </p></li>
 <li><p><strong>n_found</strong> (<em>int</em>) – </p></li>
 </ul>
@@ -753,7 +750,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.metadata_models.QueryMetadata.error_description">
-<span class="sig-name descname"><span class="pre">error_description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.metadata_models.QueryMetadata.error_description" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">error_description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.metadata_models.QueryMetadata.error_description" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -807,7 +804,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>error_description</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>error_description</strong> (<em>str</em><em> | </em><em>None</em>) – </p></li>
 <li><p><strong>rejected_info</strong> (<em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>) – </p></li>
 <li><p><strong>accepted_ids</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – </p></li>
 </ul>
@@ -815,7 +812,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.metadata_models.TaskReturnMetadata.error_description">
-<span class="sig-name descname"><span class="pre">error_description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.error_description" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">error_description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.error_description" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -1055,7 +1052,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 6.1.3.<br>
         </p>
         
 

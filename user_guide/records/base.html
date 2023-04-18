@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Base Record &#8212; QCArchive 0.50b8.post21+g50f68399 documentation</title>
+    <title>Base Record &#8212; QCArchive 0.50b9.post2+g2d814ec9 documentation</title>
   
   
   
@@ -31,7 +31,7 @@
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -39,9 +39,6 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
-    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
     <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/design-tabs.js"></script>
@@ -497,22 +494,22 @@ lots of subrecords of different types (such as a <a class="reference internal" h
 </dd>
 <dt class="field-even">Fields<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.comments_" title="qcportal.record_models.BaseRecord.comments_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">comments_</span> <span class="pre">(Optional[List[qcportal.record_models.RecordComment]])</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.compute_history_" title="qcportal.record_models.BaseRecord.compute_history_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_history_</span> <span class="pre">(Optional[List[qcportal.record_models.ComputeHistory]])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.comments_" title="qcportal.record_models.BaseRecord.comments_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">comments_</span> <span class="pre">(List[qcportal.record_models.RecordComment]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.compute_history_" title="qcportal.record_models.BaseRecord.compute_history_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_history_</span> <span class="pre">(List[qcportal.record_models.ComputeHistory]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.created_on" title="qcportal.record_models.BaseRecord.created_on"><code class="xref py py-obj docutils literal notranslate"><span class="pre">created_on</span> <span class="pre">(datetime.datetime)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.extras" title="qcportal.record_models.BaseRecord.extras"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extras</span> <span class="pre">(Optional[Dict[str,</span> <span class="pre">Any]])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.extras" title="qcportal.record_models.BaseRecord.extras"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extras</span> <span class="pre">(Dict[str,</span> <span class="pre">Any]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.id" title="qcportal.record_models.BaseRecord.id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id</span> <span class="pre">(int)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.is_service" title="qcportal.record_models.BaseRecord.is_service"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_service</span> <span class="pre">(bool)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.manager_name" title="qcportal.record_models.BaseRecord.manager_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">manager_name</span> <span class="pre">(Optional[str])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.manager_name" title="qcportal.record_models.BaseRecord.manager_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">manager_name</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.modified_on" title="qcportal.record_models.BaseRecord.modified_on"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modified_on</span> <span class="pre">(datetime.datetime)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.native_files_" title="qcportal.record_models.BaseRecord.native_files_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">native_files_</span> <span class="pre">(Optional[Dict[str,</span> <span class="pre">qcportal.record_models.NativeFile]])</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.owner_group" title="qcportal.record_models.BaseRecord.owner_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owner_group</span> <span class="pre">(Optional[str])</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.owner_user" title="qcportal.record_models.BaseRecord.owner_user"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owner_user</span> <span class="pre">(Optional[str])</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.properties" title="qcportal.record_models.BaseRecord.properties"><code class="xref py py-obj docutils literal notranslate"><span class="pre">properties</span> <span class="pre">(Optional[Dict[str,</span> <span class="pre">Any]])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.native_files_" title="qcportal.record_models.BaseRecord.native_files_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">native_files_</span> <span class="pre">(Dict[str,</span> <span class="pre">qcportal.record_models.NativeFile]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.owner_group" title="qcportal.record_models.BaseRecord.owner_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owner_group</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.owner_user" title="qcportal.record_models.BaseRecord.owner_user"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owner_user</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.properties" title="qcportal.record_models.BaseRecord.properties"><code class="xref py py-obj docutils literal notranslate"><span class="pre">properties</span> <span class="pre">(Dict[str,</span> <span class="pre">Any]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.record_type" title="qcportal.record_models.BaseRecord.record_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_type</span> <span class="pre">(str)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.service_" title="qcportal.record_models.BaseRecord.service_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">service_</span> <span class="pre">(Optional[qcportal.record_models.RecordService])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.service_" title="qcportal.record_models.BaseRecord.service_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">service_</span> <span class="pre">(qcportal.record_models.RecordService</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.status" title="qcportal.record_models.BaseRecord.status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">status</span> <span class="pre">(qcportal.record_models.RecordStatusEnum)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.task_" title="qcportal.record_models.BaseRecord.task_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">task_</span> <span class="pre">(Optional[qcportal.record_models.RecordTask])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.task_" title="qcportal.record_models.BaseRecord.task_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">task_</span> <span class="pre">(qcportal.record_models.RecordTask</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 </ul>
 </dd>
 </dl>
@@ -533,12 +530,12 @@ lots of subrecords of different types (such as a <a class="reference internal" h
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.record_models.BaseRecord.properties">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">properties</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.properties" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">properties</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.properties" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.record_models.BaseRecord.extras">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">extras</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.extras" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">extras</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.extras" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -548,7 +545,7 @@ lots of subrecords of different types (such as a <a class="reference internal" h
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.record_models.BaseRecord.manager_name">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">manager_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.manager_name" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">manager_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.manager_name" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -563,37 +560,37 @@ lots of subrecords of different types (such as a <a class="reference internal" h
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.record_models.BaseRecord.owner_user">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">owner_user</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.owner_user" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">owner_user</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.owner_user" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.record_models.BaseRecord.owner_group">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">owner_group</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.owner_group" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">owner_group</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.owner_group" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.record_models.BaseRecord.compute_history_">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_history_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ComputeHistory</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.compute_history_" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_history_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ComputeHistory</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.compute_history_" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.record_models.BaseRecord.task_">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">task_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../overview/tasks_services.html#qcportal.record_models.RecordTask" title="qcportal.record_models.RecordTask"><span class="pre">RecordTask</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.task_" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">task_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../../overview/tasks_services.html#qcportal.record_models.RecordTask" title="qcportal.record_models.RecordTask"><span class="pre">RecordTask</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.task_" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.record_models.BaseRecord.service_">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">service_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../overview/tasks_services.html#qcportal.record_models.RecordService" title="qcportal.record_models.RecordService"><span class="pre">RecordService</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.service_" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">service_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../../overview/tasks_services.html#qcportal.record_models.RecordService" title="qcportal.record_models.RecordService"><span class="pre">RecordService</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.service_" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.record_models.BaseRecord.comments_">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">comments_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">RecordComment</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.comments_" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">comments_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">RecordComment</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.comments_" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.record_models.BaseRecord.native_files_">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">native_files_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">NativeFile</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.native_files_" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">native_files_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">NativeFile</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.native_files_" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -629,42 +626,42 @@ lots of subrecords of different types (such as a <a class="reference internal" h
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.record_models.BaseRecord.task">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">task</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../overview/tasks_services.html#qcportal.record_models.RecordTask" title="qcportal.record_models.RecordTask"><span class="pre">RecordTask</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.task" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">task</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../../overview/tasks_services.html#qcportal.record_models.RecordTask" title="qcportal.record_models.RecordTask"><span class="pre">RecordTask</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.task" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.record_models.BaseRecord.service">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">service</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../overview/tasks_services.html#qcportal.record_models.RecordService" title="qcportal.record_models.RecordService"><span class="pre">RecordService</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.service" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">service</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../../overview/tasks_services.html#qcportal.record_models.RecordService" title="qcportal.record_models.RecordService"><span class="pre">RecordService</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.service" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.record_models.BaseRecord.comments">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">comments</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">RecordComment</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.comments" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">comments</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">RecordComment</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.comments" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.record_models.BaseRecord.native_files">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">native_files</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">NativeFile</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.native_files" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">native_files</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">NativeFile</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.native_files" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.record_models.BaseRecord.stdout">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stdout</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.stdout" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stdout</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.stdout" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.record_models.BaseRecord.stderr">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stderr</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.stderr" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stderr</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.stderr" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.record_models.BaseRecord.error">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.error" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.error" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.record_models.BaseRecord.provenance">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">provenance</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Provenance</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.provenance" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">provenance</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Provenance</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.provenance" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -686,7 +683,7 @@ lots of subrecords of different types (such as a <a class="reference internal" h
 <dt class="field-even">Fields<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
 <li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.auto_fetch_missing" title="qcportal.dataset_models.BaseDataset.auto_fetch_missing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">auto_fetch_missing</span> <span class="pre">(bool)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.contributed_values_" title="qcportal.dataset_models.BaseDataset.contributed_values_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">contributed_values_</span> <span class="pre">(Optional[Dict[str,</span> <span class="pre">qcportal.dataset_models.ContributedValues]])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.contributed_values_" title="qcportal.dataset_models.BaseDataset.contributed_values_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">contributed_values_</span> <span class="pre">(Dict[str,</span> <span class="pre">qcportal.dataset_models.ContributedValues]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.dataset_type" title="qcportal.dataset_models.BaseDataset.dataset_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dataset_type</span> <span class="pre">(str)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.default_priority" title="qcportal.dataset_models.BaseDataset.default_priority"><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_priority</span> <span class="pre">(qcportal.record_models.PriorityEnum)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.default_tag" title="qcportal.dataset_models.BaseDataset.default_tag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_tag</span> <span class="pre">(str)</span></code></a></p></li>
@@ -698,8 +695,8 @@ lots of subrecords of different types (such as a <a class="reference internal" h
 <li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.id" title="qcportal.dataset_models.BaseDataset.id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id</span> <span class="pre">(int)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.metadata" title="qcportal.dataset_models.BaseDataset.metadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">metadata</span> <span class="pre">(Dict[str,</span> <span class="pre">Any])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.name" title="qcportal.dataset_models.BaseDataset.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span> <span class="pre">(str)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.owner_group" title="qcportal.dataset_models.BaseDataset.owner_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owner_group</span> <span class="pre">(Optional[str])</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.owner_user" title="qcportal.dataset_models.BaseDataset.owner_user"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owner_user</span> <span class="pre">(Optional[str])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.owner_group" title="qcportal.dataset_models.BaseDataset.owner_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owner_group</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.owner_user" title="qcportal.dataset_models.BaseDataset.owner_user"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owner_user</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.provenance" title="qcportal.dataset_models.BaseDataset.provenance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">provenance</span> <span class="pre">(Dict[str,</span> <span class="pre">Any])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.record_map_" title="qcportal.dataset_models.BaseDataset.record_map_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_map_</span> <span class="pre">(Dict[Tuple[str,</span> <span class="pre">str],</span> <span class="pre">Any])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.specifications_" title="qcportal.dataset_models.BaseDataset.specifications_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">specifications_</span> <span class="pre">(Dict[str,</span> <span class="pre">Any])</span></code></a></p></li>
@@ -766,12 +763,12 @@ lots of subrecords of different types (such as a <a class="reference internal" h
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.owner_user">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">owner_user</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.owner_user" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">owner_user</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.owner_user" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.owner_group">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">owner_group</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.owner_group" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">owner_group</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.owner_group" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -806,7 +803,7 @@ lots of subrecords of different types (such as a <a class="reference internal" h
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.contributed_values_">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">contributed_values_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ContributedValues</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.contributed_values_" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">contributed_values_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ContributedValues</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.contributed_values_" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -837,10 +834,10 @@ lots of subrecords of different types (such as a <a class="reference internal" h
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>tag</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
-<li><p><strong>priority</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a><em>]</em>) – </p></li>
+<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>tag</strong> (<em>str</em><em> | </em><em>None</em>) – </p></li>
+<li><p><strong>priority</strong> (<a class="reference internal" href="#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a><em> | </em><em>None</em>) – </p></li>
 </ul>
 </dd>
 </dl>
@@ -1079,7 +1076,7 @@ lots of subrecords of different types (such as a <a class="reference internal" h
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Names of entries to fetch. If None, fetch all entries</p></li>
+<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names of entries to fetch. If None, fetch all entries</p></li>
 <li><p><strong>force_refetch</strong> (<em>bool</em>) – If true, fetch data from the server even if it already exists locally</p></li>
 </ul>
 </dd>
@@ -1102,7 +1099,7 @@ lots of subrecords of different types (such as a <a class="reference internal" h
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Optional</em>[<em>Any</em>]</p>
+<dd class="field-even"><p><em>Any</em> | None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1115,7 +1112,7 @@ lots of subrecords of different types (such as a <a class="reference internal" h
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Names of entries to iterate over. If None, iterate over all entries</p></li>
+<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names of entries to iterate over. If None, iterate over all entries</p></li>
 <li><p><strong>force_refetch</strong> (<em>bool</em>) – If true, fetch data from the server even if it already exists locally</p></li>
 </ul>
 </dd>
@@ -1143,7 +1140,7 @@ lots of subrecords of different types (such as a <a class="reference internal" h
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>names</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>]</em>) – </p></li>
 <li><p><strong>delete_records</strong> (<em>bool</em>) – </p></li>
 </ul>
 </dd>
@@ -1162,10 +1159,10 @@ If <cite>force_refetch</cite> is True, then this will always fetch the records.<
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Names of the entries whose records to fetch. If None, fetch all entries</p></li>
-<li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Names of the specifications whose records to fetch. If None, fetch all specifications</p></li>
-<li><p><strong>status</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>]</em><em>]</em><em>]</em>) – Fetch only records with these statuses</p></li>
-<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Additional fields to include in the returned record</p></li>
+<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names of the entries whose records to fetch. If None, fetch all entries</p></li>
+<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names of the specifications whose records to fetch. If None, fetch all specifications</p></li>
+<li><p><strong>status</strong> (<a class="reference internal" href="#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em> | </em><em>Iterable</em><em>[</em><a class="reference internal" href="#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>] </em><em>| </em><em>None</em>) – Fetch only records with these statuses</p></li>
+<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Additional fields to include in the returned record</p></li>
 <li><p><strong>fetch_updated</strong> (<em>bool</em>) – Fetch any records that exist locally but have been updated on the server</p></li>
 <li><p><strong>force_refetch</strong> (<em>bool</em>) – If true, fetch data from the server even if it already exists locally</p></li>
 </ul>
@@ -1183,12 +1180,12 @@ If <cite>force_refetch</cite> is True, then this will always fetch the records.<
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>entry_name</strong> (<em>str</em>) – </p></li>
 <li><p><strong>specification_name</strong> (<em>str</em>) – </p></li>
-<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
 <li><p><strong>force_refetch</strong> (<em>bool</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Optional</em>[<a class="reference internal" href="#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><em>BaseRecord</em></a>]</p>
+<dd class="field-even"><p><a class="reference internal" href="#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><em>BaseRecord</em></a> | None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1199,10 +1196,10 @@ If <cite>force_refetch</cite> is True, then this will always fetch the records.<
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>status</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>status</strong> (<a class="reference internal" href="#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em> | </em><em>Iterable</em><em>[</em><a class="reference internal" href="#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
 <li><p><strong>fetch_updated</strong> (<em>bool</em>) – </p></li>
 <li><p><strong>force_refetch</strong> (<em>bool</em>) – </p></li>
 </ul>
@@ -1216,8 +1213,8 @@ If <cite>force_refetch</cite> is True, then this will always fetch the records.<
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
 <li><p><strong>delete_records</strong> (<em>bool</em>) – </p></li>
 </ul>
 </dd>
@@ -1233,11 +1230,11 @@ If <cite>force_refetch</cite> is True, then this will always fetch the records.<
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>new_tag</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
-<li><p><strong>new_priority</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a><em>]</em>) – </p></li>
-<li><p><strong>new_comment</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>new_tag</strong> (<em>str</em><em> | </em><em>None</em>) – </p></li>
+<li><p><strong>new_priority</strong> (<a class="reference internal" href="#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a><em> | </em><em>None</em>) – </p></li>
+<li><p><strong>new_comment</strong> (<em>str</em><em> | </em><em>None</em>) – </p></li>
 <li><p><strong>refetch_records</strong> (<em>bool</em>) – </p></li>
 </ul>
 </dd>
@@ -1250,8 +1247,8 @@ If <cite>force_refetch</cite> is True, then this will always fetch the records.<
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
 <li><p><strong>refetch_records</strong> (<em>bool</em>) – </p></li>
 </ul>
 </dd>
@@ -1264,8 +1261,8 @@ If <cite>force_refetch</cite> is True, then this will always fetch the records.<
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
 <li><p><strong>refetch_records</strong> (<em>bool</em>) – </p></li>
 </ul>
 </dd>
@@ -1278,8 +1275,8 @@ If <cite>force_refetch</cite> is True, then this will always fetch the records.<
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
 <li><p><strong>refetch_records</strong> (<em>bool</em>) – </p></li>
 </ul>
 </dd>
@@ -1292,8 +1289,8 @@ If <cite>force_refetch</cite> is True, then this will always fetch the records.<
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
 <li><p><strong>refetch_records</strong> (<em>bool</em>) – </p></li>
 </ul>
 </dd>
@@ -1306,8 +1303,8 @@ If <cite>force_refetch</cite> is True, then this will always fetch the records.<
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
 <li><p><strong>refetch_records</strong> (<em>bool</em>) – </p></li>
 </ul>
 </dd>
@@ -1322,9 +1319,9 @@ If <cite>force_refetch</cite> is True, then this will always fetch the records.<
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>value_call</strong> (<em>Callable</em>) – </p></li>
 <li><p><strong>value_name</strong> (<em>str</em>) – </p></li>
-<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
 <li><p><strong>fetch_updated</strong> (<em>bool</em>) – </p></li>
 <li><p><strong>force_refetch</strong> (<em>bool</em>) – </p></li>
 </ul>
@@ -1678,7 +1675,7 @@ of a record query, and works with all kinds of records.</p>
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 6.1.3.<br>
         </p>
         
 
