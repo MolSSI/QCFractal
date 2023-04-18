@@ -108,7 +108,7 @@ class OutputStore(BaseModel):
 
     def propagate_client(self, client, history_base_url):
         self._client = client
-        self.data_url_ = f"{history_base_url}/outputs/{self.output_type}/data"
+        self.data_url_ = f"{history_base_url}/outputs/{self.output_type.value}/data"
 
     def _fetch_raw_data(self):
         if self.compressed_data_ is None and self.decompressed_data_ is None:
