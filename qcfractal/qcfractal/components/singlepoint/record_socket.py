@@ -414,7 +414,9 @@ class SinglepointRecordSocket(BaseRecordSocket):
     # Some stuff to be retrieved for singlepoints
     ####################################################
 
-    def get_wavefunction_metadata(self, record_id: int, *, session: Optional[Session] = None) -> Dict[str, Any]:
+    def get_wavefunction_metadata(
+        self, record_id: int, *, session: Optional[Session] = None
+    ) -> Optional[Dict[str, Any]]:
 
         options = [
             lazyload("*"),
@@ -428,6 +430,8 @@ class SinglepointRecordSocket(BaseRecordSocket):
             rec = session.get(SinglepointRecordORM, record_id, options=options)
             if rec is None:
                 raise MissingDataError(f"Cannot find record {record_id}")
+            if rec.wavefunction is None:
+                return None
             return rec.wavefunction.model_dict()
 
     def get_wavefunction_rawdata(
