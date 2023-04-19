@@ -402,7 +402,7 @@ class BaseRecordSocket:
             rec = session.get(BaseRecordORM, record_id, options=options)
             if rec is None:
                 raise MissingDataError(f"Cannot find record {record_id}")
-            return rec.native_files.model_dict()
+            return {k: v.model_dict() for k,v in rec.native_files.items()}
 
     def get_single_native_file_metadata(
         self,
