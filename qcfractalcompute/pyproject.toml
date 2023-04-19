@@ -37,6 +37,10 @@ qcfractal-manager = "qcfractalcompute.qcfractal_manager_cli:main"
 qcfractal-compute-manager = "qcfractalcompute.compute_manager_cli:main"
 
 
+[tool.setuptools.package-data]
+qcfractalcompute = ["run_scripts/**"]
+
+
 [tool.black]
 line-length = 120
 
