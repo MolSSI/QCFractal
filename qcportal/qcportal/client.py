@@ -36,6 +36,9 @@ from qcportal.reaction import (
     ReactionKeywords,
     ReactionQueryFilters,
 )
+from qcportal.services.models import (
+    ServiceSubtaskRecord,
+)
 from qcportal.singlepoint import (
     QCSpecification,
     SinglepointRecord,
