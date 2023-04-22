@@ -76,10 +76,6 @@ def _temporary_database(postgres_server):
     try:
         yield postgres_server
     finally:
-        # Force a garbage collection. Sometimes there's session objects or something
-        # hanging around, which will prevent the database from being deleted
-        gc.collect()
-
         postgres_server.delete_database()
 
 
