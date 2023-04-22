@@ -192,17 +192,33 @@ class SQLAlchemySocket:
         uri = db_config.uri
         logger.info(f"Creating tables for database: {uri}")
         engine = create_engine(uri, echo=False, poolclass=NullPool, future=True)
-        session = sessionmaker(bind=engine)()
 
         from qcfractal.db_socket.base_orm import BaseORM
-        from qcfractal.components.auth.db_models import RoleORM
-        from qcfractal.components.auth.role_socket import default_roles
 
         try:
             BaseORM.metadata.create_all(engine)
         except Exception as e:
             raise RuntimeError(f"SQLAlchemy Connection Error\n{str(e)}")
 
+        SQLAlchemySocket.populate_defaults(engine)
+
+        # update alembic_version table with the current version
+        logger.debug(f"Stamping Database with current alembic revision")
+        from alembic import command
+
+        alembic_cfg = SQLAlchemySocket.get_alembic_config(db_config)
+        command.stamp(alembic_cfg, "head")
+
+    @staticmethod
+    def populate_defaults(engine):
+        """
+        Populates any default values in the database
+        """
+
+        from qcfractal.components.auth.db_models import RoleORM
+        from qcfractal.components.auth.role_socket import default_roles
+
+        session = sessionmaker(bind=engine)()
         try:
             for rolename, permissions in default_roles.items():
                 orm = RoleORM(rolename=rolename, permissions=permissions)
@@ -212,13 +228,6 @@ class SQLAlchemySocket:
             raise RuntimeError(f"Failed to populate default roles:\n {str(e)}")
         finally:
             session.close()
-
-        # update alembic_version table with the current version
-        logger.debug(f"Stamping Database with current alembic revision")
-        from alembic import command
-
-        alembic_cfg = SQLAlchemySocket.get_alembic_config(db_config)
-        command.stamp(alembic_cfg, "head")
 
     @staticmethod
     def upgrade_database(db_config: DatabaseConfig, revision: str = "head") -> None:
