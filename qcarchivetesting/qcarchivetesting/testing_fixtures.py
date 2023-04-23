@@ -116,24 +116,14 @@ def session(storage_socket):
 
 
 @pytest.fixture(scope="function", params=valid_encodings)
-def stopped_snowflake(temporary_database, request):
-    """
-    A QCFractal snowflake server used for testing, but with nothing started by default
-    """
-
-    db_config = temporary_database.config
-    with QCATestingSnowflake(db_config, encoding=request.param, start_flask=False) as server:
-        yield server
-
-
-@pytest.fixture(scope="function")
-def snowflake(stopped_snowflake):
+def snowflake(temporary_database, request):
     """
     A QCFractal snowflake server used for testing
     """
 
-    stopped_snowflake.start_flask()
-    yield stopped_snowflake
+    db_config = temporary_database.config
+    with QCATestingSnowflake(db_config, encoding=request.param) as server:
+        yield server
 
 
 @pytest.fixture(scope="function", params=valid_encodings)
@@ -235,6 +225,7 @@ def activated_manager_name(activated_manager) -> ManagerName:
     """
 
     yield activated_manager[0]
+
 
 @pytest.fixture(scope="function")
 def activated_manager_programs(activated_manager) -> ManagerName:
