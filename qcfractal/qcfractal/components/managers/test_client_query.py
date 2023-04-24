@@ -2,36 +2,33 @@ from __future__ import annotations
 
 import pytest
 
-from qcfractal.testing_helpers import QCATestingSnowflake
 from qcportal import PortalClient
 from qcportal.managers import ManagerName
 
 
 @pytest.fixture(scope="module")
-def queryable_managers_client(module_temporary_database):
-    db_config = module_temporary_database.config
-    with QCATestingSnowflake(db_config, encoding="application/json") as server:
+def queryable_managers_client(session_snowflake):
+    for cluster_i in range(4):
+        for host_i in range(10):
+            for uuid_i in range(3):
+                mname = ManagerName(
+                    cluster=f"test_cluster_{cluster_i}",
+                    hostname=f"test_host_{host_i}",
+                    uuid=f"1234-5678-1234-567{uuid_i}",
+                )
 
-        for cluster_i in range(4):
-            for host_i in range(10):
-                for uuid_i in range(3):
-                    mname = ManagerName(
-                        cluster=f"test_cluster_{cluster_i}",
-                        hostname=f"test_host_{host_i}",
-                        uuid=f"1234-5678-1234-567{uuid_i}",
-                    )
+                mclient = session_snowflake.manager_client(mname)
+                mclient.activate(
+                    manager_version="v2.0",
+                    programs={"qcengine": ["unknown"], "qcprog": ["unknown"], "qcprog2": ["v3.0"]},
+                    tags=[f"tag_{cluster_i}", "tag2"],
+                )
 
-                    mclient = server.manager_client(mname)
-                    mclient.activate(
-                        manager_version="v2.0",
-                        programs={"qcengine": ["unknown"], "qcprog": ["unknown"], "qcprog2": ["v3.0"]},
-                        tags=[f"tag_{cluster_i}", "tag2"],
-                    )
+                if uuid_i == 0:
+                    mclient.deactivate(1, 1, 1.0, 1.0)
 
-                    if uuid_i == 0:
-                        mclient.deactivate(1, 1, 1.0, 1.0)
-
-        yield server.client()
+    yield session_snowflake.client()
+    session_snowflake.reset()
 
 
 def test_manager_client_query(queryable_managers_client: PortalClient):

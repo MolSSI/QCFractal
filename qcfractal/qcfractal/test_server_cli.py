@@ -14,6 +14,8 @@ config_file = os.path.join(testconfig_path, "qcf_basic.yaml")
 old_config_file = os.path.join(migrationdata_path, "qcfractal_config_v0.15.8.yaml")
 old_db_dump = os.path.join(migrationdata_path, "qcfractal_config_v0.15.8.yaml")
 
+pytestmark = pytest.mark.slow
+
 
 @pytest.fixture(scope="function")
 def tmp_config(tmp_path_factory):
@@ -27,12 +29,15 @@ def tmp_config(tmp_path_factory):
 @pytest.fixture(scope="function", params=[True, False])
 def cli_runner_core(postgres_server, tmp_config, request):
 
-    assert postgres_server.is_alive(False)
+    pg_harness = postgres_server.get_new_harness("qcfractal_default")
+
+    # Don't actually use the database - we just want a placeholder
+    pg_harness.delete_database()
 
     own_db = request.param
     if not own_db:
         config = read_configuration([tmp_config])
-        config.database = postgres_server.config.copy(deep=True)
+        config.database = pg_harness.config.copy(deep=True)
         config.database.own = False
 
         with open(tmp_config, "w") as f:
@@ -55,29 +60,27 @@ def cli_runner_core(postgres_server, tmp_config, request):
         ):
             full_cmd = ["qcfractal-server", "--config", self.config_path] + cmd_args
             try:
-                ret = subprocess.check_output(
-                    full_cmd, stderr=subprocess.STDOUT, universal_newlines=True, input=stdin, timeout=timeout
-                )
-                if fail_expected:
-                    raise RuntimeError("Failure expected, but process succeeded")
-                return ret
-
-            except subprocess.CalledProcessError as err:
-                if fail_expected:
-                    return err.output
-                else:
-                    raise
+                ret = subprocess.run(full_cmd, capture_output=True, text=True, input=stdin, timeout=timeout)
             except subprocess.TimeoutExpired as err:
                 if timeout_expected:
                     return err.output
                 else:
                     raise
 
+            if ret.returncode == 0 and not fail_expected:
+                return ret.stdout + ret.stderr
+            if ret.returncode != 0 and fail_expected:
+                return ret.stdout + ret.stderr
+            if ret.returncode == 0 and fail_expected:
+                raise RuntimeError("Failure expected, but process succeeded")
+            if ret.returncode != 0 and not fail_expected:
+                raise RuntimeError("Error running process:\n" + ret.stdout + "\n" + ret.stderr)
+
     try:
         yield run_qcfractal_cli()
     finally:
         if not own_db:
-            postgres_server.delete_database()
+            pg_harness.delete_database()
 
 
 @pytest.fixture(scope="function")

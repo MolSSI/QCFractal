@@ -3,7 +3,7 @@ from __future__ import annotations
 import tempfile
 import threading
 import weakref
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 
 import parsl
 
@@ -16,13 +16,13 @@ from qcfractalcompute.config import FractalComputeConfig, FractalServerSettings,
 from qcportal.all_results import AllResultTypes
 from qcportal.record_models import PriorityEnum
 from qcportal.tasks import TaskInformation
-import weakref
 
 
 class MockTestingComputeManager(ComputeManager):
     def __init__(self, qcf_config: FractalConfig, result_data: Dict[int, AllResultTypes]):
 
         self._qcf_config = qcf_config
+        self._record_id_map = {}  # Maps task id to record id
 
         host = self._qcf_config.api.host
         port = self._qcf_config.api.port
@@ -64,6 +64,7 @@ class MockTestingComputeManager(ComputeManager):
 
     # We have an executor and everything running, but we short-circuit the actual compute
     def _submit_tasks(self, executor_label: str, tasks: List[TaskInformation]):
+
         # A mock app that just returns the result data given to it after two seconds
         @parsl.python_app(data_flow_kernel=self.dflow_kernel)
         def _mock_app(result: Any) -> Any:
@@ -73,6 +74,7 @@ class MockTestingComputeManager(ComputeManager):
             return result
 
         for task in tasks:
+            self._record_id_map[task.id] = task.record_id
             task_future = _mock_app(self._result_data[task.record_id])
             self._task_futures[executor_label][task.id] = task_future
 
@@ -86,7 +88,7 @@ class QCATestingComputeThread:
         self._qcf_config = qcf_config
         self._result_data = result_data
 
-        self._compute = None
+        self._compute: Optional[MockTestingComputeManager] = None
         self._compute_thread = None
 
         self._finalizer = None
@@ -98,11 +100,13 @@ class QCATestingComputeThread:
             compute.stop()
             compute_thread.join()
 
-    def start(self) -> None:
+    def start(self, manual_updates) -> None:
         if self._compute is not None:
             raise RuntimeError("Compute manager already started")
         self._compute = MockTestingComputeManager(self._qcf_config, self._result_data)
-        self._compute_thread = threading.Thread(target=self._compute.start, daemon=True)
+        self._compute_thread = threading.Thread(
+            target=self._compute.start, kwargs={"manual_updates": manual_updates}, daemon=True
+        )
         self._compute_thread.start()
 
         self._finalizer = weakref.finalize(

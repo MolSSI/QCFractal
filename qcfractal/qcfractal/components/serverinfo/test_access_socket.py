@@ -4,7 +4,7 @@ import ipaddress
 from typing import TYPE_CHECKING
 
 from qcarchivetesting import load_ip_test_data
-from qcfractal.testing_helpers import QCATestingSnowflake
+from qcarchivetesting.testing_classes import QCATestingSnowflake
 from qcportal.serverinfo.models import AccessLogQueryFilters
 
 if TYPE_CHECKING:

@@ -3,6 +3,7 @@ from typing import Optional
 import pytest
 
 from qcarchivetesting import test_users
+from qcarchivetesting.testing_classes import QCATestingSnowflake
 from qcportal import PortalRequestError
 from qcportal.auth import UserInfo
 from qcportal.exceptions import (
@@ -13,7 +14,6 @@ from qcportal.exceptions import (
 from .test_group_socket import invalid_groupnames
 from .test_role_socket import invalid_rolenames
 from .test_user_socket import invalid_usernames, invalid_passwords
-from ...testing_helpers import QCATestingSnowflake
 
 
 def test_user_client_list(secure_snowflake: QCATestingSnowflake):

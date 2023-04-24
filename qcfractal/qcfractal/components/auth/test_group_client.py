@@ -1,13 +1,13 @@
 import pytest
 
 from qcarchivetesting import test_users, test_groups
+from qcarchivetesting.testing_classes import QCATestingSnowflake
 from qcportal import PortalRequestError
 from qcportal.auth import GroupInfo
 from qcportal.exceptions import (
     InvalidGroupnameError,
 )
 from .test_group_socket import invalid_groupnames
-from ...testing_helpers import QCATestingSnowflake
 
 
 def test_group_client_list(secure_snowflake: QCATestingSnowflake):

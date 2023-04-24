@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Optional
 import pytest
 
 from qcarchivetesting import load_molecule_data
-from qcfractal.db_socket import SQLAlchemySocket
 from qcportal.optimization import (
     OptimizationSpecification,
 )
@@ -15,9 +14,8 @@ from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification
 
 if TYPE_CHECKING:
-    from qcfractal.db_socket import SQLAlchemySocket
+    from qcarchivetesting.testing_classes import QCATestingSnowflake
     from qcportal import PortalClient
-    from qcportal.managers import ManagerName
 
 from qcfractal.components.optimization.testing_helpers import (
     compare_optimization_specs,
@@ -137,9 +135,11 @@ def test_optimization_client_add_existing_molecule(snowflake_client: PortalClien
 
 
 @pytest.mark.parametrize("opt_file", ["opt_psi4_benzene", "opt_psi4_fluoroethane_notraj"])
-def test_optimization_client_delete(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, opt_file: str
-):
+def test_optimization_client_delete(snowflake: QCATestingSnowflake, opt_file: str):
+    storage_socket = snowflake.get_storage_socket()
+    activated_manager_name, _ = snowflake.activate_manager()
+    snowflake_client = snowflake.client()
+
     opt_id = run_test_data(storage_socket, activated_manager_name, opt_file)
 
     rec = snowflake_client.get_optimizations(opt_id)
@@ -180,9 +180,11 @@ def test_optimization_client_delete(
     assert query_res._current_meta.n_found == 0
 
 
-def test_optimization_client_harddelete_nochildren(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
-):
+def test_optimization_client_harddelete_nochildren(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    activated_manager_name, _ = snowflake.activate_manager()
+    snowflake_client = snowflake.client()
+
     opt_id = run_test_data(storage_socket, activated_manager_name, "opt_psi4_benzene")
 
     rec = snowflake_client.get_optimizations(opt_id)
@@ -201,9 +203,11 @@ def test_optimization_client_harddelete_nochildren(
 
 
 @pytest.mark.parametrize("opt_file", ["opt_psi4_benzene", "opt_psi4_methane_sometraj"])
-def test_optimization_client_delete_traj_inuse(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, opt_file: str
-):
+def test_optimization_client_delete_traj_inuse(snowflake: QCATestingSnowflake, opt_file: str):
+    storage_socket = snowflake.get_storage_socket()
+    activated_manager_name, _ = snowflake.activate_manager()
+    snowflake_client = snowflake.client()
+
     opt_id = run_test_data(storage_socket, activated_manager_name, opt_file)
 
     rec = snowflake_client.get_optimizations(opt_id)
@@ -219,13 +223,11 @@ def test_optimization_client_delete_traj_inuse(
 
 @pytest.mark.parametrize("opt_file", ["opt_psi4_benzene", "opt_psi4_methane_sometraj"])
 @pytest.mark.parametrize("fetch_traj", [True, False])
-def test_optimization_client_traj(
-    snowflake_client: PortalClient,
-    storage_socket: SQLAlchemySocket,
-    activated_manager_name: ManagerName,
-    opt_file: str,
-    fetch_traj: bool,
-):
+def test_optimization_client_traj(snowflake: QCATestingSnowflake, opt_file: str, fetch_traj: bool):
+    storage_socket = snowflake.get_storage_socket()
+    activated_manager_name, _ = snowflake.activate_manager()
+    snowflake_client = snowflake.client()
+
     opt_id = run_test_data(storage_socket, activated_manager_name, opt_file)
 
     rec = snowflake_client.get_optimizations(opt_id)
@@ -245,7 +247,11 @@ def test_optimization_client_traj(
     assert rec.trajectory_element(-1).id == rec_traj.trajectory[-1].id
 
 
-def test_optimization_client_query(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_optimization_client_query(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    activated_manager_name, _ = snowflake.activate_manager()
+    snowflake_client = snowflake.client()
+
     id_1, _ = submit_test_data(storage_socket, "opt_psi4_fluoroethane_notraj")
     id_2, _ = submit_test_data(storage_socket, "opt_psi4_benzene")
     id_3, _ = submit_test_data(storage_socket, "opt_psi4_methane_sometraj")

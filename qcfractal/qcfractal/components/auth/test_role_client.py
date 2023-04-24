@@ -1,12 +1,12 @@
 import pytest
 
 from qcarchivetesting import test_users
+from qcarchivetesting.testing_classes import QCATestingSnowflake
 from qcportal import PortalRequestError
 from qcportal.auth import RoleInfo, PermissionsPolicy
 from qcportal.exceptions import InvalidRolenameError
 from .role_socket import default_roles
 from .test_role_socket import invalid_rolenames
-from ...testing_helpers import QCATestingSnowflake
 
 
 def test_role_client_list(secure_snowflake: QCATestingSnowflake):

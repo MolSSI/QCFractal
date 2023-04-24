@@ -15,21 +15,16 @@ from qcportal.compression import decompress
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 
 if TYPE_CHECKING:
-    from qcportal import PortalClient
-    from qcfractal.db_socket import SQLAlchemySocket
-    from qcportal.managers import ManagerName
-
+    from qcarchivetesting.testing_classes import QCATestingSnowflake
 
 all_includes = ["task", "service", "outputs", "comments"]
 
 
 @pytest.mark.parametrize("includes", [None, all_includes])
-def test_baserecord_model_common(
-    storage_socket: SQLAlchemySocket,
-    snowflake_client: PortalClient,
-    activated_manager_name: ManagerName,
-    includes: Optional[List[str]],
-):
+def test_baserecord_model_common(snowflake: QCATestingSnowflake, includes: Optional[List[str]]):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+    activated_manager_name, _ = snowflake.activate_manager()
 
     input_spec, _, result = load_sp_test_data("sp_psi4_benzene_energy_1")
 
@@ -71,12 +66,11 @@ def test_baserecord_model_common(
 
 
 @pytest.mark.parametrize("includes", [None, all_includes])
-def test_baserecord_model_error(
-    storage_socket: SQLAlchemySocket,
-    snowflake_client: PortalClient,
-    activated_manager_name: ManagerName,
-    includes: Optional[List[str]],
-):
+def test_baserecord_model_error(snowflake: QCATestingSnowflake, includes: Optional[List[str]]):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+    activated_manager_name, _ = snowflake.activate_manager()
+
     rec_id = run_sp_test_data(
         storage_socket, activated_manager_name, "sp_psi4_benzene_energy_1", end_status=RecordStatusEnum.error
     )
@@ -96,12 +90,10 @@ def test_baserecord_model_error(
 
 
 @pytest.mark.parametrize("includes", [None, all_includes])
-def test_baserecord_model_task(
-    storage_socket: SQLAlchemySocket,
-    snowflake_client: PortalClient,
-    activated_manager_name: ManagerName,
-    includes: Optional[List[str]],
-):
+def test_baserecord_model_task(snowflake: QCATestingSnowflake, includes: Optional[List[str]]):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+    activated_manager_name, _ = snowflake.activate_manager()
 
     time_0 = datetime.utcnow()
     rec_id, _ = submit_sp_test_data(
@@ -121,12 +113,10 @@ def test_baserecord_model_task(
 
 
 @pytest.mark.parametrize("includes", [None, all_includes])
-def test_baserecord_model_service(
-    storage_socket: SQLAlchemySocket,
-    snowflake_client: PortalClient,
-    activated_manager_name: ManagerName,
-    includes: Optional[List[str]],
-):
+def test_baserecord_model_service(snowflake: QCATestingSnowflake, includes: Optional[List[str]]):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+    activated_manager_name, _ = snowflake.activate_manager()
 
     time_0 = datetime.utcnow()
     rec_id, _ = submit_td_test_data(storage_socket, "td_H2O2_mopac_pm6", tag="test_tag_123", priority=PriorityEnum.low)

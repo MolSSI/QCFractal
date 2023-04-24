@@ -6,11 +6,13 @@ from typing import TYPE_CHECKING
 from qcfractal.testing_helpers import DummyJobStatus
 
 if TYPE_CHECKING:
-    from qcfractal.db_socket import SQLAlchemySocket
-    from qcportal import PortalClient
+    from qcarchivetesting.testing_classes import QCATestingSnowflake
 
 
-def test_serverinfo_client_delete_stats(storage_socket: SQLAlchemySocket, snowflake_client: PortalClient):
+def test_serverinfo_client_delete_stats(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     time_0 = datetime.utcnow()
     with storage_socket.session_scope() as session:
         storage_socket.serverinfo.update_server_stats(session=session, job_status=DummyJobStatus())

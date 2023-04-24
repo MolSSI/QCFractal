@@ -8,21 +8,16 @@ from qcfractal.components.neb.testing_helpers import run_test_data, load_test_da
 from qcportal.record_models import RecordStatusEnum
 
 if TYPE_CHECKING:
-    from qcportal import PortalClient
-    from qcfractal.db_socket import SQLAlchemySocket
-    from qcportal.managers import ManagerName
-
+    from qcarchivetesting.testing_classes import QCATestingSnowflake
 
 all_includes = ["initial_chain", "singlepoints", "optimizations"]
 
 
 @pytest.mark.parametrize("includes", [None, all_includes])
-def test_neb_record_model(
-    storage_socket: SQLAlchemySocket,
-    snowflake_client: PortalClient,
-    activated_manager_name: ManagerName,
-    includes: Optional[List[str]],
-):
+def test_neb_record_model(snowflake: QCATestingSnowflake, includes: Optional[List[str]]):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+    activated_manager_name, _ = snowflake.activate_manager()
 
     input_spec, molecules, results = load_test_data("neb_HCN_psi4_pbe_opt2")
 

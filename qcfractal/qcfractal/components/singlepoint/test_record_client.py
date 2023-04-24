@@ -7,13 +7,12 @@ from typing import TYPE_CHECKING, Optional
 import pytest
 
 from qcarchivetesting import load_molecule_data
-from qcportal.managers import ManagerName
 from qcportal.record_models import PriorityEnum
 from qcportal.singlepoint import QCSpecification, SinglepointDriver
 from .testing_helpers import submit_test_data, run_test_data, compare_singlepoint_specs, test_specs
 
 if TYPE_CHECKING:
-    from qcfractal.db_socket import SQLAlchemySocket
+    from qcarchivetesting.testing_classes import QCATestingSnowflake
     from qcportal import PortalClient
 
 
@@ -82,9 +81,11 @@ def test_singlepoint_client_add_get(submitter_client: PortalClient, spec: QCSpec
     assert recs[2].molecule == ne4
 
 
-def test_singlepoint_client_properties(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
-):
+def test_singlepoint_client_properties(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    activated_manager_name, _ = snowflake.activate_manager()
+    snowflake_client = snowflake.client()
+
     sp_id = run_test_data(storage_socket, activated_manager_name, "sp_psi4_peroxide_energy_wfn")
 
     rec = snowflake_client.get_singlepoints(sp_id)
@@ -126,9 +127,11 @@ def test_singlepoint_client_add_existing_molecule(snowflake_client: PortalClient
     assert recs[2].molecule == ne4
 
 
-def test_singlepoint_client_delete(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
-):
+def test_singlepoint_client_delete(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    activated_manager_name, _ = snowflake.activate_manager()
+    snowflake_client = snowflake.client()
+
     sp_id = run_test_data(storage_socket, activated_manager_name, "sp_psi4_peroxide_energy_wfn")
 
     # deleting with children is ok (even though we don't have children)
@@ -144,7 +147,10 @@ def test_singlepoint_client_delete(
     assert recs is None
 
 
-def test_singlepoint_client_query(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_singlepoint_client_query(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     id_1, _ = submit_test_data(storage_socket, "sp_psi4_benzene_energy_2")
     id_2, _ = submit_test_data(storage_socket, "sp_psi4_peroxide_energy_wfn")
     id_3, _ = submit_test_data(storage_socket, "sp_rdkit_water_energy")

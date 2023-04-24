@@ -3,10 +3,8 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-import pytest
-
-from qcarchivetesting import valid_encodings, test_users
-from ...testing_helpers import QCATestingSnowflake
+from qcarchivetesting import test_users
+from qcarchivetesting.testing_classes import QCATestingSnowflake
 
 if TYPE_CHECKING:
     from qcportal import PortalClient
@@ -62,11 +60,12 @@ def test_serverinfo_client_access_logged(secure_snowflake_allow_read: QCATesting
     assert accesses[3].request_bytes == 0
 
 
-@pytest.mark.parametrize("encoding", valid_encodings)
-def test_serverinfo_client_access_not_logged(temporary_database, encoding: str):
+def test_serverinfo_client_access_not_logged(postgres_server, pytestconfig):
 
-    db_config = temporary_database.config
-    with QCATestingSnowflake(db_config, encoding=encoding, log_access=False) as server:
+    pg_harness = postgres_server.get_new_harness("serverinfo_client_access_not_logged")
+    encoding = pytestconfig.getoption("--client-encoding")
+
+    with QCATestingSnowflake(pg_harness, encoding, log_access=False) as server:
         client = server.client()
         client.query_access_log()
         client.query_molecules(molecular_formula=["C"])

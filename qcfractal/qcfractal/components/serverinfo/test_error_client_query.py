@@ -3,17 +3,17 @@ from __future__ import annotations
 import pytest
 
 from qcarchivetesting import test_users
-from qcfractal.testing_helpers import QCATestingSnowflake
+from qcarchivetesting.testing_classes import QCATestingSnowflake
 from qcportal import PortalClient
 
 
 @pytest.fixture(scope="module")
-def queryable_error_client(module_temporary_database):
-    db_config = module_temporary_database.config
+def queryable_error_client(postgres_server, pytestconfig):
 
-    with QCATestingSnowflake(
-        db_config, encoding="application/json", create_users=True, enable_security=True, log_access=False
-    ) as server:
+    pg_harness = postgres_server.get_new_harness("serverinfo_test_errors")
+    encoding = pytestconfig.getoption("--client-encoding")
+
+    with QCATestingSnowflake(pg_harness, encoding, create_users=True, enable_security=True, log_access=False) as server:
 
         # generate a bunch of test data
         storage_socket = server.get_storage_socket()

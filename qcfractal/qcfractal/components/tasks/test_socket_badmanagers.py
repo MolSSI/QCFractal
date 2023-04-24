@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -19,6 +19,7 @@ from qcportal.managers import ManagerName
 from qcportal.record_models import RecordStatusEnum
 
 if TYPE_CHECKING:
+    from qcarchivetesting.testing_classes import QCATestingSnowflake
     from qcfractal.db_socket import SQLAlchemySocket
     from sqlalchemy.orm.session import Session
 
@@ -158,13 +159,14 @@ def test_task_socket_return_wrongmanager(storage_socket: SQLAlchemySocket, sessi
     assert manager.rejected == 1
 
 
-def test_task_socket_return_manager_badid(
-    storage_socket: SQLAlchemySocket, session: Session, activated_manager: Tuple[ManagerName, int], caplog
-):
+def test_task_socket_return_manager_badid(snowflake: QCATestingSnowflake, caplog):
+    storage_socket = snowflake.get_storage_socket()
+
+    mname, mid = snowflake.activate_manager()
+
     # Manager returns data for a record that doesn't exist
 
     _, _, result_data = load_test_data("sp_psi4_benzene_energy_1")
-    mname, mid = activated_manager
 
     # Should be logged
     with caplog_handler_at_level(caplog, logging.WARNING):
@@ -177,10 +179,11 @@ def test_task_socket_return_manager_badid(
     assert rmeta.rejected_info[0][1] == "Task does not exist in the task queue"
 
     # Make sure manager info was updated
-    manager = session.get(ComputeManagerORM, mid)
-    assert manager.successes == 0
-    assert manager.failures == 0
-    assert manager.rejected == 1
+    with storage_socket.session_scope() as session:
+        manager = session.get(ComputeManagerORM, mid)
+        assert manager.successes == 0
+        assert manager.failures == 0
+        assert manager.rejected == 1
 
 
 def test_task_socket_return_manager_badstatus_1(storage_socket: SQLAlchemySocket, session: Session, caplog):

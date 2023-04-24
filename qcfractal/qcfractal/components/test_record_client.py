@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcarchivetesting import test_users
+from qcarchivetesting.testing_classes import QCATestingSnowflake
 from qcfractal.components.optimization.testing_helpers import (
     run_test_data as run_opt_test_data,
     submit_test_data as submit_opt_test_data,
@@ -20,21 +21,20 @@ from qcfractal.components.singlepoint.testing_helpers import (
 )
 from qcfractal.components.testing_helpers import populate_records_status
 from qcfractal.components.torsiondrive.testing_helpers import submit_test_data as submit_td_test_data
-from qcfractal.testing_helpers import QCATestingSnowflake, DummyJobStatus
+from qcfractal.testing_helpers import DummyJobStatus
 from qcportal import PortalRequestError
-from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 
 if TYPE_CHECKING:
-    from qcfractal.db_socket import SQLAlchemySocket
-    from qcportal import PortalClient
-    from sqlalchemy.orm.session import Session
+    pass
 
 
-def test_record_client_get(
-    storage_socket: SQLAlchemySocket, snowflake_client: PortalClient, activated_manager_name: ManagerName
-):
+def test_record_client_get(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    activated_manager_name, _ = snowflake.activate_manager()
+    snowflake_client = snowflake.client()
+
     id1 = run_sp_test_data(storage_socket, activated_manager_name, "sp_psi4_benzene_energy_1")
     id2, _ = submit_opt_test_data(storage_socket, "opt_psi4_benzene")
     all_id = [id1, id2]
@@ -55,7 +55,9 @@ def test_record_client_get(
     assert r[1].task is not None
 
 
-def test_record_client_get_missing(storage_socket: SQLAlchemySocket, snowflake_client: PortalClient):
+def test_record_client_get_missing(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
 
     id1, _ = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_1")
     id2, _ = submit_opt_test_data(storage_socket, "opt_psi4_benzene")
@@ -71,7 +73,10 @@ def test_record_client_get_missing(storage_socket: SQLAlchemySocket, snowflake_c
     assert r[2].id == all_id[1]
 
 
-def test_record_client_get_empty(storage_socket: SQLAlchemySocket, snowflake_client: PortalClient):
+def test_record_client_get_empty(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_1")
     submit_opt_test_data(storage_socket, "opt_psi4_benzene")
 
@@ -79,9 +84,10 @@ def test_record_client_get_empty(storage_socket: SQLAlchemySocket, snowflake_cli
     assert r == []
 
 
-def test_record_client_query_parents_children(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
-):
+def test_record_client_query_parents_children(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    activated_manager_name, _ = snowflake.activate_manager()
+    snowflake_client = snowflake.client()
 
     id1 = run_opt_test_data(storage_socket, activated_manager_name, "opt_psi4_benzene")
 
@@ -101,7 +107,9 @@ def test_record_client_query_parents_children(
     assert list(query_res)[0].id == opt_rec.id
 
 
-def test_record_client_add_comment(secure_snowflake: QCATestingSnowflake, storage_socket: SQLAlchemySocket):
+def test_record_client_add_comment(secure_snowflake: QCATestingSnowflake):
+    storage_socket = secure_snowflake.get_storage_socket()
+
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     id1, _ = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_1")
@@ -153,7 +161,10 @@ def test_record_client_add_comment(secure_snowflake: QCATestingSnowflake, storag
     assert rec[3].comments[1].comment == "This is another test comment"
 
 
-def test_record_client_add_comment_nouser(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_record_client_add_comment_nouser(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     id1, _ = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_1")
     id2, _ = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_2")
     id3, _ = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_3")
@@ -180,7 +191,10 @@ def test_record_client_add_comment_nouser(snowflake_client: PortalClient, storag
     assert rec[3].comments[0].comment == "This is a test comment"
 
 
-def test_record_client_add_comment_badid(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_record_client_add_comment_badid(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     id1, _ = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_1")
 
     meta = snowflake_client.add_comment([id1, 9999], comment="test")
@@ -192,7 +206,10 @@ def test_record_client_add_comment_badid(snowflake_client: PortalClient, storage
     assert "does not exist" in meta.errors[0][1]
 
 
-def test_record_client_modify(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_record_client_modify(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     all_id = populate_records_status(storage_socket)
 
     time_0 = datetime.utcnow()
@@ -248,20 +265,22 @@ def test_record_client_modify(snowflake_client: PortalClient, storage_socket: SQ
     assert rec[6].task is None
 
 
-def test_record_client_modify_service(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, session: Session
-):
+def test_record_client_modify_service(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
 
     svc_id, _ = submit_td_test_data(storage_socket, "td_H2O2_mopac_pm6", "test_tag", PriorityEnum.high)
 
     with storage_socket.session_scope() as s:
         storage_socket.services.iterate_services(s, DummyJobStatus())
 
-    rec = session.get(BaseRecordORM, svc_id)
-    tasks = [x.record.task for x in rec.service.dependencies]
-    assert len(tasks) > 0
-    assert all(x.tag == "test_tag" for x in tasks)
-    assert all(x.priority == PriorityEnum.high for x in tasks)
+    with storage_socket.session_scope() as session:
+        rec = session.get(BaseRecordORM, svc_id)
+        tasks = [x.record.task for x in rec.service.dependencies]
+
+        assert len(tasks) > 0
+        assert all(x.tag == "test_tag" for x in tasks)
+        assert all(x.priority == PriorityEnum.high for x in tasks)
 
     # Modify service priority and tag
     meta = snowflake_client.modify_records(svc_id, new_tag="new_tag", new_priority=PriorityEnum.low)

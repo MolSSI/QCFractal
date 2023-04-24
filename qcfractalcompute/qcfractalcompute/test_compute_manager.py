@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import threading
 import time
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 import pytest
@@ -20,15 +21,16 @@ qcng.list_available_programs = qcng.list_all_programs
 qcng.list_available_procedures = qcng.list_all_procedures
 
 if TYPE_CHECKING:
-    from qcfractal.testing_helpers import QCATestingSnowflake, SQLAlchemySocket
+    from qcarchivetesting.testing_classes import QCATestingSnowflake
 
 
-def test_manager_keepalive(snowflake: QCATestingSnowflake, storage_socket: SQLAlchemySocket):
+def test_manager_keepalive(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
 
     snowflake.start_job_runner()
 
     compute = QCATestingComputeThread(snowflake._qcf_config, {})
-    compute.start()
+    compute.start(manual_updates=True)
 
     time.sleep(1)  # wait for manager to register
 
@@ -40,19 +42,22 @@ def test_manager_keepalive(snowflake: QCATestingSnowflake, storage_socket: SQLAl
     max_missed = snowflake._qcf_config.heartbeat_max_missed
 
     for i in range(max_missed * 2):
+        time_0 = datetime.utcnow()
+        compute._compute.heartbeat()
+        time_1 = datetime.utcnow()
         time.sleep(sleep_time)
         m = storage_socket.managers.get([manager_name])
         assert m[0]["status"] == ManagerStatusEnum.active
+        assert time_0 < m[0]["modified_on"] < time_1
 
-    # force missing too many heartbeats
-    compute.stop()
-
+    # No more updates, server should eventually mark as inactive
     time.sleep(sleep_time * (max_missed + 1))
     m = storage_socket.managers.get([manager_name])
     assert m[0]["status"] == ManagerStatusEnum.inactive
 
 
-def test_manager_tags(snowflake: QCATestingSnowflake, storage_socket: SQLAlchemySocket, tmp_path):
+def test_manager_tags(snowflake: QCATestingSnowflake, tmp_path):
+    storage_socket = snowflake.get_storage_socket()
 
     compute_config = FractalComputeConfig(
         base_folder=str(tmp_path),
@@ -88,11 +93,12 @@ def test_manager_tags(snowflake: QCATestingSnowflake, storage_socket: SQLAlchemy
 
 
 @pytest.mark.filterwarnings("ignore:Exception in thread")
-def test_manager_claim_inactive(snowflake: QCATestingSnowflake, storage_socket: SQLAlchemySocket):
+def test_manager_claim_inactive(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
     snowflake.start_job_runner()
 
     compute = QCATestingComputeThread(snowflake._qcf_config, {})
-    compute.start()
+    compute.start(manual_updates=False)
 
     time.sleep(2)  # wait for manager to register
     assert compute.is_alive() is True
@@ -101,20 +107,22 @@ def test_manager_claim_inactive(snowflake: QCATestingSnowflake, storage_socket: 
     assert meta.n_found == 1
     manager_name = managers[0]["name"]
 
+    # Mark as inactive from the server side
     storage_socket.managers.deactivate([manager_name])
 
     # Next update should kill the process
-    time.sleep(2 + 2)  # update_frequency is 2, wait another two seconds as well
+    time.sleep(compute._compute._compute_config.update_frequency + 2)
 
     # Should have killed the manager process
     assert compute.is_alive() is False
 
 
-def test_manager_claim_return(snowflake: QCATestingSnowflake, storage_socket: SQLAlchemySocket):
+def test_manager_claim_return(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
     all_id, result_data = populate_db(storage_socket)
 
     compute = QCATestingComputeThread(snowflake._qcf_config, result_data)
-    compute.start()
+    compute.start(manual_updates=False)
 
     time.sleep(1)  # wait for manager to register
     assert compute.is_alive() is True
@@ -126,77 +134,98 @@ def test_manager_claim_return(snowflake: QCATestingSnowflake, storage_socket: SQ
     assert r is True
 
 
-def test_manager_deferred_return(snowflake: QCATestingSnowflake, storage_socket: SQLAlchemySocket):
+def test_manager_deferred_return(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
     all_id, result_data = populate_db(storage_socket)
 
     compute_thread = QCATestingComputeThread(snowflake._qcf_config, result_data)
-    compute_thread.start()
+    compute_thread.start(manual_updates=True)
     compute = compute_thread._compute
 
     time.sleep(1)  # wait for manager to register
     meta, managers = storage_socket.managers.query(ManagerQueryFilters())
     assert meta.n_found == 1
+    assert compute.n_total_active_tasks == 0  # haven't updated - we are doing manual updates
+
+    # Get some tasks
+    compute.update(new_tasks=True)
     assert compute.n_total_active_tasks > 0
+    assert compute.n_deferred_tasks == 0
 
     # Sever goes down
     snowflake.stop_flask()
 
-    # Let manager try to update
-    time.sleep(compute._compute_config.update_frequency + 1)
+    # Let manager complete some tasks
+    time.sleep(3)  # Mock testing adapter waits for two seconds before returning result
+    compute.update(new_tasks=True)
     assert compute.n_deferred_tasks > 0
+    deferred_task_ids = list(compute._deferred_tasks[0].keys())
+    deferred_record_ids = [compute._record_id_map[x] for x in deferred_task_ids]
 
     # Now server comes back
     snowflake.start_flask()
 
-    time.sleep(compute._compute_config.update_frequency + 1)
+    # Manager can now update
+    compute.update(new_tasks=True)
 
-    # Now we have more tasks, and no more deferred
+    # No more deferred tasks
     assert compute.n_deferred_tasks == 0
+    assert compute.n_total_active_tasks > 0
 
-    # Finish the rest
-    snowflake.await_results()
-
-    recs = storage_socket.records.get(all_id)
-    assert all(x["status"] != RecordStatusEnum.waiting for x in recs)
-    assert all(x["manager_name"] == compute.name for x in recs)
+    # Record is complete on the server
+    r = storage_socket.records.get(deferred_record_ids)
+    assert all(x["status"] == "complete" for x in r)
+    assert all(x["manager_name"] == compute.name for x in r)
 
 
-def test_manager_deferred_drop(snowflake: QCATestingSnowflake, storage_socket: SQLAlchemySocket, caplog):
+def test_manager_deferred_drop(snowflake: QCATestingSnowflake, caplog):
+    storage_socket = snowflake.get_storage_socket()
+    all_id, result_data = populate_db(storage_socket)
 
     with caplog_handler_at_level(caplog, logging.WARNING):
-        all_id, result_data = populate_db(storage_socket)
-
         compute_thread = QCATestingComputeThread(snowflake._qcf_config, result_data)
-        compute_thread.start()
+        compute_thread.start(manual_updates=True)
         compute = compute_thread._compute
 
         time.sleep(1)  # wait for manager to register
         meta, managers = storage_socket.managers.query(ManagerQueryFilters())
         assert meta.n_found == 1
+        assert compute.n_total_active_tasks == 0  # haven't updated - we are doing manual updates
 
-        # Wait for manager to claim tasks
-        time.sleep(compute._compute_config.update_frequency + 1)
+        # Get some tasks
+        compute.update(new_tasks=True)
         assert compute.n_total_active_tasks > 0
         assert compute.n_deferred_tasks == 0
 
         # Sever goes down
         snowflake.stop_flask()
 
+        # Compute some tasks (each take 2 seconds)
+        time.sleep(5)
+
         # Manager tries to update several times, eventually giving up on returning those tasks
-        time.sleep(compute._compute_config.update_frequency * (compute._compute_config.server_error_retries + 1))
+        # Update once to make them deferred
+        compute.update(new_tasks=True)
 
-        # server comes back up
-        snowflake.start_flask()
-        time.sleep(compute._compute_config.update_frequency + 1)
+        assert compute.n_deferred_tasks > 0
+        deferred_task_ids = list(compute._deferred_tasks[0].keys())
+        deferred_record_ids = [compute._record_id_map[x] for x in deferred_task_ids]
 
-        recs = storage_socket.records.get(all_id)
-        assert all(
-            (x["status"] in (RecordStatusEnum.complete, RecordStatusEnum.running) and x["manager_name"] == compute.name)
-            or (x["status"] == RecordStatusEnum.waiting)
-            for x in recs
-        )
+        # Defer too many times = drop them
+        for _ in range(compute._compute_config.server_error_retries + 2):
+            compute.update(new_tasks=True)
 
+        # Deferred tasks were dropped
         assert compute.n_deferred_tasks == 0
+
+        ## server comes back up
+        snowflake.start_flask()
+
+        # Update again (but no new tasks)
+        compute.update(new_tasks=False)
+
+        recs = storage_socket.records.get(deferred_record_ids)
+        assert all(x["status"] == RecordStatusEnum.running for x in recs)
 
     assert "updates ago and over attempt limit. Dropping" in caplog.text
 
@@ -204,7 +233,7 @@ def test_manager_deferred_drop(snowflake: QCATestingSnowflake, storage_socket: S
 def test_manager_missed_heartbeats_shutdown(snowflake: QCATestingSnowflake):
 
     compute_thread = QCATestingComputeThread(snowflake._qcf_config)
-    compute_thread.start()
+    compute_thread.start(manual_updates=False)
 
     snowflake.stop_flask()
 

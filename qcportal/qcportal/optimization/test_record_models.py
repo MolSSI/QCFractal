@@ -9,21 +9,18 @@ from qcfractal.testing_helpers import compare_validate_molecule
 from qcportal.record_models import RecordStatusEnum
 
 if TYPE_CHECKING:
-    from qcportal import PortalClient
-    from qcfractal.db_socket import SQLAlchemySocket
-    from qcportal.managers import ManagerName
+    from qcarchivetesting.testing_classes import QCATestingSnowflake
 
 
 all_includes = ["initial_molecule", "final_molecule", "trajectory"]
 
 
 @pytest.mark.parametrize("includes", [None, all_includes])
-def test_optimizationrecord_model(
-    storage_socket: SQLAlchemySocket,
-    snowflake_client: PortalClient,
-    activated_manager_name: ManagerName,
-    includes: Optional[List[str]],
-):
+def test_optimizationrecord_model(snowflake: QCATestingSnowflake, includes: Optional[List[str]]):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+    activated_manager_name, _ = snowflake.activate_manager()
+
     input_spec, molecule, result = load_test_data("opt_psi4_benzene")
 
     rec_id = run_test_data(storage_socket, activated_manager_name, "opt_psi4_benzene")

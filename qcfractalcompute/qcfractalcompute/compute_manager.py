@@ -223,7 +223,7 @@ class ComputeManager:
     def n_deferred_tasks(self) -> int:
         return sum(len(x) for x in self._deferred_tasks.values())
 
-    def start(self):
+    def start(self, manual_updates: bool = False):
         """
         Starts the manager
 
@@ -239,20 +239,18 @@ class ComputeManager:
         self.dflow_kernel = DataFlowKernel(self.parsl_config)
 
         for ex_label, ex_config in self.manager_config.executors.items():
-            # Don't add dummy executors to the dataflow
-            if ex_config.type == "dummy":
-                continue
-
             ex = build_executor(ex_label, ex_config)
             self.dflow_kernel.add_executors([ex])
 
         def scheduler_update():
-            self._update(new_tasks=True)
+            if not manual_updates:
+                self.update(new_tasks=True)
             if not self._is_stopping:
                 self.scheduler.enter(self.manager_config.update_frequency, 1, scheduler_update)
 
         def scheduler_heartbeat():
-            self.heartbeat()
+            if not manual_updates:
+                self.heartbeat()
             if not self._is_stopping:
                 self.scheduler.enter(self.heartbeat_frequency, 1, scheduler_heartbeat)
 
@@ -269,7 +267,7 @@ class ComputeManager:
         # If we got here, the scheduler has stopped
         # Now handle the shutdown
         #############################################
-        self._update(new_tasks=False)
+        self.update(new_tasks=False)
 
         try:
             # Notify the server of shutdown
@@ -429,7 +427,7 @@ class ComputeManager:
 
         self._deferred_tasks = new_deferred_tasks
 
-    def _update(self, new_tasks) -> None:
+    def update(self, new_tasks) -> None:
         """Examines the queue for completed tasks and adds successful completions to the database
         while unsuccessful are logged for future inspection.
 

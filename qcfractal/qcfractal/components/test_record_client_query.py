@@ -5,54 +5,54 @@ import time
 import pytest
 
 from qcfractal.components.testing_helpers import populate_records_status
-from qcfractal.testing_helpers import QCATestingSnowflake
 from qcportal import PortalClient
 from qcportal.molecules import Molecule
 from qcportal.record_models import RecordStatusEnum
 
 
 @pytest.fixture(scope="module")
-def queryable_records_client(module_temporary_database):
-    db_config = module_temporary_database.config
-    with QCATestingSnowflake(db_config, encoding="application/json") as server:
+def queryable_records_client(session_snowflake):
 
-        # First populate all the statuses
-        populate_records_status(server.get_storage_socket())
+    client = session_snowflake.client()
 
-        # Now a bunch of records
-        client = server.client()
+    # First populate all the statuses
+    populate_records_status(session_snowflake.get_storage_socket())
 
-        elements = ["h", "he", "li", "be", "b", "c", "n", "o", "f", "ne"]
+    # Now a bunch of records
+    client = session_snowflake.client()
 
-        all_mols = []
-        for el in elements:
-            m = Molecule(
-                symbols=[el],
-                geometry=[0, 0, 0],
-                identifiers={
-                    "smiles": f"madeupsmiles_{el}",
-                    "inchikey": f"madeupinchi_{el}",
-                },
-            )
-            all_mols.append(m)
+    elements = ["h", "he", "li", "be", "b", "c", "n", "o", "f", "ne"]
 
-        all_ids = []
-        for prog in ["prog1", "prog2"]:
-            for driver in ["energy", "properties"]:
-                for method in ["hf", "b3lyp"]:
-                    for basis in ["sto-3g", "def2-tzvp"]:
-                        for kw in [{"maxiter": 100}, None]:
-                            meta, ids = client.add_singlepoints(all_mols, prog, driver, method, basis, kw)
-                            assert meta.success
-                            all_ids.extend(ids)
+    all_mols = []
+    for el in elements:
+        m = Molecule(
+            symbols=[el],
+            geometry=[0, 0, 0],
+            identifiers={
+                "smiles": f"madeupsmiles_{el}",
+                "inchikey": f"madeupinchi_{el}",
+            },
+        )
+        all_mols.append(m)
 
-            # prevents spurious test errors. On fast machines,
-            # records can be created too close together
-            # (we test at this boundary)
-            time.sleep(0.05)
+    all_ids = []
+    for prog in ["prog1", "prog2"]:
+        for driver in ["energy", "properties"]:
+            for method in ["hf", "b3lyp"]:
+                for basis in ["sto-3g", "def2-tzvp"]:
+                    for kw in [{"maxiter": 100}, None]:
+                        meta, ids = client.add_singlepoints(all_mols, prog, driver, method, basis, kw)
+                        assert meta.success
+                        all_ids.extend(ids)
 
-        assert len(all_ids) == 320
-        yield client
+        # prevents spurious test errors. On fast machines,
+        # records can be created too close together
+        # (we test at this boundary)
+        time.sleep(0.05)
+
+    assert len(all_ids) == 320
+    yield client
+    session_snowflake.reset()
 
 
 def test_record_client_query(queryable_records_client: PortalClient):

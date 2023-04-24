@@ -11,7 +11,7 @@ from qcportal import PortalRequestError
 from qcportal.managers import ManagerName, ManagerStatusEnum
 
 if TYPE_CHECKING:
-    from qcfractal.testing_helpers import QCATestingSnowflake
+    from qcarchivetesting.testing_classes import QCATestingSnowflake
 
 
 def test_manager_mclient_activate(snowflake: QCATestingSnowflake):

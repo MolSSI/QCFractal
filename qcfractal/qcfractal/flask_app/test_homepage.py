@@ -2,14 +2,16 @@ import os
 
 import requests
 
-from qcfractal.testing_helpers import QCATestingSnowflake
+from qcarchivetesting.testing_classes import QCATestingSnowflake
 
 
-def test_homepage_redirect(temporary_database):
-    db_config = temporary_database.config
+def test_homepage_redirect(postgres_server, pytestconfig):
+
+    pg_harness = postgres_server.get_new_harness("test_homepage_redirect")
+    encoding = pytestconfig.getoption("--client-encoding")
 
     extra_config = {"homepage_redirect_url": "https://example.com"}
-    snowflake = QCATestingSnowflake(db_config, encoding="application/json", extra_config=extra_config)
+    snowflake = QCATestingSnowflake(pg_harness, encoding, extra_config=extra_config)
 
     # The URI doesn't contain any path or anything
     r = requests.get(snowflake.get_uri(), allow_redirects=False)
@@ -17,7 +19,9 @@ def test_homepage_redirect(temporary_database):
     assert r.headers["Location"] == "https://example.com"
 
 
-def test_homepage_serve_dir(temporary_database, tmp_path_factory):
+def test_homepage_serve_dir(postgres_server, tmp_path_factory, pytestconfig):
+    encoding = pytestconfig.getoption("--client-encoding")
+
     homepage_path = str(tmp_path_factory.mktemp("homepage"))
     index_file = os.path.join(homepage_path, "index.html")
     other_file = os.path.join(homepage_path, "other_file.html")
@@ -27,9 +31,9 @@ def test_homepage_serve_dir(temporary_database, tmp_path_factory):
     with open(other_file, "w") as f:
         f.write("OTHER FILE")
 
-    db_config = temporary_database.config
+    pg_harness = postgres_server.get_new_harness("test_homepage_serve_dir")
     extra_config = {"homepage_directory": homepage_path}
-    snowflake = QCATestingSnowflake(db_config, encoding="application/json", extra_config=extra_config)
+    snowflake = QCATestingSnowflake(pg_harness, encoding, extra_config=extra_config)
 
     # The URI doesn't contain any path or anything
     r = requests.get(snowflake.get_uri(), headers={"Accept": "text/html"})

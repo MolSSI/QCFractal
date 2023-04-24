@@ -11,7 +11,7 @@ from qcportal.singlepoint import SinglepointDatasetNewEntry, SinglepointDataset
 
 if TYPE_CHECKING:
     from qcportal import PortalClient
-    from qcportal.managers import ManagerName
+    from qcarchivetesting.testing_classes import QCATestingSnowflake
 
 
 def test_dataset_model_basic(submitter_client: PortalClient):
@@ -116,7 +116,11 @@ def test_dataset_model_metadata(snowflake_client: PortalClient):
     assert snowflake_client.get_dataset_by_id(ds_id).default_priority == PriorityEnum.high
 
 
-def test_dataset_model_status(storage_socket, snowflake_client: PortalClient, activated_manager_name: ManagerName):
+def test_dataset_model_status(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+    activated_manager_name, _ = snowflake.activate_manager()
+
     ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
     assert ds.status() == {}
 

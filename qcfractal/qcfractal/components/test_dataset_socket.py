@@ -7,7 +7,7 @@ import pytest
 from qcportal.record_models import PriorityEnum
 
 if TYPE_CHECKING:
-    from qcfractal.testing_helpers import QCATestingSnowflake
+    from qcarchivetesting.testing_classes import QCATestingSnowflake
 
 
 @pytest.mark.parametrize(

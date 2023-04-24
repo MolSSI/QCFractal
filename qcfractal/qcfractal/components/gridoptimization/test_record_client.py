@@ -8,7 +8,6 @@ import pytest
 
 from qcarchivetesting import load_molecule_data
 from qcfractal.components.gridoptimization.record_db_models import GridoptimizationRecordORM
-from qcfractal.db_socket import SQLAlchemySocket
 from qcportal.gridoptimization import GridoptimizationKeywords, GridoptimizationSpecification
 from qcportal.optimization import OptimizationSpecification
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
@@ -16,10 +15,8 @@ from qcportal.singlepoint import QCSpecification
 from .testing_helpers import compare_gridoptimization_specs, test_specs, submit_test_data, run_test_data
 
 if TYPE_CHECKING:
-    from qcfractal.db_socket import SQLAlchemySocket
+    from qcarchivetesting.testing_classes import QCATestingSnowflake
     from qcportal import PortalClient
-    from qcportal.managers import ManagerName
-    from sqlalchemy.orm.session import Session
 
 
 def test_gridoptimization_client_tag_priority(snowflake_client: PortalClient):
@@ -135,17 +132,16 @@ def test_gridoptimization_client_add_existing_molecule(snowflake_client: PortalC
     assert rec_mols == set(mol_ids + mol_ids_2)
 
 
-def test_gridoptimization_client_delete(
-    snowflake_client: PortalClient,
-    storage_socket: SQLAlchemySocket,
-    session: Session,
-    activated_manager_name: ManagerName,
-):
+def test_gridoptimization_client_delete(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    activated_manager_name, _ = snowflake.activate_manager()
+    snowflake_client = snowflake.client()
 
     go_id = run_test_data(storage_socket, activated_manager_name, "go_H2O2_psi4_pbe")
 
-    rec = session.get(GridoptimizationRecordORM, go_id)
-    child_ids = [x.optimization_id for x in rec.optimizations]
+    with storage_socket.session_scope() as session:
+        rec = session.get(GridoptimizationRecordORM, go_id)
+        child_ids = [x.optimization_id for x in rec.optimizations]
 
     meta = snowflake_client.delete_records(go_id, soft_delete=True, delete_children=False)
     assert meta.success
@@ -181,17 +177,16 @@ def test_gridoptimization_client_delete(
     assert query_res._current_meta.n_found == 0
 
 
-def test_gridoptimization_client_harddelete_nochildren(
-    snowflake_client: PortalClient,
-    storage_socket: SQLAlchemySocket,
-    session: Session,
-    activated_manager_name: ManagerName,
-):
+def test_gridoptimization_client_harddelete_nochildren(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    activated_manager_name, _ = snowflake.activate_manager()
+    snowflake_client = snowflake.client()
 
     go_id = run_test_data(storage_socket, activated_manager_name, "go_H2O2_psi4_pbe")
 
-    rec = session.get(GridoptimizationRecordORM, go_id)
-    child_ids = [x.optimization_id for x in rec.optimizations]
+    with storage_socket.session_scope() as session:
+        rec = session.get(GridoptimizationRecordORM, go_id)
+        child_ids = [x.optimization_id for x in rec.optimizations]
 
     meta = snowflake_client.delete_records(go_id, soft_delete=False, delete_children=False)
     assert meta.success
@@ -205,17 +200,16 @@ def test_gridoptimization_client_harddelete_nochildren(
     assert all(x is not None for x in child_recs)
 
 
-def test_gridoptimization_client_delete_opt_inuse(
-    snowflake_client: PortalClient,
-    storage_socket: SQLAlchemySocket,
-    session: Session,
-    activated_manager_name: ManagerName,
-):
+def test_gridoptimization_client_delete_opt_inuse(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    activated_manager_name, _ = snowflake.activate_manager()
+    snowflake_client = snowflake.client()
 
     go_id = run_test_data(storage_socket, activated_manager_name, "go_H2O2_psi4_pbe")
 
-    rec = session.get(GridoptimizationRecordORM, go_id)
-    child_ids = [x.optimization_id for x in rec.optimizations]
+    with storage_socket.session_scope() as session:
+        rec = session.get(GridoptimizationRecordORM, go_id)
+        child_ids = [x.optimization_id for x in rec.optimizations]
 
     meta = snowflake_client.delete_records(child_ids[0], soft_delete=False)
     assert meta.success is False
@@ -225,7 +219,10 @@ def test_gridoptimization_client_delete_opt_inuse(
     assert ch_rec is not None
 
 
-def test_gridoptimization_client_query(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_gridoptimization_client_query(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     id_1, _ = submit_test_data(storage_socket, "go_H2O2_psi4_b3lyp")
     id_2, _ = submit_test_data(storage_socket, "go_H2O2_psi4_pbe")
     id_3, _ = submit_test_data(storage_socket, "go_C4H4N2OS_mopac_pm6")

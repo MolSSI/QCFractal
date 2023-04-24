@@ -1,29 +1,44 @@
 import pytest
 import requests
 
-from qcarchivetesting import valid_encodings, test_users
-from qcfractal.testing_helpers import QCATestingSnowflake, mname1
+from qcarchivetesting import test_users
+from qcarchivetesting.testing_classes import QCATestingSnowflake
+from qcfractal.testing_helpers import mname1
 from qcportal import PortalRequestError
 from qcportal.auth import RoleInfo, UserInfo
 from qcportal.molecules import Molecule
 
 
-@pytest.fixture(scope="function", params=valid_encodings)
-def authtest_snowflake(temporary_database, request):
+@pytest.fixture(scope="module")
+def module_authtest_snowflake(postgres_server, pytestconfig):
     """
     A QCFractal snowflake server for testing authorization
     """
 
-    db_config = temporary_database.config
+    pg_harness = postgres_server.get_new_harness("module_authtest_snowflake")
+    encoding = pytestconfig.getoption("--client-encoding")
     with QCATestingSnowflake(
-        db_config,
-        encoding=request.param,
+        pg_harness,
+        encoding,
         start_flask=True,
         create_users=False,
         enable_security=True,
         allow_unauthenticated_read=False,
-    ) as server:
-        yield server
+    ) as snowflake:
+        pg_harness.create_template()
+        yield snowflake
+
+
+@pytest.fixture(scope="function")
+def authtest_snowflake(module_authtest_snowflake):
+    """
+    A QCFractal snowflake used for testing (function-scoped)
+
+    The underlying database is deleted and recreated after each test function
+    """
+
+    yield module_authtest_snowflake
+    module_authtest_snowflake.reset()
 
 
 def test_auth_allow_deny_read(authtest_snowflake):

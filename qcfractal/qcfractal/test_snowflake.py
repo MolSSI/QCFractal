@@ -1,5 +1,7 @@
 import time
+
 import pytest
+
 from qcfractal.snowflake import FractalSnowflake
 
 
@@ -18,17 +20,17 @@ def test_snowflake_restarting():
 
     time.sleep(5)
 
-    assert s._flask is None
-    assert s._compute_thread is None
-    assert s._job_runner_thread is None
+    assert s._flask_proc is None
+    assert s._compute_proc is None
+    assert s._job_runner_proc is None
 
     s._start_flask()
     s._start_compute()
     s._start_job_runner()
 
-    assert s._flask_thread.is_alive()
-    assert s._compute_thread.is_alive()
-    assert s._job_runner_thread.is_alive()
+    assert s._flask_proc.is_alive()
+    assert s._compute_proc.is_alive()
+    assert s._job_runner_proc.is_alive()
 
     c = s.client()
     assert c.ping()

@@ -9,9 +9,7 @@ from qcportal.record_models import RecordStatusEnum
 from .record_models import QCSpecification, SinglepointDriver
 
 if TYPE_CHECKING:
-    from qcportal import PortalClient
-    from qcfractal.db_socket import SQLAlchemySocket
-    from qcportal.managers import ManagerName
+    from qcarchivetesting.testing_classes import QCATestingSnowflake
 
 
 all_includes = ["molecule", "wavefunction"]
@@ -51,12 +49,11 @@ def test_singlepoint_models_basis_convert():
 
 
 @pytest.mark.parametrize("includes", [None, all_includes])
-def test_singlepointrecord_model(
-    storage_socket: SQLAlchemySocket,
-    snowflake_client: PortalClient,
-    activated_manager_name: ManagerName,
-    includes: Optional[List[str]],
-):
+def test_singlepointrecord_model(snowflake: QCATestingSnowflake, includes: Optional[List[str]]):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+    activated_manager_name, _ = snowflake.activate_manager()
+
     input_spec, molecule, result = load_test_data("sp_psi4_peroxide_energy_wfn")
 
     rec_id = run_test_data(storage_socket, activated_manager_name, "sp_psi4_peroxide_energy_wfn")

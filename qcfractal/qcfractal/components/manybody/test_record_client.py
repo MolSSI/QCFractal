@@ -8,17 +8,14 @@ import pytest
 
 from qcarchivetesting import load_molecule_data
 from qcfractal.components.manybody.record_db_models import ManybodyRecordORM
-from qcfractal.db_socket import SQLAlchemySocket
 from qcportal.manybody import ManybodySpecification, ManybodyKeywords
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification
 from .testing_helpers import compare_manybody_specs, test_specs, submit_test_data, run_test_data
 
 if TYPE_CHECKING:
-    from qcfractal.db_socket import SQLAlchemySocket
+    from qcarchivetesting.testing_classes import QCATestingSnowflake
     from qcportal import PortalClient
-    from qcportal.managers import ManagerName
-    from sqlalchemy.orm.session import Session
 
 
 def test_manybody_client_tag_priority(snowflake_client: PortalClient):
@@ -120,17 +117,16 @@ def test_manybody_client_add_existing_molecule(snowflake_client: PortalClient):
     assert recs[1].initial_molecule.get_hash() == mol2.get_hash()
 
 
-def test_manybody_client_delete(
-    snowflake_client: PortalClient,
-    storage_socket: SQLAlchemySocket,
-    session: Session,
-    activated_manager_name: ManagerName,
-):
+def test_manybody_client_delete(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    activated_manager_name, _ = snowflake.activate_manager()
+    snowflake_client = snowflake.client()
 
     mb_id = run_test_data(storage_socket, activated_manager_name, "mb_none_he4_psi4_mp2")
 
-    rec = session.get(ManybodyRecordORM, mb_id)
-    child_ids = [x.singlepoint_id for x in rec.clusters]
+    with storage_socket.session_scope() as session:
+        rec = session.get(ManybodyRecordORM, mb_id)
+        child_ids = [x.singlepoint_id for x in rec.clusters]
 
     meta = snowflake_client.delete_records(mb_id, soft_delete=True, delete_children=False)
     assert meta.success
@@ -166,17 +162,16 @@ def test_manybody_client_delete(
     assert query_res._current_meta.n_found == 0
 
 
-def test_manybody_client_harddelete_nochildren(
-    snowflake_client: PortalClient,
-    storage_socket: SQLAlchemySocket,
-    session: Session,
-    activated_manager_name: ManagerName,
-):
+def test_manybody_client_harddelete_nochildren(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    activated_manager_name, _ = snowflake.activate_manager()
+    snowflake_client = snowflake.client()
 
     mb_id = run_test_data(storage_socket, activated_manager_name, "mb_none_he4_psi4_mp2")
 
-    rec = session.get(ManybodyRecordORM, mb_id)
-    child_ids = [x.singlepoint_id for x in rec.clusters]
+    with storage_socket.session_scope() as session:
+        rec = session.get(ManybodyRecordORM, mb_id)
+        child_ids = [x.singlepoint_id for x in rec.clusters]
 
     meta = snowflake_client.delete_records(mb_id, soft_delete=False, delete_children=False)
     assert meta.success
@@ -190,17 +185,16 @@ def test_manybody_client_harddelete_nochildren(
     assert all(x is not None for x in child_recs)
 
 
-def test_manybody_client_delete_opt_inuse(
-    snowflake_client: PortalClient,
-    storage_socket: SQLAlchemySocket,
-    session: Session,
-    activated_manager_name: ManagerName,
-):
+def test_manybody_client_delete_opt_inuse(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    activated_manager_name, _ = snowflake.activate_manager()
+    snowflake_client = snowflake.client()
 
     mb_id = run_test_data(storage_socket, activated_manager_name, "mb_none_he4_psi4_mp2")
 
-    rec = session.get(ManybodyRecordORM, mb_id)
-    child_ids = [x.singlepoint_id for x in rec.clusters]
+    with storage_socket.session_scope() as session:
+        rec = session.get(ManybodyRecordORM, mb_id)
+        child_ids = [x.singlepoint_id for x in rec.clusters]
 
     meta = snowflake_client.delete_records(child_ids[0], soft_delete=False)
     assert meta.success is False
@@ -210,7 +204,10 @@ def test_manybody_client_delete_opt_inuse(
     assert ch_rec is not None
 
 
-def test_manybody_client_query(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_manybody_client_query(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     id_1, _ = submit_test_data(storage_socket, "mb_none_he4_psi4_mp2")
     id_2, _ = submit_test_data(storage_socket, "mb_cp_he4_psi4_mp2")
 

@@ -4,7 +4,7 @@ from datetime import datetime
 
 import pytest
 
-from qcfractal.testing_helpers import QCATestingSnowflake
+from qcarchivetesting.testing_classes import QCATestingSnowflake
 from qcportal import PortalRequestError
 from qcportal.managers import ManagerName, ManagerStatusEnum
 
@@ -68,7 +68,8 @@ def test_manager_client_get(snowflake: QCATestingSnowflake):
     assert manager[3].id == manager[0].id
 
 
-def test_manager_client_get_nonexist(snowflake: QCATestingSnowflake, activated_manager_name: ManagerName):
+def test_manager_client_get_nonexist(snowflake: QCATestingSnowflake):
+    activated_manager_name, _ = snowflake.activate_manager()
     client = snowflake.client()
     manager = client.get_managers(["noname", activated_manager_name.fullname], missing_ok=True)
     assert manager[0] is None

@@ -12,11 +12,11 @@ from qcfractal.components.optimization.testing_helpers import (
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.singlepoint.testing_helpers import submit_test_data as submit_sp_test_data
 from qcfractal.components.testing_helpers import populate_records_status
-from qcportal import PortalClient
 from qcportal.managers import ManagerName
 from qcportal.record_models import RecordStatusEnum
 
 if TYPE_CHECKING:
+    from qcarchivetesting.testing_classes import QCATestingSnowflake
     from qcfractal.db_socket import SQLAlchemySocket
     from sqlalchemy.orm.session import Session
 
@@ -89,7 +89,10 @@ def test_record_socket_reset_assigned_manager_none(storage_socket: SQLAlchemySoc
     assert ids == []
 
 
-def test_record_client_reset(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, session: Session):
+def test_record_client_reset(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     all_id = populate_records_status(storage_socket)
 
     # Can reset only running, error
@@ -98,43 +101,44 @@ def test_record_client_reset(snowflake_client: PortalClient, storage_socket: SQL
     time_1 = datetime.utcnow()
     assert meta.n_updated == 2
 
-    rec = [session.get(BaseRecordORM, i) for i in all_id]
+    with storage_socket.session_scope() as session:
+        rec = [session.get(BaseRecordORM, i) for i in all_id]
 
-    # created_on shouldn't change
-    for r in rec:
-        assert r.created_on < time_0
+        # created_on shouldn't change
+        for r in rec:
+            assert r.created_on < time_0
 
-    assert rec[0].status == RecordStatusEnum.waiting
-    assert rec[1].status == RecordStatusEnum.complete
-    assert rec[2].status == RecordStatusEnum.waiting
-    assert rec[3].status == RecordStatusEnum.waiting
-    assert rec[4].status == RecordStatusEnum.cancelled
-    assert rec[5].status == RecordStatusEnum.deleted
-    assert rec[6].status == RecordStatusEnum.invalid
+        assert rec[0].status == RecordStatusEnum.waiting
+        assert rec[1].status == RecordStatusEnum.complete
+        assert rec[2].status == RecordStatusEnum.waiting
+        assert rec[3].status == RecordStatusEnum.waiting
+        assert rec[4].status == RecordStatusEnum.cancelled
+        assert rec[5].status == RecordStatusEnum.deleted
+        assert rec[6].status == RecordStatusEnum.invalid
 
-    assert rec[0].task is not None
-    assert rec[1].task is None
-    assert rec[2].task is not None
-    assert rec[3].task is not None
-    assert rec[4].task is None
-    assert rec[5].task is None
-    assert rec[6].task is None
+        assert rec[0].task is not None
+        assert rec[1].task is None
+        assert rec[2].task is not None
+        assert rec[3].task is not None
+        assert rec[4].task is None
+        assert rec[5].task is None
+        assert rec[6].task is None
 
-    assert rec[0].manager_name is None
-    assert rec[1].manager_name is not None
-    assert rec[2].manager_name is None
-    assert rec[3].manager_name is None
-    assert rec[4].manager_name is None
-    assert rec[5].manager_name is None
-    assert rec[6].manager_name is not None
+        assert rec[0].manager_name is None
+        assert rec[1].manager_name is not None
+        assert rec[2].manager_name is None
+        assert rec[3].manager_name is None
+        assert rec[4].manager_name is None
+        assert rec[5].manager_name is None
+        assert rec[6].manager_name is not None
 
-    assert rec[0].modified_on < time_0
-    assert rec[1].modified_on < time_0
-    assert time_0 < rec[2].modified_on < time_1
-    assert time_0 < rec[3].modified_on < time_1
-    assert rec[4].modified_on < time_0
-    assert rec[5].modified_on < time_0
-    assert rec[6].modified_on < time_0
+        assert rec[0].modified_on < time_0
+        assert rec[1].modified_on < time_0
+        assert time_0 < rec[2].modified_on < time_1
+        assert time_0 < rec[3].modified_on < time_1
+        assert rec[4].modified_on < time_0
+        assert rec[5].modified_on < time_0
+        assert rec[6].modified_on < time_0
 
 
 def test_record_socket_reset_none(storage_socket: SQLAlchemySocket):
@@ -144,20 +148,29 @@ def test_record_socket_reset_none(storage_socket: SQLAlchemySocket):
     assert meta.n_updated == 0
 
 
-def test_record_client_reset_none(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_record_client_reset_none(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     populate_records_status(storage_socket)
     meta = snowflake_client.reset_records([])
     assert meta.n_updated == 0
 
 
-def test_record_client_reset_missing(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_record_client_reset_missing(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     all_id = populate_records_status(storage_socket)
     meta = snowflake_client.reset_records([all_id[2], 9999])
     assert meta.success is False
     assert meta.n_updated == 1
 
 
-def test_record_client_cancel(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, session: Session):
+def test_record_client_cancel(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     all_id = populate_records_status(storage_socket)
 
     # waiting, running, error can be cancelled
@@ -166,43 +179,44 @@ def test_record_client_cancel(snowflake_client: PortalClient, storage_socket: SQ
     time_1 = datetime.utcnow()
     assert meta.n_updated == 3
 
-    rec = [session.get(BaseRecordORM, i) for i in all_id]
+    with storage_socket.session_scope() as session:
+        rec = [session.get(BaseRecordORM, i) for i in all_id]
 
-    # created_on hasn't changed
-    for r in rec:
-        assert r.created_on < time_0
+        # created_on hasn't changed
+        for r in rec:
+            assert r.created_on < time_0
 
-    assert rec[0].status == RecordStatusEnum.cancelled
-    assert rec[1].status == RecordStatusEnum.complete
-    assert rec[2].status == RecordStatusEnum.cancelled
-    assert rec[3].status == RecordStatusEnum.cancelled
-    assert rec[4].status == RecordStatusEnum.cancelled
-    assert rec[5].status == RecordStatusEnum.deleted
-    assert rec[6].status == RecordStatusEnum.invalid
+        assert rec[0].status == RecordStatusEnum.cancelled
+        assert rec[1].status == RecordStatusEnum.complete
+        assert rec[2].status == RecordStatusEnum.cancelled
+        assert rec[3].status == RecordStatusEnum.cancelled
+        assert rec[4].status == RecordStatusEnum.cancelled
+        assert rec[5].status == RecordStatusEnum.deleted
+        assert rec[6].status == RecordStatusEnum.invalid
 
-    assert rec[0].task is None
-    assert rec[1].task is None
-    assert rec[2].task is None
-    assert rec[3].task is None
-    assert rec[4].task is None
-    assert rec[5].task is None
-    assert rec[6].task is None
+        assert rec[0].task is None
+        assert rec[1].task is None
+        assert rec[2].task is None
+        assert rec[3].task is None
+        assert rec[4].task is None
+        assert rec[5].task is None
+        assert rec[6].task is None
 
-    assert rec[0].manager_name is None
-    assert rec[1].manager_name is not None
-    assert rec[2].manager_name is None
-    assert rec[3].manager_name is not None  # manager left for errored
-    assert rec[4].manager_name is None
-    assert rec[5].manager_name is None
-    assert rec[6].manager_name is not None
+        assert rec[0].manager_name is None
+        assert rec[1].manager_name is not None
+        assert rec[2].manager_name is None
+        assert rec[3].manager_name is not None  # manager left for errored
+        assert rec[4].manager_name is None
+        assert rec[5].manager_name is None
+        assert rec[6].manager_name is not None
 
-    assert time_0 < rec[0].modified_on < time_1
-    assert rec[1].modified_on < time_0
-    assert time_0 < rec[2].modified_on < time_1
-    assert time_0 < rec[3].modified_on < time_1
-    assert rec[4].modified_on < time_0
-    assert rec[5].modified_on < time_0
-    assert rec[6].modified_on < time_0
+        assert time_0 < rec[0].modified_on < time_1
+        assert rec[1].modified_on < time_0
+        assert time_0 < rec[2].modified_on < time_1
+        assert time_0 < rec[3].modified_on < time_1
+        assert rec[4].modified_on < time_0
+        assert rec[5].modified_on < time_0
+        assert rec[6].modified_on < time_0
 
 
 def test_record_socket_cancel_none(storage_socket: SQLAlchemySocket):
@@ -212,20 +226,29 @@ def test_record_socket_cancel_none(storage_socket: SQLAlchemySocket):
     assert meta.n_updated == 0
 
 
-def test_record_client_cancel_none(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_record_client_cancel_none(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     populate_records_status(storage_socket)
     meta = snowflake_client.cancel_records([])
     assert meta.n_updated == 0
 
 
-def test_record_client_cancel_missing(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_record_client_cancel_missing(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     all_id = populate_records_status(storage_socket)
     meta = snowflake_client.cancel_records([all_id[0], 9999])
     assert meta.success is False
     assert meta.n_updated == 1
 
 
-def test_record_client_invalidate(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, session: Session):
+def test_record_client_invalidate(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     all_id = populate_records_status(storage_socket)
 
     # only completed can be invalidated
@@ -234,43 +257,44 @@ def test_record_client_invalidate(snowflake_client: PortalClient, storage_socket
     time_1 = datetime.utcnow()
     assert meta.n_updated == 1
 
-    rec = [session.get(BaseRecordORM, i) for i in all_id]
+    with storage_socket.session_scope() as session:
+        rec = [session.get(BaseRecordORM, i) for i in all_id]
 
-    # created_on hasn't changed
-    for r in rec:
-        assert r.created_on < time_0
+        # created_on hasn't changed
+        for r in rec:
+            assert r.created_on < time_0
 
-    assert rec[0].status == RecordStatusEnum.waiting
-    assert rec[1].status == RecordStatusEnum.invalid
-    assert rec[2].status == RecordStatusEnum.running
-    assert rec[3].status == RecordStatusEnum.error
-    assert rec[4].status == RecordStatusEnum.cancelled
-    assert rec[5].status == RecordStatusEnum.deleted
-    assert rec[6].status == RecordStatusEnum.invalid
+        assert rec[0].status == RecordStatusEnum.waiting
+        assert rec[1].status == RecordStatusEnum.invalid
+        assert rec[2].status == RecordStatusEnum.running
+        assert rec[3].status == RecordStatusEnum.error
+        assert rec[4].status == RecordStatusEnum.cancelled
+        assert rec[5].status == RecordStatusEnum.deleted
+        assert rec[6].status == RecordStatusEnum.invalid
 
-    assert rec[0].task is not None
-    assert rec[1].task is None
-    assert rec[2].task is not None
-    assert rec[3].task is not None
-    assert rec[4].task is None
-    assert rec[5].task is None
-    assert rec[6].task is None
+        assert rec[0].task is not None
+        assert rec[1].task is None
+        assert rec[2].task is not None
+        assert rec[3].task is not None
+        assert rec[4].task is None
+        assert rec[5].task is None
+        assert rec[6].task is None
 
-    assert rec[0].manager_name is None
-    assert rec[1].manager_name is not None  # Manager left on
-    assert rec[2].manager_name is not None
-    assert rec[3].manager_name is not None
-    assert rec[4].manager_name is None
-    assert rec[5].manager_name is None
-    assert rec[6].manager_name is not None
+        assert rec[0].manager_name is None
+        assert rec[1].manager_name is not None  # Manager left on
+        assert rec[2].manager_name is not None
+        assert rec[3].manager_name is not None
+        assert rec[4].manager_name is None
+        assert rec[5].manager_name is None
+        assert rec[6].manager_name is not None
 
-    assert rec[0].modified_on < time_0
-    assert time_0 < rec[1].modified_on < time_1
-    assert rec[2].modified_on < time_0
-    assert rec[3].modified_on < time_0
-    assert rec[4].modified_on < time_0
-    assert rec[5].modified_on < time_0
-    assert rec[6].modified_on < time_0
+        assert rec[0].modified_on < time_0
+        assert time_0 < rec[1].modified_on < time_1
+        assert rec[2].modified_on < time_0
+        assert rec[3].modified_on < time_0
+        assert rec[4].modified_on < time_0
+        assert rec[5].modified_on < time_0
+        assert rec[6].modified_on < time_0
 
 
 def test_record_socket_invalidate_none(storage_socket: SQLAlchemySocket):
@@ -280,20 +304,29 @@ def test_record_socket_invalidate_none(storage_socket: SQLAlchemySocket):
     assert meta.n_updated == 0
 
 
-def test_record_client_invalidate_none(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_record_client_invalidate_none(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     populate_records_status(storage_socket)
     meta = snowflake_client.invalidate_records([])
     assert meta.n_updated == 0
 
 
-def test_record_client_invalidate_missing(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_record_client_invalidate_missing(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     all_id = populate_records_status(storage_socket)
     meta = snowflake_client.invalidate_records([all_id[1], 9999])
     assert meta.success is False
     assert meta.n_updated == 1
 
 
-def test_record_client_softdelete(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, session: Session):
+def test_record_client_softdelete(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     all_id = populate_records_status(storage_socket)
 
     # only deleted can't be deleted
@@ -304,34 +337,38 @@ def test_record_client_softdelete(snowflake_client: PortalClient, storage_socket
     assert meta.deleted_idx == [0, 1, 2, 3, 4, 6]
     assert meta.error_idx == [5]  # deleted can't be deleted
 
-    rec = [session.get(BaseRecordORM, i) for i in all_id]
+    with storage_socket.session_scope() as session:
+        rec = [session.get(BaseRecordORM, i) for i in all_id]
 
-    # created_on hasn't changed
-    for r in rec:
-        assert r.created_on < time_0
+        # created_on hasn't changed
+        for r in rec:
+            assert r.created_on < time_0
 
-        assert r.status == RecordStatusEnum.deleted
-        assert r.task is None
+            assert r.status == RecordStatusEnum.deleted
+            assert r.task is None
 
-    assert time_0 < rec[0].modified_on < time_1
-    assert time_0 < rec[1].modified_on < time_1
-    assert time_0 < rec[2].modified_on < time_1
-    assert time_0 < rec[3].modified_on < time_1
-    assert time_0 < rec[4].modified_on < time_1
-    assert rec[5].modified_on < time_0
-    assert time_0 < rec[6].modified_on < time_1
+        assert time_0 < rec[0].modified_on < time_1
+        assert time_0 < rec[1].modified_on < time_1
+        assert time_0 < rec[2].modified_on < time_1
+        assert time_0 < rec[3].modified_on < time_1
+        assert time_0 < rec[4].modified_on < time_1
+        assert rec[5].modified_on < time_0
+        assert time_0 < rec[6].modified_on < time_1
 
-    # completed and errored records should keep their manager
-    assert rec[0].manager_name is None
-    assert rec[1].manager_name is not None
-    assert rec[2].manager_name is None
-    assert rec[3].manager_name is not None
-    assert rec[4].manager_name is None
-    assert rec[5].manager_name is None
-    assert rec[6].manager_name is not None
+        # completed and errored records should keep their manager
+        assert rec[0].manager_name is None
+        assert rec[1].manager_name is not None
+        assert rec[2].manager_name is None
+        assert rec[3].manager_name is not None
+        assert rec[4].manager_name is None
+        assert rec[5].manager_name is None
+        assert rec[6].manager_name is not None
 
 
-def test_record_client_softdelete_missing(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_record_client_softdelete_missing(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     all_id = populate_records_status(storage_socket)
     meta = snowflake_client.delete_records(all_id + [99999], soft_delete=True)
     assert meta.success is False
@@ -348,14 +385,20 @@ def test_record_socket_softdelete_none(storage_socket: SQLAlchemySocket):
     assert meta.n_deleted == 0
 
 
-def test_record_client_softdelete_none(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_record_client_softdelete_none(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     populate_records_status(storage_socket)
     meta = snowflake_client.delete_records([], soft_delete=True)
     assert meta.success is True
     assert meta.n_deleted == 0
 
 
-def test_record_client_harddelete_1(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, session: Session):
+def test_record_client_harddelete_1(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     all_id = populate_records_status(storage_socket)
 
     # only deleted can't be deleted
@@ -364,11 +407,15 @@ def test_record_client_harddelete_1(snowflake_client: PortalClient, storage_sock
     assert meta.deleted_idx == [0, 1, 2, 3, 4, 5, 6]
     assert meta.n_deleted == 7
 
-    rec = [session.get(BaseRecordORM, i) for i in all_id]
-    assert all(x is None for x in rec)
+    with storage_socket.session_scope() as session:
+        rec = [session.get(BaseRecordORM, i) for i in all_id]
+        assert all(x is None for x in rec)
 
 
-def test_record_client_harddelete_2(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, session: Session):
+def test_record_client_harddelete_2(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     # Delete only some records
     all_id = populate_records_status(storage_socket)
 
@@ -378,14 +425,15 @@ def test_record_client_harddelete_2(snowflake_client: PortalClient, storage_sock
     assert meta.deleted_idx == [0, 1]
     assert meta.n_deleted == 2
 
-    rec = [session.get(BaseRecordORM, i) for i in all_id]
-    assert rec[0] is None
-    assert rec[1] is not None
-    assert rec[2] is not None
-    assert rec[3] is not None
-    assert rec[4] is None
-    assert rec[5] is not None
-    assert rec[6] is not None
+    with storage_socket.session_scope() as session:
+        rec = [session.get(BaseRecordORM, i) for i in all_id]
+        assert rec[0] is None
+        assert rec[1] is not None
+        assert rec[2] is not None
+        assert rec[3] is not None
+        assert rec[4] is None
+        assert rec[5] is not None
+        assert rec[6] is not None
 
 
 def test_record_socket_harddelete_none(storage_socket: SQLAlchemySocket):
@@ -396,14 +444,20 @@ def test_record_socket_harddelete_none(storage_socket: SQLAlchemySocket):
     assert meta.deleted_idx == []
 
 
-def test_record_client_harddelete_none(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_record_client_harddelete_none(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     populate_records_status(storage_socket)
     meta = snowflake_client.delete_records([], soft_delete=False)
     assert meta.success is True
     assert meta.deleted_idx == []
 
 
-def test_record_client_harddelete_missing(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_record_client_harddelete_missing(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     all_id = populate_records_status(storage_socket)
     meta = snowflake_client.delete_records(all_id + [99999], soft_delete=False)
     assert meta.success is False
@@ -412,7 +466,10 @@ def test_record_client_harddelete_missing(snowflake_client: PortalClient, storag
     assert meta.error_idx == [7]
 
 
-def test_record_client_revert_chain(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, session: Session):
+def test_record_client_revert_chain(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     # Tests undelete, uninvalidate, uncancel
     all_id = populate_records_status(storage_socket)
 
@@ -426,101 +483,102 @@ def test_record_client_revert_chain(snowflake_client: PortalClient, storage_sock
     meta = snowflake_client.delete_records(all_id)
     assert meta.n_deleted == 6
 
-    rec = [session.get(BaseRecordORM, i) for i in all_id]
-    assert len(rec[0].info_backup) == 2
-    assert len(rec[1].info_backup) == 2
-    assert len(rec[2].info_backup) == 2
-    assert len(rec[3].info_backup) == 2
-    assert len(rec[4].info_backup) == 2
-    assert len(rec[5].info_backup) == 1  # deleted in populate_db
-    assert len(rec[6].info_backup) == 2
+    with storage_socket.session_scope() as session:
+        rec = [session.get(BaseRecordORM, i) for i in all_id]
+        assert len(rec[0].info_backup) == 2
+        assert len(rec[1].info_backup) == 2
+        assert len(rec[2].info_backup) == 2
+        assert len(rec[3].info_backup) == 2
+        assert len(rec[4].info_backup) == 2
+        assert len(rec[5].info_backup) == 1  # deleted in populate_db
+        assert len(rec[6].info_backup) == 2
 
-    meta = snowflake_client.undelete_records(all_id)
-    assert meta.n_updated == 7
+        meta = snowflake_client.undelete_records(all_id)
+        assert meta.n_updated == 7
 
-    session.expire_all()
-    rec = [session.get(BaseRecordORM, i) for i in all_id]
-    assert rec[0].status == RecordStatusEnum.cancelled
-    assert rec[1].status == RecordStatusEnum.invalid
-    assert rec[2].status == RecordStatusEnum.cancelled
-    assert rec[3].status == RecordStatusEnum.cancelled
-    assert rec[4].status == RecordStatusEnum.cancelled
-    assert rec[5].status == RecordStatusEnum.waiting  # from populate_db
-    assert rec[6].status == RecordStatusEnum.invalid
+        session.expire_all()
+        rec = [session.get(BaseRecordORM, i) for i in all_id]
+        assert rec[0].status == RecordStatusEnum.cancelled
+        assert rec[1].status == RecordStatusEnum.invalid
+        assert rec[2].status == RecordStatusEnum.cancelled
+        assert rec[3].status == RecordStatusEnum.cancelled
+        assert rec[4].status == RecordStatusEnum.cancelled
+        assert rec[5].status == RecordStatusEnum.waiting  # from populate_db
+        assert rec[6].status == RecordStatusEnum.invalid
 
-    assert rec[0].task is None
-    assert rec[1].task is None
-    assert rec[2].task is None
-    assert rec[3].task is None
-    assert rec[4].task is None
-    assert rec[5].task is not None
-    assert rec[6].task is None
+        assert rec[0].task is None
+        assert rec[1].task is None
+        assert rec[2].task is None
+        assert rec[3].task is None
+        assert rec[4].task is None
+        assert rec[5].task is not None
+        assert rec[6].task is None
 
-    assert len(rec[0].info_backup) == 1
-    assert len(rec[1].info_backup) == 1
-    assert len(rec[2].info_backup) == 1
-    assert len(rec[3].info_backup) == 1
-    assert len(rec[4].info_backup) == 1
-    assert len(rec[5].info_backup) == 0
-    assert len(rec[6].info_backup) == 1
+        assert len(rec[0].info_backup) == 1
+        assert len(rec[1].info_backup) == 1
+        assert len(rec[2].info_backup) == 1
+        assert len(rec[3].info_backup) == 1
+        assert len(rec[4].info_backup) == 1
+        assert len(rec[5].info_backup) == 0
+        assert len(rec[6].info_backup) == 1
 
-    meta = snowflake_client.uncancel_records(all_id)
-    assert meta.n_updated == 4
+        meta = snowflake_client.uncancel_records(all_id)
+        assert meta.n_updated == 4
 
-    session.expire_all()
-    rec = [session.get(BaseRecordORM, i) for i in all_id]
-    assert rec[0].status == RecordStatusEnum.waiting
-    assert rec[1].status == RecordStatusEnum.invalid
-    assert rec[2].status == RecordStatusEnum.waiting
-    assert rec[3].status == RecordStatusEnum.error
-    assert rec[4].status == RecordStatusEnum.waiting  # from populate_db
-    assert rec[5].status == RecordStatusEnum.waiting  # from populate_db
-    assert rec[6].status == RecordStatusEnum.invalid
+        session.expire_all()
+        rec = [session.get(BaseRecordORM, i) for i in all_id]
+        assert rec[0].status == RecordStatusEnum.waiting
+        assert rec[1].status == RecordStatusEnum.invalid
+        assert rec[2].status == RecordStatusEnum.waiting
+        assert rec[3].status == RecordStatusEnum.error
+        assert rec[4].status == RecordStatusEnum.waiting  # from populate_db
+        assert rec[5].status == RecordStatusEnum.waiting  # from populate_db
+        assert rec[6].status == RecordStatusEnum.invalid
 
-    assert len(rec[0].info_backup) == 0
-    assert len(rec[1].info_backup) == 1
-    assert len(rec[2].info_backup) == 0
-    assert len(rec[3].info_backup) == 0
-    assert len(rec[4].info_backup) == 0
-    assert len(rec[5].info_backup) == 0
-    assert len(rec[6].info_backup) == 1
+        assert len(rec[0].info_backup) == 0
+        assert len(rec[1].info_backup) == 1
+        assert len(rec[2].info_backup) == 0
+        assert len(rec[3].info_backup) == 0
+        assert len(rec[4].info_backup) == 0
+        assert len(rec[5].info_backup) == 0
+        assert len(rec[6].info_backup) == 1
 
-    assert rec[0].task is not None
-    assert rec[1].task is None
-    assert rec[2].task is not None
-    assert rec[3].task is not None
-    assert rec[4].task is not None
-    assert rec[5].task is not None
-    assert rec[6].task is None
+        assert rec[0].task is not None
+        assert rec[1].task is None
+        assert rec[2].task is not None
+        assert rec[3].task is not None
+        assert rec[4].task is not None
+        assert rec[5].task is not None
+        assert rec[6].task is None
 
-    meta = snowflake_client.uninvalidate_records(all_id)
-    assert meta.n_updated == 2
+        meta = snowflake_client.uninvalidate_records(all_id)
+        assert meta.n_updated == 2
 
-    session.expire_all()
-    rec = [session.get(BaseRecordORM, i) for i in all_id]
-    assert rec[0].status == RecordStatusEnum.waiting
-    assert rec[1].status == RecordStatusEnum.complete
-    assert rec[2].status == RecordStatusEnum.waiting
-    assert rec[3].status == RecordStatusEnum.error
-    assert rec[4].status == RecordStatusEnum.waiting  # from populate_db
-    assert rec[5].status == RecordStatusEnum.waiting  # from populate_db
-    assert rec[6].status == RecordStatusEnum.complete
+        session.expire_all()
+        rec = [session.get(BaseRecordORM, i) for i in all_id]
+        assert rec[0].status == RecordStatusEnum.waiting
+        assert rec[1].status == RecordStatusEnum.complete
+        assert rec[2].status == RecordStatusEnum.waiting
+        assert rec[3].status == RecordStatusEnum.error
+        assert rec[4].status == RecordStatusEnum.waiting  # from populate_db
+        assert rec[5].status == RecordStatusEnum.waiting  # from populate_db
+        assert rec[6].status == RecordStatusEnum.complete
 
-    assert len(rec[0].info_backup) == 0
-    assert len(rec[1].info_backup) == 0
-    assert len(rec[2].info_backup) == 0
-    assert len(rec[3].info_backup) == 0
-    assert len(rec[4].info_backup) == 0
-    assert len(rec[5].info_backup) == 0
-    assert len(rec[6].info_backup) == 0
+        assert len(rec[0].info_backup) == 0
+        assert len(rec[1].info_backup) == 0
+        assert len(rec[2].info_backup) == 0
+        assert len(rec[3].info_backup) == 0
+        assert len(rec[4].info_backup) == 0
+        assert len(rec[5].info_backup) == 0
+        assert len(rec[6].info_backup) == 0
 
-    assert rec[0].task is not None
-    assert rec[1].task is None
-    assert rec[2].task is not None
-    assert rec[3].task is not None
-    assert rec[4].task is not None
-    assert rec[5].task is not None
-    assert rec[6].task is None
+        assert rec[0].task is not None
+        assert rec[1].task is None
+        assert rec[2].task is not None
+        assert rec[3].task is not None
+        assert rec[4].task is not None
+        assert rec[5].task is not None
+        assert rec[6].task is None
 
 
 def test_record_socket_undelete_none(storage_socket: SQLAlchemySocket):
@@ -531,7 +589,10 @@ def test_record_socket_undelete_none(storage_socket: SQLAlchemySocket):
     assert meta.n_updated == 0
 
 
-def test_record_client_undelete_none(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_record_client_undelete_none(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     populate_records_status(storage_socket)
     meta = snowflake_client.undelete_records([])
     assert meta.success is True
@@ -539,7 +600,10 @@ def test_record_client_undelete_none(snowflake_client: PortalClient, storage_soc
     assert meta.n_updated == 0
 
 
-def test_record_client_undelete_missing(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_record_client_undelete_missing(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     populate_records_status(storage_socket)
     meta = snowflake_client.undelete_records([99999])
     assert meta.success is False
@@ -556,7 +620,10 @@ def test_record_socket_uncancel_none(storage_socket: SQLAlchemySocket):
     assert meta.n_updated == 0
 
 
-def test_record_client_uncancel_none(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_record_client_uncancel_none(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     populate_records_status(storage_socket)
     meta = snowflake_client.uncancel_records([])
     assert meta.success is True
@@ -564,7 +631,10 @@ def test_record_client_uncancel_none(snowflake_client: PortalClient, storage_soc
     assert meta.n_updated == 0
 
 
-def test_record_client_uncancel_missing(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_record_client_uncancel_missing(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     populate_records_status(storage_socket)
     meta = snowflake_client.uncancel_records([99999])
     assert meta.success is False
@@ -581,7 +651,10 @@ def test_record_socket_uninvalidate_none(storage_socket: SQLAlchemySocket):
     assert meta.n_updated == 0
 
 
-def test_record_client_uninvalidate_none(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_record_client_uninvalidate_none(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     populate_records_status(storage_socket)
     meta = snowflake_client.uninvalidate_records([])
     assert meta.success is True
@@ -589,7 +662,10 @@ def test_record_client_uninvalidate_none(snowflake_client: PortalClient, storage
     assert meta.n_updated == 0
 
 
-def test_record_client_uninvalidate_missing(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_record_client_uninvalidate_missing(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     populate_records_status(storage_socket)
     meta = snowflake_client.uninvalidate_records([99999])
     assert meta.success is False
@@ -599,99 +675,96 @@ def test_record_client_uninvalidate_missing(snowflake_client: PortalClient, stor
 
 
 @pytest.mark.parametrize("opt_file", ["opt_psi4_benzene", "opt_psi4_fluoroethane_notraj"])
-def test_record_client_delete_children(
-    snowflake_client: PortalClient,
-    storage_socket: SQLAlchemySocket,
-    session: Session,
-    activated_manager_name: ManagerName,
-    opt_file: str,
-):
+def test_record_client_delete_children(snowflake: QCATestingSnowflake, opt_file: str):
+    storage_socket = snowflake.get_storage_socket()
+    activated_manager_name, _ = snowflake.activate_manager()
+    snowflake_client = snowflake.client()
+
     # Deleting with deleting children
     id1 = run_opt_test_data(storage_socket, activated_manager_name, opt_file)
 
-    rec = session.get(BaseRecordORM, id1)
-    child_ids = [x.singlepoint_id for x in rec.trajectory]
+    with storage_socket.session_scope() as session:
+        rec = session.get(BaseRecordORM, id1)
+        child_ids = [x.singlepoint_id for x in rec.trajectory]
 
-    meta = snowflake_client.delete_records([id1], soft_delete=True, delete_children=True)
-    assert meta.success
-    assert meta.deleted_idx == [0]
-    assert meta.n_children_deleted == len(child_ids)
+        meta = snowflake_client.delete_records([id1], soft_delete=True, delete_children=True)
+        assert meta.success
+        assert meta.deleted_idx == [0]
+        assert meta.n_children_deleted == len(child_ids)
 
-    session.expire_all()
-    child_recs = [session.get(BaseRecordORM, i) for i in child_ids]
-    assert all(x.status == RecordStatusEnum.deleted for x in child_recs)
+        session.expire_all()
+        child_recs = [session.get(BaseRecordORM, i) for i in child_ids]
+        assert all(x.status == RecordStatusEnum.deleted for x in child_recs)
 
-    meta = snowflake_client.delete_records([id1], soft_delete=False, delete_children=True)
-    assert meta.success
-    assert meta.deleted_idx == [0]
-    assert meta.n_children_deleted == len(child_ids)
+        meta = snowflake_client.delete_records([id1], soft_delete=False, delete_children=True)
+        assert meta.success
+        assert meta.deleted_idx == [0]
+        assert meta.n_children_deleted == len(child_ids)
 
-    session.expire_all()
-    rec = session.get(BaseRecordORM, id1)
-    assert rec is None
+        session.expire_all()
+        rec = session.get(BaseRecordORM, id1)
+        assert rec is None
 
-    child_recs = [session.get(BaseRecordORM, i) for i in child_ids]
-    assert all(x is None for x in child_recs)
+        child_recs = [session.get(BaseRecordORM, i) for i in child_ids]
+        assert all(x is None for x in child_recs)
 
 
 @pytest.mark.parametrize("opt_file", ["opt_psi4_benzene", "opt_psi4_fluoroethane_notraj"])
-def test_record_client_delete_nochildren(
-    snowflake_client: PortalClient,
-    storage_socket: SQLAlchemySocket,
-    session: Session,
-    activated_manager_name: ManagerName,
-    opt_file: str,
-):
+def test_record_client_delete_nochildren(snowflake: QCATestingSnowflake, opt_file: str):
+    storage_socket = snowflake.get_storage_socket()
+    activated_manager_name, _ = snowflake.activate_manager()
+    snowflake_client = snowflake.client()
+
     # Deleting without deleting children
     id1 = run_opt_test_data(storage_socket, activated_manager_name, opt_file)
 
-    rec = session.get(BaseRecordORM, id1)
-    child_ids = [x.singlepoint_id for x in rec.trajectory]
+    with storage_socket.session_scope() as session:
+        rec = session.get(BaseRecordORM, id1)
+        child_ids = [x.singlepoint_id for x in rec.trajectory]
 
-    meta = snowflake_client.delete_records([id1], soft_delete=True, delete_children=False)
-    assert meta.success
-    assert meta.deleted_idx == [0]
-    assert meta.n_children_deleted == 0
+        meta = snowflake_client.delete_records([id1], soft_delete=True, delete_children=False)
+        assert meta.success
+        assert meta.deleted_idx == [0]
+        assert meta.n_children_deleted == 0
 
-    session.expire_all()
-    child_recs = [session.get(BaseRecordORM, i) for i in child_ids]
-    assert all(x.status == RecordStatusEnum.complete for x in child_recs)
+        session.expire_all()
+        child_recs = [session.get(BaseRecordORM, i) for i in child_ids]
+        assert all(x.status == RecordStatusEnum.complete for x in child_recs)
 
-    meta = snowflake_client.delete_records([id1], soft_delete=False, delete_children=False)
-    assert meta.success
-    assert meta.deleted_idx == [0]
-    assert meta.n_children_deleted == 0
+        meta = snowflake_client.delete_records([id1], soft_delete=False, delete_children=False)
+        assert meta.success
+        assert meta.deleted_idx == [0]
+        assert meta.n_children_deleted == 0
 
-    session.expire_all()
-    rec = session.get(BaseRecordORM, id1)
-    assert rec is None
+        session.expire_all()
+        rec = session.get(BaseRecordORM, id1)
+        assert rec is None
 
-    child_recs = [session.get(BaseRecordORM, i) for i in child_ids]
-    assert all(x.status == RecordStatusEnum.complete for x in child_recs)
+        child_recs = [session.get(BaseRecordORM, i) for i in child_ids]
+        assert all(x.status == RecordStatusEnum.complete for x in child_recs)
 
 
 @pytest.mark.parametrize("opt_file", ["opt_psi4_benzene", "opt_psi4_fluoroethane_notraj"])
-def test_record_client_undelete_children(
-    snowflake_client: PortalClient,
-    storage_socket: SQLAlchemySocket,
-    session: Session,
-    activated_manager_name: ManagerName,
-    opt_file: str,
-):
+def test_record_client_undelete_children(snowflake: QCATestingSnowflake, opt_file: str):
+    storage_socket = snowflake.get_storage_socket()
+    activated_manager_name, _ = snowflake.activate_manager()
+    snowflake_client = snowflake.client()
+
     # Deleting with deleting children, then undeleting
     id1 = run_opt_test_data(storage_socket, activated_manager_name, opt_file)
 
-    rec = session.get(BaseRecordORM, id1)
-    child_ids = [x.singlepoint_id for x in rec.trajectory]
+    with storage_socket.session_scope() as session:
+        rec = session.get(BaseRecordORM, id1)
+        child_ids = [x.singlepoint_id for x in rec.trajectory]
 
-    meta = snowflake_client.delete_records([id1], soft_delete=True, delete_children=True)
-    assert meta.success
-    assert meta.deleted_idx == [0]
-    assert meta.n_children_deleted == len(child_ids)
+        meta = snowflake_client.delete_records([id1], soft_delete=True, delete_children=True)
+        assert meta.success
+        assert meta.deleted_idx == [0]
+        assert meta.n_children_deleted == len(child_ids)
 
-    meta = snowflake_client.undelete_records([id1])
-    assert meta.success
-    assert meta.updated_idx == [0]
+        meta = snowflake_client.undelete_records([id1])
+        assert meta.success
+        assert meta.updated_idx == [0]
 
-    child_recs = [session.get(BaseRecordORM, i) for i in child_ids]
-    assert all(x.status == RecordStatusEnum.complete for x in child_recs)
+        child_recs = [session.get(BaseRecordORM, i) for i in child_ids]
+        assert all(x.status == RecordStatusEnum.complete for x in child_recs)

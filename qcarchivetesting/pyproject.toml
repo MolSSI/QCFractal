@@ -35,7 +35,8 @@ dependencies = [
 
 
 [project.entry-points.pytest11]
-qcfractal_fixtures = "qcarchivetesting.testing_fixtures"
+qcarchive_fixtures = "qcarchivetesting.testing_fixtures"
+qcarchive_conftest = "qcarchivetesting.pytest_config"
 
 
 [tool.setuptools.package-data]

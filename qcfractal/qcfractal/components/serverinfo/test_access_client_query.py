@@ -5,19 +5,19 @@ from datetime import datetime
 import pytest
 
 from qcarchivetesting import test_users
+from qcarchivetesting.testing_classes import QCATestingSnowflake
 from qcfractal.components.serverinfo.test_access_socket import test_ips
-from qcfractal.testing_helpers import QCATestingSnowflake
 from qcportal import PortalClient
 
 
 @pytest.fixture(scope="module")
-def queryable_access_client(module_temporary_database):
-    db_config = module_temporary_database.config
+def queryable_access_client(postgres_server, pytestconfig):
+
+    pg_harness = postgres_server.get_new_harness("serverinfo_test_access")
+    encoding = pytestconfig.getoption("--client-encoding")
 
     # Don't log accesses
-    with QCATestingSnowflake(
-        db_config, encoding="application/json", enable_security=True, create_users=True, log_access=False
-    ) as server:
+    with QCATestingSnowflake(pg_harness, encoding, enable_security=True, create_users=True, log_access=False) as server:
         # generate a bunch of test data
         storage_socket = server.get_storage_socket()
 

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from qcportal.serverinfo import ErrorLogQueryFilters
 
 if TYPE_CHECKING:
-    from qcfractal.testing_helpers import QCATestingSnowflake
+    from qcarchivetesting.testing_classes import QCATestingSnowflake
 
 
 def test_serverinfo_socket_save_error(secure_snowflake: QCATestingSnowflake):

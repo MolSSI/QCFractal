@@ -10,13 +10,11 @@ import pytest
 
 from qcarchivetesting import test_users
 from qcfractal.components.internal_jobs.socket import InternalJobSocket
-from qcfractal.testing_helpers import QCATestingSnowflake
 from qcportal import PortalRequestError
 from qcportal.internal_jobs import InternalJobStatusEnum
 
 if TYPE_CHECKING:
-    from qcfractal.db_socket import SQLAlchemySocket
-    from qcportal.client import PortalClient
+    from qcarchivetesting.testing_classes import QCATestingSnowflake
 
 
 # Add in another function to the internal_jobs socket for testing
@@ -41,7 +39,10 @@ setattr(InternalJobSocket, "dummy_job", dummmy_internal_job)
 setattr(InternalJobSocket, "dummy_job_error", dummmy_internal_job_error)
 
 
-def test_internal_jobs_client_error(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_internal_jobs_client_error(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     id_1 = storage_socket.internal_jobs.add(
         "dummy_job_error", datetime.utcnow(), "internal_jobs.dummy_job_error", {}, None, unique_name=False
     )
@@ -66,7 +67,10 @@ def test_internal_jobs_client_error(snowflake_client: PortalClient, storage_sock
     assert job_1.result == "Expected error"
 
 
-def test_internal_jobs_client_cancel_waiting(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_internal_jobs_client_cancel_waiting(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     id_1 = storage_socket.internal_jobs.add(
         "dummy_job", datetime.utcnow(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
     )
@@ -80,7 +84,10 @@ def test_internal_jobs_client_cancel_waiting(snowflake_client: PortalClient, sto
     assert job_1.progress == 0
 
 
-def test_internal_jobs_client_cancel_running(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_internal_jobs_client_cancel_running(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     id_1 = storage_socket.internal_jobs.add(
         "dummy_job", datetime.utcnow(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
     )
@@ -111,7 +118,10 @@ def test_internal_jobs_client_cancel_running(snowflake_client: PortalClient, sto
         th.join()
 
 
-def test_internal_jobs_client_delete_waiting(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_internal_jobs_client_delete_waiting(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     id_1 = storage_socket.internal_jobs.add(
         "dummy_job", datetime.utcnow(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
     )
@@ -122,7 +132,10 @@ def test_internal_jobs_client_delete_waiting(snowflake_client: PortalClient, sto
         snowflake_client.get_internal_job(id_1)
 
 
-def test_internal_jobs_client_delete_running(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_internal_jobs_client_delete_running(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
     id_1 = storage_socket.internal_jobs.add(
         "dummy_job", datetime.utcnow(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
     )
