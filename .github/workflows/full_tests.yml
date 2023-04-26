@@ -1,4 +1,4 @@
-name: Full Suite End-to-end tests
+name: Full Suite End-to-end tests (old manager)
 
 on:
   push:
@@ -133,7 +133,11 @@ jobs:
       - name: Run Tests
         shell: bash -l {0}
         run: |
+          python3 -m venv testing_env
+          source testing_env/bin/activate
+          pip install --upgrade pip
           cd qcarchive
+          pip install -e ./qcportal -e ./qcfractalcompute -e ./qcfractal -e ./qcarchivetesting
           pytest -v --fractal-uri="http://127.0.0.1:7900" qcarchivetesting
 
       - name: Stop server & worker
