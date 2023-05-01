@@ -56,18 +56,18 @@ jobs:
                  --log-file=qcfractal_core.log --log-file-level=DEBUG \
                  qcfractal qcportal qcfractalcompute
 
-      - name: Code coverage
-        uses: codecov/codecov-action@v1
-        with:
-          file: ./coverage.xml
-          fail_ci_if_error: true
-
-      #- name: 'Save logs/artifacts'
-      #  if: always()
-      #  uses: actions/upload-artifact@v2
+      #- name: Code coverage
+      #  uses: codecov/codecov-action@v1
       #  with:
-      #    name: qcfractal_testing_artifacts_${{ matrix.python-version }}
-      #    path: |
-      #      coverage.xml
-      #      qcfractal_core.log
-      #    retention-days: 7
+      #    file: ./coverage.xml
+      #    fail_ci_if_error: true
+
+      - name: 'Save logs/artifacts'
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: qcfractal_testing_artifacts_${{ matrix.python-version }}
+          path: |
+            coverage.xml
+            qcfractal_core.log
+          retention-days: 7
