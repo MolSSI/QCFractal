@@ -24,6 +24,8 @@ class NEBOptimizationsORM(BaseORM):
     ts = Column(Boolean, primary_key=True)
     optimization_record = relationship(OptimizationRecordORM)
 
+    __table_args__ = (Index("ix_neb_optimizations_optimization_id", "optimization_id"),)
+
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         exclude = self.append_exclude(exclude, "neb_id")
         return BaseORM.model_dict(self, exclude)
@@ -38,6 +40,8 @@ class NEBSinglepointsORM(BaseORM):
     chain_iteration = Column(Integer, primary_key=True)
     position = Column(Integer, primary_key=True)
     singlepoint_record = relationship(SinglepointRecordORM)
+
+    __table_args__ = (Index("ix_neb_singlepoints_singlepoint_id", "singlepoint_id"),)
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         exclude = self.append_exclude(exclude, "neb_id")
