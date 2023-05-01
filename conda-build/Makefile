@@ -11,16 +11,16 @@ clean:
 	rm -Rf $(BUILDDIR)
 
 qcportal:
-	conda-build -c conda-forge --output-folder $(BUILDDIR) qcportal/
+	conda mambabuild -c conda-forge --output-folder $(BUILDDIR) qcportal/
 
 qcfractalcompute: qcportal
-	conda-build -c conda-forge --output-folder $(BUILDDIR) qcfractalcompute/
+	conda mambabuild -c conda-forge --output-folder $(BUILDDIR) qcfractalcompute/
 
 qcfractal: qcfractalcompute
-	conda-build -c conda-forge --output-folder $(BUILDDIR) qcfractal/
+	conda mambabuild -c conda-forge --output-folder $(BUILDDIR) qcfractal/
 
 qcarchivetesting: qcfractal
-	conda-build -c conda-forge --output-folder $(BUILDDIR) qcarchivetesting/
+	conda mambabuild -c conda-forge --output-folder $(BUILDDIR) qcarchivetesting/
 
 upload: 
 	anaconda upload $(BUILDDIR)/noarch/qc*-py_0.tar.bz2 --user $(CFUSER) --label $(CFLABEL)
