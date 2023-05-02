@@ -24,9 +24,10 @@ def test_periodics_server_stats(snowflake: QCATestingSnowflake):
     meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
     assert meta.n_found == 0
 
-    sleep_time = snowflake._qcf_config.statistics_frequency + 0.3
+    sleep_time = snowflake._qcf_config.statistics_frequency
 
     snowflake.start_job_runner()
+    time.sleep(0.25)
 
     for i in range(5):
         time_0 = datetime.utcnow()
