@@ -122,6 +122,9 @@ class ComputeManager:
 
         # Set up the app manager
         self.app_manager = AppManager(self.manager_config)
+        self.executor_programs = {
+            ex: self.app_manager.all_program_info(ex) for ex in self.manager_config.executors.keys()
+        }
         self.all_program_info = self.app_manager.all_program_info()
 
         self.logger.info("-" * 80)
@@ -281,11 +284,11 @@ class ComputeManager:
             shutdown_str = "Shutdown was successful, {} tasks returned to the fractal server"
 
         except Exception as ex:
-            self.logger.warning(f"Deactivation failed: {str(ex).strip()}")
+            self.logger.warning(f"Deactivation failed for {self.name}: {str(ex).strip()}")
             shutdown_str = "Shutdown was not successful, {} tasks not returned."
 
         shutdown_str = shutdown_str.format(f"{self.n_total_active_tasks} active and {self.n_deferred_tasks} stale")
-        self.logger.info(shutdown_str)
+        self.logger.info(f"Manager {self.name}: {shutdown_str}")
 
         # Close down the parsl stuff. Can sometimes get called after the
         # DataFlowKernel atexit handler has been called
@@ -576,7 +579,7 @@ class ComputeManager:
 
                 if open_slots > 0:
                     try:
-                        executor_programs = self.app_manager.all_program_info(executor_label)
+                        executor_programs = self.executor_programs[executor_label]
                         new_tasks = self.client.claim(executor_programs, executor_config.queue_tags, open_slots)
                     except (Timeout, ConnectionError) as ex:
                         self.logger.warning(f"Acquisition of new tasks failed: {str(ex).strip()}")

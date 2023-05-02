@@ -7,6 +7,7 @@ from typing import Dict, List, Any, Optional
 
 import parsl
 
+from qcarchivetesting.testing_classes import _activated_manager_programs
 from qcfractal.components.optimization.testing_helpers import submit_test_data as submit_opt_test_data
 from qcfractal.components.singlepoint.testing_helpers import submit_test_data as submit_sp_test_data
 from qcfractal.config import FractalConfig
@@ -51,6 +52,9 @@ class MockTestingComputeManager(ComputeManager):
             },
         )
         ComputeManager.__init__(self, self._compute_config)
+
+        # overwrite the executor programs for testing
+        self.executor_programs = {"local": _activated_manager_programs}
 
         def cleanup(d):
             d.cleanup()
