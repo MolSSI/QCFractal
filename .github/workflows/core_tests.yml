@@ -57,8 +57,7 @@ jobs:
                  --log-level=DEBUG \
                  qcfractal qcportal qcfractalcompute
 
-      #- name: Code coverage
-      #  uses: codecov/codecov-action@v1
-      #  with:
-      #    file: ./coverage.xml
-      #    fail_ci_if_error: true
+      - name: Code coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.xml
