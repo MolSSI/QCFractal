@@ -1,4 +1,4 @@
-name: Full Suite End-to-end test
+name: Full Suite End-to-end tests (old manager)
 
 on:
   push:
@@ -22,6 +22,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.8", "3.9", "3.10"]
+        adapter: ["pool", "parsl", "dask"]
 
     steps:
       - name: Set up Python ${{ matrix.python-version }}
@@ -79,7 +80,7 @@ jobs:
           miniforge-variant: Mambaforge
           miniforge-version: latest
           activate-environment: qcarchive-worker
-          environment-file: qcarchive/qcarchivetesting/conda-envs/fulltest_worker.yaml
+          environment-file: qcarchive/qcarchivetesting/conda-envs/fulltest_oldworker_${{ matrix.adapter }}.yaml
           auto-activate-base: false
 
       - name: Install QCFractalCompute
@@ -97,8 +98,8 @@ jobs:
         shell: bash -l {0}
         run: |
           mkdir compute; cd compute
-          cp ../qcarchive/qcarchivetesting/qcarchivetesting/config_files/gha_fractal_compute.yaml ./
-          qcfractal-compute-manager --config=gha_fractal_compute.yaml &
+          cp ../qcarchive/qcarchivetesting/qcarchivetesting/config_files/gha_fractal_oldcompute_${{ matrix.adapter }}.yaml ./
+          qcfractal-manager --config=gha_fractal_oldcompute_${{ matrix.adapter }}.yaml &
 
 
       #################################################
@@ -143,5 +144,5 @@ jobs:
       - name: Stop server & worker
         shell: bash -l {0}
         run: |
-          killall qcfractal-compute-manager
+          killall qcfractal-manager
           killall qcfractal-server

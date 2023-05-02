@@ -1,0 +1,21 @@
+cluster: testworker
+loglevel: DEBUG
+update_frequency: 5.0
+
+server:
+  fractal_uri: http://localhost:7900
+  username: null 
+  password: null
+  verify: false
+
+environments:
+  use_manager_environment: True
+
+executors:
+  test_local_1:
+    type: local
+    max_workers: 1
+    cores_per_worker: 2
+    memory_per_worker: 2
+    queue_tags:
+      - '*'

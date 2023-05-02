@@ -1,0 +1,37 @@
+name: qcarchive-worker
+channels:
+  - psi4
+  - conda-forge
+  - defaults
+
+dependencies:
+  - pip
+
+  # QCFractal dependencies
+  # NOTES:
+  #     msgpack-python in conda is msgpack in pypi (due to a rename around v0.5)
+  - numpy
+  - msgpack-python
+  - requests
+  - pyyaml
+  - pydantic
+  - zstandard
+  - qcelemental
+  - qcengine
+  - tabulate
+
+  # QCPortal dependencies
+  - tqdm
+  - pandas
+
+  # Specific codes below
+  - psi4>=1.7
+  - rdkit
+
+  # Adapter
+  - parsl
+
+  # Geometric service
+  - pip:
+    - scipy
+    - "geometric @ git+https://github.com/hjnpark/geomeTRIC@4edcf0ad201420b184887a8c12b3482adf11e0f1"
