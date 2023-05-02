@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - next
+      - next_test
     paths-ignore:
       - 'docs/**'
   pull_request:
@@ -51,9 +52,9 @@ jobs:
       - name: Run tests
         shell: bash -l {0}
         run: |
-          pytest -v --runslow \
+          pytest --runslow \
                  --cov=qcfractal --cov=qcportal --cov=qcfractalcompute --cov-report=xml \
-                 --log-file=qcfractal_core.log --log-file-level=DEBUG \
+                 --log-level=DEBUG \
                  qcfractal qcportal qcfractalcompute
 
       #- name: Code coverage
@@ -61,13 +62,3 @@ jobs:
       #  with:
       #    file: ./coverage.xml
       #    fail_ci_if_error: true
-
-      - name: 'Save logs/artifacts'
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: qcfractal_testing_artifacts_${{ matrix.python-version }}
-          path: |
-            coverage.xml
-            qcfractal_core.log
-          retention-days: 7

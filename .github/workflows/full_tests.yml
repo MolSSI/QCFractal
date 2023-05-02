@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - next
+      - next_test
     paths-ignore:
       - 'docs/**'
   pull_request:
@@ -138,21 +139,10 @@ jobs:
           pip install --upgrade pip
           cd qcarchive
           pip install -e ./qcportal -e ./qcfractalcompute -e ./qcfractal -e ./qcarchivetesting
-          pytest -v --fractal-uri="http://127.0.0.1:7900" qcarchivetesting
+          pytest --log-level=DEBUG --fractal-uri="http://127.0.0.1:7900" qcarchivetesting
 
       - name: Stop server & worker
         shell: bash -l {0}
         run: |
           killall qcfractal-manager
           killall qcfractal-server
-
-      - name: 'Save logs/artifacts'
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: qcfractal_testing_artifacts_${{ matrix.python-version }}
-          path: |
-            server
-            compute
-            !server/postgres/.s.*
-          retention-days: 7
