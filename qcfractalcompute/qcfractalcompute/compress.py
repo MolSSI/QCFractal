@@ -27,7 +27,7 @@ def _compress_common(
     if stdout is not None:
         new_stdout, ctype, clevel = compress(stdout, CompressionEnum.zstd)
         compressed_outputs["stdout"] = {"compression_type": ctype, "compression_level": clevel, "data": new_stdout}
-        update["stderr"] = None
+        update["stdout"] = None
 
     if stderr is not None:
         new_stderr, ctype, clevel = compress(stderr, CompressionEnum.zstd)
@@ -37,7 +37,7 @@ def _compress_common(
     if error is not None:
         new_error, ctype, clevel = compress(error.dict(), CompressionEnum.zstd)
         compressed_outputs["error"] = {"compression_type": ctype, "compression_level": clevel, "data": new_error}
-        update["stderr"] = None
+        update["error"] = None
 
     update["extras"] = result.extras
     if compressed_outputs:
