@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Base Record &#8212; QCArchive 0.50b10.post10+gc5780057 documentation</title>
+    <title>Base Record &#8212; QCArchive 0.50b10.post12+g26e254c0 documentation</title>
   
   
   
@@ -1384,6 +1384,20 @@ If <cite>force_refetch</cite> is True, then this will always fetch the records.<
 <span class="sig-name descname"><span class="pre">deleted</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'deleted'</span></em><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.deleted" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.make_ordered_status">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">make_ordered_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">statuses</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/record_models.html#RecordStatusEnum.make_ordered_status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.make_ordered_status" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns a list of the given statuses but in a defined order</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>statuses</strong> (<em>Iterable</em><em>[</em><a class="reference internal" href="#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>List</em>[<a class="reference internal" href="#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -1599,6 +1613,7 @@ of a record query, and works with all kinds of records.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.waiting"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.waiting</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.cancelled"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.cancelled</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.deleted"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.deleted</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.make_ordered_status"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.make_ordered_status()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.PriorityEnum"><code class="docutils literal notranslate"><span class="pre">PriorityEnum</span></code></a><ul class="visible nav section-nav flex-column">

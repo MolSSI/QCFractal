@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.dataset_models &#8212; QCArchive 0.50b10.post10+gc5780057 documentation</title>
+    <title>qcportal.dataset_models &#8212; QCArchive 0.50b10.post12+g26e254c0 documentation</title>
   
   
   
@@ -665,12 +665,13 @@ document.write(`
 
         <span class="n">ds_status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">()</span>
         <span class="n">all_status</span> <span class="o">=</span> <span class="p">{</span><span class="n">x</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">ds_status</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">y</span><span class="p">}</span>
-        <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;specification&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_status</span><span class="p">]</span>
+        <span class="n">ordered_status</span> <span class="o">=</span> <span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">make_ordered_status</span><span class="p">(</span><span class="n">all_status</span><span class="p">)</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;specification&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ordered_status</span><span class="p">]</span>
 
         <span class="n">table</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">spec</span><span class="p">,</span> <span class="n">spec_statuses</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">ds_status</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
             <span class="n">row</span> <span class="o">=</span> <span class="p">[</span><span class="n">spec</span><span class="p">]</span>
-            <span class="n">row</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">spec_statuses</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">all_status</span><span class="p">)</span>
+            <span class="n">row</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">spec_statuses</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">ordered_status</span><span class="p">)</span>
             <span class="n">table</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">tabulate</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">stralign</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span></div>

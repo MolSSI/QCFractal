@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.record_models &#8212; QCArchive 0.50b10.post10+gc5780057 documentation</title>
+    <title>qcportal.record_models &#8212; QCArchive 0.50b10.post12+g26e254c0 documentation</title>
   
   
   
@@ -491,7 +491,13 @@ document.write(`
         <span class="c1"># a string to an enum</span>
         <span class="k">for</span> <span class="n">status</span> <span class="ow">in</span> <span class="bp">cls</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="n">status</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">status</span></div>
+                <span class="k">return</span> <span class="n">status</span>
+
+<div class="viewcode-block" id="RecordStatusEnum.make_ordered_status"><a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.record_models.RecordStatusEnum.make_ordered_status">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_ordered_status</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">statuses</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a list of the given statuses but in a defined order&quot;&quot;&quot;</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="p">[</span><span class="bp">cls</span><span class="o">.</span><span class="n">complete</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">error</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">running</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">waiting</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">cancelled</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">invalid</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">deleted</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">statuses</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">order</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">x</span><span class="p">))</span></div></div>
 
 
 <span class="k">class</span> <span class="nc">OutputTypeEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
