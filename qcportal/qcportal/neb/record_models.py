@@ -78,7 +78,7 @@ class NEBKeywords(BaseModel):
 
     hessian_reset: bool = Field(
         True,
-        description="Reset Hessian when eigenvalues are below the epsilon. If it is set to False, it will skip updating the hessian.",
+        description="Reset Hessian when eigenvalues are below the epsilon.",
     )
 
     @root_validator
