@@ -250,12 +250,13 @@ class BaseDataset(BaseModel):
 
         ds_status = self.status()
         all_status = {x for y in ds_status.values() for x in y}
-        headers = ["specification"] + [x.value for x in all_status]
+        ordered_status = RecordStatusEnum.make_ordered_status(all_status)
+        headers = ["specification"] + [x.value for x in ordered_status]
 
         table = []
         for spec, spec_statuses in sorted(ds_status.items()):
             row = [spec]
-            row.extend(spec_statuses.get(s, "") for s in all_status)
+            row.extend(spec_statuses.get(s, "") for s in ordered_status)
             table.append(row)
 
         return tabulate(table, headers=headers, stralign="right")

@@ -78,6 +78,12 @@ class RecordStatusEnum(str, Enum):
             if name == status:
                 return status
 
+    @classmethod
+    def make_ordered_status(cls, statuses: Iterable[RecordStatusEnum]) -> List[RecordStatusEnum]:
+        """Returns a list of the given statuses but in a defined order"""
+        order = [cls.complete, cls.error, cls.running, cls.waiting, cls.cancelled, cls.invalid, cls.deleted]
+        return sorted(statuses, key=lambda x: order.index(x))
+
 
 class OutputTypeEnum(str, Enum):
     """
