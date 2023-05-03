@@ -354,7 +354,7 @@ class ServerInfoSocket:
             stmt = stmt.limit(query_data.limit)
             stmt = stmt.distinct(AccessLogORM.id)
             results = session.execute(stmt).scalars().all()
-            result_dicts = [x.model_dict() for x in results]
+            result_dicts = [x.model_dict() for x in sorted(results, key=lambda x: x.access_date, reverse=True)]
 
         if query_data.include_metadata:
             meta = QueryMetadata(n_found=n_found)
@@ -520,7 +520,7 @@ class ServerInfoSocket:
             stmt = stmt.limit(query_data.limit)
             stmt = stmt.distinct(InternalErrorLogORM.id)
             results = session.execute(stmt).scalars().all()
-            result_dicts = [x.model_dict() for x in results]
+            result_dicts = [x.model_dict() for x in sorted(results, key=lambda x: x.error_date, reverse=True)]
 
         if query_data.include_metadata:
             meta = QueryMetadata(n_found=n_found)
@@ -576,7 +576,9 @@ class ServerInfoSocket:
             stmt = stmt.limit(query_data.limit)
             stmt = stmt.distinct(ServerStatsLogORM.id)
             results = session.execute(stmt).scalars().all()
-            result_dicts = [x.model_dict() for x in results]
+
+            # TODO - could be done in sql query (with subquery?)
+            result_dicts = [x.model_dict() for x in sorted(results, key=lambda x: x.timestamp, reverse=True)]
 
         if query_data.include_metadata:
             meta = QueryMetadata(n_found=n_found)
