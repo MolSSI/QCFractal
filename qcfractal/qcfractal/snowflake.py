@@ -6,6 +6,7 @@ import multiprocessing
 import os
 import secrets
 import tempfile
+import threading
 import time
 import weakref
 from queue import Empty  # Just for exception handling
@@ -29,17 +30,33 @@ if TYPE_CHECKING:
 
 def _flask_process(
     qcf_config: FractalConfig,
-    finished_queue: Optional[multiprocessing.Queue] = None,
-    started_event: Optional[multiprocessing.Event] = None,
+    logging_queue: multiprocessing.Queue,
+    finished_queue: multiprocessing.Queue,
+    started_event: multiprocessing.Event,
 ) -> None:
+
+    qh = logging.handlers.QueueHandler(logging_queue)
+    logger = logging.getLogger()
+    logger.handlers.clear()
+    logger.addHandler(qh)
+
+    # Make werkzeug be quiet
+    # If not set, will default to ignore
+    wlogger = logging.getLogger("werkzeug")
+    wlogger.setLevel(logger.getEffectiveLevel())
 
     flask = SimpleFlask(qcf_config, finished_queue, started_event)
     flask.start()
 
 
-def _compute_process(compute_config: FractalComputeConfig) -> None:
+def _compute_process(compute_config: FractalComputeConfig, logging_queue: multiprocessing.Queue) -> None:
 
     import signal
+
+    qh = logging.handlers.QueueHandler(logging_queue)
+    logger = logging.getLogger()
+    logger.handlers.clear()
+    logger.addHandler(qh)
 
     compute = ComputeManager(compute_config)
 
@@ -52,9 +69,14 @@ def _compute_process(compute_config: FractalComputeConfig) -> None:
     compute.start()
 
 
-def _job_runner_process(qcf_config: FractalConfig) -> None:
+def _job_runner_process(qcf_config: FractalConfig, logging_queue: multiprocessing.Queue) -> None:
 
     import signal
+
+    qh = logging.handlers.QueueHandler(logging_queue)
+    logger = logging.getLogger()
+    logger.handlers.clear()
+    logger.addHandler(qh)
 
     job_runner = FractalJobRunner(qcf_config, None)
 
@@ -65,6 +87,16 @@ def _job_runner_process(qcf_config: FractalConfig) -> None:
     signal.signal(signal.SIGTERM, signal_handler)
 
     job_runner.start()
+
+
+def _logging_thread(logging_queue):
+    while True:
+        record = logging_queue.get()
+        if record is None:
+            break
+        logger = logging.getLogger(record.name)
+
+        logger.handle(record)
 
 
 class FractalSnowflake:
@@ -85,7 +117,18 @@ class FractalSnowflake:
         This can also be used as a context manager (`with FractalSnowflake(...) as s:`)
         """
 
+        # Multiprocessing context - generally use fork
+        self._mp_context = multiprocessing.get_context("fork")
+
         self._logger = logging.getLogger("fractal_snowflake")
+
+        # Configure logging
+        # We receive log entries from various processes via a queue
+        # See https://docs.python.org/3/howto/logging-cookbook.html#logging-to-a-single-file-from-multiple-processes
+
+        self._logging_queue = self._mp_context.Queue()
+        self._logging_thread = threading.Thread(target=_logging_thread, args=(self._logging_queue,), daemon=True)
+        self._logging_thread.start()
 
         # Create a temporary directory for everything
         self._tmpdir = tempfile.TemporaryDirectory()
@@ -136,8 +179,6 @@ class FractalSnowflake:
         ######################################
         # Set up the various components      #
         ######################################
-        # Multiprocessing context - generally use fork
-        self._mp_context = multiprocessing.get_context("fork")
 
         # For Flask
         self._flask_started = multiprocessing.Event()
@@ -170,6 +211,9 @@ class FractalSnowflake:
         # This is updated when starting components
         self._finalizer = None
 
+        # Update now because of the logging thread
+        self._update_finalizer()
+
         if start:
             self.start()
 
@@ -183,12 +227,15 @@ class FractalSnowflake:
             self._compute_proc,
             self._flask_proc,
             self._job_runner_proc,
+            self._logging_thread,
+            self._logging_queue,
         )
 
     def _start_flask(self):
         if self._flask_proc is None:
             self._flask_proc = self._mp_context.Process(
-                target=_flask_process, args=(self._qcf_config, self._finished_queue, self._flask_started)
+                target=_flask_process,
+                args=(self._qcf_config, self._logging_queue, self._finished_queue, self._flask_started),
             )
             self._flask_proc.start()
 
@@ -208,7 +255,9 @@ class FractalSnowflake:
             return
 
         if self._compute_proc is None:
-            self._compute_proc = self._mp_context.Process(target=_compute_process, args=(self._compute_config,))
+            self._compute_proc = self._mp_context.Process(
+                target=_compute_process, args=(self._compute_config, self._logging_queue)
+            )
             self._compute_proc.start()
             self._update_finalizer()
 
@@ -221,7 +270,9 @@ class FractalSnowflake:
 
     def _start_job_runner(self):
         if self._job_runner_proc is None:
-            self._job_runner_proc = self._mp_context.Process(target=_job_runner_process, args=(self._qcf_config,))
+            self._job_runner_proc = self._mp_context.Process(
+                target=_job_runner_process, args=(self._qcf_config, self._logging_queue)
+            )
             self._job_runner_proc.start()
             self._update_finalizer()
 
@@ -233,7 +284,7 @@ class FractalSnowflake:
             self._update_finalizer()
 
     @classmethod
-    def _stop(cls, compute_proc, flask_proc, job_runner_proc):
+    def _stop(cls, compute_proc, flask_proc, job_runner_proc, logging_thread, logging_queue):
         ####################################################################################
         # This is written as a class method so that it can be called by a weakref finalizer
         ####################################################################################
@@ -254,6 +305,9 @@ class FractalSnowflake:
         if flask_proc is not None:
             flask_proc.terminate()
             flask_proc.join()
+
+        logging_queue.put(None)
+        logging_thread.join()
 
     def wait_for_flask(self):
         """
