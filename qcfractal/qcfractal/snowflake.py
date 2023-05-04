@@ -69,7 +69,9 @@ def _compute_process(compute_config: FractalComputeConfig, logging_queue: multip
     compute.start()
 
 
-def _job_runner_process(qcf_config: FractalConfig, logging_queue: multiprocessing.Queue) -> None:
+def _job_runner_process(
+    qcf_config: FractalConfig, logging_queue: multiprocessing.Queue, finished_queue: multiprocessing.Queue
+) -> None:
 
     import signal
 
@@ -78,7 +80,7 @@ def _job_runner_process(qcf_config: FractalConfig, logging_queue: multiprocessin
     logger.handlers.clear()
     logger.addHandler(qh)
 
-    job_runner = FractalJobRunner(qcf_config, None)
+    job_runner = FractalJobRunner(qcf_config, finished_queue)
 
     def signal_handler(signum, frame):
         job_runner.stop()
@@ -271,7 +273,7 @@ class FractalSnowflake:
     def _start_job_runner(self):
         if self._job_runner_proc is None:
             self._job_runner_proc = self._mp_context.Process(
-                target=_job_runner_process, args=(self._qcf_config, self._logging_queue)
+                target=_job_runner_process, args=(self._qcf_config, self._logging_queue, self._finished_queue)
             )
             self._job_runner_proc.start()
             self._update_finalizer()
