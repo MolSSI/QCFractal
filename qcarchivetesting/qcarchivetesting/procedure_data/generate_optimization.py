@@ -1,12 +1,14 @@
 import json
+import logging
 import lzma
 import sys
 
-from qcarchivetesting.data_generator import DataGeneratorComputeProcess
-from qcfractal.process_runner import ProcessRunner
+from qcarchivetesting.data_generator import DataGeneratorComputeThread
 from qcfractal.snowflake import FractalSnowflake
 from qcportal.molecules import Molecule
 from qcportal.serialization import _JSONEncoder
+
+logging.basicConfig(level=logging.WARNING)
 
 if len(sys.argv) != 2:
     raise RuntimeError("Script takes a single argument - path to a test data input file")
@@ -17,7 +19,7 @@ outfile_name = infile_name + ".xz"
 # Load the start of the test data
 print(f"** Reading in data from {infile_name}")
 
-with open(sys.argv[1]) as infile:
+with open(infile_name) as infile:
     test_data = json.load(infile)
 
 
@@ -39,9 +41,7 @@ _, ids = client.add_optimizations(
 record_id = ids[0]
 
 print(f"** Starting compute")
-compute = DataGeneratorComputeProcess(config, compute_workers=1)
-compute_proc = ProcessRunner("snowflake_compute", compute, False)
-compute_proc.start()
+compute = DataGeneratorComputeThread(config, n_workers=1)
 
 print(f"** Waiting for computation to finish")
 snowflake.await_results([record_id], timeout=None)
@@ -59,7 +59,7 @@ result_data = compute.get_data()
 assert len(result_data) == 1
 
 task, result = result_data[0]
-assert task["record_id"] == record_id
+assert task.record_id == record_id
 assert result["success"] is True
 
 test_data["result"] = result
@@ -69,4 +69,4 @@ with lzma.open(outfile_name, "wt") as f:
     json.dump(test_data, f, cls=_JSONEncoder, indent=4, sort_keys=True)
 
 print(f"** Stopping compute worker")
-compute_proc.stop()
+compute.stop()
