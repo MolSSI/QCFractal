@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcfractal.snowflake &#8212; QCArchive 0.50b10.post12+g26e254c0 documentation</title>
+    <title>qcfractal.snowflake &#8212; QCArchive 0.50b10.post18+gc9465065 documentation</title>
   
   
   
@@ -421,6 +421,7 @@ document.write(`
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">secrets</span>
 <span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">import</span> <span class="nn">threading</span>
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">weakref</span>
 <span class="kn">from</span> <span class="nn">queue</span> <span class="kn">import</span> <span class="n">Empty</span>  <span class="c1"># Just for exception handling</span>
@@ -444,17 +445,33 @@ document.write(`
 
 <span class="k">def</span> <span class="nf">_flask_process</span><span class="p">(</span>
     <span class="n">qcf_config</span><span class="p">:</span> <span class="n">FractalConfig</span><span class="p">,</span>
-    <span class="n">finished_queue</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">started_event</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">multiprocessing</span><span class="o">.</span><span class="n">Event</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">logging_queue</span><span class="p">:</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span><span class="p">,</span>
+    <span class="n">finished_queue</span><span class="p">:</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span><span class="p">,</span>
+    <span class="n">started_event</span><span class="p">:</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Event</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+    <span class="n">qh</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">QueueHandler</span><span class="p">(</span><span class="n">logging_queue</span><span class="p">)</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">qh</span><span class="p">)</span>
+
+    <span class="c1"># Make werkzeug be quiet</span>
+    <span class="c1"># If not set, will default to ignore</span>
+    <span class="n">wlogger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;werkzeug&quot;</span><span class="p">)</span>
+    <span class="n">wlogger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logger</span><span class="o">.</span><span class="n">getEffectiveLevel</span><span class="p">())</span>
 
     <span class="n">flask</span> <span class="o">=</span> <span class="n">SimpleFlask</span><span class="p">(</span><span class="n">qcf_config</span><span class="p">,</span> <span class="n">finished_queue</span><span class="p">,</span> <span class="n">started_event</span><span class="p">)</span>
     <span class="n">flask</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
 
-<span class="k">def</span> <span class="nf">_compute_process</span><span class="p">(</span><span class="n">compute_config</span><span class="p">:</span> <span class="n">FractalComputeConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_compute_process</span><span class="p">(</span><span class="n">compute_config</span><span class="p">:</span> <span class="n">FractalComputeConfig</span><span class="p">,</span> <span class="n">logging_queue</span><span class="p">:</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 
     <span class="kn">import</span> <span class="nn">signal</span>
+
+    <span class="n">qh</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">QueueHandler</span><span class="p">(</span><span class="n">logging_queue</span><span class="p">)</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">qh</span><span class="p">)</span>
 
     <span class="n">compute</span> <span class="o">=</span> <span class="n">ComputeManager</span><span class="p">(</span><span class="n">compute_config</span><span class="p">)</span>
 
@@ -467,11 +484,18 @@ document.write(`
     <span class="n">compute</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
 
-<span class="k">def</span> <span class="nf">_job_runner_process</span><span class="p">(</span><span class="n">qcf_config</span><span class="p">:</span> <span class="n">FractalConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_job_runner_process</span><span class="p">(</span>
+    <span class="n">qcf_config</span><span class="p">:</span> <span class="n">FractalConfig</span><span class="p">,</span> <span class="n">logging_queue</span><span class="p">:</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span><span class="p">,</span> <span class="n">finished_queue</span><span class="p">:</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 
     <span class="kn">import</span> <span class="nn">signal</span>
 
-    <span class="n">job_runner</span> <span class="o">=</span> <span class="n">FractalJobRunner</span><span class="p">(</span><span class="n">qcf_config</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">qh</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">QueueHandler</span><span class="p">(</span><span class="n">logging_queue</span><span class="p">)</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">qh</span><span class="p">)</span>
+
+    <span class="n">job_runner</span> <span class="o">=</span> <span class="n">FractalJobRunner</span><span class="p">(</span><span class="n">qcf_config</span><span class="p">,</span> <span class="n">finished_queue</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">signal_handler</span><span class="p">(</span><span class="n">signum</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
         <span class="n">job_runner</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
@@ -480,6 +504,16 @@ document.write(`
     <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">,</span> <span class="n">signal_handler</span><span class="p">)</span>
 
     <span class="n">job_runner</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">_logging_thread</span><span class="p">(</span><span class="n">logging_queue</span><span class="p">):</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">record</span> <span class="o">=</span> <span class="n">logging_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">record</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="FractalSnowflake"><a class="viewcode-back" href="../../overview/snowflake.html#qcfractal.snowflake.FractalSnowflake">[docs]</a><span class="k">class</span> <span class="nc">FractalSnowflake</span><span class="p">:</span>
@@ -500,7 +534,18 @@ document.write(`
 <span class="sd">        This can also be used as a context manager (`with FractalSnowflake(...) as s:`)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="c1"># Multiprocessing context - generally use fork</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mp_context</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="s2">&quot;fork&quot;</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;fractal_snowflake&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Configure logging</span>
+        <span class="c1"># We receive log entries from various processes via a queue</span>
+        <span class="c1"># See https://docs.python.org/3/howto/logging-cookbook.html#logging-to-a-single-file-from-multiple-processes</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logging_queue</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mp_context</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logging_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">_logging_thread</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_logging_queue</span><span class="p">,),</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logging_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
         <span class="c1"># Create a temporary directory for everything</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span>
@@ -551,8 +596,6 @@ document.write(`
         <span class="c1">######################################</span>
         <span class="c1"># Set up the various components      #</span>
         <span class="c1">######################################</span>
-        <span class="c1"># Multiprocessing context - generally use fork</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_mp_context</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="s2">&quot;fork&quot;</span><span class="p">)</span>
 
         <span class="c1"># For Flask</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_flask_started</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
@@ -585,6 +628,9 @@ document.write(`
         <span class="c1"># This is updated when starting components</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_finalizer</span> <span class="o">=</span> <span class="kc">None</span>
 
+        <span class="c1"># Update now because of the logging thread</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_finalizer</span><span class="p">()</span>
+
         <span class="k">if</span> <span class="n">start</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
@@ -598,12 +644,15 @@ document.write(`
             <span class="bp">self</span><span class="o">.</span><span class="n">_compute_proc</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_flask_proc</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_proc</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logging_thread</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logging_queue</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_start_flask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flask_proc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_flask_proc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mp_context</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
-                <span class="n">target</span><span class="o">=</span><span class="n">_flask_process</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finished_queue</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flask_started</span><span class="p">)</span>
+                <span class="n">target</span><span class="o">=</span><span class="n">_flask_process</span><span class="p">,</span>
+                <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logging_queue</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finished_queue</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flask_started</span><span class="p">),</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_flask_proc</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
@@ -623,7 +672,9 @@ document.write(`
             <span class="k">return</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_proc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_proc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mp_context</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">_compute_process</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_compute_config</span><span class="p">,))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_proc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mp_context</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
+                <span class="n">target</span><span class="o">=</span><span class="n">_compute_process</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_compute_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logging_queue</span><span class="p">)</span>
+            <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_compute_proc</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_finalizer</span><span class="p">()</span>
 
@@ -636,7 +687,9 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_start_job_runner</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_proc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_proc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mp_context</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">_job_runner_process</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="p">,))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_proc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mp_context</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
+                <span class="n">target</span><span class="o">=</span><span class="n">_job_runner_process</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logging_queue</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finished_queue</span><span class="p">)</span>
+            <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_proc</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_finalizer</span><span class="p">()</span>
 
@@ -648,7 +701,7 @@ document.write(`
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_finalizer</span><span class="p">()</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">_stop</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">compute_proc</span><span class="p">,</span> <span class="n">flask_proc</span><span class="p">,</span> <span class="n">job_runner_proc</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_stop</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">compute_proc</span><span class="p">,</span> <span class="n">flask_proc</span><span class="p">,</span> <span class="n">job_runner_proc</span><span class="p">,</span> <span class="n">logging_thread</span><span class="p">,</span> <span class="n">logging_queue</span><span class="p">):</span>
         <span class="c1">####################################################################################</span>
         <span class="c1"># This is written as a class method so that it can be called by a weakref finalizer</span>
         <span class="c1">####################################################################################</span>
@@ -669,6 +722,9 @@ document.write(`
         <span class="k">if</span> <span class="n">flask_proc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">flask_proc</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
             <span class="n">flask_proc</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+
+        <span class="n">logging_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="n">logging_thread</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
 
 <div class="viewcode-block" id="FractalSnowflake.wait_for_flask"><a class="viewcode-back" href="../../overview/snowflake.html#qcfractal.snowflake.FractalSnowflake.wait_for_flask">[docs]</a>    <span class="k">def</span> <span class="nf">wait_for_flask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -779,10 +835,10 @@ document.write(`
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">finished_id</span><span class="p">,</span> <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finished_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span>
             <span class="k">except</span> <span class="n">Empty</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Not all tasks finished in </span><span class="si">{</span><span class="n">timeout</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Not all records finished in </span><span class="si">{</span><span class="n">timeout</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
                 <span class="k">return</span> <span class="kc">False</span>
 
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Task finished: id=</span><span class="si">{</span><span class="n">finished_id</span><span class="si">}</span><span class="s2">, status=</span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Record finished: id=</span><span class="si">{</span><span class="n">finished_id</span><span class="si">}</span><span class="s2">, status=</span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
             <span class="c1"># Add it to the list of all completed results we have seen</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_all_completed</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">finished_id</span><span class="p">)</span>
