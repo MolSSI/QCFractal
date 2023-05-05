@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcfractal.snowflake &#8212; QCArchive 0.50b10.post18+gc9465065 documentation</title>
+    <title>qcfractal.snowflake &#8212; QCArchive 0.50b10.post19+g81599b3b documentation</title>
   
   
   
@@ -553,6 +553,12 @@ document.write(`
         <span class="c1"># db is in a subdir of that</span>
         <span class="n">db_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;db&quot;</span><span class="p">)</span>
 
+        <span class="c1"># also parsl run directory and scratch directories</span>
+        <span class="n">parsl_run_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;parsl_run_dir&quot;</span><span class="p">)</span>
+        <span class="n">compute_scratch_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;compute_scratch_dir&quot;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">parsl_run_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">compute_scratch_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">database_config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Make this part of the class so it is kept alive</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_tmp_pgdb</span> <span class="o">=</span> <span class="n">TemporaryPostgres</span><span class="p">(</span><span class="n">data_dir</span><span class="o">=</span><span class="n">db_dir</span><span class="p">)</span>
@@ -607,6 +613,7 @@ document.write(`
         <span class="n">uri</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;http://</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">host</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">port</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_compute_config</span> <span class="o">=</span> <span class="n">FractalComputeConfig</span><span class="p">(</span>
             <span class="n">base_folder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">parsl_run_dir</span><span class="o">=</span><span class="n">parsl_run_dir</span><span class="p">,</span>
             <span class="n">cluster</span><span class="o">=</span><span class="s2">&quot;snowflake_compute&quot;</span><span class="p">,</span>
             <span class="n">update_frequency</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
             <span class="n">server</span><span class="o">=</span><span class="n">FractalServerSettings</span><span class="p">(</span>
@@ -615,7 +622,11 @@ document.write(`
             <span class="p">),</span>
             <span class="n">executors</span><span class="o">=</span><span class="p">{</span>
                 <span class="s2">&quot;local&quot;</span><span class="p">:</span> <span class="n">LocalExecutorConfig</span><span class="p">(</span>
-                    <span class="n">cores_per_worker</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">memory_per_worker</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_workers</span><span class="o">=</span><span class="n">compute_workers</span><span class="p">,</span> <span class="n">queue_tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;*&quot;</span><span class="p">]</span>
+                    <span class="n">cores_per_worker</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">memory_per_worker</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">max_workers</span><span class="o">=</span><span class="n">compute_workers</span><span class="p">,</span>
+                    <span class="n">queue_tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;*&quot;</span><span class="p">],</span>
+                    <span class="n">scratch_directory</span><span class="o">=</span><span class="n">compute_scratch_dir</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">},</span>
         <span class="p">)</span>
