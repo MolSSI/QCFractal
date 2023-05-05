@@ -30,7 +30,7 @@ def geometric_nextchain_conda_app(
         else:
             cmd = ["python3", script_path, str(record_id), f.name]
 
-        proc_result = subprocess.run(cmd, capture_output=True, text=True)
+        proc_result = subprocess.run(cmd, capture_output=True, text=True, cwd=executor_config.scratch_directory)
 
         if proc_result.returncode == 0:
             ret = json.loads(proc_result.stdout)

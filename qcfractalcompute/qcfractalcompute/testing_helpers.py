@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import tempfile
 import threading
 import weakref
@@ -33,8 +34,14 @@ class MockTestingComputeManager(ComputeManager):
         # from the server. This allows us to test dropping deferred tasks without having the manager
         # die due to missed heartbeats
         tmpdir = tempfile.TemporaryDirectory()
+        parsl_run_dir = os.path.join(tmpdir.name, "parsl_run_dir")
+        compute_scratch_dir = os.path.join(tmpdir.name, "compute_scratch_dir")
+        os.makedirs(parsl_run_dir, exist_ok=True)
+        os.makedirs(compute_scratch_dir, exist_ok=True)
+
         self._compute_config = FractalComputeConfig(
             base_folder=tmpdir.name,
+            parsl_run_dir=parsl_run_dir,
             cluster="mock_compute",
             update_frequency=1,
             server_error_retries=3,
@@ -48,6 +55,7 @@ class MockTestingComputeManager(ComputeManager):
                     memory_per_worker=1,
                     max_workers=1,
                     queue_tags=["*"],
+                    scratch_directory=compute_scratch_dir,
                 )
             },
         )

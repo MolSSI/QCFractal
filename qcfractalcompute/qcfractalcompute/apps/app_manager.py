@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import tempfile
 from functools import lru_cache, partial
 from typing import TYPE_CHECKING, Dict, List, Set, Any, Optional
 
@@ -28,7 +29,9 @@ def discover_programs_conda(conda_env_name: Optional[str]) -> Dict[str, Dict[str
     else:
         cmd = ["python3", qcengine_list_path]
 
-    result = subprocess.check_output(cmd, universal_newlines=True)
+    # Use a temporary dir. QCEngine will sometimes write files there (like timer.dat)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        result = subprocess.check_output(cmd, universal_newlines=True, cwd=tmpdir)
 
     # QCEngine differentiates between programs and procedures, but we don't
     program_info = json.loads(result)

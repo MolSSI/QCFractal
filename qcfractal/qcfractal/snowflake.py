@@ -138,6 +138,12 @@ class FractalSnowflake:
         # db is in a subdir of that
         db_dir = os.path.join(self._tmpdir.name, "db")
 
+        # also parsl run directory and scratch directories
+        parsl_run_dir = os.path.join(self._tmpdir.name, "parsl_run_dir")
+        compute_scratch_dir = os.path.join(self._tmpdir.name, "compute_scratch_dir")
+        os.makedirs(parsl_run_dir, exist_ok=True)
+        os.makedirs(compute_scratch_dir, exist_ok=True)
+
         if database_config is None:
             # Make this part of the class so it is kept alive
             self._tmp_pgdb = TemporaryPostgres(data_dir=db_dir)
@@ -192,6 +198,7 @@ class FractalSnowflake:
         uri = f"http://{self._qcf_config.api.host}:{self._qcf_config.api.port}"
         self._compute_config = FractalComputeConfig(
             base_folder=self._tmpdir.name,
+            parsl_run_dir=parsl_run_dir,
             cluster="snowflake_compute",
             update_frequency=5,
             server=FractalServerSettings(
@@ -200,7 +207,11 @@ class FractalSnowflake:
             ),
             executors={
                 "local": LocalExecutorConfig(
-                    cores_per_worker=1, memory_per_worker=1, max_workers=compute_workers, queue_tags=["*"]
+                    cores_per_worker=1,
+                    memory_per_worker=1,
+                    max_workers=compute_workers,
+                    queue_tags=["*"],
+                    scratch_directory=compute_scratch_dir,
                 )
             },
         )
