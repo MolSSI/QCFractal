@@ -243,7 +243,7 @@ class NEBRecordSocket(BaseRecordSocket):
                         )
                         geometries.append(mol_data[0]["geometry"])
                         energies.append(sp_record.properties["return_energy"])
-                        gradients.append(convert_numpy_recursive(sp_record.return_result, flatten=True))
+                        gradients.append(convert_numpy_recursive(sp_record.properties['return_result'], flatten=True))
                     service_state.nebinfo["geometry"] = convert_numpy_recursive(geometries, flatten=False)
                     service_state.nebinfo["energies"] = energies
                     service_state.nebinfo["gradients"] = gradients
