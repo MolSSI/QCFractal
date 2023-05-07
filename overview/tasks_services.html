@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Tasks and Services &#8212; QCArchive 0.50b10.post19+g81599b3b documentation</title>
+    <title>Tasks and Services &#8212; QCArchive 0.50b10.post21+g04f147c2 documentation</title>
   
   
   
@@ -518,7 +518,7 @@ server first.</p>
 <dd class="field-even"><ul class="simple">
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordTask.created_on" title="qcportal.record_models.RecordTask.created_on"><code class="xref py py-obj docutils literal notranslate"><span class="pre">created_on</span> <span class="pre">(datetime.datetime)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordTask.function" title="qcportal.record_models.RecordTask.function"><code class="xref py py-obj docutils literal notranslate"><span class="pre">function</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.record_models.RecordTask.function_kwargs_lb_id" title="qcportal.record_models.RecordTask.function_kwargs_lb_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">function_kwargs_lb_id</span> <span class="pre">(int</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.record_models.RecordTask.function_kwargs_compressed" title="qcportal.record_models.RecordTask.function_kwargs_compressed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">function_kwargs_compressed</span> <span class="pre">(bytes</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordTask.id" title="qcportal.record_models.RecordTask.id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id</span> <span class="pre">(int)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordTask.priority" title="qcportal.record_models.RecordTask.priority"><code class="xref py py-obj docutils literal notranslate"><span class="pre">priority</span> <span class="pre">(qcportal.record_models.PriorityEnum)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordTask.record_id" title="qcportal.record_models.RecordTask.record_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_id</span> <span class="pre">(int)</span></code></a></p></li>
@@ -543,8 +543,8 @@ server first.</p>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.record_models.RecordTask.function_kwargs_lb_id">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">function_kwargs_lb_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.RecordTask.function_kwargs_lb_id" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="qcportal.record_models.RecordTask.function_kwargs_compressed">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">function_kwargs_compressed</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.RecordTask.function_kwargs_compressed" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -688,7 +688,7 @@ server first.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordTask.id"><code class="docutils literal notranslate"><span class="pre">RecordTask.id</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordTask.record_id"><code class="docutils literal notranslate"><span class="pre">RecordTask.record_id</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordTask.function"><code class="docutils literal notranslate"><span class="pre">RecordTask.function</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordTask.function_kwargs_lb_id"><code class="docutils literal notranslate"><span class="pre">RecordTask.function_kwargs_lb_id</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordTask.function_kwargs_compressed"><code class="docutils literal notranslate"><span class="pre">RecordTask.function_kwargs_compressed</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordTask.tag"><code class="docutils literal notranslate"><span class="pre">RecordTask.tag</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordTask.priority"><code class="docutils literal notranslate"><span class="pre">RecordTask.priority</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordTask.required_programs"><code class="docutils literal notranslate"><span class="pre">RecordTask.required_programs</span></code></a></li>
