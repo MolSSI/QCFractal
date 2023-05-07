@@ -15,6 +15,7 @@ from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
+    from qcportal.tasks import TaskInformation
 
 test_specs = [
     ReactionSpecification(
@@ -51,8 +52,8 @@ def compare_reaction_specs(
     return input_spec == output_spec
 
 
-def generate_task_key(task):
-    inp_data = task["function_kwargs"]["input_data"]
+def generate_task_key(task: TaskInformation):
+    inp_data = task.function_kwargs["input_data"]
 
     if inp_data["schema_name"] == "qcschema_optimization_input":
         record_type = "optimization"

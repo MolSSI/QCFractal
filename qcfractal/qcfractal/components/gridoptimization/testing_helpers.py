@@ -19,6 +19,7 @@ from qcportal.utils import recursive_normalizer
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
+    from qcportal.tasks import TaskInformation
 
 
 def compare_gridoptimization_specs(
@@ -82,9 +83,9 @@ test_specs = [
 ]
 
 
-def generate_task_key(task):
+def generate_task_key(task: TaskInformation):
     # task is an optimization
-    inp_data = task["function_kwargs"]["input_data"]
+    inp_data = task.function_kwargs["input_data"]
     assert inp_data["schema_name"] in "qcschema_optimization_input"
 
     mol_hash = inp_data["initial_molecule"]["identifiers"]["molecule_hash"]

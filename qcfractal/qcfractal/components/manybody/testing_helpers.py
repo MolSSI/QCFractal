@@ -15,6 +15,7 @@ from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
+    from qcportal.tasks import TaskInformation
 
 test_specs = [
     ManybodySpecification(
@@ -66,9 +67,9 @@ def compare_manybody_specs(
     return input_spec == output_spec
 
 
-def generate_task_key(task):
+def generate_task_key(task: TaskInformation):
     # task is a singlepoint
-    inp_data = task["function_kwargs"]["input_data"]
+    inp_data = task.function_kwargs["input_data"]
     assert inp_data["schema_name"] in "qcschema_input"
 
     mol_hash = inp_data["molecule"]["identifiers"]["molecule_hash"]

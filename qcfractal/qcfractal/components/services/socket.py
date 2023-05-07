@@ -9,12 +9,10 @@ from sqlalchemy import select, or_
 from sqlalchemy.dialects.postgresql import array_agg
 from sqlalchemy.orm import contains_eager, aliased, defer, selectinload, joinedload
 
-from qcfractal.components.largebinary.db_models import LargeBinaryORM
 from qcfractal.components.record_db_models import BaseRecordORM, RecordComputeHistoryORM
 from qcfractal.db_socket.helpers import (
     get_count,
 )
-from qcportal.compression import CompressionEnum, compress
 from qcportal.generic_result import GenericTaskResult
 from qcportal.metadata_models import InsertMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
@@ -376,19 +374,14 @@ class ServiceSubtaskRecordSocket(BaseRecordSocket):
 
         # Normally, this function is a little more complicated (ie, for others the spec is
         # generated from data in the record). However, this record type is a pretty
-        # transparent passthrough. The function and kwargs_id are stored in the record, so just return them
-        return {"function": record_orm.function, "function_kwargs_lb_id": record_orm.function_kwargs_lb_id}
+        # transparent passthrough. The function and kwargs stored in the record, so just return them
+        return {"function": record_orm.function, "function_kwargs": record_orm.function_kwargs}
 
     def update_completed_task(
         self, session: Session, record_orm: ServiceSubtaskRecordORM, result: GenericTaskResult, manager_name: str
     ) -> None:
 
-        # Isn't a whole lot to do here
-        data, _, _ = compress(result.results, CompressionEnum.zstd)
-        lb_orm = LargeBinaryORM()
-        self.root_socket.largebinary.populate_orm(lb_orm, data, CompressionEnum.zstd, session=session)
-        self.root_socket.largebinary.add_orm(lb_orm, session=session)
-        record_orm.results_lb_id = lb_orm.id
+        record_orm.results = result.results
 
     def add(
         self,
@@ -448,6 +441,7 @@ class ServiceSubtaskRecordSocket(BaseRecordSocket):
                 rec_orm = ServiceSubtaskRecordORM(
                     is_service=False,
                     function=function,
+                    function_kwargs=kw,
                     required_programs=required_programs,
                     status=RecordStatusEnum.waiting,
                     owner_user_id=owner_user_id,
@@ -455,13 +449,6 @@ class ServiceSubtaskRecordSocket(BaseRecordSocket):
                 )
 
                 self.create_task(rec_orm, tag, priority)
-
-                data, _, _ = compress(kw, CompressionEnum.zstd)
-                kwargs_lb_orm = LargeBinaryORM()
-                self.root_socket.largebinary.populate_orm(kwargs_lb_orm, data, CompressionEnum.zstd, session=session)
-                self.root_socket.largebinary.add_orm(kwargs_lb_orm, session=session)
-
-                rec_orm.function_kwargs_lb_id = kwargs_lb_orm.id
 
                 all_orm.append(rec_orm)
                 session.add(rec_orm)

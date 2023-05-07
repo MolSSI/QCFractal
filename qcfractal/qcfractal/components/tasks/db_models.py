@@ -7,15 +7,13 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Index,
+    LargeBinary,
     CheckConstraint,
     UniqueConstraint,
-    DDL,
-    event,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, TEXT
 from sqlalchemy.orm import relationship
 
-from qcfractal.components.largebinary.db_models import LargeBinaryORM
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.db_socket import BaseORM
 
@@ -30,7 +28,7 @@ class TaskQueueORM(BaseORM):
     id = Column(Integer, primary_key=True)
 
     function = Column(String, nullable=True)
-    function_kwargs_lb_id = Column(Integer, ForeignKey(LargeBinaryORM.id), nullable=True)
+    function_kwargs_compressed = Column(LargeBinary, nullable=True)
 
     # For some reason, this can't be array of varchar. If it is, the comparisons
     # when claiming tasks don't work
@@ -52,7 +50,6 @@ class TaskQueueORM(BaseORM):
         Index("ix_task_queue_tag", "tag"),
         Index("ix_task_queue_required_programs", "required_programs"),
         Index("ix_task_queue_waiting_sort", priority.desc(), created_on),
-        Index("ix_task_queue_function_kwargs_lb_id", "function_kwargs_lb_id"),
         UniqueConstraint("record_id", name="ux_task_queue_record_id"),
         # WARNING - these are not autodetected by alembic
         CheckConstraint(
@@ -60,23 +57,3 @@ class TaskQueueORM(BaseORM):
         ),
         CheckConstraint("tag = LOWER(tag)", name="ck_task_queue_tag_lower"),
     )
-
-
-# Trigger for deleting largebinary_store rows when rows of task_queue are deleted
-_del_lb_trigger = DDL(
-    """
-    CREATE FUNCTION qca_task_queue_delete_lb() RETURNS TRIGGER AS
-    $_$
-    BEGIN
-      DELETE FROM largebinary_store WHERE largebinary_store.id = OLD.function_kwargs_lb_id;
-      RETURN OLD;
-    END
-    $_$ LANGUAGE 'plpgsql';
-
-    CREATE TRIGGER qca_task_queue_delete_lb_tr
-    AFTER DELETE ON task_queue
-    FOR EACH ROW EXECUTE PROCEDURE qca_task_queue_delete_lb();
-    """
-)
-
-event.listen(TaskQueueORM.__table__, "after_create", _del_lb_trigger.execute_if(dialect=("postgresql")))

@@ -3,7 +3,6 @@
 # to be registered with the blueprint)
 
 from .molecules import db_models, routes
-from .largebinary import db_models
 from .auth import db_models, routes
 from .serverinfo import db_models, routes
 from .managers import db_models, routes

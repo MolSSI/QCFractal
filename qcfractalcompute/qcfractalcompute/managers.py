@@ -622,10 +622,16 @@ class ComputeManager:
 
         if new_tasks is True and open_slots > 0:
             try:
-                new_tasks = self.client.claim(self.all_program_info, self.queue_tag, open_slots)
+                new_tasks_v2 = self.client.claim(self.all_program_info, self.queue_tag, open_slots)
 
                 # We don't need to deal with task objects, that for manager v2
-                new_tasks = [x.dict() for x in new_tasks]
+                # decompress the kwargs
+                new_tasks = []
+                for task in new_tasks_v2:
+                    t = task.dict(exclude=["function_kwargs_compressed"])
+                    t["function_kwargs"] = t.function_kwargs
+                    new_tasks.append(t)
+
             except ConnectionError as ex:
                 self.logger.warning(f"Acquisition of new tasks failed: {str(ex).strip()}")
                 return

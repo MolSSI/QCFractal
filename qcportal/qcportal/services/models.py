@@ -12,5 +12,5 @@ class ServiceSubtaskRecord(BaseRecord):
 
     required_programs: Dict[str, Any]
     function: str
-    function_kwargs_lb_id: Optional[int]
-    results_lb_id: Optional[int]
+    function_kwargs: Dict[str, Any]
+    results: Optional[Dict[str, Any]]

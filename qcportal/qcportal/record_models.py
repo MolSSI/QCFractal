@@ -312,7 +312,7 @@ class RecordTask(BaseModel):
     record_id: int
 
     function: Optional[str]
-    function_kwargs_lb_id: Optional[int]
+    function_kwargs_compressed: Optional[bytes]
 
     tag: str
     priority: PriorityEnum

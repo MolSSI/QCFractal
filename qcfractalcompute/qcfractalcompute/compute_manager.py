@@ -372,7 +372,9 @@ class ComputeManager:
         for task in tasks:
             task_app = self.app_manager.get_app(self.dflow_kernel, executor_label, task)
             task_future = task_app(
-                task.record_id, task.function_kwargs, executor_config=self.manager_config.executors[executor_label]
+                task.record_id,
+                task.function_kwargs_compressed,
+                executor_config=self.manager_config.executors[executor_label],
             )
             self._task_futures[executor_label][task.id] = task_future
 
@@ -580,16 +582,16 @@ class ComputeManager:
                 if open_slots > 0:
                     try:
                         executor_programs = self.executor_programs[executor_label]
-                        new_tasks = self.client.claim(executor_programs, executor_config.queue_tags, open_slots)
+                        new_task_info = self.client.claim(executor_programs, executor_config.queue_tags, open_slots)
                     except (Timeout, ConnectionError) as ex:
                         self.logger.warning(f"Acquisition of new tasks failed: {str(ex).strip()}")
                         return
 
-                    self.logger.info("Acquired {} new tasks.".format(len(new_tasks)))
+                    self.logger.info("Acquired {} new tasks.".format(len(new_task_info)))
 
                     # Add new tasks to queue
-                    self.preprocess_new_tasks(new_tasks)
-                    self._submit_tasks(executor_label, new_tasks)
+                    self.preprocess_new_tasks(new_task_info)
+                    self._submit_tasks(executor_label, new_task_info)
 
     def preprocess_new_tasks(self, new_tasks: List[TaskInformation]):
         """

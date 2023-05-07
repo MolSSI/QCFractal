@@ -8,8 +8,10 @@ from sqlalchemy import select
 from qcfractal.components.internal_jobs.db_models import InternalJobORM
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.db_socket import SQLAlchemySocket
+from qcportal.compression import decompress, CompressionEnum
 from qcportal.managers import ManagerName
 from qcportal.record_models import RecordStatusEnum
+from qcportal.tasks import TaskInformation
 
 mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
 mname2 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="2234-5678-1234-5678")
@@ -83,7 +85,14 @@ def run_service(
                 # The function that iterates a service returns True if it is finished
                 if job_orm.result is True:
 
-                    rec = session.get(BaseRecordORM, record_id)
+                    rec: BaseRecordORM = session.get(BaseRecordORM, record_id)
+
+                    if rec.status == RecordStatusEnum.error:
+                        print("Error in service dependency")
+                        print(rec.status)
+                        print(rec.compute_history[-1].status)
+                        print(decompress(rec.compute_history[-1].outputs["error"].data, CompressionEnum.zstd))
+
                     assert rec.status == RecordStatusEnum.complete
                     assert rec.service is None
                     finished = True
@@ -97,11 +106,12 @@ def run_service(
 
         # only do 5 tasks at a time. Tests iteration when stuff is not completed
         manager_programs = storage_socket.managers.get([manager_name.fullname])[0]["programs"]
-        manager_tasks = storage_socket.tasks.claim_tasks(manager_name.fullname, manager_programs, ["*"], limit=5)
+        manager_tasks_d = storage_socket.tasks.claim_tasks(manager_name.fullname, manager_programs, ["*"], limit=5)
+        manager_tasks = [TaskInformation(**x) for x in manager_tasks_d]
 
         # Sometimes a task may be duplicated in the service dependencies.
         # The C8H6 test has this "feature"
-        ids = set(x["record_id"] for x in manager_tasks)
+        ids = set(x.record_id for x in manager_tasks)
 
         with storage_socket.session_scope() as session:
             recs = [session.get(BaseRecordORM, i) for i in ids]
@@ -122,7 +132,7 @@ def run_service(
             if task_result is None:
                 raise RuntimeError(f"Cannot find task results! key = {task_key}")
 
-            manager_ret[t["id"]] = task_result
+            manager_ret[t.id] = task_result
 
         rmeta = storage_socket.tasks.update_finished(manager_name.fullname, manager_ret)
         assert rmeta.n_accepted == len(manager_tasks)

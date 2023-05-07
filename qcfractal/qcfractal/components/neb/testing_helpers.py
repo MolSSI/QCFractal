@@ -17,6 +17,7 @@ from qcportal.utils import recursive_normalizer, hash_dict
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
+    from qcportal.tasks import TaskInformation
 
 test_specs = [
     NEBSpecification(
@@ -66,9 +67,9 @@ def compare_neb_specs(
     return input_spec == output_spec
 
 
-def generate_task_key(task):
-    if task["function"] in ("qcengine.compute", "qcengine.compute_procedure"):
-        inp_data = task["function_kwargs"]["input_data"]
+def generate_task_key(task: TaskInformation):
+    if task.function in ("qcengine.compute", "qcengine.compute_procedure"):
+        inp_data = task.function_kwargs["input_data"]
 
         if inp_data["schema_name"] == "qcschema_optimization_input":
             record_type = "optimization"
@@ -83,8 +84,8 @@ def generate_task_key(task):
     else:
         # generic service subtask (nextchain)
         # hash function + kwargs
-        normalized = recursive_normalizer(task["function_kwargs"], digits=6)
-        return task["function"] + "|" + hash_dict(normalized)
+        normalized = recursive_normalizer(task.function_kwargs, digits=6)
+        return task.function + "|" + hash_dict(normalized)
 
 
 def load_test_data(

@@ -11,6 +11,7 @@ from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification, SinglepointDriver, SinglepointProtocols
+from qcportal.tasks import TaskInformation
 from .record_db_models import SinglepointRecordORM
 from .testing_helpers import test_specs, load_test_data, run_test_data
 
@@ -44,16 +45,18 @@ def test_singlepoint_socket_task_spec(
     assert meta.success
 
     tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, activated_manager_programs, ["*"])
+    tasks = [TaskInformation(**t) for t in tasks]
 
     assert len(tasks) == 3
     for t in tasks:
-        assert t["function_kwargs"]["input_data"]["model"] == {"method": spec.method, "basis": spec.basis}
-        assert t["function_kwargs"]["input_data"]["protocols"] == spec.protocols.dict(exclude_defaults=True)
-        assert t["function_kwargs"]["input_data"]["keywords"] == spec.keywords
-        assert t["function_kwargs"]["program"] == spec.program
-        assert t["tag"] == "tag1"
-        assert t["priority"] == PriorityEnum.low
-        assert time_0 < t["created_on"] < time_1
+        function_kwargs = t.function_kwargs
+        assert function_kwargs["input_data"]["model"] == {"method": spec.method, "basis": spec.basis}
+        assert function_kwargs["input_data"]["protocols"] == spec.protocols.dict(exclude_defaults=True)
+        assert function_kwargs["input_data"]["keywords"] == spec.keywords
+        assert function_kwargs["program"] == spec.program
+        assert t.tag == "tag1"
+        assert t.priority == PriorityEnum.low
+        assert time_0 < t.created_on < time_1
 
     rec_id_mol_map = {
         id[0]: all_mols[0],
@@ -61,9 +64,9 @@ def test_singlepoint_socket_task_spec(
         id[2]: all_mols[2],
     }
 
-    assert Molecule(**tasks[0]["function_kwargs"]["input_data"]["molecule"]) == rec_id_mol_map[tasks[0]["record_id"]]
-    assert Molecule(**tasks[1]["function_kwargs"]["input_data"]["molecule"]) == rec_id_mol_map[tasks[1]["record_id"]]
-    assert Molecule(**tasks[2]["function_kwargs"]["input_data"]["molecule"]) == rec_id_mol_map[tasks[2]["record_id"]]
+    assert Molecule(**tasks[0].function_kwargs["input_data"]["molecule"]) == rec_id_mol_map[tasks[0].record_id]
+    assert Molecule(**tasks[1].function_kwargs["input_data"]["molecule"]) == rec_id_mol_map[tasks[1].record_id]
+    assert Molecule(**tasks[2].function_kwargs["input_data"]["molecule"]) == rec_id_mol_map[tasks[2].record_id]
 
 
 def test_singlepoint_socket_add_same_1(storage_socket: SQLAlchemySocket):

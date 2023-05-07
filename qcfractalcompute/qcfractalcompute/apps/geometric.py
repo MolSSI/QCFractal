@@ -2,16 +2,16 @@ from __future__ import annotations
 
 import os
 import tempfile
-from typing import Dict, Any
 
 from qcfractalcompute.config import ExecutorConfig
 
 
 def geometric_nextchain_conda_app(
-    record_id: int, function_kwargs: Dict[str, Any], executor_config: ExecutorConfig, conda_env_name: str
+    record_id: int, function_kwargs_compressed: bytes, executor_config: ExecutorConfig, conda_env_name: str
 ):
-    import subprocess
     import json
+    import subprocess
+    from qcportal.compression import decompress, CompressionEnum
     from qcfractalcompute.apps.helpers import get_conda_env_conda
     from qcfractalcompute.run_scripts import get_script_path
 
@@ -20,6 +20,8 @@ def geometric_nextchain_conda_app(
     env = os.environ.copy()
     env["OMP_NUM_THREADS"] = str(executor_config.cores_per_worker)
     env["MKL_NUM_THREADS"] = str(executor_config.cores_per_worker)
+
+    function_kwargs = decompress(function_kwargs_compressed, CompressionEnum.zstd)
 
     with tempfile.NamedTemporaryFile("w") as f:
         json.dump(function_kwargs, f)
@@ -50,15 +52,18 @@ def geometric_nextchain_conda_app(
 
 def geometric_nextchain_apptainer_app(
     record_id: int,
-    function_kwargs: Dict[str, Any],
+    function_kwargs_compressed: bytes,
     executor_config: ExecutorConfig,
     sif_path: str,
 ):
     import json
+    from qcportal.compression import decompress, CompressionEnum
     from qcfractalcompute.apps.helpers import run_apptainer, get_conda_env_apptainer
     from qcfractalcompute.run_scripts import get_script_path
 
     script_path = get_script_path("geometric_nextchain.py")
+
+    function_kwargs = decompress(function_kwargs_compressed, CompressionEnum.zstd)
 
     with tempfile.NamedTemporaryFile("w") as f:
         json.dump(function_kwargs, f)

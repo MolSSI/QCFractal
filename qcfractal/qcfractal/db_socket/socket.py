@@ -85,7 +85,6 @@ class SQLAlchemySocket:
         self.Session = sessionmaker(bind=self.engine, future=True)
 
         # Create/initialize the subsockets
-        from ..components.largebinary.socket import LargeBinarySocket
         from ..components.internal_jobs.socket import InternalJobSocket
         from ..components.molecules.socket import MoleculeSocket
         from ..components.auth.user_socket import UserSocket
@@ -98,9 +97,6 @@ class SQLAlchemySocket:
         from ..components.services.socket import ServiceSocket
         from ..components.record_socket import RecordSocket
         from ..components.dataset_socket import DatasetSocket
-
-        # Large storage
-        self.largebinary = LargeBinarySocket(self)
 
         # Internal job socket goes first - others may depend on this
         self.internal_jobs = InternalJobSocket(self)
