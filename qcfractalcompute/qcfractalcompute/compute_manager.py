@@ -15,6 +15,7 @@ from parsl.config import Config as ParslConfig
 from parsl.dataflow.dflow import DataFlowKernel
 from parsl.dataflow.futures import Future as ParslFuture
 from parsl.executors import HighThroughputExecutor, ThreadPoolExecutor
+from pkg_resources import parse_version
 from pydantic import BaseModel, Extra, Field, parse_obj_as
 from qcelemental.models import FailedOperation, ComputeError
 from requests.exceptions import Timeout
@@ -94,6 +95,19 @@ class ComputeManager:
             password=config.server.password,
             verify=config.server.verify,
         )
+
+        # Check the allowed manager versions
+        manager_version_lower_limit = parse_version(self.client.server_info["manager_version_lower_limit"])
+        manager_version_upper_limit = parse_version(self.client.server_info["manager_version_upper_limit"])
+
+        manager_version = parse_version(__version__)
+
+        if not manager_version_lower_limit <= manager_version <= manager_version_upper_limit:
+            raise RuntimeError(
+                f"This manager version {str(manager_version)} does not fall within the server's allowed "
+                f"manager versions of [{str(manager_version_lower_limit)}, {str(manager_version_upper_limit)}]."
+                f"You may need to upgrade or downgrade"
+            )
 
         # Load the executors
         self.manager_config = config

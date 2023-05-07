@@ -23,6 +23,7 @@ __all__ = ["ComputeManager"]
 
 from qcportal import ManagerClient
 from qcportal.utils import make_list
+from pkg_resources import parse_version
 from qcportal.managers import ManagerName
 from qcportal.metadata_models import TaskReturnMetadata
 from qcportal.all_results import AllResultTypes
@@ -199,6 +200,19 @@ class ComputeManager:
             password=password,
             verify=verify,
         )
+
+        # Check the allowed manager versions
+        manager_version_lower_limit = parse_version(self.client.server_info["manager_version_lower_limit"])
+        manager_version_upper_limit = parse_version(self.client.server_info["manager_version_upper_limit"])
+
+        manager_version = parse_version(__version__)
+
+        if not manager_version_lower_limit <= manager_version <= manager_version_upper_limit:
+            raise RuntimeError(
+                f"This manager version {str(manager_version)} does not fall within the server's allowed "
+                f"manager versions of [{str(manager_version_lower_limit)}, {str(manager_version_upper_limit)}]."
+                f"You may need to upgrade or downgrade"
+            )
 
         self.cores_per_task = cores_per_task
         self.memory_per_task = memory_per_task

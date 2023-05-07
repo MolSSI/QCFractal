@@ -3,7 +3,12 @@ from flask import current_app
 from qcfractal import __version__ as qcfractal_version
 from qcfractal.api_v1.blueprint import api_v1
 from qcfractal.api_v1.helpers import wrap_route
-from qcfractal.client_versions import client_version_lower_limit, client_version_upper_limit
+from qcfractal.client_versions import (
+    client_version_lower_limit,
+    client_version_upper_limit,
+    manager_version_lower_limit,
+    manager_version_upper_limit,
+)
 from qcfractal.flask_app import storage_socket
 from qcportal.serverinfo import (
     AccessLogSummaryFilters,
@@ -29,6 +34,8 @@ def get_information():
         "api_limits": qcf_cfg.api_limits.dict(),
         "client_version_lower_limit": client_version_lower_limit,
         "client_version_upper_limit": client_version_upper_limit,
+        "manager_version_lower_limit": manager_version_lower_limit,
+        "manager_version_upper_limit": manager_version_upper_limit,
         "motd": storage_socket.serverinfo.get_motd(),
     }
 
