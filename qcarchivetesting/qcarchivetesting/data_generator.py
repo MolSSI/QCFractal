@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from typing import List, Dict, Any
     from qcportal.tasks import TaskInformation
     from qcfractal.config import FractalConfig
+    from qcfractalcompute.apps.models import AppTaskResult
 
 
 def clean_conda_env(d: Dict[str, Any]):
@@ -71,16 +72,14 @@ class DataGeneratorManager(ComputeManager):
 
         weakref.finalize(self, cleanup, tmpdir)
 
-    def postprocess_results(self, results):
-        # results is a dict[executor_label] -> dict[task_id] to result
-        for executor_results in results.values():
-            for task_id, result in executor_results.items():
-                # Return full task + full result (as dict)
-                r_dict = result.dict()
-                clean_conda_env(r_dict)
-                self._result_queue.put((self._task_map[task_id], r_dict))
+    def postprocess_results(self, results: Dict[int, AppTaskResult]):
+        for task_id, app_result in results.items():
+            # Return full task + full result (as dict)
+            r_dict = app_result.result
+            clean_conda_env(r_dict)
+            self._result_queue.put((self._task_map[task_id], r_dict))
 
-    def preprocess_new_tasks(self, new_tasks):
+    def preprocess_new_tasks(self, new_tasks: List[TaskInformation]):
         for task in new_tasks:
             # Store the full task by task id
             self._task_map[task.id] = task

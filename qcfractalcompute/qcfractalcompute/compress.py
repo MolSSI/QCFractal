@@ -2,77 +2,65 @@
 Helpers for compressing data to send back to the server
 """
 
-from typing import Union, Dict, Any
+from typing import Dict, Any
 
-from qcelemental.models import AtomicResult, OptimizationResult
+import numpy
 
 from qcportal.compression import CompressionEnum, compress
-from qcportal.generic_result import GenericTaskResult
 
 
-def _compress_common(
-    result: Union[AtomicResult, OptimizationResult, GenericTaskResult],
-):
+def _compress_common(result: Dict[str, Any]):
     """
     Compresses outputs of an AtomicResult or OptimizationResult, storing them in extras
     """
 
-    stdout = result.stdout
-    stderr = result.stderr
-    error = result.error
+    stdout = result.get("stdout", None)
+    stderr = result.get("stderr", None)
+    error = result.get("error", None)
 
     compressed_outputs = {}
-    update = {}
 
     if stdout is not None:
+        result["extras"].setdefault("_qcfractal_compressed_outputs", {})
         new_stdout, ctype, clevel = compress(stdout, CompressionEnum.zstd)
         compressed_outputs["stdout"] = {"compression_type": ctype, "compression_level": clevel, "data": new_stdout}
-        update["stdout"] = None
+        result["stdout"] = None
 
     if stderr is not None:
+        result["extras"].setdefault("_qcfractal_compressed_outputs", {})
         new_stderr, ctype, clevel = compress(stderr, CompressionEnum.zstd)
         compressed_outputs["stderr"] = {"compression_type": ctype, "compression_level": clevel, "data": new_stderr}
-        update["stderr"] = None
+        result["stderr"] = None
 
     if error is not None:
+        result["extras"].setdefault("_qcfractal_compressed_outputs", {})
         new_error, ctype, clevel = compress(error.dict(), CompressionEnum.zstd)
         compressed_outputs["error"] = {"compression_type": ctype, "compression_level": clevel, "data": new_error}
-        update["error"] = None
+        result["error"] = None
 
-    update["extras"] = result.extras
     if compressed_outputs:
-        update["extras"]["_qcfractal_compressed_outputs"] = compressed_outputs
-
-    return result.copy(update=update)
+        result["extras"]["_qcfractal_compressed_outputs"] = compressed_outputs
 
 
-def _compress_native_files(
-    result: Union[AtomicResult, OptimizationResult],
-):
+def _compress_native_files(result: Dict[str, Any]):
     """
     Compresses outputs and native files, storing them in extras
     """
 
-    if not result.native_files:
+    native_files = result.get("native_files", None)
+    if not native_files:
         return result
 
     compressed_nf = {}
-    for name, data in result.native_files.items():
+    for name, data in native_files.items():
         nf, ctype, clevel = compress(data, CompressionEnum.zstd)
-
         compressed_nf[name] = {"compression_type": ctype, "compression_level": clevel, "data": nf}
 
-    update = {"native_files": {}}
-
-    update["extras"] = result.extras
-    update["extras"]["_qcfractal_compressed_native_files"] = compressed_nf
-
-    return result.copy(update=update)
+    result["native_files"] = {}
+    result["extras"]["_qcfractal_compressed_native_files"] = compressed_nf
 
 
-def _compress_optimizationresult(
-    result: OptimizationResult,
-):
+def _compress_optimizationresult(result: Dict[str, Any]):
     """
     Compresses outputs inside an OptimizationResult, storing them in extras
 
@@ -80,34 +68,53 @@ def _compress_optimizationresult(
     """
 
     # Handle the trajectory
-    trajectory = [_compress_common(x) for x in result.trajectory]
-    result = result.copy(update={"trajectory": trajectory})
+    if result.get("trajectory", None):
+        for x in result["trajectory"]:
+            _compress_common(x)
 
     # Now handle the outputs of the optimization itself
-    return _compress_common(result)
+    _compress_common(result)
 
 
-def compress_results(
-    results: Dict[int, Any],
-):
+def _convert_numpy(obj):
+    if isinstance(obj, dict):
+        return {k: _convert_numpy(v) for k, v in obj.items()}
+    elif isinstance(obj, (list, tuple, set)):
+        return [_convert_numpy(v) for v in obj]
+    elif isinstance(obj, numpy.ndarray):
+        if obj.shape:
+            return obj.ravel().tolist()
+        else:
+            return obj.tolist()
+    else:
+        return obj
+
+
+def compress_result(result: Dict[str, Any]) -> bytes:
     """
-    Compress outputs and native files inside results, storing them in extras
+    Compress outputs and native files inside results, storing them in extras. Then compress the whole result
+
+    Outputs and native files are put into the database compressed, so no decompression is done
+    until someone requests them (and then decompression happens on the client)
 
     The compressed outputs are stored in extras. For OptimizationResult, the outputs for the optimization
     are stored in the extras field of the OptimizationResult, while the outputs for the trajectory
     are stored in the extras field for the AtomicResults within the trajectory
     """
 
-    ret = {}
-    for k, result in results.items():
-        if isinstance(result, AtomicResult):
-            ret[k] = _compress_common(result)
-            ret[k] = _compress_native_files(ret[k])
-        elif isinstance(result, OptimizationResult):
-            ret[k] = _compress_optimizationresult(result)
-        elif isinstance(result, GenericTaskResult):
-            ret[k] = _compress_common(result)
-        else:
-            ret[k] = result
+    result = _convert_numpy(result)
+    schema_type = result.get("schema_name", None)
 
-    return ret
+    if schema_type == "qcschema_output":
+        _compress_common(result)
+        _compress_native_files(result)
+    elif schema_type == "qcschema_optimization_output":
+        _compress_optimizationresult(result)
+    elif schema_type == "qca_generic_task_result":
+        _compress_common(result)
+    else:
+        pass
+
+    # Compress the whole thing
+    r, _, _ = compress(result, CompressionEnum.zstd)
+    return r

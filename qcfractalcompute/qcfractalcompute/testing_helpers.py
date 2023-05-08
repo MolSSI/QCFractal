@@ -4,7 +4,7 @@ import os
 import tempfile
 import threading
 import weakref
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Optional
 
 import parsl
 
@@ -13,6 +13,8 @@ from qcfractal.components.optimization.testing_helpers import submit_test_data a
 from qcfractal.components.singlepoint.testing_helpers import submit_test_data as submit_sp_test_data
 from qcfractal.config import FractalConfig
 from qcfractal.db_socket import SQLAlchemySocket
+from qcfractalcompute.apps.models import AppTaskResult
+from qcfractalcompute.compress import compress_result
 from qcfractalcompute.compute_manager import ComputeManager
 from qcfractalcompute.config import FractalComputeConfig, FractalServerSettings, LocalExecutorConfig
 from qcportal.all_results import AllResultTypes
@@ -79,11 +81,11 @@ class MockTestingComputeManager(ComputeManager):
 
         # A mock app that just returns the result data given to it after two seconds
         @parsl.python_app(data_flow_kernel=self.dflow_kernel)
-        def _mock_app(result: Any) -> Any:
+        def _mock_app(result: AllResultTypes) -> AppTaskResult:
             import time
 
             time.sleep(2)
-            return result
+            return AppTaskResult(success=result.success, walltime=2.0, result_compressed=compress_result(result.dict()))
 
         for task in tasks:
             self._record_id_map[task.id] = task.record_id

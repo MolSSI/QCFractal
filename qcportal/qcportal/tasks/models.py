@@ -3,7 +3,6 @@ from typing import Dict, List, Any, Optional
 
 from pydantic import Field, BaseModel, constr, Extra
 
-from qcportal.all_results import AllResultTypes
 from qcportal.base_models import RestModelBase
 from qcportal.compression import decompress, CompressionEnum
 from qcportal.managers import ManagerName
@@ -19,7 +18,7 @@ class TaskClaimBody(RestModelBase):
 
 class TaskReturnBody(RestModelBase):
     name_data: ManagerName = Field(..., description="Name information about this manager")
-    results: Dict[int, AllResultTypes]
+    results_compressed: Dict[int, bytes]
 
 
 class TaskInformation(BaseModel):

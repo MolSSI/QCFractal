@@ -11,6 +11,7 @@ from qcelemental.models import ComputeError, FailedOperation
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.singlepoint.testing_helpers import load_test_data, submit_test_data
+from qcfractalcompute.compress import compress_result
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
 
 if TYPE_CHECKING:
@@ -48,7 +49,10 @@ def test_task_socket_fullworkflow_success(snowflake: QCATestingSnowflake):
 
         rmeta = storage_socket.tasks.update_finished(
             mname.fullname,
-            {tasks[0]["id"]: result_map[tasks[0]["record_id"]], tasks[1]["id"]: result_map[tasks[1]["record_id"]]},
+            {
+                tasks[0]["id"]: compress_result(result_map[tasks[0]["record_id"]].dict()),
+                tasks[1]["id"]: compress_result(result_map[tasks[1]["record_id"]].dict()),
+            },
         )
 
         assert rmeta.n_accepted == 2
@@ -101,7 +105,7 @@ def test_task_socket_fullworkflow_error(snowflake: QCATestingSnowflake):
 
     rmeta = storage_socket.tasks.update_finished(
         mname.fullname,
-        {tasks[0]["id"]: fop, tasks[1]["id"]: fop},
+        {tasks[0]["id"]: compress_result(fop.dict()), tasks[1]["id"]: compress_result(fop.dict())},
     )
 
     assert rmeta.n_accepted == 2
@@ -145,33 +149,35 @@ def test_task_socket_fullworkflow_error_retry(snowflake: QCATestingSnowflake):
     activated_manager_programs = snowflake.activated_manager_programs()
 
     input_spec1, molecule1, result_data1 = load_test_data("sp_psi4_benzene_energy_1")
+    result_data1_compressed = compress_result(result_data1.dict())
 
     meta1, id1 = storage_socket.records.singlepoint.add(
         [molecule1], input_spec1, "tag1", PriorityEnum.normal, None, None
     )
 
     fop = FailedOperation(error=ComputeError(error_type="test_error", error_message="this is a test error"))
+    fop_compressed = compress_result(fop.dict())
 
     # Sends back an error. Do it a few times
     time_0 = datetime.utcnow()
     tasks = storage_socket.tasks.claim_tasks(mname.fullname, activated_manager_programs, ["*"])
-    storage_socket.tasks.update_finished(mname.fullname, {tasks[0]["id"]: fop})
+    storage_socket.tasks.update_finished(mname.fullname, {tasks[0]["id"]: fop_compressed})
     storage_socket.records.reset(id1)
 
     time_1 = datetime.utcnow()
     tasks = storage_socket.tasks.claim_tasks(mname.fullname, activated_manager_programs, ["*"])
-    storage_socket.tasks.update_finished(mname.fullname, {tasks[0]["id"]: fop})
+    storage_socket.tasks.update_finished(mname.fullname, {tasks[0]["id"]: fop_compressed})
     storage_socket.records.reset(id1)
 
     time_2 = datetime.utcnow()
     tasks = storage_socket.tasks.claim_tasks(mname.fullname, activated_manager_programs, ["*"])
-    storage_socket.tasks.update_finished(mname.fullname, {tasks[0]["id"]: fop})
+    storage_socket.tasks.update_finished(mname.fullname, {tasks[0]["id"]: fop_compressed})
     storage_socket.records.reset(id1)
 
     # Now succeed
     time_3 = datetime.utcnow()
     tasks = storage_socket.tasks.claim_tasks(mname.fullname, activated_manager_programs, ["*"])
-    storage_socket.tasks.update_finished(mname.fullname, {tasks[0]["id"]: result_data1})
+    storage_socket.tasks.update_finished(mname.fullname, {tasks[0]["id"]: result_data1_compressed})
     time_4 = datetime.utcnow()
 
     with storage_socket.session_scope() as session:
@@ -223,12 +229,14 @@ def test_task_socket_fullworkflow_error_autoreset(snowflake: QCATestingSnowflake
     )
 
     fop_u = FailedOperation(error=ComputeError(error_type="unknown_error", error_message="this is a test error"))
+    fop_u_compressed = compress_result(fop_u.dict())
     fop_r = FailedOperation(error=ComputeError(error_type="random_error", error_message="this is a test error"))
+    fop_r_compressed = compress_result(fop_r.dict())
 
     # Sends back an error
     with storage_socket.session_scope() as session:
         tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, activated_manager_programs, ["*"])
-        storage_socket.tasks.update_finished(activated_manager_name.fullname, {tasks[0]["id"]: fop_r})
+        storage_socket.tasks.update_finished(activated_manager_name.fullname, {tasks[0]["id"]: fop_r_compressed})
 
         # task should be waiting
         rec = session.get(BaseRecordORM, id1)
@@ -237,7 +245,7 @@ def test_task_socket_fullworkflow_error_autoreset(snowflake: QCATestingSnowflake
 
         # Claim again, and return a different error
         tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, activated_manager_programs, ["*"])
-        storage_socket.tasks.update_finished(activated_manager_name.fullname, {tasks[0]["id"]: fop_u})
+        storage_socket.tasks.update_finished(activated_manager_name.fullname, {tasks[0]["id"]: fop_u_compressed})
 
         # waiting again...
         session.expire(rec)
@@ -246,7 +254,7 @@ def test_task_socket_fullworkflow_error_autoreset(snowflake: QCATestingSnowflake
 
         # Claim again, and return an unknown error. Should stay in errored state now
         tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, activated_manager_programs, ["*"])
-        storage_socket.tasks.update_finished(activated_manager_name.fullname, {tasks[0]["id"]: fop_u})
+        storage_socket.tasks.update_finished(activated_manager_name.fullname, {tasks[0]["id"]: fop_u_compressed})
 
         session.expire(rec)
         assert rec.status == RecordStatusEnum.error

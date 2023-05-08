@@ -14,6 +14,7 @@ from qcarchivetesting import caplog_handler_at_level
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.singlepoint.testing_helpers import load_test_data, submit_test_data
+from qcfractalcompute.compress import compress_result
 from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerName
 from qcportal.record_models import RecordStatusEnum
@@ -66,13 +67,14 @@ def test_task_socket_return_manager_noexist(storage_socket: SQLAlchemySocket, se
     )
 
     record_id, result_data = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
+    result_data_compressed = compress_result(result_data.dict())
 
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname, _manager_programs, ["tag1"])
 
     with pytest.raises(ComputeManagerError, match="does not exist"):
         storage_socket.tasks.update_finished(
             "missing_manager",
-            {tasks[0]["id"]: result_data},
+            {tasks[0]["id"]: result_data_compressed},
         )
 
     # Task should still be running
@@ -96,6 +98,8 @@ def test_task_socket_return_manager_inactive(storage_socket: SQLAlchemySocket):
     )
 
     record_id, result_data = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
+    result_data_compressed = compress_result(result_data.dict())
+
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname, _manager_programs, ["tag1"])
 
     storage_socket.managers.deactivate([mname1.fullname])
@@ -103,7 +107,7 @@ def test_task_socket_return_manager_inactive(storage_socket: SQLAlchemySocket):
     with pytest.raises(ComputeManagerError, match="is not active"):
         storage_socket.tasks.update_finished(
             mname1.fullname,
-            {tasks[0]["id"]: result_data},
+            {tasks[0]["id"]: result_data_compressed},
         )
 
 
@@ -129,6 +133,7 @@ def test_task_socket_return_wrongmanager(storage_socket: SQLAlchemySocket, sessi
     )
 
     record_id, result_data = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
+    result_data_compressed = compress_result(result_data.dict())
 
     # Manager 1 claims tasks
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname, _manager_programs, ["tag1"])
@@ -136,7 +141,7 @@ def test_task_socket_return_wrongmanager(storage_socket: SQLAlchemySocket, sessi
     # Manager 2 tries to return it
     rmeta = storage_socket.tasks.update_finished(
         mname2.fullname,
-        {tasks[0]["id"]: result_data},
+        {tasks[0]["id"]: result_data_compressed},
     )
 
     assert rmeta.n_accepted == 0
@@ -167,10 +172,11 @@ def test_task_socket_return_manager_badid(snowflake: QCATestingSnowflake, caplog
     # Manager returns data for a record that doesn't exist
 
     _, _, result_data = load_test_data("sp_psi4_benzene_energy_1")
+    result_data_compressed = compress_result(result_data.dict())
 
     # Should be logged
     with caplog_handler_at_level(caplog, logging.WARNING):
-        rmeta = storage_socket.tasks.update_finished(mname.fullname, {123: result_data})
+        rmeta = storage_socket.tasks.update_finished(mname.fullname, {123: result_data_compressed})
         assert "does not exist in the task queue" in caplog.text
 
     assert rmeta.n_accepted == 0
@@ -199,16 +205,14 @@ def test_task_socket_return_manager_badstatus_1(storage_socket: SQLAlchemySocket
     )
 
     record_id, result_data = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
+    result_data_compressed = compress_result(result_data.dict())
 
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname, _manager_programs, ["tag1"])
 
     storage_socket.records.reset([record_id])
 
     with caplog_handler_at_level(caplog, logging.WARNING):
-        rmeta = storage_socket.tasks.update_finished(
-            mname1.fullname,
-            {tasks[0]["id"]: result_data},
-        )
+        rmeta = storage_socket.tasks.update_finished(mname1.fullname, {tasks[0]["id"]: result_data_compressed})
         assert "not in a running state" in caplog.text
 
     assert rmeta.n_accepted == 0
@@ -243,12 +247,13 @@ def test_task_socket_return_manager_badstatus_2(storage_socket: SQLAlchemySocket
     )
 
     record_id, result_data = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
+    result_data_compressed = compress_result(result_data.dict())
 
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname, _manager_programs, ["tag1"])
 
     storage_socket.tasks.update_finished(
         mname1.fullname,
-        {tasks[0]["id"]: result_data},
+        {tasks[0]["id"]: result_data_compressed},
     )
 
     time_1 = datetime.utcnow()
@@ -256,7 +261,7 @@ def test_task_socket_return_manager_badstatus_2(storage_socket: SQLAlchemySocket
     with caplog_handler_at_level(caplog, logging.WARNING):
         rmeta = storage_socket.tasks.update_finished(
             mname1.fullname,
-            {tasks[0]["id"]: result_data},
+            {tasks[0]["id"]: result_data_compressed},
         )
         assert "does not exist in the task queue" in caplog.text
 
@@ -293,6 +298,7 @@ def test_task_socket_return_manager_badstatus_3(storage_socket: SQLAlchemySocket
     )
 
     record_id, result_data = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
+    result_data_compressed = compress_result(result_data.dict())
 
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname, _manager_programs, ["tag1"])
 
@@ -303,7 +309,7 @@ def test_task_socket_return_manager_badstatus_3(storage_socket: SQLAlchemySocket
     with caplog_handler_at_level(caplog, logging.WARNING):
         rmeta = storage_socket.tasks.update_finished(
             mname1.fullname,
-            {tasks[0]["id"]: result_data},
+            {tasks[0]["id"]: result_data_compressed},
         )
         assert "does not exist in the task queue" in caplog.text
 

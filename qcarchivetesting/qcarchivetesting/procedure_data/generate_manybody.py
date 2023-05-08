@@ -64,7 +64,7 @@ if record.status != "complete":
 
 test_data["results"] = {}
 for task, result in result_data:
-    task_key = generate_task_key(task.dict())
+    task_key = generate_task_key(task)
     test_data["results"][task_key] = result
 
 print(f"** Writing output to {outfile_name}")

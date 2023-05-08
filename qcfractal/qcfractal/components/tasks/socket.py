@@ -5,6 +5,7 @@ import traceback
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+import pydantic
 from qcelemental.models import FailedOperation
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import array
@@ -12,7 +13,9 @@ from sqlalchemy.orm import joinedload, Load
 
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.record_db_models import BaseRecordORM
+from qcportal.all_results import AllResultTypes
 from qcportal.compression import CompressionEnum, compress
+from qcportal.compression import decompress
 from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerStatusEnum
 from qcportal.metadata_models import TaskReturnMetadata
@@ -24,7 +27,6 @@ from .reset_logic import should_reset
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from qcportal.all_results import AllResultTypes
     from typing import List, Dict, Tuple, Optional, Any
 
 
@@ -40,7 +42,7 @@ class TaskSocket:
         self._tasks_claim_limit = root_socket.qcf_config.api_limits.manager_tasks_claim
 
     def update_finished(
-        self, manager_name: str, results: Dict[int, AllResultTypes], *, session: Optional[Session] = None
+        self, manager_name: str, results_compressed: Dict[int, bytes], *, session: Optional[Session] = None
     ) -> TaskReturnMetadata:
         """
         Insert data from finished calculations into the database
@@ -49,14 +51,14 @@ class TaskSocket:
         ----------
         manager_name
             The name of the manager submitting the results
-        results
+        results_compressed
             Results (in QCSchema format), with the task_id as the key
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
         """
 
-        all_task_ids = list(results.keys())
+        all_task_ids = list(results_compressed.keys())
 
         self._logger.info("Received completed tasks from {}.".format(manager_name))
         self._logger.info("    Task ids: " + " ".join(str(x) for x in all_task_ids))
@@ -83,7 +85,10 @@ class TaskSocket:
             # For automatic resetting
             to_be_reset: List[int] = []
 
-            for task_id, result in results.items():
+            for task_id, result_compressed in results_compressed.items():
+
+                result_dict = decompress(result_compressed, CompressionEnum.zstd)
+                result = pydantic.parse_obj_as(AllResultTypes, result_dict)
 
                 # We load one at a time. This works well with 'with_for_update'
                 # which will do row locking. This lock is released on commit or rollback
@@ -206,7 +211,7 @@ class TaskSocket:
 
         self._logger.info(
             "Processed {} returned tasks ({} successful, {} failed, {} rejected).".format(
-                len(results), len(tasks_success), len(tasks_failures), len(tasks_rejected)
+                len(results_compressed), len(tasks_success), len(tasks_failures), len(tasks_rejected)
             )
         )
 

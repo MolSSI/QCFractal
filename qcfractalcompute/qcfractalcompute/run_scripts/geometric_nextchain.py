@@ -39,11 +39,13 @@ if __name__ == "__main__":
 
     if success:
         ret = {
+            "schema_name": "qca_generic_task_result",
             "id": record_id,
             "success": True,
             "stdout": stdout if stdout else None,  # convert empty string to None
             "stderr": stderr if stderr else None,
             "results": results,
+            "extras": {},
             "provenance": {
                 "creator": "geometric.neb.nextchain",
                 "version": geometric.__version__,

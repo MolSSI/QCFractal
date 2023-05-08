@@ -8,6 +8,7 @@ from qcelemental.models import Molecule, FailedOperation, ComputeError, AtomicRe
 
 from qcarchivetesting.helpers import read_record_data
 from qcfractal.components.singlepoint.record_db_models import SinglepointRecordORM
+from qcfractalcompute.compress import compress_result
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification, SinglepointDriver
 
@@ -99,7 +100,9 @@ def run_test_data(
     manager_programs = storage_socket.managers.get([manager_name.fullname])[0]["programs"]
     tasks = storage_socket.tasks.claim_tasks(manager_name.fullname, manager_programs, [tag], limit=100)
     assert len(tasks) == 1
-    result_dict = {tasks[0]["id"]: result}
+
+    result_compressed = compress_result(result.dict())
+    result_dict = {tasks[0]["id"]: result_compressed}
 
     storage_socket.tasks.update_finished(manager_name.fullname, result_dict)
     time_2 = datetime.utcnow()

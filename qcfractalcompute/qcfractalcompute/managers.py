@@ -17,7 +17,7 @@ from qcelemental.models import Molecule, FailedOperation
 
 from . import __version__
 from .adapters import build_queue_adapter
-from .compress import compress_results
+from .compress import compress_result
 
 __all__ = ["ComputeManager"]
 
@@ -486,11 +486,7 @@ class ComputeManager:
         results = self.queue_adapter.acquire_complete()
 
         # Compress the stdout/stderr/error outputs, and native files
-        results = compress_results(results)
-
-        # Any post-processing tasks
-        # Sometimes used for saving data for later
-        self.postprocess_results(results)
+        results = {k: compress_result(v) for k, v in results.items()}
 
         # Stats fetching for running tasks, as close to the time we got the jobs as we can
         last_time = self.statistics.last_update_time
@@ -652,27 +648,8 @@ class ComputeManager:
 
             self.logger.info("Acquired {} new tasks.".format(len(new_tasks)))
 
-            # Add new tasks to queue
-            self.preprocess_new_tasks(new_tasks)
-
             self.queue_adapter.submit_tasks(new_tasks)
             self.active += len(new_tasks)
-
-    def preprocess_new_tasks(self, new_tasks):
-        """
-        Any processing to do to the new tasks
-
-        To be overridden by a derived class. Sometimes used to save the results for testing
-        """
-        pass
-
-    def postprocess_results(self, results):
-        """
-        Any processing to do to the results
-
-        To be overridden by a derived class. Sometimes used to save the results for testing
-        """
-        pass
 
     def test(self, n=1) -> bool:
         """

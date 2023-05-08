@@ -32,7 +32,9 @@ def return_tasks_v1(body_data: TaskReturnBody):
     """Return finished tasks"""
 
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.manager_tasks_claim
-    if len(body_data.results) > max_limit:
+    if len(body_data.results_compressed) > max_limit:
         raise LimitExceededError(f"Attempted to return too many results - limit is {max_limit}")
 
-    return storage_socket.tasks.update_finished(manager_name=body_data.name_data.fullname, results=body_data.results)
+    return storage_socket.tasks.update_finished(
+        manager_name=body_data.name_data.fullname, results_compressed=body_data.results_compressed
+    )

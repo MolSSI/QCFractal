@@ -4,6 +4,7 @@ import tempfile
 from typing import Optional
 
 from qcfractalcompute.config import ExecutorConfig
+from .models import AppTaskResult
 
 
 def qcengine_conda_app(
@@ -11,11 +12,10 @@ def qcengine_conda_app(
     function_kwargs_compressed: bytes,
     executor_config: ExecutorConfig,
     conda_env_name: Optional[str],
-):
+) -> AppTaskResult:
     import json
-    import subprocess
     from qcportal.compression import decompress, CompressionEnum
-    from qcfractalcompute.apps.helpers import get_conda_env_conda
+    from qcfractalcompute.apps.helpers import run_conda_subprocess
     from qcfractalcompute.run_scripts import get_script_path
 
     script_path = get_script_path("qcengine_compute.py")
@@ -35,27 +35,8 @@ def qcengine_conda_app(
         json.dump(function_kwargs, f)
         f.flush()
 
-        if conda_env_name:
-            cmd = ["conda", "run", "-n", conda_env_name, "python3", script_path, f.name]
-        else:
-            cmd = ["python3", script_path, f.name]
-
-        proc_result = subprocess.run(cmd, capture_output=True, text=True, cwd=executor_config.scratch_directory)
-
-        if proc_result.returncode == 0:
-            ret = json.loads(proc_result.stdout)
-        else:
-            raise RuntimeError(
-                f"QCEngine failed with error code {proc_result.returncode}\n"
-                f"stdout: {proc_result.stdout}\n"
-                f"stderr: {proc_result.stderr}"
-            )
-
-        # Add conda environment to the provenance
-        if "provenance" in ret:
-            ret["provenance"]["conda_environment"] = get_conda_env_conda(conda_env_name)
-
-        return ret
+        cmd = ["python3", script_path, f.name]
+        return run_conda_subprocess(conda_env_name, cmd, executor_config.scratch_directory, {})
 
 
 def qcengine_apptainer_app(
@@ -63,10 +44,10 @@ def qcengine_apptainer_app(
     function_kwargs_compressed: bytes,
     executor_config: ExecutorConfig,
     sif_path: str,
-):
+) -> AppTaskResult:
     import json
     from qcportal.compression import decompress, CompressionEnum
-    from qcfractalcompute.apps.helpers import run_apptainer, get_conda_env_apptainer
+    from qcfractalcompute.apps.helpers import run_apptainer
     from qcfractalcompute.run_scripts import get_script_path
 
     script_path = get_script_path("qcengine_compute.py")
@@ -89,10 +70,4 @@ def qcengine_apptainer_app(
         volumes = [(script_path, "/qcengine_compute.py"), (f.name, "/input.json")]
         cmd = ["python3", "/qcengine_compute.py", "/input.json"]
 
-        ret = run_apptainer(sif_path, command=cmd, volumes=volumes)
-
-    # Add conda environment to the provenance
-    if "provenance" in ret:
-        ret["provenance"]["conda_environment"] = get_conda_env_apptainer(sif_path)
-
-    return ret
+        return run_apptainer(sif_path, command=cmd, volumes=volumes)

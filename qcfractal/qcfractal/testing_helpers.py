@@ -8,6 +8,7 @@ from sqlalchemy import select
 from qcfractal.components.internal_jobs.db_models import InternalJobORM
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.db_socket import SQLAlchemySocket
+from qcfractalcompute.compress import compress_result
 from qcportal.compression import decompress, CompressionEnum
 from qcportal.managers import ManagerName
 from qcportal.record_models import RecordStatusEnum
@@ -132,7 +133,7 @@ def run_service(
             if task_result is None:
                 raise RuntimeError(f"Cannot find task results! key = {task_key}")
 
-            manager_ret[t.id] = task_result
+            manager_ret[t.id] = compress_result(task_result.dict())
 
         rmeta = storage_socket.tasks.update_finished(manager_name.fullname, manager_ret)
         assert rmeta.n_accepted == len(manager_tasks)

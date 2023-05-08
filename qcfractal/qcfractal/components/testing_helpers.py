@@ -11,6 +11,7 @@ from qcfractal.components.optimization.testing_helpers import load_test_data as 
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.singlepoint.testing_helpers import load_test_data as load_sp_test_data
 from qcfractal.testing_helpers import mname1
+from qcfractalcompute.compress import compress_result
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 
 if TYPE_CHECKING:
@@ -87,9 +88,9 @@ def populate_records_status(storage_socket: SQLAlchemySocket):
         mname1.fullname,
         {
             # tasks[1] is left running (corresponds to record 2)
-            tasks[0]["id"]: result_data_1,
-            tasks[2]["id"]: fop,
-            tasks[3]["id"]: result_data_6,
+            tasks[0]["id"]: compress_result(result_data_1.dict()),
+            tasks[2]["id"]: compress_result(fop.dict()),
+            tasks[3]["id"]: compress_result(result_data_6.dict()),
         },
     )
 
@@ -103,7 +104,8 @@ def populate_records_status(storage_socket: SQLAlchemySocket):
         assert len(tasks) == 1
         assert tasks[0]["tag"] == "tag3"
 
-        storage_socket.tasks.update_finished(mname1.fullname, {tasks[0]["id"]: fop})
+        fop_compress = compress_result(fop.dict())
+        storage_socket.tasks.update_finished(mname1.fullname, {tasks[0]["id"]: fop_compress})
 
     meta = storage_socket.records.cancel(id_4)
     assert meta.n_updated == 1

@@ -1,6 +1,5 @@
 from typing import Optional, List, Dict
 
-from .all_results import AllResultTypes
 from .client_base import PortalClientBase
 from .managers import (
     ManagerName,
@@ -118,17 +117,18 @@ class ManagerClient(PortalClientBase):
 
         return self.make_request("post", "v1/tasks/claim", List[TaskInformation], body=body)
 
-    def return_finished(self, results: Dict[int, AllResultTypes]) -> TaskReturnMetadata:
+    def return_finished(self, results_compressed: Dict[int, bytes]) -> TaskReturnMetadata:
 
         # Chunk based on the server limit
-        results_flat = list(results.items())
+        results_flat = list(results_compressed.items())
         n_results = len(results_flat)
         limit = self.server_info["api_limits"]["manager_tasks_return"]
 
         task_return_meta = TaskReturnMetadata()
         for chunk in range(0, n_results, limit):
             body = TaskReturnBody(
-                name_data=self.manager_name_data, results={k: v for k, v in results_flat[chunk : chunk + limit]}
+                name_data=self.manager_name_data,
+                results_compressed={k: v for k, v in results_flat[chunk : chunk + limit]},
             )
 
             meta = self.make_request("post", "v1/tasks/return", TaskReturnMetadata, body=body)

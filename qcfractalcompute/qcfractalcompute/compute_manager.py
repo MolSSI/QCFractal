@@ -8,7 +8,7 @@ import time
 import traceback
 import uuid
 from collections import defaultdict
-from typing import TYPE_CHECKING, Dict, List, Any
+from typing import TYPE_CHECKING, Dict, List
 
 import parsl.executors.high_throughput.interchange
 from parsl.config import Config as ParslConfig
@@ -16,18 +16,17 @@ from parsl.dataflow.dflow import DataFlowKernel
 from parsl.dataflow.futures import Future as ParslFuture
 from parsl.executors import HighThroughputExecutor, ThreadPoolExecutor
 from pkg_resources import parse_version
-from pydantic import BaseModel, Extra, Field, parse_obj_as
-from qcelemental.models import FailedOperation, ComputeError
+from pydantic import BaseModel, Extra, Field
 from requests.exceptions import Timeout
 
 from qcfractalcompute.apps.app_manager import AppManager
 from qcportal import ManagerClient
-from qcportal.all_results import AllResultTypes
 from qcportal.managers import ManagerName
 from qcportal.metadata_models import TaskReturnMetadata
 from qcportal.tasks import TaskInformation
 from . import __version__
-from .compress import compress_results
+from .apps.models import AppTaskResult
+from .compress import compress_result
 from .config import FractalComputeConfig
 from .executors import build_executor
 
@@ -120,8 +119,8 @@ class ComputeManager:
         self.server_error_retries = self.manager_config.server_error_retries
         self.deferred_task_limit = self.manager_config.deferred_task_limit
 
-        # key = number of retries. value = dict of (task_id, result)
-        self._deferred_tasks: Dict[int, Dict[int, AllResultTypes]] = defaultdict(dict)
+        # key = number of retries. value = dict of (task_id, compressed result)
+        self._deferred_tasks: Dict[int, Dict[int, AppTaskResult]] = defaultdict(dict)
 
         # key = executor label, value = (key = task_id, value = parsl future)
         self._task_futures: Dict[str, Dict[int, ParslFuture]] = {exl: {} for exl in config.executors.keys()}
@@ -347,28 +346,44 @@ class ComputeManager:
                 self.logger.warning("Too many failed heartbeats, shutting down.")
                 self.stop()
 
-    def _acquire_complete_tasks(self) -> Dict[str, Dict[int, Any]]:
-        ret = {}
+    def _acquire_complete_tasks(self) -> Dict[str, Dict[int, AppTaskResult]]:
+
+        # First key is name of executor
+        # Second key is task_id
+        # Value is the result (including compressed computation result)
+        ret: Dict[str, Dict[int, AppTaskResult]] = {}
+
         for executor_label, task_futures in self._task_futures.items():
             ret.setdefault(executor_label, {})
-            finished = []
+
+            # Finished tasks - will be removed from the task_futures dict later
+            finished: List[int] = []
 
             for task_id, task in task_futures.items():
                 if task.done():
                     try:
-                        result = task.result()
-                        ret[executor_label][task_id] = parse_obj_as(AllResultTypes, result)
+                        ret[executor_label][task_id] = task.result()
 
                     except parsl.executors.high_throughput.interchange.ManagerLost as e:
                         msg = "Compute worker lost:\n" + traceback.format_exc()
-                        ret[executor_label][task_id] = FailedOperation(
-                            success=False, error=ComputeError(error_type=e.__class__.__name__, error_message=msg)
+                        failed_op = {
+                            "success": False,
+                            "error": {"error_type": e.__class__.__name__, "error_message": msg},
+                        }
+
+                        ret[executor_label][task_id] = AppTaskResult(
+                            success=False, walltime=0.0, result_compressed=compress_result(failed_op)
                         )
 
                     except Exception as e:
                         msg = "Error getting task result:\n" + traceback.format_exc()
-                        ret[executor_label][task_id] = FailedOperation(
-                            success=False, error=ComputeError(error_type=e.__class__.__name__, error_message=msg)
+                        failed_op = {
+                            "success": False,
+                            "error": {"error_type": e.__class__.__name__, "error_message": msg},
+                        }
+
+                        ret[executor_label][task_id] = AppTaskResult(
+                            success=False, walltime=0.0, result_compressed=compress_result(failed_op)
                         )
 
                     finished.append(task_id)
@@ -392,11 +407,13 @@ class ComputeManager:
             )
             self._task_futures[executor_label][task.id] = task_future
 
-    def _return_finished(self, results: Dict[int, AllResultTypes]) -> TaskReturnMetadata:
+    def _return_finished(self, results: Dict[int, AppTaskResult]) -> TaskReturnMetadata:
         # Handling of exceptions is expected to be done in the calling function
 
-        return_meta = self.client.return_finished(results)
+        to_send = {k: v.result_compressed for k, v in results.items()}
+        return_meta = self.client.return_finished(to_send)
         self.logger.info(f"Successfully return tasks to the fractal server")
+
         if return_meta.accepted_ids:
             self.logger.info(f"Accepted task ids: " + " ".join(str(x) for x in return_meta.accepted_ids))
         if return_meta.rejected_ids:
@@ -461,17 +478,14 @@ class ComputeManager:
 
         results = self._acquire_complete_tasks()
 
-        # Compress the stdout/stderr/error outputs, and native files
-        results = {ex_label: compress_results(ex_results) for ex_label, ex_results in results.items()}
-
-        # Any post-processing tasks
-        # Sometimes used for saving data for later
-        self.postprocess_results(results)
-
         server_up = True
 
         # Return results to the server (per executor)
         for executor_label, executor_results in results.items():
+            # Any post-processing tasks
+            # Sometimes used for saving data for later
+            self.postprocess_results(executor_results)
+
             n_success = 0
             n_result = len(executor_results)
 
@@ -495,35 +509,19 @@ class ComputeManager:
                         task_status = {k: "unknown_error" for k in executor_results.keys()}
                         server_up = False
 
-                for key, result in executor_results.items():
-                    wall_time_seconds = 0.0
+                for key, app_result in executor_results.items():
+                    walltime_seconds = app_result.walltime
 
-                    if result.success:
+                    if app_result.success:
                         n_success += 1
-                        if hasattr(result.provenance, "wall_time"):
-                            wall_time_seconds = float(result.provenance.wall_time)
-
                         task_status[key] += " / success"
                     else:
-                        assert isinstance(result, FailedOperation)
-
-                        task_status[key] += f" / failed: {result.error.error_type}"
-                        failure_messages[key] = result.error
-
-                        # Try to get the wall time in the most fault-tolerant way
-                        try:
-                            if (
-                                result.input_data is not None
-                                and result.input_data.provenance is not None
-                                and hasattr(result.input_data.provenance, "wall_time")
-                            ):
-                                wall_time_seconds = float(result.input_data.provenance.wall_time)
-                        except (AttributeError, TypeError):
-                            # Type error may happen if wall_time is None
-                            pass
+                        task_status[key] += f" / failed"
+                        walltime_seconds += app_result.walltime
+                        failure_messages[key] = app_result.result["error"]
 
                     cores_per_worker = self.manager_config.executors[executor_label].cores_per_worker
-                    self.statistics.total_cpu_hours += wall_time_seconds * cores_per_worker / 3600
+                    self.statistics.total_cpu_hours += walltime_seconds * cores_per_worker / 3600
 
                 n_fail = n_result - n_success
 
@@ -615,7 +613,7 @@ class ComputeManager:
         """
         pass
 
-    def postprocess_results(self, results):
+    def postprocess_results(self, results: Dict[int, AppTaskResult]):
         """
         Any processing to do to the results
 
