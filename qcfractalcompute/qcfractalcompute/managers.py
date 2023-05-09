@@ -423,7 +423,10 @@ class ComputeManager:
         self.logger.info(shutdown_string)
 
     def _return_finished(self, results: Dict[int, AllResultTypes]) -> TaskReturnMetadata:
-        return_meta = self.client.return_finished(results)
+        # Server expects data to be compressed
+        results_compressed = {k: compress_result(v.dict()) for k, v in results.items()}
+        return_meta = self.client.return_finished(results_compressed)
+
         self.logger.info(f"Successfully return tasks to the fractal server")
         if return_meta.accepted_ids:
             self.logger.info(f"Accepted task ids: " + " ".join(str(x) for x in return_meta.accepted_ids))
