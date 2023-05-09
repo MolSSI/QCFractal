@@ -736,9 +736,7 @@ def main():
         raise ValueError("Cores per task must be larger than one!")
 
     if settings.common.adapter == "pool":
-        from multiprocessing import Pool, set_start_method
-
-        set_start_method("spawn")
+        from multiprocessing import Pool
 
         # Error if the number of nodes per jobs is more than 1
         if settings.common.nodes_per_job > 1:
