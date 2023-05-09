@@ -534,8 +534,7 @@ class ComputeManager:
                 if n_fail:
                     self.logger.debug("The following tasks failed with the errors:")
                     for task_id, error_info in failure_messages.items():
-                        self.logger.debug(f"Error for task id {task_id}: {error_info.error_type}")
-                        self.logger.debug("    Backtrace: \n" + str(error_info.error_message))
+                        self.logger.debug(f"Error for task id {task_id}: {error_info['error_type']}")
 
                 # Update the statistics
                 self.statistics.total_successful_tasks += n_success
