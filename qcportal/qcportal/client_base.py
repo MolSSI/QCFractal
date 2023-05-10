@@ -260,7 +260,7 @@ class PortalClientBase:
         # If JWT token expired, automatically renew it and retry once
         if retry and (r.status_code == 401) and "Token has expired" in r.json()["msg"]:
             self._refresh_JWT_token()
-            return self._request(method, endpoint, body=body, retry=False)
+            return self._request(method, endpoint, body=body, url_params=url_params, retry=False)
 
         if r.status_code != 200:
             try:
