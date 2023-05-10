@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcfractal.snowflake &#8212; QCArchive 0.50b10.post27+g9a6715ba documentation</title>
+    <title>qcfractal.snowflake &#8212; QCArchive 0.50b10.post31+g565211a1 documentation</title>
   
   
   
@@ -434,7 +434,7 @@ document.write(`
 <span class="kn">from</span> <span class="nn">qcportal</span> <span class="kn">import</span> <span class="n">PortalClient</span>
 <span class="kn">from</span> <span class="nn">qcportal.record_models</span> <span class="kn">import</span> <span class="n">RecordStatusEnum</span>
 <span class="kn">from</span> <span class="nn">.config</span> <span class="kn">import</span> <span class="n">FractalConfig</span><span class="p">,</span> <span class="n">DatabaseConfig</span><span class="p">,</span> <span class="n">update_nested_dict</span>
-<span class="kn">from</span> <span class="nn">.flask_app</span> <span class="kn">import</span> <span class="n">SimpleFlask</span>
+<span class="kn">from</span> <span class="nn">.flask_app.gunicorn_app</span> <span class="kn">import</span> <span class="n">FractalGunicornApp</span>
 <span class="kn">from</span> <span class="nn">.job_runner</span> <span class="kn">import</span> <span class="n">FractalJobRunner</span>
 <span class="kn">from</span> <span class="nn">.port_util</span> <span class="kn">import</span> <span class="n">find_open_port</span>
 <span class="kn">from</span> <span class="nn">.postgres_harness</span> <span class="kn">import</span> <span class="n">TemporaryPostgres</span>
@@ -443,7 +443,7 @@ document.write(`
     <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span>
 
 
-<span class="k">def</span> <span class="nf">_flask_process</span><span class="p">(</span>
+<span class="k">def</span> <span class="nf">_api_process</span><span class="p">(</span>
     <span class="n">qcf_config</span><span class="p">:</span> <span class="n">FractalConfig</span><span class="p">,</span>
     <span class="n">logging_queue</span><span class="p">:</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span><span class="p">,</span>
     <span class="n">finished_queue</span><span class="p">:</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span><span class="p">,</span>
@@ -455,13 +455,8 @@ document.write(`
     <span class="n">logger</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">qh</span><span class="p">)</span>
 
-    <span class="c1"># Make werkzeug be quiet</span>
-    <span class="c1"># If not set, will default to ignore</span>
-    <span class="n">wlogger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;werkzeug&quot;</span><span class="p">)</span>
-    <span class="n">wlogger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logger</span><span class="o">.</span><span class="n">getEffectiveLevel</span><span class="p">())</span>
-
-    <span class="n">flask</span> <span class="o">=</span> <span class="n">SimpleFlask</span><span class="p">(</span><span class="n">qcf_config</span><span class="p">,</span> <span class="n">finished_queue</span><span class="p">,</span> <span class="n">started_event</span><span class="p">)</span>
-    <span class="n">flask</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="n">api</span> <span class="o">=</span> <span class="n">FractalGunicornApp</span><span class="p">(</span><span class="n">qcf_config</span><span class="p">,</span> <span class="n">finished_queue</span><span class="p">,</span> <span class="n">started_event</span><span class="p">)</span>
+    <span class="n">api</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 
 
 <span class="k">def</span> <span class="nf">_compute_process</span><span class="p">(</span><span class="n">compute_config</span><span class="p">:</span> <span class="n">FractalComputeConfig</span><span class="p">,</span> <span class="n">logging_queue</span><span class="p">:</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -604,10 +599,10 @@ document.write(`
         <span class="c1">######################################</span>
 
         <span class="c1"># For Flask</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_flask_started</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_api_started</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_finished_queue</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mp_context</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_all_completed</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_flask_proc</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="c1"># For the compute manager</span>
         <span class="n">uri</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;http://</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">host</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">port</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -653,29 +648,29 @@ document.write(`
             <span class="bp">self</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_stop</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_compute_proc</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_flask_proc</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_proc</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logging_thread</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logging_queue</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_start_flask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flask_proc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_flask_proc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mp_context</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
-                <span class="n">target</span><span class="o">=</span><span class="n">_flask_process</span><span class="p">,</span>
-                <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logging_queue</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finished_queue</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flask_started</span><span class="p">),</span>
+    <span class="k">def</span> <span class="nf">_start_api</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mp_context</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
+                <span class="n">target</span><span class="o">=</span><span class="n">_api_process</span><span class="p">,</span>
+                <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logging_queue</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finished_queue</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_started</span><span class="p">),</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_flask_proc</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_finalizer</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">wait_for_flask</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait_for_api</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">_stop_flask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flask_proc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_flask_proc</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_flask_proc</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_flask_proc</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_flask_started</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">_stop_api</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_api_started</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_finalizer</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_start_compute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -712,7 +707,7 @@ document.write(`
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_finalizer</span><span class="p">()</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">_stop</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">compute_proc</span><span class="p">,</span> <span class="n">flask_proc</span><span class="p">,</span> <span class="n">job_runner_proc</span><span class="p">,</span> <span class="n">logging_thread</span><span class="p">,</span> <span class="n">logging_queue</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_stop</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">compute_proc</span><span class="p">,</span> <span class="n">api_proc</span><span class="p">,</span> <span class="n">job_runner_proc</span><span class="p">,</span> <span class="n">logging_thread</span><span class="p">,</span> <span class="n">logging_queue</span><span class="p">):</span>
         <span class="c1">####################################################################################</span>
         <span class="c1"># This is written as a class method so that it can be called by a weakref finalizer</span>
         <span class="c1">####################################################################################</span>
@@ -730,21 +725,21 @@ document.write(`
             <span class="n">job_runner_proc</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
             <span class="n">job_runner_proc</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="n">flask_proc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">flask_proc</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
-            <span class="n">flask_proc</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">api_proc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">api_proc</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+            <span class="n">api_proc</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
 
         <span class="n">logging_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
         <span class="n">logging_thread</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
 
-<div class="viewcode-block" id="FractalSnowflake.wait_for_flask"><a class="viewcode-back" href="../../overview/snowflake.html#qcfractal.snowflake.FractalSnowflake.wait_for_flask">[docs]</a>    <span class="k">def</span> <span class="nf">wait_for_flask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="FractalSnowflake.wait_for_api"><a class="viewcode-back" href="../../overview/snowflake.html#qcfractal.snowflake.FractalSnowflake.wait_for_api">[docs]</a>    <span class="k">def</span> <span class="nf">wait_for_api</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Wait for the flask server to come up and then exit</span>
+<span class="sd">        Wait for the flask/api server to come up and then exit</span>
 
 <span class="sd">        If it does not come up after some time, an exception will be raised</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">running</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flask_started</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="mf">10.0</span><span class="p">)</span>
+        <span class="n">running</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_started</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="mf">10.0</span><span class="p">)</span>
         <span class="k">assert</span> <span class="n">running</span>
 
         <span class="c1"># Seems there still may be a small time after the event is triggered and before</span>
@@ -774,7 +769,7 @@ document.write(`
 <span class="sd">        Starts all the components of the snowflake</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_start_flask</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_start_api</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_start_compute</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_start_job_runner</span><span class="p">()</span></div>
 
@@ -786,7 +781,7 @@ document.write(`
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finalizer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_finalizer</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_flask_proc</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_compute_proc</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_proc</span> <span class="o">=</span> <span class="kc">None</span></div>
 
