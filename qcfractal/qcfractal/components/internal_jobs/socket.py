@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import logging
 import select as io_select
+import traceback
 import uuid
 from datetime import datetime, timedelta
 from operator import attrgetter
 from socket import gethostname
 from typing import TYPE_CHECKING
 
-import psycopg2
 from sqlalchemy import select, delete, update, and_, or_, text
 from sqlalchemy.dialects.postgresql import insert
 
@@ -323,8 +323,11 @@ class InternalJobSocket:
                 job_orm.status = InternalJobStatusEnum.complete
                 job_orm.progress = 100
 
-        except Exception as e:
-            result = str(e)
+        except Exception:
+            session.rollback()
+            result = traceback.format_exc()
+            self._logger.error(f"Job {job_orm.id} failed with exception:\n{result}")
+
             job_orm.status = InternalJobStatusEnum.error
 
         if not job_status.deleted():
