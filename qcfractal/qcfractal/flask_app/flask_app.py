@@ -3,13 +3,11 @@ from __future__ import annotations
 import importlib
 import logging
 import queue
-import threading
 from typing import TYPE_CHECKING
 
 from flask import Flask
 from flask_jwt_extended import JWTManager
 from werkzeug.routing import IntegerConverter
-from werkzeug.serving import make_server
 
 from qcfractal.db_socket.socket import SQLAlchemySocket
 from .home import home_blueprint
@@ -40,7 +38,9 @@ class SignedIntConverter(IntegerConverter):
     regex = r"-?\d+"
 
 
-def create_flask_app(qcfractal_config: FractalConfig, init_storage: bool = True):
+def create_flask_app(
+    qcfractal_config: FractalConfig, init_storage: bool = True, finished_queue: Optional[queue.Queue] = None
+):
     app = Flask(__name__)
 
     app.url_map.converters["signed_int"] = SignedIntConverter
@@ -77,6 +77,9 @@ def create_flask_app(qcfractal_config: FractalConfig, init_storage: bool = True)
         # Initialize the database socket, API logger, and view handler
         storage_socket.init(qcfractal_config)
 
+    if finished_queue:
+        storage_socket.set_finished_watch(finished_queue)
+
     # Registers the various error and before/after request handlers
     importlib.import_module("qcfractal.flask_app.handlers")
 
@@ -108,30 +111,3 @@ def create_flask_app_dummy():
 
     qcf_cfg = FractalConfig(**cfg)
     return create_flask_app(qcf_cfg, init_storage=False)
-
-
-# From https://stackoverflow.com/questions/15562446/how-to-stop-flask-application-without-using-ctrl-c/45017691#45017691
-class SimpleFlask:
-    def __init__(
-        self,
-        qcf_config: FractalConfig,
-        finished_queue: Optional[queue.Queue] = None,
-        started_event: Optional[threading.Event] = None,
-    ):
-        self.started_event = started_event
-        self.app = create_flask_app(qcf_config)
-
-        if finished_queue is not None:
-            storage_socket.set_finished_watch(finished_queue)
-
-        self.server = make_server(qcf_config.api.host, qcf_config.api.port, self.app, threaded=True)
-
-    def start(self):
-        if self.started_event is not None:
-            with self.app.app_context():
-                self.started_event.set()
-
-        self.server.serve_forever()
-
-    def stop(self):
-        self.server.shutdown()

@@ -11,4 +11,3 @@ api:
   secret_key: THISISASECRETKEY 
   jwt_secret_key: THISISASECRETKEY
   port: 7900
-  keepalive: 90

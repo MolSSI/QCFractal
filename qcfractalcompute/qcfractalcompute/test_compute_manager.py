@@ -153,7 +153,7 @@ def test_manager_deferred_return(snowflake: QCATestingSnowflake):
     assert compute.n_deferred_tasks == 0
 
     # Sever goes down
-    snowflake.stop_flask()
+    snowflake.stop_api()
 
     # Let manager complete some tasks
     time.sleep(3)  # Mock testing adapter waits for two seconds before returning result
@@ -163,7 +163,7 @@ def test_manager_deferred_return(snowflake: QCATestingSnowflake):
     deferred_record_ids = [compute._record_id_map[x] for x in deferred_task_ids]
 
     # Now server comes back
-    snowflake.start_flask()
+    snowflake.start_api()
 
     # Manager can now update
     compute.update(new_tasks=True)
@@ -198,7 +198,7 @@ def test_manager_deferred_drop(snowflake: QCATestingSnowflake, caplog):
         assert compute.n_deferred_tasks == 0
 
         # Sever goes down
-        snowflake.stop_flask()
+        snowflake.stop_api()
 
         # Compute some tasks (each take 2 seconds)
         time.sleep(5)
@@ -219,7 +219,7 @@ def test_manager_deferred_drop(snowflake: QCATestingSnowflake, caplog):
         assert compute.n_deferred_tasks == 0
 
         ## server comes back up
-        snowflake.start_flask()
+        snowflake.start_api()
 
         # Update again (but no new tasks)
         compute.update(new_tasks=False)
@@ -235,7 +235,7 @@ def test_manager_missed_heartbeats_shutdown(snowflake: QCATestingSnowflake):
     compute_thread = QCATestingComputeThread(snowflake._qcf_config)
     compute_thread.start(manual_updates=False)
 
-    snowflake.stop_flask()
+    snowflake.stop_api()
 
     time.sleep(snowflake._qcf_config.heartbeat_frequency * (snowflake._qcf_config.heartbeat_max_missed + 2))
 

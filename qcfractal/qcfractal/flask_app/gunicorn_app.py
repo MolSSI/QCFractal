@@ -10,6 +10,9 @@ from gunicorn.glogging import Logger as GLogger
 from .flask_app import create_flask_app, storage_socket
 
 if TYPE_CHECKING:
+    import queue
+    import threading
+    from typing import Optional
     from ..config import FractalConfig
 
 
@@ -45,11 +48,21 @@ class FractalGunicornLogger(GLogger):
 
 
 class FractalGunicornApp(gunicorn.app.base.BaseApplication):
-    def __init__(self, qcfractal_config: FractalConfig):
+    def __init__(
+        self,
+        qcfractal_config: FractalConfig,
+        finished_queue: Optional[queue.Queue] = None,
+        started_event: Optional[threading.Event] = None,
+    ):
         self.qcfractal_config = qcfractal_config
-        self.application = create_flask_app(qcfractal_config)
+        self.application = create_flask_app(qcfractal_config, finished_queue=finished_queue)
+        self.started_event = started_event
 
         super().__init__()
+
+    def _server_ready(self, server):
+        if self.started_event is not None:
+            self.started_event.set()
 
     def load(self):
         return self.application
@@ -67,7 +80,7 @@ class FractalGunicornApp(gunicorn.app.base.BaseApplication):
             "loglevel": self.qcfractal_config.loglevel,
             "logger_class": FractalGunicornLogger,
             "post_fork": post_fork_cleanup,
-            "keepalive": self.qcfractal_config.api.keepalive,
+            "when_ready": self._server_ready,
         }
 
         if self.qcfractal_config.api.extra_gunicorn_options:

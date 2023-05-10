@@ -19,7 +19,7 @@ from qcfractalcompute.config import FractalComputeConfig, FractalServerSettings,
 from qcportal import PortalClient
 from qcportal.record_models import RecordStatusEnum
 from .config import FractalConfig, DatabaseConfig, update_nested_dict
-from .flask_app import SimpleFlask
+from .flask_app.gunicorn_app import FractalGunicornApp
 from .job_runner import FractalJobRunner
 from .port_util import find_open_port
 from .postgres_harness import TemporaryPostgres
@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from typing import Dict, Any, Sequence, Optional, Set
 
 
-def _flask_process(
+def _api_process(
     qcf_config: FractalConfig,
     logging_queue: multiprocessing.Queue,
     finished_queue: multiprocessing.Queue,
@@ -40,13 +40,8 @@ def _flask_process(
     logger.handlers.clear()
     logger.addHandler(qh)
 
-    # Make werkzeug be quiet
-    # If not set, will default to ignore
-    wlogger = logging.getLogger("werkzeug")
-    wlogger.setLevel(logger.getEffectiveLevel())
-
-    flask = SimpleFlask(qcf_config, finished_queue, started_event)
-    flask.start()
+    api = FractalGunicornApp(qcf_config, finished_queue, started_event)
+    api.run()
 
 
 def _compute_process(compute_config: FractalComputeConfig, logging_queue: multiprocessing.Queue) -> None:
@@ -189,10 +184,10 @@ class FractalSnowflake:
         ######################################
 
         # For Flask
-        self._flask_started = multiprocessing.Event()
+        self._api_started = multiprocessing.Event()
         self._finished_queue = self._mp_context.Queue()
         self._all_completed: Set[int] = set()
-        self._flask_proc = None
+        self._api_proc = None
 
         # For the compute manager
         uri = f"http://{self._qcf_config.api.host}:{self._qcf_config.api.port}"
@@ -238,29 +233,29 @@ class FractalSnowflake:
             self,
             self._stop,
             self._compute_proc,
-            self._flask_proc,
+            self._api_proc,
             self._job_runner_proc,
             self._logging_thread,
             self._logging_queue,
         )
 
-    def _start_flask(self):
-        if self._flask_proc is None:
-            self._flask_proc = self._mp_context.Process(
-                target=_flask_process,
-                args=(self._qcf_config, self._logging_queue, self._finished_queue, self._flask_started),
+    def _start_api(self):
+        if self._api_proc is None:
+            self._api_proc = self._mp_context.Process(
+                target=_api_process,
+                args=(self._qcf_config, self._logging_queue, self._finished_queue, self._api_started),
             )
-            self._flask_proc.start()
+            self._api_proc.start()
 
         self._update_finalizer()
-        self.wait_for_flask()
+        self.wait_for_api()
 
-    def _stop_flask(self):
-        if self._flask_proc is not None:
-            self._flask_proc.terminate()
-            self._flask_proc.join()
-            self._flask_proc = None
-            self._flask_started.clear()
+    def _stop_api(self):
+        if self._api_proc is not None:
+            self._api_proc.terminate()
+            self._api_proc.join()
+            self._api_proc = None
+            self._api_started.clear()
             self._update_finalizer()
 
     def _start_compute(self):
@@ -297,7 +292,7 @@ class FractalSnowflake:
             self._update_finalizer()
 
     @classmethod
-    def _stop(cls, compute_proc, flask_proc, job_runner_proc, logging_thread, logging_queue):
+    def _stop(cls, compute_proc, api_proc, job_runner_proc, logging_thread, logging_queue):
         ####################################################################################
         # This is written as a class method so that it can be called by a weakref finalizer
         ####################################################################################
@@ -315,21 +310,21 @@ class FractalSnowflake:
             job_runner_proc.terminate()
             job_runner_proc.join()
 
-        if flask_proc is not None:
-            flask_proc.terminate()
-            flask_proc.join()
+        if api_proc is not None:
+            api_proc.terminate()
+            api_proc.join()
 
         logging_queue.put(None)
         logging_thread.join()
 
-    def wait_for_flask(self):
+    def wait_for_api(self):
         """
-        Wait for the flask server to come up and then exit
+        Wait for the flask/api server to come up and then exit
 
         If it does not come up after some time, an exception will be raised
         """
 
-        running = self._flask_started.wait(10.0)
+        running = self._api_started.wait(10.0)
         assert running
 
         # Seems there still may be a small time after the event is triggered and before
@@ -359,7 +354,7 @@ class FractalSnowflake:
         Starts all the components of the snowflake
         """
 
-        self._start_flask()
+        self._start_api()
         self._start_compute()
         self._start_job_runner()
 
@@ -371,7 +366,7 @@ class FractalSnowflake:
         if self._finalizer is not None:
             self._finalizer()
 
-        self._flask_proc = None
+        self._api_proc = None
         self._compute_proc = None
         self._job_runner_proc = None
 

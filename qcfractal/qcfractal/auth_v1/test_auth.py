@@ -20,7 +20,7 @@ def module_authtest_snowflake(postgres_server, pytestconfig):
     with QCATestingSnowflake(
         pg_harness,
         encoding,
-        start_flask=True,
+        start_api=True,
         create_users=False,
         enable_security=True,
         allow_unauthenticated_read=False,
