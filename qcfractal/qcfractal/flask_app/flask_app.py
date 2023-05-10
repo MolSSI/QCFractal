@@ -124,7 +124,7 @@ class SimpleFlask:
         if finished_queue is not None:
             storage_socket.set_finished_watch(finished_queue)
 
-        self.server = make_server(qcf_config.api.host, qcf_config.api.port, self.app)
+        self.server = make_server(qcf_config.api.host, qcf_config.api.port, self.app, threaded=True)
 
     def start(self):
         if self.started_event is not None:

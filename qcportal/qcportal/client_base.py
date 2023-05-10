@@ -234,24 +234,12 @@ class PortalClientBase:
 
         # Add "api" to the endpoint. QCPortal only deals with the API
         addr = self.address + "api/" + endpoint
-        kwargs = {"data": body, "verify": self._verify, "timeout": self._timeout}
 
-        if url_params:
-            kwargs["params"] = url_params
+        req = requests.Request(method=method.upper(), url=addr, data=body, params=url_params)
+        prep_req = self._req_session.prepare_request(req)
 
         try:
-            if method == "get":
-                r = self._req_session.get(addr, **kwargs)
-            elif method == "post":
-                r = self._req_session.post(addr, **kwargs)
-            elif method == "put":
-                r = self._req_session.put(addr, **kwargs)
-            elif method == "patch":
-                r = self._req_session.patch(addr, **kwargs)
-            elif method == "delete":
-                r = self._req_session.delete(addr, **kwargs)
-            else:
-                raise KeyError("Method not understood: '{}'".format(method))
+            r = self._req_session.send(prep_req, verify=self._verify, timeout=self._timeout)
         except requests.exceptions.SSLError:
             raise ConnectionRefusedError(_ssl_error_msg) from None
         except requests.exceptions.ConnectionError:
