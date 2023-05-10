@@ -25,7 +25,6 @@ test_specs = [
         keywords=NEBKeywords(
             images=11,
             spring_constant=0.1,
-            energy_weighted=5,
         ),
         singlepoint_specification=QCSpecification(
             program="psi4",
@@ -41,7 +40,6 @@ test_specs = [
         keywords=NEBKeywords(
             images=11,
             spring_constant=0.5,
-            energy_weighted=10,
         ),
         singlepoint_specification=QCSpecification(
             program="psi4",

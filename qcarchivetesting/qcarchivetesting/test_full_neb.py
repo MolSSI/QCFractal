@@ -17,13 +17,10 @@ def test_neb_full_1(fulltest_client: PortalClient):
     neb_keywords = NEBKeywords(
         images=11,
         spring_constant=1,
-        coordinate_system="tric",
-        energy_weighted=None,
         optimize_endpoints=True,
         maximum_force=0.02,
         average_force=0.02,
         optimize_ts=True,
-        align_chain=False,
         epsilon=1e-6,
         hessian_reset=True,
         spring_type=0,

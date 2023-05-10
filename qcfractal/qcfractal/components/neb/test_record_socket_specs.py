@@ -14,7 +14,6 @@ def test_neb_socket_basic_specification(storage_socket: SQLAlchemySocket):
         keywords=NEBKeywords(
             images=31,
             spring_constant=1.0,
-            energy_weighted=10,
             spring_type=2,
         ),
         singlepoint_specification=QCSpecification(
@@ -32,7 +31,6 @@ def test_neb_socket_basic_specification(storage_socket: SQLAlchemySocket):
         keywords=NEBKeywords(
             images=11,
             spring_constant=1.0,
-            energy_weighted=7,
             spring_type=0,
         ),
         singlepoint_specification=QCSpecification(
@@ -49,7 +47,6 @@ def test_neb_socket_basic_specification(storage_socket: SQLAlchemySocket):
         keywords=NEBKeywords(
             images=31,
             spring_constant=1.0,
-            energy_weighted=10,
             spring_type=1,
         ),
         singlepoint_specification=QCSpecification(
@@ -91,7 +88,7 @@ def test_neb_socket_add_specification_same_0(storage_socket: SQLAlchemySocket):
     spec1 = NEBSpecification(
         program="geometric",
         keywords=NEBKeywords(
-            images=11, spring_constant=1.0, optimize_ts=True, align_chain=False, optimize_endpoints=True
+            images=11, spring_constant=1.0, optimize_ts=True, optimize_endpoints=True
         ),
         singlepoint_specification=common_sp_spec,
     )
@@ -112,7 +109,7 @@ def test_neb_socket_add_specification_same_0(storage_socket: SQLAlchemySocket):
     spec1 = NEBSpecification(
         program="geometric",
         keywords=NEBKeywords(
-            images=11, spring_constant=2.0, optimize_ts=True, align_chain=False, optimize_endpoints=True
+            images=11, spring_constant=2.0, optimize_ts=True, optimize_endpoints=True
         ),
         singlepoint_specification=common_sp_spec,
     )
@@ -281,7 +278,6 @@ def test_neb_socket_add_specification_diff_1(storage_socket: SQLAlchemySocket):
         keywords=NEBKeywords(
             images=11,
             spring_constant=1.0,
-            energy_weighted=10,
             spring_type=1,
         ),
         singlepoint_specification=common_sp_spec,
@@ -292,7 +288,6 @@ def test_neb_socket_add_specification_diff_1(storage_socket: SQLAlchemySocket):
         keywords=NEBKeywords(
             images=21,
             spring_constant=1.5,
-            energy_weighted=5,
         ),
         singlepoint_specification=common_sp_spec,
     )
@@ -316,7 +311,6 @@ def test_neb_socket_add_specification_diff_2(storage_socket: SQLAlchemySocket):
         keywords=NEBKeywords(
             images=21,
             spring_constant=1.5,
-            energy_weighted=5,
             optimize_endpoints=False,
             spring_type=0,
         ),
@@ -328,7 +322,6 @@ def test_neb_socket_add_specification_diff_2(storage_socket: SQLAlchemySocket):
         keywords=NEBKeywords(
             images=21,
             spring_constant=1.5,
-            energy_weighted=5,
             optimize_endpoints=True,
         ),
         singlepoint_specification=common_sp_spec,
@@ -353,7 +346,6 @@ def test_neb_socket_add_specification_diff_3(storage_socket: SQLAlchemySocket):
         keywords=NEBKeywords(
             images=21,
             spring_constant=1.5,
-            energy_weighted=5,
             optimize_endpoints=True,
             hessian_reset=False,
             spring_type=0,
@@ -366,7 +358,6 @@ def test_neb_socket_add_specification_diff_3(storage_socket: SQLAlchemySocket):
         keywords=NEBKeywords(
             images=21,
             spring_constant=1.5,
-            energy_weighted=5,
             optimize_endpoints=True,
         ),
         singlepoint_specification=common_sp_spec,

@@ -48,11 +48,6 @@ class NEBKeywords(BaseModel):
 
     maximum_cycle: int = Field(100, description="Maximum iteration number for NEB calculation.")
 
-    energy_weighted: Optional[int] = Field(
-        None,
-        description="Provide an integer value to vary the spring constant based on images' energy (range: spring_constant/energy_weighted - spring_constant).",
-    )
-
     optimize_ts: bool = Field(
         False,
         description="Setting it equal to true will perform a transition sate optimization starting with the guessed transition state structure from the NEB calculation result.",
@@ -61,17 +56,6 @@ class NEBKeywords(BaseModel):
     optimize_endpoints: bool = Field(
         False,
         description="Setting it equal to True will optimize two end points of the initial chain before starting NEB.",
-    )
-
-    coordinate_system: str = Field(
-        "tric",
-        description="Coordinate system for optimizations:\n"
-        '"tric" for Translation-Rotation Internal Coordinates (default)\n'
-        '"cart" = Cartesian coordinate system\n'
-        '"prim" = Primitive (a.k.a redundant internal coordinates)\n '
-        '"dlc" = Delocalized Internal Coordinates,\n'
-        '"hdlc" = Hybrid Delocalized Internal Coordinates\n'
-        '"tric-p" for primitive Translation-Rotation Internal Coordinates (no delocalization)\n ',
     )
 
     epsilon: float = Field(1e-5, description="Small eigenvalue threshold for resetting Hessian.")

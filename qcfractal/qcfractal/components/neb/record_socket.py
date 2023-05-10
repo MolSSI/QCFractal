@@ -328,7 +328,7 @@ class NEBRecordSocket(BaseRecordSocket):
                 qc_specification=QCSpecification(**qc_spec),
                 keywords={
                     "transition": True,
-                    "coordsys": service_state.keywords["coordinate_system"],
+                    "coordsys": 'tric',
                     "hessian": service_state.tshessian,
                 },
             )
@@ -337,7 +337,7 @@ class NEBRecordSocket(BaseRecordSocket):
             opt_spec = OptimizationSpecification(
                 program="geometric",
                 qc_specification=QCSpecification(**qc_spec),
-                keywords={"coordsys": service_state.keywords["coordinate_system"]},
+                keywords={"coordsys": 'tric'},
             )
             ts = False
 
