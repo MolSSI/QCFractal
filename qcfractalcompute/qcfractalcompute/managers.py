@@ -488,9 +488,6 @@ class ComputeManager:
 
         results = self.queue_adapter.acquire_complete()
 
-        # Compress the stdout/stderr/error outputs, and native files
-        results = {k: compress_result(v) for k, v in results.items()}
-
         # Stats fetching for running tasks, as close to the time we got the jobs as we can
         last_time = self.statistics.last_update_time
         now = self.statistics.last_update_time = time.time()
@@ -641,8 +638,8 @@ class ComputeManager:
                 # decompress the kwargs
                 new_tasks = []
                 for task in new_tasks_v2:
-                    t = task.dict(exclude=["function_kwargs_compressed"])
-                    t["function_kwargs"] = t.function_kwargs
+                    t = task.dict(exclude={"function_kwargs_compressed"})
+                    t["function_kwargs"] = task.function_kwargs
                     new_tasks.append(t)
 
             except ConnectionError as ex:
