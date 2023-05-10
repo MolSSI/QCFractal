@@ -31,6 +31,21 @@ _ssl_error_msg = (
 _connection_error_msg = "\n\nCould not connect to server {}, please check the address and try again."
 
 
+def pretty_print_request(req):
+    print("----------------------")
+    print(f"{req.method} {req.url}")
+    print("\n".join(f"{k}: {v}" for k, v in req.headers.items()))
+    print("----------------------")
+
+
+def pretty_print_response(res):
+    print("----------------------")
+    print(f"RESPONSE {res.url} -> {res.status_code}")
+    print(f"Content: {len(res.content)} bytes")
+    print("\n".join(f"{k}: {v}" for k, v in res.headers.items()))
+    print("----------------------")
+
+
 class PortalRequestError(Exception):
     def __init__(self, msg: str, status_code: int, details: Dict[str, Any]):
         Exception.__init__(self, msg)
@@ -68,6 +83,9 @@ class PortalClientBase:
         show_motd
             If a Message-of-the-Day is available, display it
         """
+
+        # For developer use and debugging
+        self.debug_requests = False
 
         if not address.startswith("http://") and not address.startswith("https://"):
             address = "https://" + address
@@ -238,8 +256,14 @@ class PortalClientBase:
         req = requests.Request(method=method.upper(), url=addr, data=body, params=url_params)
         prep_req = self._req_session.prepare_request(req)
 
+        if self.debug_requests:
+            pretty_print_request(prep_req)
+
         try:
             r = self._req_session.send(prep_req, verify=self._verify, timeout=self._timeout)
+            if self.debug_requests:
+                pretty_print_response(r)
+
         except requests.exceptions.SSLError:
             raise ConnectionRefusedError(_ssl_error_msg) from None
         except requests.exceptions.ConnectionError:
