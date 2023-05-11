@@ -58,6 +58,7 @@ class DataGeneratorManager(ComputeManager):
             ),
             executors={
                 "local": LocalExecutorConfig(
+                    scratch_directory=tmpdir.name,
                     cores_per_worker=1,
                     memory_per_worker=1,
                     max_workers=n_workers,
