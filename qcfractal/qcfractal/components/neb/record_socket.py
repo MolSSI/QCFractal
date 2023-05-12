@@ -243,7 +243,7 @@ class NEBRecordSocket(BaseRecordSocket):
                         )
                         geometries.append(mol_data[0]["geometry"])
                         energies.append(sp_record.properties["return_energy"])
-                        gradients.append(convert_numpy_recursive(sp_record.properties['return_result'], flatten=True))
+                        gradients.append(convert_numpy_recursive(sp_record.properties["return_result"], flatten=True))
                     service_state.nebinfo["geometry"] = convert_numpy_recursive(geometries, flatten=False)
                     service_state.nebinfo["energies"] = energies
                     service_state.nebinfo["gradients"] = gradients
@@ -328,7 +328,7 @@ class NEBRecordSocket(BaseRecordSocket):
                 qc_specification=QCSpecification(**qc_spec),
                 keywords={
                     "transition": True,
-                    "coordsys": 'tric',
+                    "coordsys": "tric",
                     "hessian": service_state.tshessian,
                 },
             )
@@ -337,7 +337,7 @@ class NEBRecordSocket(BaseRecordSocket):
             opt_spec = OptimizationSpecification(
                 program="geometric",
                 qc_specification=QCSpecification(**qc_spec),
-                keywords={"coordsys": 'tric'},
+                keywords={"coordsys": "tric"},
             )
             ts = False
 
