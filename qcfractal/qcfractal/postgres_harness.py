@@ -21,7 +21,7 @@ from .db_socket.socket import SQLAlchemySocket
 from .port_util import find_open_port, is_port_inuse
 
 if TYPE_CHECKING:
-    from typing import Any, List, Optional, Tuple
+    from typing import Any, List, Optional, Tuple, Dict
     import psycopg2.extensions
 
 
@@ -153,7 +153,7 @@ class PostgresHarness:
             )
         return tool_path
 
-    def _run_subprocess(self, command: List[str]) -> Tuple[int, str, str]:
+    def _run_subprocess(self, command: List[str], env: Optional[Dict[str, Any]] = None) -> Tuple[int, str, str]:
         """
         Runs a command using subprocess, and output stdout into the logger
 
@@ -168,7 +168,12 @@ class PostgresHarness:
             Return code, stdout, and stderr as a Tuple
         """
 
-        proc = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        full_env = os.environ.copy()
+
+        if env is not None:
+            full_env.update(env)
+
+        proc = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=full_env)
         self._logger.debug("Running subprocess: " + str(command))
         stdout = proc.stdout.decode()
         stderr = proc.stderr.decode()
@@ -561,13 +566,17 @@ class PostgresHarness:
             str(self.config.port),
             "-d",
             self.config.database_name,
+            "--username",
+            self.config.username,
             "-Fc",  # Custom postgres format, fast
             "--file",
             filepath,
         ]
 
+        env = {"PGPASSWORD": self.config.password}
+
         self._logger.debug(f"pg_backup command: {'  '.join(cmds)}")
-        retcode, stdout, stderr = self._run_subprocess(cmds)
+        retcode, stdout, stderr = self._run_subprocess(cmds, env=env)
 
         if retcode != 0:
             err_msg = f"Error backing up the database\noutput:\n{stdout}\nstderr:\n{stderr}"
@@ -590,11 +599,14 @@ class PostgresHarness:
             f"--host={self.config.host}",
             f"--port={self.config.port}",
             f"--dbname={self.config.database_name}",
+            f"--username={self.config.username}",
             filepath,
         ]
 
+        env = {"PGPASSWORD": self.config.password}
+
         self._logger.debug(f"pg_restore command: {'  '.join(cmds)}")
-        retcode, stdout, stderr = self._run_subprocess(cmds)
+        retcode, stdout, stderr = self._run_subprocess(cmds, env=env)
 
         if retcode != 0:
             err_msg = f"Error restoring the database\noutput:\n{stdout}\nstderr:\n{stderr}"
