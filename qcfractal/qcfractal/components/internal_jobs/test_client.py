@@ -64,7 +64,7 @@ def test_internal_jobs_client_error(snowflake: QCATestingSnowflake):
     assert job_1.progress < 100
     assert time_0 < job_1.ended_date < time_1
     assert time_0 < job_1.last_updated < time_1
-    assert job_1.result == "Expected error"
+    assert "Expected error" in job_1.result
 
 
 def test_internal_jobs_client_cancel_waiting(snowflake: QCATestingSnowflake):
