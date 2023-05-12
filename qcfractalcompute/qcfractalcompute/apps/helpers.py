@@ -5,11 +5,9 @@ import os
 import shutil
 import subprocess
 import time
-from functools import lru_cache
-from typing import Optional, Dict, Tuple, List, Any
+from typing import Optional, Dict, Tuple, List
 
 from qcfractalcompute.compress import compress_result
-from qcfractalcompute.run_scripts import get_script_path
 from .models import AppTaskResult
 
 _apptainer_cmd = None
@@ -53,10 +51,6 @@ def run_apptainer(sif_path: str, command: List[str], volumes: List[Tuple[str, st
 
         ret = {"success": False, "error": {"error_type": "RuntimeError", "error_message": msg}}
 
-    # Add conda environment to the provenance
-    if "provenance" in ret:
-        ret["provenance"]["conda_environment"] = get_conda_env_apptainer(sif_path)
-
     return AppTaskResult(
         success=ret["success"],
         walltime=time_1 - time_0,
@@ -87,53 +81,8 @@ def run_conda_subprocess(conda_env_name: Optional[str], cmd: List[str], cwd: str
 
         ret = {"success": False, "error": {"error_type": "RuntimeError", "error_message": msg}}
 
-    # Add conda environment to the provenance
-    if "provenance" in ret:
-        ret["provenance"]["conda_environment"] = get_conda_env_conda(conda_env_name)
-
     return AppTaskResult(
         success=ret["success"],
         walltime=time_1 - time_0,
         result_compressed=compress_result(ret),
     )
-
-
-@lru_cache()
-def get_conda_env_conda(
-    conda_env_name: Optional[str],
-) -> Dict[str, Any]:
-
-    env_script_path = get_script_path("conda_list_env.sh")
-    if conda_env_name:
-        cmd = ["conda", "run", "-n", conda_env_name, "/bin/bash", env_script_path]
-    else:
-        cmd = ["/bin/bash", env_script_path]
-
-    conda_env = subprocess.check_output(cmd, universal_newlines=True)
-    return json.loads(conda_env)
-
-
-@lru_cache()
-def get_conda_env_apptainer(sif_path: str) -> Dict[str, Any]:
-
-    env_script_path = get_script_path("conda_list_env.sh")
-    volume = [f"{env_script_path}:/conda_list_env.sh"]
-
-    cmd = [get_apptainer_cmd()]
-    cmd.extend(["run", "--bind", volume, sif_path])
-    cmd.extend(["/bin/bash", "/conda_list_env.sh"])
-
-    proc_result = subprocess.run(cmd, capture_output=True, text=True)
-
-    if proc_result.returncode == 0:
-        ret = json.loads(proc_result.stdout)
-    else:
-        msg = (
-            f"Cannot get conda env info from apptainer file {sif_path}: error code {proc_result.returncode}\n"
-            f"stdout: {proc_result.stdout}\n"
-            f"stderr: {proc_result.stderr}"
-        )
-
-        raise RuntimeError(msg)
-
-    return ret
