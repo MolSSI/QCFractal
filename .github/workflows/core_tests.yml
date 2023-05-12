@@ -46,7 +46,6 @@ jobs:
       - name: Install All QCArchive packages
         shell: bash -l {0}
         run: |
-          pip install scipy # for geometric
           pip install -e ./qcportal -e ./qcfractalcompute -e ./qcfractal[services] -e ./qcarchivetesting
 
       - name: Run tests
