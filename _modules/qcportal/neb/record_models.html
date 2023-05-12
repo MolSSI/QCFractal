@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.neb.record_models &#8212; QCArchive 0.50b10.post32+g581067e1 documentation</title>
+    <title>qcportal.neb.record_models &#8212; QCArchive 0.50b10.post43+g04d808c0 documentation</title>
   
   
   
@@ -463,39 +463,21 @@ document.write(`
 
     <span class="n">maximum_cycle</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Maximum iteration number for NEB calculation.&quot;</span><span class="p">)</span>
 
-    <span class="n">energy_weighted</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">None</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Provide an integer value to vary the spring constant based on images&#39; energy (range: spring_constant/energy_weighted - spring_constant).&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-
     <span class="n">optimize_ts</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">False</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Setting it equal to true will perform a transition sate optimization starting with the guessed transition state structure from the NEB calculation result.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
-
-    <span class="n">align_chain</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Aligning the initial chain before optimization.&quot;</span><span class="p">)</span>
 
     <span class="n">optimize_endpoints</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">False</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Setting it equal to True will optimize two end points of the initial chain before starting NEB.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">coordinate_system</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="s2">&quot;tric&quot;</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Coordinate system for optimizations:</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="s1">&#39;&quot;tric&quot; for Translation-Rotation Internal Coordinates (default)</span><span class="se">\n</span><span class="s1">&#39;</span>
-        <span class="s1">&#39;&quot;cart&quot; = Cartesian coordinate system</span><span class="se">\n</span><span class="s1">&#39;</span>
-        <span class="s1">&#39;&quot;prim&quot; = Primitive (a.k.a redundant internal coordinates)</span><span class="se">\n</span><span class="s1"> &#39;</span>
-        <span class="s1">&#39;&quot;dlc&quot; = Delocalized Internal Coordinates,</span><span class="se">\n</span><span class="s1">&#39;</span>
-        <span class="s1">&#39;&quot;hdlc&quot; = Hybrid Delocalized Internal Coordinates</span><span class="se">\n</span><span class="s1">&#39;</span>
-        <span class="s1">&#39;&quot;tric-p&quot; for primitive Translation-Rotation Internal Coordinates (no delocalization)</span><span class="se">\n</span><span class="s1"> &#39;</span><span class="p">,</span>
-    <span class="p">)</span>
-
     <span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mf">1e-5</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Small eigenvalue threshold for resetting Hessian.&quot;</span><span class="p">)</span>
 
     <span class="n">hessian_reset</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">True</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Reset Hessian when eigenvalues are below the epsilon. If it is set to False, it will skip updating the hessian.&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Reset Hessian when eigenvalues are below the epsilon.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="nd">@root_validator</span>
