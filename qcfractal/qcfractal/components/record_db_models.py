@@ -222,6 +222,7 @@ class BaseRecordORM(BaseORM):
         foreign_keys=[owner_user_id],
         primaryjoin="BaseRecordORM.owner_user_id == UserIDMapSubquery.id",
         lazy="selectin",
+        viewonly=True,
     )
 
     owner_group = relationship(
@@ -229,6 +230,7 @@ class BaseRecordORM(BaseORM):
         foreign_keys=[owner_group_id],
         primaryjoin="BaseRecordORM.owner_group_id == GroupIDMapSubquery.id",
         lazy="selectin",
+        viewonly=True,
     )
 
     # Full compute history

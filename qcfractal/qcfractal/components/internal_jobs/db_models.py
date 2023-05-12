@@ -44,6 +44,7 @@ class InternalJobORM(BaseORM):
         foreign_keys=[user_id],
         primaryjoin="InternalJobORM.user_id == UserIDMapSubquery.id",
         lazy="selectin",
+        viewonly=True,
     )
 
     # Nullable column with unique constraint. If a unique_name is specified,

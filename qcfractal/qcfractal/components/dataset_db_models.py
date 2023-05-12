@@ -49,6 +49,7 @@ class BaseDatasetORM(BaseORM):
         foreign_keys=[owner_user_id],
         primaryjoin="BaseDatasetORM.owner_user_id == UserIDMapSubquery.id",
         lazy="selectin",
+        viewonly=True,
     )
 
     owner_group = relationship(
@@ -56,6 +57,7 @@ class BaseDatasetORM(BaseORM):
         foreign_keys=[owner_group_id],
         primaryjoin="BaseDatasetORM.owner_group_id == GroupIDMapSubquery.id",
         lazy="selectin",
+        viewonly=True,
     )
 
     default_tag = Column(String, nullable=False)
