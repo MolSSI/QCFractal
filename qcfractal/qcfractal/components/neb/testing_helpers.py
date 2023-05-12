@@ -73,7 +73,8 @@ def generate_task_key(task: TaskInformation):
             record_type = "optimization"
             mol_hash = inp_data["initial_molecule"]["identifiers"]["molecule_hash"]
         elif inp_data["schema_name"] == "qcschema_input":
-            record_type = "singlepoint"
+            # NEB uses both gradient and hessians on the same molecule
+            record_type = "singlepoint" + "|" + inp_data["driver"]
             mol_hash = inp_data["molecule"]["identifiers"]["molecule_hash"]
         else:
             raise RuntimeError(f"Unknown result type: {inp_data['schema_name']}")
