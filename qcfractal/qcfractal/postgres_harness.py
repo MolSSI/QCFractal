@@ -560,20 +560,20 @@ class PostgresHarness:
 
         cmds = [
             self._get_tool("pg_dump"),
-            "-h",
-            self.config.host,
-            "-p",
-            str(self.config.port),
-            "-d",
-            self.config.database_name,
-            "--username",
-            self.config.username,
             "-Fc",  # Custom postgres format, fast
-            "--file",
-            filepath,
+            f"--host={self.config.host}",
+            f"--port={self.config.port}",
+            f"--dbname={self.config.database_name}",
+            f"--file={filepath}",
         ]
 
-        env = {"PGPASSWORD": self.config.password}
+        if self.config.username:
+            cmds.append(f"--username={self.config.username}")
+
+        # Passwords are passed through environment variables
+        env = {}
+        if self.config.password:
+            env["PGPASSWORD"] = self.config.password
 
         self._logger.debug(f"pg_backup command: {'  '.join(cmds)}")
         retcode, stdout, stderr = self._run_subprocess(cmds, env=env)
@@ -599,11 +599,16 @@ class PostgresHarness:
             f"--host={self.config.host}",
             f"--port={self.config.port}",
             f"--dbname={self.config.database_name}",
-            f"--username={self.config.username}",
             filepath,
         ]
 
-        env = {"PGPASSWORD": self.config.password}
+        if self.config.username:
+            cmds.append(f"--username={self.config.username}")
+
+        # Passwords are passed through environment variables
+        env = {}
+        if self.config.password:
+            env["PGPASSWORD"] = self.config.password
 
         self._logger.debug(f"pg_restore command: {'  '.join(cmds)}")
         retcode, stdout, stderr = self._run_subprocess(cmds, env=env)
