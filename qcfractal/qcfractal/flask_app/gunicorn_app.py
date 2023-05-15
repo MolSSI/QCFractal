@@ -73,9 +73,14 @@ class FractalGunicornApp(gunicorn.app.base.BaseApplication):
         bind = self.qcfractal_config.api.host
         port = self.qcfractal_config.api.port
 
+        # Use the sync worker class, however if threads > 1, then the gthread worker class will
+        # be automatically used instead (according to gunicorn docs)
+        # https://docs.gunicorn.org/en/stable/settings.html#threads
         config = {
+            "worker_class": "sync",
             "bind": f"{bind}:{port}",
             "workers": self.qcfractal_config.api.num_workers,
+            "threads": self.qcfractal_config.api.num_threads_per_worker,
             "timeout": self.qcfractal_config.api.worker_timeout,
             "loglevel": self.qcfractal_config.loglevel,
             "logger_class": FractalGunicornLogger,
