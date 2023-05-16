@@ -22,7 +22,8 @@ valid_encodings = ["application/json", "application/msgpack"]
 # Path to this file (directory only)
 _my_path = os.path.dirname(os.path.abspath(__file__))
 
-geoip_path = os.path.join(_my_path, "MaxMind-DB", "test-data", "GeoIP2-City-Test.mmdb")
+geoip_path = os.path.join(_my_path, "MaxMind-DB", "test-data")
+geoip_filename = "GeoLite2-City-Test.mmdb"
 
 testconfig_path = os.path.join(_my_path, "config_files")
 migrationdata_path = os.path.join(_my_path, "migration_data")

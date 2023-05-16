@@ -38,9 +38,9 @@ class ServiceSocket:
         self._service_frequency = root_socket.qcf_config.service_frequency
 
         # Add the initial job for iterating the service
-        self.add_internal_job(0.0)
+        self.add_internal_job_iterate_services(0.0)
 
-    def add_internal_job(self, delay: float, *, session: Optional[Session] = None):
+    def add_internal_job_iterate_services(self, delay: float, *, session: Optional[Session] = None):
         """
         Adds an internal job to check/update the services
 
@@ -60,7 +60,7 @@ class ServiceSocket:
                 {},
                 user_id=None,
                 unique_name=True,
-                after_function="services.add_internal_job",
+                after_function="services.add_internal_job_iterate_services",
                 after_function_kwargs={"delay": self._service_frequency},
                 session=session,
             )

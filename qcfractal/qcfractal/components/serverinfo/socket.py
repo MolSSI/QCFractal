@@ -1,11 +1,18 @@
 from __future__ import annotations
 
+import hashlib
+import io
 import logging
+import os
+import re
+import tarfile
 from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
+import requests
 from sqlalchemy import and_, or_, func, text, select, delete
+from sqlalchemy.orm import load_only
 
 import qcfractal
 from qcfractal.components.auth.db_models import UserIDMapSubquery
@@ -22,13 +29,22 @@ from qcportal.serverinfo import (
     ErrorLogQueryFilters,
     ServerStatsQueryFilters,
 )
-from .db_models import AccessLogORM, InternalErrorLogORM, ServerStatsLogORM, MessageOfTheDayORM
+from .db_models import AccessLogORM, InternalErrorLogORM, ServerStatsLogORM, MessageOfTheDayORM, ServerStatsMetadataORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from qcfractal.components.internal_jobs.status import JobStatus
     from typing import Dict, Any, List, Optional, Tuple
+
+
+# GeoIP2 package is optional
+try:
+    import geoip2.database
+
+    geoip2_found = True
+except ImportError:
+    geoip2_found = False
 
 
 class ServerInfoSocket:
@@ -41,41 +57,39 @@ class ServerInfoSocket:
         self._logger = logging.getLogger(__name__)
         self._server_stats_frequency = root_socket.qcf_config.statistics_frequency
 
+        self._geoip2_dir = root_socket.qcf_config.geoip2_dir
+        self._geoip2_file_path = os.path.join(self._geoip2_dir, root_socket.qcf_config.geoip2_filename)
+        self._maxmind_license_key = root_socket.qcf_config.maxmind_license_key
+
+        self._geolocate_accesses_frequency = 120  # two minutes should be ok?
+        self._update_geoip2_frequency = 60 * 60 * 24  # one day
+
         # Set up access logging
         self._access_log_enabled = root_socket.qcf_config.log_access
+        self._geoip2_enabled = geoip2_found and self._access_log_enabled
 
         # MOTD contents
         self._load_motd()
 
-        self._geoip2_reader = None
+        if not os.path.exists(self._geoip2_dir):
+            os.makedirs(self._geoip2_dir)
 
         if self._access_log_enabled:
-            geo_file_path = root_socket.qcf_config.geo_file_path
+            if not geoip2_found:
+                self._logger.info(
+                    "GeoIP2 package not found. To include locations in access logs, install the geoip2 package"
+                )
 
-            if geo_file_path:
-                try:
-                    import geoip2.database
+        # Server stats job. Don't do it right at startup
+        self.add_internal_job_server_stats(self._server_stats_frequency)
 
-                    self._geoip2_reader = geoip2.database.Reader(geo_file_path)
-                    self._logger.info(f"Successfully initialized geoip2 with {geo_file_path}.")
+        # Updating the geolocation database file
+        self.add_internal_job_update_geoip2(0.0)
 
-                except ImportError:
-                    self._logger.warning(
-                        f"Cannot import geoip2 module. To use API access logging, you need "
-                        f"to install it manually using `pip install geoip2`"
-                    )
-                except FileNotFoundError:
-                    self._logger.warning(
-                        f"GeoIP cities file cannot be read from {geo_file_path}.\n"
-                        f"Make sure to manually download the file from: \n"
-                        f"https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz\n"
-                        f"Then, set the geo_file_path in qcfractal_config.yaml in your base_folder."
-                    )
+        # Updating the access log with geolocation info. Don't do it right at startup
+        self.add_internal_job_geolocate_accesses(self._geolocate_accesses_frequency)
 
-        # Delay this. Don't do it right at startup
-        self.add_internal_job(self._server_stats_frequency)
-
-    def add_internal_job(self, delay: float, *, session: Optional[Session] = None):
+    def add_internal_job_server_stats(self, delay: float, *, session: Optional[Session] = None):
         """
         Adds an internal job to update the server statistics
 
@@ -88,39 +102,208 @@ class ServerInfoSocket:
             is used, it will be flushed (but not committed) before returning from this function.
         """
         with self.root_socket.optional_session(session) as session:
-            x = self.root_socket.internal_jobs.add(
+            self.root_socket.internal_jobs.add(
                 "update_server_stats",
                 datetime.utcnow() + timedelta(seconds=delay),
                 "serverinfo.update_server_stats",
                 {},
                 user_id=None,
                 unique_name=True,
-                after_function="serverinfo.add_internal_job",
+                after_function="serverinfo.add_internal_job_server_stats",
                 after_function_kwargs={"delay": self._server_stats_frequency},
                 session=session,
             )
 
-    def _get_geoip2_data(self, ip_address: str) -> Dict[str, Any]:
+    def add_internal_job_update_geoip2(self, delay: float, *, session: Optional[Session] = None):
         """
-        Obtain geolocation data of an ip address
+        Adds an internal job to update the geoip database
         """
 
-        out: Dict[str, Any] = {}
+        # Only add this if we have the maxmind license key
+        if not (self._geoip2_enabled and self._maxmind_license_key):
+            return
 
-        if not self._geoip2_reader:
+        with self.root_socket.optional_session(session) as session:
+            self.root_socket.internal_jobs.add(
+                "update_geoip2_file",
+                datetime.utcnow() + timedelta(seconds=delay),
+                "serverinfo.update_geoip2_file",
+                {},
+                user_id=None,
+                unique_name=True,
+                after_function="serverinfo.add_internal_job_update_geoip2",
+                after_function_kwargs={"delay": self._update_geoip2_frequency},  # wait one day
+                session=session,
+            )
+
+    def add_internal_job_geolocate_accesses(self, delay: float, *, session: Optional[Session] = None):
+        """
+        Adds an internal job to update the access log with geolocation information
+        """
+
+        if not self._geoip2_enabled:
+            return
+
+        with self.root_socket.optional_session(session) as session:
+            self.root_socket.internal_jobs.add(
+                "geolocate_accesses",
+                datetime.utcnow() + timedelta(seconds=delay),
+                "serverinfo.geolocate_accesses",
+                {},
+                user_id=None,
+                unique_name=True,
+                after_function="serverinfo.add_internal_job_geolocate_accesses",
+                after_function_kwargs={"delay": self._geolocate_accesses_frequency},  # wait 2 minutes
+                session=session,
+            )
+
+    def update_geoip2_file(self, session: Session, job_status: JobStatus) -> None:
+
+        # Possible to reach this if we changed the settings, but have a job still in the queue
+        if not (self._geoip2_enabled and self._maxmind_license_key):
+            return
+
+        # Session is not needed, but must be consistent with other jobs
+        maxmind_license_key = self._maxmind_license_key
+
+        if not maxmind_license_key:
+            self._logger.warning("No maxmind license key provided. Cannot update geoip2 database")
+            return
+
+        base_url = f"https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&license_key={maxmind_license_key}"
+        db_url = base_url + "&suffix=tar.gz"  # Actual DB file
+        sha256_url = base_url + "&suffix=tar.gz.sha256"  # File with the sha256 hash
+
+        self._logger.info("Checking if update of geoip2 database is needed")
+
+        # According to the docs, we can use a head request and look at the last-modified header
+        r = requests.head(db_url)
+        remote_last_modified = r.headers.get("content-disposition")
+        m = re.match(r".*GeoLite2-City_(\d{8}).tar.gz.*", remote_last_modified)
+
+        if not m:
+            raise RuntimeError(
+                "Could not get sane filename from maxmind server. Account issue? Content-disposition: "
+                + remote_last_modified
+            )
+
+        remote_last_modified = m.group(1)
+
+        date_path = os.path.join(self._geoip2_dir, "last_modified.txt")
+
+        # What version do we have already?
+        if os.path.exists(date_path):
+            with open(date_path, "r") as f:
+                local_last_modified = f.read()
+        else:
+            local_last_modified = "00000000"
+
+        self._logger.debug(f"Maxmind GeoIP2 last modified: {remote_last_modified}")
+        self._logger.debug(f"Local GeoIP2 version: {local_last_modified}")
+
+        if remote_last_modified <= local_last_modified:
+            self._logger.info("Update of GeoIP2 database not needed")
+            return
+
+        else:
+            self._logger.info("Update of GeoIP2 database required")
+
+        geoip_file_data = requests.get(db_url)
+        geoip_file_sha256 = requests.get(sha256_url).text
+
+        local_hash = hashlib.sha256(geoip_file_data.content).hexdigest()
+
+        # Is like a file: [hash] [filename]
+        # We only want the hash
+        expected_hash = geoip_file_sha256.split()[0]
+        if local_hash != expected_hash:
+            self._logger.warning(f"Hashes for geoip2 data do not match. Expected {expected_hash}, got {local_hash}")
+
+        fileobj = io.BytesIO(geoip_file_data.content)
+
+        # Extract contents, but remove the subdirectory
+        with tarfile.open(fileobj=fileobj, mode="r:gz") as tar:
+            db_date = None
+            to_extract = []
+            for ti in tar.getmembers():
+                if ti.isfile():
+                    ti.name = os.path.basename(ti.name)  # Remove the directory
+                    to_extract.append(ti)
+                if ti.isdir():
+                    db_date = ti.name.split("_")[1]
+
+            tar.extractall(path=self._geoip2_dir, members=to_extract)
+
+            # Write the date of the subdir into the last_modified file
+            with open(os.path.join(self._geoip2_dir, "last_modified.txt"), "w") as f:
+                f.write(db_date)
+
+        self._logger.info(f"Geoip database (date {db_date}) downloaded and extracted to {self._geoip2_dir}")
+
+    def geolocate_accesses(self, session: Session, job_status: JobStatus) -> None:
+        """
+        Finds and updates accesses which haven't been processed for geolocation data
+        """
+
+        # Possible to reach this if we changed the settings, but have a job still in the queue
+        if not self._geoip2_enabled:
+            return
+
+        stmt = select(ServerStatsMetadataORM).where(ServerStatsMetadataORM.name == "last_geolocated_date")
+        last_geolocated_date = session.execute(stmt).scalar_one_or_none()
+
+        access_stmt = select(AccessLogORM)
+        access_stmt = access_stmt.options(load_only(AccessLogORM.access_date, AccessLogORM.ip_address))
+        access_stmt = access_stmt.where(AccessLogORM.ip_address.is_not(None))
+
+        if last_geolocated_date:
+            access_stmt = access_stmt.where(AccessLogORM.access_date > last_geolocated_date.date_value)
+
+        access_stmt = access_stmt.order_by(AccessLogORM.access_date.asc())
+
+        to_process = session.execute(access_stmt).scalars().all()
+        self._logger.info(f"Found {len(to_process)} accesses to process")
+
+        if not to_process:
+            return
+
+        distinct_ip = set(x.ip_address for x in to_process)
+        self._logger.info(f"Found {len(distinct_ip)} distinct ip addresses to process")
+
+        geo_reader = geoip2.database.Reader(self._geoip2_file_path)
+
+        def _lookup_ip(ip_address: str) -> Dict[str, Any]:
+            out: Dict[str, Any] = {}
+            try:
+                loc_data = geo_reader.city(ip_address)
+                out["country_code"] = loc_data.country.iso_code
+                out["subdivision"] = loc_data.subdivisions.most_specific.name
+                out["city"] = loc_data.city.name
+                out["ip_lat"] = loc_data.location.latitude
+                out["ip_long"] = loc_data.location.longitude
+            except:
+                pass
+
             return out
 
-        try:
-            loc_data = self._geoip2_reader.city(ip_address)
-            out["country_code"] = loc_data.country.iso_code
-            out["subdivision"] = loc_data.subdivisions.most_specific.name
-            out["city"] = loc_data.city.name
-            out["ip_lat"] = loc_data.location.latitude
-            out["ip_long"] = loc_data.location.longitude
-        except:
-            pass
+        geo_data = {ip: _lookup_ip(ip) for ip in distinct_ip}
 
-        return out
+        for access in to_process:
+            geo = geo_data.get(access.ip_address, {})
+            access.country_code = geo.get("country_code")
+            access.subdivision = geo.get("subdivision")
+            access.city = geo.get("city")
+            access.ip_lat = geo.get("ip_lat")
+            access.ip_long = geo.get("ip_long")
+
+        # Update the last geolocated date
+        if last_geolocated_date is None:
+            last_geolocated_date = ServerStatsMetadataORM(name="last_geolocated_date")
+            session.add(last_geolocated_date)
+
+        last_geolocated_date.date_value = to_process[-1].access_date
+
+        session.commit()
 
     def _load_motd(self, *, session: Optional[Session] = None):
         stmt = select(MessageOfTheDayORM).order_by(MessageOfTheDayORM.id)
@@ -170,11 +353,8 @@ class ServerInfoSocket:
             is used, it will be flushed (but not committed) before returning from this function.
         """
 
-        # Obtain all the information we can from the GeoIP database
-        ip_data = self._get_geoip2_data(log_data["ip_address"])
-
         with self.root_socket.optional_session(session) as session:
-            log = AccessLogORM(**log_data, **ip_data)
+            log = AccessLogORM(**log_data)
             session.add(log)
 
     def save_error(self, error_data: Dict[str, Any], *, session: Optional[Session] = None) -> int:

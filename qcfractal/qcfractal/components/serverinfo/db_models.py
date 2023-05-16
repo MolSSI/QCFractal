@@ -11,6 +11,14 @@ from qcfractal.components.auth.db_models import UserORM, UserIDMapSubquery
 from qcfractal.db_socket import BaseORM
 
 
+class ServerStatsMetadataORM(BaseORM):
+    __tablename__ = "server_stats_metadata"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    date_value = Column(DateTime, nullable=False)
+
+
 class AccessLogORM(BaseORM):
     """
     Table for storing a log of accesses/requests

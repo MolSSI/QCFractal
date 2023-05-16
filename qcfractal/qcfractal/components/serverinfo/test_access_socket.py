@@ -5,10 +5,11 @@ from typing import TYPE_CHECKING
 
 from qcarchivetesting import load_ip_test_data
 from qcarchivetesting.testing_classes import QCATestingSnowflake
+from qcfractal.testing_helpers import DummyJobStatus
 from qcportal.serverinfo.models import AccessLogQueryFilters
 
 if TYPE_CHECKING:
-    from qcfractal.db_socket import SQLAlchemySocket
+    pass
 
 # First part of the tuple is the ip address
 # second is the range, as stored in the MaxMind test JSON file
@@ -20,32 +21,6 @@ test_ips = [
     ("10.0.0.1", None),
     ("2.125.160.217", "::2.125.160.216/125"),
 ]
-
-
-def test_serverinfo_socket_geoip(storage_socket: SQLAlchemySocket):
-    ip_data = load_ip_test_data()
-
-    for ip, lookup_key in test_ips:
-        our_data = storage_socket.serverinfo._get_geoip2_data(ip)
-        ref_data = ip_data.get(lookup_key, None)
-
-        if lookup_key is None:
-            assert our_data.get("country_code") is None
-            assert our_data.get("subdivision") is None
-            assert our_data.get("city") is None
-            assert our_data.get("ip_lat") is None
-            assert our_data.get("ip_long") is None
-        else:
-            assert our_data["country_code"] == ref_data["country"]["iso_code"]
-
-            if our_data.get("subdivision") is not None:
-                assert our_data["subdivision"] == ref_data["subdivisions"][-1]["names"]["en"]
-            if our_data.get("city") is not None:
-                assert our_data["city"] == ref_data["city"]["names"]["en"]
-            if our_data.get("ip_lat") is not None:
-                assert our_data["ip_lat"] == ref_data["location"]["latitude"]
-            if our_data.get("ip_long") is not None:
-                assert our_data["ip_long"] == ref_data["location"]["longitude"]
 
 
 def test_serverinfo_socket_save_access(secure_snowflake: QCATestingSnowflake):
@@ -133,6 +108,10 @@ def test_serverinfo_socket_save_access(secure_snowflake: QCATestingSnowflake):
     storage_socket.serverinfo.save_access(access4)
     storage_socket.serverinfo.save_access(access5)
     storage_socket.serverinfo.save_access(access6)
+
+    # Update the IP addresses with geo data
+    with storage_socket.session_scope() as session:
+        storage_socket.serverinfo.geolocate_accesses(session, DummyJobStatus())
 
     meta, accesses = storage_socket.serverinfo.query_access_log(AccessLogQueryFilters())
     assert meta.success

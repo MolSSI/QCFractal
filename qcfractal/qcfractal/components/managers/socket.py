@@ -33,9 +33,9 @@ class ManagerSocket:
         self._manager_max_missed_heartbeats = root_socket.qcf_config.heartbeat_max_missed
 
         # Add the initial job for checking on managers
-        self.add_internal_job(0.0)
+        self.add_internal_job_check_heartbeats(0.0)
 
-    def add_internal_job(self, delay: float, *, session: Optional[Session] = None):
+    def add_internal_job_check_heartbeats(self, delay: float, *, session: Optional[Session] = None):
         """
         Adds an internal job to check for dead managers
 
@@ -55,7 +55,7 @@ class ManagerSocket:
                 {},
                 user_id=None,
                 unique_name=True,
-                after_function="managers.add_internal_job",
+                after_function="managers.add_internal_job_check_heartbeats",
                 after_function_kwargs={"delay": self._manager_heartbeat_frequency},
                 session=session,
             )

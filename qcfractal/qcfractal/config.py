@@ -336,10 +336,21 @@ class FractalConfig(ConfigBase):
     )
 
     # Access logging
-    log_access: bool = Field(False, description="Store API access in the Database")
-    geo_file_path: Optional[str] = Field(
+    log_access: bool = Field(False, description="Store API access in the database")
+
+    # maxmind_account_id: Optional[int] = Field(None, description="Account ID for MaxMind GeoIP2 service")
+    maxmind_license_key: Optional[str] = Field(
         None,
-        description="Geoip2 cites file path (.mmdb) for geolocating IP addresses. Defaults to [base_folder]/GeoLite2-City.mmdb. If this file is not available, geo-ip lookup will not be enabled",
+        description="License key for MaxMind GeoIP2 service. If provided, the GeoIP2 database will be downloaded and updated automatically",
+    )
+
+    geoip2_dir: Optional[str] = Field(
+        None,
+        description="Directory containing the Maxmind GeoIP2 Cities file (GeoLite2-City.mmdb) Defaults to [base_folder]/geoip2. This directory will be created if needed.",
+    )
+
+    geoip2_filename: str = Field(
+        "GeoLite2-City.mmdb", description="Filename of the Maxmind GeoIP2 Cities file (GeoLite2-City.mmdb)"
     )
 
     # Internal jobs
@@ -368,9 +379,9 @@ class FractalConfig(ConfigBase):
         values.setdefault("auto_reset", dict())
         return values
 
-    @validator("geo_file_path")
-    def _check_geo_file_path(cls, v, values):
-        return _make_abs_path(v, values["base_folder"], None)
+    @validator("geoip2_dir")
+    def _check_geoip2_dir(cls, v, values):
+        return _make_abs_path(v, values["base_folder"], "geoip2")
 
     @validator("homepage_directory")
     def _check_hompepage_directory_path(cls, v, values):
@@ -432,7 +443,9 @@ def convert_old_configuration(old_config):
     cfg_dict["max_active_services"] = old_config.fractal.max_active_services
     cfg_dict["heartbeat_frequency"] = old_config.fractal.heartbeat_frequency
     cfg_dict["log_access"] = old_config.fractal.log_apis
-    cfg_dict["geo_file_path"] = old_config.fractal.geo_file_path
+
+    if old_config.fractal.geo_file_path:
+        cfg_dict["geoip2_dir"] = os.path.basename(old_config.fractal.geo_file_path)
 
     return FractalConfig(**cfg_dict)
 
