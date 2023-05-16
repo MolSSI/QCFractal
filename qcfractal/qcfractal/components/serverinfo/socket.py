@@ -249,6 +249,13 @@ class ServerInfoSocket:
         if not self._geoip2_enabled:
             return
 
+        if not os.path.exists(self._geoip2_file_path):
+            self._logger.warning(
+                "GeoIP2 database file not found. Cannot add location data to accesses. "
+                "May need to wait for the updater job to run"
+            )
+            return
+
         stmt = select(ServerStatsMetadataORM).where(ServerStatsMetadataORM.name == "last_geolocated_date")
         last_geolocated_date = session.execute(stmt).scalar_one_or_none()
 
