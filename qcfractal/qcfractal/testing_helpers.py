@@ -18,7 +18,7 @@ mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-
 mname2 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="2234-5678-1234-5678")
 
 
-class DummyJobStatus:
+class DummyJobProgress:
     """
     Functor for updating progress and cancelling internal jobs
 
@@ -68,7 +68,7 @@ def run_service(
 
     while n_iterations < max_iterations:
         with storage_socket.session_scope() as session:
-            n_services = storage_socket.services.iterate_services(session, DummyJobStatus())
+            n_services = storage_socket.services.iterate_services(session, DummyJobProgress())
 
             # iterate_services will handle errors
             if n_services == 0:
@@ -82,7 +82,7 @@ def run_service(
             job_orm = session.execute(stmt).scalar_one_or_none()
 
             if job_orm is not None:
-                storage_socket.internal_jobs._run_single(session, job_orm, DummyJobStatus())
+                storage_socket.internal_jobs._run_single(session, job_orm, DummyJobProgress())
                 # The function that iterates a service returns True if it is finished
                 if job_orm.result is True:
 

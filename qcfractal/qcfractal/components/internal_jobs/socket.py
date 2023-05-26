@@ -18,7 +18,7 @@ from qcportal.exceptions import MissingDataError
 from qcportal.internal_jobs.models import InternalJobStatusEnum, InternalJobQueryFilters
 from qcportal.metadata_models import QueryMetadata
 from .db_models import InternalJobORM
-from .status import JobStatus
+from .status import JobProgress
 
 if TYPE_CHECKING:
     from qcfractal.db_socket.socket import SQLAlchemySocket
@@ -297,7 +297,7 @@ class InternalJobSocket:
         with self.root_socket.optional_session(session) as session:
             session.execute(stmt)
 
-    def _run_single(self, session: Session, job_orm: InternalJobORM, job_status: JobStatus):
+    def _run_single(self, session: Session, job_orm: InternalJobORM, job_progress: JobProgress):
         """
         Runs a single job
         """
@@ -305,7 +305,7 @@ class InternalJobSocket:
         job_orm.started_date = datetime.utcnow()
         job_orm.last_updated = datetime.utcnow()
         job_orm.runner_hostname = self._hostname
-        job_orm.runner_uuid = job_status._runner_uuid
+        job_orm.runner_uuid = job_progress._runner_uuid
         job_orm.status = InternalJobStatusEnum.running
 
         # Releases the row-level lock (from the with_for_update() in the original query)
@@ -316,10 +316,10 @@ class InternalJobSocket:
 
             # Function must be part of the sockets
             func = func_attr(self.root_socket)
-            result = func(**job_orm.kwargs, job_status=job_status, session=session)
+            result = func(**job_orm.kwargs, job_progress=job_progress, session=session)
 
             # Mark complete, unless this was cancelled
-            if not job_status.cancelled():
+            if not job_progress.cancelled():
                 job_orm.status = InternalJobStatusEnum.complete
                 job_orm.progress = 100
 
@@ -330,7 +330,7 @@ class InternalJobSocket:
 
             job_orm.status = InternalJobStatusEnum.error
 
-        if not job_status.deleted():
+        if not job_progress.deleted():
             job_orm.ended_date = datetime.utcnow()
             job_orm.last_updated = job_orm.ended_date
             job_orm.result = result
@@ -462,11 +462,11 @@ class InternalJobSocket:
 
             self._logger.info(f"UUID={runner_uuid} running job {job_orm.name} (id={job_orm.id})")
 
-            job_status = JobStatus(job_orm.id, runner_uuid, session_status, self._update_frequency, end_event)
-            self._run_single(session_main, job_orm, job_status=job_status)
+            job_progress = JobProgress(job_orm.id, runner_uuid, session_status, self._update_frequency, end_event)
+            self._run_single(session_main, job_orm, job_progress=job_progress)
 
             # Stop the updating thread and cleanup
-            job_status.stop()
+            job_progress.stop()
 
         # Remove the listener registration for this process
         cursor.execute("UNLISTEN check_internal_jobs;")

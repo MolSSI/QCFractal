@@ -18,20 +18,20 @@ if TYPE_CHECKING:
 
 
 # Add in another function to the internal_jobs socket for testing
-def dummmy_internal_job(self, iterations: int, session, job_status):
+def dummmy_internal_job(self, iterations: int, session, job_progress):
     for i in range(iterations):
         time.sleep(1.0)
-        job_status.update_progress(100 * ((i + 1) / iterations))
+        job_progress.update_progress(100 * ((i + 1) / iterations))
         print("Dummy internal job counter ", i)
 
-        if job_status.cancelled():
+        if job_progress.cancelled():
             return "Internal job cancelled"
 
     return "Internal job finished"
 
 
 # And another one for errors
-def dummmy_internal_job_error(self, session, job_status):
+def dummmy_internal_job_error(self, session, job_progress):
     raise RuntimeError("Expected error")
 
 

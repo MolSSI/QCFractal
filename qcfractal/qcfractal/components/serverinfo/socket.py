@@ -34,7 +34,7 @@ from .db_models import AccessLogORM, InternalErrorLogORM, ServerStatsLogORM, Mes
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from qcfractal.components.internal_jobs.status import JobStatus
+    from qcfractal.components.internal_jobs.status import JobProgress
     from typing import Dict, Any, List, Optional, Tuple
 
 
@@ -157,7 +157,7 @@ class ServerInfoSocket:
                 session=session,
             )
 
-    def update_geoip2_file(self, session: Session, job_status: JobStatus) -> None:
+    def update_geoip2_file(self, session: Session, job_progress: JobProgress) -> None:
 
         # Possible to reach this if we changed the settings, but have a job still in the queue
         if not (self._geoip2_enabled and self._maxmind_license_key):
@@ -240,7 +240,7 @@ class ServerInfoSocket:
 
         self._logger.info(f"Geoip database (date {db_date}) downloaded and extracted to {self._geoip2_dir}")
 
-    def geolocate_accesses(self, session: Session, job_status: JobStatus) -> None:
+    def geolocate_accesses(self, session: Session, job_progress: JobProgress) -> None:
         """
         Finds and updates accesses which haven't been processed for geolocation data
         """
@@ -388,7 +388,7 @@ class ServerInfoSocket:
             session.flush()
             return log.id
 
-    def update_server_stats(self, session: Session, job_status: JobStatus) -> None:
+    def update_server_stats(self, session: Session, job_progress: JobProgress) -> None:
         """
         Obtains some statistics about the server and stores them in the database
 

@@ -14,7 +14,7 @@ from qcfractal.components.torsiondrive.testing_helpers import (
     generate_task_key as generate_td_task_key,
 )
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.testing_helpers import run_service, DummyJobStatus
+from qcfractal.testing_helpers import run_service, DummyJobProgress
 from qcportal.managers import ManagerName
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 
@@ -61,7 +61,7 @@ def test_service_socket_iterate_order(storage_socket: SQLAlchemySocket, session:
     id_2, _ = submit_go_test_data(storage_socket, "go_H3NS_psi4_pbe", "*", PriorityEnum.high)
 
     with storage_socket.session_scope() as s:
-        storage_socket.services.iterate_services(s, DummyJobStatus())
+        storage_socket.services.iterate_services(s, DummyJobProgress())
 
     assert session.get(BaseRecordORM, id_1).status == RecordStatusEnum.waiting
     assert session.get(BaseRecordORM, id_2).status == RecordStatusEnum.running

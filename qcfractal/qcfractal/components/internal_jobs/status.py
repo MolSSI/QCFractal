@@ -11,7 +11,7 @@ from qcfractal.components.internal_jobs.db_models import InternalJobORM
 from qcportal.internal_jobs.models import InternalJobStatusEnum
 
 
-class JobStatus:
+class JobProgress:
     """
     Functor for updating progress and cancelling internal jobs
     """

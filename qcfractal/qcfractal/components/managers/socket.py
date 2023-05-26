@@ -16,7 +16,7 @@ from .db_models import ComputeManagerLogORM, ComputeManagerORM
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from qcfractal.components.internal_jobs.status import JobStatus
+    from qcfractal.components.internal_jobs.status import JobProgress
     from typing import List, Iterable, Optional, Sequence, Sequence, Dict, Any, Tuple
 
 
@@ -333,7 +333,7 @@ class ManagerSocket:
 
         return meta, result_dicts
 
-    def check_manager_heartbeats(self, session: Session, job_status: JobStatus) -> None:
+    def check_manager_heartbeats(self, session: Session, job_progress: JobProgress) -> None:
         """
         Checks for manager heartbeats
 
@@ -345,8 +345,8 @@ class ManagerSocket:
         ----------
         session
             An existing SQLAlchemy session to use.
-        job_status
-            An object that reports the current job status and which we can use to update progress
+        job_progress
+            An object used to report the current job progress and status
         """
         self._logger.debug("Checking manager heartbeats")
         manager_window = self._manager_max_missed_heartbeats * self._manager_heartbeat_frequency

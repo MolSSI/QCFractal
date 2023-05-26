@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from qcarchivetesting import load_ip_test_data
 from qcarchivetesting.testing_classes import QCATestingSnowflake
-from qcfractal.testing_helpers import DummyJobStatus
+from qcfractal.testing_helpers import DummyJobProgress
 from qcportal.serverinfo.models import AccessLogQueryFilters
 
 if TYPE_CHECKING:
@@ -111,7 +111,7 @@ def test_serverinfo_socket_save_access(secure_snowflake: QCATestingSnowflake):
 
     # Update the IP addresses with geo data
     with storage_socket.session_scope() as session:
-        storage_socket.serverinfo.geolocate_accesses(session, DummyJobStatus())
+        storage_socket.serverinfo.geolocate_accesses(session, DummyJobProgress())
 
     meta, accesses = storage_socket.serverinfo.query_access_log(AccessLogQueryFilters())
     assert meta.success

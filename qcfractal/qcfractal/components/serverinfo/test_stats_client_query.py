@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from qcarchivetesting.testing_classes import QCATestingSnowflake
-from qcfractal.testing_helpers import DummyJobStatus
+from qcfractal.testing_helpers import DummyJobProgress
 
 
 @pytest.fixture(scope="module")
@@ -19,7 +19,7 @@ def queryable_stats_client(postgres_server, pytestconfig):
         storage_socket = server.get_storage_socket()
         with storage_socket.session_scope() as session:
             for i in range(100):
-                storage_socket.serverinfo.update_server_stats(session=session, job_status=DummyJobStatus())
+                storage_socket.serverinfo.update_server_stats(session=session, job_progress=DummyJobProgress())
 
         yield server.client()
 

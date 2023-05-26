@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from qcfractal.testing_helpers import DummyJobStatus
+from qcfractal.testing_helpers import DummyJobProgress
 from qcportal.serverinfo import ServerStatsQueryFilters
 
 if TYPE_CHECKING:
@@ -20,7 +20,7 @@ def test_serverinfo_socket_update_stats(storage_socket: SQLAlchemySocket):
 
     # Force saving the stats
     with storage_socket.session_scope() as session:
-        storage_socket.serverinfo.update_server_stats(session=session, job_status=DummyJobStatus())
+        storage_socket.serverinfo.update_server_stats(session=session, job_progress=DummyJobProgress())
 
     time_1 = datetime.utcnow()
 
@@ -37,7 +37,7 @@ def test_serverinfo_socket_update_stats(storage_socket: SQLAlchemySocket):
 
     # Force saving the stats again
     with storage_socket.session_scope() as session:
-        storage_socket.serverinfo.update_server_stats(session=session, job_status=DummyJobStatus())
+        storage_socket.serverinfo.update_server_stats(session=session, job_progress=DummyJobProgress())
 
     # Should get the latest now
     meta, stats2 = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
@@ -52,7 +52,7 @@ def test_serverinfo_socket_update_stats(storage_socket: SQLAlchemySocket):
 
     # one more update
     with storage_socket.session_scope() as session:
-        storage_socket.serverinfo.update_server_stats(session=session, job_status=DummyJobStatus())
+        storage_socket.serverinfo.update_server_stats(session=session, job_progress=DummyJobProgress())
 
     meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters(before=datetime.utcnow()))
     assert meta.n_found == 3
