@@ -115,10 +115,6 @@ class ComputeManager:
 
         self.scheduler = InterruptableScheduler()
 
-        # Server response/stale job handling
-        self.server_error_retries = self.manager_config.server_error_retries
-        self.deferred_task_limit = self.manager_config.deferred_task_limit
-
         # key = number of retries. value = dict of (task_id, compressed result)
         self._deferred_tasks: Dict[int, Dict[int, AppTaskResult]] = defaultdict(dict)
 
@@ -448,18 +444,8 @@ class ComputeManager:
                 # Tried and failed
                 attempts += 1
 
-                # Case: Still within the retry limit
-                if self.server_error_retries is None or attempts < self.server_error_retries:
-                    new_deferred_tasks[attempts] = results
-                    self.logger.warning(
-                        f"Could not post jobs from {attempts-1} updates ago, will retry on next update."
-                    )
-
-                # Case: Over limit
-                else:
-                    self.logger.warning(
-                        f"Could not post {len(results)} tasks from {attempts-1} updates ago and over attempt limit. Dropping"
-                    )
+                new_deferred_tasks[attempts] = results
+                self.logger.warning(f"Could not post jobs from {attempts-1} updates ago, will retry on next update.")
 
         self._deferred_tasks = new_deferred_tasks
 
@@ -499,15 +485,10 @@ class ComputeManager:
                         {k: "rejected" for k in executor_results.keys() if k in return_meta.rejected_ids}
                     )
                 except (ConnectionError, Timeout):
-                    if self.server_error_retries is None or self.server_error_retries > 0:
-                        self.logger.warning("Returning complete tasks failed. Attempting again on next update.")
-                        self._deferred_tasks[0].update(executor_results)
-                        task_status = {k: "deferred" for k in executor_results.keys()}
-                        server_up = False
-                    else:
-                        self.logger.warning("Returning complete tasks failed. Data may be lost.")
-                        task_status = {k: "unknown_error" for k in executor_results.keys()}
-                        server_up = False
+                    self.logger.warning("Returning complete tasks failed. Attempting again on next update.")
+                    self._deferred_tasks[0].update(executor_results)
+                    task_status = {k: "deferred" for k in executor_results.keys()}
+                    server_up = False
 
                 for key, app_result in executor_results.items():
                     walltime_seconds = app_result.walltime

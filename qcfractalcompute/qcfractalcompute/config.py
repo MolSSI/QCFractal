@@ -149,9 +149,6 @@ class FractalComputeConfig(BaseModel):
         gt=0,
     )
 
-    deferred_task_limit: int = 50
-    server_error_retries: int = 10
-
     parsl_run_dir: str = "parsl_run_dir"
 
     server: FractalServerSettings = Field(...)

@@ -51,7 +51,6 @@ class DataGeneratorManager(ComputeManager):
             base_folder=tmpdir.name,
             cluster="datagenerator_compute",
             update_frequency=10,
-            server_error_retries=3,
             server=FractalServerSettings(
                 fractal_uri=uri,
                 verify=False,

@@ -178,58 +178,6 @@ def test_manager_deferred_return(snowflake: QCATestingSnowflake):
     assert all(x["manager_name"] == compute.name for x in r)
 
 
-def test_manager_deferred_drop(snowflake: QCATestingSnowflake, caplog):
-    storage_socket = snowflake.get_storage_socket()
-    all_id, result_data = populate_db(storage_socket)
-
-    with caplog_handler_at_level(caplog, logging.WARNING):
-        compute_thread = QCATestingComputeThread(snowflake._qcf_config, result_data)
-        compute_thread.start(manual_updates=True)
-        compute = compute_thread._compute
-
-        time.sleep(1)  # wait for manager to register
-        meta, managers = storage_socket.managers.query(ManagerQueryFilters())
-        assert meta.n_found == 1
-        assert compute.n_total_active_tasks == 0  # haven't updated - we are doing manual updates
-
-        # Get some tasks
-        compute.update(new_tasks=True)
-        assert compute.n_total_active_tasks > 0
-        assert compute.n_deferred_tasks == 0
-
-        # Sever goes down
-        snowflake.stop_api()
-
-        # Compute some tasks (each take 2 seconds)
-        time.sleep(5)
-
-        # Manager tries to update several times, eventually giving up on returning those tasks
-        # Update once to make them deferred
-        compute.update(new_tasks=True)
-
-        assert compute.n_deferred_tasks > 0
-        deferred_task_ids = list(compute._deferred_tasks[0].keys())
-        deferred_record_ids = [compute._record_id_map[x] for x in deferred_task_ids]
-
-        # Defer too many times = drop them
-        for _ in range(compute._compute_config.server_error_retries + 2):
-            compute.update(new_tasks=True)
-
-        # Deferred tasks were dropped
-        assert compute.n_deferred_tasks == 0
-
-        ## server comes back up
-        snowflake.start_api()
-
-        # Update again (but no new tasks)
-        compute.update(new_tasks=False)
-
-        recs = storage_socket.records.get(deferred_record_ids)
-        assert all(x["status"] == RecordStatusEnum.running for x in recs)
-
-    assert "updates ago and over attempt limit. Dropping" in caplog.text
-
-
 def test_manager_missed_heartbeats_shutdown(snowflake: QCATestingSnowflake):
 
     compute_thread = QCATestingComputeThread(snowflake._qcf_config)

@@ -46,7 +46,6 @@ class MockTestingComputeManager(ComputeManager):
             parsl_run_dir=parsl_run_dir,
             cluster="mock_compute",
             update_frequency=1,
-            server_error_retries=3,
             server=FractalServerSettings(
                 fractal_uri=uri,
                 verify=False,
