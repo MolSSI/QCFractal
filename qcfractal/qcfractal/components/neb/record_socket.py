@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import contextlib
 import importlib
 import io
 import json
@@ -112,10 +111,14 @@ class NEBRecordSocket(BaseRecordSocket):
         spec: NEBSpecification = neb_orm.specification.to_model(NEBSpecification)
         keywords = spec.keywords.dict()
         table_rows = sorted(keywords.items())
-        output += tabulate.tabulate(table_rows, headers=["keywords", "value"])
+        output += tabulate.tabulate(table_rows, headers=["NEB keywords", "value"])
         output += "\n\n"
         table_rows = sorted(spec.singlepoint_specification.dict().items())
-        output += tabulate.tabulate(table_rows, headers=["keywords", "value"])
+        output += tabulate.tabulate(table_rows, headers=["NEB QC keywords", "value"])
+        output += "\n\n"
+        if bool(spec.optimization_specification):
+            table_rows = sorted(spec.optimization_specification.qc_specification.dict().items())
+            output += tabulate.tabulate(table_rows, headers=["OPT QC keywords", "value"])
         output += "\n\n"
 
         initial_chain: List[Dict[str, Any]] = [x.molecule.model_dict() for x in neb_orm.initial_chain]
@@ -194,9 +197,13 @@ class NEBRecordSocket(BaseRecordSocket):
 
                 neb_stdout = io.StringIO()
                 logging.captureWarnings(True)
-                with contextlib.redirect_stdout(neb_stdout):
-                    respaced_chain = geometric.neb.arrange(initial_molecules)
+                logger = logging.getLogger('geometric.nifty')
+                handler = logging.StreamHandler(neb_stdout)
+                handler.terminator = ""
+                logger.addHandler(handler)
+                respaced_chain = geometric.neb.arrange(initial_molecules)
                 logging.captureWarnings(False)
+                logger.handlers.clear()
                 output += "\n" + neb_stdout.getvalue()
 
                 # Submit the first batch of singlepoint calculations
@@ -249,19 +256,22 @@ class NEBRecordSocket(BaseRecordSocket):
                     service_state.nebinfo["gradients"] = gradients
                     service_state.nebinfo["params"] = params
                     neb_stdout = io.StringIO()
+                    logger = logging.getLogger('geometric.nifty')
+                    handler = logging.StreamHandler(neb_stdout)
+                    handler.terminator = ""
+                    logger.addHandler(handler)
                     logging.captureWarnings(True)
-                    with contextlib.redirect_stdout(neb_stdout):
-                        if service_state.iteration == 1:
-                            newcoords, prev = geometric.neb.prepare(service_state.nebinfo)
-                            service_state.nebinfo = prev
+                    if service_state.iteration == 1:
+                        newcoords, prev = geometric.neb.prepare(service_state.nebinfo)
+                        service_state.nebinfo = prev
 
-                            next_chain = [Molecule(**molecule_template, geometry=geometry) for geometry in newcoords]
-                            self.submit_singlepoints(session, service_state, service_orm, next_chain)
-                            service_state.iteration += 1
-                        else:
-                            self.submit_nextchain_subtask(session, service_state, service_orm)
-
+                        next_chain = [Molecule(**molecule_template, geometry=geometry) for geometry in newcoords]
+                        self.submit_singlepoints(session, service_state, service_orm, next_chain)
+                        service_state.iteration += 1
+                    else:
+                        self.submit_nextchain_subtask(session, service_state, service_orm)
                     output += "\n" + neb_stdout.getvalue()
+                    logger.handlers.clear()
                     logging.captureWarnings(False)
 
             # We are converged, but need to handle TS optimization
@@ -321,17 +331,22 @@ class NEBRecordSocket(BaseRecordSocket):
         # delete all existing entries in the dependency list
         service_orm.dependencies = []
         service_state = NEBServiceState(**service_orm.service_state)
+        neb_spec = neb_orm.specification.to_model(NEBSpecification)
+        has_optimization = bool(neb_spec.optimization_specification)
         qc_spec = neb_orm.specification.singlepoint_specification.model_dict()
         if service_state.tsoptimize and service_state.converged:
-            opt_spec = OptimizationSpecification(
-                program="geometric",
-                qc_specification=QCSpecification(**qc_spec),
-                keywords={
-                    "transition": True,
-                    "coordsys": "tric",
-                    "hessian": service_state.tshessian,
-                },
-            )
+            if has_optimization:
+                opt_spec = neb_orm.specification.optimization_specification.to_model(OptimizationSpecification)
+            else:
+                opt_spec = OptimizationSpecification(
+                    program="geometric",
+                    qc_specification=QCSpecification(**qc_spec),
+                    keywords={
+                        "transition": True,
+                        "coordsys": "tric",
+                        "hessian": service_state.tshessian,
+                    },
+                )
             ts = True
         else:
             opt_spec = OptimizationSpecification(
@@ -457,31 +472,58 @@ class NEBRecordSocket(BaseRecordSocket):
                     ),
                     None,
                 )
-
-            stmt = (
-                insert(NEBSpecificationORM)
-                .values(
-                    program=neb_spec.program,
-                    keywords=neb_kw_dict,
-                    keywords_hash=kw_hash,
-                    singlepoint_specification_id=sp_spec_id,
-                )
-                .on_conflict_do_nothing()
-                .returning(NEBSpecificationORM.id)
+            # Add the optimization specification
+            meta, opt_spec_id = self.root_socket.records.optimization.add_specification(
+                neb_spec.optimization_specification, session=session
             )
+            if not meta.success:
+                return (
+                    InsertMetadata(
+                        error_description="Unable to add optimization specification: " + meta.error_string,
+                    ),
+                    None,
+                )
+
+            stmt = select(NEBSpecificationORM.id).filter_by(
+                program=neb_spec.program,
+                keywords_hash=kw_hash,
+                singlepoint_specification_id=sp_spec_id,
+                optimization_specification_id=opt_spec_id,
+            )
+            #stmt = (
+            #    insert(NEBSpecificationORM)
+            #    .values(
+            #        program=neb_spec.program,
+            #        keywords=neb_kw_dict,
+            #        keywords_hash=kw_hash,
+            #        singlepoint_specification_id=sp_spec_id,
+            #        optimization_specification_id=opt_spec_id,
+            #    )
+            #    .on_conflict_do_nothing()
+            #    .returning(NEBSpecificationORM.id)
+            #)
+
+
+            if opt_spec_id is not None:
+                stmt = stmt.filter(NEBSpecificationORM.optimization_specification_id == opt_spec_id)
+            else:
+                stmt = stmt.filter(NEBSpecificationORM.optimization_specification_id.is_(None))
 
             r = session.execute(stmt).scalar_one_or_none()
 
             if r is not None:
-                return InsertMetadata(inserted_idx=[0]), r
+                return InsertMetadata(existing_idx=[0]), r
             else:
                 # Specification was already existing
-                stmt = select(NEBSpecificationORM.id).filter_by(
+                stmt = (
+                    insert(NEBSpecificationORM).
+                    values(
                     program=neb_spec.program,
                     keywords=neb_kw_dict,
                     keywords_hash=kw_hash,
                     singlepoint_specification_id=sp_spec_id,
-                )
+                    optimization_specification_id=opt_spec_id,
+                ).returning(NEBSpecificationORM.id))
 
                 r = session.execute(stmt).scalar_one()
                 return InsertMetadata(existing_idx=[0]), r

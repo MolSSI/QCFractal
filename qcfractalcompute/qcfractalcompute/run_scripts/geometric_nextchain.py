@@ -1,9 +1,11 @@
+import logging
 import io
 import json
 import sys
 import time
 import traceback
-from contextlib import redirect_stdout, redirect_stderr
+import re
+from contextlib import redirect_stderr
 
 import geometric
 
@@ -12,29 +14,35 @@ if __name__ == "__main__":
     record_id = sys.argv[1]
     nextchain_info_file = sys.argv[2]
 
+    logger = logging.getLogger('geometric.nifty')
+    rdout = io.StringIO()
+    handler = logging.StreamHandler(rdout)
+    handler.terminator = ""
+    logger.addHandler(handler)
+
     with open(nextchain_info_file, "r") as f:
         nextchain_kwargs = json.load(f)
 
-    with redirect_stdout(io.StringIO()) as rdout:
-        with redirect_stderr(io.StringIO()) as rderr:
-            start_time = time.time()
+    with redirect_stderr(io.StringIO()) as rderr:
+        start_time = time.time()
+        success = False
+        try:
+            results = geometric.neb.nextchain(**nextchain_kwargs)
+            success = True
+        except Exception as e:
             success = False
-            try:
-                results = geometric.neb.nextchain(**nextchain_kwargs)
-                success = True
-            except Exception as e:
-                success = False
-                results = {
-                    "error": {
-                        "error_type": type(e).__name__,
-                        "error_message": traceback.format_exc(),
-                    },
-                    "success": False,
-                }
+            results = {
+                "error": {
+                    "error_type": type(e).__name__,
+                    "error_message": traceback.format_exc(),
+                },
+                "success": False,
+            }
 
-            end_time = time.time()
-
+        end_time = time.time()
+    logger.handlers.clear()
     stdout = rdout.getvalue()
+    stdout = re.sub("Custom engine selected.\n", "", stdout)
     stderr = rderr.getvalue()
 
     if success:

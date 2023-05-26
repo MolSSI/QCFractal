@@ -2179,6 +2179,7 @@ class PortalClient(PortalClientBase):
         initial_chains: List[List[Union[int, Molecule]]],
         program: str,
         singlepoint_specification: QCSpecification,
+        optimization_specification: Optional[OptimizationSpecification],
         keywords: Union[NEBKeywords, Dict[str, Any]],
         tag: str = "*",
         priority: PriorityEnum = PriorityEnum.normal,
@@ -2195,6 +2196,7 @@ class PortalClient(PortalClientBase):
             "specification": {
                 "program": program,
                 "singlepoint_specification": singlepoint_specification,
+                "optimization_specification": optimization_specification,
                 "keywords": keywords,
             },
             "tag": tag,

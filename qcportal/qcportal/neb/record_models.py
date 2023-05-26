@@ -6,7 +6,7 @@ from typing_extensions import Literal
 from qcportal.molecules import Molecule
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
 from qcportal.utils import recursive_normalizer
-from ..optimization.record_models import OptimizationRecord
+from ..optimization.record_models import OptimizationRecord, OptimizationSpecification
 from ..singlepoint.record_models import QCSpecification, SinglepointRecord
 
 
@@ -76,6 +76,7 @@ class NEBSpecification(BaseModel):
 
     program: constr(to_lower=True) = "geometric"
     singlepoint_specification: QCSpecification
+    optimization_specification: Optional[OptimizationSpecification]
     keywords: NEBKeywords
 
 

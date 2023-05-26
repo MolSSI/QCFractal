@@ -8,7 +8,7 @@ from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.orm import relationship
 
 from qcfractal.components.molecules.db_models import MoleculeORM
-from qcfractal.components.optimization.record_db_models import OptimizationRecordORM
+from qcfractal.components.optimization.record_db_models import OptimizationRecordORM, OptimizationSpecificationORM
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM, SinglepointRecordORM
 from qcfractal.db_socket import BaseORM
@@ -64,6 +64,9 @@ class NEBInitialchainORM(BaseORM):
 
 
 class NEBSpecificationORM(BaseORM):
+    """
+    Table for storing NEB specifications
+    """
 
     __tablename__ = "neb_specification"
 
@@ -74,6 +77,9 @@ class NEBSpecificationORM(BaseORM):
     singlepoint_specification_id = Column(Integer, ForeignKey(QCSpecificationORM.id), nullable=False)
     singlepoint_specification = relationship(QCSpecificationORM, lazy="joined", uselist=False)
 
+    optimization_specification_id = Column(Integer, ForeignKey(OptimizationSpecificationORM.id), nullable=True)
+    optimization_specification = relationship(OptimizationSpecificationORM, lazy="joined")
+
     keywords = Column(JSONB, nullable=False)
     keywords_hash = Column(String, nullable=False)
 
@@ -81,16 +87,18 @@ class NEBSpecificationORM(BaseORM):
         UniqueConstraint(
             "program",
             "singlepoint_specification_id",
+            "optimization_specification_id",
             "keywords_hash",
             name="ux_neb_specification_keys",
         ),
         Index("ix_neb_specification_program", "program"),
         Index("ix_neb_specification_singlepoint_specification_id", "singlepoint_specification_id"),
+        Index("ix_neb_specification_optimization_specification_id", "optimization_specification_id")
         # Enforce lowercase on some fields
     )
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        exclude = self.append_exclude(exclude, "id", "keywords_hash", "singlepoint_specification_id")
+        exclude = self.append_exclude(exclude, "id", "keywords_hash", "singlepoint_specification_id", "optimization_specification_id")
         return BaseORM.model_dict(self, exclude)
 
     @property
