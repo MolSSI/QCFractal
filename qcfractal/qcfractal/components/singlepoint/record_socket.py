@@ -195,7 +195,6 @@ class SinglepointRecordSocket(BaseRecordSocket):
                     driver=qc_spec.driver,
                     method=qc_spec.method,
                     basis=basis,
-                    keywords=qc_spec.keywords,
                     keywords_hash=kw_hash,
                     protocols=protocols_dict,
                 )

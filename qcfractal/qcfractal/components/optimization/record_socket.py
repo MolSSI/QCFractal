@@ -169,7 +169,6 @@ class OptimizationRecordSocket(BaseRecordSocket):
                 # Specification was already existing
                 stmt = select(OptimizationSpecificationORM.id).filter_by(
                     program=opt_spec.program,
-                    keywords=opt_spec.keywords,
                     keywords_hash=kw_hash,
                     qc_specification_id=qc_spec_id,
                     protocols=protocols_dict,

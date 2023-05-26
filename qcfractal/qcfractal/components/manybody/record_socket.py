@@ -439,7 +439,6 @@ class ManybodyRecordSocket(BaseRecordSocket):
                 stmt = select(ManybodySpecificationORM.id).filter_by(
                     program=mb_spec.program,
                     singlepoint_specification_id=sp_spec_id,
-                    keywords=kw_dict,
                     keywords_hash=kw_hash,
                 )
 

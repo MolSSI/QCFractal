@@ -341,7 +341,6 @@ class ReactionRecordSocket(BaseRecordSocket):
             # Query first, due to behavior of NULL in postgres
             stmt = select(ReactionSpecificationORM.id).filter_by(
                 program=rxn_spec.program,
-                keywords=kw_dict,
                 keywords_hash=kw_hash,
             )
 
@@ -371,7 +370,7 @@ class ReactionRecordSocket(BaseRecordSocket):
                     .returning(ReactionSpecificationORM.id)
                 )
 
-            r = session.execute(stmt).scalar_one_or_none()
+            r = session.execute(stmt).scalar_one()
             return InsertMetadata(inserted_idx=[0]), r
 
     def query(

@@ -378,7 +378,6 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                 # Specification was already existing
                 stmt = select(TorsiondriveSpecificationORM.id).filter_by(
                     program=td_spec.program,
-                    keywords=td_kw_dict,
                     keywords_hash=kw_hash,
                     optimization_specification_id=opt_spec_id,
                 )

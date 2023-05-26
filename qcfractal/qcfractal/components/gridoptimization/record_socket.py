@@ -465,7 +465,6 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                 # Specification was already existing
                 stmt = select(GridoptimizationSpecificationORM.id).filter_by(
                     program=go_spec.program,
-                    keywords=go_kw_dict,
                     keywords_hash=kw_hash,
                     optimization_specification_id=opt_spec_id,
                 )
