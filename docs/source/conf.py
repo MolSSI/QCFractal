@@ -95,7 +95,7 @@ html_theme_options = {
   ],
 
     "secondary_sidebar_items": ["page-toc", "sourcelink"],
-    "footer_items": [ "molssi_footer" ],
+    "footer_end": [ "molssi_footer" ],
 }
 
 html_css_files = ['css/custom.css']

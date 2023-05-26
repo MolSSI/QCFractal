@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/PR-SVG-20010719/DTD/svg10.dtd">
+<svg width="57cm" height="26cm" viewBox="-204 -197 1125 503" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <g>
+    <rect style="fill: #4472c4" x="171.027" y="50.3623" width="166.551" height="43.1667"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="171.027" y="50.3623" width="166.551" height="43.1667"/>
+    <text font-size="16.9333" style="fill: #ffffff;text-anchor:middle;font-family:DINCond-Bold;font-style:normal;font-weight:500" x="254.302" y="77.703">
+      <tspan x="254.302" y="77.703">Web API</tspan>
+    </text>
+  </g>
+  <g>
+    <rect style="fill: #ca611f" x="546.25" y="-19.4473" width="136.5" height="64.3333"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="546.25" y="-19.4473" width="136.5" height="64.3333"/>
+    <text font-size="16.9333" style="fill: #ffffff;text-anchor:middle;font-family:DINCond-Bold;font-style:normal;font-weight:500" x="614.5" y="18.4766">
+      <tspan x="614.5" y="18.4766">Compute Manager</tspan>
+    </text>
+  </g>
+  <g>
+    <g>
+      <path style="fill: #b0049b" d="M 412.703 154.045 C 424.903,143.795 431.003,140.379 443.203,140.379 C 455.403,140.379 461.503,143.795 473.703,154.045 L 473.703,208.712 C 461.503,218.962 455.403,222.379 443.203,222.379 C 431.003,222.379 424.903,218.962 412.703,208.712 L 412.703,154.045z"/>
+      <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 412.703 154.045 C 424.903,143.795 431.003,140.379 443.203,140.379 C 455.403,140.379 461.503,143.795 473.703,154.045 L 473.703,208.712 C 461.503,218.962 455.403,222.379 443.203,222.379 C 431.003,222.379 424.903,218.962 412.703,208.712 L 412.703,154.045"/>
+      <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 412.703 154.045 C 424.903,164.295 431.003,167.712 443.203,167.712 C 455.403,167.712 461.503,164.295 473.703,154.045"/>
+      <text font-size="12.7998" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="443.203" y="193.894">
+        <tspan x="443.203" y="193.894"></tspan>
+      </text>
+    </g>
+    <text font-size="16.9333" style="fill: #ffffff;text-anchor:start;font-family:DINCond-Bold;font-style:normal;font-weight:500" x="416.753" y="187.906">
+      <tspan x="416.753" y="187.906">Database</tspan>
+    </text>
+  </g>
+  <g>
+    <rect style="fill: #4472c4" x="171.027" y="159.795" width="166.551" height="43.1667"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="171.027" y="159.795" width="166.551" height="43.1667"/>
+    <text font-size="16.9333" style="fill: #ffffff;text-anchor:middle;font-family:DINCond-Bold;font-style:normal;font-weight:500" x="254.302" y="187.136">
+      <tspan x="254.302" y="187.136">Components/Sockets</tspan>
+    </text>
+  </g>
+  <g>
+    <rect style="fill: #4472c4" x="171.027" y="261.836" width="166.551" height="43.1667"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="171.027" y="261.836" width="166.551" height="43.1667"/>
+    <text font-size="16.9333" style="fill: #ffffff;text-anchor:middle;font-family:DINCond-Bold;font-style:normal;font-weight:500" x="254.302" y="289.177">
+      <tspan x="254.302" y="289.177">Internal Jobs</tspan>
+    </text>
+  </g>
+  <g>
+    <g>
+      <rect style="fill: #ab7400" x="783.452" y="-90.164" width="136.5" height="43.1667"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="783.452" y="-90.164" width="136.5" height="43.1667"/>
+      <text font-size="16.9333" style="fill: #ffffff;text-anchor:middle;font-family:DINCond-Bold;font-style:normal;font-weight:500" x="851.702" y="-62.8234">
+        <tspan x="851.702" y="-62.8234">Worker</tspan>
+      </text>
+    </g>
+    <g>
+      <rect style="fill: #ab7400" x="783.452" y="-35.964" width="136.5" height="43.1667"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="783.452" y="-35.964" width="136.5" height="43.1667"/>
+      <text font-size="16.9333" style="fill: #ffffff;text-anchor:middle;font-family:DINCond-Bold;font-style:normal;font-weight:500" x="851.702" y="-8.62337">
+        <tspan x="851.702" y="-8.62337">Worker</tspan>
+      </text>
+    </g>
+    <g>
+      <rect style="fill: #ab7400" x="783.452" y="72.436" width="136.5" height="43.1667"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="783.452" y="72.436" width="136.5" height="43.1667"/>
+      <text font-size="16.9333" style="fill: #ffffff;text-anchor:middle;font-family:DINCond-Bold;font-style:normal;font-weight:500" x="851.702" y="99.7766">
+        <tspan x="851.702" y="99.7766">Worker</tspan>
+      </text>
+    </g>
+    <g>
+      <rect style="fill: #ab7400" x="783.452" y="18.236" width="136.5" height="43.1667"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="783.452" y="18.236" width="136.5" height="43.1667"/>
+      <text font-size="16.9333" style="fill: #ffffff;text-anchor:middle;font-family:DINCond-Bold;font-style:normal;font-weight:500" x="851.702" y="45.5766">
+        <tspan x="851.702" y="45.5766">Worker</tspan>
+      </text>
+    </g>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="682.75" y1="12.7193" x2="775.877" y2="-62.4648"/>
+    <polygon style="fill: #000000" points="781.712,-67.176 777.072,-57.004 775.877,-62.4648 770.791,-64.7848 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="781.712,-67.176 777.072,-57.004 775.877,-62.4648 770.791,-64.7848 "/>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="682.75" y1="12.7193" x2="774.05" y2="-11.8506"/>
+    <polygon style="fill: #000000" points="781.293,-13.7996 772.936,-6.37271 774.05,-11.8506 770.337,-16.0292 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="781.293,-13.7996 772.936,-6.37271 774.05,-11.8506 770.337,-16.0292 "/>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="682.75" y1="12.7193" x2="774.05" y2="37.2893"/>
+    <polygon style="fill: #000000" points="781.293,39.2383 770.337,41.4678 774.05,37.2893 772.936,31.8114 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="781.293,39.2383 770.337,41.4678 774.05,37.2893 772.936,31.8114 "/>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="682.75" y1="12.7193" x2="775.877" y2="87.9034"/>
+    <polygon style="fill: #000000" points="781.712,92.6147 770.791,90.2234 775.877,87.9034 777.072,82.4426 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="781.712,92.6147 770.791,90.2234 775.877,87.9034 777.072,82.4426 "/>
+  </g>
+  <text font-size="16.9333" style="fill: #000000;text-anchor:start;font-family:DINCond-Bold;font-style:normal;font-weight:500" x="705.752" y="-44.764">
+    <tspan x="705.752" y="-44.764">Parsl</tspan>
+  </text>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="536.514,12.7193 254.302,12.7193 254.302,40.6263 "/>
+    <polygon style="fill: #000000" points="544.014,12.7193 534.014,17.7193 536.514,12.7193 534.014,7.71933 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="544.014,12.7193 534.014,17.7193 536.514,12.7193 534.014,7.71933 "/>
+    <polygon style="fill: #000000" points="254.302,48.1263 249.302,38.1263 254.302,40.6263 259.302,38.1263 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="254.302,48.1263 249.302,38.1263 254.302,40.6263 259.302,38.1263 "/>
+  </g>
+  <text font-size="16.9333" style="fill: #000000;text-anchor:start;font-family:DINCond-Bold;font-style:normal;font-weight:500" x="388.852" y="7.51245">
+    <tspan x="388.852" y="7.51245">JSON/MsgPack</tspan>
+  </text>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="254.302" y1="103.265" x2="254.302" y2="150.059"/>
+    <polygon style="fill: #000000" points="254.302,95.7651 259.302,105.765 254.302,103.265 249.302,105.765 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="254.302,95.7651 259.302,105.765 254.302,103.265 249.302,105.765 "/>
+    <polygon style="fill: #000000" points="254.302,157.559 249.302,147.559 254.302,150.059 259.302,147.559 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="254.302,157.559 249.302,147.559 254.302,150.059 259.302,147.559 "/>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="254.302" y1="212.698" x2="254.302" y2="252.1"/>
+    <polygon style="fill: #000000" points="254.302,205.198 259.302,215.198 254.302,212.698 249.302,215.198 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="254.302,205.198 259.302,215.198 254.302,212.698 249.302,215.198 "/>
+    <polygon style="fill: #000000" points="254.302,259.6 249.302,249.6 254.302,252.1 259.302,249.6 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="254.302,259.6 249.302,249.6 254.302,252.1 259.302,249.6 "/>
+  </g>
+  <g>
+    <rect style="fill: #48a706" x="-202.648" y="50.6012" width="131.45" height="64.3333"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="-202.648" y="50.6012" width="131.45" height="64.3333"/>
+    <text font-size="16.9333" style="fill: #ffffff;text-anchor:middle;font-family:DINCond-Bold;font-style:normal;font-weight:500" x="-136.923" y="88.5252">
+      <tspan x="-136.923" y="88.5252">WebApp (JS)</tspan>
+    </text>
+  </g>
+  <g>
+    <rect style="fill: #48a706" x="-202.648" y="-195.399" width="131.45" height="64.3333"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="-202.648" y="-195.399" width="131.45" height="64.3333"/>
+    <text font-size="16.9333" style="fill: #ffffff;text-anchor:middle;font-family:DINCond-Bold;font-style:normal;font-weight:500" x="-136.923" y="-157.475">
+      <tspan x="-136.923" y="-157.475">Other Apps</tspan>
+    </text>
+  </g>
+  <g>
+    <rect style="fill: #48a706" x="-202.648" y="-72.3988" width="131.45" height="64.3333"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="-202.648" y="-72.3988" width="131.45" height="64.3333"/>
+    <text font-size="16.9333" style="fill: #ffffff;text-anchor:middle;font-family:DINCond-Bold;font-style:normal;font-weight:500" x="-136.923" y="-34.4748">
+      <tspan x="-136.923" y="-34.4748">QCPortal</tspan>
+    </text>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="347.314" y1="181.379" x2="401.981" y2="181.379"/>
+    <polygon style="fill: #000000" points="339.814,181.379 349.814,176.379 347.314,181.379 349.814,186.379 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="339.814,181.379 349.814,176.379 347.314,181.379 349.814,186.379 "/>
+    <polygon style="fill: #000000" points="409.481,181.379 399.481,186.379 401.981,181.379 399.481,176.379 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="409.481,181.379 399.481,186.379 401.981,181.379 399.481,176.379 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="-61.4619,-163.232 212.664,-163.232 212.664,40.6263 "/>
+    <polygon style="fill: #000000" points="-68.9619,-163.232 -58.9619,-168.232 -61.4619,-163.232 -58.9619,-158.232 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="-68.9619,-163.232 -58.9619,-168.232 -61.4619,-163.232 -58.9619,-158.232 "/>
+    <polygon style="fill: #000000" points="212.664,48.1263 207.664,38.1263 212.664,40.6263 217.664,38.1263 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="212.664,48.1263 207.664,38.1263 212.664,40.6263 217.664,38.1263 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="-61.4619,-40.2321 49.9143,-40.2321 49.9143,61.154 161.29,61.154 "/>
+    <polygon style="fill: #000000" points="-68.9619,-40.2321 -58.9619,-45.2321 -61.4619,-40.2321 -58.9619,-35.2321 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="-68.9619,-40.2321 -58.9619,-45.2321 -61.4619,-40.2321 -58.9619,-35.2321 "/>
+    <polygon style="fill: #000000" points="168.79,61.154 158.79,66.154 161.29,61.154 158.79,56.154 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="168.79,61.154 158.79,66.154 161.29,61.154 158.79,56.154 "/>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="-61.4619" y1="82.7666" x2="161.29" y2="82.7386"/>
+    <polygon style="fill: #000000" points="-68.9619,82.7676 -58.9626,77.7663 -61.4619,82.7666 -58.9613,87.7663 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="-68.9619,82.7676 -58.9626,77.7663 -61.4619,82.7666 -58.9613,87.7663 "/>
+    <polygon style="fill: #000000" points="168.79,82.7376 158.791,87.7389 161.29,82.7386 158.79,77.7389 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="168.79,82.7376 158.791,87.7389 161.29,82.7386 158.79,77.7389 "/>
+  </g>
+  <text font-size="16.9333" style="fill: #000000;text-anchor:start;font-family:DINCond-Bold;font-style:normal;font-weight:500" x="-51.8313" y="-167.381">
+    <tspan x="-51.8313" y="-167.381">JSON/MsgPack</tspan>
+  </text>
+  <text font-size="16.9333" style="fill: #000000;text-anchor:start;font-family:DINCond-Bold;font-style:normal;font-weight:500" x="-51.8313" y="-43.7953">
+    <tspan x="-51.8313" y="-43.7953">JSON/MsgPack</tspan>
+  </text>
+  <text font-size="16.9333" style="fill: #000000;text-anchor:start;font-family:DINCond-Bold;font-style:normal;font-weight:500" x="-51.5859" y="78.4932">
+    <tspan x="-51.5859" y="78.4932">JSON/MsgPack</tspan>
+  </text>
+</svg>
