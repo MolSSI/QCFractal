@@ -5,6 +5,7 @@ from qcportal.singlepoint import (
     SinglepointDriver,
     SinglepointProtocols,
 )
+from qcportal.optimization import OptimizationSpecification
 
 
 def test_neb_socket_basic_specification(storage_socket: SQLAlchemySocket):
@@ -56,6 +57,17 @@ def test_neb_socket_basic_specification(storage_socket: SQLAlchemySocket):
             keywords={"k1": "values1"},
             driver=SinglepointDriver.hessian,
             protocols=SinglepointProtocols(wavefunction="all"),
+        ),
+        optimization_specification=OptimizationSpecification(
+            program="geometric",
+            qc_specification=QCSpecification(
+                program="mopac",
+                method="pm7",
+                basis="",
+                keywords={"k1": "values1"},
+                driver=SinglepointDriver.deferred,
+            ),
+            protocols={},
         ),
     )
 

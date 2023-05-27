@@ -40,6 +40,7 @@ def test_neb_client_tag_priority(snowflake_client: PortalClient):
                 driver="gradient",
                 keywords={"tag_priority": [tag, priority]},
             ),
+            None,
             NEBKeywords(),
             priority=priority,
             tag=tag,
@@ -60,8 +61,9 @@ def test_neb_client_add_get(submitter_client: PortalClient, spec: NEBSpecificati
     meta, id = submitter_client.add_nebs(
         initial_chains=[chain1, chain2],
         program=spec.program,
-        keywords=spec.keywords,
         singlepoint_specification=spec.singlepoint_specification,
+        optimization_specification=None,
+        keywords=spec.keywords,
         tag="tag1",
         priority=PriorityEnum.low,
         owner_group=owner_group,
@@ -113,6 +115,7 @@ def test_neb_client_add_existing_chain(snowflake_client: PortalClient):
         program=spec.program,
         keywords=spec.keywords,
         singlepoint_specification=spec.singlepoint_specification,
+        optimization_specification=None,
         tag="tag1",
         priority=PriorityEnum.low,
     )

@@ -197,7 +197,7 @@ class NEBRecordSocket(BaseRecordSocket):
 
                 neb_stdout = io.StringIO()
                 logging.captureWarnings(True)
-                logger = logging.getLogger('geometric.nifty')
+                logger = logging.getLogger("geometric.nifty")
                 handler = logging.StreamHandler(neb_stdout)
                 handler.terminator = ""
                 logger.addHandler(handler)
@@ -256,7 +256,7 @@ class NEBRecordSocket(BaseRecordSocket):
                     service_state.nebinfo["gradients"] = gradients
                     service_state.nebinfo["params"] = params
                     neb_stdout = io.StringIO()
-                    logger = logging.getLogger('geometric.nifty')
+                    logger = logging.getLogger("geometric.nifty")
                     handler = logging.StreamHandler(neb_stdout)
                     handler.terminator = ""
                     logger.addHandler(handler)
@@ -473,16 +473,18 @@ class NEBRecordSocket(BaseRecordSocket):
                     None,
                 )
             # Add the optimization specification
-            meta, opt_spec_id = self.root_socket.records.optimization.add_specification(
-                neb_spec.optimization_specification, session=session
-            )
-            if not meta.success:
-                return (
-                    InsertMetadata(
-                        error_description="Unable to add optimization specification: " + meta.error_string,
-                    ),
-                    None,
+            opt_spec_id = None
+            if neb_spec.optimization_specification is not None:
+                meta, opt_spec_id = self.root_socket.records.optimization.add_specification(
+                    neb_spec.optimization_specification, session=session
                 )
+                if not meta.success:
+                    return (
+                        InsertMetadata(
+                            error_description="Unable to add optimization specification: " + meta.error_string,
+                        ),
+                        None,
+                    )
 
             stmt = select(NEBSpecificationORM.id).filter_by(
                 program=neb_spec.program,
@@ -490,7 +492,7 @@ class NEBRecordSocket(BaseRecordSocket):
                 singlepoint_specification_id=sp_spec_id,
                 optimization_specification_id=opt_spec_id,
             )
-            #stmt = (
+            # stmt = (
             #    insert(NEBSpecificationORM)
             #    .values(
             #        program=neb_spec.program,
@@ -501,8 +503,7 @@ class NEBRecordSocket(BaseRecordSocket):
             #    )
             #    .on_conflict_do_nothing()
             #    .returning(NEBSpecificationORM.id)
-            #)
-
+            # )
 
             if opt_spec_id is not None:
                 stmt = stmt.filter(NEBSpecificationORM.optimization_specification_id == opt_spec_id)
@@ -514,19 +515,21 @@ class NEBRecordSocket(BaseRecordSocket):
             if r is not None:
                 return InsertMetadata(existing_idx=[0]), r
             else:
-                # Specification was already existing
+                # Specification did not already exist
                 stmt = (
-                    insert(NEBSpecificationORM).
-                    values(
-                    program=neb_spec.program,
-                    keywords=neb_kw_dict,
-                    keywords_hash=kw_hash,
-                    singlepoint_specification_id=sp_spec_id,
-                    optimization_specification_id=opt_spec_id,
-                ).returning(NEBSpecificationORM.id))
+                    insert(NEBSpecificationORM)
+                    .values(
+                        program=neb_spec.program,
+                        keywords=neb_kw_dict,
+                        keywords_hash=kw_hash,
+                        singlepoint_specification_id=sp_spec_id,
+                        optimization_specification_id=opt_spec_id,
+                    )
+                    .returning(NEBSpecificationORM.id)
+                )
 
                 r = session.execute(stmt).scalar_one()
-                return InsertMetadata(existing_idx=[0]), r
+                return InsertMetadata(inserted_idx=[0]), r
 
     def query(
         self,

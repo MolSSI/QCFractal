@@ -98,7 +98,9 @@ class NEBSpecificationORM(BaseORM):
     )
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        exclude = self.append_exclude(exclude, "id", "keywords_hash", "singlepoint_specification_id", "optimization_specification_id")
+        exclude = self.append_exclude(
+            exclude, "id", "keywords_hash", "singlepoint_specification_id", "optimization_specification_id"
+        )
         return BaseORM.model_dict(self, exclude)
 
     @property
