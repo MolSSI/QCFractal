@@ -201,7 +201,7 @@ class NEBRecordSocket(BaseRecordSocket):
                 handler = logging.StreamHandler(neb_stdout)
                 handler.terminator = ""
                 logger.addHandler(handler)
-                respaced_chain = geometric.neb.arrange(initial_molecules)
+                respaced_chain = geometric.qcf_neb.arrange(initial_molecules)
                 logging.captureWarnings(False)
                 logger.handlers.clear()
                 output += "\n" + neb_stdout.getvalue()
@@ -262,7 +262,7 @@ class NEBRecordSocket(BaseRecordSocket):
                     logger.addHandler(handler)
                     logging.captureWarnings(True)
                     if service_state.iteration == 1:
-                        newcoords, prev = geometric.neb.prepare(service_state.nebinfo)
+                        newcoords, prev = geometric.qcf_neb.prepare(service_state.nebinfo)
                         service_state.nebinfo = prev
 
                         next_chain = [Molecule(**molecule_template, geometry=geometry) for geometry in newcoords]
@@ -437,7 +437,7 @@ class NEBRecordSocket(BaseRecordSocket):
 
         meta, ids = self.root_socket.records.service_subtask.add(
             {"geometric": None},
-            "geometric.neb.nextchain",
+            "geometric.qcf_neb.nextchain",
             [{"info_dict": service_state.nebinfo}],
             service_orm.tag,
             service_orm.priority,

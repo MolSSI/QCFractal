@@ -27,7 +27,7 @@ if __name__ == "__main__":
         start_time = time.time()
         success = False
         try:
-            results = geometric.neb.nextchain(**nextchain_kwargs)
+            results = geometric.qcf_neb.nextchain(**nextchain_kwargs)
             success = True
         except Exception as e:
             success = False
@@ -55,7 +55,7 @@ if __name__ == "__main__":
             "results": results,
             "extras": {},
             "provenance": {
-                "creator": "geometric.neb.nextchain",
+                "creator": "geometric.qcf_neb.nextchain",
                 "version": geometric.__version__,
                 "walltime": (end_time - start_time),
             },
