@@ -4,6 +4,7 @@ import time
 from typing import TYPE_CHECKING
 
 from qcportal.neb import NEBKeywords
+from qcportal.optimization import OptimizationSpecification
 from qcportal.record_models import RecordStatusEnum
 from qcarchivetesting import load_molecule_data
 from qcportal.singlepoint import QCSpecification
@@ -34,8 +35,17 @@ def test_neb_full_1(fulltest_client: PortalClient):
         keywords={},
     )
 
+    opt_spec = OptimizationSpecification(
+        program="geometric",
+        qc_specification=sp_spec,
+    )
+
     meta, ids = fulltest_client.add_nebs(
-        initial_chains=[chain], program="geometric", singlepoint_specification=sp_spec, keywords=neb_keywords
+        initial_chains=[chain],
+        program="geometric",
+        singlepoint_specification=sp_spec,
+        optimization_specification=opt_spec,
+        keywords=neb_keywords,
     )
 
     for i in range(600):

@@ -49,7 +49,7 @@ def discover_programs_conda(conda_env_name: Optional[str]) -> Dict[str, Dict[str
     }
 
     if "geometric" in program_info:
-        functions["geometric.neb.nextchain"] = {
+        functions["geometric.qcf_neb.nextchain"] = {
             "programs": {"geometric": program_info["geometric"]},
             "app_function": partial(geometric_nextchain_conda_app, conda_env_name=conda_env_name),
         }
@@ -79,7 +79,7 @@ def discover_programs_apptainer(sif_path: str) -> Dict[str, Dict[str, Any]]:
     }
 
     if "geometric" in program_info:
-        functions["geometric.neb.nextchain"] = {
+        functions["geometric.qcf_neb.nextchain"] = {
             "programs": {"geometric": program_info["geometric"]},
             "app_function": partial(geometric_nextchain_apptainer_app, sif_path=sif_path),
         }
