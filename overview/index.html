@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>QCArchive Overview &#8212; QCArchive 0.50b11.post1+g29c69851 documentation</title>
+    <title>QCArchive Overview &#8212; QCArchive 0.50b11.post7+ga1501aaa documentation</title>
   
   
   
@@ -46,7 +46,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Glossary of Common Concepts" href="glossary.html" />
-    <link rel="prev" title="Welcome to QCArchive’s documentation!" href="../index.html" />
+    <link rel="prev" title="The MolSSI QCArchive Project" href="../index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -434,14 +434,54 @@ document.write(`
   <section id="qcarchive-overview">
 <h1>QCArchive Overview<a class="headerlink" href="#qcarchive-overview" title="Permalink to this heading">#</a></h1>
 <div class="toctree-wrapper compound">
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary of Common Concepts</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tasks_services.html">Tasks and Services</a></li>
-<li class="toctree-l1"><a class="reference internal" href="internal_jobs.html">Internal Jobs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="snowflake.html">QCFractal Snowflake</a></li>
-</ul>
 </div>
+</section>
+<section id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading">#</a></h1>
+<p>QCArchive is a platform that makes running large numbers of quantum chemistry calculations in a
+robust and scalable manner accessible to computational chemists.
+QCArchive is designed to handle thousands to millions of computations,
+storing them in a database for later sharing, retrieval and analysis, or export.</p>
+<section id="motivation">
+<h2>Motivation<a class="headerlink" href="#motivation" title="Permalink to this heading">#</a></h2>
+<p>There is a growing need for enormous amounts of high-accuracy data for a variety of purposes, including
+AI/ML and method development. However, while running a few computations is relatively straightforward,
+as the number of computations required increases, the complexity of managing and running them increases
+dramatically.</p>
+<p>This complexity increase is due to a variety of factors, but is primarily driven by the bespoke nature
+of running different QM codes, the coordination of distributed computation resources,
+as well as handling of errors that inevitably appear as the number of computations scale up.</p>
+<p>While there are a variety of distributed computation platforms available, they
+tend to be very general and require a large amount of customization by chemists to run quantum chemistry
+calculations, whereas QCArchive itself is build around the concepts that computational chemists will find
+familiar. In reality, QCArchive utilizes some of these tools (such as <a class="reference external" href="https://parsl-project.org">Parsl</a>)
+to achieve its goals.</p>
+<p>The overarching goal of the QCArchive project is to make creating and managing these kinds of datasets
+as easy as possible for chemists who know some Python, but are unfamiliar with distributed computing at this scale.</p>
+</section>
+<section id="overall-architecture">
+<h2>Overall Architecture<a class="headerlink" href="#overall-architecture" title="Permalink to this heading">#</a></h2>
+<img alt="../_images/architecture_simple.svg" class="align-center" src="../_images/architecture_simple.svg" /><p>QCArchive contains three main components. Central to the architecture is server software (QCFractal) that
+is responsible for storing and managing data. The server is accessed by a client (QCPortal) that provides
+a Python-native way to submit and manage calculations.</p>
+<p>A third component is the workers (QCFractalCompute). This is responsible for running the calculations.</p>
+<p>In a typical setup, the server is run on a dedicated machine, while the client is run on a user’s machine.
+The workers are set up on a supercomputing cluster, with a process on the head node responsible for
+coordinating job submission and monitoring (although other setups are possible).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>QCPortal is not the only way to access the server. The server exposes a JSON-based web API, and so
+any software written in any language that can make requests to these kinds of APIs can be used.</p>
+</div>
+<p>If you are just interested in connecting to a server and running computations, you only need the client on your
+local computer. For that information, see the <a class="reference internal" href="../user_guide/index.html"><span class="doc">QCArchive User Guide</span></a>.</p>
+<p>For information about setting up a server and/or workers see <a class="reference internal" href="../admin_guide/index.html"><span class="doc">QCFractal Server User Guide</span></a>.</p>
+</section>
+<section id="source-code">
+<h2>Source code<a class="headerlink" href="#source-code" title="Permalink to this heading">#</a></h2>
+<p>The source code is available on github at <a class="github reference external" href="https://github.com/MolSSI/QCFractal.git">MolSSI/QCFractal.git</a>. Packages are also
+made available from PyPI and conda-forge (see <a class="reference internal" href="../user_guide/client_setup.html"><span class="doc">QCPortal Installation &amp; Setup</span></a> and <a class="reference internal" href="../admin_guide/setup.html"><span class="doc">QCFractal Installation and Setup</span></a>).</p>
+</section>
 </section>
 
 
@@ -461,7 +501,7 @@ document.write(`
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Welcome to QCArchive’s documentation!</p>
+        <p class="prev-next-title">The MolSSI QCArchive Project</p>
       </div>
     </a>
     <a class="right-next"
@@ -484,6 +524,23 @@ document.write(`
             
               
                 <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">QCArchive Overview</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#introduction">Introduction</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#motivation">Motivation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overall-architecture">Overall Architecture</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#source-code">Source code</a></li>
+</ul>
+</li>
+</ul>
+
+  </nav></div>
 
   <div class="sidebar-secondary-item">
   <div class="tocsection sourcelink">
@@ -513,6 +570,27 @@ document.write(`
 <div class="bd-footer__inner bd-page-width">
   
     <div class="footer-items__start">
+      
+        <div class="footer-item">
+  <p class="copyright">
+    
+      © Copyright 2018-2023, The Molecular Sciences Software Institute.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
       
         <div class="footer-item">
   
@@ -554,15 +632,6 @@ document.write(`
           </a>
     </div>
 </div></div>
-      
-    </div>
-  
-  
-    <div class="footer-items__end">
-      
-        <div class="footer-item"><p class="theme-version">
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
-</p></div>
       
     </div>
   

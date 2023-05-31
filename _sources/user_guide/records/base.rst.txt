@@ -7,7 +7,13 @@ lots of subrecords of different types (such as a :doc:`NEB record <neb>`.
 
 However, all records share a set of common methods and properties.
 
-Records can be :doc:`retrieved using the QCPortal client <../record_retrieval>`
+Records can be :doc:`submitted <../record_submission>`, :doc:`retrieved <../record_retrieval>`,
+and :doc:`modified <../record_management>` using the QCPortal client.
+
+.. tip::
+
+  All records are `Pydantic <https://docs.pydantic.dev/latest/>`_ models, and so incorporates all the
+  features from that library.
 
 Metadata
 ~~~~~~~~

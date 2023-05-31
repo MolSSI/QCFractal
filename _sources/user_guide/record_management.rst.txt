@@ -91,7 +91,7 @@ Client functions: :meth:`~qcportal.client.PortalClient.delete_records` and
 invalid
 ~~~~~~~~~~~~
 
-A record that was successfully completed, but after manual (human) review, was discovered to have
+A record that was successfully completed, but after manual review, was discovered to have
 some problem with it (for example, converging to an incorrect state). This state must be manually
 set by a user.
 

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/PR-SVG-20010719/DTD/svg10.dtd">
+<svg width="36cm" height="5cm" viewBox="-9 -92 712 86" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <g>
+    <rect style="fill: #48a706" x="-7.931" y="-71.6377" width="116.683" height="64.3333"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="-7.931" y="-71.6377" width="116.683" height="64.3333"/>
+    <text font-size="16.9333" style="fill: #ffffff;text-anchor:middle;font-family:DINCond-Bold;font-style:normal;font-weight:500" x="50.4105" y="-44.297">
+      <tspan x="50.4105" y="-44.297">Client</tspan>
+      <tspan x="50.4105" y="-23.1304">(QCPortal)</tspan>
+    </text>
+  </g>
+  <g>
+    <rect style="fill: #4472c4" x="270.201" y="-71.6377" width="133.6" height="64.3333"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="270.201" y="-71.6377" width="133.6" height="64.3333"/>
+    <text font-size="16.9333" style="fill: #ffffff;text-anchor:middle;font-family:DINCond-Bold;font-style:normal;font-weight:500" x="337.001" y="-44.297">
+      <tspan x="337.001" y="-44.297">Server</tspan>
+      <tspan x="337.001" y="-23.1304">(QCFractal)</tspan>
+    </text>
+  </g>
+  <g>
+    <rect style="fill: #ca611f" x="565.25" y="-71.6377" width="136.5" height="64.3333"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="565.25" y="-71.6377" width="136.5" height="64.3333"/>
+    <text font-size="16.9333" style="fill: #ffffff;text-anchor:middle;font-family:DINCond-Bold;font-style:normal;font-weight:500" x="633.5" y="-44.297">
+      <tspan x="633.5" y="-44.297">Worker</tspan>
+      <tspan x="633.5" y="-23.1304">(QCFractalCompute)</tspan>
+    </text>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="108.752" y1="-55.5543" x2="260.465" y2="-55.5543"/>
+    <polygon style="fill: #000000" points="267.965,-55.5543 257.965,-50.5543 260.465,-55.5543 257.965,-60.5543 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="267.965,-55.5543 257.965,-50.5543 260.465,-55.5543 257.965,-60.5543 "/>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="270.201" y1="-23.3877" x2="118.488" y2="-23.3877"/>
+    <polygon style="fill: #000000" points="110.988,-23.3877 120.988,-28.3877 118.488,-23.3877 120.988,-18.3877 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="110.988,-23.3877 120.988,-28.3877 118.488,-23.3877 120.988,-18.3877 "/>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="403.801" y1="-55.5543" x2="555.514" y2="-55.5543"/>
+    <polygon style="fill: #000000" points="563.014,-55.5543 553.014,-50.5543 555.514,-55.5543 553.014,-60.5543 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="563.014,-55.5543 553.014,-50.5543 555.514,-55.5543 553.014,-60.5543 "/>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="565.25" y1="-23.3877" x2="413.537" y2="-23.3877"/>
+    <polygon style="fill: #000000" points="406.037,-23.3877 416.037,-28.3877 413.537,-23.3877 416.037,-18.3877 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="406.037,-23.3877 416.037,-28.3877 413.537,-23.3877 416.037,-18.3877 "/>
+  </g>
+  <text font-size="22.5778" style="fill: #000000;text-anchor:start;font-family:DINCond-Bold;font-style:normal;font-weight:500" x="157.617" y="-70.0702">
+    <tspan x="157.617" y="-70.0702">Web API</tspan>
+  </text>
+  <text font-size="22.5778" style="fill: #000000;text-anchor:start;font-family:DINCond-Bold;font-style:normal;font-weight:500" x="452.994" y="-70.0702">
+    <tspan x="452.994" y="-70.0702">Web API</tspan>
+  </text>
+</svg>
