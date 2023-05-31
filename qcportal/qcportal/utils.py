@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import io
 import json
+import logging
+import sys
+from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from hashlib import sha256
 from typing import Optional, Union, Sequence, List, TypeVar, Any, Dict, Generator
 
@@ -118,3 +122,25 @@ def calculate_limit(max_limit: int, given_limit: Optional[int]) -> int:
 def hash_dict(d: Dict[str, Any]) -> str:
     j = json.dumps(d, ensure_ascii=True, sort_keys=True, cls=_JSONEncoder).encode("utf-8")
     return sha256(j).hexdigest()
+
+
+@contextmanager
+def capture_all_output(top_logger: str):
+    """Captures all output, including stdout, stderr, and logging"""
+
+    logger = logging.getLogger(top_logger)
+    old_handlers = logger.handlers.copy()
+
+    # Make logging print to stdout
+    handler = logging.StreamHandler(sys.stdout)
+
+    logger.handlers.clear()
+    logger.addHandler(handler)
+
+    stdout_io = io.StringIO()
+    stderr_io = io.StringIO()
+    with redirect_stdout(stdout_io) as rdout, redirect_stderr(stderr_io) as rderr:
+        yield rdout, rderr
+
+        logger.handlers.clear()
+        logger.handlers = old_handlers
