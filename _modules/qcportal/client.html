@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.client &#8212; QCArchive 0.50b11.post7+ga1501aaa documentation</title>
+    <title>qcportal.client &#8212; QCArchive 0.50b11.post11+g27042bda documentation</title>
   
   
   
@@ -2594,6 +2594,7 @@ document.write(`
         <span class="n">initial_chains</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Molecule</span><span class="p">]]],</span>
         <span class="n">program</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">singlepoint_specification</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">,</span>
+        <span class="n">optimization_specification</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">OptimizationSpecification</span><span class="p">],</span>
         <span class="n">keywords</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">NEBKeywords</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
         <span class="n">tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span>
         <span class="n">priority</span><span class="p">:</span> <span class="n">PriorityEnum</span> <span class="o">=</span> <span class="n">PriorityEnum</span><span class="o">.</span><span class="n">normal</span><span class="p">,</span>
@@ -2610,6 +2611,7 @@ document.write(`
             <span class="s2">&quot;specification&quot;</span><span class="p">:</span> <span class="p">{</span>
                 <span class="s2">&quot;program&quot;</span><span class="p">:</span> <span class="n">program</span><span class="p">,</span>
                 <span class="s2">&quot;singlepoint_specification&quot;</span><span class="p">:</span> <span class="n">singlepoint_specification</span><span class="p">,</span>
+                <span class="s2">&quot;optimization_specification&quot;</span><span class="p">:</span> <span class="n">optimization_specification</span><span class="p">,</span>
                 <span class="s2">&quot;keywords&quot;</span><span class="p">:</span> <span class="n">keywords</span><span class="p">,</span>
             <span class="p">},</span>
             <span class="s2">&quot;tag&quot;</span><span class="p">:</span> <span class="n">tag</span><span class="p">,</span>

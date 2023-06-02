@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>QCPortal API Reference &#8212; QCArchive 0.50b11.post7+ga1501aaa documentation</title>
+    <title>QCPortal API Reference &#8212; QCArchive 0.50b11.post11+g27042bda documentation</title>
   
   
   
@@ -1525,7 +1525,7 @@ that was not found.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.client.PortalClient.add_nebs">
-<span class="sig-name descname"><span class="pre">add_nebs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initial_chains</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">program</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">singlepoint_specification</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keywords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'*'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PriorityEnum.normal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner_group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/client.html#PortalClient.add_nebs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.client.PortalClient.add_nebs" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">add_nebs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initial_chains</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">program</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">singlepoint_specification</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_specification</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keywords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'*'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PriorityEnum.normal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner_group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/client.html#PortalClient.add_nebs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.client.PortalClient.add_nebs" title="Permalink to this definition">#</a></dt>
 <dd><p>Adds neb calculations to the server</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1533,6 +1533,7 @@ that was not found.</p>
 <li><p><strong>initial_chains</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>int</em><em> | </em><em>Molecule</em><em>]</em><em>]</em>) – </p></li>
 <li><p><strong>program</strong> (<em>str</em>) – </p></li>
 <li><p><strong>singlepoint_specification</strong> (<a class="reference internal" href="records/singlepoint.html#qcportal.singlepoint.QCSpecification" title="qcportal.singlepoint.record_models.QCSpecification"><em>QCSpecification</em></a>) – </p></li>
+<li><p><strong>optimization_specification</strong> (<a class="reference internal" href="records/optimization.html#qcportal.optimization.OptimizationSpecification" title="qcportal.optimization.record_models.OptimizationSpecification"><em>OptimizationSpecification</em></a><em> | </em><em>None</em>) – </p></li>
 <li><p><strong>keywords</strong> (<em>NEBKeywords</em><em> | </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p></li>
 <li><p><strong>tag</strong> (<em>str</em>) – </p></li>
 <li><p><strong>priority</strong> (<a class="reference internal" href="records/base.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a>) – </p></li>

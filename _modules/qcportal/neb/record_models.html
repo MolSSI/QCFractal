@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.neb.record_models &#8212; QCArchive 0.50b11.post7+ga1501aaa documentation</title>
+    <title>qcportal.neb.record_models &#8212; QCArchive 0.50b11.post11+g27042bda documentation</title>
   
   
   
@@ -421,7 +421,7 @@ document.write(`
 <span class="kn">from</span> <span class="nn">qcportal.molecules</span> <span class="kn">import</span> <span class="n">Molecule</span>
 <span class="kn">from</span> <span class="nn">qcportal.record_models</span> <span class="kn">import</span> <span class="n">BaseRecord</span><span class="p">,</span> <span class="n">RecordAddBodyBase</span><span class="p">,</span> <span class="n">RecordQueryFilters</span>
 <span class="kn">from</span> <span class="nn">qcportal.utils</span> <span class="kn">import</span> <span class="n">recursive_normalizer</span>
-<span class="kn">from</span> <span class="nn">..optimization.record_models</span> <span class="kn">import</span> <span class="n">OptimizationRecord</span>
+<span class="kn">from</span> <span class="nn">..optimization.record_models</span> <span class="kn">import</span> <span class="n">OptimizationRecord</span><span class="p">,</span> <span class="n">OptimizationSpecification</span>
 <span class="kn">from</span> <span class="nn">..singlepoint.record_models</span> <span class="kn">import</span> <span class="n">QCSpecification</span><span class="p">,</span> <span class="n">SinglepointRecord</span>
 
 
@@ -491,6 +491,7 @@ document.write(`
 
     <span class="n">program</span><span class="p">:</span> <span class="n">constr</span><span class="p">(</span><span class="n">to_lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">=</span> <span class="s2">&quot;geometric&quot;</span>
     <span class="n">singlepoint_specification</span><span class="p">:</span> <span class="n">QCSpecification</span>
+    <span class="n">optimization_specification</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">OptimizationSpecification</span><span class="p">]</span>
     <span class="n">keywords</span><span class="p">:</span> <span class="n">NEBKeywords</span></div>
 
 
