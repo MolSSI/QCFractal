@@ -112,7 +112,7 @@ def create_reaction_record(conn, ds_id, created_on, modified_on, spec_id, stoich
            RETURNING id
         """
         ),
-        paramters=dict(reaction_id=reaction_id, created_on=created_on, tag=tag, priority=1),
+        parameters=dict(reaction_id=reaction_id, created_on=created_on, tag=tag, priority=1),
     )
 
     return reaction_id
@@ -172,7 +172,10 @@ def create_manybody_record(conn, ds_id, created_on, modified_on, spec_id, mol_id
     )
 
     # guess a tag
-    r = conn.execute(sa.text("SELECT tag FROM task_queue WHERE record_id = :record_id LIMIT 1"), record_id=record[0])
+    r = conn.execute(
+        sa.text("SELECT tag FROM task_queue WHERE record_id = :record_id LIMIT 1"), parameters={"record_id": record[0]}
+    )
+
     tag = r.scalar_one_or_none()
     if tag is None:
         tag = "_mb_migrated"
@@ -378,7 +381,7 @@ def upgrade():
         # Test before ding migrations
         # Find all stoichiometries, and bail if there are more than 1 and they have different molecules
         for entry in entries:
-            stoichs = list(entry["stoichiometry"].items())
+            stoichs = list(entry.stoichiometry.items())
             if len(stoichs) == 0:
                 continue
 
@@ -455,7 +458,7 @@ def upgrade():
                 )
 
                 for entry in entries:
-                    stoich_for_spec = entry["stoichiometry"][spec["stoichiometry"]]
+                    stoich_for_spec = entry.stoichiometry[spec["stoichiometry"]]
 
                     # molecule:coefficient pairs
                     stoich_mol_coeff = list(stoich_for_spec.items())
@@ -470,7 +473,7 @@ def upgrade():
                             ON CONFLICT DO NOTHING
                         """
                             ),
-                            parameters=dict(ds_id=ds.id, name=entry["name"], mol_id=mol_id, coeff=coeff),
+                            parameters=dict(ds_id=ds.id, name=entry.name, mol_id=mol_id, coeff=coeff),
                         )
 
                     # This stoichiometry has molecule ids (as str) as keys
@@ -511,9 +514,7 @@ def upgrade():
                             INSERT INTO reaction_dataset_record (dataset_id, entry_name, specification_name, record_id)
                             VALUES (:ds_id, :entry_name, :spec_name, :record_id)"""
                             ),
-                            parameters=dict(
-                                ds_id=ds.id, entry_name=entry["name"], spec_name=spec_name, record_id=rxn_id
-                            ),
+                            parameters=dict(ds_id=ds.id, entry_name=entry.name, spec_name=spec_name, record_id=rxn_id),
                         )
 
             else:  # Is interaction energy (ie)
@@ -561,7 +562,7 @@ def upgrade():
 
                 for entry in entries:
                     # we only want the main molecule ("stoichiometry" key that is without a number)
-                    stoich_for_spec = entry["stoichiometry"][spec["stoichiometry"]]
+                    stoich_for_spec = entry.stoichiometry[spec["stoichiometry"]]
 
                     # Should only be one molecule
                     assert len(stoich_for_spec) == 1
@@ -578,7 +579,7 @@ def upgrade():
                         """
                         ),
                         parameters=dict(
-                            ds_id=ds.id, name=entry["name"], mol_id=mol_id, attrib=json.dumps(entry["attributes"])
+                            ds_id=ds.id, name=entry.name, mol_id=mol_id, attrib=json.dumps(entry.attributes)
                         ),
                     )
 
@@ -614,9 +615,7 @@ def upgrade():
                             INSERT INTO manybody_dataset_record (dataset_id, entry_name, specification_name, record_id)
                             VALUES (:ds_id, :entry_name, :spec_name, :record_id)"""
                             ),
-                            parameters=dict(
-                                ds_id=ds.id, entry_name=entry["name"], spec_name=spec_name, record_id=mb_id
-                            ),
+                            parameters=dict(ds_id=ds.id, entry_name=entry.name, spec_name=spec_name, record_id=mb_id),
                         )
 
                 # Remove from the reaction dataset table
