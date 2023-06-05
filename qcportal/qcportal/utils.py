@@ -3,7 +3,6 @@ from __future__ import annotations
 import io
 import json
 import logging
-import sys
 from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from hashlib import sha256
 from typing import Optional, Union, Sequence, List, TypeVar, Any, Dict, Generator
@@ -128,19 +127,24 @@ def hash_dict(d: Dict[str, Any]) -> str:
 def capture_all_output(top_logger: str):
     """Captures all output, including stdout, stderr, and logging"""
 
-    logger = logging.getLogger(top_logger)
-    old_handlers = logger.handlers.copy()
-
-    # Make logging print to stdout
-    handler = logging.StreamHandler(sys.stdout)
-
-    logger.handlers.clear()
-    logger.addHandler(handler)
-
     stdout_io = io.StringIO()
     stderr_io = io.StringIO()
+
+    logger = logging.getLogger(top_logger)
+    old_handlers = logger.handlers.copy()
+    old_prop = logger.propagate
+
+    logger.handlers.clear()
+    logger.propagate = False
+
+    # Make logging go to the string io
+    handler = logging.StreamHandler(stdout_io)
+    logger.addHandler(handler)
+
+    # Also redirect stdout/stderr to the string io objects
     with redirect_stdout(stdout_io) as rdout, redirect_stderr(stderr_io) as rderr:
         yield rdout, rderr
 
         logger.handlers.clear()
         logger.handlers = old_handlers
+        logger.propagate = old_prop

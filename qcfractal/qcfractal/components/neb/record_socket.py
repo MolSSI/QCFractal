@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import importlib
-import io
 import json
 import logging
 from typing import TYPE_CHECKING
@@ -28,6 +27,7 @@ from qcportal.optimization import OptimizationSpecification
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
 from qcportal.serialization import convert_numpy_recursive
 from qcportal.singlepoint import QCSpecification
+from qcportal.utils import capture_all_output
 from qcportal.utils import hash_dict
 from .record_db_models import (
     NEBOptimizationsORM,
@@ -195,16 +195,10 @@ class NEBRecordSocket(BaseRecordSocket):
                     initial_molecules[0] = complete_opts[0].record.final_molecule.to_model(Molecule)
                     initial_molecules[-1] = complete_opts[-1].record.final_molecule.to_model(Molecule)
 
-                neb_stdout = io.StringIO()
-                logging.captureWarnings(True)
-                logger = logging.getLogger("geometric.nifty")
-                handler = logging.StreamHandler(neb_stdout)
-                handler.terminator = ""
-                logger.addHandler(handler)
-                respaced_chain = geometric.qcf_neb.arrange(initial_molecules)
-                logging.captureWarnings(False)
-                logger.handlers.clear()
-                output += "\n" + neb_stdout.getvalue()
+                with capture_all_output("geometric.nifty") as (rdout, _):
+                    respaced_chain = geometric.qcf_neb.arrange(initial_molecules)
+
+                output += "\n" + rdout.getvalue()
 
                 # Submit the first batch of singlepoint calculations
                 self.submit_singlepoints(session, service_state, service_orm, respaced_chain)
@@ -255,24 +249,19 @@ class NEBRecordSocket(BaseRecordSocket):
                     service_state.nebinfo["energies"] = energies
                     service_state.nebinfo["gradients"] = gradients
                     service_state.nebinfo["params"] = params
-                    neb_stdout = io.StringIO()
-                    logger = logging.getLogger("geometric.nifty")
-                    handler = logging.StreamHandler(neb_stdout)
-                    handler.terminator = ""
-                    logger.addHandler(handler)
-                    logging.captureWarnings(True)
-                    if service_state.iteration == 1:
-                        newcoords, prev = geometric.qcf_neb.prepare(service_state.nebinfo)
-                        service_state.nebinfo = prev
 
-                        next_chain = [Molecule(**molecule_template, geometry=geometry) for geometry in newcoords]
-                        self.submit_singlepoints(session, service_state, service_orm, next_chain)
-                        service_state.iteration += 1
-                    else:
-                        self.submit_nextchain_subtask(session, service_state, service_orm)
-                    output += "\n" + neb_stdout.getvalue()
-                    logger.handlers.clear()
-                    logging.captureWarnings(False)
+                    with capture_all_output("geometric.nifty") as (rdout, _):
+                        if service_state.iteration == 1:
+                            newcoords, prev = geometric.qcf_neb.prepare(service_state.nebinfo)
+                            service_state.nebinfo = prev
+
+                            next_chain = [Molecule(**molecule_template, geometry=geometry) for geometry in newcoords]
+                            self.submit_singlepoints(session, service_state, service_orm, next_chain)
+                            service_state.iteration += 1
+                        else:
+                            self.submit_nextchain_subtask(session, service_state, service_orm)
+
+                    output += "\n" + rdout.getvalue()
 
             # We are converged, but need to handle TS optimization
             if service_state.converged and service_state.tsoptimize:

@@ -1,29 +1,22 @@
-import logging
-import io
 import json
+import re
 import sys
 import time
 import traceback
-import re
-from contextlib import redirect_stderr
 
 import geometric
+
+from qcportal.utils import capture_all_output
 
 if __name__ == "__main__":
 
     record_id = sys.argv[1]
     nextchain_info_file = sys.argv[2]
 
-    logger = logging.getLogger('geometric.nifty')
-    rdout = io.StringIO()
-    handler = logging.StreamHandler(rdout)
-    handler.terminator = ""
-    logger.addHandler(handler)
-
     with open(nextchain_info_file, "r") as f:
         nextchain_kwargs = json.load(f)
 
-    with redirect_stderr(io.StringIO()) as rderr:
+    with capture_all_output("geometric.nifty") as (rdout, rderr):
         start_time = time.time()
         success = False
         try:
@@ -40,7 +33,7 @@ if __name__ == "__main__":
             }
 
         end_time = time.time()
-    logger.handlers.clear()
+
     stdout = rdout.getvalue()
     stdout = re.sub("Custom engine selected.\n", "", stdout)
     stderr = rderr.getvalue()

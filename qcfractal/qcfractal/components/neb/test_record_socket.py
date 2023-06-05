@@ -196,6 +196,7 @@ def test_neb_socket_add_different_1(storage_socket: SQLAlchemySocket):
         "neb_HCN_psi4_pbe0_opt1",
         "neb_HCN_psi4_pbe_opt2",
         "neb_HCN_psi4_b3lyp_opt3",
+        "neb_HCN_psi4_pbe_opt_diff",
     ],
 )
 def test_neb_socket_run(

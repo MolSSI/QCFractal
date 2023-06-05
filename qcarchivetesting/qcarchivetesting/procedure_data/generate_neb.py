@@ -36,6 +36,7 @@ _, ids = client.add_nebs(
     [initial_chain],
     program=test_data["specification"]["program"],
     singlepoint_specification=test_data["specification"]["singlepoint_specification"],
+    optimization_specification=test_data["specification"].get("optimization_specification", None),
     keywords=test_data["specification"]["keywords"],
 )
 
