@@ -39,6 +39,7 @@ requirements:
 
     # For access logging
     - geoip2
+    - maxminddb
 
 test:
   imports:
