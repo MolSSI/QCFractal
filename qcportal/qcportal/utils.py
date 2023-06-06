@@ -139,6 +139,7 @@ def capture_all_output(top_logger: str):
 
     # Make logging go to the string io
     handler = logging.StreamHandler(stdout_io)
+    handler.terminator = ""
     logger.addHandler(handler)
 
     # Also redirect stdout/stderr to the string io objects
