@@ -1,15 +1,14 @@
 import importlib
-import io
 import operator
 import os
 import time
-from contextlib import redirect_stdout, redirect_stderr
 from typing import Dict, Any, Union
 
 from qcelemental.models import Provenance, FailedOperation, ComputeError
 
 from qcfractalcompute import __version__
 from qcportal.generic_result import GenericTaskResult
+from qcportal.utils import capture_all_output
 
 _this_dir = os.path.abspath(os.path.dirname(__file__))
 _script_path = os.path.join(_this_dir, "run_scripts/generic_script.py")
@@ -29,19 +28,18 @@ def wrap_generic_function(
     module = importlib.import_module(module_name)
     func = operator.attrgetter(func_name)(module)
 
-    with redirect_stdout(io.StringIO()) as rdout:
-        with redirect_stderr(io.StringIO()) as rderr:
-            start_time = time.time()
-            try:
-                results = func(**function_kwargs)
-            except Exception as e:
-                err = ComputeError(
-                    error_type=type(e).__name__,
-                    error_message=str(e),
-                )
-                return FailedOperation(id=record_id, error=err)
+    with capture_all_output("") as (rdout, rderr):
+        start_time = time.time()
+        try:
+            results = func(**function_kwargs)
+        except Exception as e:
+            err = ComputeError(
+                error_type=type(e).__name__,
+                error_message=str(e),
+            )
+            return FailedOperation(id=record_id, error=err)
 
-            end_time = time.time()
+        end_time = time.time()
 
     stdout = rdout.getvalue()
     stderr = rderr.getvalue()
