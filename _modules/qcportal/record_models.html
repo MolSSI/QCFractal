@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.record_models &#8212; QCArchive 0.50b12.post2+g18dbfd2d documentation</title>
+    <title>qcportal.record_models &#8212; QCArchive 0.50b12.post4+g1327cc51 documentation</title>
   
   
   
@@ -838,7 +838,7 @@ document.write(`
 <span class="sd">        This is expected to be called from derived class propagate_client functions as well</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="o">=</span> <span class="n">client</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;v1/records/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">record_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;api/v1/records/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">record_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_history_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_history_</span><span class="p">:</span>
@@ -1070,14 +1070,14 @@ document.write(`
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">meta</span><span class="p">,</span> <span class="n">record_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
                 <span class="s2">&quot;post&quot;</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s2">&quot;v1/records/query&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;api/v1/records/query&quot;</span><span class="p">,</span>
                 <span class="n">Tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">QueryMetadata</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
                 <span class="n">body</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_filters</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">meta</span><span class="p">,</span> <span class="n">record_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
                 <span class="s2">&quot;post&quot;</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s2">&quot;v1/records/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">record_type</span><span class="si">}</span><span class="s2">/query&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;api/v1/records/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">record_type</span><span class="si">}</span><span class="s2">/query&quot;</span><span class="p">,</span>
                 <span class="n">Tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">QueryMetadata</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
                 <span class="n">body</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_filters</span><span class="p">,</span>
             <span class="p">)</span>

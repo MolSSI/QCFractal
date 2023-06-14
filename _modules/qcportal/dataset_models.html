@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.dataset_models &#8212; QCArchive 0.50b12.post2+g18dbfd2d documentation</title>
+    <title>qcportal.dataset_models &#8212; QCArchive 0.50b12.post4+g1327cc51 documentation</title>
   
   
   
@@ -611,7 +611,7 @@ document.write(`
 
         <span class="n">new_body</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">body</span> <span class="o">=</span> <span class="n">DatasetModifyMetadata</span><span class="p">(</span><span class="o">**</span><span class="n">new_body</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;patch&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;patch&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">description</span>
@@ -642,7 +642,7 @@ document.write(`
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
-            <span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/submit&quot;</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body_data</span>
+            <span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/submit&quot;</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body_data</span>
         <span class="p">)</span></div>
 
     <span class="c1">#########################################</span>
@@ -654,7 +654,7 @@ document.write(`
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
             <span class="s2">&quot;get&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/status&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/status&quot;</span><span class="p">,</span>
             <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span>
         <span class="p">)</span></div>
 
@@ -684,7 +684,7 @@ document.write(`
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
             <span class="s2">&quot;get&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/detailed_status&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/detailed_status&quot;</span><span class="p">,</span>
             <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">RecordStatusEnum</span><span class="p">]],</span>
         <span class="p">)</span></div>
 
@@ -762,7 +762,7 @@ document.write(`
 
         <span class="bp">self</span><span class="o">.</span><span class="n">specifications_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
             <span class="s2">&quot;get&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/specifications&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/specifications&quot;</span><span class="p">,</span>
             <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_specification_type</span><span class="p">],</span>
         <span class="p">)</span></div>
 
@@ -773,7 +773,7 @@ document.write(`
         <span class="n">name_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">old_name</span><span class="p">:</span> <span class="n">new_name</span><span class="p">}</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
-            <span class="s2">&quot;patch&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/specifications&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">name_map</span>
+            <span class="s2">&quot;patch&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/specifications&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">name_map</span>
         <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">specifications_</span> <span class="o">=</span> <span class="p">{</span><span class="n">name_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">specifications_</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
@@ -788,7 +788,10 @@ document.write(`
         <span class="n">body</span> <span class="o">=</span> <span class="n">DatasetDeleteStrBody</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">delete_records</span><span class="o">=</span><span class="n">delete_records</span><span class="p">)</span>
 
         <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
-            <span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/specifications/bulkDelete&quot;</span><span class="p">,</span> <span class="n">DeleteMetadata</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span>
+            <span class="s2">&quot;post&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/specifications/bulkDelete&quot;</span><span class="p">,</span>
+            <span class="n">DeleteMetadata</span><span class="p">,</span>
+            <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="c1"># Delete locally-cached stuff</span>
@@ -811,7 +814,7 @@ document.write(`
 
         <span class="bp">self</span><span class="o">.</span><span class="n">entry_names_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
             <span class="s2">&quot;get&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/entry_names&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/entry_names&quot;</span><span class="p">,</span>
             <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
         <span class="p">)</span></div>
 
@@ -841,7 +844,7 @@ document.write(`
 
         <span class="n">fetched_entries</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
             <span class="s2">&quot;post&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/entries/bulkFetch&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/entries/bulkFetch&quot;</span><span class="p">,</span>
             <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_entry_type</span><span class="p">],</span>
             <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
         <span class="p">)</span>
@@ -984,7 +987,9 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;patch&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/entries&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">name_map</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+            <span class="s2">&quot;patch&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/entries&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">name_map</span>
+        <span class="p">)</span>
 
         <span class="c1"># rename locally cached entries and stuff</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">entry_names_</span> <span class="o">=</span> <span class="p">[</span><span class="n">name_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">entry_names_</span><span class="p">]</span>
@@ -1002,7 +1007,7 @@ document.write(`
 
         <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
             <span class="s2">&quot;post&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/entries/bulkDelete&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/entries/bulkDelete&quot;</span><span class="p">,</span>
             <span class="n">DeleteMetadata</span><span class="p">,</span>
             <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
         <span class="p">)</span>
@@ -1055,7 +1060,7 @@ document.write(`
 
         <span class="n">record_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
             <span class="s2">&quot;post&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/records/bulkFetch&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/records/bulkFetch&quot;</span><span class="p">,</span>
             <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span>  <span class="c1"># (entry_name, spec_name, record_id)</span>
             <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
         <span class="p">)</span>
@@ -1110,7 +1115,7 @@ document.write(`
 
             <span class="n">modified_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
                 <span class="s2">&quot;post&quot;</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s2">&quot;v1/records/bulkGet&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;api/v1/records/bulkGet&quot;</span><span class="p">,</span>
                 <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
                 <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
             <span class="p">)</span>
@@ -1333,7 +1338,7 @@ document.write(`
 
         <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
             <span class="s2">&quot;post&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/records/bulkDelete&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/records/bulkDelete&quot;</span><span class="p">,</span>
             <span class="kc">None</span><span class="p">,</span>
             <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
         <span class="p">)</span>
@@ -1368,7 +1373,7 @@ document.write(`
 
         <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
             <span class="s2">&quot;patch&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/records&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/records&quot;</span><span class="p">,</span>
             <span class="kc">None</span><span class="p">,</span>
             <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
         <span class="p">)</span>
@@ -1396,7 +1401,7 @@ document.write(`
 
         <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
             <span class="s2">&quot;patch&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/records&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/records&quot;</span><span class="p">,</span>
             <span class="kc">None</span><span class="p">,</span>
             <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
         <span class="p">)</span>
@@ -1424,7 +1429,7 @@ document.write(`
 
         <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
             <span class="s2">&quot;patch&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/records&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/records&quot;</span><span class="p">,</span>
             <span class="kc">None</span><span class="p">,</span>
             <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
         <span class="p">)</span>
@@ -1452,7 +1457,7 @@ document.write(`
 
         <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
             <span class="s2">&quot;post&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/records/revert&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/records/revert&quot;</span><span class="p">,</span>
             <span class="kc">None</span><span class="p">,</span>
             <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
         <span class="p">)</span>
@@ -1480,7 +1485,7 @@ document.write(`
 
         <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
             <span class="s2">&quot;patch&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/records&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/records&quot;</span><span class="p">,</span>
             <span class="kc">None</span><span class="p">,</span>
             <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
         <span class="p">)</span>
@@ -1508,7 +1513,7 @@ document.write(`
 
         <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
             <span class="s2">&quot;post&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/records/revert&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/records/revert&quot;</span><span class="p">,</span>
             <span class="kc">None</span><span class="p">,</span>
             <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
         <span class="p">)</span>
@@ -1553,7 +1558,7 @@ document.write(`
 
         <span class="bp">self</span><span class="o">.</span><span class="n">contributed_values_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
             <span class="s2">&quot;get&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/contributed_values&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/contributed_values&quot;</span><span class="p">,</span>
             <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ContributedValues</span><span class="p">]],</span>
         <span class="p">)</span></div>
 

@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.optimization.record_models &#8212; QCArchive 0.50b12.post2+g18dbfd2d documentation</title>
+    <title>qcportal.optimization.record_models &#8212; QCArchive 0.50b12.post4+g1327cc51 documentation</title>
   
   
   
@@ -496,7 +496,7 @@ document.write(`
 
         <span class="bp">self</span><span class="o">.</span><span class="n">trajectory_ids_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
             <span class="s2">&quot;get&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;v1/records/optimization/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/trajectory&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;api/v1/records/optimization/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/trajectory&quot;</span><span class="p">,</span>
             <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
         <span class="p">)</span>
 
@@ -544,7 +544,7 @@ document.write(`
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">trajectory_ids_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">trajectory_ids_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
                     <span class="s2">&quot;get&quot;</span><span class="p">,</span>
-                    <span class="sa">f</span><span class="s2">&quot;v1/records/optimization/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/trajectory&quot;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;api/v1/records/optimization/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/trajectory&quot;</span><span class="p">,</span>
                     <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
                 <span class="p">)</span>
 

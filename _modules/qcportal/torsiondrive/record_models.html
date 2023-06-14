@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.torsiondrive.record_models &#8212; QCArchive 0.50b12.post2+g18dbfd2d documentation</title>
+    <title>qcportal.torsiondrive.record_models &#8212; QCArchive 0.50b12.post4+g1327cc51 documentation</title>
   
   
   
@@ -572,7 +572,7 @@ document.write(`
 
         <span class="bp">self</span><span class="o">.</span><span class="n">initial_molecules_ids_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
             <span class="s2">&quot;get&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;v1/records/torsiondrive/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/initial_molecules&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;api/v1/records/torsiondrive/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/initial_molecules&quot;</span><span class="p">,</span>
             <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
         <span class="p">)</span>
 
@@ -583,7 +583,7 @@ document.write(`
 
         <span class="bp">self</span><span class="o">.</span><span class="n">optimizations_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
             <span class="s2">&quot;get&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;v1/records/torsiondrive/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/optimizations&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;api/v1/records/torsiondrive/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/optimizations&quot;</span><span class="p">,</span>
             <span class="n">List</span><span class="p">[</span><span class="n">TorsiondriveOptimization</span><span class="p">],</span>
         <span class="p">)</span>
 
@@ -613,7 +613,7 @@ document.write(`
 
         <span class="n">min_opt_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
             <span class="s2">&quot;get&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;v1/records/torsiondrive/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/minimum_optimizations&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;api/v1/records/torsiondrive/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/minimum_optimizations&quot;</span><span class="p">,</span>
             <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
         <span class="p">)</span>
 
