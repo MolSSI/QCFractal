@@ -250,10 +250,9 @@ class PortalClientBase:
         retry: Optional[bool] = True,
     ) -> requests.Response:
 
-        # Add "api" to the endpoint. QCPortal only deals with the API
-        addr = self.address + "api/" + endpoint
+        full_uri = self.address + endpoint
 
-        req = requests.Request(method=method.upper(), url=addr, data=body, params=url_params)
+        req = requests.Request(method=method.upper(), url=full_uri, data=body, params=url_params)
         prep_req = self._req_session.prepare_request(req)
 
         if self.debug_requests:
@@ -355,4 +354,4 @@ class PortalClientBase:
         """
 
         # Request the info, and store here for later use
-        return self.make_request("get", "v1/information", Dict[str, Any])
+        return self.make_request("get", "api/v1/information", Dict[str, Any])

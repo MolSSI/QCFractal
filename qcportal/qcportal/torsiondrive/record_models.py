@@ -157,7 +157,7 @@ class TorsiondriveRecord(BaseRecord):
 
         self.initial_molecules_ids_ = self._client.make_request(
             "get",
-            f"v1/records/torsiondrive/{self.id}/initial_molecules",
+            f"api/v1/records/torsiondrive/{self.id}/initial_molecules",
             List[int],
         )
 
@@ -168,7 +168,7 @@ class TorsiondriveRecord(BaseRecord):
 
         self.optimizations_ = self._client.make_request(
             "get",
-            f"v1/records/torsiondrive/{self.id}/optimizations",
+            f"api/v1/records/torsiondrive/{self.id}/optimizations",
             List[TorsiondriveOptimization],
         )
 
@@ -198,7 +198,7 @@ class TorsiondriveRecord(BaseRecord):
 
         min_opt_ids = self._client.make_request(
             "get",
-            f"v1/records/torsiondrive/{self.id}/minimum_optimizations",
+            f"api/v1/records/torsiondrive/{self.id}/minimum_optimizations",
             Dict[str, int],
         )
 

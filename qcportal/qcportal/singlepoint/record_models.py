@@ -124,7 +124,7 @@ class SinglepointRecord(BaseRecord):
 
         self.wavefunction_ = self._client.make_request(
             "get",
-            f"v1/records/singlepoint/{self.id}/wavefunction",
+            f"api/v1/records/singlepoint/{self.id}/wavefunction",
             Optional[Wavefunction],
         )
 

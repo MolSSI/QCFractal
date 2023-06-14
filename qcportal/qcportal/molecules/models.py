@@ -47,7 +47,7 @@ class MoleculeQueryIterator(QueryIteratorBase):
     def _request(self) -> Tuple[Optional[QueryMetadata], List[Molecule]]:
         meta, molecule_ids = self._client.make_request(
             "post",
-            "v1/molecules/query",
+            "api/v1/molecules/query",
             Tuple[Optional[QueryMetadata], List[int]],
             body_model=MoleculeQueryFilters,
             body=self._query_filters,

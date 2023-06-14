@@ -156,7 +156,7 @@ class NEBRecord(BaseRecord):
 
         self.optimizations_ = self._client.make_request(
             "get",
-            f"v1/records/neb/{self.id}/optimizations",
+            f"api/v1/records/neb/{self.id}/optimizations",
             Dict[str, NEBOptimization],
         )
 
@@ -177,7 +177,7 @@ class NEBRecord(BaseRecord):
 
         self.singlepoints_ = self._client.make_request(
             "get",
-            f"v1/records/neb/{self.id}/singlepoints",
+            f"api/v1/records/neb/{self.id}/singlepoints",
             List[NEBSinglepoint],
         )
 
@@ -199,7 +199,7 @@ class NEBRecord(BaseRecord):
 
         self.initial_chain_molecule_ids_ = self._client.make_request(
             "get",
-            f"v1/records/neb/{self.id}/initial_chain",
+            f"api/v1/records/neb/{self.id}/initial_chain",
             List[int],
         )
 
@@ -234,7 +234,7 @@ class NEBRecord(BaseRecord):
     def neb_result(self):
         r = self._client.make_request(
             "get",
-            f"v1/records/neb/{self.id}/neb_result",
+            f"api/v1/records/neb/{self.id}/neb_result",
             Molecule,
         )
 

@@ -196,7 +196,7 @@ class BaseDataset(BaseModel):
 
         new_body.update(**kwargs)
         body = DatasetModifyMetadata(**new_body)
-        self._client.make_request("patch", f"v1/datasets/{self.dataset_type}/{self.id}", None, body=body)
+        self._client.make_request("patch", f"api/v1/datasets/{self.dataset_type}/{self.id}", None, body=body)
 
         self.name = body.name
         self.description = body.description
@@ -227,7 +227,7 @@ class BaseDataset(BaseModel):
         )
 
         return self._client.make_request(
-            "post", f"v1/datasets/{self.dataset_type}/{self.id}/submit", Any, body=body_data
+            "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/submit", Any, body=body_data
         )
 
     #########################################
@@ -239,7 +239,7 @@ class BaseDataset(BaseModel):
 
         return self._client.make_request(
             "get",
-            f"v1/datasets/{self.dataset_type}/{self.id}/status",
+            f"api/v1/datasets/{self.dataset_type}/{self.id}/status",
             Dict[str, Dict[RecordStatusEnum, int]],
         )
 
@@ -269,7 +269,7 @@ class BaseDataset(BaseModel):
 
         return self._client.make_request(
             "get",
-            f"v1/datasets/{self.dataset_type}/{self.id}/detailed_status",
+            f"api/v1/datasets/{self.dataset_type}/{self.id}/detailed_status",
             List[Tuple[str, str, RecordStatusEnum]],
         )
 
@@ -347,7 +347,7 @@ class BaseDataset(BaseModel):
 
         self.specifications_ = self._client.make_request(
             "get",
-            f"v1/datasets/{self.dataset_type}/{self.id}/specifications",
+            f"api/v1/datasets/{self.dataset_type}/{self.id}/specifications",
             Dict[str, self._specification_type],
         )
 
@@ -358,7 +358,7 @@ class BaseDataset(BaseModel):
         name_map = {old_name: new_name}
 
         self._client.make_request(
-            "patch", f"v1/datasets/{self.dataset_type}/{self.id}/specifications", None, body=name_map
+            "patch", f"api/v1/datasets/{self.dataset_type}/{self.id}/specifications", None, body=name_map
         )
 
         self.specifications_ = {name_map.get(k, k): v for k, v in self.specifications_.items()}
@@ -373,7 +373,10 @@ class BaseDataset(BaseModel):
         body = DatasetDeleteStrBody(names=[name], delete_records=delete_records)
 
         ret = self._client.make_request(
-            "post", f"v1/datasets/{self.dataset_type}/{self.id}/specifications/bulkDelete", DeleteMetadata, body=body
+            "post",
+            f"api/v1/datasets/{self.dataset_type}/{self.id}/specifications/bulkDelete",
+            DeleteMetadata,
+            body=body,
         )
 
         # Delete locally-cached stuff
@@ -396,7 +399,7 @@ class BaseDataset(BaseModel):
 
         self.entry_names_ = self._client.make_request(
             "get",
-            f"v1/datasets/{self.dataset_type}/{self.id}/entry_names",
+            f"api/v1/datasets/{self.dataset_type}/{self.id}/entry_names",
             List[str],
         )
 
@@ -426,7 +429,7 @@ class BaseDataset(BaseModel):
 
         fetched_entries = self._client.make_request(
             "post",
-            f"v1/datasets/{self.dataset_type}/{self.id}/entries/bulkFetch",
+            f"api/v1/datasets/{self.dataset_type}/{self.id}/entries/bulkFetch",
             Dict[str, self._entry_type],
             body=body,
         )
@@ -569,7 +572,9 @@ class BaseDataset(BaseModel):
         self.assert_is_not_view()
         self.assert_online()
 
-        self._client.make_request("patch", f"v1/datasets/{self.dataset_type}/{self.id}/entries", None, body=name_map)
+        self._client.make_request(
+            "patch", f"api/v1/datasets/{self.dataset_type}/{self.id}/entries", None, body=name_map
+        )
 
         # rename locally cached entries and stuff
         self.entry_names_ = [name_map.get(x, x) for x in self.entry_names_]
@@ -587,7 +592,7 @@ class BaseDataset(BaseModel):
 
         ret = self._client.make_request(
             "post",
-            f"v1/datasets/{self.dataset_type}/{self.id}/entries/bulkDelete",
+            f"api/v1/datasets/{self.dataset_type}/{self.id}/entries/bulkDelete",
             DeleteMetadata,
             body=body,
         )
@@ -640,7 +645,7 @@ class BaseDataset(BaseModel):
 
         record_info = self._client.make_request(
             "post",
-            f"v1/datasets/{self.dataset_type}/{self.id}/records/bulkFetch",
+            f"api/v1/datasets/{self.dataset_type}/{self.id}/records/bulkFetch",
             List[Tuple[str, str, int]],  # (entry_name, spec_name, record_id)
             body=body,
         )
@@ -695,7 +700,7 @@ class BaseDataset(BaseModel):
 
             modified_info = self._client.make_request(
                 "post",
-                f"v1/records/bulkGet",
+                f"api/v1/records/bulkGet",
                 List[Dict[str, Any]],
                 body=body,
             )
@@ -918,7 +923,7 @@ class BaseDataset(BaseModel):
 
         ret = self._client.make_request(
             "post",
-            f"v1/datasets/{self.dataset_type}/{self.id}/records/bulkDelete",
+            f"api/v1/datasets/{self.dataset_type}/{self.id}/records/bulkDelete",
             None,
             body=body,
         )
@@ -953,7 +958,7 @@ class BaseDataset(BaseModel):
 
         ret = self._client.make_request(
             "patch",
-            f"v1/datasets/{self.dataset_type}/{self.id}/records",
+            f"api/v1/datasets/{self.dataset_type}/{self.id}/records",
             None,
             body=body,
         )
@@ -981,7 +986,7 @@ class BaseDataset(BaseModel):
 
         ret = self._client.make_request(
             "patch",
-            f"v1/datasets/{self.dataset_type}/{self.id}/records",
+            f"api/v1/datasets/{self.dataset_type}/{self.id}/records",
             None,
             body=body,
         )
@@ -1009,7 +1014,7 @@ class BaseDataset(BaseModel):
 
         ret = self._client.make_request(
             "patch",
-            f"v1/datasets/{self.dataset_type}/{self.id}/records",
+            f"api/v1/datasets/{self.dataset_type}/{self.id}/records",
             None,
             body=body,
         )
@@ -1037,7 +1042,7 @@ class BaseDataset(BaseModel):
 
         ret = self._client.make_request(
             "post",
-            f"v1/datasets/{self.dataset_type}/{self.id}/records/revert",
+            f"api/v1/datasets/{self.dataset_type}/{self.id}/records/revert",
             None,
             body=body,
         )
@@ -1065,7 +1070,7 @@ class BaseDataset(BaseModel):
 
         ret = self._client.make_request(
             "patch",
-            f"v1/datasets/{self.dataset_type}/{self.id}/records",
+            f"api/v1/datasets/{self.dataset_type}/{self.id}/records",
             None,
             body=body,
         )
@@ -1093,7 +1098,7 @@ class BaseDataset(BaseModel):
 
         ret = self._client.make_request(
             "post",
-            f"v1/datasets/{self.dataset_type}/{self.id}/records/revert",
+            f"api/v1/datasets/{self.dataset_type}/{self.id}/records/revert",
             None,
             body=body,
         )
@@ -1138,7 +1143,7 @@ class BaseDataset(BaseModel):
 
         self.contributed_values_ = self._client.make_request(
             "get",
-            f"v1/datasets/{self.id}/contributed_values",
+            f"api/v1/datasets/{self.id}/contributed_values",
             Optional[Dict[str, ContributedValues]],
         )
 

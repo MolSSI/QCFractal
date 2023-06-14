@@ -69,7 +69,7 @@ class OptimizationDataset(BaseDataset):
 
         ret = self._client.make_request(
             "post",
-            f"v1/datasets/optimization/{self.id}/specifications",
+            f"api/v1/datasets/optimization/{self.id}/specifications",
             InsertMetadata,
             body=[spec],
         )
@@ -85,7 +85,7 @@ class OptimizationDataset(BaseDataset):
 
         ret = self._client.make_request(
             "post",
-            f"v1/datasets/optimization/{self.id}/entries/bulkCreate",
+            f"api/v1/datasets/optimization/{self.id}/entries/bulkCreate",
             InsertMetadata,
             body=entries,
         )

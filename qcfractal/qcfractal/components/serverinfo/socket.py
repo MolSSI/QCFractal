@@ -260,13 +260,13 @@ class ServerInfoSocket:
         last_geolocated_date = session.execute(stmt).scalar_one_or_none()
 
         access_stmt = select(AccessLogORM)
-        access_stmt = access_stmt.options(load_only(AccessLogORM.access_date, AccessLogORM.ip_address))
+        access_stmt = access_stmt.options(load_only(AccessLogORM.timestamp, AccessLogORM.ip_address))
         access_stmt = access_stmt.where(AccessLogORM.ip_address.is_not(None))
 
         if last_geolocated_date:
-            access_stmt = access_stmt.where(AccessLogORM.access_date > last_geolocated_date.date_value)
+            access_stmt = access_stmt.where(AccessLogORM.timestamp > last_geolocated_date.date_value)
 
-        access_stmt = access_stmt.order_by(AccessLogORM.access_date.asc())
+        access_stmt = access_stmt.order_by(AccessLogORM.timestamp.asc())
 
         to_process = session.execute(access_stmt).scalars().all()
         self._logger.info(f"Found {len(to_process)} accesses to process")
@@ -308,7 +308,7 @@ class ServerInfoSocket:
             last_geolocated_date = ServerStatsMetadataORM(name="last_geolocated_date")
             session.add(last_geolocated_date)
 
-        last_geolocated_date.date_value = to_process[-1].access_date
+        last_geolocated_date.date_value = to_process[-1].timestamp
 
         session.commit()
 
@@ -508,15 +508,15 @@ class ServerInfoSocket:
         stmt = select(AccessLogORM)
 
         and_query = []
-        if query_data.access_type:
-            and_query.append(AccessLogORM.access_type.in_(query_data.access_type))
-        if query_data.access_method:
-            access_method = [x.upper() for x in query_data.access_method]
-            and_query.append(AccessLogORM.access_method.in_(access_method))
+        if query_data.module:
+            and_query.append(AccessLogORM.module.in_(query_data.module))
+        if query_data.method:
+            method = [x.upper() for x in query_data.method]
+            and_query.append(AccessLogORM.method.in_(method))
         if query_data.before:
-            and_query.append(AccessLogORM.access_date <= query_data.before)
+            and_query.append(AccessLogORM.timestamp <= query_data.before)
         if query_data.after:
-            and_query.append(AccessLogORM.access_date >= query_data.after)
+            and_query.append(AccessLogORM.timestamp >= query_data.after)
 
         if query_data.user:
             stmt = stmt.join(UserIDMapSubquery)
@@ -541,7 +541,7 @@ class ServerInfoSocket:
             stmt = stmt.limit(query_data.limit)
             stmt = stmt.distinct(AccessLogORM.id)
             results = session.execute(stmt).scalars().all()
-            result_dicts = [x.model_dict() for x in sorted(results, key=lambda x: x.access_date, reverse=True)]
+            result_dicts = [x.model_dict() for x in sorted(results, key=lambda x: x.timestamp, reverse=True)]
 
         if query_data.include_metadata:
             meta = QueryMetadata(n_found=n_found)
@@ -578,18 +578,18 @@ class ServerInfoSocket:
 
         and_query = []
         if query_data.before:
-            and_query.append(AccessLogORM.access_date <= query_data.before)
+            and_query.append(AccessLogORM.timestamp <= query_data.before)
         if query_data.after:
-            and_query.append(AccessLogORM.access_date >= query_data.after)
+            and_query.append(AccessLogORM.timestamp >= query_data.after)
 
         result_dict = defaultdict(list)
         with self.root_socket.optional_session(session, True) as session:
             if query_data.group_by == "user":
                 group_col = UserIDMapSubquery.username.label("group_col")
             elif query_data.group_by == "day":
-                group_col = func.to_char(AccessLogORM.access_date, "YYYY-MM-DD").label("group_col")
+                group_col = func.to_char(AccessLogORM.timestamp, "YYYY-MM-DD").label("group_col")
             elif query_data.group_by == "hour":
-                group_col = func.to_char(AccessLogORM.access_date, "YYYY-MM-DD HH24").label("group_col")
+                group_col = func.to_char(AccessLogORM.timestamp, "YYYY-MM-DD HH24").label("group_col")
             elif query_data.group_by == "country":
                 group_col = AccessLogORM.country_code.label("group_col")
             elif query_data.group_by == "subdivision":
@@ -599,8 +599,8 @@ class ServerInfoSocket:
 
             stmt = select(
                 group_col,
-                AccessLogORM.access_type,
-                AccessLogORM.access_method,
+                AccessLogORM.module,
+                AccessLogORM.method,
                 func.count(AccessLogORM.id),
                 func.min(AccessLogORM.request_duration),
                 func.percentile_disc(0.25).within_group(AccessLogORM.request_duration),
@@ -616,9 +616,7 @@ class ServerInfoSocket:
                 func.max(AccessLogORM.response_bytes),
             )
 
-            stmt = stmt.where(and_(True, *and_query)).group_by(
-                AccessLogORM.access_type, AccessLogORM.access_method, "group_col"
-            )
+            stmt = stmt.where(and_(True, *and_query)).group_by(AccessLogORM.module, AccessLogORM.method, "group_col")
 
             if query_data.group_by == "user":
                 stmt = stmt.join(UserIDMapSubquery)
@@ -630,8 +628,8 @@ class ServerInfoSocket:
             # is a dictionary with the rest of the information
             for row in results:
                 d = {
-                    "access_type": row[1],
-                    "access_method": row[2],
+                    "module": row[1],
+                    "method": row[2],
                     "count": row[3],
                     "request_duration_info": row[4:10],
                     "response_bytes_info": row[10:16],
@@ -792,7 +790,7 @@ class ServerInfoSocket:
         """
 
         with self.root_socket.optional_session(session, False) as session:
-            stmt = delete(AccessLogORM).where(AccessLogORM.access_date < before)
+            stmt = delete(AccessLogORM).where(AccessLogORM.timestamp < before)
             r = session.execute(stmt)
             return r.rowcount
 

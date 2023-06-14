@@ -28,8 +28,8 @@ class DeleteBeforeDateBody(RestModelBase):
 
 
 class AccessLogQueryFilters(QueryProjModelBase):
-    access_type: Optional[List[constr(to_lower=True)]] = None
-    access_method: Optional[List[constr(to_lower=True)]] = None
+    module: Optional[List[constr(to_lower=True)]] = None
+    method: Optional[List[constr(to_lower=True)]] = None
     user: Optional[List[Union[int, str]]] = None
     before: Optional[datetime] = None
     after: Optional[datetime] = None
@@ -46,9 +46,9 @@ class AccessLogEntry(BaseModel):
         extra = Extra.forbid
 
     id: int
-    access_date: datetime
-    access_method: str
-    access_type: str
+    timestamp: datetime
+    method: str
+    module: Optional[str]
     full_uri: Optional[str]
 
     request_duration: Optional[float]
@@ -93,7 +93,7 @@ class AccessLogQueryIterator(QueryIteratorBase):
     def _request(self) -> Tuple[Optional[QueryMetadata], List[AccessLogEntry]]:
         return self._client.make_request(
             "post",
-            "v1/access_logs/query",
+            "api/v1/access_logs/query",
             Tuple[Optional[QueryMetadata], List[AccessLogEntry]],
             body=self._query_filters,
         )
@@ -119,8 +119,8 @@ class AccessLogSummaryEntry(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    access_type: str
-    access_method: str
+    module: Optional[str]
+    method: str
     count: int
     request_duration_info: List[float]
     response_bytes_info: List[float]
@@ -187,7 +187,7 @@ class ErrorLogQueryIterator(QueryIteratorBase):
     def _request(self) -> Tuple[Optional[QueryMetadata], List[ErrorLogEntry]]:
         return self._client.make_request(
             "post",
-            "v1/server_errors/query",
+            "api/v1/server_errors/query",
             Tuple[Optional[QueryMetadata], List[ErrorLogEntry]],
             body=self._query_filters,
         )
@@ -257,7 +257,7 @@ class ServerStatsQueryIterator(QueryIteratorBase):
     def _request(self) -> Tuple[Optional[QueryMetadata], List[ServerStatsEntry]]:
         return self._client.make_request(
             "post",
-            "v1/server_stats/query",
+            "api/v1/server_stats/query",
             Tuple[Optional[QueryMetadata], List[ServerStatsEntry]],
             body=self._query_filters,
         )

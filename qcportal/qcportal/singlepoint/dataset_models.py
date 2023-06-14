@@ -1,4 +1,4 @@
-from typing import Dict, Any, Union, Optional, List, Iterable, Tuple
+from typing import Dict, Any, Union, Optional, Iterable, Tuple
 
 from pydantic import BaseModel, Extra
 from typing_extensions import Literal
@@ -72,7 +72,7 @@ class SinglepointDataset(BaseDataset):
 
         ret = self._client.make_request(
             "post",
-            f"v1/datasets/singlepoint/{self.id}/specifications",
+            f"api/v1/datasets/singlepoint/{self.id}/specifications",
             InsertMetadata,
             body=[spec],
         )
@@ -87,7 +87,7 @@ class SinglepointDataset(BaseDataset):
         entries = make_list(entries)
         ret = self._client.make_request(
             "post",
-            f"v1/datasets/singlepoint/{self.id}/entries/bulkCreate",
+            f"api/v1/datasets/singlepoint/{self.id}/entries/bulkCreate",
             InsertMetadata,
             body=entries,
         )

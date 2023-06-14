@@ -13,6 +13,7 @@ from qcfractal.db_socket.socket import SQLAlchemySocket
 from .home import home_blueprint
 from ..api_v1.blueprint import api_v1
 from ..auth_v1.blueprint import auth_v1
+from ..compute_v1.blueprint import compute_v1
 from ..dashboard_v1.blueprint import dashboard_v1
 
 if TYPE_CHECKING:
@@ -93,6 +94,7 @@ def create_flask_app(
     app.register_blueprint(home_blueprint)
     app.register_blueprint(api_v1)
     app.register_blueprint(auth_v1)
+    app.register_blueprint(compute_v1)
     app.register_blueprint(dashboard_v1)
 
     return app

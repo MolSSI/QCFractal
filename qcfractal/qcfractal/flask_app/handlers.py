@@ -13,7 +13,7 @@ from flask_jwt_extended import (
 from werkzeug.exceptions import InternalServerError, HTTPException
 
 from qcfractal.auth_v1.helpers import access_token_from_user
-from qcfractal.flask_app import storage_socket, get_url_major_component
+from qcfractal.flask_app import storage_socket
 from qcportal.auth import UserInfo, RoleInfo
 from qcportal.exceptions import UserReportableError, AuthenticationFailure, ComputeManagerError
 from .home import home_blueprint
@@ -52,14 +52,12 @@ def after_request_func(response: Response):
     request_duration = time.time() - g.request_start
 
     log_access = current_app.config["QCFRACTAL_CONFIG"].log_access
-    if log_access and request.path != "/api/v1/ping":
+    if log_access:
         # What we are going to log to the DB
         log: Dict[str, Any] = {}
-        access_type = get_url_major_component(request.path)
-        access_method = request.method  # GET, POST, etc
 
-        log["access_type"] = access_type
-        log["access_method"] = access_method
+        log["module"] = request.blueprint
+        log["method"] = request.method
 
         # Replace null in URI (since a malevolent user can do that)
         log["full_uri"] = request.path.replace("\0", "\\0")
@@ -87,7 +85,7 @@ def after_request_func(response: Response):
 
         storage_socket.serverinfo.save_access(log)
         current_app.logger.debug(
-            f"{access_method} {access_type}: {g.request_bytes} -> {response_bytes} [{request_duration*1000:.1f}ms]"
+            f"{request.method} {request.blueprint}: {g.request_bytes} -> {response_bytes} [{request_duration*1000:.1f}ms]"
         )
 
         # Basically taken from the flask-jwt-extended docs

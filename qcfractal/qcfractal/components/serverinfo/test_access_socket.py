@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ipaddress
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from qcarchivetesting import load_ip_test_data
@@ -27,6 +28,8 @@ def test_serverinfo_socket_save_access(secure_snowflake: QCATestingSnowflake):
 
     storage_socket = secure_snowflake.get_storage_socket()
 
+    time_0 = datetime.utcnow()
+
     ip_data = load_ip_test_data()
 
     admin_id = storage_socket.users.get("admin_user")["id"]
@@ -36,8 +39,9 @@ def test_serverinfo_socket_save_access(secure_snowflake: QCATestingSnowflake):
     userid_map = {admin_id: "admin_user", read_id: "read_user", monitor_id: "monitor_user"}
 
     access1 = {
-        "access_type": "v1/molecule",
-        "access_method": "GET",
+        "module": "api",
+        "method": "GET",
+        "full_uri": "/api/v1/datasets",
         "ip_address": test_ips[0][0],
         "user_agent": "Fake user agent",
         "request_duration": 0.24,
@@ -47,8 +51,9 @@ def test_serverinfo_socket_save_access(secure_snowflake: QCATestingSnowflake):
     }
 
     access2 = {
-        "access_type": "v1/wavefunction",
-        "access_method": "POST",
+        "module": "api",
+        "method": "POST",
+        "full_uri": "/api/v1/records",
         "ip_address": test_ips[1][0],
         "user_agent": "Fake user agent",
         "request_duration": 0.45,
@@ -58,8 +63,9 @@ def test_serverinfo_socket_save_access(secure_snowflake: QCATestingSnowflake):
     }
 
     access3 = {
-        "access_type": "v1/me",
-        "access_method": "GET",
+        "module": "api",
+        "method": "GET",
+        "full_uri": "/api/v1/me",
         "ip_address": test_ips[2][0],
         "user_agent": "Fake user agent",
         "request_duration": 0.01,
@@ -69,8 +75,9 @@ def test_serverinfo_socket_save_access(secure_snowflake: QCATestingSnowflake):
     }
 
     access4 = {
-        "access_type": "v1/users",
-        "access_method": "PUT",
+        "module": "api",
+        "method": "PUT",
+        "full_uri": "/api/v1/users",
         "ip_address": test_ips[3][0],
         "user_agent": "Fake user agent",
         "request_duration": 2.18,
@@ -80,8 +87,9 @@ def test_serverinfo_socket_save_access(secure_snowflake: QCATestingSnowflake):
     }
 
     access5 = {
-        "access_type": "v1/keywords",
-        "access_method": "POST",
+        "module": "compute",
+        "full_uri": "/compute/v1/activate",
+        "method": "POST",
         "ip_address": test_ips[4][0],
         "user_agent": "Fake user agent",
         "request_duration": 3.12,
@@ -91,8 +99,9 @@ def test_serverinfo_socket_save_access(secure_snowflake: QCATestingSnowflake):
     }
 
     access6 = {
-        "access_type": "v1/information",
-        "access_method": "GET",
+        "module": "auth",
+        "full_uri": "/auth/v1/login",
+        "method": "POST",
         "ip_address": test_ips[5][0],
         "user_agent": "Fake user agent",
         "request_duration": 1.28,
@@ -109,26 +118,34 @@ def test_serverinfo_socket_save_access(secure_snowflake: QCATestingSnowflake):
     storage_socket.serverinfo.save_access(access5)
     storage_socket.serverinfo.save_access(access6)
 
+    time_1 = datetime.utcnow()
+
     # Update the IP addresses with geo data
     with storage_socket.session_scope() as session:
         storage_socket.serverinfo.geolocate_accesses(session, DummyJobProgress())
 
     meta, accesses = storage_socket.serverinfo.query_access_log(AccessLogQueryFilters())
     assert meta.success
+    assert len(accesses) >= 6
+    assert meta.n_found >= 6
+
+    meta, accesses = storage_socket.serverinfo.query_access_log(AccessLogQueryFilters(before=time_1, after=time_0))
+    assert meta.success
     assert len(accesses) == 6
     assert meta.n_found == 6
 
     # Order should be latest access first
-    assert accesses[0]["access_date"] > accesses[1]["access_date"]
-    assert accesses[1]["access_date"] > accesses[2]["access_date"]
-    assert accesses[2]["access_date"] > accesses[3]["access_date"]
-    assert accesses[3]["access_date"] > accesses[4]["access_date"]
-    assert accesses[4]["access_date"] > accesses[5]["access_date"]
+    assert accesses[0]["timestamp"] > accesses[1]["timestamp"]
+    assert accesses[1]["timestamp"] > accesses[2]["timestamp"]
+    assert accesses[2]["timestamp"] > accesses[3]["timestamp"]
+    assert accesses[3]["timestamp"] > accesses[4]["timestamp"]
+    assert accesses[4]["timestamp"] > accesses[5]["timestamp"]
 
     # These are ordered descending (newest accesses first). Reverse the order for testing
     for i, (ac_in, ac_db) in enumerate(zip(all_accesses, reversed(accesses))):
-        assert ac_in["access_type"] == ac_db["access_type"]
-        assert ac_in["access_method"] == ac_db["access_method"]
+        assert ac_in["module"] == ac_db["module"]
+        assert ac_in["method"] == ac_db["method"]
+        assert ac_in["full_uri"] == ac_db["full_uri"]
 
         # IPV6 can have different representations, so use the ipaddress library for comparison
         assert ipaddress.ip_address(ac_in["ip_address"]) == ipaddress.ip_address(ac_db["ip_address"])

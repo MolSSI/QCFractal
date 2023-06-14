@@ -71,7 +71,7 @@ class TorsiondriveDataset(BaseDataset):
 
         ret = self._client.make_request(
             "post",
-            f"v1/datasets/torsiondrive/{self.id}/specifications",
+            f"api/v1/datasets/torsiondrive/{self.id}/specifications",
             InsertMetadata,
             body=[spec],
         )
@@ -86,7 +86,7 @@ class TorsiondriveDataset(BaseDataset):
         entries = make_list(entries)
         ret = self._client.make_request(
             "post",
-            f"v1/datasets/torsiondrive/{self.id}/entries/bulkCreate",
+            f"api/v1/datasets/torsiondrive/{self.id}/entries/bulkCreate",
             InsertMetadata,
             body=entries,
         )

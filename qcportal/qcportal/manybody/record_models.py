@@ -98,7 +98,7 @@ class ManybodyRecord(BaseRecord):
 
         self.clusters_ = self._client.make_request(
             "get",
-            f"v1/records/manybody/{self.id}/clusters",
+            f"api/v1/records/manybody/{self.id}/clusters",
             List[ManybodyCluster],
         )
 

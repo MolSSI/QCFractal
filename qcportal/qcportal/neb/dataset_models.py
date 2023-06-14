@@ -70,7 +70,7 @@ class NEBDataset(BaseDataset):
 
         ret = self._client.make_request(
             "post",
-            f"v1/datasets/neb/{self.id}/specifications",
+            f"api/v1/datasets/neb/{self.id}/specifications",
             InsertMetadata,
             body=[spec],
         )
@@ -83,7 +83,7 @@ class NEBDataset(BaseDataset):
         entries = make_list(entries)
         ret = self._client.make_request(
             "post",
-            f"v1/datasets/neb/{self.id}/entries/bulkCreate",
+            f"api/v1/datasets/neb/{self.id}/entries/bulkCreate",
             InsertMetadata,
             body=entries,
         )

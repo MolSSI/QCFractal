@@ -116,7 +116,7 @@ class InternalJobQueryIterator(QueryIteratorBase):
     def _request(self) -> Tuple[Optional[QueryMetadata], List[InternalJob]]:
         return self._client.make_request(
             "post",
-            "v1/internal_jobs/query",
+            "api/v1/internal_jobs/query",
             Tuple[Optional[QueryMetadata], List[InternalJob]],
             body=self._query_filters,
         )

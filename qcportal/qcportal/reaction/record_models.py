@@ -98,7 +98,7 @@ class ReactionRecord(BaseRecord):
 
         self.components_ = self._client.make_request(
             "get",
-            f"v1/records/reaction/{self.id}/components",
+            f"api/v1/records/reaction/{self.id}/components",
             List[ReactionComponent],
         )
 

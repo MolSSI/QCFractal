@@ -490,8 +490,9 @@ def test_auth_default_role_compute(secure_snowflake):
     with pytest.raises(PortalRequestError, match="Forbidden"):
         client.query_error_log()
 
-    # Can query managers
-    client.query_managers()
+    # Can't query managers
+    with pytest.raises(PortalRequestError, match="Forbidden"):
+        client.query_managers()
 
     # Can activate a manager
     mclient = secure_snowflake.manager_client(mname1, "compute_user", test_users["compute_user"]["pw"])

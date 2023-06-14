@@ -30,8 +30,9 @@ def queryable_access_client(postgres_server, pytestconfig):
                     for endpoint in ["molecules", "records", "wavefunctions", "managers"]:
                         for method in ["GET", "POST"]:
                             access = {
-                                "access_type": f"v1/{endpoint}",
-                                "access_method": method,
+                                "module": "api" if i % 2 == 0 else "compute",
+                                "full_uri": f"api/v1/{endpoint}",
+                                "method": method,
                                 "ip_address": test_ips[0][0],
                                 "user_agent": "Fake user agent",
                                 "request_duration": 0.25 * i,
@@ -46,12 +47,22 @@ def queryable_access_client(postgres_server, pytestconfig):
 
 def test_serverinfo_client_query_access(queryable_access_client: PortalClient):
 
-    query_res = queryable_access_client.query_access_log(access_method=["get"])
+    query_res = queryable_access_client.query_access_log(method=["get"])
     assert query_res._current_meta.n_found == 80
     all_entries = list(query_res)
     assert len(all_entries) == 80
 
-    query_res = queryable_access_client.query_access_log(access_method=["POST"])
+    query_res = queryable_access_client.query_access_log(method=["POST"])
+    assert query_res._current_meta.n_found == 80
+    all_entries = list(query_res)
+    assert len(all_entries) == 80
+
+    query_res = queryable_access_client.query_access_log(module=["api"])
+    assert query_res._current_meta.n_found == 80
+    all_entries = list(query_res)
+    assert len(all_entries) == 80
+
+    query_res = queryable_access_client.query_access_log(module=["compute"])
     assert query_res._current_meta.n_found == 80
     all_entries = list(query_res)
     assert len(all_entries) == 80
@@ -69,27 +80,6 @@ def test_serverinfo_client_query_access(queryable_access_client: PortalClient):
 
     query_res = queryable_access_client.query_access_log(user=["no_user"])
     assert query_res._current_meta.n_found == 0
-
-    query_res = queryable_access_client.query_access_log(access_type=["v1/molecules"], access_method="get")
-    assert query_res._current_meta.n_found == 20
-    all_entries = list(query_res)
-    assert len(all_entries) == 20
-
-    query_res = queryable_access_client.query_access_log(access_type=["v1/records"])
-    all_entries = list(query_res)
-    assert len(all_entries) == 40
-
-    # get a date. note that results are returned in descending order based on access_date
-    test_time = all_entries[10].access_date
-    query_res = queryable_access_client.query_access_log(access_type=["v1/records"], before=test_time)
-    all_entries = list(query_res)
-    assert len(all_entries) == 30
-    assert all(x.access_date <= test_time for x in all_entries)
-
-    query_res = queryable_access_client.query_access_log(access_type=["v1/records"], after=test_time)
-    all_entries = list(query_res)
-    assert len(all_entries) == 11
-    assert all(x.access_date >= test_time for x in all_entries)
 
 
 def test_serverinfo_client_query_access_empty_iter(queryable_access_client: PortalClient):

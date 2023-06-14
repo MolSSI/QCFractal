@@ -81,7 +81,7 @@ class OptimizationRecord(BaseRecord):
 
         self.trajectory_ids_ = self._client.make_request(
             "get",
-            f"v1/records/optimization/{self.id}/trajectory",
+            f"api/v1/records/optimization/{self.id}/trajectory",
             List[int],
         )
 
@@ -129,7 +129,7 @@ class OptimizationRecord(BaseRecord):
             if self.trajectory_ids_ is None:
                 self.trajectory_ids_ = self._client.make_request(
                     "get",
-                    f"v1/records/optimization/{self.id}/trajectory",
+                    f"api/v1/records/optimization/{self.id}/trajectory",
                     List[int],
                 )
 

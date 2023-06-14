@@ -48,7 +48,9 @@ class ManagerClient(PortalClientBase):
         self.manager_name_data = name_data
 
     def _update_on_server(self, manager_update: ManagerUpdateBody) -> None:
-        return self.make_request("patch", f"v1/managers/{self.manager_name_data.fullname}", None, body=manager_update)
+        return self.make_request(
+            "patch", f"compute/v1/managers/{self.manager_name_data.fullname}", None, body=manager_update
+        )
 
     def activate(
         self,
@@ -71,7 +73,7 @@ class ManagerClient(PortalClientBase):
 
         return self.make_request(
             "post",
-            "v1/managers",
+            "compute/v1/managers",
             None,
             body=manager_info,
         )
@@ -115,7 +117,7 @@ class ManagerClient(PortalClientBase):
 
         body = TaskClaimBody(name_data=self.manager_name_data, programs=programs, tags=tags, limit=limit)
 
-        return self.make_request("post", "v1/tasks/claim", List[TaskInformation], body=body)
+        return self.make_request("post", "compute/v1/tasks/claim", List[TaskInformation], body=body)
 
     def return_finished(self, results_compressed: Dict[int, bytes]) -> TaskReturnMetadata:
 
@@ -131,7 +133,7 @@ class ManagerClient(PortalClientBase):
                 results_compressed={k: v for k, v in results_flat[chunk : chunk + limit]},
             )
 
-            meta = self.make_request("post", "v1/tasks/return", TaskReturnMetadata, body=body)
+            meta = self.make_request("post", "compute/v1/tasks/return", TaskReturnMetadata, body=body)
 
             task_return_meta.error_description = meta.error_description
             task_return_meta.rejected_info.extend(meta.rejected_info)

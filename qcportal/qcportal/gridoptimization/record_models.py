@@ -219,7 +219,7 @@ class GridoptimizationRecord(BaseRecord):
 
         self.optimizations_ = self._client.make_request(
             "get",
-            f"v1/records/gridoptimization/{self.id}/optimizations",
+            f"api/v1/records/gridoptimization/{self.id}/optimizations",
             List[GridoptimizationOptimization],
         )
 

@@ -107,7 +107,7 @@ class ComputeManager(BaseModel):
 
     def propagate_client(self, client):
         self._client = client
-        self._base_url = f"v1/managers/{self.name}"
+        self._base_url = f"api/v1/managers/{self.name}"
 
     def _fetch_log(self):
         if self._client is None:
@@ -201,7 +201,7 @@ class ManagerQueryIterator(QueryIteratorBase):
     def _request(self) -> Tuple[Optional[QueryMetadata], List[ComputeManager]]:
         managers = self._client.make_request(
             "post",
-            "v1/managers/query",
+            "api/v1/managers/query",
             Tuple[Optional[QueryMetadata], List[ComputeManager]],
             body=self._query_filters,
         )

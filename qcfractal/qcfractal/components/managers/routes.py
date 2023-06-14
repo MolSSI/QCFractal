@@ -2,6 +2,7 @@ from flask import current_app
 
 from qcfractal.api_v1.blueprint import api_v1
 from qcfractal.api_v1.helpers import wrap_route
+from qcfractal.compute_v1.blueprint import compute_v1
 from qcfractal.flask_app import storage_socket
 from qcportal.base_models import CommonBulkGetNamesBody
 from qcportal.exceptions import LimitExceededError
@@ -14,7 +15,12 @@ from qcportal.managers import (
 from qcportal.utils import calculate_limit
 
 
-@api_v1.route("/managers", methods=["POST"])
+##################################################
+# Routes that deal with manager activation, etc
+##################################################
+
+
+@compute_v1.route("/managers", methods=["POST"])
 @wrap_route("WRITE")
 def activate_manager_v1(body_data: ManagerActivationBody):
     return storage_socket.managers.activate(
@@ -26,7 +32,7 @@ def activate_manager_v1(body_data: ManagerActivationBody):
     )
 
 
-@api_v1.route("/managers/<string:name>", methods=["PATCH"])
+@compute_v1.route("/managers/<string:name>", methods=["PATCH"])
 @wrap_route("WRITE")
 def update_manager_v1(name: str, body_data: ManagerUpdateBody):
     # This endpoint is used for heartbeats and deactivation
@@ -43,6 +49,11 @@ def update_manager_v1(name: str, body_data: ManagerUpdateBody):
     # Deactivate if specified
     if body_data.status != ManagerStatusEnum.active:
         storage_socket.managers.deactivate([name])
+
+
+######################################################
+# Routes for the user API to get information about managers
+######################################################
 
 
 @api_v1.route("/managers/<string:name>", methods=["GET"])

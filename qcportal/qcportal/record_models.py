@@ -423,7 +423,7 @@ class BaseRecord(BaseModel):
         This is expected to be called from derived class propagate_client functions as well
         """
         self._client = client
-        self._base_url = f"v1/records/{self.record_type}/{self.id}"
+        self._base_url = f"api/v1/records/{self.record_type}/{self.id}"
 
         if self.compute_history_ is not None:
             for ch in self.compute_history_:
@@ -655,14 +655,14 @@ class RecordQueryIterator(QueryIteratorBase):
         if self.record_type is None:
             meta, record_ids = self._client.make_request(
                 "post",
-                f"v1/records/query",
+                f"api/v1/records/query",
                 Tuple[Optional[QueryMetadata], List[int]],
                 body=self._query_filters,
             )
         else:
             meta, record_ids = self._client.make_request(
                 "post",
-                f"v1/records/{self.record_type}/query",
+                f"api/v1/records/{self.record_type}/query",
                 Tuple[Optional[QueryMetadata], List[int]],
                 body=self._query_filters,
             )

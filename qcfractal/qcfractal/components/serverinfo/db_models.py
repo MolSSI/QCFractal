@@ -27,9 +27,9 @@ class AccessLogORM(BaseORM):
     __tablename__ = "access_log"
 
     id = Column(Integer, primary_key=True)
-    access_date = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
-    access_method = Column(String, nullable=False)
-    access_type = Column(String, nullable=False)
+    timestamp = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    method = Column(String, nullable=False)
+    module = Column(String, nullable=True)
     full_uri = Column(String, nullable=True)
 
     request_duration = Column(Float, nullable=False)
@@ -57,7 +57,8 @@ class AccessLogORM(BaseORM):
     ip_long = Column(Float)
 
     __table_args__ = (
-        Index("ix_access_log_access_date", "access_date", postgresql_using="brin"),
+        Index("ix_access_log_timestamp", "timestamp", postgresql_using="brin"),
+        Index("ix_access_log_module", "module"),
         Index("ix_access_log_user_id", "user_id"),
     )
 
