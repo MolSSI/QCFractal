@@ -319,6 +319,13 @@ class RecordTask(BaseModel):
     required_programs: List[str]
     created_on: datetime
 
+    @property
+    def function_kwargs(self) -> Optional[Dict[str, Any]]:
+        if self.function_kwargs_compressed is None:
+            return None
+        else:
+            return decompress(self.function_kwargs_compressed, CompressionEnum.zstd)
+
 
 class ServiceDependency(BaseModel):
     class Config:
