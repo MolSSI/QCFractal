@@ -37,22 +37,20 @@ class SQLAlchemySocket:
 
         # Logging data
         self.logger = logging.getLogger("SQLAlchemySocket")
-        uri = qcf_config.database.uri
+        self.uri = qcf_config.database.uri
 
-        self.logger.info(f"SQLAlchemy attempt to connect to {uri}.")
+        self.logger.info(f"SQLAlchemy attempt to connect to {qcf_config.database.safe_uri}.")
 
         # Connect to DB and create session
-        self.uri = uri
-
         # If the pool size given in the config is zero, then that corresponds to using a NullPool here.
         # Note that this is different than SQLAlchemy, where pool_size = 0 means unlimited
         # If pool_size in the config is non-zero, then set the pool class to None (meaning use
         # SQLAlchemy default)
         if qcf_config.database.pool_size == 0:
-            self.engine = create_engine(uri, echo=qcf_config.database.echo_sql, poolclass=NullPool, future=True)
+            self.engine = create_engine(self.uri, echo=qcf_config.database.echo_sql, poolclass=NullPool, future=True)
         else:
             self.engine = create_engine(
-                uri, echo=qcf_config.database.echo_sql, pool_size=qcf_config.database.pool_size, future=True
+                self.uri, echo=qcf_config.database.echo_sql, pool_size=qcf_config.database.pool_size, future=True
             )
 
         self.logger.info(
