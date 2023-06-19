@@ -481,11 +481,12 @@ def delete_general(
     for idx, search_value in enumerate(search_values):
         try:
             q = [x == y for x, y in zip(search_cols, search_value)]
-            n_deleted = session.query(orm_type).filter(and_(True, *q)).delete()
-            if n_deleted == 0:
-                errors.append((idx, "Entry is missing"))
-            else:
-                deleted_idx.append(idx)
+            with session.begin_nested():
+                n_deleted = session.query(orm_type).filter(and_(True, *q)).delete()
+                if n_deleted == 0:
+                    errors.append((idx, "Entry is missing"))
+                else:
+                    deleted_idx.append(idx)
         except IntegrityError:
             err_msg = f"Integrity Error - may still be referenced"
             errors.append((idx, err_msg))
