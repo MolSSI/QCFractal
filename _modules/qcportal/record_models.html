@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.record_models &#8212; QCArchive 0.50b12.post4+g1327cc51 documentation</title>
+    <title>qcportal.record_models &#8212; QCArchive 0.50b12.post8+g710c54df documentation</title>
   
   
   
@@ -732,7 +732,14 @@ document.write(`
     <span class="n">tag</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">priority</span><span class="p">:</span> <span class="n">PriorityEnum</span>
     <span class="n">required_programs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
-    <span class="n">created_on</span><span class="p">:</span> <span class="n">datetime</span></div>
+    <span class="n">created_on</span><span class="p">:</span> <span class="n">datetime</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">function_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">function_kwargs_compressed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">decompress</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">function_kwargs_compressed</span><span class="p">,</span> <span class="n">CompressionEnum</span><span class="o">.</span><span class="n">zstd</span><span class="p">)</span></div>
 
 
 <span class="k">class</span> <span class="nc">ServiceDependency</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
