@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from functools import lru_cache
 from typing import TYPE_CHECKING
+from qcportal.utils import chunk_list
 
 from sqlalchemy import tuple_, and_, or_, func, select, inspect
 from sqlalchemy.exc import IntegrityError
@@ -476,24 +477,42 @@ def delete_general(
     deleted_idx: List[int] = []
     errors: List[Tuple[int, str]] = []
 
-    # Do one at a time to catch errors
-    # We don't delete a whole lot, so this shouldn't be a bottleneck
-    for idx, search_value in enumerate(search_values):
+    # Do in batches of 25 for efficiency
+    chunk_size = 25
+    for chunk_idx, search_values_chunk in enumerate(chunk_list(search_values, chunk_size)):
+        chunk_start = chunk_idx * chunk_size
         try:
-            q = [x == y for x, y in zip(search_cols, search_value)]
+            if len(search_cols) == 1:
+                # If only one search column, we can use the in_ operator
+                query_filter = search_cols[0].in_([x[0] for x in search_values_chunk])
+            else:
+                # Otherwise, we need to do an AND of all the search columns, and then an OR of all the ANDs
+                # ie, (search_col1 == val1 AND search_col2 == val2) OR (search_col1 == val3 AND search_col2 == val4)
+                or_tmp = []
+                for sv in search_values_chunk:
+                    and_tmp = [x == y for x, y in zip(search_cols, sv)]
+                    or_tmp.append(and_(True, *and_tmp))
+                query_filter = or_(*or_tmp)
+
             with session.begin_nested():
-                n_deleted = session.query(orm_type).filter(and_(True, *q)).delete()
-                if n_deleted == 0:
-                    errors.append((idx, "Entry is missing"))
-                else:
-                    deleted_idx.append(idx)
-        except IntegrityError:
-            err_msg = f"Integrity Error - may still be referenced"
-            errors.append((idx, err_msg))
-        except Exception as e:
-            scols = [x.key for x in search_cols]
-            err_msg = f"Attempting to delete resulted in error: orm_type={orm_type.__name__}, search_cols={scols}, idx={idx}, search_value={search_value}, error={str(e)}"
-            errors.append((idx, err_msg))
+                session.query(orm_type).filter(query_filter).delete()
+                deleted_idx.extend(range(chunk_start, chunk_start + len(search_values_chunk)))
+
+        except Exception:
+            # Have to go one at a time
+            for idx, search_value in enumerate(search_values_chunk):
+                try:
+                    q = [x == y for x, y in zip(search_cols, search_value)]
+                    with session.begin_nested():
+                        session.query(orm_type).filter(and_(True, *q)).delete()
+                        deleted_idx.append(idx)
+                except IntegrityError:
+                    err_msg = f"Integrity Error - may still be referenced"
+                    errors.append((idx, err_msg))
+                except Exception as e:
+                    scols = [x.key for x in search_cols]
+                    err_msg = f"Attempting to delete resulted in error: orm_type={orm_type.__name__}, search_cols={scols}, idx={idx}, search_value={search_value}, error={str(e)}"
+                    errors.append((idx, err_msg))
 
     session.flush()
 

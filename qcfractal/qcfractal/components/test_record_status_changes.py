@@ -458,12 +458,12 @@ def test_record_client_harddelete_missing(snowflake: QCATestingSnowflake):
     storage_socket = snowflake.get_storage_socket()
     snowflake_client = snowflake.client()
 
+    # Deletion always succeeds even if record doesn't exist
     all_id = populate_records_status(storage_socket)
     meta = snowflake_client.delete_records(all_id + [99999], soft_delete=False)
-    assert meta.success is False
-    assert meta.deleted_idx == [0, 1, 2, 3, 4, 5, 6]
-    assert meta.n_deleted == 7
-    assert meta.error_idx == [7]
+    assert meta.success is True
+    assert meta.deleted_idx == [0, 1, 2, 3, 4, 5, 6, 7]
+    assert meta.n_deleted == 8
 
 
 def test_record_client_revert_chain(snowflake: QCATestingSnowflake):

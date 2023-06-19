@@ -171,12 +171,12 @@ def test_molecules_client_delete_nonexist(snowflake_client: PortalClient):
     meta, ids = snowflake_client.add_molecules([water])
     assert meta.success
 
+    # Deletion succeeds if it doesn't exist
     meta = snowflake_client.delete_molecules([456, ids[0], ids[0], 123, 789])
-    assert meta.success is False
-    assert meta.n_deleted == 1
-    assert meta.n_errors == 4
-    assert meta.error_idx == [0, 2, 3, 4]
-    assert meta.deleted_idx == [1]
+    assert meta.success is True
+    assert meta.n_deleted == 5
+    assert meta.n_errors == 0
+    assert meta.deleted_idx == [0, 1, 2, 3, 4]
 
 
 def test_molecules_client_delete_inuse(snowflake_client: PortalClient):
