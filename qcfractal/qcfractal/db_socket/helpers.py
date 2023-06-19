@@ -505,14 +505,14 @@ def delete_general(
                     q = [x == y for x, y in zip(search_cols, search_value)]
                     with session.begin_nested():
                         session.query(orm_type).filter(and_(True, *q)).delete()
-                        deleted_idx.append(idx)
+                        deleted_idx.append(chunk_start + idx)
                 except IntegrityError:
                     err_msg = f"Integrity Error - may still be referenced"
-                    errors.append((idx, err_msg))
+                    errors.append((chunk_start + idx, err_msg))
                 except Exception as e:
                     scols = [x.key for x in search_cols]
                     err_msg = f"Attempting to delete resulted in error: orm_type={orm_type.__name__}, search_cols={scols}, idx={idx}, search_value={search_value}, error={str(e)}"
-                    errors.append((idx, err_msg))
+                    errors.append((chunk_start + idx, err_msg))
 
     session.flush()
 
