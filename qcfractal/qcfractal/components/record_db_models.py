@@ -183,7 +183,10 @@ class RecordComputeHistoryORM(BaseORM):
         passive_deletes=True,
     )
 
-    __table_args__ = (Index("ix_record_compute_history_record_id", "record_id"),)
+    __table_args__ = (
+        Index("ix_record_compute_history_record_id", "record_id"),
+        Index("ix_record_compute_history_manager_name", "manager_name"),
+    )
 
 
 class BaseRecordORM(BaseORM):
