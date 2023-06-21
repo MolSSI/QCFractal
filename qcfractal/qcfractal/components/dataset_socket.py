@@ -1345,6 +1345,7 @@ class DatasetSocket:
 
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(BaseDatasetORM.id, BaseDatasetORM.dataset_type, BaseDatasetORM.name)
+            stmt = stmt.order_by(BaseDatasetORM.id.asc())
             r = session.execute(stmt).all()
 
             return [{"id": x[0], "dataset_type": x[1], "dataset_name": x[2]} for x in r]
