@@ -33,7 +33,7 @@ def update_nested_dict(d, u):
     return d
 
 
-class PackageEnvironmentSettings(BaseModel):
+class PackageEnvironmentSettings(BaseSettings):
     """
     Environments with installed packages that can be used to run calculations
 
@@ -47,13 +47,13 @@ class PackageEnvironmentSettings(BaseModel):
         [], description="List of paths to apptainer/singularity files to query for installed packages"
     )
 
-    class Config(BaseModel.Config):
+    class Config(BaseSettings.Config):
         case_insensitive = True
         extra = "forbid"
         env_prefix = "QCF_COMPUTE_ENVIRONMENTS_"
 
 
-class ExecutorConfig(BaseModel):
+class ExecutorConfig(BaseSettings):
     type: str
     queue_tags: List[str]
     worker_init: List[str] = []
@@ -68,7 +68,7 @@ class ExecutorConfig(BaseModel):
 
     environments: PackageEnvironmentSettings = PackageEnvironmentSettings()
 
-    class Config(BaseModel.Config):
+    class Config(BaseSettings.Config):
         case_insensitive = True
         extra = "forbid"
 
@@ -122,7 +122,7 @@ class FractalServerSettings(BaseSettings):
     )
     verify: Optional[bool] = Field(None, description="Use Server-side generated SSL certification or not.")
 
-    class Config(BaseModel.Config):
+    class Config(BaseSettings.Config):
         case_insensitive = True
         extra = "forbid"
         env_prefix = "QCF_COMPUTE_SERVER_"
@@ -157,11 +157,11 @@ class FractalComputeConfig(BaseSettings):
 
     parsl_run_dir: str = "parsl_run_dir"
 
-    server: FractalServerSettings = FractalServerSettings()
+    server: FractalServerSettings = Field(...)
     environments: PackageEnvironmentSettings = PackageEnvironmentSettings()
     executors: Dict[str, AllExecutorTypes] = Field(...)
 
-    class Config(BaseModel.Config):
+    class Config(BaseSettings.Config):
         case_insensitive = True
         extra = "forbid"
         env_prefix = "QCF_COMPUTE_"
