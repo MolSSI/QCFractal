@@ -3,7 +3,7 @@ import os
 from typing import List, Optional, Union, Dict, Any
 
 import yaml
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, BaseSettings
 from typing_extensions import Literal
 
 
@@ -46,6 +46,11 @@ class PackageEnvironmentSettings(BaseModel):
     apptainer: List[str] = Field(
         [], description="List of paths to apptainer/singularity files to query for installed packages"
     )
+
+    class Config(BaseModel.Config):
+        case_insensitive = True
+        extra = "forbid"
+        env_prefix = "QCF_COMPUTE_ENVIRONMENTS_"
 
 
 class ExecutorConfig(BaseModel):
@@ -95,7 +100,7 @@ class SlurmExecutorConfig(ExecutorConfig):
 AllExecutorTypes = Union[CustomExecutorConfig, LocalExecutorConfig, SlurmExecutorConfig]
 
 
-class FractalServerSettings(BaseModel):
+class FractalServerSettings(BaseSettings):
     """
     Settings pertaining to the Fractal Server you wish to pull tasks from and push completed tasks to. Each manager
     supports exactly 1 Fractal Server to be in communication with, and exactly 1 user on that Fractal Server. These
@@ -120,9 +125,10 @@ class FractalServerSettings(BaseModel):
     class Config(BaseModel.Config):
         case_insensitive = True
         extra = "forbid"
+        env_prefix = "QCF_COMPUTE_SERVER_"
 
 
-class FractalComputeConfig(BaseModel):
+class FractalComputeConfig(BaseSettings):
 
     base_folder: str = Field(
         ...,
@@ -151,13 +157,14 @@ class FractalComputeConfig(BaseModel):
 
     parsl_run_dir: str = "parsl_run_dir"
 
-    server: FractalServerSettings = Field(...)
+    server: FractalServerSettings = FractalServerSettings()
     environments: PackageEnvironmentSettings = PackageEnvironmentSettings()
     executors: Dict[str, AllExecutorTypes] = Field(...)
 
     class Config(BaseModel.Config):
         case_insensitive = True
         extra = "forbid"
+        env_prefix = "QCF_COMPUTE_"
 
     @validator("logfile")
     def _check_logfile(cls, v, values):

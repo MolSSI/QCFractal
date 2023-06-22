@@ -10,6 +10,7 @@ import sys
 from . import __version__
 from .compute_manager import ComputeManager
 from .config import read_configuration
+from .config import FractalComputeConfig
 
 
 def main():
@@ -35,7 +36,10 @@ def main():
     else:
         logging.basicConfig(level="INFO", handlers=[log_handler], format="%(levelname)s: %(message)s")
 
-    manager_config = read_configuration([args.config])
+    if args.config is None:
+        manager_config = FractalComputeConfig(**{})
+    else:
+        manager_config = read_configuration([args.config])
 
     # Adjust the logging level to what was in the config
     logging.getLogger().setLevel(manager_config.loglevel)
