@@ -20,6 +20,7 @@ from qcportal.compression import CompressionEnum, compress, decompress
 from qcportal.exceptions import UserReportableError, MissingDataError
 from qcportal.metadata_models import DeleteMetadata, QueryMetadata, UpdateMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
+from qcportal.utils import chunk_list
 from .record_db_models import (
     RecordComputeHistoryORM,
     BaseRecordORM,
@@ -539,19 +540,19 @@ class RecordSocket:
         Recursively obtain the IDs of all children records of the given records
         """
 
-        all_children_ids = []
-
-        stmt = select(self._child_cte.c.child_id).where(self._child_cte.c.parent_id.in_(record_ids))
-        children_ids = session.execute(stmt).scalars().unique().all()
-
-        while len(children_ids) > 0:
-            all_children_ids.extend(children_ids)
-
-            # find children of children, etc
-            stmt = select(self._child_cte.c.child_id).where(self._child_cte.c.parent_id.in_(children_ids))
+        # Do in batches to prevent really huge queries
+        # First, do just direct children
+        direct_children: List[int] = []
+        for id_batch in chunk_list(record_ids, 100):
+            stmt = select(self._child_cte.c.child_id).where(self._child_cte.c.parent_id.in_(id_batch))
             children_ids = session.execute(stmt).scalars().unique().all()
+            direct_children.extend(children_ids)
 
-        return all_children_ids
+        if len(direct_children) == 0:
+            return []
+
+        # Now, recursively find all children of children, etc
+        return direct_children + self.get_children_ids(session, direct_children)
 
     def get_short_descriptions(
         self, record_ids: Iterable[int], *, session: Optional[Session] = None
