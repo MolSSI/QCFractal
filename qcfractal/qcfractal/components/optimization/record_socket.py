@@ -93,7 +93,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
     ) -> None:
 
         # Add the final molecule
-        meta, final_mol_id = self.root_socket.molecules.add([result.final_molecule])
+        meta, final_mol_id = self.root_socket.molecules.add([result.final_molecule], session=session)
         if not meta.success:
             raise RuntimeError("Unable to add final molecule: " + meta.error_string)
 
