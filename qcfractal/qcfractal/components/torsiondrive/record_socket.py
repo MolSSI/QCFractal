@@ -76,6 +76,10 @@ class TorsiondriveServiceState(BaseModel):
     dihedral_template: str
 
 
+# Meaningless, but unique to torsiondrives
+torsiondrive_insert_lock_id = 14200
+
+
 class TorsiondriveRecordSocket(BaseRecordSocket):
     """
     Socket for handling torsiondrive computations
@@ -506,6 +510,9 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         tag = tag.lower()
 
         with self.root_socket.optional_session(session, False) as session:
+
+            # Lock for the entire transaction
+            session.execute(select(func.pg_advisory_xact_lock(torsiondrive_insert_lock_id))).scalar()
 
             self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
 

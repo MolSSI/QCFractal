@@ -8,7 +8,7 @@ from typing import List, Dict, Tuple, Optional, Sequence, Any, Union, Set, TYPE_
 import numpy as np
 import sqlalchemy.orm.attributes
 from pydantic import BaseModel, Extra, parse_obj_as
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import lazyload, joinedload, undefer, defer
 
@@ -41,6 +41,9 @@ from ..record_socket import BaseRecordSocket
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
+
+# Meaningless, but unique to gridoptimizations
+gridoptimization_insert_lock_id = 14300
 
 
 def expand_ndimensional_grid(
@@ -582,6 +585,9 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
 
         with self.root_socket.optional_session(session, False) as session:
 
+            # Lock for the entire transaction
+            session.execute(select(func.pg_advisory_xact_lock(gridoptimization_insert_lock_id))).scalar()
+
             self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
 
             all_orm = []
@@ -603,6 +609,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                 all_orm,
                 (GridoptimizationRecordORM.specification_id, GridoptimizationRecordORM.initial_molecule_id),
                 (GridoptimizationRecordORM.id,),
+                lock_id=gridoptimization_insert_lock_id,
             )
 
             return meta, [x[0] for x in ids]

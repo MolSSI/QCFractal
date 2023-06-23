@@ -33,6 +33,10 @@ if TYPE_CHECKING:
     from qcfractal.db_socket.socket import SQLAlchemySocket
 
 
+# Meaningless, but unique to manybody
+manybody_insert_lock_id = 14500
+
+
 def nCr(n: int, r: int) -> int:
     """
     Compute the binomial coefficient n! / (k! * (n-k)!)
@@ -576,6 +580,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
                 all_orm,
                 (ManybodyRecordORM.specification_id, ManybodyRecordORM.initial_molecule_id),
                 (ManybodyRecordORM.id,),
+                lock_id=manybody_insert_lock_id,
             )
             return meta, [x[0] for x in ids]
 

@@ -31,6 +31,10 @@ if TYPE_CHECKING:
     from typing import List, Union, Tuple, Optional, Sequence, Dict, Any
 
 
+# Basically random, but unique to molecules
+molecule_insert_lock_id = 24773
+
+
 class MoleculeSocket:
     """
     Socket for managing/querying molecules
@@ -96,7 +100,10 @@ class MoleculeSocket:
         molecule_orm = [self.molecule_to_orm(x) for x in molecules]
 
         with self.root_socket.optional_session(session) as session:
-            meta, added_ids = insert_general(session, molecule_orm, (MoleculeORM.molecule_hash,), (MoleculeORM.id,))
+            # lock id is basically random, but unique to molecules
+            meta, added_ids = insert_general(
+                session, molecule_orm, (MoleculeORM.molecule_hash,), (MoleculeORM.id,), lock_id=molecule_insert_lock_id
+            )
 
         # added_ids is a list of tuple, with each tuple only having one value. Flatten that out
         return meta, [x[0] for x in added_ids]
@@ -174,7 +181,13 @@ class MoleculeSocket:
 
         with self.root_socket.optional_session(session) as session:
             meta, all_ids = insert_mixed_general(
-                session, MoleculeORM, molecule_orm, MoleculeORM.id, (MoleculeORM.molecule_hash,), (MoleculeORM.id,)
+                session,
+                MoleculeORM,
+                molecule_orm,
+                MoleculeORM.id,
+                (MoleculeORM.molecule_hash,),
+                (MoleculeORM.id,),
+                lock_id=molecule_insert_lock_id,
             )
 
         # added_ids is a list of tuple, with each tuple only having one value. Flatten that out

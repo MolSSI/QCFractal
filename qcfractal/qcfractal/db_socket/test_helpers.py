@@ -1,13 +1,43 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import threading
+import time
 
-if TYPE_CHECKING:
-    from qcfractal.db_socket import SQLAlchemySocket
+from sqlalchemy import select
+
 from qcfractal.components.optimization.record_db_models import OptimizationRecordORM
 from qcfractal.components.optimization.testing_helpers import submit_test_data
-from sqlalchemy import select
+from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.db_socket.helpers import get_query_proj_options
+from qcportal.molecules import Molecule
+
+
+def test_dbsocket_helper_duplicate_insert(storage_socket: SQLAlchemySocket):
+    # Tests that duplicate inserts are handled correctly if happening at the same time
+
+    # Create another socket, so we can run the inserts in separate threads
+    storage_socket_2 = SQLAlchemySocket(storage_socket.qcf_config)
+
+    m1 = Molecule(symbols=["h", "h"], geometry=[0, 0, 0, 0, 0, 2])
+    m2 = Molecule(symbols=["h", "h"], geometry=[0, 0, 0, 0, 0, 3])
+    m3 = Molecule(symbols=["h", "h"], geometry=[0, 0, 0, 0, 0, 4])
+
+    def _insert_molecules(s: SQLAlchemySocket):
+        with s.session_scope() as session:
+            # Add & flush, but don't commit
+            r = s.molecules.add([m1, m2, m3], session=session)
+            time.sleep(1)
+            session.commit()
+            return r
+
+    # other thread inserts first
+    t2 = threading.Thread(target=_insert_molecules, args=(storage_socket_2,))
+    t2.start()
+    time.sleep(0.25)
+
+    # Now do ours
+    _insert_molecules(storage_socket)
+    t2.join()
 
 
 def test_dbsocket_helper_proj(storage_socket: SQLAlchemySocket):

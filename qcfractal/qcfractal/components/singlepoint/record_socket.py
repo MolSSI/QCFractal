@@ -28,6 +28,9 @@ if TYPE_CHECKING:
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from typing import List, Dict, Tuple, Optional, Sequence, Any, Union
 
+# Meaningless, but unique to singlepoints
+singlepoint_insert_lock_id = 14000
+
 
 class SinglepointRecordSocket(BaseRecordSocket):
     """
@@ -338,6 +341,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
                 all_orm,
                 (SinglepointRecordORM.specification_id, SinglepointRecordORM.molecule_id),
                 (SinglepointRecordORM.id,),
+                lock_id=singlepoint_insert_lock_id,
             )
             return meta, [x[0] for x in ids]
 

@@ -34,6 +34,9 @@ if TYPE_CHECKING:
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from typing import List, Dict, Tuple, Optional, Sequence, Any, Union
 
+# Meaningless, but unique to optimizations
+optimization_insert_lock_id = 14100
+
 
 class OptimizationRecordSocket(BaseRecordSocket):
     """
@@ -317,6 +320,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
                 all_orm,
                 (OptimizationRecordORM.specification_id, OptimizationRecordORM.initial_molecule_id),
                 (OptimizationRecordORM.id,),
+                lock_id=optimization_insert_lock_id,
             )
             return meta, [x[0] for x in ids]
 

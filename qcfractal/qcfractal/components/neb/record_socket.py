@@ -9,7 +9,7 @@ import numpy as np
 import sqlalchemy.orm.attributes
 import tabulate
 from pydantic import BaseModel, Extra
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by, DOUBLE_PRECISION, TEXT
 from sqlalchemy.orm import lazyload, joinedload, defer, undefer
 
@@ -49,6 +49,10 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from typing import List, Dict, Tuple, Optional, Sequence, Any, Union, Iterable
+
+# Meaningless, but unique to neb
+neb_insert_lock_id = 14600
+neb_spec_insert_lock_id = 14601
 
 
 class NEBServiceState(BaseModel):
@@ -475,24 +479,15 @@ class NEBRecordSocket(BaseRecordSocket):
                         None,
                     )
 
+            # Lock for the rest of the transaction (since we have to query then add)
+            session.execute(select(func.pg_advisory_xact_lock(neb_spec_insert_lock_id))).scalar()
+
             stmt = select(NEBSpecificationORM.id).filter_by(
                 program=neb_spec.program,
                 keywords_hash=kw_hash,
                 singlepoint_specification_id=sp_spec_id,
                 optimization_specification_id=opt_spec_id,
             )
-            # stmt = (
-            #    insert(NEBSpecificationORM)
-            #    .values(
-            #        program=neb_spec.program,
-            #        keywords=neb_kw_dict,
-            #        keywords_hash=kw_hash,
-            #        singlepoint_specification_id=sp_spec_id,
-            #        optimization_specification_id=opt_spec_id,
-            #    )
-            #    .on_conflict_do_nothing()
-            #    .returning(NEBSpecificationORM.id)
-            # )
 
             if opt_spec_id is not None:
                 stmt = stmt.filter(NEBSpecificationORM.optimization_specification_id == opt_spec_id)
@@ -635,6 +630,8 @@ class NEBRecordSocket(BaseRecordSocket):
         tag = tag.lower()
 
         with self.root_socket.optional_session(session, False) as session:
+            # Lock for the entire transaction
+            session.execute(select(func.pg_advisory_xact_lock(neb_insert_lock_id))).scalar()
 
             self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
 

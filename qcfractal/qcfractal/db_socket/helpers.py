@@ -3,15 +3,15 @@ from __future__ import annotations
 import logging
 from functools import lru_cache
 from typing import TYPE_CHECKING
-from qcportal.utils import chunk_list
 
 from sqlalchemy import tuple_, and_, or_, func, select, inspect
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import load_only, selectinload, lazyload, defer
+from sqlalchemy.orm import load_only, lazyload, defer
 
 from qcfractal.db_socket import BaseORM
 from qcportal.exceptions import MissingDataError
 from qcportal.metadata_models import InsertMetadata, DeleteMetadata
+from qcportal.utils import chunk_list
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.attributes import InstrumentedAttribute
@@ -238,6 +238,7 @@ def insert_general(
     data: Sequence[_ORM_T],
     search_cols: Sequence[InstrumentedAttribute],
     returning: Sequence[InstrumentedAttribute],
+    lock_id: int,
 ) -> Tuple[InsertMetadata, List[Tuple]]:
     """
     Perform a general insert, taking into account existing data
@@ -256,6 +257,14 @@ def insert_general(
     The ORM object passed in through ``data`` may be modified, and they may be attached to the given session upon
     returning. Various fields may be filled in.
 
+    The ``lock_id`` parameter is used to block other inserts into the table for the duration of this insert.
+    This is used to prevent duplicate entries.
+
+    .. note::
+        This function is used for various fields, such as records. Since records are not unique, we don't
+        have a unique constraint and therefore cannot use the ``on_conflict_do_nothing`` clause. Hence the need
+        for manual advisory locking
+
     WARNING: This does not commit the additions to the database, but does flush them.
 
     Parameters
@@ -269,6 +278,9 @@ def insert_general(
         of [TableORM.id, TableORM.col2], etc
     returning
         What columns to return. This is usually in the form of [TableORM.id, TableORM.col2, etc]
+    lock_id
+        Unique ID for locking. The ID should be the same for a given table or type of record inserted,
+        but different from IDs for other tables or record types.
 
     Returns
     -------
@@ -276,6 +288,9 @@ def insert_general(
         Metadata showing what was added/updated, and a list of returned results. The results list
         will contain tuples with whatever data was requested in the returning parameter.
     """
+
+    # Lock for the entire transaction. Even if the caller does more after this
+    session.execute(select(func.pg_advisory_xact_lock(lock_id))).scalar()
 
     n_data = len(data)
 
@@ -303,6 +318,7 @@ def insert_mixed_general(
     id_col: InstrumentedAttribute,
     search_cols: Sequence[InstrumentedAttribute],
     returning: Sequence[InstrumentedAttribute],
+    lock_id: int,
 ) -> Tuple[InsertMetadata, List[Optional[Tuple]]]:
 
     """
@@ -332,6 +348,9 @@ def insert_mixed_general(
         of [TableORM.id, TableORM.col2], etc
     returning
         What columns to return. This is usually in the form of [TableORM.id, TableORM.col2, etc]
+    lock_id
+        Unique ID for locking. The ID should be the same for a given table or type of record inserted,
+        but different from IDs for other tables or record types.
 
     Returns
     -------
@@ -339,6 +358,9 @@ def insert_mixed_general(
         Metadata showing what was added/updated, and a list of returned results. The results list
         will contain tuples with whatever data was requested in the returning parameter.
     """
+
+    # Lock for the entire transaction. Even if the caller does more after this
+    session.execute(select(func.pg_advisory_xact_lock(lock_id))).scalar()
 
     n_data = len(data)
 

@@ -4,7 +4,7 @@ import logging
 from typing import List, Dict, Tuple, Optional, Iterable, Sequence, Any, Union, TYPE_CHECKING
 
 import tabulate
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by
 from sqlalchemy.orm import defer, undefer, joinedload, lazyload
 
@@ -27,6 +27,10 @@ from ..record_socket import BaseRecordSocket
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
+
+# Meaningless, but unique to reaction
+reaction_insert_lock_id = 14400
+reaction_spec_insert_lock_id = 14401
 
 
 class ReactionRecordSocket(BaseRecordSocket):
@@ -338,6 +342,9 @@ class ReactionRecordSocket(BaseRecordSocket):
                         None,
                     )
 
+            # Lock for the rest of the transaction (since we have to query then add)
+            session.execute(select(func.pg_advisory_xact_lock(reaction_spec_insert_lock_id))).scalar()
+
             # Query first, due to behavior of NULL in postgres
             stmt = select(ReactionSpecificationORM.id).filter_by(
                 program=rxn_spec.program,
@@ -494,6 +501,9 @@ class ReactionRecordSocket(BaseRecordSocket):
         tag = tag.lower()
 
         with self.root_socket.optional_session(session, False) as session:
+
+            # Lock for the entire transaction
+            session.execute(select(func.pg_advisory_xact_lock(reaction_insert_lock_id))).scalar()
 
             self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
 
