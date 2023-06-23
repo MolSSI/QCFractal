@@ -161,7 +161,7 @@ class FractalComputeConfig(BaseModel):
 
     @validator("logfile")
     def _check_logfile(cls, v, values):
-        return _make_abs_path(v, values["base_folder"], "qcfractal_compute.log")
+        return _make_abs_path(v, values["base_folder"], None)
 
     @validator("parsl_run_dir")
     def _check_run_dir(cls, v, values):
