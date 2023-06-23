@@ -201,7 +201,7 @@ class MoleculeSocket:
         id_lst = [(x,) for x in molecule_id]
 
         with self.root_socket.optional_session(session) as session:
-            return delete_general(session, MoleculeORM, (MoleculeORM.id,), id_lst)
+            return delete_general(session, MoleculeORM, MoleculeORM.id, id_lst)
 
     def query(
         self,

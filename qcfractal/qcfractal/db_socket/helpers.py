@@ -441,8 +441,8 @@ def get_general(
 def delete_general(
     session: sqlalchemy.orm.session.Session,
     orm_type: Type[_ORM_T],
-    search_cols: Sequence[InstrumentedAttribute],
-    search_values: Sequence[Any],
+    id_col: InstrumentedAttribute,
+    ids_to_delete: Sequence[Any],
 ) -> DeleteMetadata:
     """
     Perform a general delete operation
@@ -457,10 +457,10 @@ def delete_general(
         An existing SQLAlchemy session to use for querying/adding/updating/deleting
     orm_type
         ORM to search for (MoleculeORM, etc)
-    search_cols
-        The column to use for searching the database (typically TableORM.id or similar)
-    search_values
-        Values of the search column to search for, in order
+    id_col
+        Column of the ID to use for selecting records for deleting (typically TableORM.id or similar)
+    ids_to_delete
+        Delete records with these ids
 
     Returns
     -------
@@ -468,10 +468,10 @@ def delete_general(
         Information about what was deleted
     """
 
-    n_search_values = len(search_values)
+    n_ids = len(ids_to_delete)
 
     # Return early if not given anything
-    if n_search_values == 0:
+    if n_ids == 0:
         return DeleteMetadata()
 
     deleted_idx: List[int] = []
@@ -479,39 +479,26 @@ def delete_general(
 
     # Do in batches of 25 for efficiency
     chunk_size = 25
-    for chunk_idx, search_values_chunk in enumerate(chunk_list(search_values, chunk_size)):
+    for chunk_idx, ids_chunk in enumerate(chunk_list(ids_to_delete, chunk_size)):
         chunk_start = chunk_idx * chunk_size
         try:
-            if len(search_cols) == 1:
-                # If only one search column, we can use the in_ operator
-                query_filter = search_cols[0].in_([x[0] for x in search_values_chunk])
-            else:
-                # Otherwise, we need to do an AND of all the search columns, and then an OR of all the ANDs
-                # ie, (search_col1 == val1 AND search_col2 == val2) OR (search_col1 == val3 AND search_col2 == val4)
-                or_tmp = []
-                for sv in search_values_chunk:
-                    and_tmp = [x == y for x, y in zip(search_cols, sv)]
-                    or_tmp.append(and_(True, *and_tmp))
-                query_filter = or_(*or_tmp)
-
+            query_filter = id_col.in_([x[0] for x in ids_chunk])
             with session.begin_nested():
                 session.query(orm_type).filter(query_filter).delete()
-                deleted_idx.extend(range(chunk_start, chunk_start + len(search_values_chunk)))
+                deleted_idx.extend(range(chunk_start, chunk_start + len(ids_chunk)))
 
         except Exception:
             # Have to go one at a time
-            for idx, search_value in enumerate(search_values_chunk):
+            for idx, single_id in enumerate(ids_chunk):
                 try:
-                    q = [x == y for x, y in zip(search_cols, search_value)]
                     with session.begin_nested():
-                        session.query(orm_type).filter(and_(True, *q)).delete()
+                        session.query(orm_type).filter(id_col == single_id).delete()
                         deleted_idx.append(chunk_start + idx)
                 except IntegrityError:
                     err_msg = f"Integrity Error - may still be referenced"
                     errors.append((chunk_start + idx, err_msg))
                 except Exception as e:
-                    scols = [x.key for x in search_cols]
-                    err_msg = f"Attempting to delete resulted in error: orm_type={orm_type.__name__}, search_cols={scols}, idx={idx}, search_value={search_value}, error={str(e)}"
+                    err_msg = f"Attempting to delete resulted in error: orm_type={orm_type.__name__}, id_col={id_col.key}, idx={idx}, search_value={single_id}, error={str(e)}"
                     errors.append((chunk_start + idx, err_msg))
 
     session.flush()

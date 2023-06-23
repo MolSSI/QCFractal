@@ -1516,8 +1516,8 @@ class RecordSocket:
 
             del_id_1 = [(x,) for x in record_ids]
             del_id_2 = [(x,) for x in children_ids]
-            meta = delete_general(session, BaseRecordORM, (BaseRecordORM.id,), del_id_1)
-            ch_meta = delete_general(session, BaseRecordORM, (BaseRecordORM.id,), del_id_2)
+            meta = delete_general(session, BaseRecordORM, BaseRecordORM.id, del_id_1)
+            ch_meta = delete_general(session, BaseRecordORM, BaseRecordORM.id, del_id_2)
 
             meta_dict = meta.dict()
             meta_dict["n_children_deleted"] = ch_meta.n_deleted
