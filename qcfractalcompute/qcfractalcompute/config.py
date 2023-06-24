@@ -6,6 +6,8 @@ import yaml
 from pydantic import BaseModel, Field, validator
 from typing_extensions import Literal
 
+from qcportal.utils import seconds_to_hms
+
 
 def _make_abs_path(path: Optional[str], base_folder: str, default_filename: Optional[str]) -> Optional[str]:
     # No path specified, no default
@@ -90,6 +92,14 @@ class SlurmExecutorConfig(ExecutorConfig):
     max_nodes: int
 
     scheduler_options: List[str] = []
+
+    @validator("walltime", pre=True)
+    def walltime_must_be_str(cls, v):
+        if isinstance(v, int):
+            return seconds_to_hms(v)
+        else:
+            return v
+
 
 
 AllExecutorTypes = Union[CustomExecutorConfig, LocalExecutorConfig, SlurmExecutorConfig]

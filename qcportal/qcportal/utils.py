@@ -65,6 +65,16 @@ def chunk_iterable(it: Iterable[_T], chunk_size: int) -> Generator[List[_T], Non
         batch = list(itertools.islice(i, chunk_size))
 
 
+def seconds_to_hms(seconds: int) -> str:
+    """
+    Converts a number of seconds (as an integer) to a string representing hh:mm:ss
+    """
+
+    hours, seconds = divmod(seconds, 3600)
+    minutes, seconds = divmod(seconds, 60)
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+
+
 def recursive_normalizer(value: Any, digits: int = 10, lowercase: bool = True) -> Any:
     """
     Prepare a structure for hashing by lowercasing all values and round all floats
