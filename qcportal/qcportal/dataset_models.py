@@ -14,7 +14,7 @@ from qcportal.base_models import RestModelBase, validate_list_to_single, CommonB
 from qcportal.dataset_view import DatasetViewWrapper
 from qcportal.metadata_models import DeleteMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, BaseRecord
-from qcportal.utils import make_list, chunk_list
+from qcportal.utils import make_list, chunk_iterable
 
 
 class Citation(BaseModel):
@@ -473,7 +473,7 @@ class BaseDataset(BaseModel):
             entry_names = [x for x in entry_names if x not in self.entries_]
 
         batch_size: int = self._client.api_limits["get_dataset_entries"] // 4
-        for entry_names_batch in chunk_list(entry_names, batch_size):
+        for entry_names_batch in chunk_iterable(entry_names, batch_size):
             self._internal_fetch_entries(entry_names_batch)
 
     def get_entry(
@@ -541,7 +541,7 @@ class BaseDataset(BaseModel):
             if self.entries_ is None:
                 self.entries_ = {}
 
-            for entry_names_batch in chunk_list(entry_names, batch_size):
+            for entry_names_batch in chunk_iterable(entry_names, batch_size):
                 # If forcing refetching, then use the whole batch. Otherwise, strip out
                 # any existing entries
                 if force_refetch:
@@ -695,7 +695,7 @@ class BaseDataset(BaseModel):
         # the 'modified_on' and 'status' fields
         batch_size = self._client.api_limits["get_records"] // 4
         minfo_dict = {}
-        for record_id_batch in chunk_list(existing_record_ids, batch_size):
+        for record_id_batch in chunk_iterable(existing_record_ids, batch_size):
             body = CommonBulkGetBody(ids=record_id_batch, include=["modified_on", "status"])
 
             modified_info = self._client.make_request(
@@ -794,7 +794,7 @@ class BaseDataset(BaseModel):
         # Do all entries for one spec. This simplifies things, especially with handling
         # existing or update-able records
         for spec_name in specification_names:
-            for entry_names_batch in chunk_list(entry_names, batch_size):
+            for entry_names_batch in chunk_iterable(entry_names, batch_size):
                 # Handle existing records that need to be updated
                 if fetch_updated and not force_refetch:
                     self._internal_update_records(entry_names_batch, [spec_name], status, include)

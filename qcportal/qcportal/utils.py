@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import io
+import itertools
 import json
 import logging
 from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from hashlib import sha256
-from typing import Optional, Union, Sequence, List, TypeVar, Any, Dict, Generator
+from typing import Optional, Union, Sequence, List, TypeVar, Any, Dict, Generator, Iterable
 
 import numpy as np
 
@@ -49,13 +50,19 @@ def make_str(obj: Optional[Union[_T, Sequence[_T]]]) -> Optional[List[_T]]:
         raise ValueError("`obj` must be `None`, a str, list, tuple, or non-sequence")
 
 
-def chunk_list(lst: List[_T], batch_size: int) -> Generator[List[_T], None, None]:
+def chunk_iterable(it: Iterable[_T], chunk_size: int) -> Generator[List[_T], None, None]:
     """
-    Split a list into batches
+    Split an iterable (such as a list) into batches/chunks
     """
 
-    for idx in range(0, len(lst), batch_size):
-        yield lst[idx : idx + batch_size]
+    if chunk_size < 1:
+        raise ValueError("chunk size must be >= 1")
+    i = iter(it)
+
+    batch = list(itertools.islice(i, chunk_size))
+    while batch:
+        yield batch
+        batch = list(itertools.islice(i, chunk_size))
 
 
 def recursive_normalizer(value: Any, digits: int = 10, lowercase: bool = True) -> Any:

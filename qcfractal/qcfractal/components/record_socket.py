@@ -20,7 +20,7 @@ from qcportal.compression import CompressionEnum, compress, decompress
 from qcportal.exceptions import UserReportableError, MissingDataError
 from qcportal.metadata_models import DeleteMetadata, QueryMetadata, UpdateMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
-from qcportal.utils import chunk_list
+from qcportal.utils import chunk_iterable
 from .record_db_models import (
     RecordComputeHistoryORM,
     BaseRecordORM,
@@ -543,7 +543,7 @@ class RecordSocket:
         # Do in batches to prevent really huge queries
         # First, do just direct children
         direct_children: List[int] = []
-        for id_batch in chunk_list(record_ids, 100):
+        for id_batch in chunk_iterable(record_ids, 100):
             stmt = select(self._child_cte.c.child_id).where(self._child_cte.c.parent_id.in_(id_batch))
             children_ids = session.execute(stmt).scalars().unique().all()
             direct_children.extend(children_ids)

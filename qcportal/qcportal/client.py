@@ -99,7 +99,7 @@ from .serverinfo import (
     ServerStatsQueryIterator,
     DeleteBeforeDateBody,
 )
-from .utils import make_list, chunk_list
+from .utils import make_list, chunk_iterable
 
 _T = TypeVar("_T", bound=BaseRecord)
 
@@ -386,7 +386,7 @@ class PortalClient(PortalClientBase):
         batch_size = self.api_limits["get_molecules"] // 4
         all_molecules = []
 
-        for mol_id_batch in chunk_list(molecule_ids, batch_size):
+        for mol_id_batch in chunk_iterable(molecule_ids, batch_size):
             body = CommonBulkGetBody(ids=mol_id_batch, missing_ok=missing_ok)
             mol_batch = self.make_request("post", "api/v1/molecules/bulkGet", List[Optional[Molecule]], body=body)
             all_molecules.extend(mol_batch)
@@ -582,7 +582,7 @@ class PortalClient(PortalClientBase):
         batch_size = self.api_limits["get_records"] // 4
         all_records = []
 
-        for record_id_batch in chunk_list(record_ids, batch_size):
+        for record_id_batch in chunk_iterable(record_ids, batch_size):
             body = CommonBulkGetBody(ids=record_id_batch, missing_ok=missing_ok)
             record_data = self.make_request("post", "api/v1/records/bulkGet", List[Optional[Dict[str, Any]]], body=body)
             record_batch = records_from_dicts(record_data, self)
@@ -640,7 +640,7 @@ class PortalClient(PortalClientBase):
         batch_size = self.api_limits["get_records"] // 4
         all_records = []
 
-        for record_id_batch in chunk_list(record_ids, batch_size):
+        for record_id_batch in chunk_iterable(record_ids, batch_size):
             body = CommonBulkGetBody(ids=record_id_batch, missing_ok=missing_ok)
 
             record_data = self.make_request(

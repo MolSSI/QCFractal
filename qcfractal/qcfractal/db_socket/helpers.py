@@ -11,7 +11,7 @@ from sqlalchemy.orm import load_only, lazyload, defer
 from qcfractal.db_socket import BaseORM
 from qcportal.exceptions import MissingDataError
 from qcportal.metadata_models import InsertMetadata, DeleteMetadata
-from qcportal.utils import chunk_list
+from qcportal.utils import chunk_iterable
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.attributes import InstrumentedAttribute
@@ -501,7 +501,7 @@ def delete_general(
 
     # Do in batches of 25 for efficiency
     chunk_size = 25
-    for chunk_idx, ids_chunk in enumerate(chunk_list(ids_to_delete, chunk_size)):
+    for chunk_idx, ids_chunk in enumerate(chunk_iterable(ids_to_delete, chunk_size)):
         chunk_start = chunk_idx * chunk_size
         try:
             query_filter = id_col.in_([x[0] for x in ids_chunk])
