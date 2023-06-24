@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.dataset_models &#8212; QCArchive 0.50b12.post16+ge491ea83 documentation</title>
+    <title>qcportal.dataset_models &#8212; QCArchive 0.50b12.post19+g45ef30ff documentation</title>
   
   
   
@@ -429,7 +429,7 @@ document.write(`
 <span class="kn">from</span> <span class="nn">qcportal.dataset_view</span> <span class="kn">import</span> <span class="n">DatasetViewWrapper</span>
 <span class="kn">from</span> <span class="nn">qcportal.metadata_models</span> <span class="kn">import</span> <span class="n">DeleteMetadata</span>
 <span class="kn">from</span> <span class="nn">qcportal.record_models</span> <span class="kn">import</span> <span class="n">PriorityEnum</span><span class="p">,</span> <span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="n">BaseRecord</span>
-<span class="kn">from</span> <span class="nn">qcportal.utils</span> <span class="kn">import</span> <span class="n">make_list</span><span class="p">,</span> <span class="n">chunk_list</span>
+<span class="kn">from</span> <span class="nn">qcportal.utils</span> <span class="kn">import</span> <span class="n">make_list</span><span class="p">,</span> <span class="n">chunk_iterable</span>
 
 
 <span class="k">class</span> <span class="nc">Citation</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
@@ -888,7 +888,7 @@ document.write(`
             <span class="n">entry_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">entry_names</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">entries_</span><span class="p">]</span>
 
         <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_dataset_entries&quot;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span>
-        <span class="k">for</span> <span class="n">entry_names_batch</span> <span class="ow">in</span> <span class="n">chunk_list</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">entry_names_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_internal_fetch_entries</span><span class="p">(</span><span class="n">entry_names_batch</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BaseDataset.get_entry"><a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.get_entry">[docs]</a>    <span class="k">def</span> <span class="nf">get_entry</span><span class="p">(</span>
@@ -956,7 +956,7 @@ document.write(`
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">entries_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">entries_</span> <span class="o">=</span> <span class="p">{}</span>
 
-            <span class="k">for</span> <span class="n">entry_names_batch</span> <span class="ow">in</span> <span class="n">chunk_list</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">entry_names_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
                 <span class="c1"># If forcing refetching, then use the whole batch. Otherwise, strip out</span>
                 <span class="c1"># any existing entries</span>
                 <span class="k">if</span> <span class="n">force_refetch</span><span class="p">:</span>
@@ -1110,7 +1110,7 @@ document.write(`
         <span class="c1"># the &#39;modified_on&#39; and &#39;status&#39; fields</span>
         <span class="n">batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_records&quot;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span>
         <span class="n">minfo_dict</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">record_id_batch</span> <span class="ow">in</span> <span class="n">chunk_list</span><span class="p">(</span><span class="n">existing_record_ids</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">record_id_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">existing_record_ids</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
             <span class="n">body</span> <span class="o">=</span> <span class="n">CommonBulkGetBody</span><span class="p">(</span><span class="n">ids</span><span class="o">=</span><span class="n">record_id_batch</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;modified_on&quot;</span><span class="p">,</span> <span class="s2">&quot;status&quot;</span><span class="p">])</span>
 
             <span class="n">modified_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
@@ -1209,7 +1209,7 @@ document.write(`
         <span class="c1"># Do all entries for one spec. This simplifies things, especially with handling</span>
         <span class="c1"># existing or update-able records</span>
         <span class="k">for</span> <span class="n">spec_name</span> <span class="ow">in</span> <span class="n">specification_names</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">entry_names_batch</span> <span class="ow">in</span> <span class="n">chunk_list</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">entry_names_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
                 <span class="c1"># Handle existing records that need to be updated</span>
                 <span class="k">if</span> <span class="n">fetch_updated</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_refetch</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_internal_update_records</span><span class="p">(</span><span class="n">entry_names_batch</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">],</span> <span class="n">status</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>

@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.client &#8212; QCArchive 0.50b12.post16+ge491ea83 documentation</title>
+    <title>qcportal.client &#8212; QCArchive 0.50b12.post19+g45ef30ff documentation</title>
   
   
   
@@ -514,7 +514,7 @@ document.write(`
     <span class="n">ServerStatsQueryIterator</span><span class="p">,</span>
     <span class="n">DeleteBeforeDateBody</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">make_list</span><span class="p">,</span> <span class="n">chunk_list</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">make_list</span><span class="p">,</span> <span class="n">chunk_iterable</span>
 
 <span class="n">_T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;_T&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">BaseRecord</span><span class="p">)</span>
 
@@ -801,7 +801,7 @@ document.write(`
         <span class="n">batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_molecules&quot;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span>
         <span class="n">all_molecules</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="k">for</span> <span class="n">mol_id_batch</span> <span class="ow">in</span> <span class="n">chunk_list</span><span class="p">(</span><span class="n">molecule_ids</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">mol_id_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">molecule_ids</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
             <span class="n">body</span> <span class="o">=</span> <span class="n">CommonBulkGetBody</span><span class="p">(</span><span class="n">ids</span><span class="o">=</span><span class="n">mol_id_batch</span><span class="p">,</span> <span class="n">missing_ok</span><span class="o">=</span><span class="n">missing_ok</span><span class="p">)</span>
             <span class="n">mol_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="s2">&quot;api/v1/molecules/bulkGet&quot;</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Molecule</span><span class="p">]],</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">)</span>
             <span class="n">all_molecules</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">mol_batch</span><span class="p">)</span>
@@ -997,7 +997,7 @@ document.write(`
         <span class="n">batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_records&quot;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span>
         <span class="n">all_records</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="k">for</span> <span class="n">record_id_batch</span> <span class="ow">in</span> <span class="n">chunk_list</span><span class="p">(</span><span class="n">record_ids</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">record_id_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">record_ids</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
             <span class="n">body</span> <span class="o">=</span> <span class="n">CommonBulkGetBody</span><span class="p">(</span><span class="n">ids</span><span class="o">=</span><span class="n">record_id_batch</span><span class="p">,</span> <span class="n">missing_ok</span><span class="o">=</span><span class="n">missing_ok</span><span class="p">)</span>
             <span class="n">record_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="s2">&quot;api/v1/records/bulkGet&quot;</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]],</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">)</span>
             <span class="n">record_batch</span> <span class="o">=</span> <span class="n">records_from_dicts</span><span class="p">(</span><span class="n">record_data</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
@@ -1055,7 +1055,7 @@ document.write(`
         <span class="n">batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_records&quot;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span>
         <span class="n">all_records</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="k">for</span> <span class="n">record_id_batch</span> <span class="ow">in</span> <span class="n">chunk_list</span><span class="p">(</span><span class="n">record_ids</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">record_id_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">record_ids</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
             <span class="n">body</span> <span class="o">=</span> <span class="n">CommonBulkGetBody</span><span class="p">(</span><span class="n">ids</span><span class="o">=</span><span class="n">record_id_batch</span><span class="p">,</span> <span class="n">missing_ok</span><span class="o">=</span><span class="n">missing_ok</span><span class="p">)</span>
 
             <span class="n">record_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
