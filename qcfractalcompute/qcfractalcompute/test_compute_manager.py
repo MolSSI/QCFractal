@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 import threading
 import time
 from datetime import datetime
@@ -9,12 +8,10 @@ from typing import TYPE_CHECKING
 import pytest
 import qcengine as qcng
 
-from qcarchivetesting import caplog_handler_at_level
 from qcfractalcompute.compute_manager import ComputeManager
 from qcfractalcompute.config import FractalComputeConfig, FractalServerSettings, LocalExecutorConfig
 from qcfractalcompute.testing_helpers import QCATestingComputeThread, populate_db
 from qcportal.managers import ManagerStatusEnum, ManagerQueryFilters
-from qcportal.record_models import RecordStatusEnum
 
 # For testing only! We just make all available programs/procedures the same as all of them
 qcng.list_available_programs = qcng.list_all_programs
