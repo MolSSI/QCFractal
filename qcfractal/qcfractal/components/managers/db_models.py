@@ -45,7 +45,7 @@ class ComputeManagerLogORM(BaseORM):
     active_memory = Column(Float, nullable=False, default=0.0)
     total_cpu_hours = Column(Float, nullable=False, default=0.0)
 
-    __table_args__ = (Index("ix_compute_manager_log_timestamp", "timestamp", postgresql_using="brin"),)
+    __table_args__ = (Index("ix_compute_manager_log_manager_id", "manager_id"),)
 
 
 class ComputeManagerORM(BaseORM):
