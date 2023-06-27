@@ -49,6 +49,8 @@ class GridoptimizationOptimizationORM(BaseORM):
 
     optimization_record = relationship(OptimizationRecordORM)
 
+    __table_args__ = (Index("ix_gridoptimization_optimization_id", "optimization_id"),)
+
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         # Remove fields not present in the model
         exclude = self.append_exclude(exclude, "gridoptimization_id")
