@@ -214,7 +214,7 @@ class PortalClientBase:
 
         try:
             ret = self._req_session.post(
-                self.address + "/auth/v1/login", json={"username": username, "password": password}, verify=self._verify
+                self.address + "auth/v1/login", json={"username": username, "password": password}, verify=self._verify
             )
         except requests.exceptions.SSLError:
             raise ConnectionRefusedError(_ssl_error_msg) from None
@@ -230,7 +230,7 @@ class PortalClientBase:
     def _refresh_JWT_token(self) -> None:
 
         ret = self._req_session.post(
-            self.address + "/auth/v1/refresh",
+            self.address + "auth/v1/refresh",
             headers={"Authorization": f"Bearer {self.refresh_token}"},
             verify=self._verify,
         )
