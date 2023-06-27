@@ -225,7 +225,11 @@ class PortalClientBase:
             self.refresh_token = ret.json()["refresh_token"]
             self._req_session.headers.update({"Authorization": f'Bearer {ret.json()["access_token"]}'})
         else:
-            raise AuthenticationFailure(ret.json()["msg"])
+            try:
+                msg = ret.json()["msg"]
+            except:
+                msg = ret.reason
+            raise AuthenticationFailure(msg)
 
     def _refresh_JWT_token(self) -> None:
 
