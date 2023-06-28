@@ -590,50 +590,46 @@ class RecordSocket:
         Recursively obtain the IDs of all parent records of the given records
         """
 
-        all_parent_ids = []
+        # Do in batches to prevent really huge queries
+        # First, do just direct parents
+        direct_parents: List[int] = []
 
-        stmt = select(self._child_cte.c.parent_id).where(self._child_cte.c.child_id.in_(record_ids))
-        parent_ids = session.execute(stmt).scalars().unique().all()
-
-        while len(parent_ids) > 0:
-            all_parent_ids.extend(parent_ids)
-
-            # find parents of parents, etc
-            stmt = select(self._child_cte.c.parent_id).where(self._child_cte.c.child_id.in_(parent_ids))
+        for id_batch in chunk_iterable(record_ids, 100):
+            stmt = select(self._child_cte.c.parent_id).where(self._child_cte.c.child_id.in_(id_batch))
             parent_ids = session.execute(stmt).scalars().unique().all()
+            direct_parents.extend(parent_ids)
 
-        return all_parent_ids
+        if len(direct_parents) == 0:
+            return []
+
+        return direct_parents + self.get_parent_ids(session, direct_parents)
 
     def get_relative_ids(self, session: Session, record_ids: Iterable[int]) -> List[int]:
         """
         Recursively obtain the IDs of all parent and children records of the given records
         """
 
-        all_relative_ids = set()
+        all_relatives = set()
 
-        stmt = select(self._child_cte.c.parent_id, self._child_cte.c.child_id).where(
-            or_(self._child_cte.c.child_id.in_(record_ids), self._child_cte.c.parent_id.in_(record_ids))
-        )
+        records_to_search = set(record_ids)
+        while records_to_search:
+            direct_relatives = set()
 
-        relative_ids = session.execute(stmt).all()
+            # do in batches to prevent really huge queries
+            for id_batch in chunk_iterable(records_to_search, 100):
+                stmt = union(
+                    select(self._child_cte.c.parent_id).where(self._child_cte.c.child_id.in_(id_batch)),
+                    select(self._child_cte.c.child_id).where(self._child_cte.c.parent_id.in_(id_batch)),
+                )
 
-        while len(relative_ids) > 0:
-            rel_id_flat = set()
+                relative_ids = session.execute(stmt).scalars().unique().all()
+                direct_relatives.update(relative_ids)
 
-            rel_id_flat.update(x[0] for x in relative_ids)
-            rel_id_flat.update(x[1] for x in relative_ids)
+            # Search through the new direct relatives, but not any we have done already
+            records_to_search = direct_relatives - all_relatives
+            all_relatives.update(direct_relatives)
 
-            rel_id_flat -= all_relative_ids
-            all_relative_ids |= rel_id_flat
-
-            # find parents of parents, children of children, children of parents, parents of children, etc
-            stmt = select(self._child_cte.c.parent_id, self._child_cte.c.child_id).where(
-                or_(self._child_cte.c.child_id.in_(rel_id_flat), self._child_cte.c.parent_id.in_(rel_id_flat))
-            )
-
-            relative_ids = session.execute(stmt).all()
-
-        return list(all_relative_ids)
+        return list(all_relatives)
 
     def query_base(
         self,
