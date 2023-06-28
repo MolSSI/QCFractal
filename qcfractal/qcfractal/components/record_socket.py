@@ -617,13 +617,14 @@ class RecordSocket:
 
             # do in batches to prevent really huge queries
             for id_batch in chunk_iterable(records_to_search, 100):
-                stmt = union(
-                    select(self._child_cte.c.parent_id).where(self._child_cte.c.child_id.in_(id_batch)),
-                    select(self._child_cte.c.child_id).where(self._child_cte.c.parent_id.in_(id_batch)),
-                )
+                stmt = select(self._child_cte.c.parent_id).where(self._child_cte.c.child_id.in_(id_batch))
+                parent_ids = session.execute(stmt).scalars().unique().all()
 
-                relative_ids = session.execute(stmt).scalars().unique().all()
-                direct_relatives.update(relative_ids)
+                stmt = select(self._child_cte.c.child_id).where(self._child_cte.c.parent_id.in_(id_batch))
+                child_ids = session.execute(stmt).scalars().unique().all()
+
+                direct_relatives.update(parent_ids)
+                direct_relatives.update(child_ids)
 
             # Search through the new direct relatives, but not any we have done already
             records_to_search = direct_relatives - all_relatives
