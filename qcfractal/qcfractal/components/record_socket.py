@@ -6,7 +6,17 @@ from typing import TYPE_CHECKING
 
 from qcelemental.models import FailedOperation
 from sqlalchemy import select, union, or_
-from sqlalchemy.orm import joinedload, selectinload, lazyload, defer, undefer, defaultload, with_polymorphic, aliased
+from sqlalchemy.orm import (
+    joinedload,
+    selectinload,
+    lazyload,
+    defer,
+    undefer,
+    defaultload,
+    with_polymorphic,
+    aliased,
+    load_only,
+)
 
 from qcfractal.components.auth.db_models import UserIDMapSubquery, GroupIDMapSubquery
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
@@ -1282,62 +1292,71 @@ class RecordSocket:
         if not record_ids:
             return UpdateMetadata()
 
-        all_id = set(record_ids)
+        all_ids = set(record_ids)
 
         with self.root_socket.optional_session(session) as session:
             # We always apply these operations to children, but never to parents
             children_ids = self.get_children_ids(session, record_ids)
-            all_id.update(children_ids)
+            all_ids.update(children_ids)
 
-            # Select records with a resettable status
-            # All are resettable except complete and running
-            # Can't do inner join because task may not exist
-            stmt = select(BaseRecordORM).options(joinedload(BaseRecordORM.task))
-            stmt = stmt.options(selectinload(BaseRecordORM.info_backup))
-            stmt = stmt.where(BaseRecordORM.status.in_(applicable_status))
-            stmt = stmt.where(BaseRecordORM.id.in_(all_id))
-            stmt = stmt.with_for_update(of=[BaseRecordORM, BaseRecordORM])
-            record_data = session.execute(stmt).scalars().all()
+            updated_ids = []
+            for id_batch in chunk_iterable(all_ids, 100):
+                # Select records with a resettable status
+                # All are resettable except complete and running
+                # Can't do inner join because task may not exist
+                stmt = select(BaseRecordORM).options(
+                    joinedload(BaseRecordORM.task),
+                    load_only(BaseRecordORM.id, BaseRecordORM.status, BaseRecordORM.manager_name),
+                )
+                stmt = stmt.options(selectinload(BaseRecordORM.info_backup))
+                stmt = stmt.where(BaseRecordORM.status.in_(applicable_status))
+                stmt = stmt.where(BaseRecordORM.id.in_(id_batch))
+                stmt = stmt.with_for_update(of=[BaseRecordORM])
+                record_data = session.execute(stmt).scalars().all()
 
-            for r_orm in record_data:
+                for r_orm in record_data:
+                    # If we have the old backup info, then use that
+                    if (
+                        r_orm.status in [RecordStatusEnum.deleted, RecordStatusEnum.cancelled, RecordStatusEnum.invalid]
+                        and r_orm.info_backup
+                    ):
+                        last_info = r_orm.info_backup.pop()  # Remove the last entry
+                        r_orm.status = last_info.old_status
 
-                # If we have the old backup info, then use that
-                if (
-                    r_orm.status in [RecordStatusEnum.deleted, RecordStatusEnum.cancelled, RecordStatusEnum.invalid]
-                    and r_orm.info_backup
-                ):
-                    last_info = r_orm.info_backup.pop()  # Remove the last entry
-                    r_orm.status = last_info.old_status
+                        if r_orm.status in [RecordStatusEnum.waiting, RecordStatusEnum.error]:
+                            if r_orm.task:
+                                self._logger.warning(
+                                    f"Record {r_orm.id} has a task and also an entry in the backup table!"
+                                )
+                                session.delete(r_orm.task)
 
-                    if r_orm.status in [RecordStatusEnum.waiting, RecordStatusEnum.error]:
-                        if r_orm.task:
-                            self._logger.warning(f"Record {r_orm.id} has a task and also an entry in the backup table!")
-                            session.delete(r_orm.task)
+                            # we leave service queue entries alone
+                            if not r_orm.is_service:
+                                BaseRecordSocket.create_task(r_orm, last_info.old_tag, last_info.old_priority)
 
-                        # we leave service queue entries alone
-                        if not r_orm.is_service:
-                            BaseRecordSocket.create_task(r_orm, last_info.old_tag, last_info.old_priority)
+                    elif r_orm.status in [RecordStatusEnum.running, RecordStatusEnum.error] and not r_orm.info_backup:
+                        if not r_orm.is_service and r_orm.task is None:
+                            raise RuntimeError(f"resetting a record with status {r_orm.status} with no task")
+                        if r_orm.is_service and r_orm.service is None:
+                            raise RuntimeError(f"resetting a record with status {r_orm.status} with no service")
 
-                elif r_orm.status in [RecordStatusEnum.running, RecordStatusEnum.error] and not r_orm.info_backup:
-                    if not r_orm.is_service and r_orm.task is None:
-                        raise RuntimeError(f"resetting a record with status {r_orm.status} with no task")
-                    if r_orm.is_service and r_orm.service is None:
-                        raise RuntimeError(f"resetting a record with status {r_orm.status} with no service")
+                        # Move the record back to "waiting" for a manager/service periodics to pick it up
+                        r_orm.status = RecordStatusEnum.waiting
+                        r_orm.manager_name = None
 
-                    # Move the record back to "waiting" for a manager/service periodics to pick it up
-                    r_orm.status = RecordStatusEnum.waiting
-                    r_orm.manager_name = None
-
-                else:
-                    if r_orm.info_backup:
-                        raise RuntimeError(f"resetting record with status {r_orm.status} with backup info present")
                     else:
-                        raise RuntimeError(f"resetting record with status {r_orm.status} without backup info present")
+                        if r_orm.info_backup:
+                            raise RuntimeError(f"resetting record with status {r_orm.status} with backup info present")
+                        else:
+                            raise RuntimeError(
+                                f"resetting record with status {r_orm.status} without backup info present"
+                            )
 
-                r_orm.modified_on = datetime.utcnow()
+                    r_orm.modified_on = datetime.utcnow()
+
+                updated_ids.extend([r.id for r in record_data])
 
             # put in order of the input parameter
-            updated_ids = [r.id for r in record_data]
             error_ids = set(record_ids) - set(updated_ids)
             updated_idx = [idx for idx, rid in enumerate(record_ids) if rid in updated_ids]
             error_idx = [idx for idx, rid in enumerate(record_ids) if rid in error_ids]
@@ -1395,44 +1414,50 @@ class RecordSocket:
                 parent_ids = self.get_parent_ids(session, record_ids)
                 all_ids.update(parent_ids)
 
-            stmt = select(BaseRecordORM).options(joinedload(BaseRecordORM.task))
-            stmt = stmt.where(BaseRecordORM.status.in_(applicable_status))
-            stmt = stmt.where(BaseRecordORM.id.in_(all_ids))
-            stmt = stmt.with_for_update(of=[BaseRecordORM])
-            record_orms = session.execute(stmt).scalars().all()
-
-            for r in record_orms:
-                # If running, delete the manager. Resetting later will move it to waiting
-                if r.status == RecordStatusEnum.running:
-                    r.status = RecordStatusEnum.waiting
-                    r.manager_name = None
-
-                old_tag = None
-                old_priority = None
-                if r.task is not None:
-                    old_tag = r.task.tag
-                    old_priority = r.task.priority
-                    session.delete(r.task)
-
-                # If this is a service, we leave the
-                # the entry in the service queue since it contains
-                # the current service state info
-
-                # Store the old info in the backup table
-                backup_info = RecordInfoBackupORM(
-                    record_id=r.id,
-                    old_status=r.status,
-                    old_tag=old_tag,
-                    old_priority=old_priority,
-                    modified_on=datetime.utcnow(),
+            updated_ids = []
+            for id_batch in chunk_iterable(all_ids, 100):
+                stmt = select(BaseRecordORM).options(
+                    joinedload(BaseRecordORM.task),
+                    load_only(BaseRecordORM.id, BaseRecordORM.status, BaseRecordORM.manager_name),
                 )
-                session.add(backup_info)
+                stmt = stmt.where(BaseRecordORM.status.in_(applicable_status))
+                stmt = stmt.where(BaseRecordORM.id.in_(id_batch))
+                stmt = stmt.with_for_update(of=[BaseRecordORM])
+                record_orms = session.execute(stmt).scalars().all()
 
-                r.modified_on = datetime.utcnow()
-                r.status = new_status
+                for r in record_orms:
+                    # If running, delete the manager. Resetting later will move it to waiting
+                    if r.status == RecordStatusEnum.running:
+                        r.status = RecordStatusEnum.waiting
+                        r.manager_name = None
+
+                    old_tag = None
+                    old_priority = None
+                    if r.task is not None:
+                        old_tag = r.task.tag
+                        old_priority = r.task.priority
+                        session.delete(r.task)
+
+                    # If this is a service, we leave the
+                    # the entry in the service queue since it contains
+                    # the current service state info
+
+                    # Store the old info in the backup table
+                    backup_info = RecordInfoBackupORM(
+                        record_id=r.id,
+                        old_status=r.status,
+                        old_tag=old_tag,
+                        old_priority=old_priority,
+                        modified_on=datetime.utcnow(),
+                    )
+                    session.add(backup_info)
+
+                    r.modified_on = datetime.utcnow()
+                    r.status = new_status
+
+                updated_ids.extend([r.id for r in record_orms])
 
             # put in order of the input parameter
-            updated_ids = [r.id for r in record_orms]
             error_ids = set(record_ids) - set(updated_ids)
             updated_idx = [idx for idx, rid in enumerate(record_ids) if rid in updated_ids]
             error_idx = [idx for idx, rid in enumerate(record_ids) if rid in error_ids]
