@@ -116,6 +116,7 @@ class ServiceSocket:
             self._logger.info(
                 f"Record {service_orm.record_id} (service {service_orm.id}) does NOT have all tasks completed. Ignoring..."
             )
+            return False
 
         # Call record-dependent iterate service
         # If that function returns 0, indicating that the service has successfully completed
@@ -256,9 +257,10 @@ class ServiceSocket:
                 user_id=None,
                 session=session,
             )
-            self._logger.debug(f"Internal job {job_id} for {jobname} queued")
+            self._logger.debug(f"Internal job {job_id} for service {service_id} queued")
 
-        session.commit()
+            # Commit after each one to allow it to be picked up by an internal job worker
+            session.commit()
 
         #
         # How many services are currently running
@@ -295,7 +297,6 @@ class ServiceSocket:
                 break
 
             running_count += len(new_services)
-            self._logger.info(f"Attempting to start {len(new_services)} services")
 
             for service_orm in new_services:
 
@@ -338,11 +339,22 @@ class ServiceSocket:
                 try:
                     if fresh_start:
                         self.root_socket.records.initialize_service(session, service_orm)
-                        completed = self.root_socket.records.iterate_service(session, service_orm)
+                        session.commit()
 
-                        # Completed on first iteration? Possible if everything was already computed
-                        if completed:
-                            self.mark_service_complete(session, service_orm)
+                        jobname = f"iterate_service_{service_orm.id}"
+                        job_id = self.root_socket.internal_jobs.add(
+                            name=jobname,
+                            scheduled_date=datetime.utcnow(),
+                            unique_name=True,
+                            function="services._iterate_service",
+                            kwargs={"service_id": service_orm.id},
+                            user_id=None,
+                            session=session,
+                        )
+                        self._logger.debug(
+                            f"Internal job {job_id} for service {service_orm.id} queued - first iteration"
+                        )
+                        session.commit()
 
                 except Exception as err:
                     session.rollback()
