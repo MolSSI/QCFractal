@@ -302,15 +302,6 @@ class InternalJobSocket:
         Runs a single job
         """
 
-        job_orm.started_date = datetime.utcnow()
-        job_orm.last_updated = datetime.utcnow()
-        job_orm.runner_hostname = self._hostname
-        job_orm.runner_uuid = job_progress._runner_uuid
-        job_orm.status = InternalJobStatusEnum.running
-
-        # Releases the row-level lock (from the with_for_update() in the original query)
-        session.commit()
-
         try:
             func_attr = attrgetter(job_orm.function)
 
@@ -462,6 +453,14 @@ class InternalJobSocket:
                 break
 
             self._logger.info(f"UUID={runner_uuid} running job {job_orm.name} (id={job_orm.id})")
+            job_orm.started_date = datetime.utcnow()
+            job_orm.last_updated = datetime.utcnow()
+            job_orm.runner_hostname = self._hostname
+            job_orm.runner_uuid = runner_uuid
+            job_orm.status = InternalJobStatusEnum.running
+
+            # Releases the row-level lock (from the with_for_update() in the original query)
+            session_main.commit()
 
             job_progress = JobProgress(job_orm.id, runner_uuid, session_status, self._update_frequency, end_event)
             self._run_single(session_main, job_orm, job_progress=job_progress)
@@ -471,6 +470,7 @@ class InternalJobSocket:
 
         # Remove the listener registration for this process
         cursor.execute("UNLISTEN check_internal_jobs;")
+        cursor.execute("COMMIT;")
 
         session_main.close()
         session_status.close()
