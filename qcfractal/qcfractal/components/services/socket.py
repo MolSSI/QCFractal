@@ -261,7 +261,7 @@ class ServiceSocket:
         session.commit()
 
         #
-        # Should we start more services?
+        # How many services are currently running
         #
         stmt = select(BaseRecordORM).where(
             BaseRecordORM.status == RecordStatusEnum.running, BaseRecordORM.is_service.is_(True)
@@ -270,9 +270,15 @@ class ServiceSocket:
 
         self._logger.info(f"After iteration, now {running_count} running services. Max is {self._max_active_services}")
 
-        new_service_count = self._max_active_services - running_count
+        while True:
+            # Start up to 10 services at a time until we are full
+            new_service_count = min(10, self._max_active_services - running_count)
 
-        if new_service_count > 0:
+            # we could possibly have a negative number here if the max active services was lowered or
+            # something weird was done manually, services restarted, etc
+            if new_service_count <= 0:
+                break
+
             stmt = (
                 select(ServiceQueueORM)
                 .join(ServiceQueueORM.record)
@@ -284,10 +290,12 @@ class ServiceSocket:
 
             new_services = session.execute(stmt).scalars().all()
 
-            running_count += len(new_services)
+            # No more services available to be started
+            if len(new_services) == 0:
+                break
 
-            if len(new_services) > 0:
-                self._logger.info(f"Attempting to start {len(new_services)} services")
+            running_count += len(new_services)
+            self._logger.info(f"Attempting to start {len(new_services)} services")
 
             for service_orm in new_services:
 
