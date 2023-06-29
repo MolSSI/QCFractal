@@ -9,7 +9,7 @@ from operator import attrgetter
 from socket import gethostname
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select, delete, update, and_, or_, text
+from sqlalchemy import select, delete, update, and_, or_
 from sqlalchemy.dialects.postgresql import insert
 
 from qcfractal.components.auth.db_models import UserIDMapSubquery
@@ -141,9 +141,6 @@ class InternalJobSocket:
 
                 session.add(job_orm)
                 session.flush()
-
-                # NOTIFY is not sent until COMMIT (according to postgresql docs)
-                session.execute(text("NOTIFY check_internal_jobs;"))
                 job_id = job_orm.id
 
         return job_id
@@ -439,6 +436,7 @@ class InternalJobSocket:
 
             # If no job was found, wait for one
             if job_orm is None:
+                session_main.rollback()  # release the transaction
                 self._logger.debug(f"UUID={runner_uuid} no jobs found")
                 self._wait_for_job(session_main, runner_uuid, conn, end_event)
 

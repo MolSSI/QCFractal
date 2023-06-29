@@ -9,6 +9,7 @@ from sqlalchemy.orm import relationship
 from qcfractal.components.auth.db_models import UserIDMapSubquery, UserORM
 from qcfractal.db_socket import BaseORM
 from qcportal.internal_jobs.models import InternalJobStatusEnum
+from sqlalchemy import DDL, event
 
 if TYPE_CHECKING:
     from typing import Optional, Iterable, Dict, Any
@@ -67,3 +68,36 @@ class InternalJobORM(BaseORM):
         d = BaseORM.model_dict(self, exclude)
         d["user"] = self.user.username if self.user is not None else None
         return d
+
+
+# Function that sends a postgres NOTIFY to internal job workers
+# (always do notify, even if the job is in the future. The worker can calculate
+# the time difference and sleep until the job is ready)
+_insert_internal_job_triggerfunc = DDL(
+    """
+    CREATE OR REPLACE FUNCTION public.qca_internal_jobs_notify()
+    RETURNS trigger
+    LANGUAGE plpgsql
+    AS $_$
+        BEGIN
+          PERFORM pg_notify('check_internal_jobs', '');
+          RETURN NEW;
+        END
+        $_$
+    ;
+"""
+)
+
+# Trigger the above function whenever a new internal job is added
+_insert_internal_job_trigger = DDL(
+    """
+    CREATE TRIGGER qca_internal_jobs_insert_tr
+    AFTER INSERT ON internal_jobs
+    FOR EACH ROW EXECUTE PROCEDURE qca_internal_jobs_notify();
+    """
+)
+
+event.listen(
+    InternalJobORM.__table__, "after_create", _insert_internal_job_triggerfunc.execute_if(dialect=("postgresql"))
+)
+event.listen(InternalJobORM.__table__, "after_create", _insert_internal_job_trigger.execute_if(dialect=("postgresql")))

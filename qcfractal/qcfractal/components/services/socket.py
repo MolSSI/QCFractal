@@ -339,7 +339,6 @@ class ServiceSocket:
                 try:
                     if fresh_start:
                         self.root_socket.records.initialize_service(session, service_orm)
-                        session.commit()
 
                         jobname = f"iterate_service_{service_orm.id}"
                         job_id = self.root_socket.internal_jobs.add(
