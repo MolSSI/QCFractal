@@ -422,6 +422,7 @@ class InternalJobSocket:
         conn = self.root_socket.engine.raw_connection()
         cursor = conn.cursor()
         cursor.execute("LISTEN check_internal_jobs;")
+        cursor.execute("COMMIT;")
 
         # Prepare a statement for finding jobs
         stmt = select(InternalJobORM)
