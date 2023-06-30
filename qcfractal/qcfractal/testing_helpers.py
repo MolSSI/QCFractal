@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import Dict, Any, Tuple, Callable
 
 from qcelemental.models import Molecule
@@ -82,7 +83,9 @@ def run_service(
             job_orm = session.execute(stmt).scalar_one_or_none()
 
             if job_orm is not None:
-                storage_socket.internal_jobs._run_single(session, job_orm, DummyJobProgress())
+                storage_socket.internal_jobs._run_single(
+                    session, job_orm, logging.getLogger("internal_job"), DummyJobProgress()
+                )
                 # The function that iterates a service returns True if it is finished
                 if job_orm.result is True:
 

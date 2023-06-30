@@ -9,6 +9,7 @@ from operator import attrgetter
 from socket import gethostname
 from typing import TYPE_CHECKING
 
+import psycopg2.extensions
 from sqlalchemy import select, delete, update, and_, or_
 from sqlalchemy.dialects.postgresql import insert
 
@@ -294,7 +295,7 @@ class InternalJobSocket:
         with self.root_socket.optional_session(session) as session:
             session.execute(stmt)
 
-    def _run_single(self, session: Session, job_orm: InternalJobORM, job_progress: JobProgress):
+    def _run_single(self, session: Session, job_orm: InternalJobORM, logger, job_progress: JobProgress):
         """
         Runs a single job
         """
@@ -314,7 +315,7 @@ class InternalJobSocket:
         except Exception:
             session.rollback()
             result = traceback.format_exc()
-            self._logger.error(f"Job {job_orm.id} failed with exception:\n{result}")
+            logger.error(f"Job {job_orm.id} failed with exception:\n{result}")
 
             job_orm.status = InternalJobStatusEnum.error
 
@@ -338,7 +339,7 @@ class InternalJobSocket:
                 after_func(**job_orm.after_function_kwargs, session=session)
             session.commit()
 
-    def _wait_for_job(self, session: Session, runner_uuid: str, conn, end_event):
+    def _wait_for_job(self, session: Session, logger, conn, end_event) -> Optional[InternalJobORM]:
         """
         Blocks until a job is possibly available to run
         """
@@ -346,47 +347,78 @@ class InternalJobSocket:
         next_job_stmt = select(InternalJobORM.scheduled_date)
         next_job_stmt = next_job_stmt.where(InternalJobORM.status == InternalJobStatusEnum.waiting)
         next_job_stmt = next_job_stmt.order_by(InternalJobORM.scheduled_date.asc())
+
+        # Skip any that are being claimed for running right now
+        next_job_stmt = next_job_stmt.with_for_update(skip_locked=True, read=True)
         next_job_stmt = next_job_stmt.limit(1)
 
+        cursor = conn.cursor()
+
+        # Start listening for notifications
+        cursor.execute("LISTEN check_internal_jobs;")
+
         while True:
+            # Remove any pending notifications
+            conn.poll()
+            conn.notifies.clear()
+
             # Find the next available job, and find out if we have to sleep until then
             next_job_time = session.execute(next_job_stmt).scalar_one_or_none()
+            now = datetime.utcnow()
             if next_job_time is None:
-                # Wait for 2 minutes by default
-                total_to_wait = 120.0
+                # Wait up to 5 minutes by default. This is just a catch all to prevent
+                # programming mistakes from causing infinite waits
+                total_to_wait = 300.0
             else:
-                total_to_wait = (next_job_time - datetime.utcnow()).total_seconds() + 0.01
+                total_to_wait = (next_job_time - now).total_seconds()
+
+            session.rollback()  # Release the transaction (and row level lock)
 
             # If this is <= 0, we don't have to wait
             if total_to_wait <= 0.0:
-                return
+                logger.debug("not waiting, found possible job to run")
+                break
 
-            self._logger.debug(f"UUID={runner_uuid} going to wait for {total_to_wait} seconds")
+            logger.debug(f"found future job scheduled for {next_job_time}, waiting up to {total_to_wait:.2f} seconds")
 
             # This will end either if we have waited long enough, or there
             # is a notification from postgres (this connection has run LISTEN)
             total_waited = 0.0
+
+            # Wait in 2 second intervals (to check for end_event)
             while total_waited < total_to_wait:
-                to_wait = min(total_to_wait - total_waited, 5.0)
+                to_wait = min(total_to_wait - total_waited, 2.0)
                 if to_wait <= 0.0:
                     break
 
+                # waits until a notification is received, up to 5 seconds
+                # https://docs.python.org/3/library/select.html#select.select
                 if io_select.select([conn], [], [], to_wait) != ([], [], []):
                     # We got a notification
+                    logger.debug("received notification from check_internal_jobs")
                     conn.poll()
+
+                    # We don't actually care about the individual notifications
                     conn.notifies.clear()
 
                     # Go back to the outer loop
                     break
                 else:
-                    # Select timed out. Check for event (we should shut down)
+                    # select timed out. Check for event (we should shut down)
                     if end_event.is_set():
-                        return
+                        break
                     total_waited += to_wait
+
+            if end_event.is_set():
+                break
+
+        # Stop listening for insertions on internal_jobs
+        cursor.execute("UNLISTEN check_internal_jobs;")
+        cursor.close()
 
     def run_loop(self, end_event):
         """
-        Runs in an infinite loop, checking for jobs and running them
+        Runs in a infinite loop, checking for jobs and running them
 
         Parameters
         ----------
@@ -401,33 +433,35 @@ class InternalJobSocket:
         # give this loop a unique uuid
         runner_uuid = str(uuid.uuid4())
 
+        # Get a uuid-specific logger
+        logger = logging.getLogger(f"internal_job_runner:{runner_uuid}")
+
         # Two sessions - one for the object, and one for the job status object
         session_main = self.root_socket.Session()
         session_status = self.root_socket.Session()
 
         # Set up the listener for postgres. This will be notified when something is
         # added to the internal job queue
+        # We use a raw psycopg2 connection; sqlalchemy doesn't directly support LISTEN/NOTIFY
         conn = self.root_socket.engine.raw_connection()
-        cursor = conn.cursor()
-        cursor.execute("LISTEN check_internal_jobs;")
-        cursor.execute("COMMIT;")
+        conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
 
-        # Prepare a statement for finding jobs
+        # Prepare a statement for finding jobs. Filters will be added in the loop
         stmt = select(InternalJobORM)
-        stmt = stmt.order_by(InternalJobORM.scheduled_date.asc())
-        stmt = stmt.limit(1)
+        stmt = stmt.order_by(InternalJobORM.scheduled_date.asc()).limit(1)
         stmt = stmt.with_for_update(skip_locked=True)
 
         while True:
             if end_event.is_set():
-                self._logger.info(f"UUID={runner_uuid} shutting down")
+                logger.info("shutting down")
                 break
 
-            self._logger.debug(f"UUID={runner_uuid} checking for jobs")
+            logger.debug("checking for jobs")
 
             # Pick up anything waiting, or anything that hasn't been updated in a while (12 update periods)
             now = datetime.utcnow()
             dead = now - timedelta(seconds=(self._update_frequency * 12))
+            logger.debug(f"checking for jobs before date {now}")
             cond1 = and_(InternalJobORM.status == InternalJobStatusEnum.waiting, InternalJobORM.scheduled_date <= now)
             cond2 = and_(InternalJobORM.status == InternalJobStatusEnum.running, InternalJobORM.last_updated < dead)
 
@@ -437,20 +471,20 @@ class InternalJobSocket:
             # If no job was found, wait for one
             if job_orm is None:
                 session_main.rollback()  # release the transaction
-                self._logger.debug(f"UUID={runner_uuid} no jobs found")
-                self._wait_for_job(session_main, runner_uuid, conn, end_event)
+                logger.debug("no jobs found")
+                self._wait_for_job(session_main, logger, conn, end_event)
 
                 if end_event.is_set():
-                    self._logger.info(f"UUID={runner_uuid} shutting down")
+                    logger.info("shutting down")
                     break
                 else:
                     continue
 
             if end_event.is_set():
-                self._logger.info(f"UUID={runner_uuid} shutting down")
+                logger.info("shutting down")
                 break
 
-            self._logger.info(f"UUID={runner_uuid} running job {job_orm.name} (id={job_orm.id})")
+            logger.info(f"running job {job_orm.name} id={job_orm.id} scheduled_date={job_orm.scheduled_date}")
             job_orm.started_date = datetime.utcnow()
             job_orm.last_updated = datetime.utcnow()
             job_orm.runner_hostname = self._hostname
@@ -461,14 +495,10 @@ class InternalJobSocket:
             session_main.commit()
 
             job_progress = JobProgress(job_orm.id, runner_uuid, session_status, self._update_frequency, end_event)
-            self._run_single(session_main, job_orm, job_progress=job_progress)
+            self._run_single(session_main, job_orm, logger, job_progress=job_progress)
 
             # Stop the updating thread and cleanup
             job_progress.stop()
-
-        # Remove the listener registration for this process
-        cursor.execute("UNLISTEN check_internal_jobs;")
-        cursor.execute("COMMIT;")
 
         session_main.close()
         session_status.close()
