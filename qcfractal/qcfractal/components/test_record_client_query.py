@@ -13,8 +13,6 @@ from qcportal.record_models import RecordStatusEnum
 @pytest.fixture(scope="module")
 def queryable_records_client(session_snowflake):
 
-    client = session_snowflake.client()
-
     # First populate all the statuses
     populate_records_status(session_snowflake.get_storage_socket())
 
