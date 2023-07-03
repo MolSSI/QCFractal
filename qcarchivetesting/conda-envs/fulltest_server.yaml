@@ -17,7 +17,7 @@ dependencies:
   - gunicorn
   - requests
   - pyyaml
-  - pydantic
+  - pydantic<2.0
   - zstandard
   - bcrypt
 
