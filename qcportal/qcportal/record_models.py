@@ -15,7 +15,6 @@ from qcportal.base_models import (
     QueryIteratorBase,
 )
 from qcportal.compression import CompressionEnum, decompress, get_compressed_ext
-from qcportal.metadata_models import QueryMetadata
 
 
 class PriorityEnum(int, Enum):
@@ -658,19 +657,19 @@ class RecordQueryIterator(QueryIteratorBase):
 
         QueryIteratorBase.__init__(self, client, query_filters, batch_limit)
 
-    def _request(self) -> Tuple[Optional[QueryMetadata], List[BaseRecord]]:
+    def _request(self) -> List[BaseRecord]:
         if self.record_type is None:
-            meta, record_ids = self._client.make_request(
+            record_ids = self._client.make_request(
                 "post",
                 f"api/v1/records/query",
-                Tuple[Optional[QueryMetadata], List[int]],
+                List[int],
                 body=self._query_filters,
             )
         else:
-            meta, record_ids = self._client.make_request(
+            record_ids = self._client.make_request(
                 "post",
                 f"api/v1/records/{self.record_type}/query",
-                Tuple[Optional[QueryMetadata], List[int]],
+                List[int],
                 body=self._query_filters,
             )
 
@@ -680,7 +679,7 @@ class RecordQueryIterator(QueryIteratorBase):
             for r in records:
                 r._handle_includes(self.include)
 
-        return meta, records
+        return records
 
 
 def record_from_dict(data: Dict[str, Any], client: Any = None) -> BaseRecord:

@@ -103,16 +103,3 @@ def test_molecules_socket_add_mixed_bad_1(storage_socket: SQLAlchemySocket):
     assert meta.error_idx == [1, 2]
     assert "MoleculeORM object with id=12345 was not found" in meta.errors[0][1]
     assert "MoleculeORM object with id=67890 was not found" in meta.errors[1][1]
-
-
-def test_molecules_socket_query_metadata(storage_socket: SQLAlchemySocket):
-    water = load_molecule_data("water_dimer_minima")
-    hooh = load_molecule_data("hooh")
-
-    added_mols = [water, hooh]
-
-    meta, ids = storage_socket.molecules.add(added_mols)
-    assert meta.success
-
-    meta, mols = storage_socket.molecules.query(MoleculeQueryFilters(include_metadata=False))
-    assert meta is None

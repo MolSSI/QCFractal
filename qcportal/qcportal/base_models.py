@@ -3,8 +3,6 @@ from typing import Optional, List, Any, Tuple, Iterator
 
 from pydantic import BaseModel, validator, Extra
 
-from qcportal.metadata_models import QueryMetadata
-
 
 def validate_list_to_single(v):
     """
@@ -67,9 +65,8 @@ class QueryModelBase(RestModelBase):
 
     limit: Optional[int] = None
     cursor: Optional[int] = None
-    include_metadata: bool = True
 
-    @validator("limit", "cursor", "include_metadata", pre=True)
+    @validator("limit", "cursor", pre=True)
     def validate_lists(cls, v):
         return validate_list_to_single(v)
 
@@ -109,32 +106,25 @@ class QueryIteratorBase:
         Starts retrieval of results from the beginning again
         """
 
-        # Fetch metadata on first iteration
-        self._query_filters.include_metadata = True
-
         self._current_batch: Optional[List[Any]] = None
-        self._current_meta: Optional[QueryMetadata] = None
         self._fetched: int = 0
 
         self._fetch_batch()
 
-    def _request(self) -> Tuple[Optional[QueryMetadata], List[Any]]:
+    def _request(self) -> List[Any]:
         raise NotImplementedError("_request must be overridden by a derived class")
 
     def _fetch_batch(self) -> None:
         # We have already fetched something before
-        # Add the cursor to the query filters, and don't update metadata
+        # Add the cursor to the query filters
         if self._current_batch:
             self._query_filters.cursor = self._current_batch[-1].id
-            self._query_filters.include_metadata = False
 
         self._current_pos = 0
 
         # Have we fetched everything?
         if self._total_limit is not None and self._fetched >= self._total_limit:
             self._current_batch = []
-            if self._current_meta is None:
-                self._current_meta = QueryMetadata()
             return
 
         # adjust how many to get in this batch, taking into account any limit
@@ -146,13 +136,8 @@ class QueryIteratorBase:
 
         self._query_filters.limit = new_limit
 
-        meta, batch = self._request()
-
-        if meta is not None:
-            self._current_meta = meta
-
-        self._current_batch = batch
-        self._fetched += len(batch)
+        self._current_batch = self._request()
+        self._fetched += len(self._current_batch)
 
     def __iter__(self) -> Iterator[QueryIteratorBase]:
         return self

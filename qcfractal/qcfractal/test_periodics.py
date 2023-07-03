@@ -21,8 +21,8 @@ pytestmark = pytest.mark.slow
 def test_periodics_server_stats(snowflake: QCATestingSnowflake):
     storage_socket = snowflake.get_storage_socket()
 
-    meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
-    assert meta.n_found == 0
+    stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
+    assert len(stats) == 0
 
     sleep_time = snowflake._qcf_config.statistics_frequency
 
@@ -34,8 +34,8 @@ def test_periodics_server_stats(snowflake: QCATestingSnowflake):
         time.sleep(sleep_time)
         time_1 = datetime.utcnow()
 
-        meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
-        assert meta.n_found == i + 1
+        stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
+        assert len(stats) == i + 1
         assert time_0 < stats[0]["timestamp"] < time_1
 
 

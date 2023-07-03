@@ -31,8 +31,8 @@ def test_manager_keepalive(snowflake: QCATestingSnowflake):
 
     time.sleep(1)  # wait for manager to register
 
-    meta, managers = storage_socket.managers.query(ManagerQueryFilters())
-    assert meta.n_found == 1
+    managers = storage_socket.managers.query(ManagerQueryFilters())
+    assert len(managers) == 1
     manager_name = managers[0]["name"]
 
     sleep_time = snowflake._qcf_config.heartbeat_frequency
@@ -84,8 +84,8 @@ def test_manager_tags(snowflake: QCATestingSnowflake, tmp_path):
     compute.stop()
     compute_thread.join()
 
-    meta, managers = storage_socket.managers.query(ManagerQueryFilters())
-    assert meta.n_found == 1
+    managers = storage_socket.managers.query(ManagerQueryFilters())
+    assert len(managers) == 1
     assert set(managers[0]["tags"]) == {"tag1", "tag2", "tag3", "tag4", "*"}
 
 
@@ -100,8 +100,8 @@ def test_manager_claim_inactive(snowflake: QCATestingSnowflake):
     time.sleep(2)  # wait for manager to register
     assert compute.is_alive() is True
 
-    meta, managers = storage_socket.managers.query(ManagerQueryFilters())
-    assert meta.n_found == 1
+    managers = storage_socket.managers.query(ManagerQueryFilters())
+    assert len(managers) == 1
     manager_name = managers[0]["name"]
 
     # Mark as inactive from the server side
@@ -124,8 +124,8 @@ def test_manager_claim_return(snowflake: QCATestingSnowflake):
     time.sleep(1)  # wait for manager to register
     assert compute.is_alive() is True
 
-    meta, managers = storage_socket.managers.query(ManagerQueryFilters())
-    assert meta.n_found == 1
+    managers = storage_socket.managers.query(ManagerQueryFilters())
+    assert len(managers) == 1
 
     r = snowflake.await_results(all_id, 30.0)
     assert r is True
@@ -140,8 +140,8 @@ def test_manager_deferred_return(snowflake: QCATestingSnowflake):
     compute = compute_thread._compute
 
     time.sleep(1)  # wait for manager to register
-    meta, managers = storage_socket.managers.query(ManagerQueryFilters())
-    assert meta.n_found == 1
+    managers = storage_socket.managers.query(ManagerQueryFilters())
+    assert len(managers) == 1
     assert compute.n_total_active_tasks == 0  # haven't updated - we are doing manual updates
 
     # Get some tasks

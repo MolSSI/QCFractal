@@ -1,13 +1,12 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict, Any, List, Tuple, Union
+from typing import Optional, Dict, Any, List, Union
 
 from dateutil.parser import parse as date_parser
 from pydantic import BaseModel, Extra, validator
 
 from qcportal.base_models import QueryProjModelBase
 from ..base_models import QueryIteratorBase
-from ..metadata_models import QueryMetadata
 
 
 class InternalJobStatusEnum(str, Enum):
@@ -113,10 +112,10 @@ class InternalJobQueryIterator(QueryIteratorBase):
         batch_limit = client.api_limits["get_internal_jobs"] // 4
         QueryIteratorBase.__init__(self, client, query_filters, batch_limit)
 
-    def _request(self) -> Tuple[Optional[QueryMetadata], List[InternalJob]]:
+    def _request(self) -> List[InternalJob]:
         return self._client.make_request(
             "post",
             "api/v1/internal_jobs/query",
-            Tuple[Optional[QueryMetadata], List[InternalJob]],
+            List[InternalJob],
             body=self._query_filters,
         )

@@ -9,7 +9,6 @@ from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.sql import select, and_, or_
 
 from qcfractal.db_socket.helpers import (
-    get_count,
     insert_general,
     delete_general,
     insert_mixed_general,
@@ -19,7 +18,6 @@ from qcportal.exceptions import MissingDataError
 from qcportal.metadata_models import (
     InsertMetadata,
     DeleteMetadata,
-    QueryMetadata,
     UpdateMetadata,
 )
 from qcportal.molecules import Molecule, MoleculeIdentifiers, MoleculeQueryFilters
@@ -221,7 +219,7 @@ class MoleculeSocket:
         query_data: MoleculeQueryFilters,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[Optional[QueryMetadata], List[int]]:
+    ) -> List[int]:
         """
         General query of molecules in the database
 
@@ -239,8 +237,7 @@ class MoleculeSocket:
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of molecule ids
-            that were found in the database.
+            A list of molecule ids that were found in the database.
         """
 
         molecular_formula = query_data.molecular_formula
@@ -275,10 +272,6 @@ class MoleculeSocket:
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(MoleculeORM.id).where(and_(True, *and_query))
 
-            if query_data.include_metadata:
-                count_stmt = stmt.order_by(MoleculeORM.id.desc()).distinct(MoleculeORM.id)
-                n_found = get_count(session, count_stmt)
-
             if query_data.cursor is not None:
                 stmt = stmt.where(MoleculeORM.id < query_data.cursor)
 
@@ -287,12 +280,7 @@ class MoleculeSocket:
             stmt = stmt.distinct(MoleculeORM.id)
             molecule_ids = session.execute(stmt).scalars().all()
 
-        if query_data.include_metadata:
-            meta = QueryMetadata(n_found=n_found)
-        else:
-            meta = None
-
-        return meta, molecule_ids
+        return molecule_ids
 
     def modify(
         self,

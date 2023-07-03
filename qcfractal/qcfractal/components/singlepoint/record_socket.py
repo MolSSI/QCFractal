@@ -11,7 +11,7 @@ from sqlalchemy.orm import lazyload, joinedload, defer, undefer, defaultload
 from qcfractal.db_socket.helpers import insert_general
 from qcportal.compression import CompressionEnum, compress
 from qcportal.exceptions import MissingDataError
-from qcportal.metadata_models import InsertMetadata, QueryMetadata
+from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import (
@@ -210,7 +210,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
         query_data: SinglepointQueryFilters,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[int]]:
+    ) -> List[int]:
         """
         Query singlepoint records
 
@@ -225,8 +225,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of records
-            that were found in the database.
+            A list of records that were found in the database.
         """
 
         and_query = []

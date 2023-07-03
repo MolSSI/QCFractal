@@ -101,7 +101,6 @@ class SlurmExecutorConfig(ExecutorConfig):
             return v
 
 
-
 AllExecutorTypes = Union[CustomExecutorConfig, LocalExecutorConfig, SlurmExecutorConfig]
 
 

@@ -10,14 +10,13 @@ from sqlalchemy.orm import selectinload, defer, undefer, lazyload, joinedload
 from qcfractal.db_socket.helpers import get_query_proj_options, get_count, get_general
 from qcportal.exceptions import MissingDataError, ComputeManagerError
 from qcportal.managers import ManagerStatusEnum, ManagerName, ManagerQueryFilters
-from qcportal.metadata_models import QueryMetadata
 from .db_models import ComputeManagerLogORM, ComputeManagerORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from qcfractal.components.internal_jobs.status import JobProgress
-    from typing import List, Iterable, Optional, Sequence, Sequence, Dict, Any, Tuple
+    from typing import List, Iterable, Optional, Sequence, Sequence, Dict, Any
 
 
 class ManagerSocket:
@@ -268,7 +267,7 @@ class ManagerSocket:
         query_data: ManagerQueryFilters,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
+    ) -> List[Dict[str, Any]]:
         """
         General query of managers in the database
 
@@ -286,8 +285,7 @@ class ManagerSocket:
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of manager info (as dictionaries) that were
-            found in the database.
+            A list of manager info (as dictionaries) that were found in the database.
         """
 
         proj_options = get_query_proj_options(ComputeManagerORM, query_data.include, query_data.exclude)
@@ -312,10 +310,6 @@ class ManagerSocket:
             stmt = select(ComputeManagerORM).filter(and_(True, *and_query))
             stmt = stmt.options(*proj_options)
 
-            if query_data.include_metadata:
-                count_stmt = stmt.order_by(ComputeManagerORM.id.desc()).distinct(ComputeManagerORM.id)
-                n_found = get_count(session, count_stmt)
-
             if query_data.cursor is not None:
                 stmt = stmt.where(ComputeManagerORM.id < query_data.cursor)
 
@@ -326,12 +320,7 @@ class ManagerSocket:
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.model_dict() for x in results]
 
-        if query_data.include_metadata:
-            meta = QueryMetadata(n_found=n_found)
-        else:
-            meta = None
-
-        return meta, result_dicts
+        return result_dicts
 
     def check_manager_heartbeats(self, session: Session, job_progress: JobProgress) -> None:
         """

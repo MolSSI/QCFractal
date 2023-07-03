@@ -15,7 +15,7 @@ from sqlalchemy.orm import lazyload, joinedload, defer, undefer
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
 from qcfractal.db_socket.helpers import insert_general
 from qcportal.exceptions import MissingDataError
-from qcportal.metadata_models import InsertMetadata, QueryMetadata
+from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
 from qcportal.optimization import (
     OptimizationSpecification,
@@ -185,7 +185,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
         query_data: OptimizationQueryFilters,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[int]]:
+    ) -> List[int]:
         """
         Query optimization records
 
@@ -200,8 +200,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of record ids
-            that were found in the database.
+            A list of record ids that were found in the database.
         """
 
         and_query = []

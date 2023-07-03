@@ -12,8 +12,7 @@ if TYPE_CHECKING:
 
 def test_serverinfo_socket_update_stats(storage_socket: SQLAlchemySocket):
 
-    meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
-    assert meta.n_found == 0
+    stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
     assert len(stats) == 0
 
     time_0 = datetime.utcnow()
@@ -24,9 +23,7 @@ def test_serverinfo_socket_update_stats(storage_socket: SQLAlchemySocket):
 
     time_1 = datetime.utcnow()
 
-    meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
-    assert meta.success
-    assert meta.n_found == 1
+    stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
     assert len(stats) == 1
 
     assert stats[0]["molecule_count"] == 0
@@ -40,9 +37,7 @@ def test_serverinfo_socket_update_stats(storage_socket: SQLAlchemySocket):
         storage_socket.serverinfo.update_server_stats(session=session, job_progress=DummyJobProgress())
 
     # Should get the latest now
-    meta, stats2 = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
-    assert meta.success
-    assert meta.n_found == 2
+    stats2 = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
     assert len(stats2) == 2
 
     # Should return newest first
@@ -54,13 +49,13 @@ def test_serverinfo_socket_update_stats(storage_socket: SQLAlchemySocket):
     with storage_socket.session_scope() as session:
         storage_socket.serverinfo.update_server_stats(session=session, job_progress=DummyJobProgress())
 
-    meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters(before=datetime.utcnow()))
-    assert meta.n_found == 3
+    stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters(before=datetime.utcnow()))
+    assert len(stats) == 3
 
-    meta, stats = storage_socket.serverinfo.query_server_stats(
+    stats = storage_socket.serverinfo.query_server_stats(
         ServerStatsQueryFilters(before=datetime.utcnow(), after=time_1)
     )
-    assert meta.n_found == 2
+    assert len(stats) == 2
 
-    meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters(before=time_1))
-    assert meta.n_found == 1
+    stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters(before=time_1))
+    assert len(stats) == 1

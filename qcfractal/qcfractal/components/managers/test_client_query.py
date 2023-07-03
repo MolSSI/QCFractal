@@ -33,26 +33,31 @@ def queryable_managers_client(session_snowflake):
 
 def test_manager_client_query(queryable_managers_client: PortalClient):
     query_res = queryable_managers_client.query_managers(status="active")
-    assert query_res._current_meta.n_found == 80
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 80
 
     query_res = queryable_managers_client.query_managers(hostname="test_host_1")
-    assert query_res._current_meta.n_found == 12
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 12
 
     query_res = queryable_managers_client.query_managers(hostname="test_host_1", status="inactive")
-    assert query_res._current_meta.n_found == 4
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 4
 
     query_res = queryable_managers_client.query_managers(cluster="test_cluster_2", status="active")
-    assert query_res._current_meta.n_found == 20
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 20
 
     query_res = queryable_managers_client.query_managers(
         name=["test_cluster_2-test_host_1-1234-5678-1234-5672", "test_cluster_1-test_host_2-1234-5678-1234-5671"]
     )
-    assert query_res._current_meta.n_found == 2
-
     managers = list(query_res)
+    assert len(managers) == 2
+
     query_res = queryable_managers_client.query_managers(manager_id=[managers[0].id, managers[1].id])
-    assert query_res._current_meta.n_found == 2
-    assert all(x.log is not None for x in query_res)
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 2
+    assert all(x.log is not None for x in query_res_l)
 
 
 def test_manager_client_query_empty_iter(queryable_managers_client: PortalClient):
@@ -67,14 +72,10 @@ def test_manager_client_query_empty_iter(queryable_managers_client: PortalClient
 def test_manager_client_query_limit(queryable_managers_client: PortalClient):
 
     query_res = queryable_managers_client.query_managers(limit=19)
-    assert query_res._current_meta.n_found == 120
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 19
     assert len(query_res._current_batch) < queryable_managers_client.api_limits["get_managers"]
 
-    managers = list(query_res)
-    assert len(managers) == 19
-
     query_res = queryable_managers_client.query_managers(hostname="test_host_1", limit=11)
-    assert query_res._current_meta.n_found == 12
-
-    managers = list(query_res)
-    assert len(managers) == 11
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 11

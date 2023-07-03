@@ -48,38 +48,33 @@ def queryable_access_client(postgres_server, pytestconfig):
 def test_serverinfo_client_query_access(queryable_access_client: PortalClient):
 
     query_res = queryable_access_client.query_access_log(method=["get"])
-    assert query_res._current_meta.n_found == 80
     all_entries = list(query_res)
     assert len(all_entries) == 80
 
     query_res = queryable_access_client.query_access_log(method=["POST"])
-    assert query_res._current_meta.n_found == 80
     all_entries = list(query_res)
     assert len(all_entries) == 80
 
     query_res = queryable_access_client.query_access_log(module=["api"])
-    assert query_res._current_meta.n_found == 80
     all_entries = list(query_res)
     assert len(all_entries) == 80
 
     query_res = queryable_access_client.query_access_log(module=["compute"])
-    assert query_res._current_meta.n_found == 80
     all_entries = list(query_res)
     assert len(all_entries) == 80
 
     query_res = queryable_access_client.query_access_log(user="admin_user")
-    assert query_res._current_meta.n_found == 80
     all_entries = list(query_res)
     assert len(all_entries) == 80
 
     read_id = queryable_access_client.get_user("read_user").id
     query_res = queryable_access_client.query_access_log(user=[read_id, "admin_user"])
-    assert query_res._current_meta.n_found == 160
     all_entries = list(query_res)
     assert len(all_entries) == 160
 
     query_res = queryable_access_client.query_access_log(user=["no_user"])
-    assert query_res._current_meta.n_found == 0
+    all_entries = list(query_res)
+    assert len(all_entries) == 0
 
 
 def test_serverinfo_client_query_access_empty_iter(queryable_access_client: PortalClient):

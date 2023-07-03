@@ -21,7 +21,7 @@ from qcfractal.components.optimization.record_db_models import (
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
 from qcportal.exceptions import MissingDataError
-from qcportal.metadata_models import InsertMetadata, QueryMetadata
+from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
 from qcportal.optimization import OptimizationSpecification
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
@@ -394,7 +394,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         query_data: TorsiondriveQueryFilters,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[int]]:
+    ) -> List[int]:
         """
         Query torsiondrive records
 
@@ -409,8 +409,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of record ids
-            that were found in the database.
+            A list of record ids that were found in the database.
         """
 
         and_query = []

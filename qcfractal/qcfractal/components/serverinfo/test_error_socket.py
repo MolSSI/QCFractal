@@ -38,8 +38,7 @@ def test_serverinfo_socket_save_error(secure_snowflake: QCATestingSnowflake):
     time_12 = datetime.datetime.utcnow()
     id_2 = storage_socket.serverinfo.save_error(error_data_2)
 
-    meta, errors = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters())
-    assert meta.n_found == 2
+    errors = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters())
     assert len(errors) == 2
 
     # Returned in chrono order, newest first
@@ -55,28 +54,28 @@ def test_serverinfo_socket_save_error(secure_snowflake: QCATestingSnowflake):
         assert in_err["request_body"] == db_err["request_body"]
 
     # Query by id
-    meta, err = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters(error_id=[id_2]))
-    assert meta.n_found == 1
+    err = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters(error_id=[id_2]))
+    assert len(err) == 1
     assert err[0]["error_text"] == error_data_2["error_text"]
 
     # query by time
-    meta, err = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters(before=time_12))
-    assert meta.n_found == 1
+    err = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters(before=time_12))
+    assert len(err) == 1
     assert err[0]["error_text"] == error_data_1["error_text"]
 
-    meta, err = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters(after=datetime.datetime.utcnow()))
-    assert meta.n_found == 0
+    err = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters(after=datetime.datetime.utcnow()))
+    assert len(err) == 0
 
-    meta, err = storage_socket.serverinfo.query_error_log(
+    err = storage_socket.serverinfo.query_error_log(
         ErrorLogQueryFilters(before=datetime.datetime.utcnow(), after=time_12)
     )
-    assert meta.n_found == 1
+    assert len(err) == 1
 
-    meta, err = storage_socket.serverinfo.query_error_log(
+    err = storage_socket.serverinfo.query_error_log(
         ErrorLogQueryFilters(after=datetime.datetime.utcnow(), before=time_12)
     )
-    assert meta.n_found == 0
+    assert len(err) == 0
 
     # query by user
-    meta, err = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters(user=["read_user"]))
-    assert meta.n_found == 1
+    err = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters(user=["read_user"]))
+    assert len(err) == 1

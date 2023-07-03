@@ -6,7 +6,6 @@ import pytest
 from qcfractalcompute.config import SlurmExecutorConfig
 
 
-
 @pytest.mark.parametrize("time_str", ["02:01:59", "72:00:00", "10:00:00"])
 def test_manager_config_walltime(time_str):
     # Walltimes in a yaml can be parsed as seconds. Test we convert that correctly

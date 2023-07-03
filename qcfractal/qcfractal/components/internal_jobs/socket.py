@@ -14,10 +14,9 @@ from sqlalchemy import select, delete, update, and_, or_
 from sqlalchemy.dialects.postgresql import insert
 
 from qcfractal.components.auth.db_models import UserIDMapSubquery
-from qcfractal.db_socket.helpers import get_query_proj_options, get_count
+from qcfractal.db_socket.helpers import get_query_proj_options
 from qcportal.exceptions import MissingDataError
 from qcportal.internal_jobs.models import InternalJobStatusEnum, InternalJobQueryFilters
-from qcportal.metadata_models import QueryMetadata
 from .db_models import InternalJobORM
 from .status import JobProgress
 
@@ -26,7 +25,7 @@ if TYPE_CHECKING:
     from typing import Optional, Dict, Any
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from typing import Dict, Optional, Any, Tuple, List
+    from typing import Dict, Optional, Any, List
 
 _default_error = {"error_type": "not_supplied", "error_message": "No error message found on task."}
 
@@ -173,9 +172,7 @@ class InternalJobSocket:
 
             return job_orm.model_dict()
 
-    def query(
-        self, query_data: InternalJobQueryFilters, *, session: Optional[Session] = None
-    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
+    def query(self, query_data: InternalJobQueryFilters, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
 
         """
         General query of internal jobs in the database
@@ -194,8 +191,7 @@ class InternalJobSocket:
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of job info (as dictionaries) that were
-            found in the database.
+            A list of job info (as dictionaries) that were found in the database.
         """
 
         proj_options = get_query_proj_options(InternalJobORM, query_data.include, query_data.exclude)
@@ -235,10 +231,6 @@ class InternalJobSocket:
             stmt = stmt.filter(and_(True, *and_query))
             stmt = stmt.options(*proj_options)
 
-            if query_data.include_metadata:
-                count_stmt = stmt.order_by(InternalJobORM.id.desc()).distinct(InternalJobORM.id)
-                n_found = get_count(session, count_stmt)
-
             if query_data.cursor is not None:
                 stmt = stmt.where(InternalJobORM.id < query_data.cursor)
 
@@ -249,12 +241,7 @@ class InternalJobSocket:
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.model_dict() for x in results]
 
-        if query_data.include_metadata:
-            meta = QueryMetadata(n_found=n_found)
-        else:
-            meta = None
-
-        return meta, result_dicts
+        return result_dicts
 
     def delete(self, job_id: int, *, session: Optional[Session] = None):
         """

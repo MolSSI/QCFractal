@@ -17,7 +17,7 @@ from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM, SinglepointRecordORM
 from qcportal.exceptions import MissingDataError
-from qcportal.metadata_models import InsertMetadata, QueryMetadata
+from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
 from qcportal.neb import (
     NEBSpecification,
@@ -520,7 +520,7 @@ class NEBRecordSocket(BaseRecordSocket):
         query_data: NEBQueryFilters,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[int]]:
+    ) -> List[int]:
         """
         Query neb records
 
@@ -535,8 +535,7 @@ class NEBRecordSocket(BaseRecordSocket):
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of record ids
-            that were found in the database.
+            A list of record ids that were found in the database.
         """
 
         and_query = []

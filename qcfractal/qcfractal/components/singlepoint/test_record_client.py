@@ -159,56 +159,70 @@ def test_singlepoint_client_query(snowflake: QCATestingSnowflake):
 
     # query for molecule
     query_res = snowflake_client.query_singlepoints(molecule_id=[recs[1].molecule_id])
-    assert query_res._current_meta.n_found == 1
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 1
 
     # query for program
     query_res = snowflake_client.query_singlepoints(program="psi4")
-    assert query_res._current_meta.n_found == 2
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 2
 
     # query for basis
     query_res = snowflake_client.query_singlepoints(basis="sTO-3g")
-    assert query_res._current_meta.n_found == 1
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 1
 
     query_res = snowflake_client.query_singlepoints(basis=[None])
-    assert query_res._current_meta.n_found == 1
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 1
 
     query_res = snowflake_client.query_singlepoints(basis="")
-    assert query_res._current_meta.n_found == 1
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 1
 
     # query for method
     query_res = snowflake_client.query_singlepoints(method=["b3lyP"])
-    assert query_res._current_meta.n_found == 2
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 2
 
     # driver
     query_res = snowflake_client.query_singlepoints(driver=[SinglepointDriver.energy])
-    assert query_res._current_meta.n_found == 3
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 3
 
     # keywords
     query_res = snowflake_client.query_singlepoints(keywords={})
-    assert query_res._current_meta.n_found == 2
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 2
 
     query_res = snowflake_client.query_singlepoints(keywords=[{}], program="rdkit")
-    assert query_res._current_meta.n_found == 1
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 1
 
     query_res = snowflake_client.query_singlepoints(keywords={"maxiter": 100})
-    assert query_res._current_meta.n_found == 1
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 1
 
     query_res = snowflake_client.query_singlepoints(keywords={"something": 100})
-    assert query_res._current_meta.n_found == 0
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 0
 
     # Some empty queries
     query_res = snowflake_client.query_singlepoints(driver=[SinglepointDriver.properties])
-    assert query_res._current_meta.n_found == 0
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 0
 
     # Some empty queries
     query_res = snowflake_client.query_singlepoints(basis=["madeupbasis"])
-    assert query_res._current_meta.n_found == 0
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 0
 
     # Query by default returns everything
     query_res = snowflake_client.query_singlepoints()
-    assert query_res._current_meta.n_found == 3
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 3
 
     # Query by default (with a limit)
     query_res = snowflake_client.query_singlepoints(limit=1)
-    assert query_res._current_meta.n_found == 3
-    assert len(list(query_res)) == 1
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 1

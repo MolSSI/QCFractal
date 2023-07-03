@@ -44,6 +44,6 @@ def test_serverinfo_client_delete_error(secure_snowflake: QCATestingSnowflake):
     assert n_deleted == 1
 
     query_res = client.query_error_log()
-    assert query_res._current_meta.n_found == 1
     errors = list(query_res)
+    assert len(errors) == 1
     assert errors[0].user == "read_user"

@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional, List, Tuple, Dict, Any, Union
+from typing import Optional, List, Dict, Any, Union
 
 from dateutil.parser import parse as date_parser
 from pydantic import BaseModel, Extra, validator, IPvAnyAddress, constr
@@ -12,7 +12,6 @@ from qcportal.base_models import (
     validate_list_to_single,
     QueryIteratorBase,
 )
-from qcportal.metadata_models import QueryMetadata
 
 
 class GroupByEnum(str, Enum):
@@ -90,11 +89,11 @@ class AccessLogQueryIterator(QueryIteratorBase):
         batch_limit = client.api_limits["get_access_logs"] // 4
         QueryIteratorBase.__init__(self, client, query_filters, batch_limit)
 
-    def _request(self) -> Tuple[Optional[QueryMetadata], List[AccessLogEntry]]:
+    def _request(self) -> List[AccessLogEntry]:
         return self._client.make_request(
             "post",
             "api/v1/access_logs/query",
-            Tuple[Optional[QueryMetadata], List[AccessLogEntry]],
+            List[AccessLogEntry],
             body=self._query_filters,
         )
 
@@ -184,11 +183,11 @@ class ErrorLogQueryIterator(QueryIteratorBase):
         batch_limit = client.api_limits["get_error_logs"] // 4
         QueryIteratorBase.__init__(self, client, query_filters, batch_limit)
 
-    def _request(self) -> Tuple[Optional[QueryMetadata], List[ErrorLogEntry]]:
+    def _request(self) -> List[ErrorLogEntry]:
         return self._client.make_request(
             "post",
             "api/v1/server_errors/query",
-            Tuple[Optional[QueryMetadata], List[ErrorLogEntry]],
+            List[ErrorLogEntry],
             body=self._query_filters,
         )
 
@@ -254,10 +253,10 @@ class ServerStatsQueryIterator(QueryIteratorBase):
         batch_limit = client.api_limits["get_server_stats"] // 4
         QueryIteratorBase.__init__(self, client, query_filters, batch_limit)
 
-    def _request(self) -> Tuple[Optional[QueryMetadata], List[ServerStatsEntry]]:
+    def _request(self) -> List[ServerStatsEntry]:
         return self._client.make_request(
             "post",
             "api/v1/server_stats/query",
-            Tuple[Optional[QueryMetadata], List[ServerStatsEntry]],
+            List[ServerStatsEntry],
             body=self._query_filters,
         )

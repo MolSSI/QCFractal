@@ -1,10 +1,9 @@
-from typing import Optional, List, Tuple, Dict
+from typing import Optional, List, Dict
 
 from qcelemental.models import Molecule
 from qcelemental.models.molecule import Identifiers as MoleculeIdentifiers
 
 from ..base_models import QueryModelBase, RestModelBase, QueryIteratorBase
-from ..metadata_models import QueryMetadata
 
 
 class MoleculeQueryFilters(QueryModelBase):
@@ -44,15 +43,15 @@ class MoleculeQueryIterator(QueryIteratorBase):
         api_limit = client.api_limits["get_molecules"] // 4
         QueryIteratorBase.__init__(self, client, query_filters, api_limit)
 
-    def _request(self) -> Tuple[Optional[QueryMetadata], List[Molecule]]:
-        meta, molecule_ids = self._client.make_request(
+    def _request(self) -> List[Molecule]:
+        molecule_ids = self._client.make_request(
             "post",
             "api/v1/molecules/query",
-            Tuple[Optional[QueryMetadata], List[int]],
+            List[int],
             body_model=MoleculeQueryFilters,
             body=self._query_filters,
         )
 
         molecules = self._client.get_molecules(molecule_ids)
 
-        return meta, molecules
+        return molecules

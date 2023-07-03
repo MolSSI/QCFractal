@@ -24,11 +24,10 @@ def test_serverinfo_client_access_logged(secure_snowflake_allow_read: QCATesting
 
     # This will return 6, because the requests to /login and /information was done in constructing the clients
     query_res = client.query_access_log()
-    assert query_res._current_meta.success
 
     # creating the client can add pings
-    assert query_res._current_meta.n_found >= 6
     accesses = list(query_res)
+    assert len(accesses) >= 6
 
     assert accesses[5].module == "auth"
     assert accesses[5].full_uri == "/auth/v1/login"
@@ -78,8 +77,6 @@ def test_serverinfo_client_access_not_logged(postgres_server, pytestconfig):
 
         # This will return 0 because logging is disabled
         query_res = client.query_access_log()
-        assert query_res._current_meta.success
-        assert query_res._current_meta.n_found == 0
         assert len(list(query_res)) == 0
 
 
@@ -93,9 +90,9 @@ def test_serverinfo_client_access_delete(snowflake_client: PortalClient):
     snowflake_client.get_molecules([123], missing_ok=True)
     time_4 = datetime.utcnow()
 
-    # This will return more than 4, because the query to /information was done in constructing the client
     query_res = snowflake_client.query_access_log(after=time_0)
-    assert query_res._current_meta.n_found == 3
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 3
 
     # Delete anything related to constructing the client
     snowflake_client.delete_access_log(time_0)
@@ -111,4 +108,4 @@ def test_serverinfo_client_access_delete(snowflake_client: PortalClient):
 
     # All of the above generated accesses!
     n_deleted = snowflake_client.delete_access_log(datetime.utcnow())
-    assert n_deleted == 5
+    assert n_deleted == 7

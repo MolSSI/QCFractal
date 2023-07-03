@@ -165,45 +165,6 @@ class DeleteMetadata:
 
 
 @dataclass
-class QueryMetadata:
-    """
-    Metadata returned by query functions
-    """
-
-    # Integers in errors, missing, found are indices in the input/output list
-    error_description: Optional[str] = None
-    errors: List[str] = dataclasses.field(default_factory=list)
-    n_found: int = 0  # Total number found
-
-    @property
-    def success(self):
-        return self.error_description is None and len(self.errors) == 0
-
-    @property
-    def error_string(self):
-        s = ""
-        if self.error_description:
-            s += self.error_description + "\n"
-        s += "\n".join(f"    Index {x}: {y}" for x, y in self.errors)
-        return s
-
-    @property
-    def n_errors(self):
-        return len(self.errors)
-
-    @validator("errors", pre=True)
-    def sort_fields(cls, v):
-        return sorted(v)
-
-    def dict(self) -> Dict[str, Any]:
-        """
-        Returns the information from this dataclass as a dictionary
-        """
-
-        return dataclasses.asdict(self)
-
-
-@dataclass
 class UpdateMetadata:
     """
     Metadata returned by update functions

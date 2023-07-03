@@ -55,64 +55,75 @@ def queryable_records_client(session_snowflake):
 
 def test_record_client_query(queryable_records_client: PortalClient):
     query_res = queryable_records_client.query_records(record_type="singlepoint")
-    assert query_res._current_meta.n_found == 325
+    all_records = list(query_res)
+    assert len(all_records) == 325
 
     # Get some ids from the last query
-    all_records = list(query_res)
     ids = [x.id for x in all_records]
     query_res = queryable_records_client.query_records(record_id=ids[5:15])
-    assert query_res._current_meta.n_found == 10
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 10
 
     # Created/modified before/after
     sorted_records = sorted(all_records, key=lambda x: x.created_on)
     query_res = queryable_records_client.query_records(
         record_type="singlepoint", created_before=sorted_records[164].created_on
     )
-    assert query_res._current_meta.n_found == 165
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 165
 
     query_res = queryable_records_client.query_records(
         record_type="singlepoint", created_after=sorted_records[165].created_on
     )
-    assert query_res._current_meta.n_found == 160
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 160
 
     sorted_records = sorted(all_records, key=lambda x: x.modified_on)
     query_res = queryable_records_client.query_records(
         record_type="singlepoint", modified_before=sorted_records[165].created_on
     )
-    assert query_res._current_meta.n_found == 165
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 165
 
     query_res = queryable_records_client.query_records(
         record_type="singlepoint", modified_after=sorted_records[165].created_on
     )
-    assert query_res._current_meta.n_found == 160
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 160
 
     # find the manager used to compute these
     manager_res = queryable_records_client.query_managers()
     manager = list(manager_res)[0]
     query_res = queryable_records_client.query_records(manager_name=manager.name)
-    assert query_res._current_meta.n_found == 4
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 4
 
     # Querying based on status
     query_res = queryable_records_client.query_records(status=[RecordStatusEnum.error])
-    assert query_res._current_meta.n_found == 1
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 1
 
     query_res = queryable_records_client.query_records(status=RecordStatusEnum.cancelled)
-    assert query_res._current_meta.n_found == 1
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 1
 
     query_res = queryable_records_client.query_records(status=[RecordStatusEnum.error, RecordStatusEnum.deleted])
-    assert query_res._current_meta.n_found == 2
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 2
 
     # Some combinations
     query_res = queryable_records_client.query_records(record_type=["singlepoint"], status=[RecordStatusEnum.waiting])
-    assert query_res._current_meta.n_found == 320
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 320
 
     query_res = queryable_records_client.query_records(record_type=["optimization"], status=[RecordStatusEnum.error])
-    assert query_res._current_meta.n_found == 1
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 1
 
     # Including fields
     query_res = queryable_records_client.query_records(status=RecordStatusEnum.error)
     recs = list(query_res)
-    assert query_res._current_meta.n_found == 1
+    assert len(recs) == 1
     assert recs[0].task_ is None
     assert recs[0].compute_history[0].outputs_ is None
 
@@ -120,7 +131,6 @@ def test_record_client_query(queryable_records_client: PortalClient):
         status=RecordStatusEnum.error, include=["compute_history", "task"]
     )
     recs = list(query_res)
-    assert query_res._current_meta.n_found == 1
     assert recs[0].task_ is not None
     assert recs[0].compute_history_ is not None
 
@@ -136,10 +146,10 @@ def test_record_client_query_empty_iter(queryable_records_client: PortalClient):
 
 def test_record_client_query_limit(queryable_records_client: PortalClient):
 
+    query_res = queryable_records_client.query_records(record_type="singlepoint", limit=100)
+    all_recs = list(query_res)
+    assert len(all_recs) == 100
+
     query_res = queryable_records_client.query_records(record_type="singlepoint", limit=50)
-
-    assert query_res._current_meta.success
-    assert query_res._current_meta.n_found == 325
-
     all_recs = list(query_res)
     assert len(all_recs) == 50

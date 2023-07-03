@@ -177,7 +177,8 @@ def test_optimization_client_delete(snowflake: QCATestingSnowflake, opt_file: st
 
     # DB should be pretty empty now
     query_res = snowflake_client.query_records()
-    assert query_res._current_meta.n_found == 0
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 0
 
 
 def test_optimization_client_harddelete_nochildren(snowflake: QCATestingSnowflake):
@@ -260,41 +261,52 @@ def test_optimization_client_query(snowflake: QCATestingSnowflake):
 
     # query for molecule
     query_res = snowflake_client.query_optimizations(initial_molecule_id=[recs[1].initial_molecule_id])
-    assert query_res._current_meta.n_found == 1
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 1
 
     # query for program
     query_res = snowflake_client.query_optimizations(program=["psi4"])
-    assert query_res._current_meta.n_found == 0
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 0
 
     # query for program
     query_res = snowflake_client.query_optimizations(program=["geometric"])
-    assert query_res._current_meta.n_found == 3
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 3
 
     query_res = snowflake_client.query_optimizations(qc_program=["psi4"])
-    assert query_res._current_meta.n_found == 3
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 3
 
     # query for basis
     query_res = snowflake_client.query_optimizations(qc_basis=["sTO-3g"])
-    assert query_res._current_meta.n_found == 0
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 0
 
     query_res = snowflake_client.query_optimizations(qc_basis=[None])
-    assert query_res._current_meta.n_found == 0
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 0
 
     query_res = snowflake_client.query_optimizations(qc_basis=[""])
-    assert query_res._current_meta.n_found == 0
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 0
 
     # query for method
     query_res = snowflake_client.query_optimizations(qc_method=["b3lyP"])
-    assert query_res._current_meta.n_found == 3
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 3
 
     # Some empty queries
     query_res = snowflake_client.query_optimizations(program=["madeupprog"])
-    assert query_res._current_meta.n_found == 0
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 0
 
     # Query by default returns everything
     query_res = snowflake_client.query_optimizations()
-    assert query_res._current_meta.n_found == 3
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 3
 
     # Query by default (with a limit)
     query_res = snowflake_client.query_optimizations(limit=1)
-    assert query_res._current_meta.n_found == 3
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 1

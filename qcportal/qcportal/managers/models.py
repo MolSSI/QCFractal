@@ -2,14 +2,13 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict, Any, List, Tuple
+from typing import Optional, Dict, Any, List
 
 from dateutil.parser import parse as date_parser
 from pydantic import BaseModel, Field, constr, validator, Extra, PrivateAttr
 
 from qcportal.base_models import RestModelBase, QueryProjModelBase
 from ..base_models import QueryIteratorBase
-from ..metadata_models import QueryMetadata
 
 
 class ManagerStatusEnum(str, Enum):
@@ -198,15 +197,15 @@ class ManagerQueryIterator(QueryIteratorBase):
         batch_limit = client.api_limits["get_managers"] // 4
         QueryIteratorBase.__init__(self, client, query_filters, batch_limit)
 
-    def _request(self) -> Tuple[Optional[QueryMetadata], List[ComputeManager]]:
+    def _request(self) -> List[ComputeManager]:
         managers = self._client.make_request(
             "post",
             "api/v1/managers/query",
-            Tuple[Optional[QueryMetadata], List[ComputeManager]],
+            List[ComputeManager],
             body=self._query_filters,
         )
 
-        for m in managers[1]:
+        for m in managers:
             m.propagate_client(self._client)
 
         return managers

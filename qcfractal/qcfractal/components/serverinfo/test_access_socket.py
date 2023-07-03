@@ -124,15 +124,11 @@ def test_serverinfo_socket_save_access(secure_snowflake: QCATestingSnowflake):
     with storage_socket.session_scope() as session:
         storage_socket.serverinfo.geolocate_accesses(session, DummyJobProgress())
 
-    meta, accesses = storage_socket.serverinfo.query_access_log(AccessLogQueryFilters())
-    assert meta.success
+    accesses = storage_socket.serverinfo.query_access_log(AccessLogQueryFilters())
     assert len(accesses) >= 6
-    assert meta.n_found >= 6
 
-    meta, accesses = storage_socket.serverinfo.query_access_log(AccessLogQueryFilters(before=time_1, after=time_0))
-    assert meta.success
+    accesses = storage_socket.serverinfo.query_access_log(AccessLogQueryFilters(before=time_1, after=time_0))
     assert len(accesses) == 6
-    assert meta.n_found == 6
 
     # Order should be latest access first
     assert accesses[0]["timestamp"] > accesses[1]["timestamp"]

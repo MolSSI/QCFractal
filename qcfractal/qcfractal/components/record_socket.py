@@ -22,13 +22,12 @@ from qcfractal.components.auth.db_models import UserIDMapSubquery, GroupIDMapSub
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.db_socket.helpers import (
-    get_count,
     get_general,
     delete_general,
 )
 from qcportal.compression import CompressionEnum, compress, decompress
 from qcportal.exceptions import UserReportableError, MissingDataError
-from qcportal.metadata_models import DeleteMetadata, QueryMetadata, UpdateMetadata
+from qcportal.metadata_models import DeleteMetadata, UpdateMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
 from qcportal.utils import chunk_iterable
 from .record_db_models import (
@@ -649,7 +648,7 @@ class RecordSocket:
         query_data: RecordQueryFilters,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[int]]:
+    ) -> List[int]:
         """
         Core query functionality of all records
 
@@ -673,8 +672,7 @@ class RecordSocket:
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of record ids
-            that were found in the database.
+            A list of record ids that were found in the database.
         """
 
         and_query = []
@@ -735,10 +733,6 @@ class RecordSocket:
         with self.root_socket.optional_session(session, True) as session:
             stmt = stmt.where(*and_query)
 
-            if query_data.include_metadata:
-                count_stmt = stmt.order_by(orm_type.id.desc()).distinct(orm_type.id)
-                n_found = get_count(session, count_stmt)
-
             if query_data.cursor is not None:
                 stmt = stmt.where(orm_type.id < query_data.cursor)
 
@@ -747,19 +741,14 @@ class RecordSocket:
             stmt = stmt.distinct(orm_type.id)
             record_ids = session.execute(stmt).scalars().all()
 
-        if query_data.include_metadata:
-            meta = QueryMetadata(n_found=n_found)
-        else:
-            meta = None
-
-        return meta, record_ids
+        return record_ids
 
     def query(
         self,
         query_data: RecordQueryFilters,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[int]]:
+    ) -> List[int]:
         """
         Query records of all types based on common fields
 
@@ -774,8 +763,7 @@ class RecordSocket:
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of record ids
-            that were found in the database.
+            A list of record ids that were found in the database.
         """
 
         wp = with_polymorphic(BaseRecordORM, "*")

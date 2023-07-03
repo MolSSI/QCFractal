@@ -21,8 +21,7 @@ from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.record_db_models import BaseRecordORM, OutputStoreORM
 from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
-from qcfractal.db_socket.helpers import get_query_proj_options, get_count
-from qcportal.metadata_models import QueryMetadata
+from qcfractal.db_socket.helpers import get_query_proj_options
 from qcportal.serverinfo import (
     AccessLogQueryFilters,
     AccessLogSummaryFilters,
@@ -35,8 +34,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from qcfractal.components.internal_jobs.status import JobProgress
-    from typing import Dict, Any, List, Optional, Tuple
-
+    from typing import Dict, Any, List, Optional
 
 # GeoIP2 package is optional
 try:
@@ -479,7 +477,7 @@ class ServerInfoSocket:
         query_data: AccessLogQueryFilters,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
+    ) -> List[Dict[str, Any]]:
         """
         General query of server access logs
 
@@ -500,7 +498,7 @@ class ServerInfoSocket:
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of access log dictionaries
+            A list of access log dictionaries
         """
 
         proj_options = get_query_proj_options(AccessLogORM, query_data.include, query_data.exclude)
@@ -530,10 +528,6 @@ class ServerInfoSocket:
             stmt = stmt.where(and_(True, *and_query))
             stmt = stmt.options(*proj_options)
 
-            if query_data.include_metadata:
-                count_stmt = stmt.distinct(AccessLogORM.id)
-                n_found = get_count(session, count_stmt)
-
             if query_data.cursor is not None:
                 stmt = stmt.where(AccessLogORM.id < query_data.cursor)
 
@@ -543,12 +537,7 @@ class ServerInfoSocket:
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.model_dict() for x in sorted(results, key=lambda x: x.timestamp, reverse=True)]
 
-        if query_data.include_metadata:
-            meta = QueryMetadata(n_found=n_found)
-        else:
-            meta = None
-
-        return meta, result_dicts
+        return result_dicts
 
     def query_access_summary(
         self,
@@ -649,7 +638,7 @@ class ServerInfoSocket:
         query_data: ErrorLogQueryFilters,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
+    ) -> List[Dict[str, Any]]:
         """
         General query of server internal error logs
 
@@ -670,8 +659,7 @@ class ServerInfoSocket:
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of errors (as dictionaries)
-            that were found in the database.
+            A list of errors (as dictionaries) that were found in the database.
         """
 
         and_query = []
@@ -694,10 +682,6 @@ class ServerInfoSocket:
         with self.root_socket.optional_session(session, True) as session:
             stmt = stmt.where(and_(True, *and_query))
 
-            if query_data.include_metadata:
-                count_stmt = stmt.distinct(InternalErrorLogORM.id)
-                n_found = get_count(session, count_stmt)
-
             if query_data.cursor is not None:
                 stmt = stmt.where(InternalErrorLogORM.id < query_data.cursor)
 
@@ -707,19 +691,14 @@ class ServerInfoSocket:
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.model_dict() for x in sorted(results, key=lambda x: x.error_date, reverse=True)]
 
-        if query_data.include_metadata:
-            meta = QueryMetadata(n_found=n_found)
-        else:
-            meta = None
-
-        return meta, result_dicts
+        return result_dicts
 
     def query_server_stats(
         self,
         query_data: ServerStatsQueryFilters,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
+    ) -> List[Dict[str, Any]]:
         """
         General query of server statistics
 
@@ -737,8 +716,7 @@ class ServerInfoSocket:
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of server statistic entries (as dictionaries)
-            that were found in the database.
+            A list of server statistic entries (as dictionaries) that were found in the database.
         """
 
         and_query = []
@@ -749,10 +727,6 @@ class ServerInfoSocket:
 
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(ServerStatsLogORM).filter(and_(True, *and_query))
-
-            if query_data.include_metadata:
-                count_stmt = stmt.distinct(ServerStatsLogORM.id)
-                n_found = get_count(session, count_stmt)
 
             if query_data.cursor is not None:
                 stmt = stmt.where(ServerStatsLogORM.id < query_data.cursor)
@@ -765,12 +739,7 @@ class ServerInfoSocket:
             # TODO - could be done in sql query (with subquery?)
             result_dicts = [x.model_dict() for x in sorted(results, key=lambda x: x.timestamp, reverse=True)]
 
-        if query_data.include_metadata:
-            meta = QueryMetadata(n_found=n_found)
-        else:
-            meta = None
-
-        return meta, result_dicts
+        return result_dicts
 
     def delete_access_logs(self, before: datetime, *, session: Optional[Session] = None) -> int:
         """

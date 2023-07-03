@@ -26,7 +26,7 @@ from qcportal.gridoptimization import (
     GridoptimizationSpecification,
     GridoptimizationQueryFilters,
 )
-from qcportal.metadata_models import InsertMetadata, QueryMetadata
+from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
 from qcportal.optimization import OptimizationSpecification
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
@@ -480,7 +480,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         query_data: GridoptimizationQueryFilters,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[int]]:
+    ) -> List[int]:
         """
         Query gridoptimization records
 
@@ -495,8 +495,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of record ids
-            that were found in the database.
+            A list of record ids that were found in the database.
         """
 
         and_query = []

@@ -21,7 +21,7 @@ from qcportal.manybody import (
     ManybodySpecification,
     ManybodyQueryFilters,
 )
-from qcportal.metadata_models import InsertMetadata, QueryMetadata
+from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
 from qcportal.utils import hash_dict
@@ -454,7 +454,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
         query_data: ManybodyQueryFilters,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[int]]:
+    ) -> List[int]:
         """
         Query manybody records
 
@@ -469,8 +469,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of record ids
-            that were found in the database.
+            A list of record ids that were found in the database.
         """
 
         and_query = []
