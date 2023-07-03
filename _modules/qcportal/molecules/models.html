@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.molecules.models &#8212; QCArchive 0.50b12.post33+g2b7d2b56 documentation</title>
+    <title>qcportal.molecules.models &#8212; QCArchive 0.50b12.post35+g0e3a6db7 documentation</title>
   
   
   
@@ -413,13 +413,12 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <h1>Source code for qcportal.molecules.models</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Dict</span>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span>
 
 <span class="kn">from</span> <span class="nn">qcelemental.models</span> <span class="kn">import</span> <span class="n">Molecule</span>
 <span class="kn">from</span> <span class="nn">qcelemental.models.molecule</span> <span class="kn">import</span> <span class="n">Identifiers</span> <span class="k">as</span> <span class="n">MoleculeIdentifiers</span>
 
 <span class="kn">from</span> <span class="nn">..base_models</span> <span class="kn">import</span> <span class="n">QueryModelBase</span><span class="p">,</span> <span class="n">RestModelBase</span><span class="p">,</span> <span class="n">QueryIteratorBase</span>
-<span class="kn">from</span> <span class="nn">..metadata_models</span> <span class="kn">import</span> <span class="n">QueryMetadata</span>
 
 
 <span class="k">class</span> <span class="nc">MoleculeQueryFilters</span><span class="p">(</span><span class="n">QueryModelBase</span><span class="p">):</span>
@@ -459,18 +458,18 @@ document.write(`
         <span class="n">api_limit</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_molecules&quot;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span>
         <span class="n">QueryIteratorBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">query_filters</span><span class="p">,</span> <span class="n">api_limit</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_request</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">QueryMetadata</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Molecule</span><span class="p">]]:</span>
-        <span class="n">meta</span><span class="p">,</span> <span class="n">molecule_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_request</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Molecule</span><span class="p">]:</span>
+        <span class="n">molecule_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
             <span class="s2">&quot;post&quot;</span><span class="p">,</span>
             <span class="s2">&quot;api/v1/molecules/query&quot;</span><span class="p">,</span>
-            <span class="n">Tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">QueryMetadata</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
+            <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
             <span class="n">body_model</span><span class="o">=</span><span class="n">MoleculeQueryFilters</span><span class="p">,</span>
             <span class="n">body</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_filters</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">molecules</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get_molecules</span><span class="p">(</span><span class="n">molecule_ids</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">meta</span><span class="p">,</span> <span class="n">molecules</span></div>
+        <span class="k">return</span> <span class="n">molecules</span></div>
 </pre></div>
 
                 </article>
