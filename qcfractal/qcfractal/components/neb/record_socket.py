@@ -329,7 +329,12 @@ class NEBRecordSocket(BaseRecordSocket):
         qc_spec = neb_orm.specification.singlepoint_specification.model_dict()
         if service_state.tsoptimize and service_state.converged:
             if has_optimization:
-                opt_spec = neb_orm.specification.optimization_specification.to_model(OptimizationSpecification)
+                opt_spec = neb_orm.specification.optimization_specification.model_dict()
+                opt_spec["keywords"]["hessian"] = service_state.tshessian
+                opt_spec["keywords"]["transition"] = True
+                opt_spec["program"]= "geometric"
+                opt_spec = OptimizationSpecification(**opt_spec)#neb_orm.specification.optimization_specification.to_model(OptimizationSpecification)
+
             else:
                 opt_spec = OptimizationSpecification(
                     program="geometric",
@@ -380,12 +385,17 @@ class NEBRecordSocket(BaseRecordSocket):
         neb_orm: NEBRecordORM = service_orm.record
         # delete all existing entries in the dependency list
         service_orm.dependencies = []
+        neb_spec = neb_orm.specification.to_model(NEBSpecification)
+        has_optimization = bool(neb_spec.optimization_specification)
 
         # Create a singlepoint input based on the multiple geometries
         qc_spec = neb_orm.specification.singlepoint_specification.model_dict()
         qc_spec["driver"] = "gradient"
 
         if service_state.converged and service_state.tsoptimize and len(service_state.tshessian) == 0:
+            if has_optimization:
+                opt_spec = neb_orm.specification.optimization_specification.model_dict()
+                qc_spec = opt_spec['qc_specification']
             qc_spec["driver"] = "hessian"
 
         meta, sp_ids = self.root_socket.records.singlepoint.add(
