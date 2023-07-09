@@ -47,7 +47,7 @@ class QCATestingPostgresHarness(PostgresHarness):
 
         self.sql_command(
             f"CREATE DATABASE {self.template_name} TEMPLATE {self.db_name};",
-            database_name=self.config.existing_db,
+            use_maintenance_db=True,
             returns=False,
         )
 
@@ -59,7 +59,7 @@ class QCATestingPostgresHarness(PostgresHarness):
         self.delete_database()
         self.sql_command(
             f"CREATE DATABASE {self.db_name} TEMPLATE {self.template_name};",
-            database_name=self.config.existing_db,
+            use_maintenance_db=True,
             returns=False,
         )
 
@@ -73,17 +73,17 @@ class QCATestingPostgresServer:
         self.logger = logging.getLogger(__name__)
         self.tmp_pg = TemporaryPostgres(data_dir=db_path)
         self.harness = self.tmp_pg._harness
-        self.logger.debug(f"Using database located at {db_path} with uri {self.harness.database_uri}")
+        self.logger.debug(f"Using database located at {db_path} with uri {self.harness.config.safe_uri}")
 
         # Postgres process is up, but the database is not created
-        assert self.harness.is_alive(False) and not self.harness.is_alive(True)
+        assert self.harness.is_alive() and not self.harness.can_connect()
 
     def get_new_harness(self, db_name: str) -> QCATestingPostgresHarness:
         harness_config = deepcopy(self.harness.config.dict())
         harness_config["database_name"] = db_name
 
         new_harness = QCATestingPostgresHarness(DatabaseConfig(**harness_config))
-        new_harness.create_database()
+        new_harness.create_database(create_tables=True)
         return new_harness
 
 

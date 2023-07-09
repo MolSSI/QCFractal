@@ -8,7 +8,6 @@ import shutil
 import subprocess
 import tempfile
 import time
-import urllib.parse
 import weakref
 from typing import TYPE_CHECKING
 
@@ -23,33 +22,6 @@ from .port_util import find_open_port, is_port_inuse
 if TYPE_CHECKING:
     from typing import Any, List, Optional, Tuple, Dict
     import psycopg2.extensions
-
-
-def replace_db_in_uri(uri: str, new_dbname: str) -> str:
-    """
-    Replaces the database name part of a URI with a different database name
-
-    The rest of the URI (host, password, etc) all remain the same.
-
-    For example, can turn postgresql://user:pass@127.0.0.1/some_db into
-    postgresql://user:pass@127.0.0.1/postgres
-
-    Parameters
-    ----------
-    uri: str
-        The base URI to use
-    new_dbname: str
-        The database name to replace with
-
-    Returns
-    -------
-    :
-        A new URI with the database name replaced
-    """
-
-    components = urllib.parse.urlparse(uri)
-    components = components._replace(path=new_dbname)
-    return urllib.parse.urlunparse(components)
 
 
 class PostgresHarness:
@@ -185,70 +157,73 @@ class PostgresHarness:
         return proc.returncode, stdout, stderr
 
     @property
-    def database_uri(self) -> str:
-        """Provides the full PostgreSQL URI string."""
-        return self.config.uri
+    def database_dsn(self) -> str:
+        """Provides the full PostgreSQL connection string (for direct use with psycopg2)"""
+        return self.config.psycopg2_dsn
 
-    @staticmethod
-    def connect(uri) -> psycopg2.extensions.connection:
-        """Builds a psycopg2 connection object.
+    @property
+    def maintenance_dsn(self) -> str:
+        """Provides the full PostgreSQL URI string for the maintenance db (for direct use with psycopg2)"""
+        return self.config.psycopg2_maintenance_dsn
 
-        Parameters
-        ----------
-        uri
-            The database to URI to connect to
+    def can_connect(self) -> bool:
+        """Checks if the postgres instance is alive, that the database exists, and that we can connect to it
 
-        Returns
-        -------
-        :
-            A live psycopg2 connection
-        """
-
-        # Note that we can just use the URI here. The docs are a little misleading
-        return psycopg2.connect(uri)
-
-    def is_alive(self, check_database: bool = True) -> bool:
-        """Checks if the postgres is alive, and optionally if the database is present.
-
-        If check_database is True, then we will check to see if the database specified
-        in the configuration exists. Otherwise, we will just check to see that the postgres
-        instance is running and that we can connect to it
-
-        Parameters
-        ----------
-        check_database
-            If true, check to see if the database specified in the config exists.
+        This function swallows most exceptions (OperationalError), and returns False in those cases
 
         Returns
         -------
         :
-            True if the instance is alive and that the database exists (if check_database is True)
+            True if the instance is alive and that we can connect to it. Optionally checks that
+            the database exists
         """
+
         try:
-            uri = self.config.uri
-            if not check_database:
-                # We try to connect to the existing database (usually 'postgres') which should always exist
-                uri = replace_db_in_uri(uri, self.config.existing_db)
-            conn = self.connect(uri)
+            conn = psycopg2.connect(self.database_dsn)
             conn.close()
             return True
         except psycopg2.OperationalError as e:
             return False
 
+    def is_alive(self) -> bool:
+        """Checks if the postgres is alive
+
+        This only checks to see if an instance is running on the given host/port. It does not check
+        if we have permission to connect to it or if the database exists
+
+        Returns
+        -------
+        :
+            True if a postgres instance is alive
+        """
+
+        try:
+            conn = psycopg2.connect(self.database_dsn)
+            conn.close()
+            return True
+        except psycopg2.OperationalError as e:
+            estr = str(e)
+
+            if "Connection refused" in estr:
+                return False
+
+            # right?
+            return True
+
     def ensure_alive(self):
         """
-        Checks to see that the postgres instance is up and running. Does not check anything
-        about the database.
+        Checks to see that the postgres instance is up and running
 
         If it is not running, but we are expected to control the database, it will be started.
+        This function does not check anything about the database.
 
-        Will raise an exception if the database is not alive and/or could not be started
+        This will raise an exception if the database is not alive and/or could not be started
         """
 
         # if own = True, we are responsible for starting the db instance
         # But don't start it if it is already alive. It may have been started
         # elsewhere.
-        if not self.is_alive(False):
+        if not self.is_alive():
             if self.config.own:
                 self.start()
                 self._logger.info(f"Started a postgres instance for uri {self.config.safe_uri}")
@@ -258,10 +233,10 @@ class PostgresHarness:
                     f"It must be running for me to continue "
                 )
 
-        self._logger.info(f"Database serving uri {self.config.safe_uri} appears to be up and running")
+        self._logger.info(f"Postgres instance serving uri {self.config.safe_uri} appears to be up and running")
 
     def sql_command(
-        self, statement: str, database_name: Optional[str] = None, autocommit: bool = True, returns=True
+        self, statement: str, use_maintenance_db: bool = False, autocommit: bool = True, returns=True
     ) -> Any:
         """Runs a single SQL query or statement string and returns the output
 
@@ -269,8 +244,8 @@ class PostgresHarness:
         ----------
         statement
             A psql command/query string.
-        database_name: Optional[str]:
-            Connect to an alternate database name rather than the one specified in the config
+        use_maintenance_db: bool
+            If true, connect to the maintenance db instead
         autocommit
             If true, enable autocommit on the connection
         returns
@@ -278,11 +253,12 @@ class PostgresHarness:
             don't return anything.
         """
 
-        uri = self.config.uri
-        if database_name:
-            uri = replace_db_in_uri(uri, database_name)
+        if use_maintenance_db:
+            uri = self.maintenance_dsn
+        else:
+            uri = self.database_dsn
 
-        conn = self.connect(uri)
+        conn = psycopg2.connect(uri)
         if autocommit:
             conn.autocommit = True
         cursor = conn.cursor()
@@ -314,46 +290,27 @@ class PostgresHarness:
         assert self.config.own
         self._logger.debug(f"Running pg_ctl command: {cmds}")
 
-        psql_cmd = self._get_tool("pg_ctl")
-        all_cmds = [psql_cmd, "-l", self.config.logfile, "-D", self.config.data_directory]
+        pg_ctl = self._get_tool("pg_ctl")
+        all_cmds = [pg_ctl, "-l", self.config.logfile, "-D", self.config.data_directory]
         all_cmds.extend(cmds)
         return self._run_subprocess(all_cmds)
 
     def get_postgres_version(self) -> str:
-        pg_uri = replace_db_in_uri(self.config.uri, self.config.existing_db)
+        """Returns the version of the postgres instance"""
 
-        conn = self.connect(pg_uri)
-        cursor = conn.cursor()
-
-        try:
-            cursor.execute(f"SELECT version()")
-            ver = cursor.fetchone()[0]
-        finally:
-            cursor.close()
-            conn.close()
-
-        return ver
+        return self.sql_command("SELECT version()", use_maintenance_db=True)[0][0]
 
     def get_alembic_version(self) -> str:
-        conn = self.connect(self.config.uri)
-        cursor = conn.cursor()
+        """Returns the version of the alembic schema in the database"""
 
-        try:
-            cursor.execute(f"SELECT version_num from alembic_version")
-            ver = cursor.fetchone()[0]
-        finally:
-            cursor.close()
-            conn.close()
+        return self.sql_command("SELECT version_num from alembic_version")[0][0]
 
-        return ver
+    def create_database(self, create_tables):
+        """Creates a new qcfractal database (and tables)
 
-    def create_database(self, create_tables: bool = True):
-        """Creates a new qcarchive database (and tables) given in the configuration.
-
-        The postgres instance must be up and running.
+        The postgres instance must be initialized and running.
 
         If the database is existing, no changes to the database are made.
-
         If there is an error, an exception in raised
 
         Parameters
@@ -364,8 +321,7 @@ class PostgresHarness:
 
         # First we connect to an existing database
         # The database specified in the config may not exist yet
-        pg_uri = replace_db_in_uri(self.config.uri, self.config.existing_db)
-        conn = self.connect(pg_uri)
+        conn = psycopg2.connect(self.maintenance_dsn)
         conn.autocommit = True
 
         cursor = conn.cursor()
@@ -376,7 +332,7 @@ class PostgresHarness:
             exists = cursor.fetchone()
 
             if not exists:
-                self._logger.info(f"Database {self.config.database_name} does not exist. Creating...")
+                self._logger.info(f"Creating database {self.config.database_name}...")
                 cursor.execute(f"CREATE DATABASE {self.config.database_name}")
                 self._logger.info(f"Database {self.config.database_name} created")
 
@@ -386,8 +342,8 @@ class PostgresHarness:
                 self._logger.info(f"Database {self.config.database_name} already exists, so I am leaving it alone")
 
             # Check to see that everything is ok
-            if not self.is_alive():
-                raise RuntimeError("I created the database, but now it is not alive? Maybe check the postgres logs")
+            if not self.can_connect():
+                raise RuntimeError("I created the database, but now can't connect to it? Maybe check the postgres logs")
         finally:
             cursor.close()
             conn.close()
@@ -398,10 +354,9 @@ class PostgresHarness:
 
         This will delete all data associated with the database!
         """
-        # First we connect to an existing database
+        # First we connect to the maintenance database
         # The database specified in the config may not exist yet
-        pg_uri = replace_db_in_uri(self.config.uri, self.config.existing_db)
-        conn = self.connect(pg_uri)
+        conn = psycopg2.connect(self.maintenance_dsn)
         conn.autocommit = True
 
         cursor = conn.cursor()
@@ -429,7 +384,8 @@ class PostgresHarness:
         """
         Starts a PostgreSQL server based off the current configuration parameters.
 
-        The PostgreSQL server must be initialized and the configured port open. The database does not need to exist.
+        The PostgreSQL server must be initialized and the configured port available.
+        The database does not need to exist.
         """
 
         # We should only do this if we are in charge of the database itself
@@ -439,7 +395,7 @@ class PostgresHarness:
         self._logger.info("Starting the PostgreSQL instance")
 
         # We should be in charge of this postgres process. If something is running, then that is a problem
-        if is_port_inuse(self.config.host, self.config.port):
+        if is_port_inuse("localhost", self.config.port):
             raise RuntimeError(
                 f"A process is already running on port {self.config.port} that is not associated with this QCFractal instance's database"
             )
@@ -455,7 +411,7 @@ class PostgresHarness:
 
             # Check that we are alive
             for x in range(10):
-                if self.is_alive(False):
+                if self.is_alive():
                     break
                 else:
                     time.sleep(0.2)
@@ -472,13 +428,17 @@ class PostgresHarness:
         self._started_db = True
 
     def shutdown(self) -> None:
-        """Shuts down the current postgres instance."""
+        """Shuts down the current postgres instance (if we control it)
+
+        This only shuts down the instance if qcfractal is expected to manage it (own=True) and
+        if this process started it
+        """
 
         # We don't manage the database
         if self.config.own is False or self._started_db is False:
             return
 
-        if self.is_alive(False) is False:
+        if self.is_alive() is False:
             return
 
         retcode, stdout, stderr = self.pg_ctl(["stop"])
@@ -489,24 +449,39 @@ class PostgresHarness:
             raise RuntimeError(err_msg)
 
     def postgres_initialized(self):
+        """
+        Returns True if the postgres instance has been initialized, False otherwise
+        """
+
         psql_conf_file = os.path.join(self.config.data_directory, "postgresql.conf")
         return os.path.exists(psql_conf_file)
 
-    def initialize_postgres(self) -> None:
+    def initialize_postgres(self, auth_method: str = "trust") -> None:
         """Initializes a postgresql instance and starts it
 
         The data directory and port from the configuration is used for the postgres instance
 
         This does not create the QCFractal database or its tables
+
+
+        Parameters
+        ----------
+        auth_method
+            [ADVANCED] The authentication method to use for host and local connections.
+            The default is "trust" which is insecure but is easy for local installations.
         """
 
         # Can only initialize if we are expected to manage it
         assert self.config.own
 
+        # auth method must be 'trust' if user/password not given
+        if auth_method != "trust" and (self.config.username is None or self.config.password is None):
+            raise RuntimeError("Cannot use auth_method other than 'trust' if username or password are not given")
+
         self._logger.info("Initializing the Postgresql database")
 
         # Is the specified port open? Stop early if in use
-        if is_port_inuse(self.config.host, self.config.port):
+        if is_port_inuse("localhost", self.config.port):
             raise RuntimeError("Port is already in use. Specify another port for the database")
 
         psql_conf_file = os.path.join(self.config.data_directory, "postgresql.conf")
@@ -516,7 +491,22 @@ class PostgresHarness:
 
         initdb_path = self._get_tool("initdb")
 
-        retcode, stdout, stderr = self._run_subprocess([initdb_path, "-D", self.config.data_directory])
+        cmd = [initdb_path, "-D", self.config.data_directory, "--auth", auth_method]
+        if self.config.username is not None:
+            cmd += ["--username", self.config.username]
+
+        # Initdb requires passwords come from a file
+        if self.config.password is not None:
+            pw_file_path = os.path.join(self.config.base_folder, ".initdb_pwfile")
+            with open(pw_file_path, "w") as pw_tmp:
+                pw_tmp.write(self.config.password)
+            cmd += ["--pwfile", pw_file_path]
+
+        try:
+            retcode, stdout, stderr = self._run_subprocess(cmd)
+        finally:
+            if self.config.password is not None:
+                os.remove(pw_file_path)
 
         if retcode != 0 or "Success." not in stdout:
             err_msg = f"Error initializing a PostgreSQL instance:\noutput:\n{stdout}\nstderr:\n{stderr}"
@@ -531,9 +521,11 @@ class PostgresHarness:
 
         # Change the location of the socket file
         # Some OSs/Linux distributions will use a directory not writeable by a normal user
+        sock_dir = os.path.join(self.config.data_directory, "sock")
+        os.makedirs(sock_dir, exist_ok=True)
         psql_conf = re.sub(
             r"#?unix_socket_directories =.*",
-            f"unix_socket_directories = '{self.config.data_directory}'",
+            f"unix_socket_directories = '{sock_dir}'",
             psql_conf,
             re.M,
         )
@@ -561,22 +553,14 @@ class PostgresHarness:
         cmds = [
             self._get_tool("pg_dump"),
             "-Fc",  # Custom postgres format, fast
-            f"--host={self.config.host}",
-            f"--port={self.config.port}",
-            f"--dbname={self.config.database_name}",
-            f"--file={filepath}",
+            "--dbname",
+            self.database_dsn,  # Yes, dbname can take the psycopg2 uri like "host=localhost, port=5432"
+            "--file",
+            filepath,
         ]
 
-        if self.config.username:
-            cmds.append(f"--username={self.config.username}")
-
-        # Passwords are passed through environment variables
-        env = {}
-        if self.config.password:
-            env["PGPASSWORD"] = self.config.password
-
         self._logger.debug(f"pg_backup command: {'  '.join(cmds)}")
-        retcode, stdout, stderr = self._run_subprocess(cmds, env=env)
+        retcode, stdout, stderr = self._run_subprocess(cmds)
 
         if retcode != 0:
             err_msg = f"Error backing up the database\noutput:\n{stdout}\nstderr:\n{stderr}"
@@ -596,22 +580,13 @@ class PostgresHarness:
             "-e",
             "-x",
             "-O",
-            f"--host={self.config.host}",
-            f"--port={self.config.port}",
-            f"--dbname={self.config.database_name}",
+            "--dbname",
+            self.database_dsn,  # Yes, dbname can take the psycopg2 uri like "host=localhost, port=5432"
             filepath,
         ]
 
-        if self.config.username:
-            cmds.append(f"--username={self.config.username}")
-
-        # Passwords are passed through environment variables
-        env = {}
-        if self.config.password:
-            env["PGPASSWORD"] = self.config.password
-
         self._logger.debug(f"pg_restore command: {'  '.join(cmds)}")
-        retcode, stdout, stderr = self._run_subprocess(cmds, env=env)
+        retcode, stdout, stderr = self._run_subprocess(cmds)
 
         if retcode != 0:
             err_msg = f"Error restoring the database\noutput:\n{stdout}\nstderr:\n{stderr}"
@@ -622,11 +597,8 @@ class PostgresHarness:
         Returns the size of the database in bytes
         """
 
-        sql = f"SELECT pg_database_size('{self.config.database_name}');"
-        size = self.sql_command(sql, self.config.existing_db)
-
         # sql_command returns a list of tuples
-        return size[0][0]
+        return self.sql_command(f"SELECT pg_database_size('{self.config.database_name}');")[0][0]
 
 
 class TemporaryPostgres:
@@ -656,35 +628,25 @@ class TemporaryPostgres:
             self._data_tmpdir = tempfile.TemporaryDirectory()
             self._data_dir = self._data_tmpdir.name
 
+        self._sock_dir = os.path.join(self._data_dir, "sock")
+
         port = find_open_port()
-        db_config = {"port": port, "data_directory": self._data_dir, "base_folder": self._data_dir, "own": True}
+        db_config = {
+            "port": port,
+            "data_directory": self._data_dir,
+            "base_folder": self._data_dir,
+            "own": True,
+            "host": self._sock_dir,
+        }
 
         self._config = DatabaseConfig(**db_config)
+
         self._harness = PostgresHarness(self._config)
         self._harness.initialize_postgres()
 
         logger.info(f"Created temporary postgres database at location {self._data_dir} running on port {port}")
 
         self._finalizer = weakref.finalize(self, self._stop, self._data_tmpdir, self._harness)
-
-    def database_uri(self, safe: bool = True) -> str:
-        """Provides the full Postgres URI string.
-
-        Parameters
-        ----------
-        safe : bool, optional
-            If True, hides the postgres password.
-
-        Returns
-        -------
-        str
-            The database URI
-        """
-
-        if safe:
-            return self._config.safe_uri
-        else:
-            return self._config.uri
 
     def stop(self):
         """

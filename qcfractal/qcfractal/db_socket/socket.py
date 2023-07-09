@@ -37,7 +37,6 @@ class SQLAlchemySocket:
 
         # Logging data
         self.logger = logging.getLogger("SQLAlchemySocket")
-        self.uri = qcf_config.database.uri
 
         self.logger.info(f"SQLAlchemy attempt to connect to {qcf_config.database.safe_uri}.")
 
@@ -47,10 +46,18 @@ class SQLAlchemySocket:
         # If pool_size in the config is non-zero, then set the pool class to None (meaning use
         # SQLAlchemy default)
         if qcf_config.database.pool_size == 0:
-            self.engine = create_engine(self.uri, echo=qcf_config.database.echo_sql, poolclass=NullPool, future=True)
+            self.engine = create_engine(
+                self.qcf_config.database.sqlalchemy_url,
+                echo=qcf_config.database.echo_sql,
+                poolclass=NullPool,
+                future=True,
+            )
         else:
             self.engine = create_engine(
-                self.uri, echo=qcf_config.database.echo_sql, pool_size=qcf_config.database.pool_size, future=True
+                self.qcf_config.database.sqlalchemy_url,
+                echo=qcf_config.database.echo_sql,
+                pool_size=qcf_config.database.pool_size,
+                future=True,
             )
 
         self.logger.info(
@@ -113,7 +120,7 @@ class SQLAlchemySocket:
         self.auth = AuthSocket(self)
 
     def __str__(self) -> str:
-        return f"<SQLAlchemySocket: address='{self.uri}`>"
+        return f"<SQLAlchemySocket: address='{self.qcf_config.database.safe_uri}`>"
 
     def post_fork_cleanup(self):
         """
@@ -142,15 +149,19 @@ class SQLAlchemySocket:
             Components of an alembic command line as a list of strings
         """
 
-        db_uri = db_config.uri
-
         # Find the path to the almebic ini
         alembic_ini = os.path.join(qcfractal.qcfractal_topdir, "alembic.ini")
         alembic_path = shutil.which("alembic")
 
         if alembic_path is None:
             raise RuntimeError("Cannot find the 'alembic' command. Is it installed?")
-        return [alembic_path, "-c", alembic_ini, "-x", "uri=" + db_uri]
+        return [
+            alembic_path,
+            "-c",
+            alembic_ini,
+            "-x",
+            "uri=" + db_config.database_uri,
+        ]
 
     @staticmethod
     def get_alembic_config(db_config: DatabaseConfig):
@@ -165,7 +176,7 @@ class SQLAlchemySocket:
 
         # Tell alembic to not set up logging. We already did that
         alembic_cfg.set_main_option("skip_logging", "True")
-        alembic_cfg.set_main_option("sqlalchemy.url", db_config.uri)
+        alembic_cfg.set_main_option("sqlalchemy.url", db_config.database_uri)
 
         return alembic_cfg
 
@@ -183,9 +194,8 @@ class SQLAlchemySocket:
         importlib.import_module("qcfractal.components.register_all")
 
         # create the tables via sqlalchemy
-        uri = db_config.uri
-        logger.info(f"Creating tables for database: {uri}")
-        engine = create_engine(uri, echo=False, poolclass=NullPool, future=True)
+        logger.info(f"Creating tables for database: {db_config.safe_uri}")
+        engine = create_engine(db_config.sqlalchemy_url, echo=False, poolclass=NullPool, future=True)
 
         from qcfractal.db_socket.base_orm import BaseORM
 

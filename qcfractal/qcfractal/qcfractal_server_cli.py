@@ -77,7 +77,7 @@ def start_database(config: FractalConfig) -> Tuple[PostgresHarness, SQLAlchemySo
     Obtain a storage socket to a running postgres server
 
     If the server is not started and we are expected to manage it, this will also
-    start it. The database and tables will be created as needed.
+    start it
 
     This returns a harness and a storage socket
     """
@@ -96,7 +96,7 @@ def start_database(config: FractalConfig) -> Tuple[PostgresHarness, SQLAlchemySo
     pg_harness.ensure_alive()
 
     # Checks that the database exists
-    if not pg_harness.is_alive():
+    if not pg_harness.can_connect():
         raise RuntimeError(f"Database at {config.database.safe_uri} does not exist?")
 
     # Start up a socket. The main thing is to see if it can connect, and also
@@ -542,7 +542,7 @@ def server_upgrade_db(config):
     pg_harness.ensure_alive()
 
     # Checks that the database exists
-    if not pg_harness.is_alive():
+    if not pg_harness.can_connect():
         raise RuntimeError(f"Database at {config.database.safe_uri} does not exist for upgrading?")
 
     logger.info(f"Upgrading the postgres database at {config.database.safe_uri}")
@@ -824,7 +824,7 @@ def server_restore(args: argparse.Namespace, config: FractalConfig):
     # If not, make sure it is started
     pg_harness.ensure_alive()
 
-    db_exists = pg_harness.is_alive(True)
+    db_exists = pg_harness.can_connect()
 
     if db_exists:
         print("!WARNING! This will erase old data!")

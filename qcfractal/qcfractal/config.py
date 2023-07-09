@@ -6,14 +6,14 @@ from __future__ import annotations
 
 import logging
 import os
-import re
 import secrets
-import urllib.parse
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Union, Any
 
 import yaml
+from psycopg2.extensions import make_dsn, parse_dsn
 from pydantic import BaseSettings, Field, validator, root_validator, ValidationError
 from pydantic.env_settings import SettingsSourceCallable
+from sqlalchemy.engine.url import URL, make_url
 
 from qcfractal.port_util import find_open_port
 
@@ -42,6 +42,29 @@ def _make_abs_path(path: Optional[str], base_folder: str, default_filename: Opti
     else:
         path = os.path.join(base_folder, path)
         return os.path.abspath(path)
+
+
+def make_uri_string(
+    host: Optional[str],
+    port: Optional[Union[int, str]],
+    username: Optional[str],
+    password: Optional[str],
+    dbname: Optional[str],
+    query: Optional[Dict[str, str]],
+) -> str:
+
+    username = username if username is not None else ""
+    password = ":" + password if password is not None else ""
+    sep = "@" if username != "" or password != "" else ""
+    query_str = "" if query is None else "&".join(f"{k}={v}" for k, v in query.items())
+
+    # If this is a socket file, move the host to the query params
+    if host.startswith("/"):
+        query_str = "&" + query_str if query_str != "" else ""
+        return f"postgresql://{username}{password}{sep}:{port}/{dbname}?host={host}{query_str}"
+    else:
+        query_str = "?" + query_str if query_str != "" else ""
+        return f"postgresql://{username}{password}{sep}{host}:{port}/{dbname}{query_str}"
 
 
 class ConfigCommon:
@@ -104,7 +127,7 @@ class DatabaseConfig(ConfigBase):
 
     host: str = Field(
         "localhost",
-        description="The hostname and ip address the database is running on. If own = True, this must be localhost",
+        description="The hostname or ip address the database is running on. If own = True, this must be localhost. May also be a path to a directory containing the database socket file",
     )
     port: int = Field(
         5432,
@@ -113,7 +136,7 @@ class DatabaseConfig(ConfigBase):
     database_name: str = Field("qcfractal_default", description="The database name to connect to.")
     username: Optional[str] = Field(None, description="The database username to connect with")
     password: Optional[str] = Field(None, description="The database password to connect with")
-    query: Optional[str] = Field(None, description="Extra connection query parameters at the end of the URL string")
+    query: Dict[str, str] = Field({}, description="Extra connection query parameters at the end of the URL string")
 
     own: bool = Field(
         True,
@@ -140,7 +163,7 @@ class DatabaseConfig(ConfigBase):
         description="[ADVANCED] set the size of the connection pool to use in SQLAlchemy. Set to zero to disable pooling",
     )
 
-    existing_db: str = Field(
+    maintenance_db: str = Field(
         "postgres",
         description="[ADVANCED] An existing database (not the one you want to use/create). This is used for database management",
     )
@@ -159,54 +182,64 @@ class DatabaseConfig(ConfigBase):
     def _check_logfile(cls, v, values):
         return _make_abs_path(v, values["base_folder"], "qcfractal_database.log")
 
-    @root_validator(pre=True)
-    def _root_validator(cls, values):
-        """
-        If full uri is specified, decompose it into the other fields
-        """
-
-        full_uri = values.get("full_uri")
-        if full_uri:
-            parsed = urllib.parse.urlparse(full_uri)
-            values["host"] = parsed.hostname
-            values["port"] = parsed.port
-            values["username"] = parsed.username
-            values["password"] = parsed.password
-            values["query"] = "?" + parsed.query
-            values["database_name"] = parsed.path.strip("/")
-
-        return values
-
     @property
-    def uri(self):
+    def database_uri(self) -> str:
+        """
+        Returns the real database URI as a string
+
+        It does not hide the password, so is not suitable for logging
+        """
         if self.full_uri is not None:
             return self.full_uri
         else:
-            # Hostname can be a directory (unix sockets). But we need to escape some stuff
-            host = urllib.parse.quote(self.host, safe="")
-            username = self.username if self.username is not None else ""
-            password = f":{self.password}" if self.password is not None else ""
-            sep = "@" if username != "" or password != "" else ""
-            query = "" if self.query is None else self.query
-            return f"postgresql://{username}{password}{sep}{host}:{self.port}/{self.database_name}{query}"
+            return make_uri_string(
+                host=self.host,
+                port=self.port,
+                username=self.username,
+                password=self.password,
+                dbname=self.database_name,
+                query=self.query,
+            )
 
     @property
-    def safe_uri(self):
-        if self.full_uri is not None:
-            parsed = urllib.parse.urlparse(self.full_uri)
-            if parsed.password is None:
-                return self.full_uri
+    def sqlalchemy_url(self) -> URL:
+        """Returns the SQLAlchemy URL for this database"""
 
-            new_netloc = re.sub(":.*@", ":********@", parsed.netloc)
-            parsed = parsed._replace(netloc=new_netloc)
-            return parsed.geturl()
-        else:
-            host = urllib.parse.quote(self.host, safe="")
-            username = self.username if self.username is not None else ""
-            password = ":********" if self.password is not None else ""
-            sep = "@" if username != "" or password != "" else ""
-            query = "" if self.query is None else self.query
-            return f"postgresql://{username}{password}{sep}{host}:{self.port}/{self.database_name}{query}"
+        url = make_url(self.database_uri)
+        return url.set(drivername="postgresql+psycopg2")
+
+    @property
+    def psycopg2_dsn(self) -> str:
+        """
+        Returns a string suitable for use as a psycopg2 connection string
+        """
+        dsn_dict = parse_dsn(self.database_uri)
+        return make_dsn(**dsn_dict)
+
+    @property
+    def psycopg2_maintenance_dsn(self) -> str:
+        dsn_dict = parse_dsn(self.database_uri)
+        dsn_dict["dbname"] = self.maintenance_db
+        return make_dsn(**dsn_dict)
+
+    @property
+    def safe_uri(self) -> str:
+        """
+        Returns a user-readable version of the URI for logging, etc.
+        """
+
+        dsn = parse_dsn(self.database_uri)
+
+        host = dsn.pop("host")
+        port = dsn.pop("port", None)
+        user = dsn.pop("user", None)
+        password = dsn.pop("password", None)
+        dbname = dsn.pop("dbname")
+
+        # SQLAlchemy render_string has some problems sometimes, so use our own
+        return make_uri_string(
+            host=host, port=port, username=user, password="********" if password else None, dbname=dbname, query=dsn
+        )  # everything left over
 
 
 class AutoResetConfig(ConfigBase):
