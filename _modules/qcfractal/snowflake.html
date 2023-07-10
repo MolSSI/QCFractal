@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcfractal.snowflake &#8212; QCArchive 0.50b12.post36+gc7e4a327 documentation</title>
+    <title>qcfractal.snowflake &#8212; QCArchive 0.50b12.post37+g1be6db89 documentation</title>
   
   
   
@@ -557,11 +557,9 @@ document.write(`
         <span class="k">if</span> <span class="n">database_config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Make this part of the class so it is kept alive</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_tmp_pgdb</span> <span class="o">=</span> <span class="n">TemporaryPostgres</span><span class="p">(</span><span class="n">data_dir</span><span class="o">=</span><span class="n">db_dir</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_tmp_pgdb</span><span class="o">.</span><span class="n">_harness</span><span class="o">.</span><span class="n">create_database</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_storage_uri</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tmp_pgdb</span><span class="o">.</span><span class="n">database_uri</span><span class="p">(</span><span class="n">safe</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_tmp_pgdb</span><span class="o">.</span><span class="n">_harness</span><span class="o">.</span><span class="n">create_database</span><span class="p">(</span><span class="n">create_tables</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="n">db_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tmp_pgdb</span><span class="o">.</span><span class="n">_config</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_storage_uri</span> <span class="o">=</span> <span class="n">database_config</span><span class="o">.</span><span class="n">uri</span>
             <span class="n">db_config</span> <span class="o">=</span> <span class="n">database_config</span>
 
         <span class="n">fractal_host</span> <span class="o">=</span> <span class="s2">&quot;127.0.0.1&quot;</span>
