@@ -174,7 +174,7 @@ class ManagerQueryFilters(QueryProjModelBase):
         return v
 
 
-class ManagerQueryIterator(QueryIteratorBase):
+class ManagerQueryIterator(QueryIteratorBase[ComputeManager]):
     """
     Iterator for manager queries
 

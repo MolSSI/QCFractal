@@ -1,7 +1,10 @@
 from __future__ import annotations
-from typing import Optional, List, Any, Tuple, Iterator
+
+from typing import Optional, List, Iterator, Generic, TypeVar
 
 from pydantic import BaseModel, validator, Extra
+
+T = TypeVar("T")
 
 
 def validate_list_to_single(v):
@@ -81,7 +84,7 @@ class QueryProjModelBase(QueryModelBase, ProjURLParameters):
     pass
 
 
-class QueryIteratorBase:
+class QueryIteratorBase(Generic[T]):
     """
     Base class for all query result iterators
 
@@ -106,12 +109,12 @@ class QueryIteratorBase:
         Starts retrieval of results from the beginning again
         """
 
-        self._current_batch: Optional[List[Any]] = None
+        self._current_batch: Optional[List[T]] = None
         self._fetched: int = 0
 
         self._fetch_batch()
 
-    def _request(self) -> List[Any]:
+    def _request(self) -> List[T]:
         raise NotImplementedError("_request must be overridden by a derived class")
 
     def _fetch_batch(self) -> None:
@@ -139,10 +142,10 @@ class QueryIteratorBase:
         self._current_batch = self._request()
         self._fetched += len(self._current_batch)
 
-    def __iter__(self) -> Iterator[QueryIteratorBase]:
+    def __iter__(self) -> Iterator[T]:
         return self
 
-    def __next__(self):
+    def __next__(self) -> T:
         # This can happen if there is none returned on the first iteration
         # Check here so we don't fetch twice
         if len(self._current_batch) == 0:

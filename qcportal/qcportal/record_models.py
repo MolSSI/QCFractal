@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict, Any, List, Union, Iterable, Tuple, Type, Sequence, ClassVar
+from typing import Optional, Dict, Any, List, Union, Iterable, Tuple, Type, Sequence, ClassVar, TypeVar
 
 from dateutil.parser import parse as date_parser
 from pydantic import BaseModel, Extra, constr, validator, PrivateAttr, Field
@@ -575,6 +575,8 @@ class BaseRecord(BaseModel):
 
 ServiceDependency.update_forward_refs()
 
+_Record_T = TypeVar("_Record_T", bound=BaseRecord)
+
 
 class RecordAddBodyBase(RestModelBase):
     tag: constr(to_lower=True)
@@ -623,7 +625,7 @@ class RecordQueryFilters(QueryModelBase):
         return v
 
 
-class RecordQueryIterator(QueryIteratorBase):
+class RecordQueryIterator(QueryIteratorBase[_Record_T]):
     """
     Iterator for all types of record queries
 
@@ -657,7 +659,7 @@ class RecordQueryIterator(QueryIteratorBase):
 
         QueryIteratorBase.__init__(self, client, query_filters, batch_limit)
 
-    def _request(self) -> List[BaseRecord]:
+    def _request(self) -> List[_Record_T]:
         if self.record_type is None:
             record_ids = self._client.make_request(
                 "post",
@@ -673,7 +675,7 @@ class RecordQueryIterator(QueryIteratorBase):
                 body=self._query_filters,
             )
 
-        records = self._client.get_records(record_ids)
+        records: List[_Record_T] = self._client.get_records(record_ids)
 
         if self.include:
             for r in records:

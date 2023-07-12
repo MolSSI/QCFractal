@@ -681,7 +681,7 @@ class PortalClient(PortalClientBase):
         owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: int = None,
         include: Optional[Iterable[str]] = None,
-    ) -> RecordQueryIterator:
+    ) -> RecordQueryIterator[BaseRecord]:
         """
         Query records of all types based on common fields
 
@@ -748,7 +748,7 @@ class PortalClient(PortalClientBase):
 
         filter_data = RecordQueryFilters(**filter_dict)
 
-        return RecordQueryIterator(self, filter_data, None, include)
+        return RecordQueryIterator[BaseRecord](self, filter_data, None, include)
 
     def reset_records(self, record_ids: Union[int, Sequence[int]]) -> UpdateMetadata:
         """
@@ -1038,7 +1038,7 @@ class PortalClient(PortalClientBase):
         owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
         include: Optional[Iterable[str]] = None,
-    ) -> RecordQueryIterator:
+    ) -> RecordQueryIterator[SinglepointRecord]:
         """
         Queries singlepoint records on the server
 
@@ -1114,7 +1114,7 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = SinglepointQueryFilters(**filter_dict)
-        return RecordQueryIterator(self, filter_data, "singlepoint", include)
+        return RecordQueryIterator[SinglepointRecord](self, filter_data, "singlepoint", include)
 
     ##############################################################
     # Optimization calculations
@@ -1255,7 +1255,7 @@ class PortalClient(PortalClientBase):
         owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
         include: Optional[Iterable[str]] = None,
-    ) -> RecordQueryIterator:
+    ) -> RecordQueryIterator[OptimizationRecord]:
         """
         Queries optimization records on the server
 
@@ -1333,7 +1333,7 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = OptimizationQueryFilters(**filter_dict)
-        return RecordQueryIterator(self, filter_data, "optimization", include)
+        return RecordQueryIterator[OptimizationRecord](self, filter_data, "optimization", include)
 
     ##############################################################
     # Torsiondrive calculations
@@ -1464,7 +1464,7 @@ class PortalClient(PortalClientBase):
         owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
         include: Optional[Iterable[str]] = None,
-    ) -> RecordQueryIterator:
+    ) -> RecordQueryIterator[TorsiondriveRecord]:
         """
         Queries torsiondrive records on the server
 
@@ -1542,7 +1542,7 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = TorsiondriveQueryFilters(**filter_dict)
-        return RecordQueryIterator(self, filter_data, "torsiondrive", include)
+        return RecordQueryIterator[TorsiondriveRecord](self, filter_data, "torsiondrive", include)
 
     ##############################################################
     # Grid optimization calculations
@@ -1673,7 +1673,7 @@ class PortalClient(PortalClientBase):
         owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
         include: Optional[Iterable[str]] = None,
-    ) -> RecordQueryIterator:
+    ) -> RecordQueryIterator[GridoptimizationRecord]:
         """
         Queries gridoptimization records on the server
 
@@ -1751,7 +1751,7 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = GridoptimizationQueryFilters(**filter_dict)
-        return RecordQueryIterator(self, filter_data, "gridoptimization", include)
+        return RecordQueryIterator[GridoptimizationRecord](self, filter_data, "gridoptimization", include)
 
     ##############################################################
     # Reactions
@@ -1890,7 +1890,7 @@ class PortalClient(PortalClientBase):
         owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
         include: Optional[Iterable[str]] = None,
-    ) -> RecordQueryIterator:
+    ) -> RecordQueryIterator[ReactionRecord]:
         """
         Queries reaction records on the server
 
@@ -1968,7 +1968,7 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = ReactionQueryFilters(**filter_dict)
-        return RecordQueryIterator(self, filter_data, "reaction", include)
+        return RecordQueryIterator[ReactionRecord](self, filter_data, "reaction", include)
 
     ##############################################################
     # Manybody calculations
@@ -2097,7 +2097,7 @@ class PortalClient(PortalClientBase):
         owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
         include: Optional[Iterable[str]] = None,
-    ) -> RecordQueryIterator:
+    ) -> RecordQueryIterator[ManybodyRecord]:
         """
         Queries reaction records on the server
 
@@ -2172,7 +2172,7 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = ManybodyQueryFilters(**filter_dict)
-        return RecordQueryIterator(self, filter_data, "manybody", include)
+        return RecordQueryIterator[ManybodyRecord](self, filter_data, "manybody", include)
 
     ##############################################################
     # NEB
@@ -2276,7 +2276,7 @@ class PortalClient(PortalClientBase):
         owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         include: Optional[Iterable[str]] = None,
-    ) -> RecordQueryIterator:
+    ) -> RecordQueryIterator[NEBRecord]:
         """Queries neb records from the server."""
 
         filter_dict = {
@@ -2301,7 +2301,7 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = NEBQueryFilters(**filter_dict)
-        return RecordQueryIterator(self, filter_data, "neb", include)
+        return RecordQueryIterator[NEBRecord](self, filter_data, "neb", include)
 
     ##############################################################
     # Managers

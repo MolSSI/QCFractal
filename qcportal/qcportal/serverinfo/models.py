@@ -66,7 +66,7 @@ class AccessLogEntry(BaseModel):
     ip_long: Optional[float]
 
 
-class AccessLogQueryIterator(QueryIteratorBase):
+class AccessLogQueryIterator(QueryIteratorBase[AccessLogEntry]):
     """
     Iterator for access log queries
 
@@ -160,7 +160,7 @@ class ErrorLogEntry(BaseModel):
     request_body: Optional[str]
 
 
-class ErrorLogQueryIterator(QueryIteratorBase):
+class ErrorLogQueryIterator(QueryIteratorBase[ErrorLogEntry]):
     """
     Iterator for error log queries
 
@@ -230,7 +230,7 @@ class ServerStatsEntry(BaseModel):
     db_table_information: Dict[str, Any]
 
 
-class ServerStatsQueryIterator(QueryIteratorBase):
+class ServerStatsQueryIterator(QueryIteratorBase[ServerStatsEntry]):
     """
     Iterator for server statistics queries
 

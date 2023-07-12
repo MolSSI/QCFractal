@@ -89,7 +89,7 @@ class InternalJobQueryFilters(QueryProjModelBase):
         return v
 
 
-class InternalJobQueryIterator(QueryIteratorBase):
+class InternalJobQueryIterator(QueryIteratorBase[InternalJob]):
     """
     Iterator for internal job queries
 
