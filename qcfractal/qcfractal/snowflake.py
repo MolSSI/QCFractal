@@ -22,7 +22,7 @@ from .config import FractalConfig, DatabaseConfig, update_nested_dict
 from .flask_app.gunicorn_app import FractalGunicornApp
 from .job_runner import FractalJobRunner
 from .port_util import find_open_port
-from .postgres_harness import TemporaryPostgres
+from .postgres_harness import create_snowflake_postgres
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Sequence, Optional, Set
@@ -130,9 +130,6 @@ class FractalSnowflake:
         # Create a temporary directory for everything
         self._tmpdir = tempfile.TemporaryDirectory()
 
-        # db is in a subdir of that
-        db_dir = os.path.join(self._tmpdir.name, "db")
-
         # also parsl run directory and scratch directories
         parsl_run_dir = os.path.join(self._tmpdir.name, "parsl_run_dir")
         compute_scratch_dir = os.path.join(self._tmpdir.name, "compute_scratch_dir")
@@ -140,16 +137,17 @@ class FractalSnowflake:
         os.makedirs(compute_scratch_dir, exist_ok=True)
 
         if database_config is None:
-            # Make this part of the class so it is kept alive
-            self._tmp_pgdb = TemporaryPostgres(data_dir=db_dir)
-            self._tmp_pgdb._harness.create_database(create_tables=True)
-            db_config = self._tmp_pgdb._config
+            # db and socket are subdirs of the base temporary directory
+            db_dir = os.path.join(self._tmpdir.name, "db")
+            self._pg_harness = create_snowflake_postgres(db_dir)
+            self._pg_harness.create_database(True)
+            db_config = self._pg_harness.config
         else:
             db_config = database_config
 
-        fractal_host = "127.0.0.1"
-        fractal_port = find_open_port()
-        self._fractal_uri = f"http://{fractal_host}:{fractal_port}"
+        api_host = "127.0.0.1"
+        api_port = find_open_port()
+        self._fractal_uri = f"http://{api_host}:{api_port}"
 
         # Create a configuration for QCFractal
         # Assign the log level for subprocesses. Use the same level as what is assigned for this object
@@ -165,8 +163,8 @@ class FractalSnowflake:
         qcf_cfg["heartbeat_frequency"] = 5
         qcf_cfg["heartbeat_max_missed"] = 3
         qcf_cfg["api"] = {
-            "host": fractal_host,
-            "port": fractal_port,
+            "host": api_host,
+            "port": api_port,
             "secret_key": secrets.token_urlsafe(32),
             "jwt_secret_key": secrets.token_urlsafe(32),
         }

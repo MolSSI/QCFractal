@@ -6,9 +6,7 @@ import pathlib
 import re
 import shutil
 import subprocess
-import tempfile
 import time
-import weakref
 from typing import TYPE_CHECKING
 
 import psycopg2
@@ -305,7 +303,7 @@ class PostgresHarness:
 
         return self.sql_command("SELECT version_num from alembic_version")[0][0]
 
-    def create_database(self, create_tables):
+    def create_database(self, create_tables: bool):
         """Creates a new qcfractal database (and tables)
 
         The postgres instance must be initialized and running.
@@ -601,69 +599,28 @@ class PostgresHarness:
         return self.sql_command(f"SELECT pg_database_size('{self.config.database_name}');")[0][0]
 
 
-class TemporaryPostgres:
+def create_snowflake_postgres(data_dir: str) -> PostgresHarness:
+    """Create and Initialize a postgres instance in a particular directory
+
+    Parameters
+    ----------
+    data_dir
+        Path to the directory to store the database data
     """
-    This class is used to create a temporary PostgreSQL instance and database. On destruction,
-    the database and all its data will be deleted.
-    """
 
-    def __init__(self, data_dir: Optional[str] = None):
-        """A PostgreSQL instance run in a temporary folder.
+    data_dir = data_dir
+    sock_dir = os.path.join(data_dir, "sock")
 
-        ! Warning ! All data is lost when this object is deleted.
+    port = find_open_port()
+    db_config = {
+        "port": port,
+        "data_directory": data_dir,
+        "base_folder": data_dir,
+        "own": True,
+        "host": sock_dir,
+    }
 
-        Parameters
-        ----------
-        data_dir: str, optional
-            Path to the directory to store the database data. If not provided, one will
-            be created (and it will be deleted afterwards)
-        """
-
-        logger = logging.getLogger(__name__)
-
-        if data_dir:
-            self._data_dir = data_dir
-            self._data_tmpdir = None
-        else:
-            self._data_tmpdir = tempfile.TemporaryDirectory()
-            self._data_dir = self._data_tmpdir.name
-
-        self._sock_dir = os.path.join(self._data_dir, "sock")
-
-        port = find_open_port()
-        db_config = {
-            "port": port,
-            "data_directory": self._data_dir,
-            "base_folder": self._data_dir,
-            "own": True,
-            "host": self._sock_dir,
-        }
-
-        self._config = DatabaseConfig(**db_config)
-
-        self._harness = PostgresHarness(self._config)
-        self._harness.initialize_postgres()
-
-        logger.info(f"Created temporary postgres database at location {self._data_dir} running on port {port}")
-
-        self._finalizer = weakref.finalize(self, self._stop, self._data_tmpdir, self._harness)
-
-    def stop(self):
-        """
-        Stops and deletes the temporary database. Once done, it cannot be started again
-        """
-
-        # This will call the finalizer, and then detach the finalizer. This object
-        # is pretty much dead after that
-        self._finalizer()
-
-    @classmethod
-    def _stop(cls, tmpdir, harness) -> None:
-        ####################################################################################
-        # This is written as a class method so that it can be called by a weakref finalizer
-        ####################################################################################
-
-        harness.shutdown()
-
-        if tmpdir is not None:
-            tmpdir.cleanup()
+    config = DatabaseConfig(**db_config)
+    pg_harness = PostgresHarness(config)
+    pg_harness.initialize_postgres()
+    return pg_harness

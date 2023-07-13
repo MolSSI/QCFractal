@@ -6,7 +6,7 @@ from copy import deepcopy
 from qcarchivetesting import geoip_path, geoip_filename
 from qcfractal.config import DatabaseConfig, update_nested_dict
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.postgres_harness import PostgresHarness, TemporaryPostgres
+from qcfractal.postgres_harness import PostgresHarness, create_snowflake_postgres
 from qcfractal.snowflake import FractalSnowflake
 from qcportal import PortalClient, ManagerClient
 from qcportal.auth import UserInfo, GroupInfo
@@ -71,8 +71,7 @@ class QCATestingPostgresServer:
 
     def __init__(self, db_path: str):
         self.logger = logging.getLogger(__name__)
-        self.tmp_pg = TemporaryPostgres(data_dir=db_path)
-        self.harness = self.tmp_pg._harness
+        self.harness = create_snowflake_postgres(db_path)
         self.logger.debug(f"Using database located at {db_path} with uri {self.harness.config.safe_uri}")
 
         # Postgres process is up, but the database is not created
