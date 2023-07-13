@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.record_models &#8212; QCArchive 0.50b12.post37+g1be6db89 documentation</title>
+    <title>qcportal.record_models &#8212; QCArchive 0.50b12.post39+g952061ca documentation</title>
   
   
   
@@ -418,7 +418,7 @@ document.write(`
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">ClassVar</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">TypeVar</span>
 
 <span class="kn">from</span> <span class="nn">dateutil.parser</span> <span class="kn">import</span> <span class="n">parse</span> <span class="k">as</span> <span class="n">date_parser</span>
 <span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">constr</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">PrivateAttr</span><span class="p">,</span> <span class="n">Field</span>
@@ -990,6 +990,8 @@ document.write(`
 
 <span class="n">ServiceDependency</span><span class="o">.</span><span class="n">update_forward_refs</span><span class="p">()</span>
 
+<span class="n">_Record_T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;_Record_T&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">BaseRecord</span><span class="p">)</span>
+
 
 <span class="k">class</span> <span class="nc">RecordAddBodyBase</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
     <span class="n">tag</span><span class="p">:</span> <span class="n">constr</span><span class="p">(</span><span class="n">to_lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1038,7 +1040,7 @@ document.write(`
         <span class="k">return</span> <span class="n">v</span>
 
 
-<div class="viewcode-block" id="RecordQueryIterator"><a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.record_models.RecordQueryIterator">[docs]</a><span class="k">class</span> <span class="nc">RecordQueryIterator</span><span class="p">(</span><span class="n">QueryIteratorBase</span><span class="p">):</span>
+<div class="viewcode-block" id="RecordQueryIterator"><a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.record_models.RecordQueryIterator">[docs]</a><span class="k">class</span> <span class="nc">RecordQueryIterator</span><span class="p">(</span><span class="n">QueryIteratorBase</span><span class="p">[</span><span class="n">_Record_T</span><span class="p">]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Iterator for all types of record queries</span>
 
@@ -1072,7 +1074,7 @@ document.write(`
 
         <span class="n">QueryIteratorBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">query_filters</span><span class="p">,</span> <span class="n">batch_limit</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_request</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">BaseRecord</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">_request</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">_Record_T</span><span class="p">]:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">record_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
                 <span class="s2">&quot;post&quot;</span><span class="p">,</span>
@@ -1088,7 +1090,7 @@ document.write(`
                 <span class="n">body</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_filters</span><span class="p">,</span>
             <span class="p">)</span>
 
-        <span class="n">records</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="n">record_ids</span><span class="p">)</span>
+        <span class="n">records</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">_Record_T</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="n">record_ids</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">include</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span><span class="p">:</span>

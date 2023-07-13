@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.client &#8212; QCArchive 0.50b12.post37+g1be6db89 documentation</title>
+    <title>qcportal.client &#8212; QCArchive 0.50b12.post39+g952061ca documentation</title>
   
   
   
@@ -1096,7 +1096,7 @@ document.write(`
         <span class="n">owner_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RecordQueryIterator</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">BaseRecord</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Query records of all types based on common fields</span>
 
@@ -1163,7 +1163,7 @@ document.write(`
 
         <span class="n">filter_data</span> <span class="o">=</span> <span class="n">RecordQueryFilters</span><span class="p">(</span><span class="o">**</span><span class="n">filter_dict</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">BaseRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="PortalClient.reset_records"><a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.reset_records">[docs]</a>    <span class="k">def</span> <span class="nf">reset_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">UpdateMetadata</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1453,7 +1453,7 @@ document.write(`
         <span class="n">owner_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">limit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RecordQueryIterator</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">SinglepointRecord</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Queries singlepoint records on the server</span>
 
@@ -1529,7 +1529,7 @@ document.write(`
         <span class="p">}</span>
 
         <span class="n">filter_data</span> <span class="o">=</span> <span class="n">SinglepointQueryFilters</span><span class="p">(</span><span class="o">**</span><span class="n">filter_dict</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="s2">&quot;singlepoint&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">SinglepointRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="s2">&quot;singlepoint&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
 
     <span class="c1">##############################################################</span>
     <span class="c1"># Optimization calculations</span>
@@ -1670,7 +1670,7 @@ document.write(`
         <span class="n">owner_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">limit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RecordQueryIterator</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">OptimizationRecord</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Queries optimization records on the server</span>
 
@@ -1748,7 +1748,7 @@ document.write(`
         <span class="p">}</span>
 
         <span class="n">filter_data</span> <span class="o">=</span> <span class="n">OptimizationQueryFilters</span><span class="p">(</span><span class="o">**</span><span class="n">filter_dict</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="s2">&quot;optimization&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">OptimizationRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="s2">&quot;optimization&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
 
     <span class="c1">##############################################################</span>
     <span class="c1"># Torsiondrive calculations</span>
@@ -1879,7 +1879,7 @@ document.write(`
         <span class="n">owner_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">limit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RecordQueryIterator</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">TorsiondriveRecord</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Queries torsiondrive records on the server</span>
 
@@ -1957,7 +1957,7 @@ document.write(`
         <span class="p">}</span>
 
         <span class="n">filter_data</span> <span class="o">=</span> <span class="n">TorsiondriveQueryFilters</span><span class="p">(</span><span class="o">**</span><span class="n">filter_dict</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="s2">&quot;torsiondrive&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">TorsiondriveRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="s2">&quot;torsiondrive&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
 
     <span class="c1">##############################################################</span>
     <span class="c1"># Grid optimization calculations</span>
@@ -2088,7 +2088,7 @@ document.write(`
         <span class="n">owner_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">limit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RecordQueryIterator</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">GridoptimizationRecord</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Queries gridoptimization records on the server</span>
 
@@ -2166,7 +2166,7 @@ document.write(`
         <span class="p">}</span>
 
         <span class="n">filter_data</span> <span class="o">=</span> <span class="n">GridoptimizationQueryFilters</span><span class="p">(</span><span class="o">**</span><span class="n">filter_dict</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="s2">&quot;gridoptimization&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">GridoptimizationRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="s2">&quot;gridoptimization&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
 
     <span class="c1">##############################################################</span>
     <span class="c1"># Reactions</span>
@@ -2305,7 +2305,7 @@ document.write(`
         <span class="n">owner_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">limit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RecordQueryIterator</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">ReactionRecord</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Queries reaction records on the server</span>
 
@@ -2383,7 +2383,7 @@ document.write(`
         <span class="p">}</span>
 
         <span class="n">filter_data</span> <span class="o">=</span> <span class="n">ReactionQueryFilters</span><span class="p">(</span><span class="o">**</span><span class="n">filter_dict</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="s2">&quot;reaction&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">ReactionRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="s2">&quot;reaction&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
 
     <span class="c1">##############################################################</span>
     <span class="c1"># Manybody calculations</span>
@@ -2512,7 +2512,7 @@ document.write(`
         <span class="n">owner_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">limit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RecordQueryIterator</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">ManybodyRecord</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Queries reaction records on the server</span>
 
@@ -2587,7 +2587,7 @@ document.write(`
         <span class="p">}</span>
 
         <span class="n">filter_data</span> <span class="o">=</span> <span class="n">ManybodyQueryFilters</span><span class="p">(</span><span class="o">**</span><span class="n">filter_dict</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="s2">&quot;manybody&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">ManybodyRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="s2">&quot;manybody&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
 
     <span class="c1">##############################################################</span>
     <span class="c1"># NEB</span>
@@ -2691,7 +2691,7 @@ document.write(`
         <span class="n">owner_user</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">owner_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RecordQueryIterator</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">NEBRecord</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Queries neb records from the server.&quot;&quot;&quot;</span>
 
         <span class="n">filter_dict</span> <span class="o">=</span> <span class="p">{</span>
@@ -2716,7 +2716,7 @@ document.write(`
         <span class="p">}</span>
 
         <span class="n">filter_data</span> <span class="o">=</span> <span class="n">NEBQueryFilters</span><span class="p">(</span><span class="o">**</span><span class="n">filter_dict</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="s2">&quot;neb&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">NEBRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="s2">&quot;neb&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
 
     <span class="c1">##############################################################</span>
     <span class="c1"># Managers</span>
