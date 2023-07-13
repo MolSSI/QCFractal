@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcfractal.snowflake &#8212; QCArchive 0.50b12.post39+g952061ca documentation</title>
+    <title>qcfractal.snowflake &#8212; QCArchive 0.50b12.post40+g482243cd documentation</title>
   
   
   
@@ -437,7 +437,7 @@ document.write(`
 <span class="kn">from</span> <span class="nn">.flask_app.gunicorn_app</span> <span class="kn">import</span> <span class="n">FractalGunicornApp</span>
 <span class="kn">from</span> <span class="nn">.job_runner</span> <span class="kn">import</span> <span class="n">FractalJobRunner</span>
 <span class="kn">from</span> <span class="nn">.port_util</span> <span class="kn">import</span> <span class="n">find_open_port</span>
-<span class="kn">from</span> <span class="nn">.postgres_harness</span> <span class="kn">import</span> <span class="n">TemporaryPostgres</span>
+<span class="kn">from</span> <span class="nn">.postgres_harness</span> <span class="kn">import</span> <span class="n">create_snowflake_postgres</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span>
@@ -545,9 +545,6 @@ document.write(`
         <span class="c1"># Create a temporary directory for everything</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span>
 
-        <span class="c1"># db is in a subdir of that</span>
-        <span class="n">db_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;db&quot;</span><span class="p">)</span>
-
         <span class="c1"># also parsl run directory and scratch directories</span>
         <span class="n">parsl_run_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;parsl_run_dir&quot;</span><span class="p">)</span>
         <span class="n">compute_scratch_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;compute_scratch_dir&quot;</span><span class="p">)</span>
@@ -555,16 +552,17 @@ document.write(`
         <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">compute_scratch_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">database_config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># Make this part of the class so it is kept alive</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_tmp_pgdb</span> <span class="o">=</span> <span class="n">TemporaryPostgres</span><span class="p">(</span><span class="n">data_dir</span><span class="o">=</span><span class="n">db_dir</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_tmp_pgdb</span><span class="o">.</span><span class="n">_harness</span><span class="o">.</span><span class="n">create_database</span><span class="p">(</span><span class="n">create_tables</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="n">db_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tmp_pgdb</span><span class="o">.</span><span class="n">_config</span>
+            <span class="c1"># db and socket are subdirs of the base temporary directory</span>
+            <span class="n">db_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;db&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pg_harness</span> <span class="o">=</span> <span class="n">create_snowflake_postgres</span><span class="p">(</span><span class="n">db_dir</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pg_harness</span><span class="o">.</span><span class="n">create_database</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">db_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pg_harness</span><span class="o">.</span><span class="n">config</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">db_config</span> <span class="o">=</span> <span class="n">database_config</span>
 
-        <span class="n">fractal_host</span> <span class="o">=</span> <span class="s2">&quot;127.0.0.1&quot;</span>
-        <span class="n">fractal_port</span> <span class="o">=</span> <span class="n">find_open_port</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fractal_uri</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;http://</span><span class="si">{</span><span class="n">fractal_host</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">fractal_port</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">api_host</span> <span class="o">=</span> <span class="s2">&quot;127.0.0.1&quot;</span>
+        <span class="n">api_port</span> <span class="o">=</span> <span class="n">find_open_port</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fractal_uri</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;http://</span><span class="si">{</span><span class="n">api_host</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">api_port</span><span class="si">}</span><span class="s2">&quot;</span>
 
         <span class="c1"># Create a configuration for QCFractal</span>
         <span class="c1"># Assign the log level for subprocesses. Use the same level as what is assigned for this object</span>
@@ -580,8 +578,8 @@ document.write(`
         <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">&quot;heartbeat_frequency&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span>
         <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">&quot;heartbeat_max_missed&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span>
         <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">&quot;api&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="n">fractal_host</span><span class="p">,</span>
-            <span class="s2">&quot;port&quot;</span><span class="p">:</span> <span class="n">fractal_port</span><span class="p">,</span>
+            <span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="n">api_host</span><span class="p">,</span>
+            <span class="s2">&quot;port&quot;</span><span class="p">:</span> <span class="n">api_port</span><span class="p">,</span>
             <span class="s2">&quot;secret_key&quot;</span><span class="p">:</span> <span class="n">secrets</span><span class="o">.</span><span class="n">token_urlsafe</span><span class="p">(</span><span class="mi">32</span><span class="p">),</span>
             <span class="s2">&quot;jwt_secret_key&quot;</span><span class="p">:</span> <span class="n">secrets</span><span class="o">.</span><span class="n">token_urlsafe</span><span class="p">(</span><span class="mi">32</span><span class="p">),</span>
         <span class="p">}</span>
