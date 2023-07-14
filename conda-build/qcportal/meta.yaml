@@ -30,7 +30,7 @@ requirements:
     - msgpack-python
     - requests
     - pyyaml
-    - pydantic
+    - pydantic<2.0
     - zstandard
 
     - qcelemental
