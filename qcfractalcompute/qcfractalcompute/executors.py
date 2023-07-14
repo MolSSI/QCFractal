@@ -6,9 +6,16 @@ from typing import TYPE_CHECKING
 
 from parsl.channels import LocalChannel
 from parsl.executors import ThreadPoolExecutor, HighThroughputExecutor
-from parsl.providers import LocalProvider, SlurmProvider
+from parsl.providers import SlurmProvider, TorqueProvider, LSFProvider
 
-from qcfractalcompute.config import ExecutorConfig, LocalExecutorConfig, SlurmExecutorConfig, CustomExecutorConfig
+from qcfractalcompute.config import (
+    ExecutorConfig,
+    LocalExecutorConfig,
+    SlurmExecutorConfig,
+    TorqueExecutorConfig,
+    LSFExecutorConfig,
+    CustomExecutorConfig,
+)
 
 if TYPE_CHECKING:
     from parsl.executors.base import ParslExecutor
@@ -95,6 +102,70 @@ def build_executor(executor_label: str, executor_config: ExecutorConfig) -> Pars
                 scheduler_options="\n".join(executor_config.scheduler_options),
             ),
         )
+
+    elif executor_config.type == "torque":
+
+        assert isinstance(executor_config, TorqueExecutorConfig)
+        # Use a HighThroughputExecutor with a Torque provider
+        # Use blocks of size 1, so number of nodes = number of blocks
+        # Pretty straightforward mapping from config to parsl config
+        # We let the high-throughput executor handle max_workers (which is the
+        # max *per node*, not overall)
+
+        # User specifies resources per worker, so convert to resources per node
+        cores_per_node = executor_config.cores_per_worker * executor_config.workers_per_node
+
+        return HighThroughputExecutor(
+            label=executor_label,
+            cores_per_worker=executor_config.cores_per_worker,
+            mem_per_worker=executor_config.memory_per_worker,
+            address=executor_config.bind_address,
+            provider=TorqueProvider(
+                channel=lchannel,
+                init_blocks=1,
+                min_blocks=0,
+                max_blocks=executor_config.max_nodes,
+                nodes_per_block=1,
+                walltime=executor_config.walltime,
+                account=executor_config.account,
+                queue=executor_config.queue,
+                worker_init=";".join(executor_config.worker_init),
+                scheduler_options="\n".join(executor_config.scheduler_options),
+            ),
+        )
+
+    elif executor_config.type == "lsf":
+
+        assert isinstance(executor_config, LSFExecutorConfig)
+        # Use a HighThroughputExecutor with a LSF provider
+        # Use blocks of size 1, so number of nodes = number of blocks
+        # Pretty straightforward mapping from config to parsl config
+        # We let the high-throughput executor handle max_workers (which is the
+        # max *per node*, not overall)
+
+        # User specifies resources per worker, so convert to resources per node
+        cores_per_node = executor_config.cores_per_worker * executor_config.workers_per_node
+
+        return HighThroughputExecutor(
+            label=executor_label,
+            cores_per_worker=executor_config.cores_per_worker,
+            mem_per_worker=executor_config.memory_per_worker,
+            address=executor_config.bind_address,
+            provider=LSFProvider(
+                channel=lchannel,
+                init_blocks=1,
+                min_blocks=0,
+                max_blocks=executor_config.max_nodes,
+                nodes_per_block=1,
+                cores_per_node=cores_per_node,
+                walltime=executor_config.walltime,
+                project=executor_config.project,
+                queue=executor_config.queue,
+                worker_init=";".join(executor_config.worker_init),
+                scheduler_options="\n".join(executor_config.scheduler_options),
+            ),
+        )
+
     elif executor_config.type == "custom":
         assert isinstance(executor_config, CustomExecutorConfig)
         raise RuntimeError("TODO")

@@ -101,7 +101,49 @@ class SlurmExecutorConfig(ExecutorConfig):
             return v
 
 
-AllExecutorTypes = Union[CustomExecutorConfig, LocalExecutorConfig, SlurmExecutorConfig]
+class TorqueExecutorConfig(ExecutorConfig):
+    type: Literal["torque"] = "torque"
+
+    walltime: str
+    account: Optional[str] = None
+    queue: Optional[str] = None
+
+    workers_per_node: int
+    max_nodes: int
+
+    scheduler_options: List[str] = []
+
+    @validator("walltime", pre=True)
+    def walltime_must_be_str(cls, v):
+        if isinstance(v, int):
+            return seconds_to_hms(v)
+        else:
+            return v
+
+
+class LSFExecutorConfig(ExecutorConfig):
+    type: Literal["lsf"] = "lsf"
+
+    walltime: str
+    project: Optional[str] = None
+    queue: Optional[str] = None
+
+    workers_per_node: int
+    max_nodes: int
+
+    scheduler_options: List[str] = []
+
+    @validator("walltime", pre=True)
+    def walltime_must_be_str(cls, v):
+        if isinstance(v, int):
+            return seconds_to_hms(v)
+        else:
+            return v
+
+
+AllExecutorTypes = Union[
+    CustomExecutorConfig, LocalExecutorConfig, SlurmExecutorConfig, TorqueExecutorConfig, LSFExecutorConfig
+]
 
 
 class FractalServerSettings(BaseModel):
