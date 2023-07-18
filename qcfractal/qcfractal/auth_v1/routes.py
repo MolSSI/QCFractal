@@ -1,4 +1,4 @@
-from flask import jsonify
+from flask import jsonify, g
 from flask_jwt_extended import (
     jwt_required,
     verify_jwt_in_request,
@@ -48,6 +48,10 @@ def refresh():
     role_info = RoleInfo(**role_dict)
 
     access_token = access_token_from_user(user_info, role_info)
+
+    # For logging purposes (in the after_request_func)
+    g.user_id = user_id
+
     ret = jsonify(access_token=access_token)
     return ret, 200
 

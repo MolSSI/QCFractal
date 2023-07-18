@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Tuple, Optional
 
-from flask import request, current_app
+from flask import request, current_app, g
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
@@ -65,6 +65,10 @@ def login_and_get_jwt(get_refresh_token: bool) -> Tuple[str, Optional[str]]:
         user_info = storage_socket.auth.authenticate(username, password)
         role_dict = storage_socket.roles.get(user_info.role)
         role_info = RoleInfo(**role_dict)
+
+        # Used for logging (in the after_request_func)
+        g.user_id = user_info.id
+
     except AuthenticationFailure as e:
         current_app.logger.info(f"Authentication failed for user {username}: {str(e)}")
         raise

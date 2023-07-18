@@ -31,7 +31,7 @@ def test_serverinfo_client_access_logged(secure_snowflake_allow_read: QCATesting
 
     assert accesses[5].module == "auth"
     assert accesses[5].full_uri == "/auth/v1/login"
-    assert accesses[5].user is None
+    assert accesses[5].user == "admin_user"
 
     assert accesses[4].module == "api"
     assert accesses[4].full_uri == "/api/v1/information"

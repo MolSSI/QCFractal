@@ -332,8 +332,10 @@ class NEBRecordSocket(BaseRecordSocket):
                 opt_spec = neb_orm.specification.optimization_specification.model_dict()
                 opt_spec["keywords"]["hessian"] = service_state.tshessian
                 opt_spec["keywords"]["transition"] = True
-                opt_spec["program"]= "geometric"
-                opt_spec = OptimizationSpecification(**opt_spec)#neb_orm.specification.optimization_specification.to_model(OptimizationSpecification)
+                opt_spec["program"] = "geometric"
+                opt_spec = OptimizationSpecification(
+                    **opt_spec
+                )  # neb_orm.specification.optimization_specification.to_model(OptimizationSpecification)
 
             else:
                 opt_spec = OptimizationSpecification(
@@ -395,7 +397,7 @@ class NEBRecordSocket(BaseRecordSocket):
         if service_state.converged and service_state.tsoptimize and len(service_state.tshessian) == 0:
             if has_optimization:
                 opt_spec = neb_orm.specification.optimization_specification.model_dict()
-                qc_spec = opt_spec['qc_specification']
+                qc_spec = opt_spec["qc_specification"]
             qc_spec["driver"] = "hessian"
 
         meta, sp_ids = self.root_socket.records.singlepoint.add(
