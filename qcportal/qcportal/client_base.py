@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import time
 from typing import (
     Any,
     Dict,
@@ -10,6 +11,7 @@ from typing import (
     Type,
 )
 
+import jwt
 import pydantic
 import requests
 import yaml
@@ -121,7 +123,14 @@ class PortalClientBase:
             requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
         if username is not None and password is not None:
-            self._get_JWT_token(username, password)
+            self._username = username
+            self._password = password
+            self._get_JWT_token()
+        else:
+            self._username = None
+            self._password = None
+            self._jwt_access_exp = None
+            self._jwt_refresh_exp = None
 
         # Try to connect and pull the server info
         self.server_info = self.get_server_information()
@@ -210,11 +219,13 @@ class PortalClientBase:
         enc_headers = {"Content-Type": encoding, "Accept": encoding}
         self._req_session.headers.update(enc_headers)
 
-    def _get_JWT_token(self, username: str, password: str) -> None:
+    def _get_JWT_token(self) -> None:
 
         try:
             ret = self._req_session.post(
-                self.address + "auth/v1/login", json={"username": username, "password": password}, verify=self._verify
+                self.address + "auth/v1/login",
+                json={"username": self._username, "password": self._password},
+                verify=self._verify,
             )
         except requests.exceptions.SSLError:
             raise ConnectionRefusedError(_ssl_error_msg) from None
@@ -222,8 +233,20 @@ class PortalClientBase:
             raise ConnectionRefusedError(_connection_error_msg.format(self.address)) from None
 
         if ret.status_code == 200:
-            self.refresh_token = ret.json()["refresh_token"]
-            self._req_session.headers.update({"Authorization": f'Bearer {ret.json()["access_token"]}'})
+            ret_json = ret.json()
+            self.refresh_token = ret_json["refresh_token"]
+            self._req_session.headers.update({"Authorization": f'Bearer {ret_json["access_token"]}'})
+
+            # Store the expiration time of the access and refresh tokens
+            # (these are unix epoch timestamps)
+            decoded_access_token = jwt.decode(
+                ret_json["access_token"], algorithms=["HS256"], options={"verify_signature": False}
+            )
+            decoded_refresh_token = jwt.decode(
+                ret_json["refresh_token"], algorithms=["HS256"], options={"verify_signature": False}
+            )
+            self._jwt_access_exp = decoded_access_token["exp"]
+            self._jwt_refresh_exp = decoded_refresh_token["exp"]
         else:
             try:
                 msg = ret.json()["msg"]
@@ -254,6 +277,14 @@ class PortalClientBase:
         retry: Optional[bool] = True,
     ) -> requests.Response:
 
+        # If JWT token is expired, automatically renew it
+        if self._jwt_access_exp and self._jwt_access_exp < time.time():
+            self._refresh_JWT_token()
+
+        # If refresh token has expired, log in again
+        if self._jwt_refresh_exp and self._jwt_refresh_exp < time.time():
+            self._get_JWT_token()
+
         full_uri = self.address + endpoint
 
         req = requests.Request(method=method.upper(), url=full_uri, data=body, params=url_params)
@@ -272,7 +303,9 @@ class PortalClientBase:
         except requests.exceptions.ConnectionError:
             raise ConnectionRefusedError(_connection_error_msg.format(self.address)) from None
 
-        # If JWT token expired, automatically renew it and retry once
+        # If JWT token expired, automatically renew it and retry once. This should have been caught above,
+        # but can happen in rare instances where the token expires between the time we check it and the time
+        # we use it.
         if retry and (r.status_code == 401) and "Token has expired" in r.json()["msg"]:
             self._refresh_JWT_token()
             return self._request(method, endpoint, body=body, url_params=url_params, retry=False)
