@@ -6,7 +6,10 @@ from enum import Enum
 from typing import Optional, Dict, Any, List, Union, Iterable, Tuple, Type, Sequence, ClassVar, TypeVar
 
 from dateutil.parser import parse as date_parser
-from pydantic import BaseModel, Extra, constr, validator, PrivateAttr, Field
+try:
+    from pydantic.v1 import BaseModel, Extra, constr, validator, PrivateAttr, Field
+except ImportError:
+    from pydantic import BaseModel, Extra, constr, validator, PrivateAttr, Field
 from qcelemental.models.results import Provenance
 
 from qcportal.base_models import (

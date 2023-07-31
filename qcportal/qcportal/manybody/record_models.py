@@ -1,7 +1,10 @@
 from enum import Enum
 from typing import List, Union, Optional, Dict, Any, Iterable
 
-from pydantic import BaseModel, Extra, validator, constr
+try:
+    from pydantic.v1 import BaseModel, Extra, validator, constr
+except ImportError:
+    from pydantic import BaseModel, Extra, validator, constr
 from typing_extensions import Literal
 
 from qcportal.molecules import Molecule

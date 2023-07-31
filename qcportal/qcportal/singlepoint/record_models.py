@@ -2,7 +2,10 @@ from copy import deepcopy
 from enum import Enum
 from typing import Optional, Union, Any, List, Dict, Iterable, Tuple
 
-from pydantic import BaseModel, Field, constr, validator, Extra, PrivateAttr
+try:
+    from pydantic.v1 import BaseModel, Field, constr, validator, Extra, PrivateAttr
+except ImportError:
+    from pydantic import BaseModel, Field, constr, validator, Extra, PrivateAttr
 from qcelemental.models import Molecule
 from qcelemental.models.results import (
     AtomicResult,

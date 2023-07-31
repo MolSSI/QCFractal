@@ -12,7 +12,10 @@ from collections import defaultdict
 from typing import Dict, List, Optional, Union
 
 import qcengine as qcng
-from pydantic import BaseModel, validator, Extra
+try:
+    from pydantic.v1 import BaseModel, validator, Extra
+except ImportError:
+    from pydantic import BaseModel, validator, Extra
 from qcelemental.models import Molecule, FailedOperation
 
 from . import __version__

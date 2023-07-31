@@ -3,7 +3,10 @@ import os
 from typing import List, Optional, Union, Dict, Any
 
 import yaml
-from pydantic import BaseModel, Field, validator
+try:
+    from pydantic.v1 import BaseModel, Field, validator
+except ImportError:
+    from pydantic import BaseModel, Field, validator
 from typing_extensions import Literal
 
 from qcportal.utils import seconds_to_hms

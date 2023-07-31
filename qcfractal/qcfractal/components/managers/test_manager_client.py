@@ -4,7 +4,10 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 import pytest
-from pydantic import ValidationError
+try:
+    from pydantic.v1 import ValidationError
+except ImportError:
+    from pydantic import ValidationError
 
 from qcfractal.components.singlepoint.testing_helpers import submit_test_data
 from qcportal import PortalRequestError

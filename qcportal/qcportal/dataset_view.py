@@ -5,7 +5,10 @@ import sqlite3
 from typing import Optional, Dict, Any, List, Iterable
 
 import zstandard
-from pydantic import BaseModel, validator, PrivateAttr, parse_obj_as, Extra
+try:
+    from pydantic.v1 import BaseModel, validator, PrivateAttr, parse_obj_as, Extra
+except ImportError:
+    from pydantic import BaseModel, validator, PrivateAttr, parse_obj_as, Extra
 
 from qcportal.serialization import deserialize
 

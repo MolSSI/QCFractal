@@ -13,7 +13,10 @@ from typing import List, Optional, Union
 
 import qcengine as qcng
 import yaml
-from pydantic import BaseSettings, Field, validator
+try:
+    from pydantic.v1 import BaseSettings, Field, validator
+except ImportError:
+    from pydantic import BaseSettings, Field, validator
 
 from . import __version__, cli_utils
 from .managers import ComputeManager

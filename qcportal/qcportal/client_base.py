@@ -12,7 +12,10 @@ from typing import (
 )
 
 import jwt
-import pydantic
+try:
+    import pydantic.v1 as pydantic
+except ImportError:
+    import pydantic
 import requests
 import yaml
 from pkg_resources import parse_version

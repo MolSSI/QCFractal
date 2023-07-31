@@ -1,6 +1,9 @@
 from typing import Dict, Any, Union, Optional, Iterable, Tuple
 
-from pydantic import BaseModel, Extra
+try:
+    from pydantic.v1 import BaseModel, Extra
+except ImportError:
+    from pydantic import BaseModel, Extra
 from typing_extensions import Literal
 
 from qcportal.dataset_models import BaseDataset

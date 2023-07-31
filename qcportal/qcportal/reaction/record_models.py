@@ -1,6 +1,9 @@
 from typing import List, Union, Optional, Tuple, Iterable
 
-from pydantic import BaseModel, Extra, root_validator, constr
+try:
+    from pydantic.v1 import BaseModel, Extra, root_validator, constr
+except ImportError:
+    from pydantic import BaseModel, Extra, root_validator, constr
 from typing_extensions import Literal
 
 from qcportal.molecules import Molecule

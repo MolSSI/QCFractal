@@ -1,7 +1,10 @@
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 
-from pydantic import Field, BaseModel, constr, Extra
+try:
+    from pydantic.v1 import Field, BaseModel, constr, Extra
+except ImportError:
+    from pydantic import Field, BaseModel, constr, Extra
 
 from qcportal.base_models import RestModelBase
 from qcportal.compression import decompress, CompressionEnum
