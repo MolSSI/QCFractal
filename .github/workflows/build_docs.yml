@@ -36,5 +36,6 @@ jobs:
 
       - name: Deploy Documentation
         uses: JamesIves/github-pages-deploy-action@v4
+        if: github.event_name == 'push' && github.repository == 'MolSSI/QCFractal' && ( startsWith( github.ref, 'refs/tags/' ) || github.ref == 'refs/heads/next' )
         with:
           folder: docs/build/html
