@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 
 
@@ -8,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.dataset_models &#8212; QCArchive 0.50b13.post6+gd5aa7bb7 documentation</title>
+    <title>qcportal.dataset_models &#8212; QCArchive 0.50b13.post7+gab8e480e documentation</title>
   
   
   
@@ -28,19 +27,19 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=c224919a" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinx_highlight.js"></script>
-    <script src="../../_static/design-tabs.js"></script>
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=5bc18214"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/qcportal/dataset_models';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -1092,6 +1091,8 @@ document.write(`
 <span class="sd">            Names of the entries whose records to update. If None, fetch all entries</span>
 <span class="sd">        specification_names</span>
 <span class="sd">            Names of the specifications whose records to update. If None, fetch all specifications</span>
+<span class="sd">        status</span>
+<span class="sd">            Update records that have this status on the server. If None, update records with any status on the server</span>
 <span class="sd">        include</span>
 <span class="sd">            Additional fields/data to include when fetch the entry</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1100,17 +1101,24 @@ document.write(`
             <span class="k">return</span>
 
         <span class="c1"># Get all the record ids that we store that correspond to the entries/specs</span>
-        <span class="n">existing_record_ids</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">entry_name</span><span class="p">,</span> <span class="n">spec_name</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">specification_names</span><span class="p">):</span>
-            <span class="n">existing_rec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_map_</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">entry_name</span><span class="p">,</span> <span class="n">spec_name</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">existing_rec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">existing_record_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">existing_rec</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="n">existing_record_info</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">s</span><span class="p">),</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_map_</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">entry_names</span> <span class="ow">and</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">specification_names</span>
+        <span class="p">]</span>
+
+        <span class="c1"># Subset that we should check for updated records on the server</span>
+        <span class="c1"># (completed and invalid rarely change)</span>
+        <span class="n">updateable_record_ids</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">id</span>
+            <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">existing_record_info</span>
+            <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">complete</span><span class="p">,</span> <span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">invalid</span><span class="p">)</span>
+        <span class="p">]</span>
 
         <span class="c1"># Do a raw call to the records/bulkGet endpoint. This allows us to only get</span>
         <span class="c1"># the &#39;modified_on&#39; and &#39;status&#39; fields</span>
         <span class="n">batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_records&quot;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span>
-        <span class="n">minfo_dict</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">record_id_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">existing_record_ids</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
+        <span class="n">minfo_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># record_id -&gt; modified time</span>
+
+        <span class="k">for</span> <span class="n">record_id_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">updateable_record_ids</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
             <span class="n">body</span> <span class="o">=</span> <span class="n">CommonBulkGetBody</span><span class="p">(</span><span class="n">ids</span><span class="o">=</span><span class="n">record_id_batch</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;modified_on&quot;</span><span class="p">,</span> <span class="s2">&quot;status&quot;</span><span class="p">])</span>
 
             <span class="n">modified_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
@@ -1122,31 +1130,28 @@ document.write(`
 
             <span class="c1"># Too lazy to look up how pydantic stores datetime, so use pydantic to parse it</span>
             <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">modified_info</span><span class="p">:</span>
+                <span class="c1"># Only store if the status on the server matches what the caller wants</span>
                 <span class="k">if</span> <span class="n">status</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">m</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">status</span><span class="p">:</span>
                     <span class="n">minfo_dict</span><span class="p">[</span><span class="n">m</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">parse_obj_as</span><span class="p">(</span><span class="n">datetime</span><span class="p">,</span> <span class="n">m</span><span class="p">[</span><span class="s2">&quot;modified_on&quot;</span><span class="p">])</span>
 
-        <span class="c1"># Which ones need to be updated</span>
+        <span class="c1"># Which ones need to be fully updated</span>
         <span class="n">need_updating</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">entry_name</span><span class="p">,</span> <span class="n">spec_name</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">specification_names</span><span class="p">):</span>
-            <span class="n">existing_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_map_</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">entry_name</span><span class="p">,</span> <span class="n">spec_name</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">entry_name</span><span class="p">,</span> <span class="n">spec_name</span><span class="p">,</span> <span class="n">existing_record</span> <span class="ow">in</span> <span class="n">existing_record_info</span><span class="p">:</span>
+            <span class="n">server_mtime</span> <span class="o">=</span> <span class="n">minfo_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">existing_record</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">existing_record</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Perhaps a status mismatch (status on server isn&#39;t one we want)</span>
+            <span class="k">if</span> <span class="n">server_mtime</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">continue</span>
 
-            <span class="n">server_rec_mtime</span> <span class="o">=</span> <span class="n">minfo_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">existing_record</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-
-            <span class="c1"># Maybe mismatched status</span>
-            <span class="k">if</span> <span class="n">server_rec_mtime</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">continue</span>
-
-            <span class="k">if</span> <span class="n">existing_record</span><span class="o">.</span><span class="n">modified_on</span> <span class="o">&lt;</span> <span class="n">server_rec_mtime</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">existing_record</span><span class="o">.</span><span class="n">modified_on</span> <span class="o">&lt;</span> <span class="n">server_mtime</span><span class="p">:</span>
                 <span class="n">need_updating</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">entry_name</span><span class="p">,</span> <span class="n">spec_name</span><span class="p">))</span>
 
         <span class="c1"># Go via one spec at a time</span>
         <span class="k">for</span> <span class="n">spec_name</span> <span class="ow">in</span> <span class="n">specification_names</span><span class="p">:</span>
             <span class="n">entries_to_update</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">need_updating</span> <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">spec_name</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">entries_to_update</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_internal_fetch_records</span><span class="p">(</span><span class="n">entries_to_update</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">entries_to_update_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">entries_to_update</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_internal_fetch_records</span><span class="p">(</span><span class="n">entries_to_update_batch</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
 
 <div class="viewcode-block" id="BaseDataset.fetch_records"><a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.fetch_records">[docs]</a>    <span class="k">def</span> <span class="nf">fetch_records</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -1746,7 +1751,7 @@ document.write(`
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
     <br/>
   </p>
 </div>
@@ -1785,7 +1790,7 @@ document.write(`
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 6.2.1.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.1.2.<br>
         </p>
         
 
