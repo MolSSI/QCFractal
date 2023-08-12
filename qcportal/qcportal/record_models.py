@@ -582,6 +582,7 @@ class RecordAddBodyBase(RestModelBase):
     tag: constr(to_lower=True)
     priority: PriorityEnum
     owner_group: Optional[str]
+    find_existing: bool = True
 
 
 class RecordModifyBody(RestModelBase):
