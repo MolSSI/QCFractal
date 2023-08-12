@@ -88,6 +88,7 @@ class ReactionDatasetSocket(BaseDatasetSocket):
         priority: Optional[PriorityEnum],
         owner_user_id: Optional[int],
         owner_group_id: Optional[int],
+        find_existing: bool,
     ):
         # Weed out any with additional keywords
         special_entries = [x for x in entry_orm if x.additional_keywords]

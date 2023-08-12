@@ -215,6 +215,7 @@ class BaseDataset(BaseModel):
         specification_names: Optional[Union[str, Iterable[str]]] = None,
         tag: Optional[str] = None,
         priority: PriorityEnum = None,
+        find_existing: bool = True,
     ):
         self.assert_is_not_view()
         self.assert_online()
@@ -224,6 +225,7 @@ class BaseDataset(BaseModel):
             specification_names=make_list(specification_names),
             tag=tag,
             priority=priority,
+            find_existing=find_existing,
         )
 
         return self._client.make_request(
@@ -1232,6 +1234,7 @@ class DatasetSubmitBody(RestModelBase):
     tag: Optional[str] = None
     priority: Optional[PriorityEnum] = None
     owner_group: Optional[str] = None
+    find_existing: bool = True
 
 
 class DatasetRecordModifyBody(RestModelBase):

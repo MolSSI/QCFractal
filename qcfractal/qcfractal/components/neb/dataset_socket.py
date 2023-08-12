@@ -79,6 +79,7 @@ class NEBDatasetSocket(BaseDatasetSocket):
         priority: PriorityEnum,
         owner_user_id: Optional[int],
         owner_group_id: Optional[int],
+        find_existing: bool,
     ):
         for spec in spec_orm:
             neb_spec_obj = spec.specification.to_model(NEBSpecification)

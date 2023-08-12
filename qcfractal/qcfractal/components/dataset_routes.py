@@ -160,6 +160,7 @@ def submit_dataset_v1(dataset_type: str, dataset_id: int, body_data: DatasetSubm
         priority=body_data.priority,
         owner_user=g.username,
         owner_group=body_data.owner_group,
+        find_existing=body_data.find_existing,
     )
 
 

@@ -88,6 +88,7 @@ class BaseDatasetSocket:
         priority: PriorityEnum,
         owner_user_id: Optional[int],
         owner_group_id: Optional[int],
+        find_existing: bool,
     ):
         raise NotImplementedError("_submit must be overridden by the derived class")
 
@@ -967,6 +968,7 @@ class BaseDatasetSocket:
         priority: Optional[PriorityEnum],
         owner_user: Optional[Union[int, str]],
         owner_group: Optional[Union[int, str]],
+        find_existing: bool,
         *,
         session: Optional[Session] = None,
     ):
@@ -992,6 +994,8 @@ class BaseDatasetSocket:
             will not be modified.
         owner_group
             Group with additional permission for these records
+        find_existing
+            If True, search for existing records and return those. If False, always add new records
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -1053,7 +1057,16 @@ class BaseDatasetSocket:
             existing_records = [(x.entry_name, x.specification_name) for x in existing_record_orm]
 
             return self._submit(
-                session, dataset_id, entries, ds_specs, existing_records, tag, priority, owner_user_id, owner_group_id
+                session,
+                dataset_id,
+                entries,
+                ds_specs,
+                existing_records,
+                tag,
+                priority,
+                owner_user_id,
+                owner_group_id,
+                find_existing,
             )
 
     #######################

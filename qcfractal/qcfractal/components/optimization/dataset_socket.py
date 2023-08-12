@@ -75,6 +75,7 @@ class OptimizationDatasetSocket(BaseDatasetSocket):
         priority: PriorityEnum,
         owner_user_id: Optional[int],
         owner_group_id: Optional[int],
+        find_existing: bool,
     ):
 
         # Weed out any with additional keywords
