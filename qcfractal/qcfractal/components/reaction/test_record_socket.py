@@ -29,12 +29,7 @@ def test_reaction_socket_add_get(storage_socket: SQLAlchemySocket, session: Sess
 
     time_0 = datetime.utcnow()
     meta, ids = storage_socket.records.reaction.add(
-        [[(1.0, hooh), (2.0, ne4)], [(3.0, hooh), (4.0, water)]],
-        spec,
-        "tag1",
-        PriorityEnum.low,
-        None,
-        None,
+        [[(1.0, hooh), (2.0, ne4)], [(3.0, hooh), (4.0, water)]], spec, "tag1", PriorityEnum.low, None, None, True
     )
     time_1 = datetime.utcnow()
     assert meta.success
@@ -88,23 +83,13 @@ def test_reaction_socket_add_same_1(storage_socket: SQLAlchemySocket):
     water = load_molecule_data("water_dimer_minima")
 
     meta, id1 = storage_socket.records.reaction.add(
-        [[(2.0, water), (3.0, hooh)]],
-        spec,
-        "*",
-        PriorityEnum.normal,
-        None,
-        None,
+        [[(2.0, water), (3.0, hooh)]], spec, "*", PriorityEnum.normal, None, None, True
     )
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
 
     meta, id2 = storage_socket.records.reaction.add(
-        [[(3.0, hooh), (2.0, water)]],
-        spec,
-        "*",
-        PriorityEnum.normal,
-        None,
-        None,
+        [[(3.0, hooh), (2.0, water)]], spec, "*", PriorityEnum.normal, None, None, True
     )
     assert meta.n_inserted == 0
     assert meta.n_existing == 1
@@ -130,7 +115,7 @@ def test_reaction_socket_run(
     storage_socket.users.add(UserInfo(username="submit_user", role="submit", groups=["group1"], enabled=True))
 
     meta_1, id_1 = storage_socket.records.reaction.add(
-        [stoich_1], input_spec_1, "test_tag", PriorityEnum.low, "submit_user", "group1"
+        [stoich_1], input_spec_1, "test_tag", PriorityEnum.low, "submit_user", "group1", True
     )
     assert meta_1.success
 

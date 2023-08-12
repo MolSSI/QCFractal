@@ -34,6 +34,7 @@ def add_reaction_records_v1(body_data: ReactionAddBody):
         priority=body_data.priority,
         owner_user=g.username,
         owner_group=body_data.owner_group,
+        find_existing=body_data.find_existing,
     )
 
 

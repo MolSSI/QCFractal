@@ -31,7 +31,9 @@ def test_gridoptimization_socket_add_get(
     h3ns = load_molecule_data("go_H3NS")
 
     time_0 = datetime.utcnow()
-    meta, ids = storage_socket.records.gridoptimization.add([hooh, h3ns], spec, "tag1", PriorityEnum.low, None, None)
+    meta, ids = storage_socket.records.gridoptimization.add(
+        [hooh, h3ns], spec, "tag1", PriorityEnum.low, None, None, True
+    )
     time_1 = datetime.utcnow()
     assert meta.success
 
@@ -55,7 +57,7 @@ def test_gridoptimization_socket_add_get(
     assert recs[1].initial_molecule.identifiers["molecule_hash"] == h3ns.get_hash()
 
 
-def test_gridoptimization_socket_add_same_1(storage_socket: SQLAlchemySocket):
+def test_gridoptimization_socket_find_existing_1(storage_socket: SQLAlchemySocket):
     spec = GridoptimizationSpecification(
         program="gridoptimization",
         keywords=GridoptimizationKeywords(
@@ -80,18 +82,18 @@ def test_gridoptimization_socket_add_same_1(storage_socket: SQLAlchemySocket):
     )
 
     hooh = load_molecule_data("peroxide2")
-    meta, id1 = storage_socket.records.gridoptimization.add([hooh], spec, "*", PriorityEnum.normal, None, None)
+    meta, id1 = storage_socket.records.gridoptimization.add([hooh], spec, "*", PriorityEnum.normal, None, None, True)
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
 
-    meta, id2 = storage_socket.records.gridoptimization.add([hooh], spec, "*", PriorityEnum.normal, None, None)
+    meta, id2 = storage_socket.records.gridoptimization.add([hooh], spec, "*", PriorityEnum.normal, None, None, True)
     assert meta.n_inserted == 0
     assert meta.n_existing == 1
     assert meta.existing_idx == [0]
     assert id1 == id2
 
 
-def test_gridoptimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
+def test_gridoptimization_socket_find_existing_2(storage_socket: SQLAlchemySocket):
     # some modifications to the input specification
     spec1 = GridoptimizationSpecification(
         program="gridoptimization",
@@ -141,11 +143,15 @@ def test_gridoptimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
 
     mol1 = load_molecule_data("go_H3NS")
     mol2 = load_molecule_data("peroxide2")
-    meta, id1 = storage_socket.records.gridoptimization.add([mol1, mol2], spec1, "*", PriorityEnum.normal, None, None)
+    meta, id1 = storage_socket.records.gridoptimization.add(
+        [mol1, mol2], spec1, "*", PriorityEnum.normal, None, None, True
+    )
     assert meta.n_inserted == 2
     assert meta.inserted_idx == [0, 1]
 
-    meta, id2 = storage_socket.records.gridoptimization.add([mol1, mol2], spec2, "*", PriorityEnum.normal, None, None)
+    meta, id2 = storage_socket.records.gridoptimization.add(
+        [mol1, mol2], spec2, "*", PriorityEnum.normal, None, None, True
+    )
     assert meta.n_inserted == 0
     assert meta.n_existing == 2
     assert meta.existing_idx == [0, 1]
@@ -169,7 +175,7 @@ def test_gridoptimization_socket_run(
     storage_socket.users.add(UserInfo(username="submit_user", role="submit", groups=["group1"], enabled=True))
 
     meta_1, id_1 = storage_socket.records.gridoptimization.add(
-        [molecules_1], input_spec_1, "test_tag", PriorityEnum.low, "submit_user", "group1"
+        [molecules_1], input_spec_1, "test_tag", PriorityEnum.low, "submit_user", "group1", True
     )
     assert meta_1.success
 

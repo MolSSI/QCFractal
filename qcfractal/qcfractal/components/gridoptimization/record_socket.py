@@ -358,6 +358,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                     service_orm.priority,
                     go_orm.owner_user_id,
                     go_orm.owner_group_id,
+                    find_existing=True,
                     session=session,
                 )
 
@@ -391,6 +392,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                     service_orm.priority,
                     go_orm.owner_user_id,
                     go_orm.owner_group_id,
+                    find_existing=True,
                     session=session,
                 )
 
@@ -543,6 +545,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         priority: PriorityEnum,
         owner_user_id: Optional[int],
         owner_group_id: Optional[int],
+        find_existing: bool,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
@@ -569,6 +572,8 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
             ID of the user who owns the record
         owner_group_id
             ID of the group with additional permission for these records
+        find_existing
+            If True, search for existing records and return those. If False, always add new records
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -584,10 +589,10 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
 
         with self.root_socket.optional_session(session, False) as session:
 
+            self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
+
             # Lock for the entire transaction
             session.execute(select(func.pg_advisory_xact_lock(gridoptimization_insert_lock_id))).scalar()
-
-            self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
 
             all_orm = []
             for mid in initial_molecule_ids:
@@ -603,15 +608,21 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                 self.create_service(go_orm, tag, priority)
                 all_orm.append(go_orm)
 
-            meta, ids = insert_general(
-                session,
-                all_orm,
-                (GridoptimizationRecordORM.specification_id, GridoptimizationRecordORM.initial_molecule_id),
-                (GridoptimizationRecordORM.id,),
-                lock_id=gridoptimization_insert_lock_id,
-            )
+            if find_existing:
+                meta, ids = insert_general(
+                    session,
+                    all_orm,
+                    (GridoptimizationRecordORM.specification_id, GridoptimizationRecordORM.initial_molecule_id),
+                    (GridoptimizationRecordORM.id,),
+                    lock_id=gridoptimization_insert_lock_id,
+                )
+                return meta, [x[0] for x in ids]
+            else:
+                session.add_all(all_orm)
+                session.flush()
+                meta = InsertMetadata(inserted_idx=list(range(len(all_orm))))
 
-            return meta, [x[0] for x in ids]
+                return meta, [x.id for x in all_orm]
 
     def add(
         self,
@@ -621,6 +632,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         priority: PriorityEnum,
         owner_user: Optional[Union[int, str]],
         owner_group: Optional[Union[int, str]],
+        find_existing: bool,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
@@ -646,6 +658,8 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
             Name or ID of the user who owns the record
         owner_group
             Group with additional permission for these records
+        find_existing
+            If True, search for existing records and return those. If False, always add new records
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -682,7 +696,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                 )
 
             return self.add_internal(
-                init_mol_ids, spec_id, tag, priority, owner_user_id, owner_group_id, session=session
+                init_mol_ids, spec_id, tag, priority, owner_user_id, owner_group_id, find_existing, session=session
             )
 
     ####################################################

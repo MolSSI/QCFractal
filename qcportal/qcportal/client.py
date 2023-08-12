@@ -912,6 +912,7 @@ class PortalClient(PortalClientBase):
         tag: str = "*",
         priority: PriorityEnum = PriorityEnum.normal,
         owner_group: Optional[str] = None,
+        find_existing: bool = True,
     ) -> Tuple[InsertMetadata, List[int]]:
         """
         Adds new singlepoint computations to the server
@@ -943,6 +944,8 @@ class PortalClient(PortalClientBase):
             The priority of the job (high, normal, low). Default is normal.
         owner_group
             Group with additional permission for these records
+        find_existing
+            If True, search for existing records and return those. If False, always add new records
 
         Returns
         -------
@@ -971,6 +974,7 @@ class PortalClient(PortalClientBase):
             "tag": tag,
             "priority": priority,
             "owner_group": owner_group,
+            "find_existing": find_existing,
         }
 
         # If these are None, then let the pydantic models handle the defaults
@@ -1130,6 +1134,7 @@ class PortalClient(PortalClientBase):
         tag: str = "*",
         priority: PriorityEnum = PriorityEnum.normal,
         owner_group: Optional[str] = None,
+        find_existing: bool = True,
     ) -> Tuple[InsertMetadata, List[int]]:
         """
         Adds new geometry optimization calculations to the server
@@ -1157,6 +1162,8 @@ class PortalClient(PortalClientBase):
             The priority of the job (high, normal, low). Default is normal.
         owner_group
             Group with additional permission for these records
+        find_existing
+            If True, search for existing records and return those. If False, always add new records
 
         Returns
         -------
@@ -1183,6 +1190,7 @@ class PortalClient(PortalClientBase):
             "tag": tag,
             "priority": priority,
             "owner_group": owner_group,
+            "find_existing": find_existing,
         }
 
         # If these are None, then let the pydantic models handle the defaults
@@ -1348,6 +1356,7 @@ class PortalClient(PortalClientBase):
         tag: str = "*",
         priority: PriorityEnum = PriorityEnum.normal,
         owner_group: Optional[str] = None,
+        find_existing: bool = True,
     ) -> Tuple[InsertMetadata, List[int]]:
         """
         Adds new torsiondrive computations to the server
@@ -1374,6 +1383,8 @@ class PortalClient(PortalClientBase):
             The priority of the job (high, normal, low). Default is normal.
         owner_group
             Group with additional permission for these records
+        find_existing
+            If True, search for existing records and return those. If False, always add new records
 
         Returns
         -------
@@ -1401,6 +1412,7 @@ class PortalClient(PortalClientBase):
             "tag": tag,
             "priority": priority,
             "owner_group": owner_group,
+            "find_existing": find_existing,
         }
 
         body = TorsiondriveAddBody(**body_data)
@@ -1557,6 +1569,7 @@ class PortalClient(PortalClientBase):
         tag: str = "*",
         priority: PriorityEnum = PriorityEnum.normal,
         owner_group: Optional[str] = None,
+        find_existing: bool = True,
     ) -> Tuple[InsertMetadata, List[int]]:
         """
         Adds new gridoptimization computations to the server
@@ -1583,6 +1596,8 @@ class PortalClient(PortalClientBase):
             The priority of the job (high, normal, low). Default is normal.
         owner_group
             Group with additional permission for these records
+        find_existing
+            If True, search for existing records and return those. If False, always add new records
 
         Returns
         -------
@@ -1610,6 +1625,7 @@ class PortalClient(PortalClientBase):
             "tag": tag,
             "priority": priority,
             "owner_group": owner_group,
+            "find_existing": find_existing,
         }
 
         body = GridoptimizationAddBody(**body_data)
@@ -1767,6 +1783,7 @@ class PortalClient(PortalClientBase):
         tag: str = "*",
         priority: PriorityEnum = PriorityEnum.normal,
         owner_group: Optional[str] = None,
+        find_existing: bool = True,
     ) -> Tuple[InsertMetadata, List[int]]:
         """
         Adds new reaction computations to the server
@@ -1800,6 +1817,8 @@ class PortalClient(PortalClientBase):
             The priority of the job (high, normal, low). Default is normal.
         owner_group
             Group with additional permission for these records
+        find_existing
+            If True, search for existing records and return those. If False, always add new records
 
         Returns
         -------
@@ -1827,6 +1846,7 @@ class PortalClient(PortalClientBase):
             "tag": tag,
             "priority": priority,
             "owner_group": owner_group,
+            "find_existing": find_existing,
         }
 
         body = ReactionAddBody(**body_data)
@@ -1983,6 +2003,7 @@ class PortalClient(PortalClientBase):
         tag: str = "*",
         priority: PriorityEnum = PriorityEnum.normal,
         owner_group: Optional[str] = None,
+        find_existing: bool = True,
     ) -> Tuple[InsertMetadata, List[int]]:
         """
         Adds new manybody expansion computations to the server
@@ -2008,6 +2029,8 @@ class PortalClient(PortalClientBase):
             The priority of the job (high, normal, low). Default is normal.
         owner_group
             Group with additional permission for these records
+        find_existing
+            If True, search for existing records and return those. If False, always add new records
 
         Returns
         -------
@@ -2035,6 +2058,7 @@ class PortalClient(PortalClientBase):
             "tag": tag,
             "priority": priority,
             "owner_group": owner_group,
+            "find_existing": find_existing,
         }
 
         body = ManybodyAddBody(**body_data)
@@ -2188,6 +2212,7 @@ class PortalClient(PortalClientBase):
         tag: str = "*",
         priority: PriorityEnum = PriorityEnum.normal,
         owner_group: Optional[str] = None,
+        find_existing: bool = True,
     ) -> Tuple[InsertMetadata, List[int]]:
         """
         Adds neb calculations to the server
@@ -2206,6 +2231,7 @@ class PortalClient(PortalClientBase):
             "tag": tag,
             "priority": priority,
             "owner_group": owner_group,
+            "find_existing": find_existing,
         }
 
         if len(body_data["initial_chains"]) > self.api_limits["add_records"]:

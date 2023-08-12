@@ -94,6 +94,7 @@ class ManybodyDatasetSocket(BaseDatasetSocket):
                 priority=priority,
                 owner_user_id=owner_user_id,
                 owner_group_id=owner_group_id,
+                find_existing=find_existing,
                 session=session,
             )
 
@@ -123,6 +124,7 @@ class ManybodyDatasetSocket(BaseDatasetSocket):
                     priority=priority,
                     owner_user=owner_user_id,
                     owner_group=owner_group_id,
+                    find_existing=find_existing,
                     session=session,
                 )
 

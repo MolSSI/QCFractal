@@ -363,6 +363,7 @@ class NEBRecordSocket(BaseRecordSocket):
             service_orm.priority,
             neb_orm.owner_user_id,
             neb_orm.owner_group_id,
+            find_existing=True,
             session=session,
         )
         for pos, opt_id in enumerate(opt_ids):
@@ -407,6 +408,7 @@ class NEBRecordSocket(BaseRecordSocket):
             service_orm.priority,
             neb_orm.owner_user_id,
             neb_orm.owner_group_id,
+            find_existing=True,
             session=session,
         )
 
@@ -602,6 +604,7 @@ class NEBRecordSocket(BaseRecordSocket):
         priority: PriorityEnum,
         owner_user_id: Optional[int],
         owner_group_id: Optional[int],
+        find_existing: bool,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
@@ -628,6 +631,8 @@ class NEBRecordSocket(BaseRecordSocket):
             ID of the user who owns the record
         owner_group_id
             ID of the group with additional permission for these records
+        find_existing
+            If True, search for existing records and return those. If False, always add new records
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -641,42 +646,70 @@ class NEBRecordSocket(BaseRecordSocket):
         tag = tag.lower()
 
         with self.root_socket.optional_session(session, False) as session:
-            # Lock for the entire transaction
-            session.execute(select(func.pg_advisory_xact_lock(neb_insert_lock_id))).scalar()
 
             self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
+
+            # Lock for the entire transaction
+            session.execute(select(func.pg_advisory_xact_lock(neb_insert_lock_id))).scalar()
 
             neb_ids = []
             inserted_idx = []
             existing_idx = []
 
-            init_mol_cte = (
-                select(
-                    NEBRecordORM.id,
-                    NEBRecordORM.specification_id,
-                    array_agg(
-                        aggregate_order_by(
-                            NEBInitialchainORM.molecule_id,
-                            NEBInitialchainORM.position.asc(),
+            if find_existing:
+                init_mol_cte = (
+                    select(
+                        NEBRecordORM.id,
+                        NEBRecordORM.specification_id,
+                        array_agg(
+                            aggregate_order_by(
+                                NEBInitialchainORM.molecule_id,
+                                NEBInitialchainORM.position.asc(),
+                            )
+                        ).label("molecule_ids"),
+                    )
+                    .join(
+                        NEBInitialchainORM,
+                        NEBInitialchainORM.neb_id == NEBRecordORM.id,
+                    )
+                    .group_by(NEBRecordORM.id)
+                    .cte()
+                )
+
+                for idx, mol_ids in enumerate(initial_chain_ids):
+                    # does this exist?
+                    stmt = select(init_mol_cte.c.id)
+                    stmt = stmt.where(init_mol_cte.c.specification_id == neb_spec_id)
+                    stmt = stmt.where(init_mol_cte.c.molecule_ids == mol_ids)
+                    existing = session.execute(stmt).scalars().first()
+
+                    if not existing:
+                        neb_orm = NEBRecordORM(
+                            is_service=True,
+                            specification_id=neb_spec_id,
+                            status=RecordStatusEnum.waiting,
+                            owner_user_id=owner_user_id,
+                            owner_group_id=owner_group_id,
                         )
-                    ).label("molecule_ids"),
-                )
-                .join(
-                    NEBInitialchainORM,
-                    NEBInitialchainORM.neb_id == NEBRecordORM.id,
-                )
-                .group_by(NEBRecordORM.id)
-                .cte()
-            )
 
-            for idx, mol_ids in enumerate(initial_chain_ids):
-                # does this exist?
-                stmt = select(init_mol_cte.c.id)
-                stmt = stmt.where(init_mol_cte.c.specification_id == neb_spec_id)
-                stmt = stmt.where(init_mol_cte.c.molecule_ids == mol_ids)
-                existing = session.execute(stmt).scalars().first()
+                        self.create_service(neb_orm, tag, priority)
 
-                if not existing:
+                        session.add(neb_orm)
+                        session.flush()
+
+                        for pos, mid in enumerate(mol_ids):
+                            mid_orm = NEBInitialchainORM(molecule_id=mid, neb_id=neb_orm.id, position=pos)
+                            session.add(mid_orm)
+
+                        session.flush()
+
+                        neb_ids.append(neb_orm.id)
+                        inserted_idx.append(idx)
+                    else:
+                        neb_ids.append(existing)
+                        existing_idx.append(idx)
+            else:
+                for idx, mol_ids in enumerate(initial_chain_ids):
                     neb_orm = NEBRecordORM(
                         is_service=True,
                         specification_id=neb_spec_id,
@@ -698,12 +731,8 @@ class NEBRecordSocket(BaseRecordSocket):
 
                     neb_ids.append(neb_orm.id)
                     inserted_idx.append(idx)
-                else:
-                    neb_ids.append(existing)
-                    existing_idx.append(idx)
 
             meta = InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx)
-
             return meta, neb_ids
 
     def add(
@@ -714,6 +743,7 @@ class NEBRecordSocket(BaseRecordSocket):
         priority: PriorityEnum,
         owner_user: Optional[Union[int, str]],
         owner_group: Optional[Union[int, str]],
+        find_existing: bool,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
@@ -739,6 +769,8 @@ class NEBRecordSocket(BaseRecordSocket):
             Name or ID of the user who owns the record
         owner_group
             Group with additional permission for these records
+        find_existing
+            If True, search for existing records and return those. If False, always add new records
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed before returning from this function.
@@ -793,7 +825,7 @@ class NEBRecordSocket(BaseRecordSocket):
                 init_molecule_ids.append(molecule_ids)
 
             return self.add_internal(
-                init_molecule_ids, spec_id, tag, priority, owner_user_id, owner_group_id, session=session
+                init_molecule_ids, spec_id, tag, priority, owner_user_id, owner_group_id, find_existing, session=session
             )
 
     ####################################################

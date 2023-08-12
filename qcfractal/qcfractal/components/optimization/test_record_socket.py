@@ -42,7 +42,7 @@ def test_optimization_socket_task_spec(
     all_mols = [water, hooh, ne4]
 
     time_0 = datetime.utcnow()
-    meta, id = storage_socket.records.optimization.add(all_mols, spec, "tag1", PriorityEnum.low, None, None)
+    meta, id = storage_socket.records.optimization.add(all_mols, spec, "tag1", PriorityEnum.low, None, None, True)
     time_1 = datetime.utcnow()
     assert meta.success
 
@@ -86,7 +86,7 @@ def test_optimization_socket_task_spec(
     assert Molecule(**tasks[2].function_kwargs["input_data"]["initial_molecule"]) == rec_id_mol_map[tasks[2].record_id]
 
 
-def test_optimization_socket_add_same_1(storage_socket: SQLAlchemySocket):
+def test_optimization_socket_find_existing_1(storage_socket: SQLAlchemySocket):
     spec = OptimizationSpecification(
         program="optprog1",
         keywords={},
@@ -102,18 +102,18 @@ def test_optimization_socket_add_same_1(storage_socket: SQLAlchemySocket):
     )
 
     water = load_molecule_data("water_dimer_minima")
-    meta, id1 = storage_socket.records.optimization.add([water], spec, "*", PriorityEnum.normal, None, None)
+    meta, id1 = storage_socket.records.optimization.add([water], spec, "*", PriorityEnum.normal, None, None, True)
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
 
-    meta, id2 = storage_socket.records.optimization.add([water], spec, "*", PriorityEnum.normal, None, None)
+    meta, id2 = storage_socket.records.optimization.add([water], spec, "*", PriorityEnum.normal, None, None, True)
     assert meta.n_inserted == 0
     assert meta.n_existing == 1
     assert meta.existing_idx == [0]
     assert id1 == id2
 
 
-def test_optimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
+def test_optimization_socket_find_existing_2(storage_socket: SQLAlchemySocket):
     # Test case sensitivity
     spec1 = OptimizationSpecification(
         program="optprog1",
@@ -144,18 +144,18 @@ def test_optimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
     )
 
     water = load_molecule_data("water_dimer_minima")
-    meta, id1 = storage_socket.records.optimization.add([water], spec1, "*", PriorityEnum.normal, None, None)
+    meta, id1 = storage_socket.records.optimization.add([water], spec1, "*", PriorityEnum.normal, None, None, True)
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
 
-    meta, id2 = storage_socket.records.optimization.add([water], spec2, "*", PriorityEnum.normal, None, None)
+    meta, id2 = storage_socket.records.optimization.add([water], spec2, "*", PriorityEnum.normal, None, None, True)
     assert meta.n_inserted == 0
     assert meta.n_existing == 1
     assert meta.existing_idx == [0]
     assert id1 == id2
 
 
-def test_optimization_socket_add_same_3(storage_socket: SQLAlchemySocket):
+def test_optimization_socket_find_existing_3(storage_socket: SQLAlchemySocket):
     # Test default keywords and protocols
     spec1 = OptimizationSpecification(
         program="optprog1",
@@ -184,18 +184,18 @@ def test_optimization_socket_add_same_3(storage_socket: SQLAlchemySocket):
     )
 
     water = load_molecule_data("water_dimer_minima")
-    meta, id1 = storage_socket.records.optimization.add([water], spec1, "*", PriorityEnum.normal, None, None)
+    meta, id1 = storage_socket.records.optimization.add([water], spec1, "*", PriorityEnum.normal, None, None, True)
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
 
-    meta, id2 = storage_socket.records.optimization.add([water], spec2, "*", PriorityEnum.normal, None, None)
+    meta, id2 = storage_socket.records.optimization.add([water], spec2, "*", PriorityEnum.normal, None, None, True)
     assert meta.n_inserted == 0
     assert meta.n_existing == 1
     assert meta.existing_idx == [0]
     assert id1 == id2
 
 
-def test_optimization_socket_add_same_4(storage_socket: SQLAlchemySocket):
+def test_optimization_socket_find_existing_4(storage_socket: SQLAlchemySocket):
     # Test adding molecule by id
 
     water = load_molecule_data("water_dimer_minima")
@@ -212,11 +212,11 @@ def test_optimization_socket_add_same_4(storage_socket: SQLAlchemySocket):
         ),
     )
 
-    meta, id1 = storage_socket.records.optimization.add([water], spec1, "*", PriorityEnum.normal, None, None)
+    meta, id1 = storage_socket.records.optimization.add([water], spec1, "*", PriorityEnum.normal, None, None, True)
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
 
-    meta, id2 = storage_socket.records.optimization.add(mol_ids, spec1, "*", PriorityEnum.normal, None, None)
+    meta, id2 = storage_socket.records.optimization.add(mol_ids, spec1, "*", PriorityEnum.normal, None, None, True)
     assert meta.n_inserted == 0
     assert meta.n_existing == 1
     assert meta.existing_idx == [0]

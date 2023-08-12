@@ -107,6 +107,53 @@ def test_optimization_client_add_get(
     assert recs[2].initial_molecule.identifiers.molecule_hash == ne4.get_hash()
 
 
+@pytest.mark.parametrize("spec", test_specs)
+@pytest.mark.parametrize("find_existing", [True, False])
+def test_optimization_client_add_duplicate(
+    submitter_client: PortalClient, spec: OptimizationSpecification, find_existing: bool
+):
+    water = load_molecule_data("water_dimer_minima")
+    hooh = load_molecule_data("hooh")
+    ne4 = load_molecule_data("neon_tetramer")
+    all_mols = [water, hooh, ne4]
+
+    meta, id = submitter_client.add_optimizations(
+        initial_molecules=all_mols,
+        program=spec.program,
+        keywords=spec.keywords,
+        protocols=spec.protocols,
+        qc_specification=spec.qc_specification,
+        tag="tag1",
+        priority=PriorityEnum.low,
+        owner_group=None,
+        find_existing=True,
+    )
+
+    assert meta.success
+    assert meta.n_inserted == len(all_mols)
+
+    meta, id2 = submitter_client.add_optimizations(
+        initial_molecules=all_mols,
+        program=spec.program,
+        keywords=spec.keywords,
+        protocols=spec.protocols,
+        qc_specification=spec.qc_specification,
+        tag="tag1",
+        priority=PriorityEnum.low,
+        owner_group=None,
+        find_existing=find_existing,
+    )
+
+    if find_existing:
+        assert meta.n_existing == len(all_mols)
+        assert meta.n_inserted == 0
+        assert id == id2
+    else:
+        assert meta.n_existing == 0
+        assert meta.n_inserted == len(all_mols)
+        assert set(id).isdisjoint(id2)
+
+
 def test_optimization_client_add_existing_molecule(snowflake_client: PortalClient):
     spec = test_specs[0]
 

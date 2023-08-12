@@ -65,10 +65,13 @@ def submit_test_data(
     name: str,
     tag: Optional[str] = "*",
     priority: PriorityEnum = PriorityEnum.normal,
+    find_existing: bool = True,
 ) -> Tuple[int, AtomicResult]:
 
     input_spec, molecule, result = load_test_data(name)
-    meta, record_ids = storage_socket.records.singlepoint.add([molecule], input_spec, tag, priority, None, None)
+    meta, record_ids = storage_socket.records.singlepoint.add(
+        [molecule], input_spec, tag, priority, None, None, find_existing
+    )
     assert meta.success
     assert len(record_ids) == 1
     assert meta.n_inserted == 1

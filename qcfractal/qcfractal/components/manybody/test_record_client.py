@@ -83,6 +83,49 @@ def test_manybody_client_add_get(
     assert recs[1].initial_molecule.get_hash() == water4.get_hash()
 
 
+@pytest.mark.parametrize("spec", test_specs)
+@pytest.mark.parametrize("find_existing", [True, False])
+def test_manybody_client_add_duplicate(
+    submitter_client: PortalClient, spec: ManybodySpecification, find_existing: bool
+):
+    water2 = load_molecule_data("water_dimer_minima")
+    water4 = load_molecule_data("water_stacked")
+    all_mols = [water2, water4]
+
+    meta, id = submitter_client.add_manybodys(
+        all_mols,
+        spec.program,
+        spec.singlepoint_specification,
+        spec.keywords,
+        tag="tag1",
+        priority=PriorityEnum.low,
+        owner_group=None,
+        find_existing=True,
+    )
+    assert meta.success
+    assert meta.n_inserted == len(all_mols)
+
+    meta, id2 = submitter_client.add_manybodys(
+        all_mols,
+        spec.program,
+        spec.singlepoint_specification,
+        spec.keywords,
+        tag="tag1",
+        priority=PriorityEnum.low,
+        owner_group=None,
+        find_existing=find_existing,
+    )
+
+    if find_existing:
+        assert meta.n_existing == len(all_mols)
+        assert meta.n_inserted == 0
+        assert id == id2
+    else:
+        assert meta.n_existing == 0
+        assert meta.n_inserted == len(all_mols)
+        assert set(id).isdisjoint(id2)
+
+
 def test_manybody_client_add_existing_molecule(snowflake_client: PortalClient):
     spec = test_specs[0]
 

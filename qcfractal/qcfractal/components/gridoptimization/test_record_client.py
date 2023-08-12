@@ -99,6 +99,52 @@ def test_gridoptimization_client_add_get(
     assert recs[1].initial_molecule.identifiers.molecule_hash == h3ns.get_hash()
 
 
+@pytest.mark.parametrize("spec", test_specs)
+@pytest.mark.parametrize("find_existing", [True, False])
+def test_gridoptimization_client_add_duplicate(
+    submitter_client: PortalClient,
+    spec: GridoptimizationSpecification,
+    find_existing,
+):
+
+    hooh = load_molecule_data("peroxide2")
+    h3ns = load_molecule_data("go_H3NS")
+    all_mols = [hooh, h3ns]
+
+    meta, id = submitter_client.add_gridoptimizations(
+        all_mols,
+        spec.program,
+        spec.optimization_specification,
+        spec.keywords,
+        tag="tag1",
+        priority=PriorityEnum.low,
+        owner_group=None,
+        find_existing=True,
+    )
+    assert meta.success
+
+    meta, id2 = submitter_client.add_gridoptimizations(
+        all_mols,
+        spec.program,
+        spec.optimization_specification,
+        spec.keywords,
+        tag="tag1",
+        priority=PriorityEnum.low,
+        owner_group=None,
+        find_existing=find_existing,
+    )
+    assert meta.success
+
+    if find_existing:
+        assert meta.n_existing == len(all_mols)
+        assert meta.n_inserted == 0
+        assert id == id2
+    else:
+        assert meta.n_existing == 0
+        assert meta.n_inserted == len(all_mols)
+        assert set(id).isdisjoint(id2)
+
+
 def test_gridoptimization_client_add_existing_molecule(snowflake_client: PortalClient):
     spec = test_specs[0]
 

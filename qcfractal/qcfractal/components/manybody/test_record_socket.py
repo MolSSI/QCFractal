@@ -27,7 +27,7 @@ def test_manybody_socket_add_get(storage_socket: SQLAlchemySocket, session: Sess
     water4 = load_molecule_data("water_stacked")
 
     time_0 = datetime.utcnow()
-    meta, ids = storage_socket.records.manybody.add([water2, water4], spec, "tag1", PriorityEnum.low, None, None)
+    meta, ids = storage_socket.records.manybody.add([water2, water4], spec, "tag1", PriorityEnum.low, None, None, True)
     time_1 = datetime.utcnow()
     assert meta.success
 
@@ -69,11 +69,11 @@ def test_manybody_socket_add_same_1(storage_socket: SQLAlchemySocket):
     water2 = load_molecule_data("water_dimer_minima")
     water4 = load_molecule_data("water_stacked")
 
-    meta, id1 = storage_socket.records.manybody.add([water2, water4], spec, "*", PriorityEnum.normal, None, None)
+    meta, id1 = storage_socket.records.manybody.add([water2, water4], spec, "*", PriorityEnum.normal, None, None, True)
     assert meta.n_inserted == 2
     assert meta.inserted_idx == [0, 1]
 
-    meta, id2 = storage_socket.records.manybody.add([water4, water2], spec, "*", PriorityEnum.normal, None, None)
+    meta, id2 = storage_socket.records.manybody.add([water4, water2], spec, "*", PriorityEnum.normal, None, None, True)
     assert meta.n_inserted == 0
     assert meta.n_existing == 2
     assert meta.existing_idx == [0, 1]
@@ -97,7 +97,7 @@ def test_manybody_socket_run(
     storage_socket.users.add(UserInfo(username="submit_user", role="submit", groups=["group1"], enabled=True))
 
     meta_1, id_1 = storage_socket.records.manybody.add(
-        [molecules_1], input_spec_1, "test_tag", PriorityEnum.low, "submit_user", "group1"
+        [molecules_1], input_spec_1, "test_tag", PriorityEnum.low, "submit_user", "group1", True
     )
     assert meta_1.success
 

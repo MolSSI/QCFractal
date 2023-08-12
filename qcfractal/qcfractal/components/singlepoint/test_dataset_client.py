@@ -36,7 +36,8 @@ def singlepoint_ds(submitter_client: PortalClient):
     yield ds
 
 
-def test_singlepoint_dataset_client_submit(singlepoint_ds: SinglepointDataset):
+@pytest.mark.parametrize("find_existing", [True, False])
+def test_singlepoint_dataset_client_submit(singlepoint_ds: SinglepointDataset, find_existing: bool):
 
     input_spec_1, molecule_1, _ = load_test_data("sp_psi4_benzene_energy_1")
 
@@ -67,10 +68,14 @@ def test_singlepoint_dataset_client_submit(singlepoint_ds: SinglepointDataset):
 
     # now resubmit
     singlepoint_ds.add_entries([new_ent])
-    singlepoint_ds.submit()
+    singlepoint_ds.submit(find_existing=find_existing)
     assert singlepoint_ds.status()["test_spec"]["waiting"] == 1
 
     for e, s, r in singlepoint_ds.iterate_records():
         assert r.owner_user == singlepoint_ds.owner_user
         assert r.owner_group == singlepoint_ds.owner_group
-        assert r.id == record_id
+
+        if find_existing:
+            assert r.id == record_id
+        else:
+            assert r.id != record_id

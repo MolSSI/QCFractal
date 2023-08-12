@@ -101,6 +101,51 @@ def test_neb_client_add_get(submitter_client: PortalClient, spec: NEBSpecificati
     assert {hash1, hash2} == {chain1[0].get_hash(), chain2[-1].get_hash()}
 
 
+@pytest.mark.parametrize("spec", test_specs)
+@pytest.mark.parametrize("find_existing", [True, False])
+def test_neb_client_add_duplicate(submitter_client: PortalClient, spec: NEBSpecification, find_existing: bool):
+    chain1 = [load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)]
+    chain2 = [load_molecule_data("neb/neb_C3H2N_%i" % i) for i in range(21)]
+    all_chains = [chain1, chain2]
+
+    meta, id = submitter_client.add_nebs(
+        initial_chains=all_chains,
+        program=spec.program,
+        singlepoint_specification=spec.singlepoint_specification,
+        optimization_specification=None,
+        keywords=spec.keywords,
+        tag="tag1",
+        priority=PriorityEnum.low,
+        owner_group=None,
+        find_existing=True,
+    )
+
+    assert meta.success
+    print(meta)
+    assert meta.n_inserted == len(all_chains)
+
+    meta, id2 = submitter_client.add_nebs(
+        initial_chains=all_chains,
+        program=spec.program,
+        singlepoint_specification=spec.singlepoint_specification,
+        optimization_specification=None,
+        keywords=spec.keywords,
+        tag="tag1",
+        priority=PriorityEnum.low,
+        owner_group=None,
+        find_existing=find_existing,
+    )
+
+    if find_existing:
+        assert meta.n_existing == len(all_chains)
+        assert meta.n_inserted == 0
+        assert id == id2
+    else:
+        assert meta.n_existing == 0
+        assert meta.n_inserted == len(all_chains)
+        assert set(id).isdisjoint(id2)
+
+
 def test_neb_client_add_existing_chain(snowflake_client: PortalClient):
     spec = test_specs[0]
     chain1 = [load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)]

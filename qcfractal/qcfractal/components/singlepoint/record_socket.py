@@ -272,6 +272,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
         priority: PriorityEnum,
         owner_user_id: Optional[int],
         owner_group_id: Optional[int],
+        find_existing: bool,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
@@ -298,6 +299,8 @@ class SinglepointRecordSocket(BaseRecordSocket):
             ID of the user who owns the record
         owner_group_id
             ID of the group with additional permission for these records
+        find_existing
+            If True, search for existing records and return those. If False, always add new records
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -335,14 +338,21 @@ class SinglepointRecordSocket(BaseRecordSocket):
                 self.create_task(sp_orm, tag, priority)
                 all_orm.append(sp_orm)
 
-            meta, ids = insert_general(
-                session,
-                all_orm,
-                (SinglepointRecordORM.specification_id, SinglepointRecordORM.molecule_id),
-                (SinglepointRecordORM.id,),
-                lock_id=singlepoint_insert_lock_id,
-            )
-            return meta, [x[0] for x in ids]
+            if find_existing:
+                meta, ids = insert_general(
+                    session,
+                    all_orm,
+                    (SinglepointRecordORM.specification_id, SinglepointRecordORM.molecule_id),
+                    (SinglepointRecordORM.id,),
+                    lock_id=singlepoint_insert_lock_id,
+                )
+                return meta, [x[0] for x in ids]
+            else:
+                session.add_all(all_orm)
+                session.flush()
+                meta = InsertMetadata(inserted_idx=list(range(len(all_orm))))
+
+                return meta, [x.id for x in all_orm]
 
     def add(
         self,
@@ -352,6 +362,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
         priority: PriorityEnum,
         owner_user: Optional[Union[int, str]],
         owner_group: Optional[Union[int, str]],
+        find_existing: bool,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
@@ -375,6 +386,8 @@ class SinglepointRecordSocket(BaseRecordSocket):
             Name or ID of the user who owns the record
         owner_group
             Group with additional permission for these records
+        find_existing
+            If True, search for existing records and return those. If False, always add new records
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -410,7 +423,9 @@ class SinglepointRecordSocket(BaseRecordSocket):
                     [],
                 )
 
-            return self.add_internal(mol_ids, spec_id, tag, priority, owner_user_id, owner_group_id, session=session)
+            return self.add_internal(
+                mol_ids, spec_id, tag, priority, owner_user_id, owner_group_id, find_existing, session=session
+            )
 
     ####################################################
     # Some stuff to be retrieved for singlepoints

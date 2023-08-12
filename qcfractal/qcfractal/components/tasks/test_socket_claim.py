@@ -66,25 +66,25 @@ def test_task_socket_claim_mixed(storage_socket: SQLAlchemySocket, session: Sess
     )
 
     meta, id_1 = storage_socket.records.singlepoint.add(
-        [molecule_1], input_spec_1, "tag1", PriorityEnum.low, None, None
+        [molecule_1], input_spec_1, "tag1", PriorityEnum.low, None, None, True
     )
     meta, id_2 = storage_socket.records.singlepoint.add(
-        [molecule_2], input_spec_2, "tag2", PriorityEnum.normal, None, None
+        [molecule_2], input_spec_2, "tag2", PriorityEnum.normal, None, None, True
     )
     meta, id_3 = storage_socket.records.singlepoint.add(
-        [molecule_3], input_spec_3, "tag1", PriorityEnum.high, None, None
+        [molecule_3], input_spec_3, "tag1", PriorityEnum.high, None, None, True
     )
     meta, id_4 = storage_socket.records.optimization.add(
-        [molecule_4], input_spec_4, "tag3", PriorityEnum.normal, None, None
+        [molecule_4], input_spec_4, "tag3", PriorityEnum.normal, None, None, True
     )
     meta, id_5 = storage_socket.records.singlepoint.add(
-        [molecule_5], input_spec_5, "tag1", PriorityEnum.normal, None, None
+        [molecule_5], input_spec_5, "tag1", PriorityEnum.normal, None, None, True
     )
     meta, id_6 = storage_socket.records.singlepoint.add(
-        [molecule_6], input_spec_6, "tag6", PriorityEnum.high, None, None
+        [molecule_6], input_spec_6, "tag6", PriorityEnum.high, None, None, True
     )
     meta, id_7 = storage_socket.records.singlepoint.add(
-        [molecule_7], input_spec_7, "tag1", PriorityEnum.high, None, None
+        [molecule_7], input_spec_7, "tag1", PriorityEnum.high, None, None, True
     )
 
     all_id = id_1 + id_2 + id_3 + id_4 + id_5 + id_6 + id_7
@@ -155,22 +155,28 @@ def test_task_socket_claim_priority(storage_socket: SQLAlchemySocket, session: S
     )
 
     meta, id_1 = storage_socket.records.singlepoint.add(
-        [molecule_1], input_spec_1, "tag1", PriorityEnum.low, None, None
+        [molecule_1], input_spec_1, "tag1", PriorityEnum.low, None, None, True
     )
     meta, id_2 = storage_socket.records.singlepoint.add(
-        [molecule_2], input_spec_2, "tag1", PriorityEnum.normal, None, None
+        [molecule_2], input_spec_2, "tag1", PriorityEnum.normal, None, None, True
     )
     meta, id_3 = storage_socket.records.singlepoint.add(
-        [molecule_3], input_spec_3, "tag1", PriorityEnum.high, None, None
+        [molecule_3], input_spec_3, "tag1", PriorityEnum.high, None, None, True
     )
     meta, id_4 = storage_socket.records.optimization.add(
-        [molecule_4], input_spec_4, "tag1", PriorityEnum.normal, None, None
+        [molecule_4],
+        input_spec_4,
+        "tag1",
+        PriorityEnum.normal,
+        None,
+        None,
+        True,
     )
     meta, id_5 = storage_socket.records.singlepoint.add(
-        [molecule_5], input_spec_5, "tag1", PriorityEnum.normal, None, None
+        [molecule_5], input_spec_5, "tag1", PriorityEnum.normal, None, None, True
     )
     meta, id_6 = storage_socket.records.singlepoint.add(
-        [molecule_6], input_spec_6, "tag1", PriorityEnum.high, None, None
+        [molecule_6], input_spec_6, "tag1", PriorityEnum.high, None, None, True
     )
 
     all_id = id_1 + id_2 + id_3 + id_4 + id_5 + id_6
@@ -206,19 +212,19 @@ def test_task_socket_claim_tag(storage_socket: SQLAlchemySocket, session: Sessio
     )
 
     meta, id_1 = storage_socket.records.singlepoint.add(
-        [molecule_1], input_spec_1, "TAg1", PriorityEnum.normal, None, None
+        [molecule_1], input_spec_1, "TAg1", PriorityEnum.normal, None, None, True
     )
     meta, id_2 = storage_socket.records.singlepoint.add(
-        [molecule_2], input_spec_2, "tag2", PriorityEnum.normal, None, None
+        [molecule_2], input_spec_2, "tag2", PriorityEnum.normal, None, None, True
     )
     meta, id_3 = storage_socket.records.singlepoint.add(
-        [molecule_3], input_spec_3, "*", PriorityEnum.normal, None, None
+        [molecule_3], input_spec_3, "*", PriorityEnum.normal, None, None, True
     )
     meta, id_4 = storage_socket.records.optimization.add(
-        [molecule_4], input_spec_4, "tag3", PriorityEnum.normal, None, None
+        [molecule_4], input_spec_4, "tag3", PriorityEnum.normal, None, None, True
     )
     meta, id_5 = storage_socket.records.singlepoint.add(
-        [molecule_5], input_spec_5, "tag1", PriorityEnum.normal, None, None
+        [molecule_5], input_spec_5, "tag1", PriorityEnum.normal, None, None, True
     )
 
     all_id = id_1 + id_2 + id_3 + id_4 + id_5
@@ -250,19 +256,19 @@ def test_task_socket_claim_tag_wildcard(storage_socket: SQLAlchemySocket, sessio
     )
 
     meta, id_1 = storage_socket.records.singlepoint.add(
-        [molecule_1], input_spec_1, "tag1", PriorityEnum.normal, None, None
+        [molecule_1], input_spec_1, "tag1", PriorityEnum.normal, None, None, True
     )
     meta, id_2 = storage_socket.records.singlepoint.add(
-        [molecule_2], input_spec_2, "tag2", PriorityEnum.normal, None, None
+        [molecule_2], input_spec_2, "tag2", PriorityEnum.normal, None, None, True
     )
     meta, id_3 = storage_socket.records.singlepoint.add(
-        [molecule_3], input_spec_3, "*", PriorityEnum.normal, None, None
+        [molecule_3], input_spec_3, "*", PriorityEnum.normal, None, None, True
     )
     meta, id_4 = storage_socket.records.optimization.add(
-        [molecule_4], input_spec_4, "taG3", PriorityEnum.normal, None, None
+        [molecule_4], input_spec_4, "taG3", PriorityEnum.normal, None, None, True
     )
     meta, id_5 = storage_socket.records.singlepoint.add(
-        [molecule_5], input_spec_5, "tag1", PriorityEnum.normal, None, None
+        [molecule_5], input_spec_5, "tag1", PriorityEnum.normal, None, None, True
     )
 
     all_id = id_1 + id_2 + id_3 + id_4 + id_5
@@ -296,13 +302,13 @@ def test_task_socket_claim_program(storage_socket: SQLAlchemySocket, session: Se
     )
 
     meta, id_7 = storage_socket.records.singlepoint.add(
-        [molecule_7], input_spec_7, "tag1", PriorityEnum.normal, None, None
+        [molecule_7], input_spec_7, "tag1", PriorityEnum.normal, None, None, True
     )
     meta, id_1 = storage_socket.records.singlepoint.add(
-        [molecule_1], input_spec_1, "tag1", PriorityEnum.normal, None, None
+        [molecule_1], input_spec_1, "tag1", PriorityEnum.normal, None, None, True
     )
     meta, id_2 = storage_socket.records.singlepoint.add(
-        [molecule_2], input_spec_2, "tag1", PriorityEnum.normal, None, None
+        [molecule_2], input_spec_2, "tag1", PriorityEnum.normal, None, None, True
     )
 
     all_id = id_7 + id_1 + id_2
@@ -330,13 +336,13 @@ def test_task_socket_claim_program_subset(storage_socket: SQLAlchemySocket, sess
     )
 
     meta, id_7 = storage_socket.records.singlepoint.add(
-        [molecule_7], input_spec_7, "tag1", PriorityEnum.normal, None, None
+        [molecule_7], input_spec_7, "tag1", PriorityEnum.normal, None, None, True
     )
     meta, id_1 = storage_socket.records.singlepoint.add(
-        [molecule_1], input_spec_1, "tag1", PriorityEnum.normal, None, None
+        [molecule_1], input_spec_1, "tag1", PriorityEnum.normal, None, None, True
     )
     meta, id_2 = storage_socket.records.singlepoint.add(
-        [molecule_2], input_spec_2, "tag1", PriorityEnum.normal, None, None
+        [molecule_2], input_spec_2, "tag1", PriorityEnum.normal, None, None, True
     )
 
     all_id = id_7 + id_1 + id_2

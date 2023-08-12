@@ -98,6 +98,54 @@ def test_torsiondrive_client_add_get(
     assert {hash1, hash2} == {td_mol_1.get_hash(), td_mol_2.get_hash()}
 
 
+@pytest.mark.parametrize("spec", test_specs)
+@pytest.mark.parametrize("find_existing", [True, False])
+def test_torsiondrive_client_add_duplicate(
+    submitter_client: PortalClient,
+    spec: TorsiondriveSpecification,
+    find_existing: bool,
+):
+    hooh = load_molecule_data("peroxide2")
+    td_mol_1 = load_molecule_data("td_C9H11NO2_1")
+    td_mol_2 = load_molecule_data("td_C9H11NO2_2")
+
+    all_mols = [[hooh], [td_mol_1, td_mol_2]]
+
+    meta, id = submitter_client.add_torsiondrives(
+        all_mols,
+        "torsiondrive",
+        keywords=spec.keywords,
+        optimization_specification=spec.optimization_specification,
+        tag="tag1",
+        priority=PriorityEnum.low,
+        owner_group=None,
+        find_existing=True,
+    )
+
+    assert meta.success
+    assert meta.n_inserted == len(all_mols)
+
+    meta, id2 = submitter_client.add_torsiondrives(
+        all_mols,
+        "torsiondrive",
+        keywords=spec.keywords,
+        optimization_specification=spec.optimization_specification,
+        tag="tag1",
+        priority=PriorityEnum.low,
+        owner_group=None,
+        find_existing=find_existing,
+    )
+
+    if find_existing:
+        assert meta.n_existing == len(all_mols)
+        assert meta.n_inserted == 0
+        assert id == id2
+    else:
+        assert meta.n_existing == 0
+        assert meta.n_inserted == len(all_mols)
+        assert set(id).isdisjoint(id2)
+
+
 def test_torsiondrive_client_add_existing_molecule(snowflake_client: PortalClient):
     spec = test_specs[0]
 

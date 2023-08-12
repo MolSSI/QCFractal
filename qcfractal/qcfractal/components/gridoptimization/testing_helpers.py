@@ -117,7 +117,9 @@ def submit_test_data(
 ) -> Tuple[int, Dict[str, OptimizationResult]]:
 
     input_spec, molecule, result = load_test_data(name)
-    meta, record_ids = storage_socket.records.gridoptimization.add([molecule], input_spec, tag, priority, None, None)
+    meta, record_ids = storage_socket.records.gridoptimization.add(
+        [molecule], input_spec, tag, priority, None, None, True
+    )
     assert meta.success
     assert len(record_ids) == 1
     assert meta.n_inserted == 1

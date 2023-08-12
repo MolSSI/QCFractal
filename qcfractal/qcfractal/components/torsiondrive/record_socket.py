@@ -298,6 +298,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                 service_orm.priority,
                 td_orm.owner_user_id,
                 td_orm.owner_group_id,
+                find_existing=True,
                 session=session,
             )
 
@@ -469,6 +470,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         priority: PriorityEnum,
         owner_user_id: Optional[int],
         owner_group_id: Optional[int],
+        find_existing: bool,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
@@ -495,6 +497,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             ID of the user who owns the record
         owner_group_id
             ID of the group with additional permission for these records
+        find_existing
+            If True, search for existing records and return those. If False, always add new records
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -510,52 +514,83 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
 
         with self.root_socket.optional_session(session, False) as session:
 
+            self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
+
             # Lock for the entire transaction
             session.execute(select(func.pg_advisory_xact_lock(torsiondrive_insert_lock_id))).scalar()
-
-            self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
 
             td_ids = []
             inserted_idx = []
             existing_idx = []
 
-            # Torsiondrives are a bit more complicated because we have a many-to-many relationship
-            # between torsiondrives and initial molecules. So skip the general insert
-            # function and do this one at a time
+            if find_existing:
+                # Torsiondrives are a bit more complicated because we have a many-to-many relationship
+                # between torsiondrives and initial molecules. So skip the general insert
+                # function and do this one at a time
 
-            # Create a cte with the initial molecules we can query against
-            # This is like a table, with the specification id and the initial molecule ids
-            # as a postgres array (sorted)
-            # We then use this to determine if there are duplicates
-            init_mol_cte = (
-                select(
-                    TorsiondriveRecordORM.id,
-                    TorsiondriveRecordORM.specification_id,
-                    array_agg(
-                        aggregate_order_by(
-                            TorsiondriveInitialMoleculeORM.molecule_id, TorsiondriveInitialMoleculeORM.molecule_id.asc()
+                # Create a cte with the initial molecules we can query against
+                # This is like a table, with the specification id and the initial molecule ids
+                # as a postgres array (sorted)
+                # We then use this to determine if there are duplicates
+                init_mol_cte = (
+                    select(
+                        TorsiondriveRecordORM.id,
+                        TorsiondriveRecordORM.specification_id,
+                        array_agg(
+                            aggregate_order_by(
+                                TorsiondriveInitialMoleculeORM.molecule_id,
+                                TorsiondriveInitialMoleculeORM.molecule_id.asc(),
+                            )
+                        ).label("molecule_ids"),
+                    )
+                    .join(
+                        TorsiondriveInitialMoleculeORM,
+                        TorsiondriveInitialMoleculeORM.torsiondrive_id == TorsiondriveRecordORM.id,
+                    )
+                    .group_by(TorsiondriveRecordORM.id)
+                    .cte()
+                )
+
+                for idx, mol_ids in enumerate(initial_molecule_ids):
+                    # sort molecules by increasing ids, and remove duplicates
+                    mol_ids = sorted(set(mol_ids))
+
+                    # does this exist?
+                    stmt = select(init_mol_cte.c.id)
+                    stmt = stmt.where(init_mol_cte.c.specification_id == td_spec_id)
+                    stmt = stmt.where(init_mol_cte.c.molecule_ids == mol_ids)
+                    existing = session.execute(stmt).scalars().first()
+
+                    if not existing:
+                        td_orm = TorsiondriveRecordORM(
+                            is_service=as_service,
+                            specification_id=td_spec_id,
+                            status=RecordStatusEnum.waiting,
+                            owner_user_id=owner_user_id,
+                            owner_group_id=owner_group_id,
                         )
-                    ).label("molecule_ids"),
-                )
-                .join(
-                    TorsiondriveInitialMoleculeORM,
-                    TorsiondriveInitialMoleculeORM.torsiondrive_id == TorsiondriveRecordORM.id,
-                )
-                .group_by(TorsiondriveRecordORM.id)
-                .cte()
-            )
 
-            for idx, mol_ids in enumerate(initial_molecule_ids):
-                # sort molecules by increasing ids, and remove duplicates
-                mol_ids = sorted(set(mol_ids))
+                        self.create_service(td_orm, tag, priority)
 
-                # does this exist?
-                stmt = select(init_mol_cte.c.id)
-                stmt = stmt.where(init_mol_cte.c.specification_id == td_spec_id)
-                stmt = stmt.where(init_mol_cte.c.molecule_ids == mol_ids)
-                existing = session.execute(stmt).scalars().first()
+                        session.add(td_orm)
+                        session.flush()
 
-                if not existing:
+                        for mid in mol_ids:
+                            mid_orm = TorsiondriveInitialMoleculeORM(molecule_id=mid, torsiondrive_id=td_orm.id)
+                            session.add(mid_orm)
+
+                        session.flush()
+
+                        td_ids.append(td_orm.id)
+                        inserted_idx.append(idx)
+                    else:
+                        td_ids.append(existing)
+                        existing_idx.append(idx)
+            else:  # not finding existing - just add all
+                for idx, mol_ids in enumerate(initial_molecule_ids):
+                    # sort molecules by increasing ids, and remove duplicates
+                    mol_ids = sorted(set(mol_ids))
+
                     td_orm = TorsiondriveRecordORM(
                         is_service=as_service,
                         specification_id=td_spec_id,
@@ -577,9 +612,6 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
 
                     td_ids.append(td_orm.id)
                     inserted_idx.append(idx)
-                else:
-                    td_ids.append(existing)
-                    existing_idx.append(idx)
 
             meta = InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx)
             return meta, td_ids
@@ -593,6 +625,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         priority: PriorityEnum,
         owner_user: Optional[str],
         owner_group: Optional[str],
+        find_existing: bool,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
@@ -618,6 +651,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             Name of the user who owns the record
         owner_group
             Group with additional permission for these records
+        find_existing
+            If True, search for existing records and return those. If False, always add new records
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -660,7 +695,15 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                 init_mol_ids.append(mol_ids)
 
             return self.add_internal(
-                init_mol_ids, spec_id, as_service, tag, priority, owner_user_id, owner_group_id, session=session
+                init_mol_ids,
+                spec_id,
+                as_service,
+                tag,
+                priority,
+                owner_user_id,
+                owner_group_id,
+                find_existing,
+                session=session,
             )
 
     ####################################################

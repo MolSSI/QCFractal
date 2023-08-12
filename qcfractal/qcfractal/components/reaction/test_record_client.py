@@ -102,6 +102,52 @@ def test_reaction_client_add_get(
     assert expected_coef == db_coef
 
 
+@pytest.mark.parametrize("spec", test_specs)
+@pytest.mark.parametrize("find_existing", [True, False])
+def test_reaction_client_add_duplicate(
+    submitter_client: PortalClient, spec: ReactionSpecification, find_existing: bool
+):
+    hooh = load_molecule_data("peroxide2")
+    ne4 = load_molecule_data("neon_tetramer")
+    water = load_molecule_data("water_dimer_minima")
+    all_stoich = [[(1.0, hooh), (2.0, ne4)], [(3.0, hooh), (4.0, water)]]
+
+    meta, id = submitter_client.add_reactions(
+        all_stoich,
+        spec.program,
+        spec.singlepoint_specification,
+        spec.optimization_specification,
+        spec.keywords,
+        tag="tag1",
+        priority=PriorityEnum.low,
+        owner_group=None,
+        find_existing=True,
+    )
+    assert meta.success
+    assert meta.n_inserted == len(all_stoich)
+
+    meta, id2 = submitter_client.add_reactions(
+        all_stoich,
+        spec.program,
+        spec.singlepoint_specification,
+        spec.optimization_specification,
+        spec.keywords,
+        tag="tag1",
+        priority=PriorityEnum.low,
+        owner_group=None,
+        find_existing=find_existing,
+    )
+
+    if find_existing:
+        assert meta.n_existing == len(all_stoich)
+        assert meta.n_inserted == 0
+        assert id == id2
+    else:
+        assert meta.n_existing == 0
+        assert meta.n_inserted == len(all_stoich)
+        assert set(id).isdisjoint(id2)
+
+
 def test_reaction_client_add_existing_molecule(snowflake_client: PortalClient):
     spec = test_specs[0]
 

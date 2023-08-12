@@ -149,6 +149,7 @@ class ReactionRecordSocket(BaseRecordSocket):
                 service_orm.priority,
                 rxn_orm.owner_user_id,
                 rxn_orm.owner_group_id,
+                find_existing=True,
                 session=session,
             )
 
@@ -185,6 +186,7 @@ class ReactionRecordSocket(BaseRecordSocket):
                 service_orm.priority,
                 rxn_orm.owner_user_id,
                 rxn_orm.owner_group_id,
+                find_existing=True,
                 session=session,
             )
 
@@ -460,6 +462,7 @@ class ReactionRecordSocket(BaseRecordSocket):
         priority: PriorityEnum,
         owner_user_id: Optional[int],
         owner_group_id: Optional[int],
+        find_existing: bool,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
@@ -486,6 +489,8 @@ class ReactionRecordSocket(BaseRecordSocket):
             ID of the user who owns the record
         owner_group_id
             ID of the group with additional permission for these records
+        find_existing
+            If True, search for existing records and return those. If False, always add new records
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -501,49 +506,80 @@ class ReactionRecordSocket(BaseRecordSocket):
 
         with self.root_socket.optional_session(session, False) as session:
 
+            self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
+
             # Lock for the entire transaction
             session.execute(select(func.pg_advisory_xact_lock(reaction_insert_lock_id))).scalar()
-
-            self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
 
             rxn_ids = []
             inserted_idx = []
             existing_idx = []
 
-            # Deduplication is a bit complicated we have a many-to-many relationship
-            # between reactions and molecules. So skip the general insert
+            if find_existing:
 
-            # Create a cte with the molecules we can query against
-            # This is like a table, with the specification id and the molecule ids
-            # as a postgres array (sorted)
-            # We then use this to determine if there are duplicates
-            init_mol_cte = (
-                select(
-                    ReactionRecordORM.id,
-                    ReactionRecordORM.specification_id,
-                    array_agg(
-                        aggregate_order_by(ReactionComponentORM.molecule_id, ReactionComponentORM.molecule_id.asc())
-                    ).label("molecule_ids"),
+                # Deduplication is a bit complicated we have a many-to-many relationship
+                # between reactions and molecules. So skip the general insert
+
+                # Create a cte with the molecules we can query against
+                # This is like a table, with the specification id and the molecule ids
+                # as a postgres array (sorted)
+                # We then use this to determine if there are duplicates
+                init_mol_cte = (
+                    select(
+                        ReactionRecordORM.id,
+                        ReactionRecordORM.specification_id,
+                        array_agg(
+                            aggregate_order_by(ReactionComponentORM.molecule_id, ReactionComponentORM.molecule_id.asc())
+                        ).label("molecule_ids"),
+                    )
+                    .join(
+                        ReactionComponentORM,
+                        ReactionComponentORM.reaction_id == ReactionRecordORM.id,
+                    )
+                    .group_by(ReactionRecordORM.id)
+                    .cte()
                 )
-                .join(
-                    ReactionComponentORM,
-                    ReactionComponentORM.reaction_id == ReactionRecordORM.id,
-                )
-                .group_by(ReactionRecordORM.id)
-                .cte()
-            )
 
-            for idx, rxn_mols in enumerate(stoichiometries):
-                # sort molecule ids by increasing ids, and remove duplicates
-                rxn_mol_ids = sorted(set(x[1] for x in rxn_mols))
+                for idx, rxn_mols in enumerate(stoichiometries):
+                    # sort molecule ids by increasing ids, and remove duplicates
+                    rxn_mol_ids = sorted(set(x[1] for x in rxn_mols))
 
-                # does this exist?
-                stmt = select(init_mol_cte.c.id)
-                stmt = stmt.where(init_mol_cte.c.specification_id == rxn_spec_id)
-                stmt = stmt.where(init_mol_cte.c.molecule_ids == rxn_mol_ids)
-                existing = session.execute(stmt).scalars().first()
+                    # does this exist?
+                    stmt = select(init_mol_cte.c.id)
+                    stmt = stmt.where(init_mol_cte.c.specification_id == rxn_spec_id)
+                    stmt = stmt.where(init_mol_cte.c.molecule_ids == rxn_mol_ids)
+                    existing = session.execute(stmt).scalars().first()
 
-                if not existing:
+                    if not existing:
+                        component_orm = [
+                            ReactionComponentORM(coefficient=coeff, molecule_id=mid) for coeff, mid in rxn_mols
+                        ]
+
+                        rxn_orm = ReactionRecordORM(
+                            is_service=True,
+                            specification_id=rxn_spec_id,
+                            components=component_orm,
+                            status=RecordStatusEnum.waiting,
+                            owner_user_id=owner_user_id,
+                            owner_group_id=owner_group_id,
+                        )
+
+                        self.create_service(rxn_orm, tag, priority)
+
+                        session.add(rxn_orm)
+                        session.flush()
+
+                        rxn_ids.append(rxn_orm.id)
+                        inserted_idx.append(idx)
+                    else:
+                        rxn_ids.append(existing)
+                        existing_idx.append(idx)
+
+            else:  # don't find existing - always add
+                for idx, rxn_mols in enumerate(stoichiometries):
+                    # sort molecule ids by increasing ids, and remove duplicates
+                    rxn_mol_ids = sorted(set(x[1] for x in rxn_mols))
+
                     component_orm = [
                         ReactionComponentORM(coefficient=coeff, molecule_id=mid) for coeff, mid in rxn_mols
                     ]
@@ -564,9 +600,6 @@ class ReactionRecordSocket(BaseRecordSocket):
 
                     rxn_ids.append(rxn_orm.id)
                     inserted_idx.append(idx)
-                else:
-                    rxn_ids.append(existing)
-                    existing_idx.append(idx)
 
             meta = InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx)
             return meta, rxn_ids
@@ -579,6 +612,7 @@ class ReactionRecordSocket(BaseRecordSocket):
         priority: PriorityEnum,
         owner_user: Optional[Union[int, str]],
         owner_group: Optional[Union[int, str]],
+        find_existing: bool,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
@@ -602,6 +636,8 @@ class ReactionRecordSocket(BaseRecordSocket):
             Name or ID of the user who owns the record
         owner_group
             Group with additional permission for these records
+        find_existing
+            If True, search for existing records and return those. If False, always add new records
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -645,7 +681,9 @@ class ReactionRecordSocket(BaseRecordSocket):
 
                 new_mol.append([(x[0], y) for x, y in zip(single_stoic, mol_ids)])
 
-            return self.add_internal(new_mol, spec_id, tag, priority, owner_user_id, owner_group_id, session=session)
+            return self.add_internal(
+                new_mol, spec_id, tag, priority, owner_user_id, owner_group_id, find_existing, session=session
+            )
 
     ####################################################
     # Some stuff to be retrieved for reactions
