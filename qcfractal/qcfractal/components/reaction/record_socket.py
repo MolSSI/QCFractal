@@ -149,7 +149,7 @@ class ReactionRecordSocket(BaseRecordSocket):
                 service_orm.priority,
                 rxn_orm.owner_user_id,
                 rxn_orm.owner_group_id,
-                find_existing=True,
+                service_orm.find_existing,
                 session=session,
             )
 
@@ -186,7 +186,7 @@ class ReactionRecordSocket(BaseRecordSocket):
                 service_orm.priority,
                 rxn_orm.owner_user_id,
                 rxn_orm.owner_group_id,
-                find_existing=True,
+                service_orm.find_existing,
                 session=session,
             )
 
@@ -564,7 +564,7 @@ class ReactionRecordSocket(BaseRecordSocket):
                             owner_group_id=owner_group_id,
                         )
 
-                        self.create_service(rxn_orm, tag, priority)
+                        self.create_service(rxn_orm, tag, priority, find_existing)
 
                         session.add(rxn_orm)
                         session.flush()
@@ -593,7 +593,7 @@ class ReactionRecordSocket(BaseRecordSocket):
                         owner_group_id=owner_group_id,
                     )
 
-                    self.create_service(rxn_orm, tag, priority)
+                    self.create_service(rxn_orm, tag, priority, find_existing)
 
                     session.add(rxn_orm)
                     session.flush()

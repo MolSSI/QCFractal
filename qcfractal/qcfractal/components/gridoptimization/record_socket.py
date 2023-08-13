@@ -358,7 +358,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                     service_orm.priority,
                     go_orm.owner_user_id,
                     go_orm.owner_group_id,
-                    find_existing=True,
+                    service_orm.find_existing,
                     session=session,
                 )
 
@@ -392,7 +392,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                     service_orm.priority,
                     go_orm.owner_user_id,
                     go_orm.owner_group_id,
-                    find_existing=True,
+                    service_orm.find_existing,
                     session=session,
                 )
 
@@ -605,7 +605,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                     owner_group_id=owner_group_id,
                 )
 
-                self.create_service(go_orm, tag, priority)
+                self.create_service(go_orm, tag, priority, find_existing)
                 all_orm.append(go_orm)
 
             if find_existing:

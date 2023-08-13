@@ -112,12 +112,12 @@ class BaseRecordSocket:
         record_orm.task = TaskQueueORM(tag=tag, priority=priority, required_programs=record_orm.required_programs)
 
     @staticmethod
-    def create_service(record_orm: BaseRecordORM, tag: str, priority: PriorityEnum) -> None:
+    def create_service(record_orm: BaseRecordORM, tag: str, priority: PriorityEnum, find_existing: bool) -> None:
         """
         Create an entry in the service queue, and attach it to the given record ORM
         """
 
-        record_orm.service = ServiceQueueORM(service_state={}, tag=tag, priority=priority)
+        record_orm.service = ServiceQueueORM(service_state={}, tag=tag, priority=priority, find_existing=find_existing)
 
     def get(
         self,

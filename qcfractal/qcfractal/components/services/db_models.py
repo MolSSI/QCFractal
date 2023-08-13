@@ -10,6 +10,7 @@ from sqlalchemy import (
     ForeignKey,
     String,
     DateTime,
+    Boolean,
     Index,
     UniqueConstraint,
     CheckConstraint,
@@ -64,6 +65,7 @@ class ServiceQueueORM(BaseORM):
     tag = Column(String, nullable=False)
     priority = Column(Integer, nullable=False)
     created_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    find_existing = Column(Boolean, nullable=False)
 
     service_state = Column(PlainMsgpackExt)
 

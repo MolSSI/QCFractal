@@ -363,7 +363,7 @@ class NEBRecordSocket(BaseRecordSocket):
             service_orm.priority,
             neb_orm.owner_user_id,
             neb_orm.owner_group_id,
-            find_existing=True,
+            service_orm.find_existing,
             session=session,
         )
         for pos, opt_id in enumerate(opt_ids):
@@ -408,7 +408,7 @@ class NEBRecordSocket(BaseRecordSocket):
             service_orm.priority,
             neb_orm.owner_user_id,
             neb_orm.owner_group_id,
-            find_existing=True,
+            service_orm.find_existing,
             session=session,
         )
 
@@ -692,7 +692,7 @@ class NEBRecordSocket(BaseRecordSocket):
                             owner_group_id=owner_group_id,
                         )
 
-                        self.create_service(neb_orm, tag, priority)
+                        self.create_service(neb_orm, tag, priority, find_existing)
 
                         session.add(neb_orm)
                         session.flush()
@@ -718,7 +718,7 @@ class NEBRecordSocket(BaseRecordSocket):
                         owner_group_id=owner_group_id,
                     )
 
-                    self.create_service(neb_orm, tag, priority)
+                    self.create_service(neb_orm, tag, priority, find_existing)
 
                     session.add(neb_orm)
                     session.flush()

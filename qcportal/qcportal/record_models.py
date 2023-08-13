@@ -344,6 +344,7 @@ class RecordService(BaseModel):
     tag: str
     priority: PriorityEnum
     created_on: datetime
+    find_existing: bool
 
     service_state: Optional[Dict[str, Any]] = None
     dependencies: List[ServiceDependency]
