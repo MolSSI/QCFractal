@@ -1,10 +1,7 @@
-import datetime
-
 from sqlalchemy import (
     Column,
     Integer,
     String,
-    DateTime,
     ForeignKey,
     Index,
     LargeBinary,
@@ -37,8 +34,6 @@ class TaskQueueORM(BaseORM):
     tag = Column(String, nullable=False)
     priority = Column(Integer, nullable=False)
 
-    created_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
-
     record_id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="cascade"), nullable=False)
     record = relationship(BaseRecordORM, back_populates="task", uselist=False)
 
@@ -49,7 +44,6 @@ class TaskQueueORM(BaseORM):
     __table_args__ = (
         Index("ix_task_queue_tag", "tag"),
         Index("ix_task_queue_required_programs", "required_programs"),
-        Index("ix_task_queue_waiting_sort", priority.desc(), created_on),
         UniqueConstraint("record_id", name="ux_task_queue_record_id"),
         # WARNING - these are not autodetected by alembic
         CheckConstraint(

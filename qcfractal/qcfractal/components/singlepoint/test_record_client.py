@@ -74,7 +74,6 @@ def test_singlepoint_client_add_get(submitter_client: PortalClient, spec: QCSpec
         assert r.owner_group == owner_group
         assert time_0 < r.created_on < time_1
         assert time_0 < r.modified_on < time_1
-        assert time_0 < r.task.created_on < time_1
 
     assert recs[0].molecule == water
     assert recs[1].molecule == hooh

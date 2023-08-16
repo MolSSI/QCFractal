@@ -12,7 +12,7 @@ from qcfractalcompute.apps.geometric import geometric_nextchain_conda_app, geome
 from qcfractalcompute.apps.helpers import run_apptainer
 from qcfractalcompute.apps.qcengine import qcengine_conda_app, qcengine_apptainer_app
 from qcfractalcompute.run_scripts import get_script_path
-from qcportal.tasks import TaskInformation
+from qcportal.record_models import RecordTask
 
 if TYPE_CHECKING:
     from parsl.dataflow.dflow import DataFlowKernel
@@ -126,7 +126,7 @@ class AppManager:
                         (qcengine_function_name, func_info["programs"], func_info["app_function"])
                     )
 
-    def get_app(self, dflow_kernel: DataFlowKernel, executor_label: str, task: TaskInformation) -> Any:
+    def get_app(self, dflow_kernel: DataFlowKernel, executor_label: str, task: RecordTask) -> Any:
         task_programs = set(task.required_programs)
 
         if executor_label not in self._parsl_apps:

@@ -12,8 +12,7 @@ from qcfractal.db_socket import SQLAlchemySocket
 from qcfractalcompute.compress import compress_result
 from qcportal.compression import decompress, CompressionEnum
 from qcportal.managers import ManagerName
-from qcportal.record_models import RecordStatusEnum
-from qcportal.tasks import TaskInformation
+from qcportal.record_models import RecordStatusEnum, RecordTask
 
 mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
 mname2 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="2234-5678-1234-5678")
@@ -111,7 +110,7 @@ def run_service(
         # only do 5 tasks at a time. Tests iteration when stuff is not completed
         manager_programs = storage_socket.managers.get([manager_name.fullname])[0]["programs"]
         manager_tasks_d = storage_socket.tasks.claim_tasks(manager_name.fullname, manager_programs, ["*"], limit=5)
-        manager_tasks = [TaskInformation(**x) for x in manager_tasks_d]
+        manager_tasks = [RecordTask(**x) for x in manager_tasks_d]
 
         # Sometimes a task may be duplicated in the service dependencies.
         # The C8H6 test has this "feature"

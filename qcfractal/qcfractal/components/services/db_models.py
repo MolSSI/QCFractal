@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import datetime
 from typing import Optional, Iterable, Dict, Any
 
 from sqlalchemy import (
@@ -9,7 +8,6 @@ from sqlalchemy import (
     JSON,
     ForeignKey,
     String,
-    DateTime,
     Boolean,
     Index,
     UniqueConstraint,
@@ -64,7 +62,6 @@ class ServiceQueueORM(BaseORM):
 
     tag = Column(String, nullable=False)
     priority = Column(Integer, nullable=False)
-    created_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
     find_existing = Column(Boolean, nullable=False)
 
     service_state = Column(PlainMsgpackExt)
@@ -76,7 +73,6 @@ class ServiceQueueORM(BaseORM):
     __table_args__ = (
         UniqueConstraint("record_id", name="ux_service_queue_record_id"),
         Index("ix_service_queue_tag", "tag"),
-        Index("ix_service_queue_waiting_sort", priority.desc(), created_on),
         CheckConstraint("tag = LOWER(tag)", name="ck_service_queue_tag_lower"),
     )
 

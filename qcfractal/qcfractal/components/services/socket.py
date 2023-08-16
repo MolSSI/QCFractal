@@ -286,7 +286,7 @@ class ServiceSocket:
                 .join(ServiceQueueORM.record)
                 .options(contains_eager(ServiceQueueORM.record))
                 .filter(BaseRecordORM.status == RecordStatusEnum.waiting)
-                .order_by(ServiceQueueORM.priority.desc(), ServiceQueueORM.created_on)
+                .order_by(ServiceQueueORM.priority.desc(), BaseRecordORM.created_on)
                 .limit(new_service_count)
             )
 

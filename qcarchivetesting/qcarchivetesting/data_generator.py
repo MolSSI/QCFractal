@@ -11,7 +11,7 @@ from qcfractalcompute.config import FractalComputeConfig, FractalServerSettings,
 
 if TYPE_CHECKING:
     from typing import List, Dict, Any
-    from qcportal.tasks import TaskInformation
+    from qcportal.record_models import RecordTask
     from qcfractal.config import FractalConfig
     from qcfractalcompute.apps.models import AppTaskResult
 
@@ -79,7 +79,7 @@ class DataGeneratorManager(ComputeManager):
             clean_conda_env(r_dict)
             self._result_queue.put((self._task_map[task_id], r_dict))
 
-    def preprocess_new_tasks(self, new_tasks: List[TaskInformation]):
+    def preprocess_new_tasks(self, new_tasks: List[RecordTask]):
         for task in new_tasks:
             # Store the full task by task id
             self._task_map[task.id] = task
@@ -112,7 +112,7 @@ class DataGeneratorComputeThread:
     def stop(self) -> None:
         self._finalizer()
 
-    def get_data(self) -> List[tuple[TaskInformation, Dict[str, Any]]]:
+    def get_data(self) -> List[tuple[RecordTask, Dict[str, Any]]]:
         # Returns list of iterable (task, result)
         data = []
 

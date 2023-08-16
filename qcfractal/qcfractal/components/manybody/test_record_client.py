@@ -77,7 +77,6 @@ def test_manybody_client_add_get(
 
         assert time_0 < r.created_on < time_1
         assert time_0 < r.modified_on < time_1
-        assert time_0 < r.service.created_on < time_1
 
     assert recs[0].initial_molecule.get_hash() == water2.get_hash()
     assert recs[1].initial_molecule.get_hash() == water4.get_hash()

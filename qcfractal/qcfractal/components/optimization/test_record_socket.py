@@ -15,13 +15,12 @@ from qcportal.molecules import Molecule
 from qcportal.optimization import (
     OptimizationSpecification,
 )
-from qcportal.record_models import RecordStatusEnum, PriorityEnum
+from qcportal.record_models import RecordStatusEnum, PriorityEnum, RecordTask
 from qcportal.singlepoint import (
     QCSpecification,
     SinglepointDriver,
     SinglepointProtocols,
 )
-from qcportal.tasks import TaskInformation
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -47,7 +46,7 @@ def test_optimization_socket_task_spec(
     assert meta.success
 
     tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, activated_manager_programs, ["*"])
-    tasks = [TaskInformation(**t) for t in tasks]
+    tasks = [RecordTask(**t) for t in tasks]
 
     assert len(tasks) == 3
     for t in tasks:
@@ -72,8 +71,6 @@ def test_optimization_socket_task_spec(
 
         assert t.tag == "tag1"
         assert t.priority == PriorityEnum.low
-
-        assert time_0 < t.created_on < time_1
 
     rec_id_mol_map = {
         id[0]: all_mols[0],

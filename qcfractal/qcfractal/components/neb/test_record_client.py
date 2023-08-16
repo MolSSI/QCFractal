@@ -89,7 +89,6 @@ def test_neb_client_add_get(submitter_client: PortalClient, spec: NEBSpecificati
 
         assert time_0 < r.created_on < time_1
         assert time_0 < r.modified_on < time_1
-        assert time_0 < r.service.created_on < time_1
 
     assert len(recs[0].initial_chain) == 11  # default image number
     assert len(recs[1].initial_chain) == 11

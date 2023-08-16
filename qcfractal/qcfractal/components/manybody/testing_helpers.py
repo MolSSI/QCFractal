@@ -9,13 +9,12 @@ from qcarchivetesting.helpers import read_record_data
 from qcfractal.components.manybody.record_db_models import ManybodyRecordORM
 from qcfractal.testing_helpers import run_service
 from qcportal.manybody import ManybodySpecification, ManybodyKeywords
-from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.record_models import PriorityEnum, RecordStatusEnum, RecordTask
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
-    from qcportal.tasks import TaskInformation
 
 test_specs = [
     ManybodySpecification(
@@ -67,7 +66,7 @@ def compare_manybody_specs(
     return input_spec == output_spec
 
 
-def generate_task_key(task: TaskInformation):
+def generate_task_key(task: RecordTask):
     # task is a singlepoint
     inp_data = task.function_kwargs["input_data"]
     assert inp_data["schema_name"] in "qcschema_input"

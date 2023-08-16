@@ -11,7 +11,7 @@ from qcarchivetesting.helpers import read_record_data
 from qcfractal.components.torsiondrive.record_db_models import TorsiondriveRecordORM
 from qcfractal.testing_helpers import run_service
 from qcportal.optimization import OptimizationSpecification
-from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.record_models import PriorityEnum, RecordStatusEnum, RecordTask
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 from qcportal.torsiondrive import TorsiondriveSpecification, TorsiondriveKeywords
 from qcportal.utils import recursive_normalizer
@@ -19,7 +19,6 @@ from qcportal.utils import recursive_normalizer
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
-    from qcportal.tasks import TaskInformation
 
 
 test_specs = [
@@ -84,7 +83,7 @@ def compare_torsiondrive_specs(
     return input_spec == output_spec
 
 
-def generate_task_key(task: TaskInformation):
+def generate_task_key(task: RecordTask):
     # task is an optimization
     inp_data = task.function_kwargs["input_data"]
     assert inp_data["schema_name"] in "qcschema_optimization_input"

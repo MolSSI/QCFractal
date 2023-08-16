@@ -52,7 +52,6 @@ def test_neb_socket_add_get(storage_socket: SQLAlchemySocket, session: Session, 
 
         assert time_0 < r.created_on < time_1
         assert time_0 < r.modified_on < time_1
-        assert time_0 < r.service.created_on < time_1
 
     assert len(recs[0].initial_chain) == spec.keywords.images
     assert len(recs[1].initial_chain) == spec.keywords.images

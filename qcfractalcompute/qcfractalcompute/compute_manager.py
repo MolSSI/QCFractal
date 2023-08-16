@@ -23,7 +23,7 @@ from qcfractalcompute.apps.app_manager import AppManager
 from qcportal import ManagerClient
 from qcportal.managers import ManagerName
 from qcportal.metadata_models import TaskReturnMetadata
-from qcportal.tasks import TaskInformation
+from qcportal.record_models import RecordTask
 from . import __version__
 from .apps.models import AppTaskResult
 from .compress import compress_result
@@ -389,7 +389,7 @@ class ComputeManager:
 
         return ret
 
-    def _submit_tasks(self, executor_label: str, tasks: List[TaskInformation]):
+    def _submit_tasks(self, executor_label: str, tasks: List[RecordTask]):
         """
         Submits tasks to the parsl queue to be run
         """
@@ -585,7 +585,7 @@ class ComputeManager:
                     self.preprocess_new_tasks(new_task_info)
                     self._submit_tasks(executor_label, new_task_info)
 
-    def preprocess_new_tasks(self, new_tasks: List[TaskInformation]):
+    def preprocess_new_tasks(self, new_tasks: List[RecordTask]):
         """
         Any processing to do to the new tasks
 

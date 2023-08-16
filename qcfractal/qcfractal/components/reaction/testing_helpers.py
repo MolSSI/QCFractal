@@ -9,13 +9,12 @@ from qcarchivetesting.helpers import read_record_data
 from qcfractal.components.reaction.record_db_models import ReactionRecordORM
 from qcfractal.testing_helpers import run_service
 from qcportal.reaction import ReactionSpecification, ReactionKeywords
-from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.record_models import PriorityEnum, RecordStatusEnum, RecordTask
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
-    from qcportal.tasks import TaskInformation
 
 test_specs = [
     ReactionSpecification(
@@ -52,7 +51,7 @@ def compare_reaction_specs(
     return input_spec == output_spec
 
 
-def generate_task_key(task: TaskInformation):
+def generate_task_key(task: RecordTask):
     inp_data = task.function_kwargs["input_data"]
 
     if inp_data["schema_name"] == "qcschema_optimization_input":

@@ -106,7 +106,6 @@ def test_baserecord_model_task(snowflake: QCATestingSnowflake, includes: Optiona
     assert record.manager_name is None
     assert record.task.tag == "test_tag_123"
     assert record.task.priority == PriorityEnum.low
-    assert time_0 < record.task.created_on < time_1
     assert "psi4" in record.task.required_programs
 
     assert record.service is None
@@ -129,6 +128,5 @@ def test_baserecord_model_service(snowflake: QCATestingSnowflake, includes: Opti
     assert record.manager_name is None
     assert record.service.tag == "test_tag_123"
     assert record.service.priority == PriorityEnum.low
-    assert time_0 < record.service.created_on < time_1
 
     assert record.task is None

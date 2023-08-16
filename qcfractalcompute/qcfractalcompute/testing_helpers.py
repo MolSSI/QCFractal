@@ -18,8 +18,7 @@ from qcfractalcompute.compress import compress_result
 from qcfractalcompute.compute_manager import ComputeManager
 from qcfractalcompute.config import FractalComputeConfig, FractalServerSettings, LocalExecutorConfig
 from qcportal.all_results import AllResultTypes
-from qcportal.record_models import PriorityEnum
-from qcportal.tasks import TaskInformation
+from qcportal.record_models import PriorityEnum, RecordTask
 
 
 class MockTestingComputeManager(ComputeManager):
@@ -76,7 +75,7 @@ class MockTestingComputeManager(ComputeManager):
         self._result_data = result_data
 
     # We have an executor and everything running, but we short-circuit the actual compute
-    def _submit_tasks(self, executor_label: str, tasks: List[TaskInformation]):
+    def _submit_tasks(self, executor_label: str, tasks: List[RecordTask]):
 
         # A mock app that just returns the result data given to it after two seconds
         @parsl.python_app(data_flow_kernel=self.dflow_kernel)

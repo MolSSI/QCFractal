@@ -85,7 +85,6 @@ def test_reaction_client_add_get(
 
         assert time_0 < r.created_on < time_1
         assert time_0 < r.modified_on < time_1
-        assert time_0 < r.service.created_on < time_1
 
     mol_hash_0 = set(x.molecule.identifiers.molecule_hash for x in recs[0].components)
     mol_hash_1 = set(x.molecule.identifiers.molecule_hash for x in recs[1].components)

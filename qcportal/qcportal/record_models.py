@@ -316,7 +316,6 @@ class RecordTask(BaseModel):
     tag: str
     priority: PriorityEnum
     required_programs: List[str]
-    created_on: datetime
 
     @property
     def function_kwargs(self) -> Optional[Dict[str, Any]]:
@@ -343,7 +342,6 @@ class RecordService(BaseModel):
 
     tag: str
     priority: PriorityEnum
-    created_on: datetime
     find_existing: bool
 
     service_state: Optional[Dict[str, Any]] = None

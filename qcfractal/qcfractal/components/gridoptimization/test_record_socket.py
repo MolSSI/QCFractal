@@ -51,7 +51,6 @@ def test_gridoptimization_socket_add_get(
 
         assert time_0 < r.created_on < time_1
         assert time_0 < r.modified_on < time_1
-        assert time_0 < r.service.created_on < time_1
 
     assert recs[0].initial_molecule.identifiers["molecule_hash"] == hooh.get_hash()
     assert recs[1].initial_molecule.identifiers["molecule_hash"] == h3ns.get_hash()

@@ -1,1 +1,1 @@
-from .models import TaskInformation, TaskClaimBody, TaskReturnBody
+from .models import TaskClaimBody, TaskReturnBody

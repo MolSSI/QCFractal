@@ -12,14 +12,13 @@ from qcfractal.components.gridoptimization.record_db_models import Gridoptimizat
 from qcfractal.testing_helpers import run_service
 from qcportal.gridoptimization import GridoptimizationSpecification, GridoptimizationKeywords
 from qcportal.optimization import OptimizationSpecification
-from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.record_models import PriorityEnum, RecordStatusEnum, RecordTask
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 from qcportal.utils import recursive_normalizer
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
-    from qcportal.tasks import TaskInformation
 
 
 def compare_gridoptimization_specs(
@@ -83,7 +82,7 @@ test_specs = [
 ]
 
 
-def generate_task_key(task: TaskInformation):
+def generate_task_key(task: RecordTask):
     # task is an optimization
     inp_data = task.function_kwargs["input_data"]
     assert inp_data["schema_name"] in "qcschema_optimization_input"

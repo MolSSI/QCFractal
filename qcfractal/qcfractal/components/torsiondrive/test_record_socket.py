@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcarchivetesting import load_molecule_data
+from qcfractal.components.torsiondrive.record_db_models import TorsiondriveRecordORM
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service
 from qcportal.auth import UserInfo, GroupInfo
@@ -14,7 +15,6 @@ from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification, SinglepointProtocols
 from qcportal.torsiondrive import TorsiondriveSpecification, TorsiondriveKeywords
 from .testing_helpers import compare_torsiondrive_specs, test_specs, load_test_data, generate_task_key
-from qcfractal.components.torsiondrive.record_db_models import TorsiondriveRecordORM
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -51,7 +51,6 @@ def test_torsiondrive_socket_add_get(
 
         assert time_0 < r.created_on < time_1
         assert time_0 < r.modified_on < time_1
-        assert time_0 < r.service.created_on < time_1
 
     assert len(recs[0].initial_molecules) == 1
     assert len(recs[1].initial_molecules) == 2

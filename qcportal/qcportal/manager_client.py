@@ -1,5 +1,6 @@
 from typing import Optional, List, Dict
 
+from qcportal.record_models import RecordTask
 from .client_base import PortalClientBase
 from .managers import (
     ManagerName,
@@ -8,7 +9,7 @@ from .managers import (
     ManagerStatusEnum,
 )
 from .metadata_models import TaskReturnMetadata
-from .tasks import TaskClaimBody, TaskReturnBody, TaskInformation
+from .tasks import TaskClaimBody, TaskReturnBody
 
 
 class ManagerClient(PortalClientBase):
@@ -113,11 +114,11 @@ class ManagerClient(PortalClientBase):
 
         return self._update_on_server(manager_update)
 
-    def claim(self, programs: Dict[str, List[str]], tags: List[str], limit: int) -> List[TaskInformation]:
+    def claim(self, programs: Dict[str, List[str]], tags: List[str], limit: int) -> List[RecordTask]:
 
         body = TaskClaimBody(name_data=self.manager_name_data, programs=programs, tags=tags, limit=limit)
 
-        return self.make_request("post", "compute/v1/tasks/claim", List[TaskInformation], body=body)
+        return self.make_request("post", "compute/v1/tasks/claim", List[RecordTask], body=body)
 
     def return_finished(self, results_compressed: Dict[int, bytes]) -> TaskReturnMetadata:
 

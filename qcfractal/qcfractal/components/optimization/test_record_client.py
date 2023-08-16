@@ -92,7 +92,6 @@ def test_optimization_client_add_get(
 
         assert time_0 < r.created_on < time_1
         assert time_0 < r.modified_on < time_1
-        assert time_0 < r.task.created_on < time_1
 
     mol1 = submitter_client.get_molecules([recs[0].initial_molecule_id])[0]
     mol2 = submitter_client.get_molecules([recs[1].initial_molecule_id])[0]

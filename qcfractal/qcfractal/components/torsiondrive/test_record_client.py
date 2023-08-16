@@ -85,7 +85,6 @@ def test_torsiondrive_client_add_get(
 
         assert time_0 < r.created_on < time_1
         assert time_0 < r.modified_on < time_1
-        assert time_0 < r.service.created_on < time_1
 
     assert len(recs[0].initial_molecules) == 1
     assert len(recs[1].initial_molecules) == 2

@@ -10,14 +10,13 @@ from qcfractal.components.neb.record_db_models import NEBRecordORM
 from qcfractal.testing_helpers import run_service
 from qcportal.generic_result import GenericTaskResult
 from qcportal.neb import NEBSpecification, NEBKeywords
-from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.record_models import PriorityEnum, RecordStatusEnum, RecordTask
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 from qcportal.utils import recursive_normalizer, hash_dict
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
-    from qcportal.tasks import TaskInformation
 
 test_specs = [
     NEBSpecification(
@@ -65,7 +64,7 @@ def compare_neb_specs(
     return input_spec == output_spec
 
 
-def generate_task_key(task: TaskInformation):
+def generate_task_key(task: RecordTask):
     if task.function in ("qcengine.compute", "qcengine.compute_procedure"):
         inp_data = task.function_kwargs["input_data"]
 

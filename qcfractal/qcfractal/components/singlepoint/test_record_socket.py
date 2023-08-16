@@ -9,9 +9,8 @@ from qcarchivetesting import load_molecule_data
 from qcportal.compression import decompress
 from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule
-from qcportal.record_models import RecordStatusEnum, PriorityEnum
+from qcportal.record_models import RecordStatusEnum, PriorityEnum, RecordTask
 from qcportal.singlepoint import QCSpecification, SinglepointDriver, SinglepointProtocols
-from qcportal.tasks import TaskInformation
 from .record_db_models import SinglepointRecordORM
 from .testing_helpers import test_specs, load_test_data, run_test_data
 
@@ -45,7 +44,7 @@ def test_singlepoint_socket_task_spec(
     assert meta.success
 
     tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, activated_manager_programs, ["*"])
-    tasks = [TaskInformation(**t) for t in tasks]
+    tasks = [RecordTask(**t) for t in tasks]
 
     assert len(tasks) == 3
     for t in tasks:
@@ -56,7 +55,6 @@ def test_singlepoint_socket_task_spec(
         assert function_kwargs["program"] == spec.program
         assert t.tag == "tag1"
         assert t.priority == PriorityEnum.low
-        assert time_0 < t.created_on < time_1
 
     rec_id_mol_map = {
         id[0]: all_mols[0],
