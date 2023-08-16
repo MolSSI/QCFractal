@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.client &#8212; QCArchive 0.50b13.post7+gab8e480e documentation</title>
+    <title>qcportal.client &#8212; QCArchive 0.50b13.post14+g2bf3f9a2 documentation</title>
   
   
   
@@ -36,7 +36,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=5bc18214"></script>
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=9c46cf3a"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../../_static/design-tabs.js?v=36754332"></script>
@@ -1326,6 +1326,7 @@ document.write(`
         <span class="n">tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span>
         <span class="n">priority</span><span class="p">:</span> <span class="n">PriorityEnum</span> <span class="o">=</span> <span class="n">PriorityEnum</span><span class="o">.</span><span class="n">normal</span><span class="p">,</span>
         <span class="n">owner_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">find_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">InsertMetadata</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Adds new singlepoint computations to the server</span>
@@ -1357,6 +1358,8 @@ document.write(`
 <span class="sd">            The priority of the job (high, normal, low). Default is normal.</span>
 <span class="sd">        owner_group</span>
 <span class="sd">            Group with additional permission for these records</span>
+<span class="sd">        find_existing</span>
+<span class="sd">            If True, search for existing records and return those. If False, always add new records</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1385,6 +1388,7 @@ document.write(`
             <span class="s2">&quot;tag&quot;</span><span class="p">:</span> <span class="n">tag</span><span class="p">,</span>
             <span class="s2">&quot;priority&quot;</span><span class="p">:</span> <span class="n">priority</span><span class="p">,</span>
             <span class="s2">&quot;owner_group&quot;</span><span class="p">:</span> <span class="n">owner_group</span><span class="p">,</span>
+            <span class="s2">&quot;find_existing&quot;</span><span class="p">:</span> <span class="n">find_existing</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="c1"># If these are None, then let the pydantic models handle the defaults</span>
@@ -1544,6 +1548,7 @@ document.write(`
         <span class="n">tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span>
         <span class="n">priority</span><span class="p">:</span> <span class="n">PriorityEnum</span> <span class="o">=</span> <span class="n">PriorityEnum</span><span class="o">.</span><span class="n">normal</span><span class="p">,</span>
         <span class="n">owner_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">find_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">InsertMetadata</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Adds new geometry optimization calculations to the server</span>
@@ -1571,6 +1576,8 @@ document.write(`
 <span class="sd">            The priority of the job (high, normal, low). Default is normal.</span>
 <span class="sd">        owner_group</span>
 <span class="sd">            Group with additional permission for these records</span>
+<span class="sd">        find_existing</span>
+<span class="sd">            If True, search for existing records and return those. If False, always add new records</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1597,6 +1604,7 @@ document.write(`
             <span class="s2">&quot;tag&quot;</span><span class="p">:</span> <span class="n">tag</span><span class="p">,</span>
             <span class="s2">&quot;priority&quot;</span><span class="p">:</span> <span class="n">priority</span><span class="p">,</span>
             <span class="s2">&quot;owner_group&quot;</span><span class="p">:</span> <span class="n">owner_group</span><span class="p">,</span>
+            <span class="s2">&quot;find_existing&quot;</span><span class="p">:</span> <span class="n">find_existing</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="c1"># If these are None, then let the pydantic models handle the defaults</span>
@@ -1762,6 +1770,7 @@ document.write(`
         <span class="n">tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span>
         <span class="n">priority</span><span class="p">:</span> <span class="n">PriorityEnum</span> <span class="o">=</span> <span class="n">PriorityEnum</span><span class="o">.</span><span class="n">normal</span><span class="p">,</span>
         <span class="n">owner_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">find_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">InsertMetadata</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Adds new torsiondrive computations to the server</span>
@@ -1788,6 +1797,8 @@ document.write(`
 <span class="sd">            The priority of the job (high, normal, low). Default is normal.</span>
 <span class="sd">        owner_group</span>
 <span class="sd">            Group with additional permission for these records</span>
+<span class="sd">        find_existing</span>
+<span class="sd">            If True, search for existing records and return those. If False, always add new records</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1815,6 +1826,7 @@ document.write(`
             <span class="s2">&quot;tag&quot;</span><span class="p">:</span> <span class="n">tag</span><span class="p">,</span>
             <span class="s2">&quot;priority&quot;</span><span class="p">:</span> <span class="n">priority</span><span class="p">,</span>
             <span class="s2">&quot;owner_group&quot;</span><span class="p">:</span> <span class="n">owner_group</span><span class="p">,</span>
+            <span class="s2">&quot;find_existing&quot;</span><span class="p">:</span> <span class="n">find_existing</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="n">body</span> <span class="o">=</span> <span class="n">TorsiondriveAddBody</span><span class="p">(</span><span class="o">**</span><span class="n">body_data</span><span class="p">)</span>
@@ -1971,6 +1983,7 @@ document.write(`
         <span class="n">tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span>
         <span class="n">priority</span><span class="p">:</span> <span class="n">PriorityEnum</span> <span class="o">=</span> <span class="n">PriorityEnum</span><span class="o">.</span><span class="n">normal</span><span class="p">,</span>
         <span class="n">owner_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">find_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">InsertMetadata</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Adds new gridoptimization computations to the server</span>
@@ -1997,6 +2010,8 @@ document.write(`
 <span class="sd">            The priority of the job (high, normal, low). Default is normal.</span>
 <span class="sd">        owner_group</span>
 <span class="sd">            Group with additional permission for these records</span>
+<span class="sd">        find_existing</span>
+<span class="sd">            If True, search for existing records and return those. If False, always add new records</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -2024,6 +2039,7 @@ document.write(`
             <span class="s2">&quot;tag&quot;</span><span class="p">:</span> <span class="n">tag</span><span class="p">,</span>
             <span class="s2">&quot;priority&quot;</span><span class="p">:</span> <span class="n">priority</span><span class="p">,</span>
             <span class="s2">&quot;owner_group&quot;</span><span class="p">:</span> <span class="n">owner_group</span><span class="p">,</span>
+            <span class="s2">&quot;find_existing&quot;</span><span class="p">:</span> <span class="n">find_existing</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="n">body</span> <span class="o">=</span> <span class="n">GridoptimizationAddBody</span><span class="p">(</span><span class="o">**</span><span class="n">body_data</span><span class="p">)</span>
@@ -2181,6 +2197,7 @@ document.write(`
         <span class="n">tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span>
         <span class="n">priority</span><span class="p">:</span> <span class="n">PriorityEnum</span> <span class="o">=</span> <span class="n">PriorityEnum</span><span class="o">.</span><span class="n">normal</span><span class="p">,</span>
         <span class="n">owner_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">find_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">InsertMetadata</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Adds new reaction computations to the server</span>
@@ -2214,6 +2231,8 @@ document.write(`
 <span class="sd">            The priority of the job (high, normal, low). Default is normal.</span>
 <span class="sd">        owner_group</span>
 <span class="sd">            Group with additional permission for these records</span>
+<span class="sd">        find_existing</span>
+<span class="sd">            If True, search for existing records and return those. If False, always add new records</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -2241,6 +2260,7 @@ document.write(`
             <span class="s2">&quot;tag&quot;</span><span class="p">:</span> <span class="n">tag</span><span class="p">,</span>
             <span class="s2">&quot;priority&quot;</span><span class="p">:</span> <span class="n">priority</span><span class="p">,</span>
             <span class="s2">&quot;owner_group&quot;</span><span class="p">:</span> <span class="n">owner_group</span><span class="p">,</span>
+            <span class="s2">&quot;find_existing&quot;</span><span class="p">:</span> <span class="n">find_existing</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="n">body</span> <span class="o">=</span> <span class="n">ReactionAddBody</span><span class="p">(</span><span class="o">**</span><span class="n">body_data</span><span class="p">)</span>
@@ -2397,6 +2417,7 @@ document.write(`
         <span class="n">tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span>
         <span class="n">priority</span><span class="p">:</span> <span class="n">PriorityEnum</span> <span class="o">=</span> <span class="n">PriorityEnum</span><span class="o">.</span><span class="n">normal</span><span class="p">,</span>
         <span class="n">owner_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">find_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">InsertMetadata</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Adds new manybody expansion computations to the server</span>
@@ -2422,6 +2443,8 @@ document.write(`
 <span class="sd">            The priority of the job (high, normal, low). Default is normal.</span>
 <span class="sd">        owner_group</span>
 <span class="sd">            Group with additional permission for these records</span>
+<span class="sd">        find_existing</span>
+<span class="sd">            If True, search for existing records and return those. If False, always add new records</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -2449,6 +2472,7 @@ document.write(`
             <span class="s2">&quot;tag&quot;</span><span class="p">:</span> <span class="n">tag</span><span class="p">,</span>
             <span class="s2">&quot;priority&quot;</span><span class="p">:</span> <span class="n">priority</span><span class="p">,</span>
             <span class="s2">&quot;owner_group&quot;</span><span class="p">:</span> <span class="n">owner_group</span><span class="p">,</span>
+            <span class="s2">&quot;find_existing&quot;</span><span class="p">:</span> <span class="n">find_existing</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="n">body</span> <span class="o">=</span> <span class="n">ManybodyAddBody</span><span class="p">(</span><span class="o">**</span><span class="n">body_data</span><span class="p">)</span>
@@ -2602,6 +2626,7 @@ document.write(`
         <span class="n">tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span>
         <span class="n">priority</span><span class="p">:</span> <span class="n">PriorityEnum</span> <span class="o">=</span> <span class="n">PriorityEnum</span><span class="o">.</span><span class="n">normal</span><span class="p">,</span>
         <span class="n">owner_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">find_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">InsertMetadata</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Adds neb calculations to the server</span>
@@ -2620,6 +2645,7 @@ document.write(`
             <span class="s2">&quot;tag&quot;</span><span class="p">:</span> <span class="n">tag</span><span class="p">,</span>
             <span class="s2">&quot;priority&quot;</span><span class="p">:</span> <span class="n">priority</span><span class="p">,</span>
             <span class="s2">&quot;owner_group&quot;</span><span class="p">:</span> <span class="n">owner_group</span><span class="p">,</span>
+            <span class="s2">&quot;find_existing&quot;</span><span class="p">:</span> <span class="n">find_existing</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">body_data</span><span class="p">[</span><span class="s2">&quot;initial_chains&quot;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;add_records&quot;</span><span class="p">]:</span>

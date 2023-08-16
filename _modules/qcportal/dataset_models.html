@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.dataset_models &#8212; QCArchive 0.50b13.post7+gab8e480e documentation</title>
+    <title>qcportal.dataset_models &#8212; QCArchive 0.50b13.post14+g2bf3f9a2 documentation</title>
   
   
   
@@ -36,7 +36,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=5bc18214"></script>
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=9c46cf3a"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../../_static/design-tabs.js?v=36754332"></script>
@@ -629,6 +629,7 @@ document.write(`
         <span class="n">specification_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">tag</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">priority</span><span class="p">:</span> <span class="n">PriorityEnum</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">find_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
@@ -638,6 +639,7 @@ document.write(`
             <span class="n">specification_names</span><span class="o">=</span><span class="n">make_list</span><span class="p">(</span><span class="n">specification_names</span><span class="p">),</span>
             <span class="n">tag</span><span class="o">=</span><span class="n">tag</span><span class="p">,</span>
             <span class="n">priority</span><span class="o">=</span><span class="n">priority</span><span class="p">,</span>
+            <span class="n">find_existing</span><span class="o">=</span><span class="n">find_existing</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
@@ -1646,6 +1648,7 @@ document.write(`
     <span class="n">tag</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">priority</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PriorityEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">owner_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">find_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
 
 
 <span class="k">class</span> <span class="nc">DatasetRecordModifyBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>

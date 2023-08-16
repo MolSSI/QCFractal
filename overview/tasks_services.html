@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Tasks and Services &#8212; QCArchive 0.50b13.post7+gab8e480e documentation</title>
+    <title>Tasks and Services &#8212; QCArchive 0.50b13.post14+g2bf3f9a2 documentation</title>
   
   
   
@@ -37,7 +37,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=5bc18214"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=9c46cf3a"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../_static/design-tabs.js?v=36754332"></script>
@@ -515,7 +515,6 @@ server first.</p>
 </dd>
 <dt class="field-even">Fields<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference internal" href="#qcportal.record_models.RecordTask.created_on" title="qcportal.record_models.RecordTask.created_on"><code class="xref py py-obj docutils literal notranslate"><span class="pre">created_on</span> <span class="pre">(datetime.datetime)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordTask.function" title="qcportal.record_models.RecordTask.function"><code class="xref py py-obj docutils literal notranslate"><span class="pre">function</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordTask.function_kwargs_compressed" title="qcportal.record_models.RecordTask.function_kwargs_compressed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">function_kwargs_compressed</span> <span class="pre">(bytes</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordTask.id" title="qcportal.record_models.RecordTask.id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id</span> <span class="pre">(int)</span></code></a></p></li>
@@ -561,11 +560,6 @@ server first.</p>
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">required_programs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.record_models.RecordTask.required_programs" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.record_models.RecordTask.created_on">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">created_on</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.record_models.RecordTask.created_on" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.record_models.RecordTask.function_kwargs">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">function_kwargs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.RecordTask.function_kwargs" title="Permalink to this definition">#</a></dt>
@@ -587,8 +581,8 @@ server first.</p>
 </dd>
 <dt class="field-even">Fields<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference internal" href="#qcportal.record_models.RecordService.created_on" title="qcportal.record_models.RecordService.created_on"><code class="xref py py-obj docutils literal notranslate"><span class="pre">created_on</span> <span class="pre">(datetime.datetime)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordService.dependencies" title="qcportal.record_models.RecordService.dependencies"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dependencies</span> <span class="pre">(List[qcportal.record_models.ServiceDependency])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.record_models.RecordService.find_existing" title="qcportal.record_models.RecordService.find_existing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_existing</span> <span class="pre">(bool)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordService.id" title="qcportal.record_models.RecordService.id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id</span> <span class="pre">(int)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordService.priority" title="qcportal.record_models.RecordService.priority"><code class="xref py py-obj docutils literal notranslate"><span class="pre">priority</span> <span class="pre">(qcportal.record_models.PriorityEnum)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordService.record_id" title="qcportal.record_models.RecordService.record_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_id</span> <span class="pre">(int)</span></code></a></p></li>
@@ -618,8 +612,8 @@ server first.</p>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.record_models.RecordService.created_on">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">created_on</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.record_models.RecordService.created_on" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="qcportal.record_models.RecordService.find_existing">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">find_existing</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.record_models.RecordService.find_existing" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -696,7 +690,6 @@ server first.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordTask.tag"><code class="docutils literal notranslate"><span class="pre">RecordTask.tag</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordTask.priority"><code class="docutils literal notranslate"><span class="pre">RecordTask.priority</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordTask.required_programs"><code class="docutils literal notranslate"><span class="pre">RecordTask.required_programs</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordTask.created_on"><code class="docutils literal notranslate"><span class="pre">RecordTask.created_on</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordTask.function_kwargs"><code class="docutils literal notranslate"><span class="pre">RecordTask.function_kwargs</span></code></a></li>
 </ul>
 </li>
@@ -705,7 +698,7 @@ server first.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordService.record_id"><code class="docutils literal notranslate"><span class="pre">RecordService.record_id</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordService.tag"><code class="docutils literal notranslate"><span class="pre">RecordService.tag</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordService.priority"><code class="docutils literal notranslate"><span class="pre">RecordService.priority</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordService.created_on"><code class="docutils literal notranslate"><span class="pre">RecordService.created_on</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordService.find_existing"><code class="docutils literal notranslate"><span class="pre">RecordService.find_existing</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordService.service_state"><code class="docutils literal notranslate"><span class="pre">RecordService.service_state</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordService.dependencies"><code class="docutils literal notranslate"><span class="pre">RecordService.dependencies</span></code></a></li>
 </ul>
