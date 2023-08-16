@@ -103,8 +103,10 @@ class OptimizationDataset(BaseDataset):
         comment: Optional[str] = None,
     ):
 
-        additional_keywords = {} if additional_keywords is None else additional_keywords
-        attributes = {} if attributes is None else attributes
+        if additional_keywords is None:
+            additional_keywords = {}
+        if attributes is None:
+            attributes = {}
 
         ent = OptimizationDatasetNewEntry(
             name=name,

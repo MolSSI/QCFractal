@@ -104,6 +104,12 @@ class TorsiondriveDataset(BaseDataset):
         attributes: Optional[Dict[str, Any]] = None,
         comment: Optional[str] = None,
     ):
+        if additional_keywords is None:
+            additional_keywords = {}
+        if additional_optimization_keywords is None:
+            additional_optimization_keywords = {}
+        if attributes is None:
+            attributes = {}
 
         ent = TorsiondriveDatasetNewEntry(
             name=name,

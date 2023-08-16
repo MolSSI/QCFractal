@@ -101,6 +101,12 @@ class NEBDataset(BaseDataset):
         attributes: Optional[Dict[str, Any]] = None,
         comment: Optional[str] = None,
     ):
+        if additional_keywords is None:
+            additional_keywords = {}
+        if additional_singlepoint_keywords is None:
+            additional_singlepoint_keywords = {}
+        if attributes is None:
+            attributes = {}
 
         ent = NEBDatasetNewEntry(
             name=name,

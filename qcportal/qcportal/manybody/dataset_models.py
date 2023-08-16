@@ -96,6 +96,10 @@ class ManybodyDataset(BaseDataset):
         attributes: Optional[Dict[str, Any]] = None,
         comment: Optional[str] = None,
     ):
+        if additional_keywords is None:
+            additional_keywords = {}
+        if attributes is None:
+            attributes = {}
 
         ent = ManybodyDatasetNewEntry(
             name=name,
