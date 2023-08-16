@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcportal.record_models import PriorityEnum
-from qcportal.singlepoint import SinglepointDatasetNewEntry, SinglepointDataset
+from qcportal.singlepoint import SinglepointDataset
 from .testing_helpers import load_test_data
 
 if TYPE_CHECKING:
@@ -41,7 +41,6 @@ def test_singlepoint_dataset_client_submit(singlepoint_ds: SinglepointDataset, f
 
     input_spec_1, molecule_1, _ = load_test_data("sp_psi4_benzene_energy_1")
 
-    new_ent = SinglepointDatasetNewEntry(name="test_molecule", molecule=molecule_1)
     singlepoint_ds.add_entry(name="test_molecule", molecule=molecule_1)
     singlepoint_ds.add_specification("test_spec", input_spec_1, "test_specification")
 
@@ -67,7 +66,7 @@ def test_singlepoint_dataset_client_submit(singlepoint_ds: SinglepointDataset, f
     assert r.owner_user == singlepoint_ds.owner_user
 
     # now resubmit
-    singlepoint_ds.add_entries([new_ent])
+    singlepoint_ds.add_entry(name="test_molecule", molecule=molecule_1)
     singlepoint_ds.submit(find_existing=find_existing)
     assert singlepoint_ds.status()["test_spec"]["waiting"] == 1
 
