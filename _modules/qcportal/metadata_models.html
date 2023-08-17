@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.metadata_models &#8212; QCArchive 0.50b13.post14+g2bf3f9a2 documentation</title>
+    <title>qcportal.metadata_models &#8212; QCArchive 0.50b13.post15+g377015ba documentation</title>
   
   
   
@@ -28,6 +28,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/pydata-sphinx-theme.css?v=3ab4e28d" />
     <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=c224919a" />
@@ -36,9 +37,9 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=9c46cf3a"></script>
+    <script src="../../_static/documentation_options.js?v=9f9184d2"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/qcportal/metadata_models';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -419,7 +420,9 @@ document.write(`
 <span class="kn">from</span> <span class="nn">pydantic.dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
 
 
-<div class="viewcode-block" id="InsertMetadata"><a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.InsertMetadata">[docs]</a><span class="nd">@dataclass</span>
+<div class="viewcode-block" id="InsertMetadata">
+<a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.InsertMetadata">[docs]</a>
+<span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">InsertMetadata</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Metadata returned by insertion / adding functions</span>
@@ -459,11 +462,16 @@ document.write(`
         <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Index </span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">y</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">s</span>
 
-<div class="viewcode-block" id="InsertMetadata.sort_fields"><a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.InsertMetadata.sort_fields">[docs]</a>    <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;errors&quot;</span><span class="p">,</span> <span class="s2">&quot;inserted_idx&quot;</span><span class="p">,</span> <span class="s2">&quot;existing_idx&quot;</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="InsertMetadata.sort_fields">
+<a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.InsertMetadata.sort_fields">[docs]</a>
+    <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;errors&quot;</span><span class="p">,</span> <span class="s2">&quot;inserted_idx&quot;</span><span class="p">,</span> <span class="s2">&quot;existing_idx&quot;</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">sort_fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">v</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="InsertMetadata.check_all_indices"><a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.InsertMetadata.check_all_indices">[docs]</a>    <span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">skip_on_failure</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<div class="viewcode-block" id="InsertMetadata.check_all_indices">
+<a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.InsertMetadata.check_all_indices">[docs]</a>
+    <span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">skip_on_failure</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">check_all_indices</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
         <span class="c1"># Test that all indices are accounted for and that the same index doesn&#39;t show up in</span>
         <span class="c1"># inserted_idx, existing_idx, or errors</span>
@@ -497,15 +505,22 @@ document.write(`
 
         <span class="k">return</span> <span class="n">values</span></div>
 
-<div class="viewcode-block" id="InsertMetadata.dict"><a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.InsertMetadata.dict">[docs]</a>    <span class="k">def</span> <span class="nf">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+
+<div class="viewcode-block" id="InsertMetadata.dict">
+<a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.InsertMetadata.dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the information from this dataclass as a dictionary</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">return</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+</div>
 
 
-<div class="viewcode-block" id="DeleteMetadata"><a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata">[docs]</a><span class="nd">@dataclass</span>
+
+<div class="viewcode-block" id="DeleteMetadata">
+<a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata">[docs]</a>
+<span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">DeleteMetadata</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Metadata returned by delete functions</span>
@@ -541,11 +556,16 @@ document.write(`
         <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Index </span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">y</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">s</span>
 
-<div class="viewcode-block" id="DeleteMetadata.sort_fields"><a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata.sort_fields">[docs]</a>    <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;errors&quot;</span><span class="p">,</span> <span class="s2">&quot;deleted_idx&quot;</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="DeleteMetadata.sort_fields">
+<a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata.sort_fields">[docs]</a>
+    <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;errors&quot;</span><span class="p">,</span> <span class="s2">&quot;deleted_idx&quot;</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">sort_fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">v</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DeleteMetadata.check_all_indices"><a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata.check_all_indices">[docs]</a>    <span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">skip_on_failure</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DeleteMetadata.check_all_indices">
+<a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata.check_all_indices">[docs]</a>
+    <span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">skip_on_failure</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">check_all_indices</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
         <span class="c1"># Test that all indices are accounted for and that the same index doesn&#39;t show up in</span>
         <span class="c1"># deleted_idx, or errors</span>
@@ -570,15 +590,22 @@ document.write(`
 
         <span class="k">return</span> <span class="n">values</span></div>
 
-<div class="viewcode-block" id="DeleteMetadata.dict"><a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata.dict">[docs]</a>    <span class="k">def</span> <span class="nf">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+
+<div class="viewcode-block" id="DeleteMetadata.dict">
+<a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata.dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the information from this dataclass as a dictionary</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">return</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+</div>
 
 
-<div class="viewcode-block" id="UpdateMetadata"><a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata">[docs]</a><span class="nd">@dataclass</span>
+
+<div class="viewcode-block" id="UpdateMetadata">
+<a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata">[docs]</a>
+<span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">UpdateMetadata</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Metadata returned by update functions</span>
@@ -614,11 +641,16 @@ document.write(`
         <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Index </span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">y</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">s</span>
 
-<div class="viewcode-block" id="UpdateMetadata.sort_fields"><a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata.sort_fields">[docs]</a>    <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;errors&quot;</span><span class="p">,</span> <span class="s2">&quot;updated_idx&quot;</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="UpdateMetadata.sort_fields">
+<a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata.sort_fields">[docs]</a>
+    <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;errors&quot;</span><span class="p">,</span> <span class="s2">&quot;updated_idx&quot;</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">sort_fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">v</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="UpdateMetadata.check_all_indices"><a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata.check_all_indices">[docs]</a>    <span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">skip_on_failure</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<div class="viewcode-block" id="UpdateMetadata.check_all_indices">
+<a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata.check_all_indices">[docs]</a>
+    <span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">skip_on_failure</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">check_all_indices</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
         <span class="c1"># Test that all indices are accounted for and that the same index doesn&#39;t show up in</span>
         <span class="c1"># inserted_idx, existing_idx, or errors</span>
@@ -643,15 +675,22 @@ document.write(`
 
         <span class="k">return</span> <span class="n">values</span></div>
 
-<div class="viewcode-block" id="UpdateMetadata.dict"><a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata.dict">[docs]</a>    <span class="k">def</span> <span class="nf">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+
+<div class="viewcode-block" id="UpdateMetadata.dict">
+<a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata.dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the information from this dataclass as a dictionary</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">return</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+</div>
 
 
-<div class="viewcode-block" id="TaskReturnMetadata"><a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.TaskReturnMetadata">[docs]</a><span class="nd">@dataclass</span>
+
+<div class="viewcode-block" id="TaskReturnMetadata">
+<a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.TaskReturnMetadata">[docs]</a>
+<span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">TaskReturnMetadata</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Metadata returned to managers that have sent completed tasks back to the server</span>
@@ -686,16 +725,23 @@ document.write(`
         <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Task id </span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">y</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rejected_info</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">s</span>
 
-<div class="viewcode-block" id="TaskReturnMetadata.sort_fields"><a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.TaskReturnMetadata.sort_fields">[docs]</a>    <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;rejected_info&quot;</span><span class="p">,</span> <span class="s2">&quot;accepted_ids&quot;</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="TaskReturnMetadata.sort_fields">
+<a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.TaskReturnMetadata.sort_fields">[docs]</a>
+    <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;rejected_info&quot;</span><span class="p">,</span> <span class="s2">&quot;accepted_ids&quot;</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">sort_fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">v</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TaskReturnMetadata.dict"><a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.TaskReturnMetadata.dict">[docs]</a>    <span class="k">def</span> <span class="nf">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+
+<div class="viewcode-block" id="TaskReturnMetadata.dict">
+<a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.TaskReturnMetadata.dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the information from this dataclass as a dictionary</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">return</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+</div>
+
 </pre></div>
 
                 </article>
@@ -748,7 +794,7 @@ document.write(`
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.1.
     <br/>
   </p>
 </div>
@@ -787,7 +833,7 @@ document.write(`
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.1.2.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.2.1.<br>
         </p>
         
 

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Molecules &#8212; QCArchive 0.50b13.post14+g2bf3f9a2 documentation</title>
+    <title>Molecules &#8212; QCArchive 0.50b13.post15+g377015ba documentation</title>
   
   
   
@@ -29,6 +29,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/pydata-sphinx-theme.css?v=3ab4e28d" />
     <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
     <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=c224919a" />
@@ -37,9 +38,9 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=9c46cf3a"></script>
+    <script src="../_static/documentation_options.js?v=9f9184d2"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/molecule';</script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -451,13 +452,13 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="molecules">
-<h1>Molecules<a class="headerlink" href="#molecules" title="Permalink to this heading">#</a></h1>
+<h1>Molecules<a class="headerlink" href="#molecules" title="Link to this heading">#</a></h1>
 <p>The molecule objects used in QCArchive come from the
 <a class="reference external" href="https://docs.qcarchive.molssi.org/projects/QCElemental">QCElemental package</a>. This class is also accessible
 from <code class="docutils literal notranslate"><span class="pre">qcportal.molecules.Molecule</span></code>, but is otherwise the same as the
 <a class="reference external" href="https://docs.qcarchive.molssi.org/projects/QCElemental/en/stable/model_molecule.html">QCElemental Molecule</a>.</p>
 <section id="creating-molecules">
-<h2>Creating Molecules<a class="headerlink" href="#creating-molecules" title="Permalink to this heading">#</a></h2>
+<h2>Creating Molecules<a class="headerlink" href="#creating-molecules" title="Link to this heading">#</a></h2>
 <p>A common way to programmatically create a molecule is with the Molecule constructor. With the constructor,
 you typically specify the symbols and geometry (coordinates) in bohr:</p>
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">qcportal.molecules</span> <span class="kn">import</span> <span class="n">Molecule</span>
@@ -497,7 +498,7 @@ with more):</p>
 </div>
 </section>
 <section id="adding-molecules-to-the-server">
-<h2>Adding molecules to the server<a class="headerlink" href="#adding-molecules-to-the-server" title="Permalink to this heading">#</a></h2>
+<h2>Adding molecules to the server<a class="headerlink" href="#adding-molecules-to-the-server" title="Link to this heading">#</a></h2>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
 <p>For the most part, this is not needed. You can pass a Molecule object to functions like
@@ -520,7 +521,7 @@ some metadata about the insertion, and the molecule IDs.</p>
 full molecule objects.</p>
 </section>
 <section id="retrieving-and-querying-molecules">
-<h2>Retrieving and Querying Molecules<a class="headerlink" href="#retrieving-and-querying-molecules" title="Permalink to this heading">#</a></h2>
+<h2>Retrieving and Querying Molecules<a class="headerlink" href="#retrieving-and-querying-molecules" title="Link to this heading">#</a></h2>
 <p>The client has two methods for retrieving molecules: <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.get_molecules" title="qcportal.client.PortalClient.get_molecules"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_molecules()</span></code></a> and
 <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.query_molecules" title="qcportal.client.PortalClient.query_molecules"><code class="xref py py-meth docutils literal notranslate"><span class="pre">query_molecules()</span></code></a>. The <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.get_molecules" title="qcportal.client.PortalClient.get_molecules"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_molecules()</span></code></a>
 method is used to get molecules by ID, and returns molecules in the same order as the given ids.</p>
@@ -553,7 +554,7 @@ and the order may be different even with repeated calls with the same arguments<
 </div>
 </section>
 <section id="managing-molecules">
-<h2>Managing Molecules<a class="headerlink" href="#managing-molecules" title="Permalink to this heading">#</a></h2>
+<h2>Managing Molecules<a class="headerlink" href="#managing-molecules" title="Link to this heading">#</a></h2>
 <p>Molecules can be deleted from the server with <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.delete_molecules" title="qcportal.client.PortalClient.delete_molecules"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_molecules()</span></code></a></p>
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">delete_molecules</span><span class="p">([</span><span class="mi">585</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
@@ -686,7 +687,7 @@ that are not specified in the call to <code class="docutils literal notranslate"
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.1.
     <br/>
   </p>
 </div>
@@ -725,7 +726,7 @@ that are not specified in the call to <code class="docutils literal notranslate"
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.1.2.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.2.1.<br>
         </p>
         
 

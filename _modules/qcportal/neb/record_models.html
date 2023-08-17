@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.neb.record_models &#8212; QCArchive 0.50b13.post14+g2bf3f9a2 documentation</title>
+    <title>qcportal.neb.record_models &#8212; QCArchive 0.50b13.post15+g377015ba documentation</title>
   
   
   
@@ -28,6 +28,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/pydata-sphinx-theme.css?v=3ab4e28d" />
     <link rel="stylesheet" type="text/css" href="../../../_static/autodoc_pydantic.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=c224919a" />
@@ -36,9 +37,9 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=9c46cf3a"></script>
+    <script src="../../../_static/documentation_options.js?v=9f9184d2"></script>
     <script src="../../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/qcportal/neb/record_models';</script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -484,14 +485,20 @@ document.write(`
         <span class="k">return</span> <span class="n">recursive_normalizer</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="NEBSpecification"><a class="viewcode-back" href="../../../user_guide/records/neb.html#qcportal.neb.NEBSpecification">[docs]</a><span class="k">class</span> <span class="nc">NEBSpecification</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-<div class="viewcode-block" id="NEBSpecification.Config"><a class="viewcode-back" href="../../../user_guide/records/neb.html#qcportal.neb.NEBSpecification.Config">[docs]</a>    <span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
+<div class="viewcode-block" id="NEBSpecification">
+<a class="viewcode-back" href="../../../user_guide/records/neb.html#qcportal.neb.NEBSpecification">[docs]</a>
+<span class="k">class</span> <span class="nc">NEBSpecification</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<div class="viewcode-block" id="NEBSpecification.Config">
+<a class="viewcode-back" href="../../../user_guide/records/neb.html#qcportal.neb.NEBSpecification.Config">[docs]</a>
+    <span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
         <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span></div>
+
 
     <span class="n">program</span><span class="p">:</span> <span class="n">constr</span><span class="p">(</span><span class="n">to_lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">=</span> <span class="s2">&quot;geometric&quot;</span>
     <span class="n">singlepoint_specification</span><span class="p">:</span> <span class="n">QCSpecification</span>
     <span class="n">optimization_specification</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">OptimizationSpecification</span><span class="p">]</span>
     <span class="n">keywords</span><span class="p">:</span> <span class="n">NEBKeywords</span></div>
+
 
 
 <span class="k">class</span> <span class="nc">NEBOptimization</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
@@ -534,7 +541,9 @@ document.write(`
             <span class="k">return</span> <span class="kc">None</span>
 
 
-<div class="viewcode-block" id="NEBRecord"><a class="viewcode-back" href="../../../user_guide/records/neb.html#qcportal.neb.NEBRecord">[docs]</a><span class="k">class</span> <span class="nc">NEBRecord</span><span class="p">(</span><span class="n">BaseRecord</span><span class="p">):</span>
+<div class="viewcode-block" id="NEBRecord">
+<a class="viewcode-back" href="../../../user_guide/records/neb.html#qcportal.neb.NEBRecord">[docs]</a>
+<span class="k">class</span> <span class="nc">NEBRecord</span><span class="p">(</span><span class="n">BaseRecord</span><span class="p">):</span>
 
     <span class="n">record_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;neb&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;neb&quot;</span>
     <span class="n">specification</span><span class="p">:</span> <span class="n">NEBSpecification</span>
@@ -553,7 +562,9 @@ document.write(`
     <span class="n">optimizations_cache_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">OptimizationRecord</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">singlepoints_cache_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">SinglepointRecord</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="NEBRecord.propagate_client"><a class="viewcode-back" href="../../../user_guide/records/neb.html#qcportal.neb.NEBRecord.propagate_client">[docs]</a>    <span class="k">def</span> <span class="nf">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">):</span>
+<div class="viewcode-block" id="NEBRecord.propagate_client">
+<a class="viewcode-back" href="../../../user_guide/records/neb.html#qcportal.neb.NEBRecord.propagate_client">[docs]</a>
+    <span class="k">def</span> <span class="nf">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">):</span>
         <span class="n">BaseRecord</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizations_cache_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -564,6 +575,7 @@ document.write(`
             <span class="k">for</span> <span class="n">splist</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">singlepoints_cache_</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
                 <span class="k">for</span> <span class="n">sp2</span> <span class="ow">in</span> <span class="n">splist</span><span class="p">:</span>
                     <span class="n">sp2</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="n">client</span><span class="p">)</span></div>
+
 
     <span class="k">def</span> <span class="nf">_fetch_optimizations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_assert_online</span><span class="p">()</span>
@@ -663,6 +675,7 @@ document.write(`
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">ts_optimization</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">OptimizationRecord</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;transition&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+
 </pre></div>
 
                 </article>
@@ -715,7 +728,7 @@ document.write(`
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.1.
     <br/>
   </p>
 </div>
@@ -754,7 +767,7 @@ document.write(`
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.1.2.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.2.1.<br>
         </p>
         
 

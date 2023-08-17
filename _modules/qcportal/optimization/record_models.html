@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.optimization.record_models &#8212; QCArchive 0.50b13.post14+g2bf3f9a2 documentation</title>
+    <title>qcportal.optimization.record_models &#8212; QCArchive 0.50b13.post15+g377015ba documentation</title>
   
   
   
@@ -28,6 +28,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/pydata-sphinx-theme.css?v=3ab4e28d" />
     <link rel="stylesheet" type="text/css" href="../../../_static/autodoc_pydantic.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=c224919a" />
@@ -36,9 +37,9 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=9c46cf3a"></script>
+    <script src="../../../_static/documentation_options.js?v=9f9184d2"></script>
     <script src="../../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/qcportal/optimization/record_models';</script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -429,32 +430,43 @@ document.write(`
 <span class="kn">from</span> <span class="nn">qcportal.singlepoint</span> <span class="kn">import</span> <span class="n">SinglepointProtocols</span><span class="p">,</span> <span class="n">SinglepointRecord</span><span class="p">,</span> <span class="n">QCSpecification</span><span class="p">,</span> <span class="n">SinglepointDriver</span>
 
 
-<div class="viewcode-block" id="OptimizationSpecification"><a class="viewcode-back" href="../../../user_guide/records/optimization.html#qcportal.optimization.OptimizationSpecification">[docs]</a><span class="k">class</span> <span class="nc">OptimizationSpecification</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<div class="viewcode-block" id="OptimizationSpecification">
+<a class="viewcode-back" href="../../../user_guide/records/optimization.html#qcportal.optimization.OptimizationSpecification">[docs]</a>
+<span class="k">class</span> <span class="nc">OptimizationSpecification</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An OptimizationSpecification as stored on the server</span>
 
 <span class="sd">    This is the same as the input specification, with a few ids added</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="OptimizationSpecification.Config"><a class="viewcode-back" href="../../../user_guide/records/optimization.html#qcportal.optimization.OptimizationSpecification.Config">[docs]</a>    <span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
+<div class="viewcode-block" id="OptimizationSpecification.Config">
+<a class="viewcode-back" href="../../../user_guide/records/optimization.html#qcportal.optimization.OptimizationSpecification.Config">[docs]</a>
+    <span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
         <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span></div>
+
 
     <span class="n">program</span><span class="p">:</span> <span class="n">constr</span><span class="p">(</span><span class="n">to_lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The program to use for an optimization&quot;</span><span class="p">)</span>
     <span class="n">qc_specification</span><span class="p">:</span> <span class="n">QCSpecification</span>
     <span class="n">keywords</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">({})</span>
     <span class="n">protocols</span><span class="p">:</span> <span class="n">OptimizationProtocols</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">OptimizationProtocols</span><span class="p">())</span>
 
-<div class="viewcode-block" id="OptimizationSpecification.force_qcspec"><a class="viewcode-back" href="../../../user_guide/records/optimization.html#qcportal.optimization.OptimizationSpecification.force_qcspec">[docs]</a>    <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;qc_specification&quot;</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="OptimizationSpecification.force_qcspec">
+<a class="viewcode-back" href="../../../user_guide/records/optimization.html#qcportal.optimization.OptimizationSpecification.force_qcspec">[docs]</a>
+    <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;qc_specification&quot;</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">force_qcspec</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">QCSpecification</span><span class="p">):</span>
             <span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">dict</span><span class="p">()</span>
 
         <span class="n">v</span><span class="p">[</span><span class="s2">&quot;driver&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">SinglepointDriver</span><span class="o">.</span><span class="n">deferred</span>
         <span class="n">v</span><span class="p">[</span><span class="s2">&quot;protocols&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">SinglepointProtocols</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">v</span></div></div>
+        <span class="k">return</span> <span class="n">v</span></div>
+</div>
 
 
-<div class="viewcode-block" id="OptimizationRecord"><a class="viewcode-back" href="../../../user_guide/records/optimization.html#qcportal.optimization.OptimizationRecord">[docs]</a><span class="k">class</span> <span class="nc">OptimizationRecord</span><span class="p">(</span><span class="n">BaseRecord</span><span class="p">):</span>
+
+<div class="viewcode-block" id="OptimizationRecord">
+<a class="viewcode-back" href="../../../user_guide/records/optimization.html#qcportal.optimization.OptimizationRecord">[docs]</a>
+<span class="k">class</span> <span class="nc">OptimizationRecord</span><span class="p">(</span><span class="n">BaseRecord</span><span class="p">):</span>
 
     <span class="n">record_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;optimization&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;optimization&quot;</span>
     <span class="n">specification</span><span class="p">:</span> <span class="n">OptimizationSpecification</span>
@@ -474,12 +486,15 @@ document.write(`
     <span class="c1">########################################</span>
     <span class="n">trajectory_records_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">SinglepointRecord</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="OptimizationRecord.propagate_client"><a class="viewcode-back" href="../../../user_guide/records/optimization.html#qcportal.optimization.OptimizationRecord.propagate_client">[docs]</a>    <span class="k">def</span> <span class="nf">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">):</span>
+<div class="viewcode-block" id="OptimizationRecord.propagate_client">
+<a class="viewcode-back" href="../../../user_guide/records/optimization.html#qcportal.optimization.OptimizationRecord.propagate_client">[docs]</a>
+    <span class="k">def</span> <span class="nf">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">):</span>
         <span class="n">BaseRecord</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">trajectory_records_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">trajectory_records_</span><span class="p">:</span>
                 <span class="n">sp</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="n">client</span><span class="p">)</span></div>
+
 
     <span class="k">def</span> <span class="nf">_fetch_initial_molecule</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_assert_online</span><span class="p">()</span>
@@ -534,7 +549,9 @@ document.write(`
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">trajectory_records_</span>
 
-<div class="viewcode-block" id="OptimizationRecord.trajectory_element"><a class="viewcode-back" href="../../../user_guide/records/optimization.html#qcportal.optimization.OptimizationRecord.trajectory_element">[docs]</a>    <span class="k">def</span> <span class="nf">trajectory_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trajectory_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SinglepointRecord</span><span class="p">:</span>
+<div class="viewcode-block" id="OptimizationRecord.trajectory_element">
+<a class="viewcode-back" href="../../../user_guide/records/optimization.html#qcportal.optimization.OptimizationRecord.trajectory_element">[docs]</a>
+    <span class="k">def</span> <span class="nf">trajectory_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trajectory_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SinglepointRecord</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">trajectory_records_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">trajectory_records_</span><span class="p">[</span><span class="n">trajectory_index</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
@@ -555,7 +572,10 @@ document.write(`
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot find trajectory for record </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="OptimizationRecord.to_qcschema_result"><a class="viewcode-back" href="../../../user_guide/records/optimization.html#qcportal.optimization.OptimizationRecord.to_qcschema_result">[docs]</a>    <span class="k">def</span> <span class="nf">to_qcschema_result</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OptimizationResult</span><span class="p">:</span>
+
+<div class="viewcode-block" id="OptimizationRecord.to_qcschema_result">
+<a class="viewcode-back" href="../../../user_guide/records/optimization.html#qcportal.optimization.OptimizationRecord.to_qcschema_result">[docs]</a>
+    <span class="k">def</span> <span class="nf">to_qcschema_result</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OptimizationResult</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">complete</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot create QCSchema result from record with status </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -590,7 +610,9 @@ document.write(`
             <span class="n">stdout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span>
             <span class="n">provenance</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">provenance</span><span class="p">,</span>
             <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># Status has been checked above</span>
-        <span class="p">)</span></div></div>
+        <span class="p">)</span></div>
+</div>
+
 
 
 <span class="k">class</span> <span class="nc">OptimizationQueryFilters</span><span class="p">(</span><span class="n">RecordQueryFilters</span><span class="p">):</span>
@@ -666,7 +688,7 @@ document.write(`
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.1.
     <br/>
   </p>
 </div>
@@ -705,7 +727,7 @@ document.write(`
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.1.2.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.2.1.<br>
         </p>
         
 

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Using datasets &#8212; QCArchive 0.50b13.post14+g2bf3f9a2 documentation</title>
+    <title>Using datasets &#8212; QCArchive 0.50b13.post15+g377015ba documentation</title>
   
   
   
@@ -29,6 +29,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/pydata-sphinx-theme.css?v=3ab4e28d" />
     <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
     <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=c224919a" />
@@ -37,9 +38,9 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=9c46cf3a"></script>
+    <script src="../_static/documentation_options.js?v=9f9184d2"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/datasets';</script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -451,7 +452,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="using-datasets">
-<h1>Using datasets<a class="headerlink" href="#using-datasets" title="Permalink to this heading">#</a></h1>
+<h1>Using datasets<a class="headerlink" href="#using-datasets" title="Link to this heading">#</a></h1>
 <p>A <em>dataset</em> is a relatively homogeneous collection of records that allows for
 submission and management of a large number of computations.</p>
 <p>A dataset is made up of entries, specifications, and records.
@@ -494,7 +495,7 @@ submit computations for that specification that apply to all the existing entrie
 have different types for these items. That is, entries in a <a class="reference internal" href="records/singlepoint.html#singlepoint-dataset"><span class="std std-ref">Singlepoint Dataset</span></a> are different than entries
 in an <a class="reference internal" href="records/optimization.html#optimization-dataset"><span class="std std-ref">Optimization Dataset</span></a>, and the same is true for specifications.</p>
 <section id="dataset-limitations">
-<h2>Dataset Limitations<a class="headerlink" href="#dataset-limitations" title="Permalink to this heading">#</a></h2>
+<h2>Dataset Limitations<a class="headerlink" href="#dataset-limitations" title="Link to this heading">#</a></h2>
 <p>A dataset can only contain one type of calculation. For example, you can have a <a class="reference internal" href="records/singlepoint.html#singlepoint-dataset"><span class="std std-ref">Singlepoint Dataset</span></a>
 or a <a class="reference internal" href="records/optimization.html#optimization-dataset"><span class="std std-ref">Optimization Dataset</span></a>, but not a dataset that contains both single point and optimization
 calculations.</p>
@@ -502,7 +503,7 @@ calculations.</p>
 keywords on a per-entry basis, but there is no way to assign a different basis for a particular entry.</p>
 </section>
 <section id="retrieving-datasets">
-<h2>Retrieving Datasets<a class="headerlink" href="#retrieving-datasets" title="Permalink to this heading">#</a></h2>
+<h2>Retrieving Datasets<a class="headerlink" href="#retrieving-datasets" title="Link to this heading">#</a></h2>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>When retrieving a dataset, only a limited about of data is downloaded first. After that, operations such as
@@ -523,7 +524,7 @@ and its name with <a class="reference internal" href="qcportal_reference.html#qc
 </div>
 </section>
 <section id="adding-datasets">
-<h2>Adding Datasets<a class="headerlink" href="#adding-datasets" title="Permalink to this heading">#</a></h2>
+<h2>Adding Datasets<a class="headerlink" href="#adding-datasets" title="Link to this heading">#</a></h2>
 <p>Datasets can be created on a server with the <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.add_dataset" title="qcportal.client.PortalClient.add_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_dataset()</span></code></a>
 function of the <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">PortalClient</span></code></a>. This function returns the dataset:</p>
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;optimization&quot;</span><span class="p">,</span> <span class="s2">&quot;Optimization of important molecules&quot;</span><span class="p">)</span>
@@ -535,7 +536,7 @@ function of the <a class="reference internal" href="qcportal_reference.html#qcpo
 some for descriptions of the dataset as well as default priority and <a class="reference internal" href="../overview/tasks_services.html#routing-tags"><span class="std std-ref">tags</span></a>.</p>
 </section>
 <section id="dataset-metadata">
-<h2>Dataset Metadata<a class="headerlink" href="#dataset-metadata" title="Permalink to this heading">#</a></h2>
+<h2>Dataset Metadata<a class="headerlink" href="#dataset-metadata" title="Link to this heading">#</a></h2>
 <p>Datasets have some useful metadata and properties</p>
 <ul class="simple">
 <li><p><strong>name</strong>, <strong>description</strong>, <strong>tagline</strong>, <strong>group</strong>, and <strong>tags</strong> are user-defined metadata that categorize this dataset
@@ -561,7 +562,7 @@ with <a class="reference internal" href="records/base.html#qcportal.dataset_mode
 </pre></div>
 </div>
 <section id="status">
-<h3>Status<a class="headerlink" href="#status" title="Permalink to this heading">#</a></h3>
+<h3>Status<a class="headerlink" href="#status" title="Link to this heading">#</a></h3>
 <p>The <a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.status" title="qcportal.dataset_models.BaseDataset.status"><code class="xref py py-meth docutils literal notranslate"><span class="pre">status()</span></code></a> returns a dictionary describing the status of the computations.
 This is indexed by specification</p>
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span> <span class="o">&gt;&gt;&gt;</span> <span class="n">ds</span><span class="o">.</span><span class="n">status</span><span class="p">()</span>
@@ -597,7 +598,7 @@ local caching.</p>
 </section>
 </section>
 <section id="specifications-and-entries">
-<h2>Specifications and Entries<a class="headerlink" href="#specifications-and-entries" title="Permalink to this heading">#</a></h2>
+<h2>Specifications and Entries<a class="headerlink" href="#specifications-and-entries" title="Link to this heading">#</a></h2>
 <p>The specifications of the dataset are available with the <code class="docutils literal notranslate"><span class="pre">.specification_names</span></code> and <code class="docutils literal notranslate"><span class="pre">.specifications</span></code> properties.
 <code class="docutils literal notranslate"><span class="pre">.specifications</span></code> returns a dictionary, with the key being the name of the specification.</p>
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">specification_names</span><span class="p">)</span>
@@ -645,7 +646,7 @@ entry names.</p>
 </div>
 </section>
 <section id="retrieving-records">
-<h2>Retrieving Records<a class="headerlink" href="#retrieving-records" title="Permalink to this heading">#</a></h2>
+<h2>Retrieving Records<a class="headerlink" href="#retrieving-records" title="Link to this heading">#</a></h2>
 <p>A single records can be retrieved by entry name and specification name
 with <a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.get_record" title="qcportal.dataset_models.BaseDataset.get_record"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_record()</span></code></a></p>
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rec</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">get_record</span><span class="p">(</span><span class="s1">&#39;H2&#39;</span><span class="p">,</span> <span class="s1">&#39;hf/sto-3g&#39;</span><span class="p">)</span>
@@ -685,7 +686,7 @@ by entry name, specification name, and status</p>
 be overridden with <code class="docutils literal notranslate"><span class="pre">force_refetch=True</span></code> which will always download a fresh record.</p>
 </section>
 <section id="manipulating-entries-and-specifications">
-<h2>Manipulating Entries and Specifications<a class="headerlink" href="#manipulating-entries-and-specifications" title="Permalink to this heading">#</a></h2>
+<h2>Manipulating Entries and Specifications<a class="headerlink" href="#manipulating-entries-and-specifications" title="Link to this heading">#</a></h2>
 <p>Entries and specifications can be added with <code class="docutils literal notranslate"><span class="pre">add_entries</span></code>, <code class="docutils literal notranslate"><span class="pre">add_entry</span></code>, and <code class="docutils literal notranslate"><span class="pre">add_specification</span></code>.
 The details of these functions depend on the type of dataset - see <a class="reference internal" href="records/index.html"><span class="doc">Computation Types</span></a>. The following examples
 are for an <a class="reference internal" href="records/optimization.html#optimization-dataset"><span class="std std-ref">optimization dataset</span></a>.</p>
@@ -740,7 +741,7 @@ an unoptimized ‘initial’ molecule. Adding entries returns <a class="referenc
 </div>
 </section>
 <section id="submitting-computations">
-<span id="dataset-submission"></span><h2>Submitting Computations<a class="headerlink" href="#submitting-computations" title="Permalink to this heading">#</a></h2>
+<span id="dataset-submission"></span><h2>Submitting Computations<a class="headerlink" href="#submitting-computations" title="Link to this heading">#</a></h2>
 <p>Adding entries and specifications does not immediately create the underlying records. To do that,
 we use <a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.submit" title="qcportal.dataset_models.BaseDataset.submit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">submit()</span></code></a>.</p>
 <p>With no arguments, this will create missing records for all entries and specifications, using the
@@ -756,7 +757,7 @@ or change the tag and priority.</p>
 </pre></div>
 </div>
 <section id="renaming-and-deleting-entries-and-specifications">
-<h3>Renaming and Deleting Entries and Specifications<a class="headerlink" href="#renaming-and-deleting-entries-and-specifications" title="Permalink to this heading">#</a></h3>
+<h3>Renaming and Deleting Entries and Specifications<a class="headerlink" href="#renaming-and-deleting-entries-and-specifications" title="Link to this heading">#</a></h3>
 <p>Entries and specifications can be renamed and deleted. Deletion can also optionally delete the underlying record.</p>
 <p><a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.rename_entries" title="qcportal.dataset_models.BaseDataset.rename_entries"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rename_entries()</span></code></a> and
 <a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.rename_specification" title="qcportal.dataset_models.BaseDataset.rename_specification"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rename_specification()</span></code></a>
@@ -781,7 +782,7 @@ Note that deleting entries and specifications by default do not delete the recor
 </section>
 </section>
 <section id="record-management">
-<h2>Record Management<a class="headerlink" href="#record-management" title="Permalink to this heading">#</a></h2>
+<h2>Record Management<a class="headerlink" href="#record-management" title="Link to this heading">#</a></h2>
 <p>Records that belong to the dataset can be managed via the usual client methods (see <a class="reference internal" href="record_management.html"><span class="doc">Managing Records</span></a>).
 However, datasets have convenient methods for management, which use entry and specification names rather than record.</p>
 <ul class="simple">
@@ -908,7 +909,7 @@ However, datasets have convenient methods for management, which use entry and sp
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.1.
     <br/>
   </p>
 </div>
@@ -947,7 +948,7 @@ However, datasets have convenient methods for management, which use entry and sp
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.1.2.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.2.1.<br>
         </p>
         
 

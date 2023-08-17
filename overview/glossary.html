@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Glossary of Common Concepts &#8212; QCArchive 0.50b13.post14+g2bf3f9a2 documentation</title>
+    <title>Glossary of Common Concepts &#8212; QCArchive 0.50b13.post15+g377015ba documentation</title>
   
   
   
@@ -29,6 +29,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/pydata-sphinx-theme.css?v=3ab4e28d" />
     <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
     <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=c224919a" />
@@ -37,9 +38,9 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=9c46cf3a"></script>
+    <script src="../_static/documentation_options.js?v=9f9184d2"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'overview/glossary';</script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -434,22 +435,22 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="glossary-of-common-concepts">
-<h1>Glossary of Common Concepts<a class="headerlink" href="#glossary-of-common-concepts" title="Permalink to this heading">#</a></h1>
+<h1>Glossary of Common Concepts<a class="headerlink" href="#glossary-of-common-concepts" title="Link to this heading">#</a></h1>
 <section id="record">
-<span id="glossary-record"></span><h2>record<a class="headerlink" href="#record" title="Permalink to this heading">#</a></h2>
+<span id="glossary-record"></span><h2>record<a class="headerlink" href="#record" title="Link to this heading">#</a></h2>
 <p>An object that represents a single computation. Records can be simple (a singlepoint computation), or can
 contain a complex <a class="reference internal" href="#glossary-service"><span class="std std-ref">service</span></a>, which may contain many child records.
 The record stores the input information and, if the record has been successfully computed,
 the results of the computation.</p>
 </section>
 <section id="molecule">
-<span id="glossary-molecule"></span><h2>molecule<a class="headerlink" href="#molecule" title="Permalink to this heading">#</a></h2>
+<span id="glossary-molecule"></span><h2>molecule<a class="headerlink" href="#molecule" title="Link to this heading">#</a></h2>
 <p>An object containing symbols and geometry of atoms. It may also contain information such as bonding
 and identifiers. Molecules in this way are defined to be a specific geometry.</p>
 <p>See <a class="reference internal" href="../user_guide/molecule.html"><span class="doc">Molecules</span></a></p>
 </section>
 <section id="specification">
-<span id="glossary-specification"></span><h2>specification<a class="headerlink" href="#specification" title="Permalink to this heading">#</a></h2>
+<span id="glossary-specification"></span><h2>specification<a class="headerlink" href="#specification" title="Link to this heading">#</a></h2>
 <p>A <em>specification</em> details how a computation should be run. For example, an
 <a class="reference internal" href="../user_guide/records/optimization.html#qcportal.optimization.OptimizationSpecification" title="qcportal.optimization.OptimizationSpecification"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationSpecification</span></code></a> contains
 information about the program used to run the optimization, which method or basis, and other
@@ -457,7 +458,7 @@ input information.</p>
 <p>A specification applied to an input molecule results in a <a class="reference internal" href="#glossary-record"><span class="std std-ref">record</span></a>.</p>
 </section>
 <section id="task">
-<span id="glossary-task"></span><h2>task<a class="headerlink" href="#task" title="Permalink to this heading">#</a></h2>
+<span id="glossary-task"></span><h2>task<a class="headerlink" href="#task" title="Link to this heading">#</a></h2>
 <p>A <em>task</em> is a self-contained object that represents a computation to be run. <em>Tasks</em> are mostly for internal use
 by the server and managers, although they can be retrieved for help in debugging problems.</p>
 <p>Every task is associated with a <a class="reference internal" href="#glossary-record"><span class="std std-ref">record</span></a>, although not every record has a task. Tasks that are
@@ -465,34 +466,34 @@ completed are typically deleted from the server, with the data being copied to t
 See <a class="reference internal" href="tasks_services.html"><span class="doc">Tasks and Services</span></a>.</p>
 </section>
 <section id="service">
-<span id="glossary-service"></span><h2>service<a class="headerlink" href="#service" title="Permalink to this heading">#</a></h2>
+<span id="glossary-service"></span><h2>service<a class="headerlink" href="#service" title="Link to this heading">#</a></h2>
 <p>A hard-coded workflow that run on the server. The workflow is responsible for creating new
 <a class="reference internal" href="#glossary-record"><span class="std std-ref">records</span></a>, and then iterating when all those records have been successfully
 computed. See <a class="reference internal" href="tasks_services.html"><span class="doc">Tasks and Services</span></a>.</p>
 </section>
 <section id="internal-job">
-<span id="glossary-internal-job"></span><h2>internal job<a class="headerlink" href="#internal-job" title="Permalink to this heading">#</a></h2>
+<span id="glossary-internal-job"></span><h2>internal job<a class="headerlink" href="#internal-job" title="Link to this heading">#</a></h2>
 <p>An <em>internal job</em> is a specific action or piece of work that is to be run
 on the server. This is in contrast to a <a class="reference internal" href="#glossary-task"><span class="std std-ref">task</span></a> which are to be run on
 distributed <a class="reference internal" href="#glossary-manager"><span class="std std-ref">managers</span></a>.</p>
 <p>See <a class="reference internal" href="internal_jobs.html"><span class="doc">Internal Jobs</span></a></p>
 </section>
 <section id="compute-manager">
-<span id="glossary-manager"></span><h2>compute manager<a class="headerlink" href="#compute-manager" title="Permalink to this heading">#</a></h2>
+<span id="glossary-manager"></span><h2>compute manager<a class="headerlink" href="#compute-manager" title="Link to this heading">#</a></h2>
 <p>A <em>compute manager</em> (or just <em>manager</em>) is a process that requests <a class="reference internal" href="#glossary-task"><span class="std std-ref">tasks</span></a> from the
 server and then sends them to be computed. Simple managers may just compute them by itself, although
 for production-level infrastructure these tasks are then queued to be run elsewhere (on an HPC cluster, for example).
 See <a class="reference internal" href="../admin_guide/managers/index.html"><span class="doc">Compute Managers</span></a> in the user guide.</p>
 </section>
 <section id="routing-tag">
-<span id="glossary-tag"></span><h2>routing tag<a class="headerlink" href="#routing-tag" title="Permalink to this heading">#</a></h2>
+<span id="glossary-tag"></span><h2>routing tag<a class="headerlink" href="#routing-tag" title="Link to this heading">#</a></h2>
 <p>A <em>routing tag</em> (or just <em>tag</em>) is a user-specified string to assist in the routing of <a class="reference internal" href="#glossary-task"><span class="std std-ref">tasks</span></a>.
 <a class="reference internal" href="#glossary-manager"><span class="std std-ref">Managers</span></a> can be set up to only requests tasks that are
 assigned a specific tag. This can assist with directing certain tasks to special hardware, for example.
 See <a class="reference internal" href="tasks_services.html#routing-tags"><span class="std std-ref">Routing tags</span></a>.</p>
 </section>
 <section id="dataset">
-<span id="glossary-dataset"></span><h2>dataset<a class="headerlink" href="#dataset" title="Permalink to this heading">#</a></h2>
+<span id="glossary-dataset"></span><h2>dataset<a class="headerlink" href="#dataset" title="Link to this heading">#</a></h2>
 <p>A <em>dataset</em> is a collection of similar <a class="reference internal" href="#glossary-record"><span class="std std-ref">records</span></a>.
 A dataset contains <a class="reference internal" href="#glossary-dataset-entry"><span class="std std-ref">entries</span></a> which typically correspond to input
 <a class="reference internal" href="#glossary-molecule"><span class="std std-ref">molecules</span></a>, and <a class="reference internal" href="#glossary-dataset-specification"><span class="std std-ref">specifications</span></a> that
@@ -500,14 +501,14 @@ define how a computation is to be run.</p>
 <p>See <a class="reference internal" href="../user_guide/datasets.html"><span class="doc">Using datasets</span></a></p>
 </section>
 <section id="dataset-entry">
-<span id="glossary-dataset-entry"></span><h2>dataset entry<a class="headerlink" href="#dataset-entry" title="Permalink to this heading">#</a></h2>
+<span id="glossary-dataset-entry"></span><h2>dataset entry<a class="headerlink" href="#dataset-entry" title="Link to this heading">#</a></h2>
 <p>An object that represents a <a class="reference internal" href="#glossary-molecule"><span class="std std-ref">molecule</span></a> or similar input in a dataset.
 The <a class="reference internal" href="#glossary-dataset-specification"><span class="std std-ref">specifications</span></a> of the dataset are then applied to the
 entries.</p>
 <p>See <a class="reference internal" href="../user_guide/datasets.html"><span class="doc">Using datasets</span></a></p>
 </section>
 <section id="dataset-specification">
-<span id="glossary-dataset-specification"></span><h2>dataset specification<a class="headerlink" href="#dataset-specification" title="Permalink to this heading">#</a></h2>
+<span id="glossary-dataset-specification"></span><h2>dataset specification<a class="headerlink" href="#dataset-specification" title="Link to this heading">#</a></h2>
 <p>An object that represents a <a class="reference internal" href="#glossary-specification"><span class="std std-ref">specification</span></a> in a dataset. Typically these are just
 <a class="reference internal" href="#glossary-specification"><span class="std std-ref">specifications</span></a> with an attached name, making it easier to
 organize a dataset.</p>
@@ -618,7 +619,7 @@ form <a class="reference internal" href="#glossary-record"><span class="std std-
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.1.
     <br/>
   </p>
 </div>
@@ -657,7 +658,7 @@ form <a class="reference internal" href="#glossary-record"><span class="std std-
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.1.2.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.2.1.<br>
         </p>
         
 
