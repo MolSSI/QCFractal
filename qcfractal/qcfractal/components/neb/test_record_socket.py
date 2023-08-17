@@ -245,3 +245,41 @@ def test_neb_socket_run(
 
     out = rec.compute_history[-1].outputs["stdout"].get_output()
     assert "NEB calculation is completed" in out
+
+
+def test_neb_socket_run_duplicate(
+    storage_socket: SQLAlchemySocket,
+    session: Session,
+    activated_manager_name: ManagerName,
+):
+    input_spec_1, molecules_1, result_data_1 = load_test_data("neb_HCN_psi4_pbe_opt_diff")
+
+    meta_1, id_1 = storage_socket.records.neb.add(
+        [molecules_1], input_spec_1, "test_tag", PriorityEnum.low, None, None, True
+    )
+    id_1 = id_1[0]
+    assert meta_1.success
+
+    run_service(storage_socket, activated_manager_name, id_1, generate_task_key, result_data_1, 100)
+
+    rec_1 = session.get(NEBRecordORM, id_1)
+    assert rec_1.status == RecordStatusEnum.complete
+    sp_ids_1 = [x.singlepoint_id for x in rec_1.singlepoints]
+    opt_ids_1 = [x.optimization_id for x in rec_1.optimizations]
+
+    # Submit again, without duplicate checking
+    meta_2, id_2 = storage_socket.records.neb.add(
+        [molecules_1], input_spec_1, "test_tag", PriorityEnum.low, None, None, False
+    )
+    id_2 = id_2[0]
+    assert meta_2.success
+    assert id_2 != id_1
+
+    run_service(storage_socket, activated_manager_name, id_2, generate_task_key, result_data_1, 1000)
+
+    rec_2 = session.get(NEBRecordORM, id_2)
+    assert rec_2.status == RecordStatusEnum.complete
+    sp_ids_2 = [x.singlepoint_id for x in rec_2.singlepoints]
+    opt_ids_2 = [x.optimization_id for x in rec_2.optimizations]
+
+    assert set(sp_ids_1 + opt_ids_1).isdisjoint(sp_ids_2 + opt_ids_2)

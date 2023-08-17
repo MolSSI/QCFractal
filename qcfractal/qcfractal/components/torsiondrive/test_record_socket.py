@@ -293,11 +293,12 @@ def test_torsiondrive_socket_run(
     meta_1, id_1 = storage_socket.records.torsiondrive.add(
         [molecules_1], input_spec_1, True, "test_tag", PriorityEnum.low, "submit_user", "group1", True
     )
+    id_1 = id_1[0]
     assert meta_1.success
 
     time_0 = datetime.utcnow()
     finished, n_optimizations = run_service(
-        storage_socket, activated_manager_name, id_1[0], generate_task_key, result_data_1, 1000
+        storage_socket, activated_manager_name, id_1, generate_task_key, result_data_1, 1000
     )
     time_1 = datetime.utcnow()
 
@@ -311,7 +312,7 @@ def test_torsiondrive_socket_run(
     assert time_0 < rec.compute_history[-1].modified_on < time_1
     assert rec.service is None
 
-    desc_info = storage_socket.records.get_short_descriptions(id_1)[0]
+    desc_info = storage_socket.records.get_short_descriptions([id_1])[0]
     short_desc = desc_info["description"]
     assert desc_info["record_type"] == rec.record_type
     assert desc_info["created_on"] == rec.created_on
@@ -324,3 +325,39 @@ def test_torsiondrive_socket_run(
     assert "Job Finished" in out
 
     assert len(rec.optimizations) == n_optimizations
+
+
+def test_torsiondrive_socket_run_duplicate(
+    storage_socket: SQLAlchemySocket,
+    session: Session,
+    activated_manager_name: ManagerName,
+):
+    input_spec_1, molecules_1, result_data_1 = load_test_data("td_H2O2_mopac_pm6")
+
+    meta_1, id_1 = storage_socket.records.torsiondrive.add(
+        [molecules_1], input_spec_1, True, "test_tag", PriorityEnum.low, None, None, True
+    )
+    id_1 = id_1[0]
+    assert meta_1.success
+
+    run_service(storage_socket, activated_manager_name, id_1, generate_task_key, result_data_1, 1000)
+
+    rec_1 = session.get(TorsiondriveRecordORM, id_1)
+    assert rec_1.status == RecordStatusEnum.complete
+    opt_ids_1 = [x.optimization_id for x in rec_1.optimizations]
+
+    # Submit again, without duplicate checking
+    meta_2, id_2 = storage_socket.records.torsiondrive.add(
+        [molecules_1], input_spec_1, True, "test_tag", PriorityEnum.low, None, None, False
+    )
+    id_2 = id_2[0]
+    assert meta_2.success
+    assert id_2 != id_1
+
+    run_service(storage_socket, activated_manager_name, id_2, generate_task_key, result_data_1, 1000)
+
+    rec_2 = session.get(TorsiondriveRecordORM, id_2)
+    assert rec_2.status == RecordStatusEnum.complete
+    opt_ids_2 = [x.optimization_id for x in rec_2.optimizations]
+
+    assert set(opt_ids_1).isdisjoint(opt_ids_2)
