@@ -1,18 +1,18 @@
 @import "../basic.css";
 
 html[data-theme="light"] {
-    --pst-color-primary: #1d35e7;
+    --pst-color-primary: #0080C7;
 	--pst-color-warning: #ed1c24;
-	--pst-color-primary-highlight: #3e51e3;
+	--pst-color-primary-highlight: #288ec5;
 	--pst-color-secondary: #ed1c24;
 	--pst-color-secondary-highlight: #bc151b;
 }
 
 
 html[data-theme="dark"] {
-    --pst-color-primary: #1d35e7;
+    --pst-color-primary: #0080C7;
 	--pst-color-warning: #ed1c24;
-	--pst-color-primary-highlight: #3e51e3;
+	--pst-color-primary-highlight: #288ec5;
 	--pst-color-background: #1A1A1A;
 	--pst-color-secondary: #ed1c24;
 	--pst-color-secondary-highlight: #bc151b;
