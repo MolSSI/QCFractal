@@ -8,6 +8,8 @@ on:
     branches:
       - next
 
+permissions: write-all
+
 jobs:
   deploy_docs:
     runs-on: ubuntu-latest
