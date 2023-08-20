@@ -35,6 +35,10 @@
         </p>
         {% endif %}
 
+        <p class="theme-version">
+        {% trans theme_version=theme_version|e %}Built with a customized <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> {{ theme_version }}.{% endtrans %}
+        </p>
+
     </div>
     <div class="col-2">
         <a href="https://nsf.gov/" target="_blank" title="Go to the NSF in a new tab">
