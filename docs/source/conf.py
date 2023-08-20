@@ -46,6 +46,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx_design',
     'sphinxcontrib.autodoc_pydantic',
+    'sphinx_copybutton'
 ]
 
 # Some options
@@ -95,7 +96,8 @@ html_theme_options = {
   ],
 
     "secondary_sidebar_items": ["page-toc", "sourcelink"],
-    "footer_end": [ "molssi_footer" ],
+    "footer_start": [ "molssi_footer" ],
+    "footer_end": [],
 }
 
 html_css_files = ['css/custom.css']

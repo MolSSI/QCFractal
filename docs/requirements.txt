@@ -2,6 +2,7 @@ sphinx_design
 pydata_sphinx_theme
 sphinx
 autodoc-pydantic
+sphinx-copybutton
 -e ../qcportal
 -e ../qcfractalcompute
 -e ../qcfractal

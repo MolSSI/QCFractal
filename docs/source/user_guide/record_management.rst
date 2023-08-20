@@ -115,25 +115,33 @@ You can check what the error is with
 the :attr:`~qcportal.record_models.BaseRecord.error`, :attr:`~qcportal.record_models.BaseRecord.stdout`, and
 :attr:`~qcportal.record_models.BaseRecord.stderr` properties.
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> r = client.get_records(411)
-  >>> print(r.status)
-  RecordStatusEnum.error
+  .. tab-item:: PYTHON
 
-  >>> meta = client.reset_records(411) # can also take a list
-  >>> print(meta)
-  UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)
+    .. code-block:: py3
+
+      >>> r = client.get_records(411)
+      >>> print(r.status)
+      RecordStatusEnum.error
+
+      >>> meta = client.reset_records(411) # can also take a list
+      >>> print(meta)
+      UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)
 
 The :doc:`metadata <metadata>` is similarly to the metadata returned by ``add_`` functions.
 In this case, the only record (index 0) had its status updated back to ``waiting`` and will be picked up/run by a
 manager again.
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> r = client.get_records(411)
-  >>> print(r.status)
-  RecordStatusEnum.waiting
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+      >>> r = client.get_records(411)
+      >>> print(r.status)
+      RecordStatusEnum.waiting
 
 
 Deleting records
@@ -150,20 +158,23 @@ If ``soft_delete=False`` ("hard delete"), then the record is deleted permanently
 
   A record cannot be hard-deleted if it is being referenced somewhere (another record or a dataset).
 
+.. tab-set::
 
-.. code-block:: py3
+  .. tab-item:: PYTHON
 
-  >>> r = client.get_records(149)
-  >>> print(r.status)
-  RecordStatusEnum.complete
+    .. code-block:: py3
 
-  >>> meta = client.delete_records(149, soft_delete=True) # can also take a list
-  >>> print(meta)
-  DeleteMetadata(error_description=None, errors=[], deleted_idx=[0], n_children_deleted=5)
+      >>> r = client.get_records(149)
+      >>> print(r.status)
+      RecordStatusEnum.complete
 
-  >>> r = client.get_records(149)
-  >>> print(r.status)
-  RecordStatusEnum.deleted
+      >>> meta = client.delete_records(149, soft_delete=True) # can also take a list
+      >>> print(meta)
+      DeleteMetadata(error_description=None, errors=[], deleted_idx=[0], n_children_deleted=5)
+
+      >>> r = client.get_records(149)
+      >>> print(r.status)
+      RecordStatusEnum.deleted
 
 Note that in this example, the child records were also (soft) deleted. This can be controlled with the
 ``delete_children`` argument to  :meth:`~qcportal.client.PortalClient.delete_records`.
@@ -171,23 +182,31 @@ In this case, the record was an optimization, meaning that the trajectory record
 
 We can undo a soft deletion with :meth:`~qcportal.client.PortalClient.undelete_records`
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> meta = client.undelete_records(149) # can also take a list
-  >>> print(meta)
-  UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=5)
+  .. tab-item:: PYTHON
+    
+    .. code-block:: py3
+
+      >>> meta = client.undelete_records(149) # can also take a list
+      >>> print(meta)
+      UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=5)
 
 Hard deletions are permanent and result in the removal of the record from the server
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> meta = client.delete_records([942, 943], soft_delete=False) # can also take a list
-  >>> print(meta)
-  DeleteMetadata(error_description=None, errors=[], deleted_idx=[0, 1], n_children_deleted=0)
+  .. tab-item:: PYTHON
 
-  >>> r = client.get_records(942, missing_ok=True)
-  >>> print(r)
-  None
+    .. code-block:: py3
+
+      >>> meta = client.delete_records([942, 943], soft_delete=False) # can also take a list
+      >>> print(meta)
+      DeleteMetadata(error_description=None, errors=[], deleted_idx=[0, 1], n_children_deleted=0)
+
+      >>> r = client.get_records(942, missing_ok=True)
+      >>> print(r)
+      None
 
 .. warning::
 
@@ -207,19 +226,23 @@ before it was cancelled, with will go back to a ``waiting state``.
 
 Invalidation can be undone with :meth:`~qcportal.client.PortalClient.uncancel_records`.
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> r = client.get_records(411)
-  >>> print(r.status)
-  RecordStatusEnum.waiting
+  .. tab-item:: PYTHON
 
-  >>> meta = client.cancel_records(411) # can also take a list
-  >>> print(meta)
-  UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)
+    .. code-block:: py3
 
-  >>> r = client.get_records(411)
-  >>> print(r.status)
-  RecordStatusEnum.cancelled
+      >>> r = client.get_records(411)
+      >>> print(r.status)
+      RecordStatusEnum.waiting
+
+      >>> meta = client.cancel_records(411) # can also take a list
+      >>> print(meta)
+      UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)
+
+      >>> r = client.get_records(411)
+      >>> print(r.status)
+      RecordStatusEnum.cancelled
 
 .. note::
 
@@ -234,19 +257,23 @@ the record should be deleted, but in some cases it may be useful to keep the rec
 
 Invalidation can be undone with :meth:`~qcportal.client.PortalClient.uninvalidate_records`.
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> r = client.get_records(149)
-  >>> print(r.status)
-  RecordStatusEnum.complete
+  .. tab-item:: PYTHON
 
-  >>> meta = client.invalidate_records(149) # can also take a list
-  >>> print(meta)
-  UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)
+    .. code-block:: py3
 
-  >>> r = client.get_records(149)
-  >>> print(r.status)
-  RecordStatusEnum.invalid
+      >>> r = client.get_records(149)
+      >>> print(r.status)
+      RecordStatusEnum.complete
+
+      >>> meta = client.invalidate_records(149) # can also take a list
+      >>> print(meta)
+      UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)
+
+      >>> r = client.get_records(149)
+      >>> print(r.status)
+      RecordStatusEnum.invalid
 
 .. note::
 
@@ -259,19 +286,23 @@ Changing tag and priority
 A record's tag and priority can be changed if it has not yet been successfully completed (ie, the task or service
 still exists - see :doc:`../overview/tasks_services`).
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> r = client.get_records(941)
-  >>> print(r.task.tag, r.task.priority)
-  * PriorityEnum.normal
+  .. tab-item:: PYTHON
 
-  >>> meta = client.modify_records(941, new_tag='a_new_tag', new_priority='low')
-  >>> print(meta)
-  UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)
+    .. code-block:: py3
 
-  >>> r = client.get_records(941)
-  >>> print(r.task.tag, r.task.priority)
-  a_new_tag PriorityEnum.low
+      >>> r = client.get_records(941)
+      >>> print(r.task.tag, r.task.priority)
+      * PriorityEnum.normal
+
+      >>> meta = client.modify_records(941, new_tag='a_new_tag', new_priority='low')
+      >>> print(meta)
+      UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)
+
+      >>> r = client.get_records(941)
+      >>> print(r.task.tag, r.task.priority)
+      a_new_tag PriorityEnum.low
 
 
 Adding comments
@@ -282,13 +313,17 @@ with the :attr:`~qcportal.record_models.BaseRecord.comments` property.
 
 The server will automatically add the time the comment was added and the name of the user adding the comment.
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> meta = client.add_comment(149, 'Invalid due to convergence to wrong minimum')
-  >>> print(meta)
-  UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)
+  .. tab-item:: PYTHON
+    
+    .. code-block:: py3
 
-  >>> r = client.get_records(149)
-  >>> print(r.comments)
-  [RecordComment(id=1, record_id=149, username='ben', timestamp=datetime.datetime(2023, 1, 4, 17, 21, 1, 990674),
-   comment='Invalid due to convergence to wrong minimum')]
+      >>> meta = client.add_comment(149, 'Invalid due to convergence to wrong minimum')
+      >>> print(meta)
+      UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)
+
+      >>> r = client.get_records(149)
+      >>> print(r.comments)
+      [RecordComment(id=1, record_id=149, username='ben', timestamp=datetime.datetime(2023, 1, 4, 17, 21, 1, 990674),
+      comment='Invalid due to convergence to wrong minimum')]
