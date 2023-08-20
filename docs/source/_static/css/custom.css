@@ -44,7 +44,7 @@ html[data-theme="dark"] p .reference.internal {
 }
 
 html[data-theme="dark"] a:hover {
-	color: #3e51e3;
+	color: var(--pst-color-primary);
 }
 
 html[data-theme="dark"] .prev-next-area a p.prev-next-title {
@@ -52,7 +52,7 @@ html[data-theme="dark"] .prev-next-area a p.prev-next-title {
 }
 
 html[data-theme="dark"] .prev-next-area:hover a:hover p.prev-next-title:hover {
-    color: #3e51e3;
+    color: var(--pst-color-primary);
 }
 
 html[data-theme="dark"] dt:target {
