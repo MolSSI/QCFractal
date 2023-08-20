@@ -46,6 +46,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx_design',
     'sphinxcontrib.autodoc_pydantic',
+    'sphinx_copybutton'
 ]
 
 # Some options

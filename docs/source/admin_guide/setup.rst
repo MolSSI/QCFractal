@@ -23,10 +23,14 @@ The QCFractal server can be installed via `conda/anaconda <https://www.anaconda.
 or `mamba <https://github.com/mamba-org/mamba>`_. The packages exist under the
 `QCArchive organization <https://anaconda.org/QCArchive>`_ on Anaconda.
 
-.. code-block:: bash
+.. tab-set::
 
-    $ conda create -n qcf_server qcfractal postgresql -c qcarchive/label/next
-    $ conda activate qcf_server
+  .. tab-item:: SHELL
+
+    .. code-block:: bash
+
+        conda create -n qcf_server qcfractal postgresql -c qcarchive/label/next
+        conda activate qcf_server
 
 
 Setting up the server
@@ -35,10 +39,14 @@ Setting up the server
 You generally want to keep all files related to the QCFractal server in a single directory.
 So we are going to create a directory, and then initialize a configuration file there.
 
-.. code-block:: bash
+.. tab-set::
 
-    $ mkdir qcf_server
-    $ qcfractal-server --config=qcf_server/qcf_config.yaml init-config
+  .. tab-item:: SHELL
+
+    .. code-block:: bash
+
+        mkdir qcf_server
+        qcfractal-server --config=qcf_server/qcf_config.yaml init-config
 
 This creates an example configuration file. You are now free to change those settings as
 needed - see :ref:`server_configuration`.
@@ -57,25 +65,37 @@ Some fields are likely to be changed
 Now we are ready to initialize the database. This creates the database directory structure and files,
 as well as the actual postgres database and tables for QCFractal.
 
-.. code-block:: bash
+.. tab-set::
 
-    $ qcfractal-server --config=qcf_server/qcf_config.yaml init-db
+  .. tab-item:: SHELL
+
+    .. code-block:: bash
+
+        qcfractal-server --config=qcf_server/qcf_config.yaml init-db
 
 
 Before starting the server, it doesn't hurt to check the configuration to make sure it matches
 your expectations.
 
-.. code-block:: bash
+.. tab-set::
 
-    $ qcfractal-server --config=qcf_server/qcf_config.yaml info
+  .. tab-item:: SHELL
+
+    .. code-block:: bash
+
+        qcfractal-server --config=qcf_server/qcf_config.yaml info
 
 
 Now we may start the server! This will run the server in the foreground, so you can not use your terminal anymore.
 You can place it in the background with **screen** or any other utilities if needed.
 
-.. code-block:: bash
+.. tab-set::
 
-    $ qcfractal-server --config=qcf_server/qcf_config.yaml start
+  .. tab-item:: SHELL
+
+    .. code-block:: bash
+
+        qcfractal-server --config=qcf_server/qcf_config.yaml start
 
 To stop a running server, you can use **Ctrl-C**.
 
