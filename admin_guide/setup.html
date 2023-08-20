@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>QCFractal Installation and Setup &#8212; QCArchive 0.50b13.post15+g377015ba documentation</title>
+    <title>QCFractal Installation and Setup &#8212; QCArchive 0.50b13.post24+gd192cdf4 documentation</title>
   
   
   
@@ -29,18 +29,20 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/pydata-sphinx-theme.css?v=3ab4e28d" />
     <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=c224919a" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=5829417c" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script src="../_static/documentation_options.js?v=9f9184d2"></script>
+    <script src="../_static/documentation_options.js?v=4c8bf18c"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     <script src="../_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'admin_guide/setup';</script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -457,18 +459,30 @@ QCFractal manage the database.</p>
 <p>The QCFractal server can be installed via <a class="reference external" href="https://www.anaconda.com">conda/anaconda</a>
 or <a class="reference external" href="https://github.com/mamba-org/mamba">mamba</a>. The packages exist under the
 <a class="reference external" href="https://anaconda.org/QCArchive">QCArchive organization</a> on Anaconda.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>qcf_server<span class="w"> </span>qcfractal<span class="w"> </span>postgresql<span class="w"> </span>-c<span class="w"> </span>qcarchive/label/next
-$<span class="w"> </span>conda<span class="w"> </span>activate<span class="w"> </span>qcf_server
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-0">
+SHELL</label><div class="sd-tab-content docutils">
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>qcf_server<span class="w"> </span>qcfractal<span class="w"> </span>postgresql<span class="w"> </span>-c<span class="w"> </span>qcarchive/label/next
+conda<span class="w"> </span>activate<span class="w"> </span>qcf_server
 </pre></div>
+</div>
+</div>
 </div>
 </section>
 <section id="setting-up-the-server">
 <h2>Setting up the server<a class="headerlink" href="#setting-up-the-server" title="Link to this heading">#</a></h2>
 <p>You generally want to keep all files related to the QCFractal server in a single directory.
 So we are going to create a directory, and then initialize a configuration file there.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>mkdir<span class="w"> </span>qcf_server
-$<span class="w"> </span>qcfractal-server<span class="w"> </span>--config<span class="o">=</span>qcf_server/qcf_config.yaml<span class="w"> </span>init-config
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-1">
+SHELL</label><div class="sd-tab-content docutils">
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mkdir<span class="w"> </span>qcf_server
+qcfractal-server<span class="w"> </span>--config<span class="o">=</span>qcf_server/qcf_config.yaml<span class="w"> </span>init-config
 </pre></div>
+</div>
+</div>
 </div>
 <p>This creates an example configuration file. You are now free to change those settings as
 needed - see <a class="reference internal" href="configuration.html#server-configuration"><span class="std std-ref">Server Configuration</span></a>.</p>
@@ -487,18 +501,36 @@ needed - see <a class="reference internal" href="configuration.html#server-confi
 </div></blockquote>
 <p>Now we are ready to initialize the database. This creates the database directory structure and files,
 as well as the actual postgres database and tables for QCFractal.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>qcfractal-server<span class="w"> </span>--config<span class="o">=</span>qcf_server/qcf_config.yaml<span class="w"> </span>init-db
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-2" name="sd-tab-set-2" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-2">
+SHELL</label><div class="sd-tab-content docutils">
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>qcfractal-server<span class="w"> </span>--config<span class="o">=</span>qcf_server/qcf_config.yaml<span class="w"> </span>init-db
 </pre></div>
+</div>
+</div>
 </div>
 <p>Before starting the server, it doesn’t hurt to check the configuration to make sure it matches
 your expectations.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>qcfractal-server<span class="w"> </span>--config<span class="o">=</span>qcf_server/qcf_config.yaml<span class="w"> </span>info
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-3" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-3">
+SHELL</label><div class="sd-tab-content docutils">
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>qcfractal-server<span class="w"> </span>--config<span class="o">=</span>qcf_server/qcf_config.yaml<span class="w"> </span>info
 </pre></div>
+</div>
+</div>
 </div>
 <p>Now we may start the server! This will run the server in the foreground, so you can not use your terminal anymore.
 You can place it in the background with <strong>screen</strong> or any other utilities if needed.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>qcfractal-server<span class="w"> </span>--config<span class="o">=</span>qcf_server/qcf_config.yaml<span class="w"> </span>start
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-4" name="sd-tab-set-4" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-4">
+SHELL</label><div class="sd-tab-content docutils">
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>qcfractal-server<span class="w"> </span>--config<span class="o">=</span>qcf_server/qcf_config.yaml<span class="w"> </span>start
 </pre></div>
+</div>
+</div>
 </div>
 <p>To stop a running server, you can use <strong>Ctrl-C</strong>.</p>
 </section>
@@ -591,27 +623,6 @@ You can place it in the background with <strong>screen</strong> or any other uti
     <div class="footer-items__start">
       
         <div class="footer-item">
-  <p class="copyright">
-    
-      © Copyright 2018-2023, The Molecular Sciences Software Institute.
-      <br/>
-    
-  </p>
-</div>
-      
-        <div class="footer-item">
-  <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.1.
-    <br/>
-  </p>
-</div>
-      
-    </div>
-  
-  
-    <div class="footer-items__end">
-      
-        <div class="footer-item">
   
 
 
@@ -640,9 +651,13 @@ You can place it in the background with <strong>screen</strong> or any other uti
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.2.1.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.2.2.<br>
         </p>
         
+
+        <p class="theme-version">
+        Built with a customized <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
+        </p>
 
     </div>
     <div class="col-2">
@@ -653,6 +668,7 @@ You can place it in the background with <strong>screen</strong> or any other uti
 </div></div>
       
     </div>
+  
   
 </div>
 

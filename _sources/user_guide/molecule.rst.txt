@@ -12,38 +12,50 @@ Creating Molecules
 A common way to programmatically create a molecule is with the Molecule constructor. With the constructor,
 you typically specify the symbols and geometry (coordinates) in bohr:
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> from qcportal.molecules import Molecule
-  >>> water = Molecule(symbols=['H', 'H', 'O'], geometry=[[0.0, 2.0, 0.0], [2.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
-  >>> print(water)
-  Molecule(name='H2O', formula='H2O', hash='3a04ba3')
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+      >>> from qcportal.molecules import Molecule
+      >>> water = Molecule(symbols=['H', 'H', 'O'], geometry=[[0.0, 2.0, 0.0], [2.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
+      >>> print(water)
+      Molecule(name='H2O', formula='H2O', hash='3a04ba3')
 
 The geometry can be specified as a nested list as above, or simply as a flattened list. The below is equivalent to the
 above:
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> from qcportal.molecules import Molecule
-  >>> water = Molecule(symbols=['H', 'H', 'O'], geometry=[0.0, 2.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-  >>> print(water)
-  Molecule(name='H2O', formula='H2O', hash='3a04ba3')
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+      >>> from qcportal.molecules import Molecule
+      >>> water = Molecule(symbols=['H', 'H', 'O'], geometry=[0.0, 2.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+      >>> print(water)
+      Molecule(name='H2O', formula='H2O', hash='3a04ba3')
 
 Another option is to read molecules from strings that are in some common format (like XYZ, although it will work
 with more):
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> mol_xyz = """
-  ...   3
-  ...
-  ...   H   0.000000 1.000000 0.000000
-  ...   H   1.000000 0.000000 0.000000
-  ...   O   0.000000 0.000000 0.000000
-  ... """
-  >>> water = Molecule.from_data(mol_xyz)
-  >>> print(water2)
-  Molecule(name='H2O', formula='H2O', hash='246998b')
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+      >>> mol_xyz = """
+      ...   3
+      ...
+      ...   H   0.000000 1.000000 0.000000
+      ...   H   1.000000 0.000000 0.000000
+      ...   O   0.000000 0.000000 0.000000
+      ... """
+      >>> water = Molecule.from_data(mol_xyz)
+      >>> print(water2)
+      Molecule(name='H2O', formula='H2O', hash='246998b')
 
 Note that in the case of XYZ files, the units are angstroms.
 
@@ -69,16 +81,20 @@ Adding molecules to the server
 Molecules can be added to the server database with `~qcportal.client.PortalClient.add_molecules`. This returns
 some metadata about the insertion, and the molecule IDs.
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> water = Molecule(symbols=['H', 'H', 'O'], geometry=[0.0, 2.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-  >>> water2 = Molecule(symbols=['H', 'H', 'O'], geometry=[0.0, 2.5, 0.0, 2.5, 0.0, 0.0, 0.0, 0.0, 0.0])
-  >>> meta, ids = client.add_molecules([water, water2])
-  >>> print(meta)
-  InsertMetadata(error_description=None, errors=[], inserted_idx=[0, 1], existing_idx=[])
+  .. tab-item:: PYTHON
 
-  >>> print(ids)
-  [585, 586]
+    .. code-block:: py3
+
+      >>> water = Molecule(symbols=['H', 'H', 'O'], geometry=[0.0, 2.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+      >>> water2 = Molecule(symbols=['H', 'H', 'O'], geometry=[0.0, 2.5, 0.0, 2.5, 0.0, 0.0, 0.0, 0.0, 0.0])
+      >>> meta, ids = client.add_molecules([water, water2])
+      >>> print(meta)
+      InsertMetadata(error_description=None, errors=[], inserted_idx=[0, 1], existing_idx=[])
+
+      >>> print(ids)
+      [585, 586]
 
 These IDs can be passed into functions like :meth:`~qcportal.client.PortalClient.add_singlepoints` instead of
 full molecule objects.
@@ -90,19 +106,27 @@ The client has two methods for retrieving molecules: :meth:`~qcportal.client.Por
 :meth:`~qcportal.client.PortalClient.query_molecules`. The :meth:`~qcportal.client.PortalClient.get_molecules`
 method is used to get molecules by ID, and returns molecules in the same order as the given ids.
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> mols = client.get_molecules([5, 15, 10])
-  >>> print(mols[0].id, mols[1].id, mols[2].id)
-  5 15 10
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+      >>> mols = client.get_molecules([5, 15, 10])
+      >>> print(mols[0].id, mols[1].id, mols[2].id)
+      5 15 10
 
 You can also specify a single ID and get a single molecule back
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> mol = client.get_molecules(5)
-  >>> print(mol.id)
-  5
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+      >>> mol = client.get_molecules(5)
+      >>> print(mol.id)
+      5
 
 
 You can also query the molecules in the database with :meth:`~qcportal.client.PortalClient.query_molecules`.
@@ -110,13 +134,17 @@ This function returns an :doc:`iterator <query_iterators>`, which you can then u
 iterate over the results. The iterator automatically handles returning batches or pages of query results from the
 server.
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> query_it = client.query_molecules(molecular_formula='N2')
-  >>> for mol in query_it:
-  ...    print(mol.id, mol.identifiers.molecular_formula)
-  371 N2
-  372 N2
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+      >>> query_it = client.query_molecules(molecular_formula='N2')
+      >>> for mol in query_it:
+      ...    print(mol.id, mol.identifiers.molecular_formula)
+      371 N2
+      372 N2
 
 
 .. caution::
@@ -131,11 +159,15 @@ Managing Molecules
 
 Molecules can be deleted from the server with :meth:`~qcportal.client.PortalClient.delete_molecules`
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> meta = client.delete_molecules([585])
-  >>> print(meta)
-  DeleteMetadata(error_description=None, errors=[], deleted_idx=[0], n_children_deleted=0)
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+      >>> meta = client.delete_molecules([585])
+      >>> print(meta)
+      DeleteMetadata(error_description=None, errors=[], deleted_idx=[0], n_children_deleted=0)
 
 
 The server also allows for some limited modification of molecules. This is limited to the name, comment, and
@@ -143,28 +175,32 @@ identifiers of the molecule. By default, new identifiers will be merged with the
 unless ``overwrite_identifiers=True``, in which case all identifiers will be replaced (that is, identifiers
 that are not specified in the call to ``modify_molecules`` will be removed).
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> n2 = Molecule(symbols=['N', 'N'], geometry=[0.0, 0.0, 0.0, 0.0, 0.0, 2.0],
-  ...               name='nitrogen', comment='initial geometry of nitrogen', identifiers={'smiles': 'N#N'})
-  >>> _, ids = client.add_molecules([n2])
-  >>> print(ids)
-  [601]
+  .. tab-item:: PYTHON
 
-  >>> meta = client.modify_molecule(601, name='dinitrogen', comment='dinitrogen molecule',
-  ...                               identifiers={'pubchem_cid': '947'})
-  >>> print(meta)
-  UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)
+    .. code-block:: py3
 
-  >>> mol = client.get_molecules(601)
-  >>> print(mol.name)
-  dinitrogen
+      >>> n2 = Molecule(symbols=['N', 'N'], geometry=[0.0, 0.0, 0.0, 0.0, 0.0, 2.0],
+      ...               name='nitrogen', comment='initial geometry of nitrogen', identifiers={'smiles': 'N#N'})
+      >>> _, ids = client.add_molecules([n2])
+      >>> print(ids)
+      [601]
 
-  >>> print(mol.comment)
-  dinitrogen molecule
+      >>> meta = client.modify_molecule(601, name='dinitrogen', comment='dinitrogen molecule',
+      ...                               identifiers={'pubchem_cid': '947'})
+      >>> print(meta)
+      UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)
 
-  >>> print(mol.identifiers.smiles)
-  N#N
+      >>> mol = client.get_molecules(601)
+      >>> print(mol.name)
+      dinitrogen
 
-  >>> print(mol.identifiers.pubchem_cid)
-  947
+      >>> print(mol.comment)
+      dinitrogen molecule
+
+      >>> print(mol.identifiers.smiles)
+      N#N
+
+      >>> print(mol.identifiers.pubchem_cid)
+      947

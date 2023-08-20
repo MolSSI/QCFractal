@@ -57,16 +57,19 @@ so two datasets can have the same name as long as they are of different types. T
 You can retrieve a dataset with via its ID with :meth:`~qcportal.client.PortalClient.get_dataset_by_id`
 and its name with :meth:`~qcportal.client.PortalClient.get_dataset`
 
+.. tab-set::
 
-.. code-block:: py3
+  .. tab-item:: PYTHON
 
-  >>> ds = client.get_dataset_by_id(123)
-  >>> print(ds.id, ds.dataset_type, ds.name)
-  123 singlepoint Organic molecule energies
+    .. code-block:: py3
 
-  >>> ds = client.get_dataset("optimization", "Diatomic geometries")
-  >>> print(ds.id, ds.dataset_type, ds.name)
-  52 optimization Diatomic geometries
+      >>> ds = client.get_dataset_by_id(123)
+      >>> print(ds.id, ds.dataset_type, ds.name)
+      123 singlepoint Organic molecule energies
+
+      >>> ds = client.get_dataset("optimization", "Diatomic geometries")
+      >>> print(ds.id, ds.dataset_type, ds.name)
+      52 optimization Diatomic geometries
 
 
 Adding Datasets
@@ -75,11 +78,15 @@ Adding Datasets
 Datasets can be created on a server with the :meth:`~qcportal.client.PortalClient.add_dataset`
 function of the :class:`~qcportal.client.PortalClient`. This function returns the dataset:
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> ds = client.add_dataset("optimization", "Optimization of important molecules")
-  >>> print(ds.id)
-  27
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+      >>> ds = client.add_dataset("optimization", "Optimization of important molecules")
+      >>> print(ds.id)
+      27
 
 The :meth:`~qcportal.client.PortalClient.add_dataset` takes several optional arguments, including
 some for descriptions of the dataset as well as default priority and :ref:`tags <routing_tags>`.
@@ -102,17 +109,21 @@ with :meth:`~qcportal.dataset_models.BaseDataset.set_name`,
 :meth:`~qcportal.dataset_models.BaseDataset.set_description`,
 :meth:`~qcportal.dataset_models.BaseDataset.set_metadata`, and so on.
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> print(ds.description)
-  Optimization of diatomic molecules at different levels of theory
+  .. tab-item:: PYTHON
 
-  >>> ds.set_description("A new description")
+    .. code-block:: py3
 
-  >>> # It has been changed on the server
-  >>> ds = client.get_dataset_by_id(1)
-  >>> print(ds.description)
-  A new description
+      >>> print(ds.description)
+      Optimization of diatomic molecules at different levels of theory
+
+      >>> ds.set_description("A new description")
+
+      >>> # It has been changed on the server
+      >>> ds = client.get_dataset_by_id(1)
+      >>> print(ds.description)
+      A new description
 
 
 Status
@@ -121,32 +132,40 @@ Status
 The :meth:`~qcportal.dataset_models.BaseDataset.status` returns a dictionary describing the status of the computations.
 This is indexed by specification
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> ds.status()
-  {'pbe0/sto-3g': {<RecordStatusEnum.complete: 'complete'>: 4,
-  <RecordStatusEnum.error: 'error'>: 1},
- 'b3lyp/def2-tzvp': {<RecordStatusEnum.error: 'error'>: 1,
-  <RecordStatusEnum.complete: 'complete'>: 4},
- 'pbe/6-31g': {<RecordStatusEnum.complete: 'complete'>: 3,
-  <RecordStatusEnum.error: 'error'>: 2}}
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+      >>> ds.status()
+      {'pbe0/sto-3g': {<RecordStatusEnum.complete: 'complete'>: 4,
+      <RecordStatusEnum.error: 'error'>: 1},
+    'b3lyp/def2-tzvp': {<RecordStatusEnum.error: 'error'>: 1,
+      <RecordStatusEnum.complete: 'complete'>: 4},
+    'pbe/6-31g': {<RecordStatusEnum.complete: 'complete'>: 3,
+      <RecordStatusEnum.error: 'error'>: 2}}
 
 If you are in an interactive session or notebook, or just want a prettier version, you can use
 :meth:`~qcportal.dataset_models.BaseDataset.status_table` returns a table as a string, and
 :meth:`~qcportal.dataset_models.BaseDataset.print_status` prints a table of the statuses.
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> ds.print_status_()
-      specification    complete    error    invalid
-  -----------------  ----------  -------  ---------
-      pbe/def2-tzvp           3        2
-         pbe/sto-3g           4        1
-         pbe0/6-31g           4        1
-       pbe0/6-31g**           4        1
-   pbe0/aug-cc-pvtz           3        1          1
-     pbe0/def2-tzvp           4        1
-        pbe0/sto-3g           4        1
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+      >>> ds.print_status_()
+          specification    complete    error    invalid
+      -----------------  ----------  -------  ---------
+          pbe/def2-tzvp           3        2
+            pbe/sto-3g           4        1
+            pbe0/6-31g           4        1
+          pbe0/6-31g**           4        1
+      pbe0/aug-cc-pvtz           3        1          1
+        pbe0/def2-tzvp           4        1
+            pbe0/sto-3g           4        1
 
 
 .. note::
@@ -162,59 +181,78 @@ Specifications and Entries
 The specifications of the dataset are available with the ``.specification_names`` and ``.specifications`` properties.
 ``.specifications`` returns a dictionary, with the key being the name of the specification.
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> print(ds.specification_names)
-  ['hf/sto-3g', 'hf/def2-tzvp']
+  .. tab-item:: PYTHON
 
-  >>> print(ds.specifications['hf/sto-3g'])
-  name='hf/sto-3g' specification=OptimizationSpecification(program='geometric',
-  qc_specification=QCSpecification(program='psi4', driver=<SinglepointDriver.deferred: 'deferred'>, method='hf',
-  basis='sto-3g', keywords={'maxiter': 100}, protocols=AtomicResultProtocols(wavefunction=<WavefunctionProtocolEnum.none: 'none'>,
-  stdout=True, error_correction=ErrorCorrectionProtocol(default_policy=True, policies=None),
-  native_files=<NativeFilesProtocolEnum.none: 'none'>)), keywords={},
-  protocols=OptimizationProtocols(trajectory=<TrajectoryProtocolEnum.all: 'all'>)) description=None
+    .. code-block:: py3
+
+      >>> print(ds.specification_names)
+      ['hf/sto-3g', 'hf/def2-tzvp']
+
+      >>> print(ds.specifications['hf/sto-3g'])
+      name='hf/sto-3g' specification=OptimizationSpecification(program='geometric',
+      qc_specification=QCSpecification(program='psi4', driver=<SinglepointDriver.deferred: 'deferred'>, method='hf',
+      basis='sto-3g', keywords={'maxiter': 100}, protocols=AtomicResultProtocols(wavefunction=<WavefunctionProtocolEnum.none: 'none'>,
+      stdout=True, error_correction=ErrorCorrectionProtocol(default_policy=True, policies=None),
+      native_files=<NativeFilesProtocolEnum.none: 'none'>)), keywords={},
+      protocols=OptimizationProtocols(trajectory=<TrajectoryProtocolEnum.all: 'all'>)) description=None
 
 
 Entries are slightly different. Since it is expected that a dataset may have many entries, only the names
 are accessible all at once
 
+.. tab-set::
 
-.. code-block:: py3
+  .. tab-item:: PYTHON
 
-  >>> print(ds.entry_names)
-  ['H2', 'N2', 'O2', 'F2', 'Hg2']
+    .. code-block:: py3
+
+      >>> print(ds.entry_names)
+      ['H2', 'N2', 'O2', 'F2', 'Hg2']
 
 You can obtain a full entry from its name with :meth:`~qcportal.dataset_models.BaseDataset.get_entry`:
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> print(ds.get_entry)
-  OptimizationDatasetEntry(name='H2', initial_molecule=Molecule(name='H2', formula='H2', hash='7746e69'),
-  additional_keywords={}, attributes={}, comment=None)
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+      >>> print(ds.get_entry)
+      OptimizationDatasetEntry(name='H2', initial_molecule=Molecule(name='H2', formula='H2', hash='7746e69'),
+      additional_keywords={}, attributes={}, comment=None)
 
 If you need to get all entries, you may iterate over the entries with
 :meth:`~qcportal.dataset_models.BaseDataset.iterate_entries`:
 
-.. code-block:: py3
+.. tab-set::
 
-    >>> for x in ds.iterate_entries():
-    ...    print(x.initial_molecule)
-    Molecule(name='H2', formula='H2', hash='7746e69')
-    Molecule(name='N2', formula='N2', hash='609abf3')
-    Molecule(name='O2', formula='O2', hash='018caee')
-    Molecule(name='F2', formula='F2', hash='7ffa835')
-    Molecule(name='Hg2', formula='Hg2', hash='a67cb93')
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+        >>> for x in ds.iterate_entries():
+        ...    print(x.initial_molecule)
+        Molecule(name='H2', formula='H2', hash='7746e69')
+        Molecule(name='N2', formula='N2', hash='609abf3')
+        Molecule(name='O2', formula='O2', hash='018caee')
+        Molecule(name='F2', formula='F2', hash='7ffa835')
+        Molecule(name='Hg2', formula='Hg2', hash='a67cb93')
 
 :meth:`~qcportal.dataset_models.BaseDataset.iterate_entries` can also be restricted to only iterate over certain
 entry names.
 
-.. code-block:: py3
+.. tab-set::
 
-    >>> for x in ds.iterate_entries(entry_names=['H2', 'O2']):
-    ...    print(x.initial_molecule)
-    Molecule(name='H2', formula='H2', hash='7746e69')
-    Molecule(name='O2', formula='O2', hash='018caee')
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+        >>> for x in ds.iterate_entries(entry_names=['H2', 'O2']):
+        ...    print(x.initial_molecule)
+        Molecule(name='H2', formula='H2', hash='7746e69')
+        Molecule(name='O2', formula='O2', hash='018caee')
 
 
 Retrieving Records
@@ -223,44 +261,56 @@ Retrieving Records
 A single records can be retrieved by entry name and specification name
 with :meth:`~qcportal.dataset_models.BaseDataset.get_record`
 
-.. code-block:: py3
+.. tab-set::
 
-    >>> rec = ds.get_record('H2', 'hf/sto-3g')
-    >>> print(rec)
-    <OptimizationRecord id=3 status=complete>
+  .. tab-item:: PYTHON
 
-    >>> print(rec.final_molecule)
-    Molecule(name='H2', formula='H2', hash='6c7a0a9')
+    .. code-block:: py3
+
+        >>> rec = ds.get_record('H2', 'hf/sto-3g')
+        >>> print(rec)
+        <OptimizationRecord id=3 status=complete>
+
+        >>> print(rec.final_molecule)
+        Molecule(name='H2', formula='H2', hash='6c7a0a9')
 
 Multiple records (or all records) can be obtained by using the iterator returned from
 :meth:`~qcportal.dataset_models.BaseDataset.iterate_records`. The iterator return a tuple of three
 values - the entry name, specification name, and then the full record.
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> for e_name, s_name, record in ds.iterate_records():
-  ...   print(e_name, s_name, record.id, record.status)
-  H2 hf/sto-3g 3 RecordStatusEnum.complete
-  N2 hf/sto-3g 1 RecordStatusEnum.complete
-  O2 hf/sto-3g 4 RecordStatusEnum.complete
-  F2 hf/sto-3g 5 RecordStatusEnum.complete
-  Hg2 hf/sto-3g 2 RecordStatusEnum.error
-  H2 hf/def2-tzvp 8 RecordStatusEnum.complete
-  N2 hf/def2-tzvp 9 RecordStatusEnum.complete
-  O2 hf/def2-tzvp 6 RecordStatusEnum.complete
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+      >>> for e_name, s_name, record in ds.iterate_records():
+      ...   print(e_name, s_name, record.id, record.status)
+      H2 hf/sto-3g 3 RecordStatusEnum.complete
+      N2 hf/sto-3g 1 RecordStatusEnum.complete
+      O2 hf/sto-3g 4 RecordStatusEnum.complete
+      F2 hf/sto-3g 5 RecordStatusEnum.complete
+      Hg2 hf/sto-3g 2 RecordStatusEnum.error
+      H2 hf/def2-tzvp 8 RecordStatusEnum.complete
+      N2 hf/def2-tzvp 9 RecordStatusEnum.complete
+      O2 hf/def2-tzvp 6 RecordStatusEnum.complete
 
 
 :meth:`~qcportal.dataset_models.BaseDataset.iterate_records` also has filtering options, including
 by entry name, specification name, and status
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> for e_name, s_name, record in ds.iterate_records(status='error'):
-  ...   print(e_name, s_name, record.id, record.status)
-  Hg2 hf/sto-3g 2 RecordStatusEnum.error
-  Hg2 hf/def2-tzvp 10 RecordStatusEnum.error
-  Hg2 hf/6-31g 15 RecordStatusEnum.error
-  Hg2 hf/6-31g** 17 RecordStatusEnum.error
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+      >>> for e_name, s_name, record in ds.iterate_records(status='error'):
+      ...   print(e_name, s_name, record.id, record.status)
+      Hg2 hf/sto-3g 2 RecordStatusEnum.error
+      Hg2 hf/def2-tzvp 10 RecordStatusEnum.error
+      Hg2 hf/6-31g 15 RecordStatusEnum.error
+      Hg2 hf/6-31g** 17 RecordStatusEnum.error
 
 If the record was previously retrieved, it won't be retrieved again unless it has been updated on the server. This can
 be overridden with ``force_refetch=True`` which will always download a fresh record.
@@ -281,54 +331,66 @@ When entries or specifications are added, the changes are reflected immediately 
 First, we add some entries to this dataset. For an optimization dataset, an entry corresponds to
 an unoptimized 'initial' molecule. Adding entries returns :doc:`metadata <metadata>`.
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> from qcportal.molecules import Molecule
-  >>> from qcportal.optimization import OptimizationDatasetEntry
+  .. tab-item:: PYTHON
 
-  >>> mol = Molecule(symbols=['C', 'O'], geometry=[0.0, 0.0, 0.0, 0.0, 0.0, 2.0])
-  >>> meta = ds.add_entry("carbon monoxide", mol)
-  >>> print(meta)
-  InsertMetadata(error_description=None, errors=[], inserted_idx=[0], existing_idx=[])
+    .. code-block:: py3
 
-  >>> # Can also create lots of entries and add them at once
-  >>> mol2 = Molecule(symbols=['F', 'F'], geometry=[0.0, 0.0, 0.0, 0.0, 0.0, 2.0])
-  >>> mol3 = Molecule(symbols=['Br', 'Br'], geometry=[0.0, 0.0, 0.0, 0.0, 0.0, 2.0])
-  >>> entry2 = OptimizationDatasetEntry(name='difluorine', initial_molecule=mol2)
-  >>> entry3 = OptimizationDatasetEntry(name='dibromine', initial_molecule=mol3)
-  >>> meta = ds.add_entries([entry2, entry3])
-  >>> print(meta)
-  InsertMetadata(error_description=None, errors=[], inserted_idx=[0, 1], existing_idx=[])
+      >>> from qcportal.molecules import Molecule
+      >>> from qcportal.optimization import OptimizationDatasetEntry
+
+      >>> mol = Molecule(symbols=['C', 'O'], geometry=[0.0, 0.0, 0.0, 0.0, 0.0, 2.0])
+      >>> meta = ds.add_entry("carbon monoxide", mol)
+      >>> print(meta)
+      InsertMetadata(error_description=None, errors=[], inserted_idx=[0], existing_idx=[])
+
+      >>> # Can also create lots of entries and add them at once
+      >>> mol2 = Molecule(symbols=['F', 'F'], geometry=[0.0, 0.0, 0.0, 0.0, 0.0, 2.0])
+      >>> mol3 = Molecule(symbols=['Br', 'Br'], geometry=[0.0, 0.0, 0.0, 0.0, 0.0, 2.0])
+      >>> entry2 = OptimizationDatasetEntry(name='difluorine', initial_molecule=mol2)
+      >>> entry3 = OptimizationDatasetEntry(name='dibromine', initial_molecule=mol3)
+      >>> meta = ds.add_entries([entry2, entry3])
+      >>> print(meta)
+      InsertMetadata(error_description=None, errors=[], inserted_idx=[0, 1], existing_idx=[])
 
 Now our dataset has three entries
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> print(ds.entry_names)
-  ['carbon monoxide', 'difluorine', 'dibromine']
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+      >>> print(ds.entry_names)
+      ['carbon monoxide', 'difluorine', 'dibromine']
 
 Next, we will add some specifications. For an optimization dataset, this is an
 :class:`~qcportal.optimization.OptimizationSpecification`.
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> from qcportal.singlepoint import SinglepointSpecification
-  >>> from qcportal.optimization import OptimizationSpecification
+  .. tab-item:: PYTHON
 
-  >>> # Use geometric, compute gradients with psi4. Optimize with b3lyp/def2-tzvp
-  >>> spec = OptimizationSpecification(
-  ...   program='geometric',
-  ...   qc_specification=QCSpecification(
-  ...     program='psi4',
-  ...     driver='deferred',
-  ...     method='b3lyp',
-  ...     basis='def2-tzvp',
-  ...   )
-  ... )
+    .. code-block:: py3
 
-  >>> meta = ds.add_specification(name='psi4/b3lyp/def2-tzvp', specification=spec)
-  >>> print(meta)
-  InsertMetadata(error_description=None, errors=[], inserted_idx=[0], existing_idx=[])
+      >>> from qcportal.singlepoint import SinglepointSpecification
+      >>> from qcportal.optimization import OptimizationSpecification
+
+      >>> # Use geometric, compute gradients with psi4. Optimize with b3lyp/def2-tzvp
+      >>> spec = OptimizationSpecification(
+      ...   program='geometric',
+      ...   qc_specification=QCSpecification(
+      ...     program='psi4',
+      ...     driver='deferred',
+      ...     method='b3lyp',
+      ...     basis='def2-tzvp',
+      ...   )
+      ... )
+
+      >>> meta = ds.add_specification(name='psi4/b3lyp/def2-tzvp', specification=spec)
+      >>> print(meta)
+      InsertMetadata(error_description=None, errors=[], inserted_idx=[0], existing_idx=[])
 
 
 .. _dataset_submission:
@@ -343,15 +405,19 @@ With no arguments, this will create missing records for all entries and specific
 default tag and priority of the dataset. However, you may also submit only certain entries and specifications,
 or change the tag and priority.
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> ds.submit() # Create everything
+  .. tab-item:: PYTHON
 
-  >>> # Submit missing difluorine computations with a special tag
-  >>> ds.submit(['difluorine'], tag='special_tag')
+    .. code-block:: py3
 
-  >>> # Submit dibromine hf/sto-3g computation at a high priority
-  >>> ds.submit(['dibromine'], ['hf/sto-3g'], priority='high')
+      >>> ds.submit() # Create everything
+
+      >>> # Submit missing difluorine computations with a special tag
+      >>> ds.submit(['difluorine'], tag='special_tag')
+
+      >>> # Submit dibromine hf/sto-3g computation at a high priority
+      >>> ds.submit(['dibromine'], ['hf/sto-3g'], priority='high')
 
 
 Renaming and Deleting Entries and Specifications
@@ -363,25 +429,33 @@ Entries and specifications can be renamed and deleted. Deletion can also optiona
 :meth:`~qcportal.dataset_models.BaseDataset.rename_specification`
 take a dictionary of old name to new name
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> ds.rename_entries({'difluorine': 'F2 molecule'})
-  >>> ent = ds.get_entry('F2 molecule')
-  >>> print(ent.initial_molecule)
-  initial_molecule=Molecule(name='F2', formula='F2', hash='7ffa835')
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+      >>> ds.rename_entries({'difluorine': 'F2 molecule'})
+      >>> ent = ds.get_entry('F2 molecule')
+      >>> print(ent.initial_molecule)
+      initial_molecule=Molecule(name='F2', formula='F2', hash='7ffa835')
 
 Entries and specifications are deleted with
 :meth:`~qcportal.dataset_models.BaseDataset.delete_entries` and
 :meth:`~qcportal.dataset_models.BaseDataset.delete_specification`.
 Note that deleting entries and specifications by default do not delete the records
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> # Keeps any records, but removes from dataset
-  >>> ds.delete_entries(['carbon monoxide'])
+  .. tab-item:: PYTHON
 
-  >>> # Deletes the records too
-  >>> ds.delete_specification('hf/sto-3g', delete_records=True)
+    .. code-block:: py3
+
+      >>> # Keeps any records, but removes from dataset
+      >>> ds.delete_entries(['carbon monoxide'])
+
+      >>> # Deletes the records too
+      >>> ds.delete_specification('hf/sto-3g', delete_records=True)
 
 
 Record Management
@@ -400,10 +474,14 @@ These functions are similar to the client counterparts, but instead use entry an
 In addition, individual records can be removed from a dataset (and optionally deleted) with
 :meth:`~qcportal.dataset_models.BaseDataset.remove_records`.
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> # Reset carbon monoxide records
-  >>> ds.reset_records(entry_names=['carbon monoxide'])
+  .. tab-item:: PYTHON
 
-  >>> # Cancel pbe0/def2-qzvp computations
-  >>> ds.cancel_records(specification_names=['pbe0/def2-qzvp'])
+    .. code-block:: py3
+
+      >>> # Reset carbon monoxide records
+      >>> ds.reset_records(entry_names=['carbon monoxide'])
+
+      >>> # Cancel pbe0/def2-qzvp computations
+      >>> ds.cancel_records(specification_names=['pbe0/def2-qzvp'])

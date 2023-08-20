@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Managing Records &#8212; QCArchive 0.50b13.post15+g377015ba documentation</title>
+    <title>Managing Records &#8212; QCArchive 0.50b13.post24+gd192cdf4 documentation</title>
   
   
   
@@ -29,18 +29,20 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/pydata-sphinx-theme.css?v=3ab4e28d" />
     <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=c224919a" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=5829417c" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script src="../_static/documentation_options.js?v=9f9184d2"></script>
+    <script src="../_static/documentation_options.js?v=4c8bf18c"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     <script src="../_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/record_management';</script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -539,6 +541,10 @@ This can be useful if you think the error may be spurious or random and that run
 You can check what the error is with
 the <a class="reference internal" href="records/base.html#qcportal.record_models.BaseRecord.error" title="qcportal.record_models.BaseRecord.error"><code class="xref py py-attr docutils literal notranslate"><span class="pre">error</span></code></a>, <a class="reference internal" href="records/base.html#qcportal.record_models.BaseRecord.stdout" title="qcportal.record_models.BaseRecord.stdout"><code class="xref py py-attr docutils literal notranslate"><span class="pre">stdout</span></code></a>, and
 <a class="reference internal" href="records/base.html#qcportal.record_models.BaseRecord.stderr" title="qcportal.record_models.BaseRecord.stderr"><code class="xref py py-attr docutils literal notranslate"><span class="pre">stderr</span></code></a> properties.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-0">
+PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">411</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
 <span class="go">RecordStatusEnum.error</span>
@@ -548,13 +554,21 @@ the <a class="reference internal" href="records/base.html#qcportal.record_models
 <span class="go">UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)</span>
 </pre></div>
 </div>
+</div>
+</div>
 <p>The <a class="reference internal" href="metadata.html"><span class="doc">metadata</span></a> is similarly to the metadata returned by <code class="docutils literal notranslate"><span class="pre">add_</span></code> functions.
 In this case, the only record (index 0) had its status updated back to <code class="docutils literal notranslate"><span class="pre">waiting</span></code> and will be picked up/run by a
 manager again.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-1">
+PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">411</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
 <span class="go">RecordStatusEnum.waiting</span>
 </pre></div>
+</div>
+</div>
 </div>
 </section>
 <section id="deleting-records">
@@ -568,6 +582,10 @@ If <code class="docutils literal notranslate"><span class="pre">soft_delete=Fals
 <p class="admonition-title">Important</p>
 <p>A record cannot be hard-deleted if it is being referenced somewhere (another record or a dataset).</p>
 </div>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-2" name="sd-tab-set-2" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-2">
+PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">149</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
 <span class="go">RecordStatusEnum.complete</span>
@@ -581,16 +599,28 @@ If <code class="docutils literal notranslate"><span class="pre">soft_delete=Fals
 <span class="go">RecordStatusEnum.deleted</span>
 </pre></div>
 </div>
+</div>
+</div>
 <p>Note that in this example, the child records were also (soft) deleted. This can be controlled with the
 <code class="docutils literal notranslate"><span class="pre">delete_children</span></code> argument to  <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.delete_records" title="qcportal.client.PortalClient.delete_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_records()</span></code></a>.
 In this case, the record was an optimization, meaning that the trajectory records were (soft) deleted.</p>
 <p>We can undo a soft deletion with <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.undelete_records" title="qcportal.client.PortalClient.undelete_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">undelete_records()</span></code></a></p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-3" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-3">
+PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">undelete_records</span><span class="p">(</span><span class="mi">149</span><span class="p">)</span> <span class="c1"># can also take a list</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
 <span class="go">UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=5)</span>
 </pre></div>
 </div>
+</div>
+</div>
 <p>Hard deletions are permanent and result in the removal of the record from the server</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-4" name="sd-tab-set-4" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-4">
+PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">delete_records</span><span class="p">([</span><span class="mi">942</span><span class="p">,</span> <span class="mi">943</span><span class="p">],</span> <span class="n">soft_delete</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="c1"># can also take a list</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
 <span class="go">DeleteMetadata(error_description=None, errors=[], deleted_idx=[0, 1], n_children_deleted=0)</span>
@@ -599,6 +629,8 @@ In this case, the record was an optimization, meaning that the trajectory record
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
 <span class="go">None</span>
 </pre></div>
+</div>
+</div>
 </div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -613,6 +645,10 @@ be picked up by a compute manager.</p>
 <p>Cancelling can be undone with <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.uncancel_records" title="qcportal.client.PortalClient.uncancel_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncancel_records()</span></code></a>. If the record was <code class="docutils literal notranslate"><span class="pre">running</span></code>
 before it was cancelled, with will go back to a <code class="docutils literal notranslate"><span class="pre">waiting</span> <span class="pre">state</span></code>.</p>
 <p>Invalidation can be undone with <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.uncancel_records" title="qcportal.client.PortalClient.uncancel_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncancel_records()</span></code></a>.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-5" name="sd-tab-set-5" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-5">
+PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">411</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
 <span class="go">RecordStatusEnum.waiting</span>
@@ -626,6 +662,8 @@ before it was cancelled, with will go back to a <code class="docutils literal no
 <span class="go">RecordStatusEnum.cancelled</span>
 </pre></div>
 </div>
+</div>
+</div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Cancelling a record will also cancel any parent records (for example, if this record was part of a service).</p>
@@ -637,6 +675,10 @@ before it was cancelled, with will go back to a <code class="docutils literal no
 that the record, although “successfully” completed, contains other problems and can not be trusted. Normally,
 the record should be deleted, but in some cases it may be useful to keep the record and mark it as invalid instead.</p>
 <p>Invalidation can be undone with <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.uninvalidate_records" title="qcportal.client.PortalClient.uninvalidate_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uninvalidate_records()</span></code></a>.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-6" name="sd-tab-set-6" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-6">
+PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">149</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
 <span class="go">RecordStatusEnum.complete</span>
@@ -650,6 +692,8 @@ the record should be deleted, but in some cases it may be useful to keep the rec
 <span class="go">RecordStatusEnum.invalid</span>
 </pre></div>
 </div>
+</div>
+</div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Invalidating a record will also cancel any parent records (for example, if this record was part of a service).</p>
@@ -659,6 +703,10 @@ the record should be deleted, but in some cases it may be useful to keep the rec
 <h3>Changing tag and priority<a class="headerlink" href="#changing-tag-and-priority" title="Link to this heading">#</a></h3>
 <p>A record’s tag and priority can be changed if it has not yet been successfully completed (ie, the task or service
 still exists - see <a class="reference internal" href="../overview/tasks_services.html"><span class="doc">Tasks and Services</span></a>).</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-7" name="sd-tab-set-7" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-7">
+PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">941</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">tag</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">priority</span><span class="p">)</span>
 <span class="go">* PriorityEnum.normal</span>
@@ -672,12 +720,18 @@ still exists - see <a class="reference internal" href="../overview/tasks_service
 <span class="go">a_new_tag PriorityEnum.low</span>
 </pre></div>
 </div>
+</div>
+</div>
 </section>
 <section id="adding-comments">
 <h3>Adding comments<a class="headerlink" href="#adding-comments" title="Link to this heading">#</a></h3>
 <p>Comments can be added to records with <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.add_comment" title="qcportal.client.PortalClient.add_comment"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_comment()</span></code></a>. These are then available
 with the <a class="reference internal" href="records/base.html#qcportal.record_models.BaseRecord.comments" title="qcportal.record_models.BaseRecord.comments"><code class="xref py py-attr docutils literal notranslate"><span class="pre">comments</span></code></a> property.</p>
 <p>The server will automatically add the time the comment was added and the name of the user adding the comment.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-8" name="sd-tab-set-8" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-8">
+PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_comment</span><span class="p">(</span><span class="mi">149</span><span class="p">,</span> <span class="s1">&#39;Invalid due to convergence to wrong minimum&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
 <span class="go">UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)</span>
@@ -685,8 +739,10 @@ with the <a class="reference internal" href="records/base.html#qcportal.record_m
 <span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">149</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">comments</span><span class="p">)</span>
 <span class="go">[RecordComment(id=1, record_id=149, username=&#39;ben&#39;, timestamp=datetime.datetime(2023, 1, 4, 17, 21, 1, 990674),</span>
-<span class="go"> comment=&#39;Invalid due to convergence to wrong minimum&#39;)]</span>
+<span class="go">comment=&#39;Invalid due to convergence to wrong minimum&#39;)]</span>
 </pre></div>
+</div>
+</div>
 </div>
 </section>
 </section>
@@ -791,27 +847,6 @@ with the <a class="reference internal" href="records/base.html#qcportal.record_m
     <div class="footer-items__start">
       
         <div class="footer-item">
-  <p class="copyright">
-    
-      © Copyright 2018-2023, The Molecular Sciences Software Institute.
-      <br/>
-    
-  </p>
-</div>
-      
-        <div class="footer-item">
-  <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.1.
-    <br/>
-  </p>
-</div>
-      
-    </div>
-  
-  
-    <div class="footer-items__end">
-      
-        <div class="footer-item">
   
 
 
@@ -840,9 +875,13 @@ with the <a class="reference internal" href="records/base.html#qcportal.record_m
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.2.1.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.2.2.<br>
         </p>
         
+
+        <p class="theme-version">
+        Built with a customized <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
+        </p>
 
     </div>
     <div class="col-2">
@@ -853,6 +892,7 @@ with the <a class="reference internal" href="records/base.html#qcportal.record_m
 </div></div>
       
     </div>
+  
   
 </div>
 

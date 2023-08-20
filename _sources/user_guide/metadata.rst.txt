@@ -11,17 +11,21 @@ then ``meta.success`` will be ``True``. If any errors happened, these are also s
 Metadata classes also have fields with an ``_idx`` suffix. These are lists that reference the
 `zero-based index` of the input list. If we take molecules as an example,
 
-.. code-block:: py3
+.. tab-set::
 
-  >>> water = Molecule(symbols=['H', 'H', 'O'], geometry=[0.0, 2.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-  >>> nitrogen = Molecule(symbols=['N', 'N'], geometry=[0.0, 0.0, 0.0, 0.0, 0.0, 2.0])
-  >>> meta, ids = client.add_molecules([water, nitrogen])
+  .. tab-item:: PYTHON
+    
+    .. code-block:: py3
 
-  >>> print(meta.success)
-  True
+      >>> water = Molecule(symbols=['H', 'H', 'O'], geometry=[0.0, 2.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+      >>> nitrogen = Molecule(symbols=['N', 'N'], geometry=[0.0, 0.0, 0.0, 0.0, 0.0, 2.0])
+      >>> meta, ids = client.add_molecules([water, nitrogen])
 
-  >>> print(meta)
-  InsertMetadata(error_description=None, errors=[], inserted_idx=[0], existing_idx=[1])
+      >>> print(meta.success)
+      True
+
+      >>> print(meta)
+      InsertMetadata(error_description=None, errors=[], inserted_idx=[0], existing_idx=[1])
 
 In this case, the addition of the two molecules to the server was a success. The first molecule ``water``
 did not exist and was added to the server - this is represented by ``0`` in the ``inserted_idx`` attribute
