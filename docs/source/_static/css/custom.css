@@ -59,6 +59,10 @@ html[data-theme="dark"] dt:target {
     background-color: #000000;
 }
 
+html[data-theme="light"] a:visited {
+	color: var(--pst-color-primary);
+}
+
 html .toctree-wrapper li[class^=toctree-l] {
 	list-style: circle;
 }
