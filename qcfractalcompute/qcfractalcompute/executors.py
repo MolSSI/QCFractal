@@ -169,6 +169,7 @@ def build_executor(executor_label: str, executor_config: ExecutorConfig) -> Pars
                 project=executor_config.project,
                 queue=executor_config.queue,
                 request_by_nodes=executor_config.request_by_nodes,
+                bsub_redirection=executor_config.bsub_redirection,
                 worker_init=";".join(executor_config.worker_init),
                 scheduler_options="\n".join(executor_config.scheduler_options),
             ),

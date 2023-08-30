@@ -132,6 +132,7 @@ class LSFExecutorConfig(ExecutorConfig):
     max_nodes: int
 
     request_by_nodes: bool = True
+    bsub_redirection: bool = True
 
     scheduler_options: List[str] = []
 
