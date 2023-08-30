@@ -146,6 +146,12 @@ def build_executor(executor_label: str, executor_config: ExecutorConfig) -> Pars
         # User specifies resources per worker, so convert to resources per node
         cores_per_node = executor_config.cores_per_worker * executor_config.workers_per_node
 
+        cores_per_block = None
+
+        if executor_config.request_by_nodes is False:
+            # For us, 1 block = 1 node
+            cores_per_block = cores_per_node
+
         return HighThroughputExecutor(
             label=executor_label,
             cores_per_worker=executor_config.cores_per_worker,
@@ -156,11 +162,13 @@ def build_executor(executor_label: str, executor_config: ExecutorConfig) -> Pars
                 init_blocks=1,
                 min_blocks=0,
                 max_blocks=executor_config.max_nodes,
+                cores_per_block=cores_per_block,
                 nodes_per_block=1,
                 cores_per_node=cores_per_node,
                 walltime=executor_config.walltime,
                 project=executor_config.project,
                 queue=executor_config.queue,
+                request_by_nodes=executor_config.request_by_nodes,
                 worker_init=";".join(executor_config.worker_init),
                 scheduler_options="\n".join(executor_config.scheduler_options),
             ),

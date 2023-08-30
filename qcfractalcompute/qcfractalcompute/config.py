@@ -131,6 +131,8 @@ class LSFExecutorConfig(ExecutorConfig):
     workers_per_node: int
     max_nodes: int
 
+    request_by_nodes: bool = True
+
     scheduler_options: List[str] = []
 
     @validator("walltime", pre=True)
