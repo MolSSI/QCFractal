@@ -119,6 +119,7 @@ class NEBRecordORM(BaseRecordORM):
 
     initial_chain = relationship(
         NEBInitialchainORM,
+        order_by=NEBInitialchainORM.position,
         collection_class=ordering_list("position"),
         cascade="all, delete-orphan",
         passive_deletes=True,
