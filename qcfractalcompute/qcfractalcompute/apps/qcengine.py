@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import tempfile
 from typing import Optional
 
@@ -23,10 +24,12 @@ def qcengine_conda_app(
     # This function handles both compute and compute_procedure
     # Record id can be ignored, but is here for consistency with other apps
 
+    scratch_directory = os.path.expandvars(executor_config.scratch_directory)
+
     qcengine_options = {}
     qcengine_options["memory"] = executor_config.memory_per_worker
     qcengine_options["ncores"] = executor_config.cores_per_worker
-    qcengine_options["scratch_directory"] = executor_config.scratch_directory
+    qcengine_options["scratch_directory"] = scratch_directory
 
     function_kwargs = decompress(function_kwargs_compressed, CompressionEnum.zstd)
     function_kwargs = {**function_kwargs, "task_config": qcengine_options}
@@ -55,10 +58,12 @@ def qcengine_apptainer_app(
     # This function handles both compute and compute_procedure
     # Record id can be ignored, but is here for consistency with other apps
 
+    scratch_directory = os.path.expandvars(executor_config.scratch_directory)
+
     qcengine_options = {}
     qcengine_options["memory"] = executor_config.memory_per_worker
     qcengine_options["ncores"] = executor_config.cores_per_worker
-    qcengine_options["scratch_directory"] = executor_config.scratch_directory
+    qcengine_options["scratch_directory"] = scratch_directory
 
     function_kwargs = decompress(function_kwargs_compressed, CompressionEnum.zstd)
     function_kwargs = {**function_kwargs, "task_config": qcengine_options}
