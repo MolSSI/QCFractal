@@ -24,7 +24,10 @@ def qcengine_conda_app(
     # This function handles both compute and compute_procedure
     # Record id can be ignored, but is here for consistency with other apps
 
-    scratch_directory = os.path.expandvars(executor_config.scratch_directory)
+    if executor_config.scratch_directory:
+        scratch_directory = os.path.expandvars(executor_config.scratch_directory)
+    else:
+        scratch_directory = None
 
     qcengine_options = {}
     qcengine_options["memory"] = executor_config.memory_per_worker
@@ -58,7 +61,10 @@ def qcengine_apptainer_app(
     # This function handles both compute and compute_procedure
     # Record id can be ignored, but is here for consistency with other apps
 
-    scratch_directory = os.path.expandvars(executor_config.scratch_directory)
+    if executor_config.scratch_directory:
+        scratch_directory = os.path.expandvars(executor_config.scratch_directory)
+    else:
+        scratch_directory = None
 
     qcengine_options = {}
     qcengine_options["memory"] = executor_config.memory_per_worker

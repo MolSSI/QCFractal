@@ -58,9 +58,12 @@ def run_apptainer(sif_path: str, command: List[str], volumes: List[Tuple[str, st
     )
 
 
-def run_conda_subprocess(conda_env_name: Optional[str], cmd: List[str], cwd: str, env: Dict[str, str]) -> AppTaskResult:
+def run_conda_subprocess(
+    conda_env_name: Optional[str], cmd: List[str], cwd: Optional[str], env: Dict[str, str]
+) -> AppTaskResult:
 
-    cwd = os.path.expandvars(cwd)
+    if cwd:
+        cwd = os.path.expandvars(cwd)
 
     sub_env = os.environ.copy()
     sub_env.update(env)
