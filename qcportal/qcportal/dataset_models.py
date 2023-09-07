@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import itertools
 from datetime import datetime
 from typing import Optional, Dict, Any, List, Iterable, Type, Tuple, Union, Callable, ClassVar
 
