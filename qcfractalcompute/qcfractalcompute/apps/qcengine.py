@@ -26,6 +26,7 @@ def qcengine_conda_app(
 
     if executor_config.scratch_directory:
         scratch_directory = os.path.expandvars(executor_config.scratch_directory)
+        scratch_directory = os.path.expanduser(scratch_directory)
     else:
         scratch_directory = None
 
@@ -63,6 +64,7 @@ def qcengine_apptainer_app(
 
     if executor_config.scratch_directory:
         scratch_directory = os.path.expandvars(executor_config.scratch_directory)
+        scratch_directory = os.path.expanduser(scratch_directory)
     else:
         scratch_directory = None
 
