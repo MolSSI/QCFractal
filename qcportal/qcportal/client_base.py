@@ -62,7 +62,7 @@ class PortalRequestError(Exception):
 class PortalClientBase:
     def __init__(
         self,
-        address: str = "https://api.qcarchive.molssi.org",
+        address: str,
         username: Optional[str] = None,
         password: Optional[str] = None,
         verify: bool = True,

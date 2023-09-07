@@ -111,7 +111,7 @@ class PortalClient(PortalClientBase):
 
     def __init__(
         self,
-        address: str = "https://api.qcarchive.molssi.org",
+        address: str,
         username: Optional[str] = None,
         password: Optional[str] = None,
         verify: bool = True,
