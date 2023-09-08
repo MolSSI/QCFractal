@@ -1,6 +1,6 @@
 # QCArchive
 
-<p style="text-align: center;">
+<p align="center">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://molssi.github.io/QCFractal/_static/molssi_main_logo.png">
       <source media="(prefers-color-scheme: light)" srcset="https://molssi.github.io/QCFractal/_static/molssi_main_logo_inverted_white.png">
@@ -26,6 +26,20 @@ storing them in a database for later sharing, retrieval and analysis, or export.
 ## Documentation
 
 Full documentation available [here](https://molssi.github.io/QCFractal)
+
+## Installing from the git repo
+
+To install these packages with pip directly from this git repository,
+
+```shell
+pip install ./qcportal ./qcfractal ./qcfractalcompute ./qcarchivetesting
+```
+
+or, for a developer (editable) install,
+
+```shell
+pip install -e ./qcportal -e ./qcfractal -e ./qcfractalcompute -e ./qcarchivetesting
+```
 
 ## About this repository
 
