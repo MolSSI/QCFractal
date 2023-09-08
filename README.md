@@ -1,15 +1,15 @@
 # QCArchive
 
-<p align="center">
-    <picture style>
+<p style="text-align: center;">
+    <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://molssi.github.io/QCFractal/_static/molssi_main_logo.png">
       <source media="(prefers-color-scheme: light)" srcset="https://molssi.github.io/QCFractal/_static/molssi_main_logo_inverted_white.png">
-      <img alt="MolSSI Logo" src="https://molssi.github.io/QCFractal/_static/molssi_main_logo.png" height=100">
+      <img alt="MolSSI Logo" src="https://molssi.github.io/QCFractal/_static/molssi_main_logo.png" height="100px">
     </picture>
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://molssi.github.io/QCFractal/_static/qcarchive_logo.svg">
       <source media="(prefers-color-scheme: light)" srcset="https://molssi.github.io/QCFractal/_static/qcarchive_logo_inverted.svg">
-      <img alt="MolSSI Logo" src="https://molssi.github.io/QCFractal/_static/qcarchive_logo.svg" height=100">
+      <img alt="QCArchive Logo" src="https://molssi.github.io/QCFractal/_static/qcarchive_logo.svg" height="100px">
     </picture>
 </p>
 
@@ -26,12 +26,6 @@ storing them in a database for later sharing, retrieval and analysis, or export.
 ## Documentation
 
 Full documentation available [here](https://molssi.github.io/QCFractal)
-
-## Demonstration server
-
-A publicly-available demonstration server is available to try out with zero installation!
-The server is accessed via Jupyter notebooks hosted on BinderHub.
-[Click here](https://qcademo.molssi.org) to access the server.
 
 ## About this repository
 
