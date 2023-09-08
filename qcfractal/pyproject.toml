@@ -31,9 +31,6 @@ dependencies = [
     "sqlalchemy >=2.0",
     "alembic",
     "psycopg2",
-
-    # For access logging
-    "geoip2",
 ]
 
 
@@ -42,6 +39,9 @@ services = [
     "torsiondrive",
     "geometric @ git+https://github.com/hjnpark/geomeTRIC",
     "scipy" # TODO - needs to be added to geometric deps
+]
+geoip = [
+    "geoip2"
 ]
 
 
