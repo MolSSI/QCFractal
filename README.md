@@ -2,13 +2,13 @@
 
 <p align="center">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://molssi.github.io/QCFractal/_static/molssi_main_logo.png">
-      <source media="(prefers-color-scheme: light)" srcset="https://molssi.github.io/QCFractal/_static/molssi_main_logo_inverted_white.png">
+      <source media="(prefers-color-scheme: light)" srcset="https://molssi.github.io/QCFractal/_static/molssi_main_logo.png">
+      <source media="(prefers-color-scheme: dark)" srcset="https://molssi.github.io/QCFractal/_static/molssi_main_logo_inverted_white.png">
       <img alt="MolSSI Logo" src="https://molssi.github.io/QCFractal/_static/molssi_main_logo.png" height="100px">
     </picture>
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://molssi.github.io/QCFractal/_static/qcarchive_logo.svg">
-      <source media="(prefers-color-scheme: light)" srcset="https://molssi.github.io/QCFractal/_static/qcarchive_logo_inverted.svg">
+      <source media="(prefers-color-scheme: light)" srcset="https://molssi.github.io/QCFractal/_static/qcarchive_logo.svg">
+      <source media="(prefers-color-scheme: dark)" srcset="https://molssi.github.io/QCFractal/_static/qcarchive_logo_inverted.svg">
       <img alt="QCArchive Logo" src="https://molssi.github.io/QCFractal/_static/qcarchive_logo.svg" height="100px">
     </picture>
 </p>
