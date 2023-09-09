@@ -3,10 +3,10 @@ name: Build and Deploy Docs
 on:
   push:
     branches:
-      - next
+      - main
   pull_request:
     branches:
-      - next
+      - main
 
 permissions: write-all
 

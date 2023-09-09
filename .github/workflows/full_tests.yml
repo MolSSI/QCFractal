@@ -3,13 +3,13 @@ name: Full Suite End-to-end test
 on:
   push:
     branches:
-      - master
+      - main
       - next
     paths-ignore:
       - 'docs/**'
   pull_request:
     branches:
-      - master
+      - main
       - next
     paths-ignore:
       - 'docs/**'

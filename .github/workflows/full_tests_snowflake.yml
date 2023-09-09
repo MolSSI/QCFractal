@@ -3,13 +3,13 @@ name: Full Snowflake End-to-end tests
 on:
   push:
     branches:
-      - master
+      - main
       - next
     paths-ignore:
       - 'docs/**'
   pull_request:
     branches:
-      - master
+      - main
       - next
     paths-ignore:
       - 'docs/**'
