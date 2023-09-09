@@ -6,16 +6,11 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 import pytest
-import qcengine as qcng
 
 from qcfractalcompute.compute_manager import ComputeManager
 from qcfractalcompute.config import FractalComputeConfig, FractalServerSettings, LocalExecutorConfig
 from qcfractalcompute.testing_helpers import QCATestingComputeThread, populate_db
 from qcportal.managers import ManagerStatusEnum, ManagerQueryFilters
-
-# For testing only! We just make all available programs/procedures the same as all of them
-qcng.list_available_programs = qcng.list_all_programs
-qcng.list_available_procedures = qcng.list_all_procedures
 
 if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
