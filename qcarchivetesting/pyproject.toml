@@ -22,8 +22,6 @@ classifiers = [
 ]
 dependencies = [
     "qcfractal",
-    "qcfractalcompute",
-    "geoip2",
     "pytest",
     "pytest-cov",
     "codecov",

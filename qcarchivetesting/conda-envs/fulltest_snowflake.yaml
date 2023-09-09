@@ -6,44 +6,44 @@ channels:
 
 dependencies:
   - pip
+  - postgresql
 
-  # QCFractal dependencies
-  # NOTES:
-  #     msgpack-python in conda is msgpack in pypi (due to a rename around v0.5)
-  #     flask-jwt-extended in conda is flask_jwt_extended in pypi
+  # QCPortal dependencies
+  # NOTE: msgpack-python in conda is msgpack in pypi (due to a rename around v0.5)
   - numpy
   - msgpack-python
-  - flask
-  - flask-jwt-extended
-  - gunicorn
   - requests
   - pyyaml
   - pydantic<2.0
   - zstandard
-  - bcrypt
-
   - qcelemental
-  - qcengine
   - tabulate
-
-  # Storage dependencies
-  - postgresql
-  - sqlalchemy >=2.0
-  - alembic
-  - psycopg2
-
-  # Services
-  - torsiondrive
-
-  # QCPortal dependencies
   - tqdm
   - pandas
+  - pyjwt
 
-  # Specific codes below
+  # QCFractalCompute dependencies
+  - parsl
+
+  # QCFractal dependencies
+  # NOTE: flask-jwt-extended in conda is flask_jwt_extended in pypi
+  - flask
+  - flask-jwt-extended
+  - gunicorn
+  - bcrypt
+  - sqlalchemy>=2.0
+  - alembic
+  - psycopg2
+  - geoip2
+
+  # QCFractal Services
+  - torsiondrive
+
+  # Worker codes below
+  - qcengine
   - psi4>=1.7
   - rdkit
 
-  # Geometric service
   - pip:
-    - scipy
-    - "geometric @ git+https://github.com/hjnpark/geomeTRIC"
+      - "geometric @ git+https://github.com/hjnpark/geomeTRIC"
+      - scipy # for geometric

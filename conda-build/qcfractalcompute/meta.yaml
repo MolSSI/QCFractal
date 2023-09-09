@@ -1,5 +1,4 @@
 {% set name = "qcfractalcompute" %}
-{% set pyproject = load_file_data(name ~ '/pyproject.toml') %}
 {% set version = environ.get('GIT_DESCRIBE_TAG', '').lstrip('v') %}
 
 package:
@@ -17,17 +16,12 @@ build:
 requirements:
   host:
     - python >=3.8
-
-    # All dependencies in 'requires' under the 'build-system' block
-    # of pyproject.toml
-    {% for dep in pyproject.get('build-system').get('requires') %}
-    - {{ dep }}
-    {% endfor %}
-
+    - setuptools >=61.0
+    - versioningit
+    - pip
 
   run:
     - qcportal ={{ version }}
-    - qcengine
     - parsl
 
 test:
@@ -37,10 +31,10 @@ test:
     - qcfractal-manager --help
 
 about:
-  home: https://github.com/MolSSI/{{ name }}
-  dev_url: https://github.com/MolSSI/{{ name }}
-  doc_url: https://qcfractal.readthedocs.io/en/latest/
-  doc_source_url: https://github.com/MolSSI/{{ name }}/blob/master/docs/source/index.rst
+  home: https://github.com/MolSSI/QCFractal/
+  dev_url: https://github.com/MolSSI/QCFractal/
+  doc_url: https://molssi.github.io/QCFractal/
+  doc_source_url: https://github.com/MolSSI/QCFractal/blob/main/docs/source/index.rst
   license: BSD-3-Clause
   license_url: https://opensource.org/licenses/BSD-3-Clause
   license_file: LICENSE

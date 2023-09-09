@@ -47,6 +47,7 @@ jobs:
         shell: bash -l {0}
         run: |
           pip install -e ./qcportal -e ./qcfractalcompute -e ./qcfractal[services,geoip] -e ./qcarchivetesting
+          pip install qcengine
 
       - name: Run tests
         shell: bash -l {0}

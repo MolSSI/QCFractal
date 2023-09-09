@@ -22,7 +22,6 @@ classifiers = [
 ]
 dependencies = [
     "qcportal",
-    "qcengine",
     "parsl",
 ]
 

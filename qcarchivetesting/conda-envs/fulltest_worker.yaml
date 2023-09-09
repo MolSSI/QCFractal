@@ -7,9 +7,8 @@ channels:
 dependencies:
   - pip
 
-  # QCFractal dependencies
-  # NOTES:
-  #     msgpack-python in conda is msgpack in pypi (due to a rename around v0.5)
+  # QCPortal dependencies
+  # NOTE: msgpack-python in conda is msgpack in pypi (due to a rename around v0.5)
   - numpy
   - msgpack-python
   - requests
@@ -17,19 +16,18 @@ dependencies:
   - pydantic<2.0
   - zstandard
   - qcelemental
-  - qcengine
   - tabulate
-
-  # QCPortal dependencies
   - tqdm
   - pandas
+  - pyjwt
 
-  # Specific codes below
+  # QCFractalCompute dependencies
+  - parsl
+
+  # Worker codes below
+  - qcengine
   - psi4>=1.7
   - rdkit
-
-  # Adapter
-  - parsl
 
   # Geometric service
   - pip:

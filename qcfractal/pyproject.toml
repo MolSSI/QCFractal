@@ -21,13 +21,11 @@ classifiers = [
     "Operating System :: MacOS",
 ]
 dependencies = [
-    "qcfractalcompute", # Includes qcportal and related deps
+    "qcfractalcompute",
     "flask",
     "flask_jwt_extended",
     "gunicorn",
     "bcrypt",
-
-    # Storage dependencies
     "sqlalchemy >=2.0",
     "alembic",
     "psycopg2",

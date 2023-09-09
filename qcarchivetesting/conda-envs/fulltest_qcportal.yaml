@@ -6,18 +6,15 @@ channels:
 dependencies:
   - pip
 
-  # QCFractal dependencies
-  # NOTES:
-  #     msgpack-python in conda is msgpack in pypi (due to a rename around v0.5)
+  # NOTE: msgpack-python in conda is msgpack in pypi (due to a rename around v0.5)
   - numpy
   - msgpack-python
   - requests
   - pyyaml
   - pydantic<2.0
   - zstandard
-
   - qcelemental
   - tabulate
-
   - tqdm
   - pandas
+  - pyjwt

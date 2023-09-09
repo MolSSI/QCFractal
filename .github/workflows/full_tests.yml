@@ -51,7 +51,7 @@ jobs:
       - name: Install QCFractal
         shell: bash -l {0}
         run: |
-          pip install -e ./qcarchive/qcportal -e ./qcarchive/qcfractalcompute -e ./qcarchive/qcfractal
+          pip install --no-deps -e ./qcarchive/qcportal -e ./qcarchive/qcfractalcompute -e ./qcarchive/qcfractal
 
       - name: Conda info for the QCFractal server
         shell: bash -l {0}
@@ -84,7 +84,7 @@ jobs:
       - name: Install QCFractalCompute
         shell: bash -l {0}
         run: |
-          pip install -e ./qcarchive/qcportal -e ./qcarchive/qcfractalcompute
+          pip install --no-deps -e ./qcarchive/qcportal -e ./qcarchive/qcfractalcompute
 
       - name: Conda info for the QCFractalCompute worker
         shell: bash -l {0}
@@ -116,7 +116,7 @@ jobs:
       - name: Install QCPortal
         shell: bash -l {0}
         run: |
-          pip install -e ./qcarchive/qcportal
+          pip install --no-deps -e ./qcarchive/qcportal
           pip install pytest
 
       - name: Conda info for the QCPortal client
