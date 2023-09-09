@@ -23,7 +23,7 @@ classifiers = [
 dependencies = [
     "qcfractalcompute",
     "flask",
-    "flask_jwt_extended",
+    "flask-jwt-extended",
     "gunicorn",
     "bcrypt",
     "sqlalchemy >=2.0",

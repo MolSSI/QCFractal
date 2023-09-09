@@ -26,7 +26,6 @@ dependencies:
   - parsl
 
   # QCFractal dependencies
-  # NOTE: flask-jwt-extended in conda is flask_jwt_extended in pypi
   - flask
   - flask-jwt-extended
   - gunicorn

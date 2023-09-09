@@ -16,6 +16,8 @@ build:
 requirements:
   host:
     - python >=3.8
+    - setuptools >=61.0
+    - versioningit
 
   run:
     - qcfractal ={{ version }}
