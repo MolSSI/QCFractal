@@ -1,3 +1,7 @@
+from importlib.metadata import version
+
+__version__ = version("qcarchivetesting")
+
 from .helpers import (
     geoip_path,
     geoip_filename,
