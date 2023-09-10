@@ -27,7 +27,7 @@ test:
   imports:
     - qcfractalcompute
   commands:
-    - qcfractal-manager --help
+    - qcfractal-compute-manager --help
 
 about:
   home: https://github.com/MolSSI/QCFractal/
