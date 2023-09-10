@@ -21,6 +21,7 @@ requirements:
 
   run:
     - qcfractal ={{ version }}
+    - qcengine
     - pytest
     - pytest-cov
     - codecov
