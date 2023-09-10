@@ -21,7 +21,6 @@ classifiers = [
     "Operating System :: MacOS",
 ]
 dependencies = [
-    "qcfractalcompute",
     "flask",
     "flask-jwt-extended",
     "gunicorn",
@@ -40,6 +39,9 @@ services = [
 ]
 geoip = [
     "geoip2"
+]
+snowflake = [
+    "qcfractalcompute"
 ]
 
 

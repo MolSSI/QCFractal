@@ -14,8 +14,6 @@ from typing import TYPE_CHECKING
 
 import requests
 
-from qcfractalcompute.compute_manager import ComputeManager
-from qcfractalcompute.config import FractalComputeConfig, FractalServerSettings, LocalExecutorConfig
 from qcportal import PortalClient
 from qcportal.record_models import RecordStatusEnum
 from .config import FractalConfig, DatabaseConfig, update_nested_dict
@@ -23,6 +21,12 @@ from .flask_app.gunicorn_app import FractalGunicornApp
 from .job_runner import FractalJobRunner
 from .port_util import find_open_port
 from .postgres_harness import create_snowflake_postgres
+
+try:
+    from qcfractalcompute.compute_manager import ComputeManager
+    from qcfractalcompute.config import FractalComputeConfig, FractalServerSettings, LocalExecutorConfig
+except ImportError:
+    raise RuntimeError("qcfractalcompute is not installed. Snowflake is useless without it")
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Sequence, Optional, Set

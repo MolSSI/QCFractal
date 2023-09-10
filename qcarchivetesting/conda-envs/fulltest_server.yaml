@@ -21,9 +21,6 @@ dependencies:
   - pandas
   - pyjwt
 
-  # QCFractalCompute dependencies
-  - parsl
-
   # QCFractal dependencies
   - flask
   - flask-jwt-extended

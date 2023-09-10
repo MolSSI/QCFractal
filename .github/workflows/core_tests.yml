@@ -46,7 +46,7 @@ jobs:
       - name: Install All QCArchive packages
         shell: bash -l {0}
         run: |
-          pip install -e ./qcportal -e ./qcfractalcompute -e ./qcfractal[services,geoip] -e ./qcarchivetesting
+          pip install -e ./qcportal -e ./qcfractalcompute -e ./qcfractal[services,geoip,snowflake] -e ./qcarchivetesting
 
       - name: Run tests
         shell: bash -l {0}
