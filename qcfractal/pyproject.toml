@@ -34,8 +34,6 @@ dependencies = [
 [project.optional-dependencies]
 services = [
     "torsiondrive",
-    "geometric @ git+https://github.com/hjnpark/geomeTRIC",
-    "scipy" # TODO - needs to be added to geometric deps
 ]
 geoip = [
     "geoip2"
