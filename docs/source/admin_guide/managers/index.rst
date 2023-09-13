@@ -14,7 +14,7 @@ Compute manager setup for an HPC cluster
 
 Install the base environment for the compute manager, using `mamba`_, and activate it::
 
-    $ mamba create -n qcfractalcompute -c qcarchive/label/next qcfractalcompute
+    $ mamba create -n qcfractalcompute -c conda-forge qcfractalcompute
     $ mamba activate qcfractalcompute
 
 This will create the conda environment ``qcfractalcompute``, which the compute manager will run under.
