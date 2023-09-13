@@ -38,5 +38,6 @@ jobs:
 
       - name: Deploy Documentation
         uses: JamesIves/github-pages-deploy-action@v4
+        if: github.event_name != 'pull_request'
         with:
           folder: docs/build/html

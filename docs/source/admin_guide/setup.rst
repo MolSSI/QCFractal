@@ -29,8 +29,8 @@ or `mamba <https://github.com/mamba-org/mamba>`_. The packages exist under the
 
     .. code-block:: bash
 
-        conda create -n qcf_server qcfractal postgresql -c qcarchive/label/next
-        conda activate qcf_server
+        mamba create -n qcf_server qcfractal postgresql -c conda-forge
+        mamba activate qcf_server
 
 
 Setting up the server

@@ -18,7 +18,7 @@ RUN which python
 
 # Copy the source, install it, and remove the source
 COPY --chown=qcarchive:qcarchive ./ qca_src
-RUN pip install --user ./qca_src/qcportal ./qca_src/qcfractalcompute ./qca_src/qcfractal[services,geoip]
+RUN pip install --user ./qca_src/qcportal ./qca_src/qcfractal[services,geoip]
 RUN rm -Rf qca_src
 
 COPY docker/entrypoint.sh /usr/local/bin

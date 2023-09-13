@@ -14,7 +14,7 @@ or `mamba <https://github.com/mamba-org/mamba>`_. The packages exist under the
 
     .. code-block:: bash
 
-        conda create -n qcportal qcportal -c qcarchive/label/next
+        conda create -n qcportal qcportal -c conda-forge
         conda activate qcportal
 
 
