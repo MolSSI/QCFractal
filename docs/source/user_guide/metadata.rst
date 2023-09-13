@@ -46,6 +46,4 @@ Metadata API
 
 .. autoclass:: qcportal.metadata_models.UpdateMetadata
 
-.. autoclass:: qcportal.metadata_models.QueryMetadata
-
 .. autoclass:: qcportal.metadata_models.TaskReturnMetadata
