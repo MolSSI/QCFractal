@@ -7,9 +7,10 @@ This document illustrates how to set up and run a compute manager on HPC resourc
 Compute manager setup for an HPC cluster
 ----------------------------------------
 
-.. note: The instructions in this section are performed on the head/login node of your HPC cluster.
-         By the end, you will start up a compute manager on the head node, and it will launch jobs on your behalf.
-         If your cluster admin forbits long-running processes on the head node, then refer to :ref:`compute-manager-local`.
+.. note:: 
+   The instructions in this section are performed on the head/login node of your HPC cluster.
+   By the end, you will start up a compute manager on the head node, and it will launch jobs on your behalf.
+   If your cluster admin forbits long-running processes on the head node, then refer to :ref:`compute-manager-local`.
 
 Install the base environment for the compute manager, using `mamba`_, and activate it::
 
