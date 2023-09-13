@@ -171,7 +171,7 @@ If leaving a long-running process running on the head node is undesirable, then 
           - source <absolute_path>/worker_init.sh
 
 
-You will then need to create a submission script suitable for your HPC scheduler that requests the appropriate resources, activates the ``qcfractalcompute`` conda environment, and runs ``qcfractal-compute-manager --config config.yml`` itself.
+You will then need to create a submission script suitable for your HPC scheduler that requests the appropriate resources, activates the ``qcfractalcompute`` conda environment, and runs ``qcfractal-compute-manager --config qcfractal-manager-config.yml`` itself.
 You can then manually submit jobs using this script as needed to complete tasks available on the QCFractal server.
 
 Using the ``local`` executor type is also recommended for running a compute manager on a standalone host, or within a container on e.g. a Kubernetes cluster.
