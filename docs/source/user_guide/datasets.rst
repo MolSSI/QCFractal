@@ -141,9 +141,9 @@ This is indexed by specification
       >>> ds.status()
       {'pbe0/sto-3g': {<RecordStatusEnum.complete: 'complete'>: 4,
       <RecordStatusEnum.error: 'error'>: 1},
-    'b3lyp/def2-tzvp': {<RecordStatusEnum.error: 'error'>: 1,
+       'b3lyp/def2-tzvp': {<RecordStatusEnum.error: 'error'>: 1,
       <RecordStatusEnum.complete: 'complete'>: 4},
-    'pbe/6-31g': {<RecordStatusEnum.complete: 'complete'>: 3,
+       'pbe/6-31g': {<RecordStatusEnum.complete: 'complete'>: 3,
       <RecordStatusEnum.error: 'error'>: 2}}
 
 If you are in an interactive session or notebook, or just want a prettier version, you can use

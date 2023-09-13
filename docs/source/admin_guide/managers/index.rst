@@ -181,5 +181,3 @@ Using the ``local`` executor type is also recommended for running a compute mana
 .. autopydantic_model:: qcfractalcompute.config.LocalExecutorConfig
    :model-show-config-summary: false
    :model-show-field-summary: false
-
-----
