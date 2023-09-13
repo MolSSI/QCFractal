@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>QCFractalCompute - Compute Managers and Workers &#8212; QCArchive 0.50.post1+gb2068546 documentation</title>
+    <title>QCFractalCompute - Compute Managers and Workers &#8212; QCArchive 0.50.post13+gcbae418d documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script src="../../_static/documentation_options.js?v=12cbc917"></script>
+    <script src="../../_static/documentation_options.js?v=563e5cb7"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -47,7 +47,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'admin_guide/managers/index';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Compute manager setup" href="setup.html" />
+    <link rel="next" title="Web API Reference" href="../../web_api/index.html" />
     <link rel="prev" title="Server administration via client and API" href="../monitoring.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -379,10 +379,7 @@ document.write(`
 <li class="toctree-l1"><a class="reference internal" href="../configuration.html">Server Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../cli_admin.html">Administration &amp; maintenance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../monitoring.html">Server administration via client and API</a></li>
-<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">QCFractalCompute - Compute Managers and Workers</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="setup.html">Compute manager setup</a></li>
-</ul>
-</li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">QCFractalCompute - Compute Managers and Workers</a></li>
 </ul>
 </div>
 </nav></div>
@@ -442,12 +439,528 @@ document.write(`
                   
   <section id="qcfractalcompute-compute-managers-and-workers">
 <h1>QCFractalCompute - Compute Managers and Workers<a class="headerlink" href="#qcfractalcompute-compute-managers-and-workers" title="Link to this heading">#</a></h1>
-<div class="toctree-wrapper compound">
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="setup.html">Compute manager setup</a></li>
-</ul>
+<p>QCFractal executes quantum chemical calculations via <strong>compute managers</strong> deployed to resources suitable for these types of calculations.
+This document illustrates how to set up and run a compute manager on HPC resources.</p>
+<section id="compute-manager-setup-for-an-hpc-cluster">
+<h2>Compute manager setup for an HPC cluster<a class="headerlink" href="#compute-manager-setup-for-an-hpc-cluster" title="Link to this heading">#</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The instructions in this section are performed on the head/login node of your HPC cluster.
+By the end, you will start up a compute manager on the head node, and it will launch jobs on your behalf.
+If your cluster admin forbits long-running processes on the head node, then refer to <a class="reference internal" href="#compute-manager-local"><span class="std std-ref">Execution without interfacing with an HPC scheduler</span></a>.</p>
 </div>
+<p>Install the base environment for the compute manager, using <a class="reference external" href="https://mamba.readthedocs.io/en/latest/mamba-installation.html#mamba-installation">mamba</a>, and activate it:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ mamba create -n qcfractalcompute -c conda-forge qcfractalcompute
+$ mamba activate qcfractalcompute
+</pre></div>
+</div>
+<p>This will create the conda environment <code class="docutils literal notranslate"><span class="pre">qcfractalcompute</span></code>, which the compute manager will run under.</p>
+<p>Next, create the manager config as <code class="docutils literal notranslate"><span class="pre">qcfractal-manager-config.yml</span></code>, using the content below as your starting point.
+Fill in the components given in <code class="docutils literal notranslate"><span class="pre">&lt;brackets&gt;</span></code>.
+For this example, we are assuming a cluster using LSF as the scheduler; for other scheduler types, see <a class="reference internal" href="#compute-manager-hpc-config-reference"><span class="std std-ref">Configuration for different HPC schedulers</span></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># qcfractal-manager-config.yml</span>
+<span class="o">---</span>
+<span class="n">cluster</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">cluster_name</span><span class="o">&gt;</span>           <span class="c1"># descriptive name to present to QCFractal server</span>
+<span class="n">loglevel</span><span class="p">:</span> <span class="n">INFO</span>
+<span class="n">logfile</span><span class="p">:</span> <span class="n">qcfractal</span><span class="o">-</span><span class="n">manager</span><span class="o">.</span><span class="n">log</span>
+<span class="n">update_frequency</span><span class="p">:</span> <span class="mf">60.0</span>
+
+<span class="n">server</span><span class="p">:</span>
+  <span class="n">fractal_uri</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">fractal_url</span><span class="o">&gt;</span>      <span class="c1"># e.g. https://qcarchive.molssi.org</span>
+  <span class="n">username</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">compute_identity</span><span class="o">&gt;</span>
+  <span class="n">password</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">compute_key</span><span class="o">&gt;</span>
+  <span class="n">verify</span><span class="p">:</span> <span class="kc">True</span>
+
+<span class="n">executors</span><span class="p">:</span>
+  <span class="n">cpuqueue</span><span class="p">:</span>
+    <span class="nb">type</span><span class="p">:</span> <span class="n">lsf</span>
+    <span class="n">workers_per_node</span><span class="p">:</span> <span class="mi">4</span>           <span class="c1"># max number of workers to spawn per node</span>
+    <span class="n">cores_per_worker</span><span class="p">:</span> <span class="mi">16</span>          <span class="c1"># cores per worker</span>
+    <span class="n">memory_per_worker</span><span class="p">:</span> <span class="mi">96</span>         <span class="c1"># memory per worker, in GiB</span>
+    <span class="n">max_nodes</span><span class="p">:</span> <span class="mi">2</span>                  <span class="c1"># max number of jobs to have queued/running at a time</span>
+    <span class="n">walltime</span><span class="p">:</span> <span class="s2">&quot;4:00:00&quot;</span>           <span class="c1"># walltime, given in `hours:min:seconds`, alternatively in integer minutes</span>
+    <span class="n">project</span><span class="p">:</span> <span class="n">null</span>
+    <span class="n">queue</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">queue_name</span><span class="o">&gt;</span>           <span class="c1"># name of queue to launch to</span>
+    <span class="n">request_by_nodes</span><span class="p">:</span> <span class="n">false</span>
+    <span class="n">scheduler_options</span><span class="p">:</span>            <span class="c1"># add additional options for submission command</span>
+      <span class="o">-</span> <span class="s2">&quot;-R fscratch&quot;</span>
+    <span class="n">queue_tags</span><span class="p">:</span>                   <span class="c1"># only claim tasks with these tags; &#39;*&#39; means all tags accepted</span>
+      <span class="o">-</span> <span class="s1">&#39;*&#39;</span>
+    <span class="n">environments</span><span class="p">:</span>
+      <span class="n">use_manager_environment</span><span class="p">:</span> <span class="kc">False</span>   <span class="c1"># don&#39;t use the manager environment for task execution</span>
+      <span class="n">conda</span><span class="p">:</span>
+        <span class="o">-</span> <span class="o">&lt;</span><span class="n">worker_conda_env_name</span><span class="o">&gt;</span>      <span class="c1"># name of conda env used for task execution; see below for example</span>
+    <span class="n">worker_init</span><span class="p">:</span>
+      <span class="o">-</span> <span class="n">source</span> <span class="o">&lt;</span><span class="n">absolute_path</span><span class="o">&gt;/</span><span class="n">worker</span><span class="o">-</span><span class="n">init</span><span class="o">.</span><span class="n">sh</span>   <span class="c1"># initialization script for worker; see below for example</span>
+</pre></div>
+</div>
+<p>Create the file <code class="docutils literal notranslate"><span class="pre">worker-init.sh</span></code>; this is run before worker startup:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># worker-init.sh
+#!/bin/bash
+
+# Make sure to run bashrc
+source $HOME/.bashrc
+
+# Don&#39;t limit stack size
+ulimit -s unlimited
+
+# make scratch space
+# CUSTOMIZE FOR YOUR CLUSTER
+mkdir -p /fscratch/${USER}/${LSB_JOBID}
+cd /fscratch/${USER}/${LSB_JOBID}
+
+# Activate qcfractalcompute conda env
+conda activate qcfractalcompute
+</pre></div>
+</div>
+<p>Set the absolute path to this file in the line <code class="docutils literal notranslate"><span class="pre">-</span> <span class="pre">source</span> <span class="pre">&lt;absolute_path&gt;/worker-init.sh</span></code> in <code class="docutils literal notranslate"><span class="pre">qcfractal-manager-config.yml</span></code> above.</p>
+<p>We will also create a conda environment used by each worker to execute tasks, e.g. an environment suitable for using <a class="reference external" href="https://psicode.org/">psi4</a>, with a conda environment file such as <code class="docutils literal notranslate"><span class="pre">worker-env.yml</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># worker-env.yml</span>
+<span class="o">---</span>
+<span class="n">name</span><span class="p">:</span> <span class="n">qcfractal</span><span class="o">-</span><span class="n">worker</span><span class="o">-</span><span class="n">psi4</span><span class="o">-</span><span class="mf">18.1</span>
+<span class="n">channels</span><span class="p">:</span>
+  <span class="o">-</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="o">/</span><span class="n">label</span><span class="o">/</span><span class="n">libint_dev</span>
+  <span class="o">-</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span>
+  <span class="o">-</span> <span class="n">defaults</span>
+<span class="n">dependencies</span><span class="p">:</span>
+  <span class="o">-</span> <span class="n">python</span> <span class="o">=</span><span class="mf">3.10</span>
+  <span class="o">-</span> <span class="n">pip</span>
+  <span class="o">-</span> <span class="n">qcengine</span>
+  <span class="o">-</span> <span class="n">psi4</span> <span class="o">=</span><span class="mf">1.8.1</span>
+  <span class="o">-</span> <span class="n">dftd3</span><span class="o">-</span><span class="n">python</span>
+  <span class="o">-</span> <span class="n">gcp</span><span class="o">-</span><span class="n">correction</span>
+  <span class="o">-</span> <span class="n">geometric</span>
+  <span class="o">-</span> <span class="n">scipy</span>
+
+  <span class="o">-</span> <span class="n">pip</span><span class="p">:</span>
+    <span class="o">-</span> <span class="n">basis_set_exchange</span>
+</pre></div>
+</div>
+<p>And creating a conda environment from it with <a class="reference external" href="https://mamba.readthedocs.io/en/latest/mamba-installation.html#mamba-installation">mamba</a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ mamba env create -f worker-env.yml
+</pre></div>
+</div>
+<p>Set the name of this conda env (<code class="docutils literal notranslate"><span class="pre">qcfractal-worker-psi4-18.1</span></code>) in the line <code class="docutils literal notranslate"><span class="pre">-</span> <span class="pre">&lt;worker_conda_env_name&gt;</span></code> in <code class="docutils literal notranslate"><span class="pre">qcfractal-manager-config.yml</span></code> above.</p>
+<p>Finally, start up the compute manager:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ qcfractal-compute-manager --config config.yml
+</pre></div>
+</div>
+<p>The compute manager will read its config file, communicate with the QCFractal server to claim tasks, and launch jobs to the HPC scheduler as needed to execute those tasks using the worker conda environment.
+To keep it running beyond your current session if connected via SSH, consider running the compute manager under <a class="reference external" href="https://github.com/tmux/tmux/wiki">tmux</a> or <a class="reference external" href="https://en.wikipedia.org/wiki/GNU_Screen">screen</a>.</p>
+</section>
+<section id="configuration-for-different-hpc-schedulers">
+<span id="compute-manager-hpc-config-reference"></span><h2>Configuration for different HPC schedulers<a class="headerlink" href="#configuration-for-different-hpc-schedulers" title="Link to this heading">#</a></h2>
+<p>HPC cluster schedulers vary in behavior, so you will need to adapt your <code class="docutils literal notranslate"><span class="pre">qcfractal-manager-config.yml</span></code> to the scheduler of the HPC cluster you intend to use.
+The configuration keys available for each <code class="docutils literal notranslate"><span class="pre">type</span></code> of record in the <code class="docutils literal notranslate"><span class="pre">executors</span></code> list are referenced here.</p>
+<hr class="docutils" />
+<dl class="py class pydantic_model">
+<dt class="sig sig-object py" id="qcfractalcompute.config.SlurmExecutorConfig">
+<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SlurmExecutorConfig</span></span><a class="reference internal" href="../../_modules/qcfractalcompute/config.html#SlurmExecutorConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcfractalcompute.config.SlurmExecutorConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ExecutorConfig</span></code></p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Validators<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#qcfractalcompute.config.SlurmExecutorConfig.walltime_must_be_str" title="qcfractalcompute.config.SlurmExecutorConfig.walltime_must_be_str"><code class="xref py py-obj docutils literal notranslate"><span class="pre">walltime_must_be_str</span></code></a> » <a class="reference internal" href="#qcfractalcompute.config.SlurmExecutorConfig.walltime" title="qcfractalcompute.config.SlurmExecutorConfig.walltime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">walltime</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.SlurmExecutorConfig.type">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'slurm'</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'slurm'</span></em><a class="headerlink" href="#qcfractalcompute.config.SlurmExecutorConfig.type" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.SlurmExecutorConfig.walltime">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">walltime</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcfractalcompute.config.SlurmExecutorConfig.walltime" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#qcfractalcompute.config.SlurmExecutorConfig.walltime_must_be_str" title="qcfractalcompute.config.SlurmExecutorConfig.walltime_must_be_str"><code class="xref py py-obj docutils literal notranslate"><span class="pre">walltime_must_be_str</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.SlurmExecutorConfig.exclusive">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exclusive</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#qcfractalcompute.config.SlurmExecutorConfig.exclusive" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.SlurmExecutorConfig.partition">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">partition</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcfractalcompute.config.SlurmExecutorConfig.partition" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.SlurmExecutorConfig.account">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">account</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcfractalcompute.config.SlurmExecutorConfig.account" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.SlurmExecutorConfig.workers_per_node">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">workers_per_node</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcfractalcompute.config.SlurmExecutorConfig.workers_per_node" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.SlurmExecutorConfig.max_nodes">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_nodes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcfractalcompute.config.SlurmExecutorConfig.max_nodes" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.SlurmExecutorConfig.scheduler_options">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scheduler_options</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#qcfractalcompute.config.SlurmExecutorConfig.scheduler_options" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method pydantic_validator">
+<dt class="sig sig-object py" id="qcfractalcompute.config.SlurmExecutorConfig.walltime_must_be_str">
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">walltime_must_be_str</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcfractalcompute.config.SlurmExecutorConfig.walltime" title="qcfractalcompute.config.SlurmExecutorConfig.walltime"><em class="xref py py-obj"><span class="pre">walltime</span></em></a><a class="reference internal" href="../../_modules/qcfractalcompute/config.html#SlurmExecutorConfig.walltime_must_be_str"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcfractalcompute.config.SlurmExecutorConfig.walltime_must_be_str" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.SlurmExecutorConfig.queue_tags">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">queue_tags</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcfractalcompute.config.SlurmExecutorConfig.queue_tags" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.SlurmExecutorConfig.worker_init">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">worker_init</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#qcfractalcompute.config.SlurmExecutorConfig.worker_init" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.SlurmExecutorConfig.scratch_directory">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scratch_directory</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcfractalcompute.config.SlurmExecutorConfig.scratch_directory" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.SlurmExecutorConfig.bind_address">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bind_address</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcfractalcompute.config.SlurmExecutorConfig.bind_address" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.SlurmExecutorConfig.cores_per_worker">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cores_per_worker</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcfractalcompute.config.SlurmExecutorConfig.cores_per_worker" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.SlurmExecutorConfig.memory_per_worker">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">memory_per_worker</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcfractalcompute.config.SlurmExecutorConfig.memory_per_worker" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.SlurmExecutorConfig.extra_executor_options">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">extra_executor_options</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#qcfractalcompute.config.SlurmExecutorConfig.extra_executor_options" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.SlurmExecutorConfig.environments">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">environments</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">PackageEnvironmentSettings</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">PackageEnvironmentSettings(use_manager_environment=True,</span> <span class="pre">conda=[],</span> <span class="pre">apptainer=[])</span></em><a class="headerlink" href="#qcfractalcompute.config.SlurmExecutorConfig.environments" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<hr class="docutils" />
+<dl class="py class pydantic_model">
+<dt class="sig sig-object py" id="qcfractalcompute.config.TorqueExecutorConfig">
+<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TorqueExecutorConfig</span></span><a class="reference internal" href="../../_modules/qcfractalcompute/config.html#TorqueExecutorConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcfractalcompute.config.TorqueExecutorConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ExecutorConfig</span></code></p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Validators<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#qcfractalcompute.config.TorqueExecutorConfig.walltime_must_be_str" title="qcfractalcompute.config.TorqueExecutorConfig.walltime_must_be_str"><code class="xref py py-obj docutils literal notranslate"><span class="pre">walltime_must_be_str</span></code></a> » <a class="reference internal" href="#qcfractalcompute.config.TorqueExecutorConfig.walltime" title="qcfractalcompute.config.TorqueExecutorConfig.walltime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">walltime</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.TorqueExecutorConfig.type">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'torque'</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'torque'</span></em><a class="headerlink" href="#qcfractalcompute.config.TorqueExecutorConfig.type" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.TorqueExecutorConfig.walltime">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">walltime</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcfractalcompute.config.TorqueExecutorConfig.walltime" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#qcfractalcompute.config.TorqueExecutorConfig.walltime_must_be_str" title="qcfractalcompute.config.TorqueExecutorConfig.walltime_must_be_str"><code class="xref py py-obj docutils literal notranslate"><span class="pre">walltime_must_be_str</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.TorqueExecutorConfig.account">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">account</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcfractalcompute.config.TorqueExecutorConfig.account" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.TorqueExecutorConfig.queue">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">queue</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcfractalcompute.config.TorqueExecutorConfig.queue" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.TorqueExecutorConfig.workers_per_node">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">workers_per_node</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcfractalcompute.config.TorqueExecutorConfig.workers_per_node" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.TorqueExecutorConfig.max_nodes">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_nodes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcfractalcompute.config.TorqueExecutorConfig.max_nodes" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.TorqueExecutorConfig.scheduler_options">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scheduler_options</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#qcfractalcompute.config.TorqueExecutorConfig.scheduler_options" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method pydantic_validator">
+<dt class="sig sig-object py" id="qcfractalcompute.config.TorqueExecutorConfig.walltime_must_be_str">
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">walltime_must_be_str</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcfractalcompute.config.TorqueExecutorConfig.walltime" title="qcfractalcompute.config.TorqueExecutorConfig.walltime"><em class="xref py py-obj"><span class="pre">walltime</span></em></a><a class="reference internal" href="../../_modules/qcfractalcompute/config.html#TorqueExecutorConfig.walltime_must_be_str"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcfractalcompute.config.TorqueExecutorConfig.walltime_must_be_str" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.TorqueExecutorConfig.queue_tags">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">queue_tags</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcfractalcompute.config.TorqueExecutorConfig.queue_tags" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.TorqueExecutorConfig.worker_init">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">worker_init</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#qcfractalcompute.config.TorqueExecutorConfig.worker_init" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.TorqueExecutorConfig.scratch_directory">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scratch_directory</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcfractalcompute.config.TorqueExecutorConfig.scratch_directory" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.TorqueExecutorConfig.bind_address">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bind_address</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcfractalcompute.config.TorqueExecutorConfig.bind_address" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.TorqueExecutorConfig.cores_per_worker">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cores_per_worker</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcfractalcompute.config.TorqueExecutorConfig.cores_per_worker" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.TorqueExecutorConfig.memory_per_worker">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">memory_per_worker</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcfractalcompute.config.TorqueExecutorConfig.memory_per_worker" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.TorqueExecutorConfig.extra_executor_options">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">extra_executor_options</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#qcfractalcompute.config.TorqueExecutorConfig.extra_executor_options" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.TorqueExecutorConfig.environments">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">environments</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">PackageEnvironmentSettings</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">PackageEnvironmentSettings(use_manager_environment=True,</span> <span class="pre">conda=[],</span> <span class="pre">apptainer=[])</span></em><a class="headerlink" href="#qcfractalcompute.config.TorqueExecutorConfig.environments" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<hr class="docutils" />
+<dl class="py class pydantic_model">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LSFExecutorConfig">
+<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">LSFExecutorConfig</span></span><a class="reference internal" href="../../_modules/qcfractalcompute/config.html#LSFExecutorConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcfractalcompute.config.LSFExecutorConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ExecutorConfig</span></code></p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Validators<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#qcfractalcompute.config.LSFExecutorConfig.walltime_must_be_str" title="qcfractalcompute.config.LSFExecutorConfig.walltime_must_be_str"><code class="xref py py-obj docutils literal notranslate"><span class="pre">walltime_must_be_str</span></code></a> » <a class="reference internal" href="#qcfractalcompute.config.LSFExecutorConfig.walltime" title="qcfractalcompute.config.LSFExecutorConfig.walltime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">walltime</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LSFExecutorConfig.type">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'lsf'</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'lsf'</span></em><a class="headerlink" href="#qcfractalcompute.config.LSFExecutorConfig.type" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LSFExecutorConfig.walltime">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">walltime</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcfractalcompute.config.LSFExecutorConfig.walltime" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#qcfractalcompute.config.LSFExecutorConfig.walltime_must_be_str" title="qcfractalcompute.config.LSFExecutorConfig.walltime_must_be_str"><code class="xref py py-obj docutils literal notranslate"><span class="pre">walltime_must_be_str</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LSFExecutorConfig.project">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">project</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcfractalcompute.config.LSFExecutorConfig.project" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LSFExecutorConfig.queue">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">queue</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcfractalcompute.config.LSFExecutorConfig.queue" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LSFExecutorConfig.workers_per_node">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">workers_per_node</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcfractalcompute.config.LSFExecutorConfig.workers_per_node" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LSFExecutorConfig.max_nodes">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_nodes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcfractalcompute.config.LSFExecutorConfig.max_nodes" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LSFExecutorConfig.request_by_nodes">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">request_by_nodes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#qcfractalcompute.config.LSFExecutorConfig.request_by_nodes" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LSFExecutorConfig.bsub_redirection">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bsub_redirection</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#qcfractalcompute.config.LSFExecutorConfig.bsub_redirection" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LSFExecutorConfig.scheduler_options">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scheduler_options</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#qcfractalcompute.config.LSFExecutorConfig.scheduler_options" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method pydantic_validator">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LSFExecutorConfig.walltime_must_be_str">
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">walltime_must_be_str</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcfractalcompute.config.LSFExecutorConfig.walltime" title="qcfractalcompute.config.LSFExecutorConfig.walltime"><em class="xref py py-obj"><span class="pre">walltime</span></em></a><a class="reference internal" href="../../_modules/qcfractalcompute/config.html#LSFExecutorConfig.walltime_must_be_str"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcfractalcompute.config.LSFExecutorConfig.walltime_must_be_str" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LSFExecutorConfig.queue_tags">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">queue_tags</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcfractalcompute.config.LSFExecutorConfig.queue_tags" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LSFExecutorConfig.worker_init">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">worker_init</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#qcfractalcompute.config.LSFExecutorConfig.worker_init" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LSFExecutorConfig.scratch_directory">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scratch_directory</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcfractalcompute.config.LSFExecutorConfig.scratch_directory" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LSFExecutorConfig.bind_address">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bind_address</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcfractalcompute.config.LSFExecutorConfig.bind_address" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LSFExecutorConfig.cores_per_worker">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cores_per_worker</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcfractalcompute.config.LSFExecutorConfig.cores_per_worker" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LSFExecutorConfig.memory_per_worker">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">memory_per_worker</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcfractalcompute.config.LSFExecutorConfig.memory_per_worker" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LSFExecutorConfig.extra_executor_options">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">extra_executor_options</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#qcfractalcompute.config.LSFExecutorConfig.extra_executor_options" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LSFExecutorConfig.environments">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">environments</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">PackageEnvironmentSettings</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">PackageEnvironmentSettings(use_manager_environment=True,</span> <span class="pre">conda=[],</span> <span class="pre">apptainer=[])</span></em><a class="headerlink" href="#qcfractalcompute.config.LSFExecutorConfig.environments" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<hr class="docutils" />
+</section>
+<section id="execution-without-interfacing-with-an-hpc-scheduler">
+<span id="compute-manager-local"></span><h2>Execution without interfacing with an HPC scheduler<a class="headerlink" href="#execution-without-interfacing-with-an-hpc-scheduler" title="Link to this heading">#</a></h2>
+<p>When running with a configuration like that above, the compute manager must remain alive on the head/login node of the cluster in order to execute tasks.
+If leaving a long-running process running on the head node is undesirable, then consider using a <code class="docutils literal notranslate"><span class="pre">local</span></code> executor configuration instead, replacing the <code class="docutils literal notranslate"><span class="pre">executors</span></code> section in <code class="docutils literal notranslate"><span class="pre">qcfractal-manager-config.yml</span></code> with e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">executors</span><span class="p">:</span>
+  <span class="n">local_executor</span><span class="p">:</span>
+    <span class="nb">type</span><span class="p">:</span> <span class="n">local</span>
+    <span class="n">max_workers</span><span class="p">:</span> <span class="mi">4</span>                <span class="c1"># max number of workers to spawn</span>
+    <span class="n">cores_per_worker</span><span class="p">:</span> <span class="mi">16</span>          <span class="c1"># cores per worker</span>
+    <span class="n">memory_per_worker</span><span class="p">:</span> <span class="mi">96</span>         <span class="c1"># memory per worker, in GiB</span>
+    <span class="n">queue_tags</span><span class="p">:</span>
+      <span class="o">-</span> <span class="s1">&#39;*&#39;</span>
+    <span class="n">environments</span><span class="p">:</span>
+      <span class="n">use_manager_environment</span><span class="p">:</span> <span class="kc">False</span>
+      <span class="n">conda</span><span class="p">:</span>
+        <span class="o">-</span> <span class="o">&lt;</span><span class="n">worker_conda_env_name</span><span class="o">&gt;</span>      <span class="c1"># name of conda env used by worker; see below for example</span>
+    <span class="n">worker_init</span><span class="p">:</span>
+      <span class="o">-</span> <span class="n">source</span> <span class="o">&lt;</span><span class="n">absolute_path</span><span class="o">&gt;/</span><span class="n">worker_init</span><span class="o">.</span><span class="n">sh</span>
+</pre></div>
+</div>
+<p>You will then need to create a submission script suitable for your HPC scheduler that requests the appropriate resources, activates the <code class="docutils literal notranslate"><span class="pre">qcfractalcompute</span></code> conda environment, and runs <code class="docutils literal notranslate"><span class="pre">qcfractal-compute-manager</span> <span class="pre">--config</span> <span class="pre">config.yml</span></code> itself.
+You can then manually submit jobs using this script as needed to complete tasks available on the QCFractal server.</p>
+<p>Using the <code class="docutils literal notranslate"><span class="pre">local</span></code> executor type is also recommended for running a compute manager on a standalone host, or within a container on e.g. a Kubernetes cluster.</p>
+<hr class="docutils" />
+<dl class="py class pydantic_model">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LocalExecutorConfig">
+<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">LocalExecutorConfig</span></span><a class="reference internal" href="../../_modules/qcfractalcompute/config.html#LocalExecutorConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcfractalcompute.config.LocalExecutorConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ExecutorConfig</span></code></p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LocalExecutorConfig.type">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'local'</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'local'</span></em><a class="headerlink" href="#qcfractalcompute.config.LocalExecutorConfig.type" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LocalExecutorConfig.max_workers">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_workers</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcfractalcompute.config.LocalExecutorConfig.max_workers" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LocalExecutorConfig.queue_tags">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">queue_tags</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcfractalcompute.config.LocalExecutorConfig.queue_tags" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LocalExecutorConfig.worker_init">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">worker_init</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#qcfractalcompute.config.LocalExecutorConfig.worker_init" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LocalExecutorConfig.scratch_directory">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scratch_directory</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcfractalcompute.config.LocalExecutorConfig.scratch_directory" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LocalExecutorConfig.bind_address">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bind_address</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcfractalcompute.config.LocalExecutorConfig.bind_address" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LocalExecutorConfig.cores_per_worker">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cores_per_worker</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcfractalcompute.config.LocalExecutorConfig.cores_per_worker" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LocalExecutorConfig.memory_per_worker">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">memory_per_worker</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcfractalcompute.config.LocalExecutorConfig.memory_per_worker" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LocalExecutorConfig.extra_executor_options">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">extra_executor_options</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#qcfractalcompute.config.LocalExecutorConfig.extra_executor_options" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LocalExecutorConfig.environments">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">environments</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">PackageEnvironmentSettings</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">PackageEnvironmentSettings(use_manager_environment=True,</span> <span class="pre">conda=[],</span> <span class="pre">apptainer=[])</span></em><a class="headerlink" href="#qcfractalcompute.config.LocalExecutorConfig.environments" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
 </section>
 
 
@@ -471,11 +984,11 @@ document.write(`
       </div>
     </a>
     <a class="right-next"
-       href="setup.html"
+       href="../../web_api/index.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Compute manager setup</p>
+        <p class="prev-next-title">Web API Reference</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -490,6 +1003,95 @@ document.write(`
             
               
                 <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compute-manager-setup-for-an-hpc-cluster">Compute manager setup for an HPC cluster</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration-for-different-hpc-schedulers">Configuration for different HPC schedulers</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.SlurmExecutorConfig"><code class="docutils literal notranslate"><span class="pre">SlurmExecutorConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.SlurmExecutorConfig.type"><code class="docutils literal notranslate"><span class="pre">SlurmExecutorConfig.type</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.SlurmExecutorConfig.walltime"><code class="docutils literal notranslate"><span class="pre">SlurmExecutorConfig.walltime</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.SlurmExecutorConfig.exclusive"><code class="docutils literal notranslate"><span class="pre">SlurmExecutorConfig.exclusive</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.SlurmExecutorConfig.partition"><code class="docutils literal notranslate"><span class="pre">SlurmExecutorConfig.partition</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.SlurmExecutorConfig.account"><code class="docutils literal notranslate"><span class="pre">SlurmExecutorConfig.account</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.SlurmExecutorConfig.workers_per_node"><code class="docutils literal notranslate"><span class="pre">SlurmExecutorConfig.workers_per_node</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.SlurmExecutorConfig.max_nodes"><code class="docutils literal notranslate"><span class="pre">SlurmExecutorConfig.max_nodes</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.SlurmExecutorConfig.scheduler_options"><code class="docutils literal notranslate"><span class="pre">SlurmExecutorConfig.scheduler_options</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.SlurmExecutorConfig.walltime_must_be_str"><code class="docutils literal notranslate"><span class="pre">SlurmExecutorConfig.walltime_must_be_str</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.SlurmExecutorConfig.queue_tags"><code class="docutils literal notranslate"><span class="pre">SlurmExecutorConfig.queue_tags</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.SlurmExecutorConfig.worker_init"><code class="docutils literal notranslate"><span class="pre">SlurmExecutorConfig.worker_init</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.SlurmExecutorConfig.scratch_directory"><code class="docutils literal notranslate"><span class="pre">SlurmExecutorConfig.scratch_directory</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.SlurmExecutorConfig.bind_address"><code class="docutils literal notranslate"><span class="pre">SlurmExecutorConfig.bind_address</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.SlurmExecutorConfig.cores_per_worker"><code class="docutils literal notranslate"><span class="pre">SlurmExecutorConfig.cores_per_worker</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.SlurmExecutorConfig.memory_per_worker"><code class="docutils literal notranslate"><span class="pre">SlurmExecutorConfig.memory_per_worker</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.SlurmExecutorConfig.extra_executor_options"><code class="docutils literal notranslate"><span class="pre">SlurmExecutorConfig.extra_executor_options</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.SlurmExecutorConfig.environments"><code class="docutils literal notranslate"><span class="pre">SlurmExecutorConfig.environments</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.TorqueExecutorConfig"><code class="docutils literal notranslate"><span class="pre">TorqueExecutorConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.TorqueExecutorConfig.type"><code class="docutils literal notranslate"><span class="pre">TorqueExecutorConfig.type</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.TorqueExecutorConfig.walltime"><code class="docutils literal notranslate"><span class="pre">TorqueExecutorConfig.walltime</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.TorqueExecutorConfig.account"><code class="docutils literal notranslate"><span class="pre">TorqueExecutorConfig.account</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.TorqueExecutorConfig.queue"><code class="docutils literal notranslate"><span class="pre">TorqueExecutorConfig.queue</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.TorqueExecutorConfig.workers_per_node"><code class="docutils literal notranslate"><span class="pre">TorqueExecutorConfig.workers_per_node</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.TorqueExecutorConfig.max_nodes"><code class="docutils literal notranslate"><span class="pre">TorqueExecutorConfig.max_nodes</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.TorqueExecutorConfig.scheduler_options"><code class="docutils literal notranslate"><span class="pre">TorqueExecutorConfig.scheduler_options</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.TorqueExecutorConfig.walltime_must_be_str"><code class="docutils literal notranslate"><span class="pre">TorqueExecutorConfig.walltime_must_be_str</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.TorqueExecutorConfig.queue_tags"><code class="docutils literal notranslate"><span class="pre">TorqueExecutorConfig.queue_tags</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.TorqueExecutorConfig.worker_init"><code class="docutils literal notranslate"><span class="pre">TorqueExecutorConfig.worker_init</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.TorqueExecutorConfig.scratch_directory"><code class="docutils literal notranslate"><span class="pre">TorqueExecutorConfig.scratch_directory</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.TorqueExecutorConfig.bind_address"><code class="docutils literal notranslate"><span class="pre">TorqueExecutorConfig.bind_address</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.TorqueExecutorConfig.cores_per_worker"><code class="docutils literal notranslate"><span class="pre">TorqueExecutorConfig.cores_per_worker</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.TorqueExecutorConfig.memory_per_worker"><code class="docutils literal notranslate"><span class="pre">TorqueExecutorConfig.memory_per_worker</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.TorqueExecutorConfig.extra_executor_options"><code class="docutils literal notranslate"><span class="pre">TorqueExecutorConfig.extra_executor_options</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.TorqueExecutorConfig.environments"><code class="docutils literal notranslate"><span class="pre">TorqueExecutorConfig.environments</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LSFExecutorConfig"><code class="docutils literal notranslate"><span class="pre">LSFExecutorConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LSFExecutorConfig.type"><code class="docutils literal notranslate"><span class="pre">LSFExecutorConfig.type</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LSFExecutorConfig.walltime"><code class="docutils literal notranslate"><span class="pre">LSFExecutorConfig.walltime</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LSFExecutorConfig.project"><code class="docutils literal notranslate"><span class="pre">LSFExecutorConfig.project</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LSFExecutorConfig.queue"><code class="docutils literal notranslate"><span class="pre">LSFExecutorConfig.queue</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LSFExecutorConfig.workers_per_node"><code class="docutils literal notranslate"><span class="pre">LSFExecutorConfig.workers_per_node</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LSFExecutorConfig.max_nodes"><code class="docutils literal notranslate"><span class="pre">LSFExecutorConfig.max_nodes</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LSFExecutorConfig.request_by_nodes"><code class="docutils literal notranslate"><span class="pre">LSFExecutorConfig.request_by_nodes</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LSFExecutorConfig.bsub_redirection"><code class="docutils literal notranslate"><span class="pre">LSFExecutorConfig.bsub_redirection</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LSFExecutorConfig.scheduler_options"><code class="docutils literal notranslate"><span class="pre">LSFExecutorConfig.scheduler_options</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LSFExecutorConfig.walltime_must_be_str"><code class="docutils literal notranslate"><span class="pre">LSFExecutorConfig.walltime_must_be_str</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LSFExecutorConfig.queue_tags"><code class="docutils literal notranslate"><span class="pre">LSFExecutorConfig.queue_tags</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LSFExecutorConfig.worker_init"><code class="docutils literal notranslate"><span class="pre">LSFExecutorConfig.worker_init</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LSFExecutorConfig.scratch_directory"><code class="docutils literal notranslate"><span class="pre">LSFExecutorConfig.scratch_directory</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LSFExecutorConfig.bind_address"><code class="docutils literal notranslate"><span class="pre">LSFExecutorConfig.bind_address</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LSFExecutorConfig.cores_per_worker"><code class="docutils literal notranslate"><span class="pre">LSFExecutorConfig.cores_per_worker</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LSFExecutorConfig.memory_per_worker"><code class="docutils literal notranslate"><span class="pre">LSFExecutorConfig.memory_per_worker</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LSFExecutorConfig.extra_executor_options"><code class="docutils literal notranslate"><span class="pre">LSFExecutorConfig.extra_executor_options</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LSFExecutorConfig.environments"><code class="docutils literal notranslate"><span class="pre">LSFExecutorConfig.environments</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#execution-without-interfacing-with-an-hpc-scheduler">Execution without interfacing with an HPC scheduler</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LocalExecutorConfig"><code class="docutils literal notranslate"><span class="pre">LocalExecutorConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LocalExecutorConfig.type"><code class="docutils literal notranslate"><span class="pre">LocalExecutorConfig.type</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LocalExecutorConfig.max_workers"><code class="docutils literal notranslate"><span class="pre">LocalExecutorConfig.max_workers</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LocalExecutorConfig.queue_tags"><code class="docutils literal notranslate"><span class="pre">LocalExecutorConfig.queue_tags</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LocalExecutorConfig.worker_init"><code class="docutils literal notranslate"><span class="pre">LocalExecutorConfig.worker_init</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LocalExecutorConfig.scratch_directory"><code class="docutils literal notranslate"><span class="pre">LocalExecutorConfig.scratch_directory</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LocalExecutorConfig.bind_address"><code class="docutils literal notranslate"><span class="pre">LocalExecutorConfig.bind_address</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LocalExecutorConfig.cores_per_worker"><code class="docutils literal notranslate"><span class="pre">LocalExecutorConfig.cores_per_worker</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LocalExecutorConfig.memory_per_worker"><code class="docutils literal notranslate"><span class="pre">LocalExecutorConfig.memory_per_worker</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LocalExecutorConfig.extra_executor_options"><code class="docutils literal notranslate"><span class="pre">LocalExecutorConfig.extra_executor_options</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LocalExecutorConfig.environments"><code class="docutils literal notranslate"><span class="pre">LocalExecutorConfig.environments</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
 
   <div class="sidebar-secondary-item">
   <div class="tocsection sourcelink">
