@@ -829,7 +829,7 @@ class NEBRecordSocket(BaseRecordSocket):
             )
 
     ####################################################
-    # Some stuff to be retrieved for reactions
+    # Some stuff to be retrieved for NEB records
     ####################################################
 
     def get_initial_molecules_ids(
