@@ -1,12 +1,42 @@
+import io
 import json
+import logging
 import re
 import sys
 import time
 import traceback
+from contextlib import contextmanager, redirect_stderr, redirect_stdout
 
 import geometric
 
-from qcportal.utils import capture_all_output
+
+@contextmanager
+def capture_all_output(top_logger: str):
+    """Captures all output, including stdout, stderr, and logging"""
+
+    stdout_io = io.StringIO()
+    stderr_io = io.StringIO()
+
+    logger = logging.getLogger(top_logger)
+    old_handlers = logger.handlers.copy()
+    old_prop = logger.propagate
+
+    logger.handlers.clear()
+    logger.propagate = False
+
+    # Make logging go to the string io
+    handler = logging.StreamHandler(stdout_io)
+    handler.terminator = ""
+    logger.addHandler(handler)
+
+    # Also redirect stdout/stderr to the string io objects
+    with redirect_stdout(stdout_io) as rdout, redirect_stderr(stderr_io) as rderr:
+        yield rdout, rderr
+
+        logger.handlers.clear()
+        logger.handlers = old_handlers
+        logger.propagate = old_prop
+
 
 if __name__ == "__main__":
 

@@ -406,7 +406,7 @@ class PortalClient(PortalClientBase):
     ) -> MoleculeQueryIterator:
         """Query molecules by attributes.
 
-        Do not count on the returned molecules being in any particular order.
+        Do not rely on the returned molecules being in any particular order.
 
         Parameters
         ----------
@@ -688,7 +688,7 @@ class PortalClient(PortalClientBase):
         This is a general query of all record types, so it can only filter by fields
         that are common among all records.
 
-        Do not count on the returned records being in any particular order.
+        Do not rely on the returned records being in any particular order.
 
         Parameters
         ----------
@@ -1046,7 +1046,7 @@ class PortalClient(PortalClientBase):
         """
         Queries singlepoint records on the server
 
-        Do not count on the returned records being in any particular order.
+        Do not rely on the returned records being in any particular order.
 
         Parameters
         ----------
@@ -1082,7 +1082,7 @@ class PortalClient(PortalClientBase):
             Query records whose molecule (id) is in the given list
         owner_user
             Query records owned by a user in the given list
-        owner_user
+        owner_group
             Query records owned by a group in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
@@ -1267,7 +1267,7 @@ class PortalClient(PortalClientBase):
         """
         Queries optimization records on the server
 
-        Do not count on the returned records being in any particular order.
+        Do not rely on the returned records being in any particular order.
 
         Parameters
         ----------
@@ -1305,7 +1305,7 @@ class PortalClient(PortalClientBase):
             Query records whose final molecule (id) is in the given list
         owner_user
             Query records owned by a user in the given list
-        owner_user
+        owner_group
             Query records owned by a group in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
@@ -1480,7 +1480,7 @@ class PortalClient(PortalClientBase):
         """
         Queries torsiondrive records on the server
 
-        Do not count on the returned records being in any particular order.
+        Do not rely on the returned records being in any particular order.
 
         Parameters
         ----------
@@ -1518,7 +1518,7 @@ class PortalClient(PortalClientBase):
             Query records whose initial molecule (id) is in the given list
         owner_user
             Query records owned by a user in the given list
-        owner_user
+        owner_group
             Query records owned by a group in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
@@ -1693,7 +1693,7 @@ class PortalClient(PortalClientBase):
         """
         Queries gridoptimization records on the server
 
-        Do not count on the returned records being in any particular order.
+        Do not rely on the returned records being in any particular order.
 
         Parameters
         ----------
@@ -1731,7 +1731,7 @@ class PortalClient(PortalClientBase):
             Query records whose initial molecule (id) is in the given list
         owner_user
             Query records owned by a user in the given list
-        owner_user
+        owner_group
             Query records owned by a group in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
@@ -1914,7 +1914,7 @@ class PortalClient(PortalClientBase):
         """
         Queries reaction records on the server
 
-        Do not count on the returned records being in any particular order.
+        Do not rely on the returned records being in any particular order.
 
         Parameters
         ----------
@@ -1952,7 +1952,7 @@ class PortalClient(PortalClientBase):
             Query reactions that contain a molecule (id) is in the given list
         owner_user
             Query records owned by a user in the given list
-        owner_user
+        owner_group
             Query records owned by a group in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
@@ -2125,7 +2125,7 @@ class PortalClient(PortalClientBase):
         """
         Queries reaction records on the server
 
-        Do not count on the returned records being in any particular order.
+        Do not rely on the returned records being in any particular order.
 
         Parameters
         ----------
@@ -2161,7 +2161,7 @@ class PortalClient(PortalClientBase):
             Query manybody calculations that contain an initial molecule (id) is in the given list
         owner_user
             Query records owned by a user in the given list
-        owner_user
+        owner_group
             Query records owned by a group in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
@@ -2216,6 +2216,39 @@ class PortalClient(PortalClientBase):
     ) -> Tuple[InsertMetadata, List[int]]:
         """
         Adds neb calculations to the server
+
+        This checks if the calculations already exist in the database. If so, it returns
+        the existing id, otherwise it will insert it and return the new id.
+
+        This will add one record per set of molecules
+
+        Parameters
+        ----------
+        initial_chains
+            The initial chains to run the NEB calculations on . Each NEB calculation starts with a single
+            chain (list of molecules), so this is a nested list
+        program
+            The program to run the neb computation with ("geometric")
+        singlepoint_specification
+            Specification of how each singlepoint (gradient/hessian) should be run
+        optimization_specification
+            Specification of how any optimizations of the torsiondrive should be run
+        keywords
+            The torsiondrive keywords for the computation
+        tag
+            The tag for the task. This will assist in routing to appropriate compute managers.
+        priority
+            The priority of the job (high, normal, low). Default is normal.
+        owner_group
+            Group with additional permission for these records
+        find_existing
+            If True, search for existing records and return those. If False, always add new records
+
+        Returns
+        -------
+        :
+            Metadata about the insertion, and a list of record ids. The ids will be in the
+            order of the input molecules
         """
         if not initial_chains:
             return InsertMetadata(), []
@@ -2298,12 +2331,62 @@ class PortalClient(PortalClientBase):
         qc_method: Optional[Union[str, Iterable[str]]] = None,
         qc_basis: Optional[Union[str, Iterable[str]]] = None,
         molecule_id: Optional[Union[int, Iterable[int]]] = None,
-        limit: Optional[int] = None,
         owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
+        limit: Optional[int] = None,
         include: Optional[Iterable[str]] = None,
     ) -> RecordQueryIterator[NEBRecord]:
-        """Queries neb records from the server."""
+        """
+        Queries neb records from the server
+
+        Do not rely on the returned records being in any particular order.
+
+        Parameters
+        ----------
+        record_id
+            Query records whose ID is in the given list
+        manager_name
+            Query records that were completed (or are currently runnning) on a manager is in the given list
+        status
+            Query records whose status is in the given list
+        dataset_id
+            Query records that are part of a dataset is in the given list
+        parent_id
+            Query records that have a parent is in the given list
+        child_id
+            Query records that have a child (optimization calculation) is in the given list
+        created_before
+            Query records that were created before the given date/time
+        created_after
+            Query records that were created after the given date/time
+        modified_before
+            Query records that were modified before the given date/time
+        modified_after
+            Query records that were modified after the given date/time
+        program
+            Query records whose torsiondrive program is in the given list
+        qc_program
+            Query records whose qc program is in the given list
+        qc_method
+            Query records whose method is in the given list
+        qc_basis
+            Query records whose basis is in the given list
+        molecule_id
+            Query records whose initial chains contain a molecule (id) that is in the given list
+        owner_user
+            Query records owned by a user in the given list
+        owner_group
+            Query records owned by a group in the given list
+        limit
+            The maximum number of records to return. Note that the server limit is always obeyed.
+        include
+            Additional fields to include in the returned record
+
+        Returns
+        -------
+        :
+            An iterator that can be used to retrieve the results of the query
+        """
 
         filter_dict = {
             "record_id": make_list(record_id),
