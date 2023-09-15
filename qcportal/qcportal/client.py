@@ -406,7 +406,7 @@ class PortalClient(PortalClientBase):
     ) -> MoleculeQueryIterator:
         """Query molecules by attributes.
 
-        Do not count on the returned molecules being in any particular order.
+        Do not rely on the returned molecules being in any particular order.
 
         Parameters
         ----------
@@ -688,7 +688,7 @@ class PortalClient(PortalClientBase):
         This is a general query of all record types, so it can only filter by fields
         that are common among all records.
 
-        Do not count on the returned records being in any particular order.
+        Do not rely on the returned records being in any particular order.
 
         Parameters
         ----------
@@ -1046,7 +1046,7 @@ class PortalClient(PortalClientBase):
         """
         Queries singlepoint records on the server
 
-        Do not count on the returned records being in any particular order.
+        Do not rely on the returned records being in any particular order.
 
         Parameters
         ----------
@@ -1082,7 +1082,7 @@ class PortalClient(PortalClientBase):
             Query records whose molecule (id) is in the given list
         owner_user
             Query records owned by a user in the given list
-        owner_user
+        owner_group
             Query records owned by a group in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
@@ -1267,7 +1267,7 @@ class PortalClient(PortalClientBase):
         """
         Queries optimization records on the server
 
-        Do not count on the returned records being in any particular order.
+        Do not rely on the returned records being in any particular order.
 
         Parameters
         ----------
@@ -1305,7 +1305,7 @@ class PortalClient(PortalClientBase):
             Query records whose final molecule (id) is in the given list
         owner_user
             Query records owned by a user in the given list
-        owner_user
+        owner_group
             Query records owned by a group in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
@@ -1480,7 +1480,7 @@ class PortalClient(PortalClientBase):
         """
         Queries torsiondrive records on the server
 
-        Do not count on the returned records being in any particular order.
+        Do not rely on the returned records being in any particular order.
 
         Parameters
         ----------
@@ -1518,7 +1518,7 @@ class PortalClient(PortalClientBase):
             Query records whose initial molecule (id) is in the given list
         owner_user
             Query records owned by a user in the given list
-        owner_user
+        owner_group
             Query records owned by a group in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
@@ -1693,7 +1693,7 @@ class PortalClient(PortalClientBase):
         """
         Queries gridoptimization records on the server
 
-        Do not count on the returned records being in any particular order.
+        Do not rely on the returned records being in any particular order.
 
         Parameters
         ----------
@@ -1731,7 +1731,7 @@ class PortalClient(PortalClientBase):
             Query records whose initial molecule (id) is in the given list
         owner_user
             Query records owned by a user in the given list
-        owner_user
+        owner_group
             Query records owned by a group in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
@@ -1914,7 +1914,7 @@ class PortalClient(PortalClientBase):
         """
         Queries reaction records on the server
 
-        Do not count on the returned records being in any particular order.
+        Do not rely on the returned records being in any particular order.
 
         Parameters
         ----------
@@ -1952,7 +1952,7 @@ class PortalClient(PortalClientBase):
             Query reactions that contain a molecule (id) is in the given list
         owner_user
             Query records owned by a user in the given list
-        owner_user
+        owner_group
             Query records owned by a group in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
@@ -2125,7 +2125,7 @@ class PortalClient(PortalClientBase):
         """
         Queries reaction records on the server
 
-        Do not count on the returned records being in any particular order.
+        Do not rely on the returned records being in any particular order.
 
         Parameters
         ----------
@@ -2161,7 +2161,7 @@ class PortalClient(PortalClientBase):
             Query manybody calculations that contain an initial molecule (id) is in the given list
         owner_user
             Query records owned by a user in the given list
-        owner_user
+        owner_group
             Query records owned by a group in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
@@ -2339,7 +2339,7 @@ class PortalClient(PortalClientBase):
         """
         Queries neb records from the server
 
-        Do not count on the returned records being in any particular order.
+        Do not rely on the returned records being in any particular order.
 
         Parameters
         ----------
