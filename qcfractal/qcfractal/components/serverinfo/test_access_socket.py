@@ -4,7 +4,9 @@ import ipaddress
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from qcarchivetesting import load_ip_test_data
+import pytest
+
+from qcarchivetesting import load_ip_test_data, ip_tests_enabled
 from qcarchivetesting.testing_classes import QCATestingSnowflake
 from qcfractal.testing_helpers import DummyJobProgress
 from qcportal.serverinfo.models import AccessLogQueryFilters
@@ -24,6 +26,7 @@ test_ips = [
 ]
 
 
+@pytest.mark.skipif(not ip_tests_enabled, reason="Test GeoIP data not found")
 def test_serverinfo_socket_save_access(secure_snowflake: QCATestingSnowflake):
 
     storage_socket = secure_snowflake.get_storage_socket()

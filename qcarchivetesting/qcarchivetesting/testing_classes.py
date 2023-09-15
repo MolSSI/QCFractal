@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from copy import deepcopy
 
-from qcarchivetesting import geoip_path, geoip_filename
+from qcarchivetesting import geoip_path, geoip_filename, ip_tests_enabled
 from qcfractal.config import DatabaseConfig, update_nested_dict
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.postgres_harness import PostgresHarness, create_snowflake_postgres
@@ -150,8 +150,11 @@ class QCATestingSnowflake(FractalSnowflake):
 
         qcf_config["database"] = {"pool_size": 0}
         qcf_config["log_access"] = log_access
-        qcf_config["geoip2_dir"] = geoip_path
-        qcf_config["geoip2_filename"] = geoip_filename
+
+        if ip_tests_enabled:
+            qcf_config["geoip2_dir"] = geoip_path
+            qcf_config["geoip2_filename"] = geoip_filename
+
         qcf_config["auto_reset"] = {"enabled": False}
 
         # Merge in any other specified config
