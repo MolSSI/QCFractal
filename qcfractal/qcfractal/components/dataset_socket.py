@@ -301,7 +301,6 @@ class BaseDatasetSocket:
         ds_orm = self.dataset_orm(
             dataset_type=self.dataset_type,
             name=name,
-            lname=name.lower(),
             tagline=tagline,
             description=description,
             tags=tags,
@@ -371,7 +370,6 @@ class BaseDatasetSocket:
                     raise AlreadyExistsError(f"{self.dataset_type} dataset named '{new_metadata.name}' already exists")
 
                 ds.name = new_metadata.name
-                ds.lname = new_metadata.name.lower()
 
             ds.description = new_metadata.description
             ds.tagline = new_metadata.tagline

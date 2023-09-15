@@ -9,6 +9,7 @@ from sqlalchemy import (
     JSON,
     Boolean,
     Index,
+    Computed,
     ForeignKey,
     ForeignKeyConstraint,
     UniqueConstraint,
@@ -30,7 +31,7 @@ class BaseDatasetORM(BaseORM):
     id = Column(Integer, primary_key=True)
     dataset_type = Column(String, nullable=False)
 
-    lname = Column(String(100), nullable=False)
+    lname = Column(String(100), Computed("LOWER(name)"), nullable=False)
     name = Column(String(100), nullable=False)
 
     tags = Column(JSON, nullable=False)
