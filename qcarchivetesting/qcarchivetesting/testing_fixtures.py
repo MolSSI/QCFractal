@@ -12,7 +12,7 @@ from qcfractal.config import FractalConfig
 from qcfractal.db_socket.socket import SQLAlchemySocket
 from qcportal import PortalClient
 from qcportal.managers import ManagerName
-from .helpers import geoip_path, geoip_filename, test_users
+from .helpers import geoip_path, geoip_filename, ip_tests_enabled, test_users
 from .testing_classes import QCATestingPostgresServer, QCATestingSnowflake, _activated_manager_programs
 
 
@@ -51,8 +51,11 @@ def session_storage_socket(postgres_server):
     cfg_dict["database"] = pg_harness.config.dict()
     cfg_dict["database"]["pool_size"] = 0
     cfg_dict["log_access"] = True
-    cfg_dict["geoip2_dir"] = geoip_path
-    cfg_dict["geoip2_filename"] = geoip_filename
+
+    if ip_tests_enabled:
+        cfg_dict["geoip2_dir"] = geoip_path
+        cfg_dict["geoip2_filename"] = geoip_filename
+
     cfg_dict["api"] = {"secret_key": secrets.token_urlsafe(32), "jwt_secret_key": secrets.token_urlsafe(32)}
     qcf_config = FractalConfig(**cfg_dict)
 

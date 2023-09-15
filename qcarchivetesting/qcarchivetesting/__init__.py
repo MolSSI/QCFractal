@@ -5,6 +5,8 @@ __version__ = version("qcarchivetesting")
 from .helpers import (
     geoip_path,
     geoip_filename,
+    ip_testdata_path,
+    ip_tests_enabled,
     testconfig_path,
     migrationdata_path,
     test_users,

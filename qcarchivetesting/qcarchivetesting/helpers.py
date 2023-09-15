@@ -24,6 +24,9 @@ _my_path = os.path.dirname(os.path.abspath(__file__))
 
 geoip_path = os.path.join(_my_path, "MaxMind-DB", "test-data")
 geoip_filename = "GeoLite2-City-Test.mmdb"
+ip_testdata_path = os.path.join(_my_path, "MaxMind-DB", "source-data", "GeoIP2-City-Test.json")
+
+ip_tests_enabled = os.path.exists(geoip_path) and os.path.exists(ip_testdata_path)
 
 testconfig_path = os.path.join(_my_path, "config_files")
 migrationdata_path = os.path.join(_my_path, "migration_data")
@@ -148,9 +151,7 @@ def load_ip_test_data():
     Loads data for testing IP logging
     """
 
-    file_path = os.path.join(_my_path, "MaxMind-DB", "source-data", "GeoIP2-City-Test.json")
-
-    with open(file_path, "r") as f:
+    with open(ip_testdata_path, "r") as f:
         d = json.load(f)
 
     # Stored as a list containing a dictionary with one key. Convert to a regular dict
