@@ -95,7 +95,6 @@ class SinglepointRecordSocket(BaseRecordSocket):
         self, session: Session, record_orm: SinglepointRecordORM, result: QCEl_AtomicResult, manager_name: str
     ) -> None:
         # Update the fields themselves
-        record_orm.return_result = result.return_result
         record_orm.wavefunction = self.wavefunction_to_orm(session, result.wavefunction)
 
     def insert_complete_record(
@@ -128,7 +127,6 @@ class SinglepointRecordSocket(BaseRecordSocket):
         record_orm.specification_id = spec_id
         record_orm.molecule_id = mol_ids[0]
         record_orm.status = RecordStatusEnum.complete
-        record_orm.return_result = result.return_result
         record_orm.wavefunction = self.wavefunction_to_orm(session, result.wavefunction)
 
         session.add(record_orm)
