@@ -598,7 +598,7 @@ class NEBRecordSocket(BaseRecordSocket):
 
     def add_internal(
         self,
-        initial_chain_ids: Sequence[Iterable[int]],
+        initial_chain_ids: Sequence[Sequence[int]],
         neb_spec_id: int,
         tag: str,
         priority: PriorityEnum,
@@ -737,7 +737,7 @@ class NEBRecordSocket(BaseRecordSocket):
 
     def add(
         self,
-        initial_chains: Sequence[Iterable[Union[Molecule]]],
+        initial_chains: Sequence[Sequence[Union[int, Molecule]]],
         neb_spec: NEBSpecification,
         tag: str,
         priority: PriorityEnum,
