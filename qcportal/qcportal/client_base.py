@@ -263,7 +263,16 @@ class PortalClientBase:
         )
 
         if ret.status_code == 200:
-            self._req_session.headers.update({"Authorization": f'Bearer {ret.json()["access_token"]}'})
+            ret_json = ret.json()
+            self._req_session.headers.update({"Authorization": f'Bearer {ret_json["access_token"]}'})
+
+            # Store the expiration time of the access and refresh tokens
+            # (these are unix epoch timestamps)
+            decoded_access_token = jwt.decode(
+                ret_json["access_token"], algorithms=["HS256"], options={"verify_signature": False}
+            )
+            self._jwt_access_exp = decoded_access_token["exp"]
+
         else:  # shouldn't happen unless user is blacklisted
             raise ConnectionRefusedError("Unable to refresh JWT authorization token! This is a server issue!!")
 
