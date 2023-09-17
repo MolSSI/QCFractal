@@ -301,10 +301,10 @@ class WebAPIConfig(ConfigBase):
     secret_key: str = Field(..., description="Secret key for flask api. See documentation")
     jwt_secret_key: str = Field(..., description="Secret key for web tokens. See documentation")
     jwt_access_token_expires: int = Field(
-        60 * 60 * 24 * 7, description="The time (in seconds) an access token is valid for. Default is 1 week"
+        60 * 60, description="The time (in seconds) an access token is valid for. Default is 1 hour"
     )
     jwt_refresh_token_expires: int = Field(
-        60 * 60 * 24 * 30, description="The time (in seconds) a refresh token is valid for. Default is 30 days"
+        60 * 60 * 24, description="The time (in seconds) a refresh token is valid for. Default is 1 day"
     )
 
     extra_flask_options: Optional[Dict[str, Any]] = Field(
