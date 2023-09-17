@@ -6,6 +6,7 @@ The molecule objects used in QCArchive come from the
 from ``qcportal.molecules.Molecule``, but is otherwise the same as the
 `QCElemental Molecule <https://docs.qcarchive.molssi.org/projects/QCElemental/en/stable/model_molecule.html>`_.
 
+.. _creating_molecules:
 Creating Molecules
 ------------------
 
