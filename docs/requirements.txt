@@ -3,6 +3,8 @@ pydata_sphinx_theme
 sphinx
 autodoc-pydantic
 sphinx-copybutton
+myst-nb
+nglview
 -e ../qcportal
 -e ../qcfractalcompute
 -e ../qcfractal
