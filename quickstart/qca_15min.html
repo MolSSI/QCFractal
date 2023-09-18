@@ -1,0 +1,1055 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>QCArchive in 15 minutes &#8212; QCArchive 0.50.post36+g644609d9 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=927b94d3fcb96560df09" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=927b94d3fcb96560df09" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=927b94d3fcb96560df09" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=927b94d3fcb96560df09" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=927b94d3fcb96560df09" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=927b94d3fcb96560df09" />
+  <script src="../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=927b94d3fcb96560df09"></script>
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'quickstart/qca_15min';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="How do I retrieve computation results by ID?" href="record_retrieval.html" />
+    <link rel="prev" title="QCArchive Quickstart" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/qcarchive_logo.svg" class="logo__image only-light" alt="Logo image"/>
+    <script>document.write(`<img src="../_static/qcarchive_logo_inverted.svg" class="logo__image only-dark" alt="Logo image"/>`);</script>
+  
+  
+    <p class="title logo__title">QCArchive</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="index.html">
+                        Quickstart
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../overview/index.html">
+                        Overview
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../user_guide/index.html">
+                        User Guide
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../admin_guide/index.html">
+                        Admin Guide
+                      </a>
+                    </li>
+                
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="pst-header-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-header-nav-more-links" class="dropdown-menu">
+                    
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-item nav-internal" href="../web_api/index.html">
+                        Web API
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-item nav-internal" href="../developer_guide/index.html">
+                        Developer Guide
+                      </a>
+                    </li>
+                
+
+                <li class="nav-item">
+                  <a class="nav-link dropdown-item nav-external" href="https://molssi.org">
+                    MolSSI
+                  </a>
+                </li>
+                
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__kbd-shortcut">Search</span>
+    <span><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MolSSI/QCFractal" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__kbd-shortcut">Search</span>
+    <span><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+    <label class="sidebar-toggle secondary-toggle" for="__secondary" tabindex="0">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
+</div>
+
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="index.html">
+                        Quickstart
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../overview/index.html">
+                        Overview
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../user_guide/index.html">
+                        User Guide
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../admin_guide/index.html">
+                        Admin Guide
+                      </a>
+                    </li>
+                
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="pst-header-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-header-nav-more-links" class="dropdown-menu">
+                    
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-item nav-internal" href="../web_api/index.html">
+                        Web API
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-item nav-internal" href="../developer_guide/index.html">
+                        Developer Guide
+                      </a>
+                    </li>
+                
+
+                <li class="nav-item">
+                  <a class="nav-link dropdown-item nav-external" href="https://molssi.org">
+                    MolSSI
+                  </a>
+                </li>
+                
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MolSSI/QCFractal" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item"><nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">QCArchive in 15 minutes</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Quickstart Guides:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="record_retrieval.html">How do I retrieve computation results by ID?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="record_query.html">How do I search for specific types of computations?</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">QCArchive Quickstart</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">QCArchive in 15 minutes</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="qcarchive-in-15-minutes">
+<span id="overview-tutorial"></span><h1>QCArchive in 15 minutes<a class="headerlink" href="#qcarchive-in-15-minutes" title="Permalink to this heading">#</a></h1>
+<p>This tutorial will give you an overview of possible actions in QCArchive.
+Using QCArchive, you can:</p>
+<ol class="arabic simple">
+<li><p>Submit a single or set of computations to a server, following a variety of workflows.</p></li>
+<li><p>Retrieve the results of previous computations.</p></li>
+<li><p>Query the database for particular computations.</p></li>
+<li><p>Create datasets holding related quantum chemistry computations.</p></li>
+<li><p>Retrieve results from datasets.</p></li>
+</ol>
+<p>This notebook will briefly walk you through each capability.
+For more details, we recommend you follow our other starter tutorials.</p>
+<section id="connecting-to-a-server">
+<h2>Connecting to a server<a class="headerlink" href="#connecting-to-a-server" title="Permalink to this heading">#</a></h2>
+<p>To work with QCArchive, you will need to connect to a QCArchive server.
+For the QuickStart tutorials, we will connect to the QCArchive Demo Server.
+To interact with a server, you will create a QCPortal client using <code class="docutils literal notranslate"><span class="pre">PortalClient</span></code>.
+The argument to <code class="docutils literal notranslate"><span class="pre">PortalClient</span></code> is the server address.
+To work with the QCArchive demo server, enter <code class="docutils literal notranslate"><span class="pre">https://qcademo.molssi.org</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">qcportal</span> <span class="k">as</span> <span class="nn">ptl</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">ptl</span><span class="o">.</span><span class="n">PortalClient</span><span class="p">(</span><span class="s2">&quot;https://qcademo.molssi.org&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>PortalClient(server_name=&#39;MolSSI QCFractal Demo Server&#39;, address=&#39;https://qcademo.molssi.org/&#39;, username=&#39;None&#39;)
+</pre></div>
+</div>
+</div>
+</div>
+<p>We now have a QCPortal client that we can use to read from and query the QCArchive demo server.</p>
+</section>
+<section id="retrieving-data-and-querying-the-database">
+<h2>Retrieving Data and Querying the Database<a class="headerlink" href="#retrieving-data-and-querying-the-database" title="Permalink to this heading">#</a></h2>
+<section id="how-do-i-retrieve-computation-results-by-id">
+<h3>How do I retrieve computation results by ID?<a class="headerlink" href="#how-do-i-retrieve-computation-results-by-id" title="Permalink to this heading">#</a></h3>
+<p>We can retrieve computations by ID using the <code class="docutils literal notranslate"><span class="pre">client.get_records</span></code> function.
+Each computation in the database is given an integer ID number.
+The cell below shows retrieval of the calculation result with ID 1.
+We see that this computation was a single point computation.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">first_record</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">first_record</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;SinglepointRecord id=1 status=complete&gt;
+</pre></div>
+</div>
+</div>
+</div>
+<p>Typically, properties from a calculation can be viewed using the <code class="docutils literal notranslate"><span class="pre">.properties</span></code> attribute for a result.
+The calculated properties are in a dictionary.
+In the cell below, we print the SCF total energy from our calcuation.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">first_record</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="s2">&quot;scf_total_energy&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>-2.807913354492941
+</pre></div>
+</div>
+</div>
+</div>
+<p>We can print information about the computation like the molecule name and properties.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Molecule: </span><span class="si">{</span><span class="n">first_record</span><span class="o">.</span><span class="n">molecule</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">, Energy: </span><span class="si">{</span><span class="n">first_record</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="s1">&#39;scf_total_energy&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Molecule: He, Energy: -2.807913354492941
+</pre></div>
+</div>
+</div>
+</div>
+<p>If you pass in several IDs, you will receive a list of results that can be iterated through.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">multiple_records</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span> 
+
+<span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">multiple_records</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Molecule: </span><span class="si">{</span><span class="n">record</span><span class="o">.</span><span class="n">molecule</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">, Energy: </span><span class="si">{</span><span class="n">record</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="s1">&#39;scf_total_energy&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Molecule: He, Energy: -2.807913354492941
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Molecule: B, Energy: -24.14911660463428
+Molecule: H, Energy: -0.46658184955727533
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="how-do-i-search-for-particular-types-of-computations">
+<h3>How do I search for particular types of computations?<a class="headerlink" href="#how-do-i-search-for-particular-types-of-computations" title="Permalink to this heading">#</a></h3>
+<p>You can search the database for particular computations using <code class="docutils literal notranslate"><span class="pre">query_records</span></code>.
+For example, to see all results from a particular time period, we can use
+<code class="docutils literal notranslate"><span class="pre">query_records</span></code> with arguments <code class="docutils literal notranslate"><span class="pre">created_before</span></code> and <code class="docutils literal notranslate"><span class="pre">created_after</span></code>.</p>
+<p>There are many fields you can query the database on and this can differ by the type of computation you’d like to retrieve.
+The query method returns a Python iterator.
+For more detailed information, see <a class="reference internal" href="record_query.html#query-quickstart"><span class="std std-ref">the quickstart tutorial on querying</span></a>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">records</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_records</span><span class="p">(</span><span class="n">created_after</span><span class="o">=</span><span class="s2">&quot;2023/01/10&quot;</span><span class="p">,</span> <span class="n">created_before</span><span class="o">=</span><span class="s2">&quot;2023/01/14&quot;</span><span class="p">)</span>
+
+<span class="c1"># Print the first record.</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">records</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;SinglepointRecord id=935 status=complete&gt;
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="how-do-i-retrieve-results-from-a-dataset">
+<h3>How do I retrieve results from a dataset?<a class="headerlink" href="#how-do-i-retrieve-results-from-a-dataset" title="Permalink to this heading">#</a></h3>
+<p>QCArchive also supports data to be stored in datasets.
+A dataset is a set of related computations.
+Datasets can be created when computations are submitted, or after computations have completed, and
+computations can belong to multiple datasets.
+Datasets are the primary use case for QCArchive, and are usually created with large-scale workflows.
+Datasets will contain only one type of calculation.</p>
+<p>We can list all of the datasets on the server we’ve connected to using <code class="docutils literal notranslate"><span class="pre">list_datasets</span></code>.
+Below, we print the names of the data sets on the QCArchive demo server.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">datasets</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">list_datasets</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">dataset</span> <span class="ow">in</span> <span class="n">datasets</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Name: </span><span class="si">{</span><span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;dataset_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, Type: </span><span class="si">{</span><span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;dataset_type&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Name: Element Benchmark, Type: singlepoint
+Name: Diatomic Molecule Opt, Type: optimization
+Name: Element Benchmarks, Type: singlepoint
+Name: Ions Benchmark, Type: singlepoint
+Name: Element Ion Benchmark, Type: singlepoint
+Name: Ion Benchmark, Type: singlepoint
+Name: Element Benchmark 1, Type: singlepoint
+Name: Element Benchmark 4, Type: singlepoint
+</pre></div>
+</div>
+</div>
+</div>
+<p>We can retrieve records from a particular dataset using the <code class="docutils literal notranslate"><span class="pre">get_dataset</span></code> method and passing in the dataset name and type. The following cell retrieves the “Element Benchmark” dataset.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_dataset</span><span class="p">(</span><span class="n">dataset_type</span><span class="o">=</span><span class="s2">&quot;singlepoint&quot;</span><span class="p">,</span> <span class="n">dataset_name</span><span class="o">=</span><span class="s2">&quot;Element Benchmark&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Variety of calculations on single atoms
+</pre></div>
+</div>
+</div>
+</div>
+<p>Datasets have a lot of properties that are beyond the scope of this overview.
+Datasets are made up of many records of the same type of computation that can differ in molecule identity or other specification parameters.
+You can pull out iterate over records, see specifications, and compile values from records.</p>
+<p>The cell below shows using the <code class="docutils literal notranslate"><span class="pre">compile_values</span></code> method to create a pandas dataframe containing the SCF total energy from each record.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># use compile_values to make a dataframe</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">compile_values</span><span class="p">(</span><span class="k">lambda</span> <span class="n">record</span><span class="p">:</span> <span class="n">record</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="s1">&#39;scf_total_energy&#39;</span><span class="p">],</span> <span class="s2">&quot;scf_total_energy&quot;</span><span class="p">)</span>
+
+<span class="c1"># view the first 10 rows.</span>
+<span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>specification</th>
+      <th>hf/sto-3g</th>
+      <th>mp2/aug-cc-pvtz</th>
+    </tr>
+    <tr>
+      <th>entry</th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>b_atom</th>
+      <td>-24.149117</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>be_atom</th>
+      <td>-14.352011</td>
+      <td>-14.572879</td>
+    </tr>
+    <tr>
+      <th>c_atom</th>
+      <td>-37.089740</td>
+      <td>-37.603047</td>
+    </tr>
+    <tr>
+      <th>f_atom</th>
+      <td>-97.986588</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>h_atom</th>
+      <td>-0.466582</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>he_atom</th>
+      <td>-2.807913</td>
+      <td>-2.861206</td>
+    </tr>
+    <tr>
+      <th>li_atom</th>
+      <td>-7.315604</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>n_atom</th>
+      <td>-53.554678</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>ne_atom</th>
+      <td>-126.604573</td>
+      <td>-128.533266</td>
+    </tr>
+    <tr>
+      <th>o_atom</th>
+      <td>-73.661918</td>
+      <td>-74.685504</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+</section>
+</section>
+<section id="submitting-computations">
+<h2>Submitting Computations<a class="headerlink" href="#submitting-computations" title="Permalink to this heading">#</a></h2>
+<p>Beyond retrieving results and querying the database, QCArchive provides a robust system for submitting computations.
+You may submit single computations, multiple computations, or computations to create a dataset.</p>
+<p>Our QCArchive demo server is publicly readable.
+This means you do not need a username or password to access the data.
+However, to submit computations, a username and password is required.</p>
+<div class="warning admonition">
+<p class="admonition-title">Protecting usernames and passwords</p>
+<p>When connecting to QCArchive using a username and password, be careful to never commit this information to publicly accessible repositories.
+You can store credentials in environment variables, as shown in the cell below,
+or you can <a class="reference internal" href="../user_guide/connecting_qcportal.html#qcportal-connecting-file"><span class="std std-ref">read user information from a file</span></a>.</p>
+</div>
+<p>In the cell below, we read environment variables set in the local environment for our username and password.
+We retrieve these using <code class="docutils literal notranslate"><span class="pre">os.environ.get</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">qcportal</span> <span class="k">as</span> <span class="nn">ptl</span>
+<span class="kn">from</span> <span class="nn">qcportal.molecules</span> <span class="kn">import</span> <span class="n">Molecule</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">ptl</span><span class="o">.</span><span class="n">PortalClient</span><span class="p">(</span><span class="s2">&quot;https://qcademo.molssi.org&quot;</span><span class="p">,</span> 
+                          <span class="n">username</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;QCArchiveUsername&quot;</span><span class="p">),</span> 
+                          <span class="n">password</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;QCArchivePWD&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>We now have a QCPortal client that can be used to submit computations.</p>
+<section id="how-do-i-submit-a-computation">
+<h3>How do I submit a computation?<a class="headerlink" href="#how-do-i-submit-a-computation" title="Permalink to this heading">#</a></h3>
+<p>QCArchive currently supports seven different computation types including single point, geometry optimization, reactions, and torsion drives.</p>
+<p>For this overview, we will show submitting a single point computation for water using two different methods.
+This notebook shows inputting an XYZ string for our molecule, but there are a <a class="reference internal" href="../user_guide/molecule.html#creating-molecules"><span class="std std-ref">number of ways</span></a> to enter molecule information.
+Our molecule geometry in this example is an optimized structure of water.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">water_xyz</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">3</span>
+
+<span class="s2">H                     0.026223561887     1.224983815810     0.000000000000</span>
+<span class="s2">H                     0.971741135004     0.039335313725     0.000000000000</span>
+<span class="s2">O                     0.002035305512     0.235680871424     0.000000000000</span>
+
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="n">water</span> <span class="o">=</span> <span class="n">Molecule</span><span class="o">.</span><span class="n">from_data</span><span class="p">(</span><span class="n">water_xyz</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>If NGLView is installed in your environment, the molecule objects in QCArchive can be visualized using NGLView by putting the variable representing the molecule as the last thing in a notebook cell.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">water</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"version_major": 2, "version_minor": 0, "model_id": "102276dceb8f4dc4a20d7710eab2e17a"}</script><script type="application/vnd.jupyter.widget-view+json">{"version_major": 2, "version_minor": 0, "model_id": "f1a69205e363435a9c73dbf49665ab12"}</script></div>
+</div>
+<p>To submit our single point computation, we will use the <code class="docutils literal notranslate"><span class="pre">add_singlepoints</span></code> method.
+We will submit two single point computations for the same molecule using different methods.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">add_singlepoints</span></code>, you specify the program you want to run (Psi4 in our case), the driver, the method and the basis set.
+The <code class="docutils literal notranslate"><span class="pre">driver</span></code> determines what is in the <code class="docutils literal notranslate"><span class="pre">return_result</span></code> for the record.
+For this demonstration, we are submitting two single point calculations for water with a differing method (<code class="docutils literal notranslate"><span class="pre">b3lyp</span></code> vs <code class="docutils literal notranslate"><span class="pre">mp2</span></code>).</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">b3lyp_meta</span><span class="p">,</span> <span class="n">b3lyp_record_ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_singlepoints</span><span class="p">([</span><span class="n">water</span><span class="p">],</span> 
+                                                       <span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span> 
+                                                       <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;energy&#39;</span><span class="p">,</span> 
+                                                       <span class="n">method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> 
+                                                       <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-tzvp&#39;</span><span class="p">)</span>
+
+<span class="n">mp2_meta</span><span class="p">,</span> <span class="n">mp2_record_ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_singlepoints</span><span class="p">([</span><span class="n">water</span><span class="p">],</span> 
+                                                   <span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span> 
+                                                   <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;energy&#39;</span><span class="p">,</span> 
+                                                   <span class="n">method</span><span class="o">=</span><span class="s1">&#39;mp2&#39;</span><span class="p">,</span> 
+                                                   <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-tzvp&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">PortalRequestError</span><span class="g g-Whitespace">                        </span>Traceback (most recent call last)
+<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">13</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
+<span class="ne">----&gt; </span><span class="mi">1</span> <span class="n">b3lyp_meta</span><span class="p">,</span> <span class="n">b3lyp_record_ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_singlepoints</span><span class="p">([</span><span class="n">water</span><span class="p">],</span> 
+<span class="g g-Whitespace">      </span><span class="mi">2</span>                                                        <span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span> 
+<span class="g g-Whitespace">      </span><span class="mi">3</span>                                                        <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;energy&#39;</span><span class="p">,</span> 
+<span class="g g-Whitespace">      </span><span class="mi">4</span>                                                        <span class="n">method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> 
+<span class="g g-Whitespace">      </span><span class="mi">5</span>                                                        <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-tzvp&#39;</span><span class="p">)</span>
+<span class="g g-Whitespace">      </span><span class="mi">7</span> <span class="n">mp2_meta</span><span class="p">,</span> <span class="n">mp2_record_ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_singlepoints</span><span class="p">([</span><span class="n">water</span><span class="p">],</span> 
+<span class="g g-Whitespace">      </span><span class="mi">8</span>                                                    <span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span> 
+<span class="g g-Whitespace">      </span><span class="mi">9</span>                                                    <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;energy&#39;</span><span class="p">,</span> 
+<span class="g g-Whitespace">     </span><span class="mi">10</span>                                                    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;mp2&#39;</span><span class="p">,</span> 
+<span class="g g-Whitespace">     </span><span class="mi">11</span>                                                    <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-tzvp&#39;</span><span class="p">)</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client.py:987,</span> in <span class="ni">PortalClient.add_singlepoints</span><span class="nt">(self, molecules, program, driver, method, basis, keywords, protocols, tag, priority, owner_group, find_existing)</span>
+<span class="g g-Whitespace">    </span><span class="mi">984</span>     <span class="n">body_data</span><span class="p">[</span><span class="s2">&quot;specification&quot;</span><span class="p">][</span><span class="s2">&quot;protocols&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">protocols</span>
+<span class="g g-Whitespace">    </span><span class="mi">986</span> <span class="n">body</span> <span class="o">=</span> <span class="n">SinglepointAddBody</span><span class="p">(</span><span class="o">**</span><span class="n">body_data</span><span class="p">)</span>
+<span class="ne">--&gt; </span><span class="mi">987</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">988</span>     <span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="s2">&quot;api/v1/records/singlepoint/bulkCreate&quot;</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">InsertMetadata</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span>
+<span class="g g-Whitespace">    </span><span class="mi">989</span> <span class="p">)</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:367,</span> in <span class="ni">PortalClientBase.make_request</span><span class="nt">(self, method, endpoint, response_model, body_model, url_params_model, body, url_params)</span>
+<span class="g g-Whitespace">    </span><span class="mi">364</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parsed_url_params</span><span class="p">,</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="g g-Whitespace">    </span><span class="mi">365</span>     <span class="n">parsed_url_params</span> <span class="o">=</span> <span class="n">parsed_url_params</span><span class="o">.</span><span class="n">dict</span><span class="p">()</span>
+<span class="ne">--&gt; </span><span class="mi">367</span> <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">serialized_body</span><span class="p">,</span> <span class="n">url_params</span><span class="o">=</span><span class="n">parsed_url_params</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">368</span> <span class="n">d</span> <span class="o">=</span> <span class="n">deserialize</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">])</span>
+<span class="g g-Whitespace">    </span><span class="mi">370</span> <span class="k">if</span> <span class="n">response_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:332,</span> in <span class="ni">PortalClientBase._request</span><span class="nt">(self, method, endpoint, body, url_params, retry)</span>
+<span class="g g-Whitespace">    </span><span class="mi">327</span>     <span class="k">except</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">328</span>         <span class="c1"># If this error comes from, ie, the web server or something else, then</span>
+<span class="g g-Whitespace">    </span><span class="mi">329</span>         <span class="c1"># we have to use &#39;reason&#39;</span>
+<span class="g g-Whitespace">    </span><span class="mi">330</span>         <span class="n">details</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;msg&quot;</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">reason</span><span class="p">}</span>
+<span class="ne">--&gt; </span><span class="mi">332</span>     <span class="k">raise</span> <span class="n">PortalRequestError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Request failed: </span><span class="si">{</span><span class="n">details</span><span class="p">[</span><span class="s1">&#39;msg&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">details</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">334</span> <span class="k">return</span> <span class="n">r</span>
+
+<span class="ne">PortalRequestError</span>: Request failed: 403 Forbidden: User {&#39;user_id&#39;: None, &#39;username&#39;: None} is not authorized to access &#39;{&#39;type&#39;: &#39;/api/v1/records&#39;}&#39; (HTTP status 403)
+</pre></div>
+</div>
+</div>
+</div>
+<p>Once submitted, we can retrieve the results using the <code class="docutils literal notranslate"><span class="pre">get_records</span></code> method shown earlier in the tutorial.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">b3lpy_record</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="n">b3lyp_record_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">mp2_record</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="n">mp2_record_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;B3LYP Status:</span><span class="se">\t</span><span class="si">{</span><span class="n">b3lpy_record</span><span class="o">.</span><span class="n">status</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;MP2 Status:</span><span class="se">\t</span><span class="si">{</span><span class="n">mp2_record</span><span class="o">.</span><span class="n">status</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>When the computations are complete, we can retrieve the energies in the same way we did earlier.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;B3LYP result: </span><span class="si">{</span><span class="n">b3lpy_record</span><span class="o">.</span><span class="n">return_result</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;MP2 result: </span><span class="si">{</span><span class="n">mp2_record</span><span class="o">.</span><span class="n">return_result</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="how-do-i-create-datasets">
+<h3>How do I create datasets?<a class="headerlink" href="#how-do-i-create-datasets" title="Permalink to this heading">#</a></h3>
+<p>Instead of submitting these computations separately, we could have grouped them together in a dataset.
+This would allow us to more easily retrieve the results together.</p>
+<p>To create a dataset, you use the <code class="docutils literal notranslate"><span class="pre">create_dataset</span></code> method.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
+<span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;singlepoint&quot;</span><span class="p">,</span>
+                        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Water calculations&quot;</span><span class="p">,</span>
+                        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Single point calculations of water at various levels of theory.&quot;</span><span class="p">)</span>
+
+</pre></div>
+</div>
+<p>Creation of datasets is beyond the scope of this overview tutorial.
+For more information on dataset construction, see the Dataset Quickstart.</p>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  <!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">QCArchive Quickstart</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="record_retrieval.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">How do I retrieve computation results by ID?</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#connecting-to-a-server">Connecting to a server</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#retrieving-data-and-querying-the-database">Retrieving Data and Querying the Database</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-retrieve-computation-results-by-id">How do I retrieve computation results by ID?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-search-for-particular-types-of-computations">How do I search for particular types of computations?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-retrieve-results-from-a-dataset">How do I retrieve results from a dataset?</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submitting-computations">Submitting Computations</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-submit-a-computation">How do I submit a computation?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-create-datasets">How do I create datasets?</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div class="tocsection sourcelink">
+    <a href="../_sources/quickstart/qca_15min.ipynb.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=927b94d3fcb96560df09"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=927b94d3fcb96560df09"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  
+
+
+
+  
+  
+  
+  
+  
+  
+  
+
+
+<div class="row h-10">
+    <div class="col-2">
+        <a href="https://molssi.org/" target="_blank" title="Go to MolSSI in a new tab">
+            <img src="../_static/molssi_main_logo.png" class="logo__image only-light footer_logo" alt="Logo image">
+            <img src="../_static/molssi_main_logo_inverted_white.png" class="logo__image only-dark footer_logo" alt="Logo image">
+        </a>
+    </div>
+    <div class="col-8">
+        <p> &copy; Copyright 2019-2023 <a href="https://molssi.org/">The Molecular Sciences Software Institute</a></p>
+        <p>Funded by the National Science Foundation 
+          <a href="https://nsf.gov/awardsearch/showAward?AWD_ID=1547580">OAC-1547580</a> and 
+          <a href="https://www.nsf.gov/awardsearch/showAward?AWD_ID=2136142">CHE-2136142.</a></p>
+ 
+        
+        <p class="sphinx-version">
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
+        </p>
+        
+
+        <p class="theme-version">
+        Built with a customized <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.14.0.
+        </p>
+
+    </div>
+    <div class="col-2">
+        <a href="https://nsf.gov/" target="_blank" title="Go to the NSF in a new tab">
+            <img src="../_static/nsf.png" class="footer_logo" alt="The NSF">
+          </a>
+    </div>
+</div></div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,295 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "d60cc0ff",
+   "metadata": {},
+   "source": [
+    "# How do I retrieve computation results by ID?\n",
+    "\n",
+    "This tutorial introduces the basics of connecting to a QCArchive server and retrieving computation results. \n",
+    "\n",
+    "When you retrieve results from QCArchive, they can be in the form of single records or a larger dataset. \n",
+    "\n",
+    "A record represents a single quantum chemistry computation and contains the input details and the results. \n",
+    "While some records represent simple computations (like a single point computation), others can encapsulate more complex workflows and multiple associated computations.\n",
+    "\n",
+    "A *dataset* is a collection of similar records.\n",
+    "\n",
+    "In this QuickStart, you'll learn how to connect to the QCArchive Demo Server and retrieve records by their IDs.\n",
+    "If you'd like to learn more about records, see the \"How do I work with records?\" tutorial."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "17936106",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import qcportal as ptl"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "77db1326",
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
+   "source": [
+    "## Create a client object and connect to the demo server\n",
+    "\n",
+    "The `PortalClient` is how you interact with the server, including querying records and submitting computations.\n",
+    "\n",
+    "The demo server allows for unauthenticated guest access, so no username/password is necessary to read from the server. However, you will\n",
+    "need to log in to submit or modify computations."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "75672420",
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
+   "outputs": [],
+   "source": [
+    "# Guest access\n",
+    "client = ptl.PortalClient(\"https://qcademo.molssi.org\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f4c63f21",
+   "metadata": {},
+   "source": [
+    "````{admonition} Connecting with username/password\n",
+    ":class: note\n",
+    "\n",
+    "If you have a username/password, you would include those in the client connection.\n",
+    "\n",
+    "```python\n",
+    "client = ptl.PortalClient(\"https://qcademo.molssi.org\", username=\"YOUR_USERNAME\", password=\"YOUR_PASSWORD\")\n",
+    "```\n",
+    "\n",
+    "⚠️Caution⚠️: Always handle credentials with care. Never commit sensitive information like usernames or passwords to public repositories.\n",
+    "\n",
+    "````"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "a94c69ee",
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
+   "source": [
+    "## Retrieving a Single Record by ID\n",
+    "\n",
+    "To retrieve a record, you can use the `get_records` method. You pass in the IDs of the records you would like to retrieve.\n",
+    "\n",
+    "If a list of IDs is specified, then a list of records is returned. Otherwise, only a single record is returned."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "7baae1c4",
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
+   "outputs": [],
+   "source": [
+    "record = client.get_records(1)\n",
+    "print(record)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0f952f1f",
+   "metadata": {},
+   "source": [
+    "From printing the record, we see that the record with ID 1 is a single point calculation (`SinglePointRecord`) and that this computation is \"complete\" (`RecordStatusEnum.complete`)."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "10554f21",
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
+   "source": [
+    "### Viewing Record Information\n",
+    "\n",
+    "Records have lots of features, and what they have depends on the type of record - we will only cover a few here.\n",
+    "\n",
+    "For the single point calculation we retrieved, we can see information about the molecule (`molecule` attribute), the method, basis, etc (`specification`), and more.\n",
+    "\n",
+    "To see information about the molecule used in the calculation, use `record.molecule`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "142dbe46",
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
+   "outputs": [],
+   "source": [
+    "# The molecule that we computed\n",
+    "print(record.molecule)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "26482a84",
+   "metadata": {},
+   "source": [
+    "The information above tells us that the single point calculation was \n",
+    "performed on a helium atom.\n",
+    "\n",
+    "````{admonition} Molecule \"hash\"\n",
+    "\n",
+    "The molecule hash is a unique identifier that takes atom identity,\n",
+    "connectivity, coordinates, and fragmentation into account.\n",
+    "\n",
+    "````\n",
+    "\n",
+    "The record specification shows the program used for the calculation,\n",
+    "as well as information about the method as basis."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "132c7542",
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
+   "outputs": [],
+   "source": [
+    "# The specification (method, basis, etc)\n",
+    "print(record.specification)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "a854f87a",
+   "metadata": {},
+   "source": [
+    "The specification printed above tells us that this calculation was performed\n",
+    "with the Psi4 software using the `hf` method and `sto-3g` basis set."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "b9144e59",
+   "metadata": {},
+   "source": [
+    "## Retrieving Multiple Records\n",
+    "\n",
+    "The previous example showed retrieving just one record from QCArchive using the `get_records` method.\n",
+    "However, more than one record at a time can be retrieved by passing a list of computation IDs to the method."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "769d9494",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "records = client.get_records([1, 2, 3])\n",
+    "\n",
+    "print(f\"Retrieved {len(records)} records.\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "07ec31d0",
+   "metadata": {},
+   "source": [
+    "Using, the information presented earlier, we can see data about each computation."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "bf19c415",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "for record in records:\n",
+    "    print(record, record.molecule)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "8feccd99",
+   "metadata": {},
+   "source": [
+    "## Retrieving Records by Computation Type\n",
+    "\n",
+    "The QCArchive API also allows you to retrieve records based on the computation type. \n",
+    "QCArchive supports different types of computations including single points, optimizations,\n",
+    "torsion drives and more.\n",
+    "In addition to using `get_records`, you can also use methods specific to the type of computation of interest.\n",
+    "For example, to retrieve single point computations only, you can use the method `get_singlepoints`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "8363f4cb",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "records = client.get_singlepoints([1,2])\n",
+    "print(records)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.12"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

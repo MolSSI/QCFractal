@@ -1,0 +1,69 @@
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.10.13/x64/lib/python3.10/site-packages/jupyter_cache/executors/utils.py", line 58, in single_nb_execution
+    executenb(
+  File "/opt/hostedtoolcache/Python/3.10.13/x64/lib/python3.10/site-packages/nbclient/client.py", line 1305, in execute
+    return NotebookClient(nb=nb, resources=resources, km=km, **kwargs).execute()
+  File "/opt/hostedtoolcache/Python/3.10.13/x64/lib/python3.10/site-packages/jupyter_core/utils/__init__.py", line 166, in wrapped
+    return loop.run_until_complete(inner)
+  File "/opt/hostedtoolcache/Python/3.10.13/x64/lib/python3.10/asyncio/base_events.py", line 649, in run_until_complete
+    return future.result()
+  File "/opt/hostedtoolcache/Python/3.10.13/x64/lib/python3.10/site-packages/nbclient/client.py", line 705, in async_execute
+    await self.async_execute_cell(
+  File "/opt/hostedtoolcache/Python/3.10.13/x64/lib/python3.10/site-packages/nbclient/client.py", line 1058, in async_execute_cell
+    await self._check_raise_for_error(cell, cell_index, exec_reply)
+  File "/opt/hostedtoolcache/Python/3.10.13/x64/lib/python3.10/site-packages/nbclient/client.py", line 914, in _check_raise_for_error
+    raise CellExecutionError.from_cell_and_msg(cell, exec_reply_content)
+nbclient.exceptions.CellExecutionError: An error occurred while executing the following cell:
+------------------
+b3lyp_meta, b3lyp_record_ids = client.add_singlepoints([water], 
+                                                       program='psi4', 
+                                                       driver='energy', 
+                                                       method='b3lyp', 
+                                                       basis='def2-tzvp')
+
+mp2_meta, mp2_record_ids = client.add_singlepoints([water], 
+                                                   program='psi4', 
+                                                   driver='energy', 
+                                                   method='mp2', 
+                                                   basis='def2-tzvp')
+------------------
+
+
+[0;31m---------------------------------------------------------------------------[0m
+[0;31mPortalRequestError[0m                        Traceback (most recent call last)
+Cell [0;32mIn[13], line 1[0m
+[0;32m----> 1[0m b3lyp_meta, b3lyp_record_ids [38;5;241m=[39m [43mclient[49m[38;5;241;43m.[39;49m[43madd_singlepoints[49m[43m([49m[43m[[49m[43mwater[49m[43m][49m[43m,[49m[43m [49m
+[1;32m      2[0m [43m                                                       [49m[43mprogram[49m[38;5;241;43m=[39;49m[38;5;124;43m'[39;49m[38;5;124;43mpsi4[39;49m[38;5;124;43m'[39;49m[43m,[49m[43m [49m
+[1;32m      3[0m [43m                                                       [49m[43mdriver[49m[38;5;241;43m=[39;49m[38;5;124;43m'[39;49m[38;5;124;43menergy[39;49m[38;5;124;43m'[39;49m[43m,[49m[43m [49m
+[1;32m      4[0m [43m                                                       [49m[43mmethod[49m[38;5;241;43m=[39;49m[38;5;124;43m'[39;49m[38;5;124;43mb3lyp[39;49m[38;5;124;43m'[39;49m[43m,[49m[43m [49m
+[1;32m      5[0m [43m                                                       [49m[43mbasis[49m[38;5;241;43m=[39;49m[38;5;124;43m'[39;49m[38;5;124;43mdef2-tzvp[39;49m[38;5;124;43m'[39;49m[43m)[49m
+[1;32m      7[0m mp2_meta, mp2_record_ids [38;5;241m=[39m client[38;5;241m.[39madd_singlepoints([water], 
+[1;32m      8[0m                                                    program[38;5;241m=[39m[38;5;124m'[39m[38;5;124mpsi4[39m[38;5;124m'[39m, 
+[1;32m      9[0m                                                    driver[38;5;241m=[39m[38;5;124m'[39m[38;5;124menergy[39m[38;5;124m'[39m, 
+[1;32m     10[0m                                                    method[38;5;241m=[39m[38;5;124m'[39m[38;5;124mmp2[39m[38;5;124m'[39m, 
+[1;32m     11[0m                                                    basis[38;5;241m=[39m[38;5;124m'[39m[38;5;124mdef2-tzvp[39m[38;5;124m'[39m)
+
+File [0;32m~/work/QCFractal/QCFractal/qcportal/qcportal/client.py:987[0m, in [0;36mPortalClient.add_singlepoints[0;34m(self, molecules, program, driver, method, basis, keywords, protocols, tag, priority, owner_group, find_existing)[0m
+[1;32m    984[0m     body_data[[38;5;124m"[39m[38;5;124mspecification[39m[38;5;124m"[39m][[38;5;124m"[39m[38;5;124mprotocols[39m[38;5;124m"[39m] [38;5;241m=[39m protocols
+[1;32m    986[0m body [38;5;241m=[39m SinglepointAddBody([38;5;241m*[39m[38;5;241m*[39mbody_data)
+[0;32m--> 987[0m [38;5;28;01mreturn[39;00m [38;5;28;43mself[39;49m[38;5;241;43m.[39;49m[43mmake_request[49m[43m([49m
+[1;32m    988[0m [43m    [49m[38;5;124;43m"[39;49m[38;5;124;43mpost[39;49m[38;5;124;43m"[39;49m[43m,[49m[43m [49m[38;5;124;43m"[39;49m[38;5;124;43mapi/v1/records/singlepoint/bulkCreate[39;49m[38;5;124;43m"[39;49m[43m,[49m[43m [49m[43mTuple[49m[43m[[49m[43mInsertMetadata[49m[43m,[49m[43m [49m[43mList[49m[43m[[49m[38;5;28;43mint[39;49m[43m][49m[43m][49m[43m,[49m[43m [49m[43mbody[49m[38;5;241;43m=[39;49m[43mbody[49m
+[1;32m    989[0m [43m[49m[43m)[49m
+
+File [0;32m~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:367[0m, in [0;36mPortalClientBase.make_request[0;34m(self, method, endpoint, response_model, body_model, url_params_model, body, url_params)[0m
+[1;32m    364[0m [38;5;28;01mif[39;00m [38;5;28misinstance[39m(parsed_url_params, pydantic[38;5;241m.[39mBaseModel):
+[1;32m    365[0m     parsed_url_params [38;5;241m=[39m parsed_url_params[38;5;241m.[39mdict()
+[0;32m--> 367[0m r [38;5;241m=[39m [38;5;28;43mself[39;49m[38;5;241;43m.[39;49m[43m_request[49m[43m([49m[43mmethod[49m[43m,[49m[43m [49m[43mendpoint[49m[43m,[49m[43m [49m[43mbody[49m[38;5;241;43m=[39;49m[43mserialized_body[49m[43m,[49m[43m [49m[43murl_params[49m[38;5;241;43m=[39;49m[43mparsed_url_params[49m[43m)[49m
+[1;32m    368[0m d [38;5;241m=[39m deserialize(r[38;5;241m.[39mcontent, r[38;5;241m.[39mheaders[[38;5;124m"[39m[38;5;124mContent-Type[39m[38;5;124m"[39m])
+[1;32m    370[0m [38;5;28;01mif[39;00m response_model [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m:
+
+File [0;32m~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:332[0m, in [0;36mPortalClientBase._request[0;34m(self, method, endpoint, body, url_params, retry)[0m
+[1;32m    327[0m     [38;5;28;01mexcept[39;00m:
+[1;32m    328[0m         [38;5;66;03m# If this error comes from, ie, the web server or something else, then[39;00m
+[1;32m    329[0m         [38;5;66;03m# we have to use 'reason'[39;00m
+[1;32m    330[0m         details [38;5;241m=[39m {[38;5;124m"[39m[38;5;124mmsg[39m[38;5;124m"[39m: r[38;5;241m.[39mreason}
+[0;32m--> 332[0m     [38;5;28;01mraise[39;00m PortalRequestError([38;5;124mf[39m[38;5;124m"[39m[38;5;124mRequest failed: [39m[38;5;132;01m{[39;00mdetails[[38;5;124m'[39m[38;5;124mmsg[39m[38;5;124m'[39m][38;5;132;01m}[39;00m[38;5;124m"[39m, r[38;5;241m.[39mstatus_code, details)
+[1;32m    334[0m [38;5;28;01mreturn[39;00m r
+
+[0;31mPortalRequestError[0m: Request failed: 403 Forbidden: User {'user_id': None, 'username': None} is not authorized to access '{'type': '/api/v1/records'}' (HTTP status 403)
+

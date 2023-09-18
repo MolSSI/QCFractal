@@ -1,0 +1,430 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "(overview-tutorial)=\n",
+    "# QCArchive in 15 minutes\n",
+    "\n",
+    "This tutorial will give you an overview of possible actions in QCArchive.\n",
+    "Using QCArchive, you can:\n",
+    "\n",
+    "1. Submit a single or set of computations to a server, following a variety of workflows. \n",
+    "2. Retrieve the results of previous computations.\n",
+    "3. Query the database for particular computations.\n",
+    "4. Create datasets holding related quantum chemistry computations.\n",
+    "5. Retrieve results from datasets.\n",
+    "\n",
+    "This notebook will briefly walk you through each capability. \n",
+    "For more details, we recommend you follow our other starter tutorials."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Connecting to a server\n",
+    "\n",
+    "To work with QCArchive, you will need to connect to a QCArchive server.\n",
+    "For the QuickStart tutorials, we will connect to the QCArchive Demo Server.\n",
+    "To interact with a server, you will create a QCPortal client using `PortalClient`.\n",
+    "The argument to `PortalClient` is the server address. \n",
+    "To work with the QCArchive demo server, enter `https://qcademo.molssi.org`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import qcportal as ptl\n",
+    "\n",
+    "client = ptl.PortalClient(\"https://qcademo.molssi.org\")\n",
+    "print(client)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We now have a QCPortal client that we can use to read from and query the QCArchive demo server.\n",
+    "\n",
+    "## Retrieving Data and Querying the Database\n",
+    "\n",
+    "### How do I retrieve computation results by ID?\n",
+    "\n",
+    "We can retrieve computations by ID using the `client.get_records` function.\n",
+    "Each computation in the database is given an integer ID number.\n",
+    "The cell below shows retrieval of the calculation result with ID 1. \n",
+    "We see that this computation was a single point computation."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "first_record = client.get_records(1)\n",
+    "print(first_record)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Typically, properties from a calculation can be viewed using the `.properties` attribute for a result.\n",
+    "The calculated properties are in a dictionary. \n",
+    "In the cell below, we print the SCF total energy from our calcuation."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "print(first_record.properties[\"scf_total_energy\"])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We can print information about the computation like the molecule name and properties."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "print(f\"Molecule: {first_record.molecule.name}, Energy: {first_record.properties['scf_total_energy']}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "If you pass in several IDs, you will receive a list of results that can be iterated through."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "multiple_records = client.get_records([1, 2, 3]) \n",
+    "\n",
+    "for record in multiple_records:\n",
+    "    print(f\"Molecule: {record.molecule.name}, Energy: {record.properties['scf_total_energy']}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### How do I search for particular types of computations?\n",
+    "\n",
+    "You can search the database for particular computations using `query_records`.\n",
+    "For example, to see all results from a particular time period, we can use\n",
+    "`query_records` with arguments `created_before` and `created_after`.\n",
+    "\n",
+    "There are many fields you can query the database on and this can differ by the type of computation you'd like to retrieve.\n",
+    "The query method returns a Python iterator.\n",
+    "For more detailed information, see [the quickstart tutorial on querying](query-quickstart)."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "records = client.query_records(created_after=\"2023/01/10\", created_before=\"2023/01/14\")\n",
+    "\n",
+    "# Print the first record.\n",
+    "print(next(records))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### How do I retrieve results from a dataset?\n",
+    "\n",
+    "QCArchive also supports data to be stored in datasets.\n",
+    "A dataset is a set of related computations. \n",
+    "Datasets can be created when computations are submitted, or after computations have completed, and\n",
+    "computations can belong to multiple datasets.\n",
+    "Datasets are the primary use case for QCArchive, and are usually created with large-scale workflows.\n",
+    "Datasets will contain only one type of calculation.\n",
+    "\n",
+    "We can list all of the datasets on the server we've connected to using `list_datasets`.\n",
+    "Below, we print the names of the data sets on the QCArchive demo server."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "datasets = client.list_datasets()\n",
+    "\n",
+    "for dataset in datasets:\n",
+    "    print(f\"Name: {dataset['dataset_name']}, Type: {dataset['dataset_type']}\")\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We can retrieve records from a particular dataset using the `get_dataset` method and passing in the dataset name and type. The following cell retrieves the \"Element Benchmark\" dataset."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "ds = client.get_dataset(dataset_type=\"singlepoint\", dataset_name=\"Element Benchmark\")\n",
+    "print(ds.description)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Datasets have a lot of properties that are beyond the scope of this overview. \n",
+    "Datasets are made up of many records of the same type of computation that can differ in molecule identity or other specification parameters.\n",
+    "You can pull out iterate over records, see specifications, and compile values from records.\n",
+    "\n",
+    "The cell below shows using the `compile_values` method to create a pandas dataframe containing the SCF total energy from each record."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# use compile_values to make a dataframe\n",
+    "df = ds.compile_values(lambda record: record.properties['scf_total_energy'], \"scf_total_energy\")\n",
+    "\n",
+    "# view the first 10 rows.\n",
+    "df.head(10)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Submitting Computations\n",
+    "\n",
+    "Beyond retrieving results and querying the database, QCArchive provides a robust system for submitting computations. \n",
+    "You may submit single computations, multiple computations, or computations to create a dataset.\n",
+    "\n",
+    "Our QCArchive demo server is publicly readable.\n",
+    "This means you do not need a username or password to access the data.\n",
+    "However, to submit computations, a username and password is required.\n",
+    "\n",
+    "```{admonition} Protecting usernames and passwords\n",
+    ":class: warning\n",
+    "\n",
+    "When connecting to QCArchive using a username and password, be careful to never commit this information to publicly accessible repositories.\n",
+    "You can store credentials in environment variables, as shown in the cell below,\n",
+    "or you can [read user information from a file](qcportal_connecting_file).\n",
+    "\n",
+    "```\n",
+    "\n",
+    "In the cell below, we read environment variables set in the local environment for our username and password. \n",
+    "We retrieve these using `os.environ.get`.\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import os\n",
+    "\n",
+    "import qcportal as ptl\n",
+    "from qcportal.molecules import Molecule\n",
+    "\n",
+    "client = ptl.PortalClient(\"https://qcademo.molssi.org\", \n",
+    "                          username=os.environ.get(\"QCArchiveUsername\"), \n",
+    "                          password=os.environ.get(\"QCArchivePWD\"))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We now have a QCPortal client that can be used to submit computations.\n",
+    "\n",
+    "### How do I submit a computation?\n",
+    "\n",
+    "QCArchive currently supports seven different computation types including single point, geometry optimization, reactions, and torsion drives.\n",
+    "\n",
+    "For this overview, we will show submitting a single point computation for water using two different methods.\n",
+    "This notebook shows inputting an XYZ string for our molecule, but there are a [number of ways](creating_molecules) to enter molecule information.\n",
+    "Our molecule geometry in this example is an optimized structure of water."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "water_xyz = \"\"\"\n",
+    "3\n",
+    "\n",
+    "H                     0.026223561887     1.224983815810     0.000000000000\n",
+    "H                     0.971741135004     0.039335313725     0.000000000000\n",
+    "O                     0.002035305512     0.235680871424     0.000000000000\n",
+    "\n",
+    "\"\"\"\n",
+    "\n",
+    "water = Molecule.from_data(water_xyz)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "If NGLView is installed in your environment, the molecule objects in QCArchive can be visualized using NGLView by putting the variable representing the molecule as the last thing in a notebook cell."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "water"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "To submit our single point computation, we will use the `add_singlepoints` method.\n",
+    "We will submit two single point computations for the same molecule using different methods.\n",
+    "\n",
+    "For `add_singlepoints`, you specify the program you want to run (Psi4 in our case), the driver, the method and the basis set.\n",
+    "The `driver` determines what is in the `return_result` for the record. \n",
+    "For this demonstration, we are submitting two single point calculations for water with a differing method (`b3lyp` vs `mp2`)."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "b3lyp_meta, b3lyp_record_ids = client.add_singlepoints([water], \n",
+    "                                                       program='psi4', \n",
+    "                                                       driver='energy', \n",
+    "                                                       method='b3lyp', \n",
+    "                                                       basis='def2-tzvp')\n",
+    "\n",
+    "mp2_meta, mp2_record_ids = client.add_singlepoints([water], \n",
+    "                                                   program='psi4', \n",
+    "                                                   driver='energy', \n",
+    "                                                   method='mp2', \n",
+    "                                                   basis='def2-tzvp')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Once submitted, we can retrieve the results using the `get_records` method shown earlier in the tutorial."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "b3lpy_record = client.get_records(b3lyp_record_ids[0])\n",
+    "mp2_record = client.get_records(mp2_record_ids[0])\n",
+    "\n",
+    "print(f\"B3LYP Status:\\t{b3lpy_record.status}\")\n",
+    "print(f\"MP2 Status:\\t{mp2_record.status}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "When the computations are complete, we can retrieve the energies in the same way we did earlier."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "print(f\"B3LYP result: {b3lpy_record.return_result}\")\n",
+    "print(f\"MP2 result: {mp2_record.return_result}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### How do I create datasets?\n",
+    "\n",
+    "Instead of submitting these computations separately, we could have grouped them together in a dataset. \n",
+    "This would allow us to more easily retrieve the results together.\n",
+    "\n",
+    "To create a dataset, you use the `create_dataset` method.\n",
+    "\n",
+    "```python\n",
+    "\n",
+    "ds = client.add_dataset(\"singlepoint\",\n",
+    "                        name=\"Water calculations\",\n",
+    "                        description=\"Single point calculations of water at various levels of theory.\")\n",
+    "\n",
+    "```\n",
+    "\n",
+    "Creation of datasets is beyond the scope of this overview tutorial.\n",
+    "For more information on dataset construction, see the Dataset Quickstart."
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "qcportal2",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.11.0"
+  },
+  "orig_nbformat": 4
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}

@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 
 
@@ -6,9 +7,9 @@
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Using datasets &#8212; QCArchive 0.50.post29+g3ec69b10 documentation</title>
+    <title>Using datasets &#8212; QCArchive 0.50.post36+g644609d9 documentation</title>
   
   
   
@@ -28,23 +29,27 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=5829417c" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=927b94d3fcb96560df09" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=927b94d3fcb96560df09" />
   <script src="../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=927b94d3fcb96560df09"></script>
 
-    <script src="../_static/documentation_options.js?v=2be922e1"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
-    <script src="../_static/copybutton.js?v=f281be69"></script>
-    <script src="../_static/design-tabs.js?v=36754332"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/design-tabs.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/datasets';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -149,6 +154,13 @@
   <ul class="bd-navbar-elements navbar-nav">
     
                     <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../quickstart/index.html">
+                        Quickstart
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
                       <a class="nav-link nav-internal" href="../overview/index.html">
                         Overview
                       </a>
@@ -168,19 +180,19 @@
                       </a>
                     </li>
                 
-
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../web_api/index.html">
-                        Web API
-                      </a>
-                    </li>
-                
             <li class="nav-item dropdown">
                 <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="pst-header-nav-more-links">
                     More
                 </button>
                 <ul id="pst-header-nav-more-links" class="dropdown-menu">
                     
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-item nav-internal" href="../web_api/index.html">
+                        Web API
+                      </a>
+                    </li>
+                
+
                     <li class="nav-item">
                       <a class="nav-link dropdown-item nav-internal" href="../developer_guide/index.html">
                         Developer Guide
@@ -295,6 +307,13 @@ document.write(`
   <ul class="bd-navbar-elements navbar-nav">
     
                     <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../quickstart/index.html">
+                        Quickstart
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
                       <a class="nav-link nav-internal" href="../overview/index.html">
                         Overview
                       </a>
@@ -314,19 +333,19 @@ document.write(`
                       </a>
                     </li>
                 
-
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../web_api/index.html">
-                        Web API
-                      </a>
-                    </li>
-                
             <li class="nav-item dropdown">
                 <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="pst-header-nav-more-links">
                     More
                 </button>
                 <ul id="pst-header-nav-more-links" class="dropdown-menu">
                     
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-item nav-internal" href="../web_api/index.html">
+                        Web API
+                      </a>
+                    </li>
+                
+
                     <li class="nav-item">
                       <a class="nav-link dropdown-item nav-internal" href="../developer_guide/index.html">
                         Developer Guide
@@ -468,7 +487,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="using-datasets">
-<h1>Using datasets<a class="headerlink" href="#using-datasets" title="Link to this heading">#</a></h1>
+<h1>Using datasets<a class="headerlink" href="#using-datasets" title="Permalink to this heading">#</a></h1>
 <p>A <em>dataset</em> is a relatively homogeneous collection of records that allows for
 submission and management of a large number of computations.</p>
 <p>A dataset is made up of entries, specifications, and records.
@@ -511,7 +530,7 @@ submit computations for that specification that apply to all the existing entrie
 have different types for these items. That is, entries in a <a class="reference internal" href="records/singlepoint.html#singlepoint-dataset"><span class="std std-ref">Singlepoint Dataset</span></a> are different than entries
 in an <a class="reference internal" href="records/optimization.html#optimization-dataset"><span class="std std-ref">Optimization Dataset</span></a>, and the same is true for specifications.</p>
 <section id="dataset-limitations">
-<h2>Dataset Limitations<a class="headerlink" href="#dataset-limitations" title="Link to this heading">#</a></h2>
+<h2>Dataset Limitations<a class="headerlink" href="#dataset-limitations" title="Permalink to this heading">#</a></h2>
 <p>A dataset can only contain one type of calculation. For example, you can have a <a class="reference internal" href="records/singlepoint.html#singlepoint-dataset"><span class="std std-ref">Singlepoint Dataset</span></a>
 or a <a class="reference internal" href="records/optimization.html#optimization-dataset"><span class="std std-ref">Optimization Dataset</span></a>, but not a dataset that contains both single point and optimization
 calculations.</p>
@@ -519,7 +538,7 @@ calculations.</p>
 keywords on a per-entry basis, but there is no way to assign a different basis for a particular entry.</p>
 </section>
 <section id="retrieving-datasets">
-<h2>Retrieving Datasets<a class="headerlink" href="#retrieving-datasets" title="Link to this heading">#</a></h2>
+<h2>Retrieving Datasets<a class="headerlink" href="#retrieving-datasets" title="Permalink to this heading">#</a></h2>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>When retrieving a dataset, only a limited about of data is downloaded first. After that, operations such as
@@ -546,7 +565,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 </div>
 </section>
 <section id="adding-datasets">
-<h2>Adding Datasets<a class="headerlink" href="#adding-datasets" title="Link to this heading">#</a></h2>
+<h2>Adding Datasets<a class="headerlink" href="#adding-datasets" title="Permalink to this heading">#</a></h2>
 <p>Datasets can be created on a server with the <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.add_dataset" title="qcportal.client.PortalClient.add_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_dataset()</span></code></a>
 function of the <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">PortalClient</span></code></a>. This function returns the dataset:</p>
 <div class="sd-tab-set docutils">
@@ -564,7 +583,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 some for descriptions of the dataset as well as default priority and <a class="reference internal" href="../overview/tasks_services.html#routing-tags"><span class="std std-ref">tags</span></a>.</p>
 </section>
 <section id="dataset-metadata">
-<h2>Dataset Metadata<a class="headerlink" href="#dataset-metadata" title="Link to this heading">#</a></h2>
+<h2>Dataset Metadata<a class="headerlink" href="#dataset-metadata" title="Permalink to this heading">#</a></h2>
 <p>Datasets have some useful metadata and properties</p>
 <ul class="simple">
 <li><p><strong>name</strong>, <strong>description</strong>, <strong>tagline</strong>, <strong>group</strong>, and <strong>tags</strong> are user-defined metadata that categorize this dataset
@@ -596,7 +615,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 </div>
 </div>
 <section id="status">
-<h3>Status<a class="headerlink" href="#status" title="Link to this heading">#</a></h3>
+<h3>Status<a class="headerlink" href="#status" title="Permalink to this heading">#</a></h3>
 <p>The <a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.status" title="qcportal.dataset_models.BaseDataset.status"><code class="xref py py-meth docutils literal notranslate"><span class="pre">status()</span></code></a> returns a dictionary describing the status of the computations.
 This is indexed by specification</p>
 <div class="sd-tab-set docutils">
@@ -644,7 +663,7 @@ local caching.</p>
 </section>
 </section>
 <section id="specifications-and-entries">
-<h2>Specifications and Entries<a class="headerlink" href="#specifications-and-entries" title="Link to this heading">#</a></h2>
+<h2>Specifications and Entries<a class="headerlink" href="#specifications-and-entries" title="Permalink to this heading">#</a></h2>
 <p>The specifications of the dataset are available with the <code class="docutils literal notranslate"><span class="pre">.specification_names</span></code> and <code class="docutils literal notranslate"><span class="pre">.specifications</span></code> properties.
 <code class="docutils literal notranslate"><span class="pre">.specifications</span></code> returns a dictionary, with the key being the name of the specification.</p>
 <div class="sd-tab-set docutils">
@@ -722,7 +741,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 </div>
 </section>
 <section id="retrieving-records">
-<h2>Retrieving Records<a class="headerlink" href="#retrieving-records" title="Link to this heading">#</a></h2>
+<h2>Retrieving Records<a class="headerlink" href="#retrieving-records" title="Permalink to this heading">#</a></h2>
 <p>A single records can be retrieved by entry name and specification name
 with <a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.get_record" title="qcportal.dataset_models.BaseDataset.get_record"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_record()</span></code></a></p>
 <div class="sd-tab-set docutils">
@@ -780,7 +799,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 be overridden with <code class="docutils literal notranslate"><span class="pre">force_refetch=True</span></code> which will always download a fresh record.</p>
 </section>
 <section id="manipulating-entries-and-specifications">
-<h2>Manipulating Entries and Specifications<a class="headerlink" href="#manipulating-entries-and-specifications" title="Link to this heading">#</a></h2>
+<h2>Manipulating Entries and Specifications<a class="headerlink" href="#manipulating-entries-and-specifications" title="Permalink to this heading">#</a></h2>
 <p>Entries and specifications can be added with <code class="docutils literal notranslate"><span class="pre">add_entries</span></code>, <code class="docutils literal notranslate"><span class="pre">add_entry</span></code>, and <code class="docutils literal notranslate"><span class="pre">add_specification</span></code>.
 The details of these functions depend on the type of dataset - see <a class="reference internal" href="records/index.html"><span class="doc">Computation Types</span></a>. The following examples
 are for an <a class="reference internal" href="records/optimization.html#optimization-dataset"><span class="std std-ref">optimization dataset</span></a>.</p>
@@ -853,7 +872,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 </div>
 </section>
 <section id="submitting-computations">
-<span id="dataset-submission"></span><h2>Submitting Computations<a class="headerlink" href="#submitting-computations" title="Link to this heading">#</a></h2>
+<span id="dataset-submission"></span><h2>Submitting Computations<a class="headerlink" href="#submitting-computations" title="Permalink to this heading">#</a></h2>
 <p>Adding entries and specifications does not immediately create the underlying records. To do that,
 we use <a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.submit" title="qcportal.dataset_models.BaseDataset.submit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">submit()</span></code></a>.</p>
 <p>With no arguments, this will create missing records for all entries and specifications, using the
@@ -875,7 +894,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 </div>
 </div>
 <section id="renaming-and-deleting-entries-and-specifications">
-<h3>Renaming and Deleting Entries and Specifications<a class="headerlink" href="#renaming-and-deleting-entries-and-specifications" title="Link to this heading">#</a></h3>
+<h3>Renaming and Deleting Entries and Specifications<a class="headerlink" href="#renaming-and-deleting-entries-and-specifications" title="Permalink to this heading">#</a></h3>
 <p>Entries and specifications can be renamed and deleted. Deletion can also optionally delete the underlying record.</p>
 <p><a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.rename_entries" title="qcportal.dataset_models.BaseDataset.rename_entries"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rename_entries()</span></code></a> and
 <a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.rename_specification" title="qcportal.dataset_models.BaseDataset.rename_specification"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rename_specification()</span></code></a>
@@ -912,7 +931,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 </section>
 </section>
 <section id="record-management">
-<h2>Record Management<a class="headerlink" href="#record-management" title="Link to this heading">#</a></h2>
+<h2>Record Management<a class="headerlink" href="#record-management" title="Permalink to this heading">#</a></h2>
 <p>Records that belong to the dataset can be managed via the usual client methods (see <a class="reference internal" href="record_management.html"><span class="doc">Managing Records</span></a>).
 However, datasets have convenient methods for management, which use entry and specification names rather than record.</p>
 <ul class="simple">
@@ -1059,7 +1078,7 @@ PYTHON</label><div class="sd-tab-content docutils">
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.2.6.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
         </p>
         
 

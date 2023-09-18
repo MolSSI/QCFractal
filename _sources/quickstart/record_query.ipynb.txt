@@ -1,0 +1,236 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "d60cc0ff",
+   "metadata": {},
+   "source": [
+    "(query-quickstart)=\n",
+    "# How do I search for specific types of computations?\n",
+    "\n",
+    "This notebook introduces you to the basics of connecting to a QCArchive server and retrieving computation results using information like molecule, basis set, method, or other computation details.\n",
+    "\n",
+    "You can retrieve results from QCArchive using the `get_records` method if you know the ID of the computation you'd like to retrieve.\n",
+    "However, you can also query the database for computations having specific details using `query` methods."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "17936106",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import qcportal as ptl"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "77db1326",
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
+   "source": [
+    "## Create a client object and connect to the demo server\n",
+    "\n",
+    "The `PortalClient` is how you interact with the server, including querying records and submitting computations.\n",
+    "\n",
+    "The demo server allows for unauthenticated guest access, so no username/password is necessary to read from the server. However, you will\n",
+    "need to log in to submit or modify computations."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "75672420",
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
+   "outputs": [],
+   "source": [
+    "# Guest access\n",
+    "client = ptl.PortalClient(\"https://qcademo.molssi.org\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f4c63f21",
+   "metadata": {},
+   "source": [
+    "````{admonition} Connecting with username/password\n",
+    ":class: note\n",
+    "\n",
+    "If you have a username/password, you would include those in the client connection.\n",
+    "\n",
+    "```python\n",
+    "client = ptl.PortalClient(\"https://qcademo.molssi.org\", username=\"YOUR_USERNAME\", password=\"YOUR_PASSWORD\")\n",
+    "```\n",
+    "\n",
+    "⚠️Caution⚠️: Always handle credentials with care. Never commit sensitive information like usernames or passwords to public repositories.\n",
+    "\n",
+    "````"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "a94c69ee",
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
+   "source": [
+    "## Querying Records\n",
+    "\n",
+    "Use the `query_records method`` for general queries. \n",
+    "This method allows you to search across all records in the database, regardless of the computation type. \n",
+    "Please note that since query_records searches all record types, you can only query fields that are common to all records."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "c7c435a3",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "help(client.query_records)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "1c8b2584",
+   "metadata": {},
+   "source": [
+    "For example, to query for computations created between January 10, 2023 and January 14, 2023, we could do the following."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "325575ec",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "results = client.query_records(created_after=\"2023/01/10\", created_before=\"2023/01/14\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "8235c32d",
+   "metadata": {},
+   "source": [
+    "Our results from this query will be in something called an iterator.\n",
+    "An iterator can be made into a list by casting or used in a `for` loop."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "109bbc33",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "results_list = list(results)\n",
+    "print(f\"Found {len(results_list)} results.\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "775c55ec",
+   "metadata": {},
+   "source": [
+    "After the results are retrieved, you can work with the records as shown in the \"How do I work with computation records?\" tutorial."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "65b65b8a",
+   "metadata": {},
+   "source": [
+    "## Querying by computation details\n",
+    "\n",
+    "If you want to query by computation specifications such as basis set, method, molecule, etc, you will need to use a more specific query methods.\n",
+    "For example, if you want to query single point computations, you should use the `query_singlepoints` method.\n",
+    "Documentation for the `query_singlepoints` method is shown below."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "9b29b0e9",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "help(client.query_singlepoints)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e2ccc525",
+   "metadata": {},
+   "source": [
+    "As shown in the help message above, you can query single points on many different parameters.\n",
+    "For example, you might choose to query the database for `mp2` calculations using the `aug-cc-pvtz` basis using the `psi4` program.\n",
+    "For the sake of demonstration in this notebook, we are limiting the number of results to 5 records."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "2ae7e4a1",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "results = client.query_singlepoints(method=\"mp2\", basis=\"aug-cc-pvtz\", program=\"psi4\", limit=5)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "4f3d1f3c",
+   "metadata": {},
+   "source": [
+    "After retrieving the results, we can loop through them and view information about the records."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "3ca53e2e",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "for record in results:\n",
+    "    print(record.id, record.molecule)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.11.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

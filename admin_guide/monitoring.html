@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 
 
@@ -6,9 +7,9 @@
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Server administration via client and API &#8212; QCArchive 0.50.post29+g3ec69b10 documentation</title>
+    <title>Server administration via client and API &#8212; QCArchive 0.50.post36+g644609d9 documentation</title>
   
   
   
@@ -28,23 +29,27 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=5829417c" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=927b94d3fcb96560df09" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=927b94d3fcb96560df09" />
   <script src="../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=927b94d3fcb96560df09"></script>
 
-    <script src="../_static/documentation_options.js?v=2be922e1"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
-    <script src="../_static/copybutton.js?v=f281be69"></script>
-    <script src="../_static/design-tabs.js?v=36754332"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/design-tabs.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'admin_guide/monitoring';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -149,6 +154,13 @@
   <ul class="bd-navbar-elements navbar-nav">
     
                     <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../quickstart/index.html">
+                        Quickstart
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
                       <a class="nav-link nav-internal" href="../overview/index.html">
                         Overview
                       </a>
@@ -168,19 +180,19 @@
                       </a>
                     </li>
                 
-
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../web_api/index.html">
-                        Web API
-                      </a>
-                    </li>
-                
             <li class="nav-item dropdown">
                 <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="pst-header-nav-more-links">
                     More
                 </button>
                 <ul id="pst-header-nav-more-links" class="dropdown-menu">
                     
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-item nav-internal" href="../web_api/index.html">
+                        Web API
+                      </a>
+                    </li>
+                
+
                     <li class="nav-item">
                       <a class="nav-link dropdown-item nav-internal" href="../developer_guide/index.html">
                         Developer Guide
@@ -295,6 +307,13 @@ document.write(`
   <ul class="bd-navbar-elements navbar-nav">
     
                     <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../quickstart/index.html">
+                        Quickstart
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
                       <a class="nav-link nav-internal" href="../overview/index.html">
                         Overview
                       </a>
@@ -314,19 +333,19 @@ document.write(`
                       </a>
                     </li>
                 
-
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../web_api/index.html">
-                        Web API
-                      </a>
-                    </li>
-                
             <li class="nav-item dropdown">
                 <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="pst-header-nav-more-links">
                     More
                 </button>
                 <ul id="pst-header-nav-more-links" class="dropdown-menu">
                     
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-item nav-internal" href="../web_api/index.html">
+                        Web API
+                      </a>
+                    </li>
+                
+
                     <li class="nav-item">
                       <a class="nav-link dropdown-item nav-internal" href="../developer_guide/index.html">
                         Developer Guide
@@ -452,45 +471,45 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="server-administration-via-client-and-api">
-<h1>Server administration via client and API<a class="headerlink" href="#server-administration-via-client-and-api" title="Link to this heading">#</a></h1>
+<h1>Server administration via client and API<a class="headerlink" href="#server-administration-via-client-and-api" title="Permalink to this heading">#</a></h1>
 <p>Needed? Could just add tabs to code examples</p>
 <section id="module-qcportal.internal_jobs.models">
-<span id="server-administration-api"></span><h2>Server Administration API<a class="headerlink" href="#module-qcportal.internal_jobs.models" title="Link to this heading">#</a></h2>
+<span id="server-administration-api"></span><h2>Server Administration API<a class="headerlink" href="#module-qcportal.internal_jobs.models" title="Permalink to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobStatusEnum">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InternalJobStatusEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/internal_jobs/models.html#InternalJobStatusEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobStatusEnum" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InternalJobStatusEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/internal_jobs/models.html#InternalJobStatusEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobStatusEnum" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
 <p>The state of a record object. The states which are available are a finite set.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobStatusEnum.complete">
-<span class="sig-name descname"><span class="pre">complete</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'complete'</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobStatusEnum.complete" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">complete</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'complete'</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobStatusEnum.complete" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobStatusEnum.waiting">
-<span class="sig-name descname"><span class="pre">waiting</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'waiting'</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobStatusEnum.waiting" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">waiting</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'waiting'</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobStatusEnum.waiting" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobStatusEnum.running">
-<span class="sig-name descname"><span class="pre">running</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'running'</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobStatusEnum.running" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">running</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'running'</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobStatusEnum.running" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobStatusEnum.error">
-<span class="sig-name descname"><span class="pre">error</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'error'</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobStatusEnum.error" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">error</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'error'</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobStatusEnum.error" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobStatusEnum.cancelled">
-<span class="sig-name descname"><span class="pre">cancelled</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'cancelled'</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobStatusEnum.cancelled" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">cancelled</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'cancelled'</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobStatusEnum.cancelled" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class pydantic_model">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJob">
-<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InternalJob</span></span><a class="reference internal" href="../_modules/qcportal/internal_jobs/models.html#InternalJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InternalJob</span></span><a class="reference internal" href="../_modules/qcportal/internal_jobs/models.html#InternalJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
@@ -503,115 +522,115 @@ document.write(`
 <dt class="field-even">Fields<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
 <li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJob.added_date" title="qcportal.internal_jobs.models.InternalJob.added_date"><code class="xref py py-obj docutils literal notranslate"><span class="pre">added_date</span> <span class="pre">(datetime.datetime)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJob.after_function" title="qcportal.internal_jobs.models.InternalJob.after_function"><code class="xref py py-obj docutils literal notranslate"><span class="pre">after_function</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJob.after_function_kwargs" title="qcportal.internal_jobs.models.InternalJob.after_function_kwargs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">after_function_kwargs</span> <span class="pre">(Dict[str,</span> <span class="pre">Any]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJob.ended_date" title="qcportal.internal_jobs.models.InternalJob.ended_date"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ended_date</span> <span class="pre">(datetime.datetime</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJob.after_function" title="qcportal.internal_jobs.models.InternalJob.after_function"><code class="xref py py-obj docutils literal notranslate"><span class="pre">after_function</span> <span class="pre">(Optional[str])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJob.after_function_kwargs" title="qcportal.internal_jobs.models.InternalJob.after_function_kwargs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">after_function_kwargs</span> <span class="pre">(Optional[Dict[str,</span> <span class="pre">Any]])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJob.ended_date" title="qcportal.internal_jobs.models.InternalJob.ended_date"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ended_date</span> <span class="pre">(Optional[datetime.datetime])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJob.function" title="qcportal.internal_jobs.models.InternalJob.function"><code class="xref py py-obj docutils literal notranslate"><span class="pre">function</span> <span class="pre">(str)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJob.id" title="qcportal.internal_jobs.models.InternalJob.id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id</span> <span class="pre">(int)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJob.kwargs" title="qcportal.internal_jobs.models.InternalJob.kwargs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">kwargs</span> <span class="pre">(Dict[str,</span> <span class="pre">Any])</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJob.last_updated" title="qcportal.internal_jobs.models.InternalJob.last_updated"><code class="xref py py-obj docutils literal notranslate"><span class="pre">last_updated</span> <span class="pre">(datetime.datetime</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJob.last_updated" title="qcportal.internal_jobs.models.InternalJob.last_updated"><code class="xref py py-obj docutils literal notranslate"><span class="pre">last_updated</span> <span class="pre">(Optional[datetime.datetime])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJob.name" title="qcportal.internal_jobs.models.InternalJob.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span> <span class="pre">(str)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJob.progress" title="qcportal.internal_jobs.models.InternalJob.progress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">progress</span> <span class="pre">(int)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJob.result" title="qcportal.internal_jobs.models.InternalJob.result"><code class="xref py py-obj docutils literal notranslate"><span class="pre">result</span> <span class="pre">(Any)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJob.runner_hostname" title="qcportal.internal_jobs.models.InternalJob.runner_hostname"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runner_hostname</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJob.runner_uuid" title="qcportal.internal_jobs.models.InternalJob.runner_uuid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runner_uuid</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJob.runner_hostname" title="qcportal.internal_jobs.models.InternalJob.runner_hostname"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runner_hostname</span> <span class="pre">(Optional[str])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJob.runner_uuid" title="qcportal.internal_jobs.models.InternalJob.runner_uuid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runner_uuid</span> <span class="pre">(Optional[str])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJob.scheduled_date" title="qcportal.internal_jobs.models.InternalJob.scheduled_date"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scheduled_date</span> <span class="pre">(datetime.datetime)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJob.started_date" title="qcportal.internal_jobs.models.InternalJob.started_date"><code class="xref py py-obj docutils literal notranslate"><span class="pre">started_date</span> <span class="pre">(datetime.datetime</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJob.started_date" title="qcportal.internal_jobs.models.InternalJob.started_date"><code class="xref py py-obj docutils literal notranslate"><span class="pre">started_date</span> <span class="pre">(Optional[datetime.datetime])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJob.status" title="qcportal.internal_jobs.models.InternalJob.status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">status</span> <span class="pre">(qcportal.internal_jobs.models.InternalJobStatusEnum)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJob.user" title="qcportal.internal_jobs.models.InternalJob.user"><code class="xref py py-obj docutils literal notranslate"><span class="pre">user</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJob.user" title="qcportal.internal_jobs.models.InternalJob.user"><code class="xref py py-obj docutils literal notranslate"><span class="pre">user</span> <span class="pre">(Optional[str])</span></code></a></p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJob.id">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.id" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.id" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJob.name">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.name" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.name" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJob.status">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobStatusEnum" title="qcportal.internal_jobs.models.InternalJobStatusEnum"><span class="pre">InternalJobStatusEnum</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.status" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobStatusEnum" title="qcportal.internal_jobs.models.InternalJobStatusEnum"><span class="pre">InternalJobStatusEnum</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.status" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJob.added_date">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">added_date</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.added_date" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">added_date</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.added_date" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJob.scheduled_date">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scheduled_date</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.scheduled_date" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scheduled_date</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.scheduled_date" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJob.started_date">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">started_date</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.started_date" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">started_date</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.started_date" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJob.last_updated">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">last_updated</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.last_updated" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">last_updated</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.last_updated" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJob.ended_date">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ended_date</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.ended_date" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ended_date</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.ended_date" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJob.runner_hostname">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">runner_hostname</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.runner_hostname" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">runner_hostname</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.runner_hostname" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJob.runner_uuid">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">runner_uuid</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.runner_uuid" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">runner_uuid</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.runner_uuid" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJob.progress">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">progress</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.progress" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">progress</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.progress" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJob.function">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">function</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.function" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">function</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.function" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJob.kwargs">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">kwargs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.kwargs" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">kwargs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.kwargs" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJob.after_function">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">after_function</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.after_function" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">after_function</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.after_function" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJob.after_function_kwargs">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">after_function_kwargs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.after_function_kwargs" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">after_function_kwargs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.after_function_kwargs" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJob.result">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">result</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Any</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.result" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">result</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Any</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.result" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJob.user">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">user</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.user" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">user</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJob.user" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class pydantic_model">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobQueryFilters">
-<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InternalJobQueryFilters</span></span><a class="reference internal" href="../_modules/qcportal/internal_jobs/models.html#InternalJobQueryFilters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InternalJobQueryFilters</span></span><a class="reference internal" href="../_modules/qcportal/internal_jobs/models.html#InternalJobQueryFilters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QueryProjModelBase</span></code></p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
@@ -624,21 +643,21 @@ document.write(`
 </dd>
 <dt class="field-even">Fields<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.added_after" title="qcportal.internal_jobs.models.InternalJobQueryFilters.added_after"><code class="xref py py-obj docutils literal notranslate"><span class="pre">added_after</span> <span class="pre">(datetime.datetime</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.added_before" title="qcportal.internal_jobs.models.InternalJobQueryFilters.added_before"><code class="xref py py-obj docutils literal notranslate"><span class="pre">added_before</span> <span class="pre">(datetime.datetime</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.cursor" title="qcportal.internal_jobs.models.InternalJobQueryFilters.cursor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cursor</span> <span class="pre">(int</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.exclude" title="qcportal.internal_jobs.models.InternalJobQueryFilters.exclude"><code class="xref py py-obj docutils literal notranslate"><span class="pre">exclude</span> <span class="pre">(List[str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.include" title="qcportal.internal_jobs.models.InternalJobQueryFilters.include"><code class="xref py py-obj docutils literal notranslate"><span class="pre">include</span> <span class="pre">(List[str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.job_id" title="qcportal.internal_jobs.models.InternalJobQueryFilters.job_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">job_id</span> <span class="pre">(List[int]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_after" title="qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_after"><code class="xref py py-obj docutils literal notranslate"><span class="pre">last_updated_after</span> <span class="pre">(datetime.datetime</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_before" title="qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_before"><code class="xref py py-obj docutils literal notranslate"><span class="pre">last_updated_before</span> <span class="pre">(datetime.datetime</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.limit" title="qcportal.internal_jobs.models.InternalJobQueryFilters.limit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">limit</span> <span class="pre">(int</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.name" title="qcportal.internal_jobs.models.InternalJobQueryFilters.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span> <span class="pre">(List[str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.runner_hostname" title="qcportal.internal_jobs.models.InternalJobQueryFilters.runner_hostname"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runner_hostname</span> <span class="pre">(List[str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.scheduled_after" title="qcportal.internal_jobs.models.InternalJobQueryFilters.scheduled_after"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scheduled_after</span> <span class="pre">(datetime.datetime</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.scheduled_before" title="qcportal.internal_jobs.models.InternalJobQueryFilters.scheduled_before"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scheduled_before</span> <span class="pre">(datetime.datetime</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.status" title="qcportal.internal_jobs.models.InternalJobQueryFilters.status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">status</span> <span class="pre">(List[qcportal.internal_jobs.models.InternalJobStatusEnum]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.user" title="qcportal.internal_jobs.models.InternalJobQueryFilters.user"><code class="xref py py-obj docutils literal notranslate"><span class="pre">user</span> <span class="pre">(List[int</span> <span class="pre">|</span> <span class="pre">str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.added_after" title="qcportal.internal_jobs.models.InternalJobQueryFilters.added_after"><code class="xref py py-obj docutils literal notranslate"><span class="pre">added_after</span> <span class="pre">(Optional[datetime.datetime])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.added_before" title="qcportal.internal_jobs.models.InternalJobQueryFilters.added_before"><code class="xref py py-obj docutils literal notranslate"><span class="pre">added_before</span> <span class="pre">(Optional[datetime.datetime])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.cursor" title="qcportal.internal_jobs.models.InternalJobQueryFilters.cursor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cursor</span> <span class="pre">(Optional[int])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.exclude" title="qcportal.internal_jobs.models.InternalJobQueryFilters.exclude"><code class="xref py py-obj docutils literal notranslate"><span class="pre">exclude</span> <span class="pre">(Optional[List[str]])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.include" title="qcportal.internal_jobs.models.InternalJobQueryFilters.include"><code class="xref py py-obj docutils literal notranslate"><span class="pre">include</span> <span class="pre">(Optional[List[str]])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.job_id" title="qcportal.internal_jobs.models.InternalJobQueryFilters.job_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">job_id</span> <span class="pre">(Optional[List[int]])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_after" title="qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_after"><code class="xref py py-obj docutils literal notranslate"><span class="pre">last_updated_after</span> <span class="pre">(Optional[datetime.datetime])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_before" title="qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_before"><code class="xref py py-obj docutils literal notranslate"><span class="pre">last_updated_before</span> <span class="pre">(Optional[datetime.datetime])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.limit" title="qcportal.internal_jobs.models.InternalJobQueryFilters.limit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">limit</span> <span class="pre">(Optional[int])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.name" title="qcportal.internal_jobs.models.InternalJobQueryFilters.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span> <span class="pre">(Optional[List[str]])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.runner_hostname" title="qcportal.internal_jobs.models.InternalJobQueryFilters.runner_hostname"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runner_hostname</span> <span class="pre">(Optional[List[str]])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.scheduled_after" title="qcportal.internal_jobs.models.InternalJobQueryFilters.scheduled_after"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scheduled_after</span> <span class="pre">(Optional[datetime.datetime])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.scheduled_before" title="qcportal.internal_jobs.models.InternalJobQueryFilters.scheduled_before"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scheduled_before</span> <span class="pre">(Optional[datetime.datetime])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.status" title="qcportal.internal_jobs.models.InternalJobQueryFilters.status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">status</span> <span class="pre">(Optional[List[qcportal.internal_jobs.models.InternalJobStatusEnum]])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.user" title="qcportal.internal_jobs.models.InternalJobQueryFilters.user"><code class="xref py py-obj docutils literal notranslate"><span class="pre">user</span> <span class="pre">(Optional[List[Union[int,</span> <span class="pre">str]]])</span></code></a></p></li>
 </ul>
 </dd>
 <dt class="field-odd">Validators<span class="colon">:</span></dt>
@@ -656,32 +675,32 @@ document.write(`
 </dl>
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobQueryFilters.job_id">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">job_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.job_id" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">job_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.job_id" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobQueryFilters.name">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.name" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.name" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobQueryFilters.user">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">user</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.user" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">user</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.user" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobQueryFilters.runner_hostname">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">runner_hostname</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.runner_hostname" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">runner_hostname</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.runner_hostname" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobQueryFilters.status">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobStatusEnum" title="qcportal.internal_jobs.models.InternalJobStatusEnum"><span class="pre">InternalJobStatusEnum</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.status" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobStatusEnum" title="qcportal.internal_jobs.models.InternalJobStatusEnum"><span class="pre">InternalJobStatusEnum</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.status" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_before">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">last_updated_before</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_before" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">last_updated_before</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_before" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Validated by<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -693,7 +712,7 @@ document.write(`
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_after">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">last_updated_after</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_after" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">last_updated_after</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_after" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Validated by<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -705,7 +724,7 @@ document.write(`
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobQueryFilters.added_before">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">added_before</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.added_before" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">added_before</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.added_before" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Validated by<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -717,7 +736,7 @@ document.write(`
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobQueryFilters.added_after">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">added_after</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.added_after" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">added_after</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.added_after" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Validated by<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -729,7 +748,7 @@ document.write(`
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobQueryFilters.scheduled_before">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scheduled_before</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.scheduled_before" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scheduled_before</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.scheduled_before" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Validated by<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -741,7 +760,7 @@ document.write(`
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobQueryFilters.scheduled_after">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scheduled_after</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.scheduled_after" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scheduled_after</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.scheduled_after" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Validated by<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -753,17 +772,17 @@ document.write(`
 
 <dl class="py method pydantic_validator">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobQueryFilters.parse_dates">
-<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_after" title="qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_after"><em class="xref py py-obj"><span class="pre">last_updated_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.scheduled_before" title="qcportal.internal_jobs.models.InternalJobQueryFilters.scheduled_before"><em class="xref py py-obj"><span class="pre">scheduled_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.scheduled_after" title="qcportal.internal_jobs.models.InternalJobQueryFilters.scheduled_after"><em class="xref py py-obj"><span class="pre">scheduled_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.added_before" title="qcportal.internal_jobs.models.InternalJobQueryFilters.added_before"><em class="xref py py-obj"><span class="pre">added_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.added_after" title="qcportal.internal_jobs.models.InternalJobQueryFilters.added_after"><em class="xref py py-obj"><span class="pre">added_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_before" title="qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_before"><em class="xref py py-obj"><span class="pre">last_updated_before</span></em></a><a class="reference internal" href="../_modules/qcportal/internal_jobs/models.html#InternalJobQueryFilters.parse_dates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.added_after" title="qcportal.internal_jobs.models.InternalJobQueryFilters.added_after"><em class="xref py py-obj"><span class="pre">added_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.scheduled_before" title="qcportal.internal_jobs.models.InternalJobQueryFilters.scheduled_before"><em class="xref py py-obj"><span class="pre">scheduled_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.added_before" title="qcportal.internal_jobs.models.InternalJobQueryFilters.added_before"><em class="xref py py-obj"><span class="pre">added_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_before" title="qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_before"><em class="xref py py-obj"><span class="pre">last_updated_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.scheduled_after" title="qcportal.internal_jobs.models.InternalJobQueryFilters.scheduled_after"><em class="xref py py-obj"><span class="pre">scheduled_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_after" title="qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_after"><em class="xref py py-obj"><span class="pre">last_updated_after</span></em></a><a class="reference internal" href="../_modules/qcportal/internal_jobs/models.html#InternalJobQueryFilters.parse_dates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.parse_dates" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method pydantic_validator">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobQueryFilters.validate_lists">
-<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_lists</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.limit" title="qcportal.internal_jobs.models.InternalJobQueryFilters.limit"><em class="xref py py-obj"><span class="pre">limit</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.cursor" title="qcportal.internal_jobs.models.InternalJobQueryFilters.cursor"><em class="xref py py-obj"><span class="pre">cursor</span></em></a><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.validate_lists" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_lists</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.cursor" title="qcportal.internal_jobs.models.InternalJobQueryFilters.cursor"><em class="xref py py-obj"><span class="pre">cursor</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.limit" title="qcportal.internal_jobs.models.InternalJobQueryFilters.limit"><em class="xref py py-obj"><span class="pre">limit</span></em></a><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.validate_lists" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobQueryFilters.limit">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">limit</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.limit" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">limit</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.limit" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Validated by<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -775,7 +794,7 @@ document.write(`
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobQueryFilters.cursor">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cursor</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.cursor" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cursor</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.cursor" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Validated by<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -787,19 +806,19 @@ document.write(`
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobQueryFilters.include">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">include</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.include" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">include</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.include" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobQueryFilters.exclude">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exclude</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.exclude" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exclude</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.exclude" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobQueryIterator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InternalJobQueryIterator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_filters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/internal_jobs/models.html#InternalJobQueryIterator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryIterator" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InternalJobQueryIterator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_filters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/internal_jobs/models.html#InternalJobQueryIterator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryIterator" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QueryIteratorBase</span></code>[<a class="reference internal" href="#qcportal.internal_jobs.models.InternalJob" title="qcportal.internal_jobs.models.InternalJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">InternalJob</span></code></a>]</p>
 <p>Iterator for internal job queries</p>
 <p>This iterator transparently handles batching and pagination over the results
@@ -815,7 +834,7 @@ of an internal job query.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobQueryIterator.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryIterator.reset" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobQueryIterator.reset" title="Permalink to this definition">#</a></dt>
 <dd><p>Starts retrieval of results from the beginning again</p>
 </dd></dl>
 
@@ -983,7 +1002,7 @@ of an internal job query.</p>
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.2.6.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
         </p>
         
 
