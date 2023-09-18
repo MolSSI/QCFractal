@@ -28,6 +28,7 @@ We recommend starting with our 15 minutes to QCArchive tutorial.
 
 .. toctree::
    :maxdepth: 1
+   :caption: Overview:
    
    qca_15min.ipynb
 
@@ -37,7 +38,7 @@ Tutorials
 
 .. toctree::
    :maxdepth: 1
-   :caption: Contents:
+   :caption: Quickstart Guides:
 
    record_retrieval.ipynb
    record_query.ipynb

@@ -14,8 +14,10 @@ html[data-theme="dark"] {
 	--pst-color-warning: #ed1c24;
 	--pst-color-primary-highlight: #288ec5;
 	--pst-color-background: #1A1A1A;
+	--pst-color-on-background: #222222;
+	--pst-color-surface: #222222;
 	--pst-color-secondary: #513D92;
-	--pst-color-secondary-highlight: #5f48a9;
+	--pst-color-secondary-highlight: #stats5f48a9;
 }
 
 html[data-theme="light"] a:hover {
@@ -28,12 +30,6 @@ html[data-theme="dark"] h1, html[data-theme="dark"] h2, html[data-theme="dark"] 
 
 a.headerlink {
     color: var(--pst-color-primary-highlight);
-}
-
-nav.bd-links li>a {
-    color: var(--pst-color-primary);
-    display: block;
-    padding: 0.25rem 0;
 }
 
 
