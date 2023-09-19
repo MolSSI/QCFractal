@@ -74,7 +74,7 @@ def after_request_func(response: Response):
         if real_ip:
             log["ip_address"] = real_ip
 
-        log["user_agent"] = request.headers["User-Agent"]
+        log["user_agent"] = request.headers.get("User-Agent", "")
 
         log["request_bytes"] = 0 if g.request_bytes is None else g.request_bytes
         log["request_duration"] = request_duration
