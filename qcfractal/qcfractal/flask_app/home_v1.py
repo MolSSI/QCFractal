@@ -2,11 +2,11 @@ from typing import Optional
 
 from flask import Blueprint, current_app, redirect, abort, send_from_directory
 
-home_blueprint = Blueprint("home", __name__)
+home_v1 = Blueprint("home", __name__)
 
 
-@home_blueprint.route("/", methods=["GET"])
-@home_blueprint.route("/<path:file_path>", methods=["GET"])
+@home_v1.route("/", methods=["GET"])
+@home_v1.route("/<path:file_path>", methods=["GET"])
 def homepage(file_path: Optional[str] = None):
     # If the root is accessed, serve the static homepage site or do a redirect
     # If a specific file is accessed, only try to serve it from the directory

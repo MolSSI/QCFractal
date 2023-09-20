@@ -1,9 +1,9 @@
 from flask import current_app
 
-from qcfractal.api_v1.blueprint import api_v1
-from qcfractal.api_v1.helpers import wrap_route
-from qcfractal.compute_v1.blueprint import compute_v1
 from qcfractal.flask_app import storage_socket
+from qcfractal.flask_app.api_v1.blueprint import api_v1
+from qcfractal.flask_app.api_v1.helpers import wrap_route
+from qcfractal.flask_app.compute_v1.blueprint import compute_v1
 from qcportal.base_models import CommonBulkGetNamesBody
 from qcportal.exceptions import LimitExceededError
 from qcportal.managers import (

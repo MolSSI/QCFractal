@@ -7,16 +7,15 @@ This class handles connecting to the server and exposing all the functionality o
 Connecting to the server is handled by the constructor of the :class:`~qcportal.client.PortalClient` class.
 
 The first parameter is the address or URI of the server you with to connect to (including ``http``/``https``).
-If no address is given, then by default the client will connect to the public, MolSSI-hosted server.
 
 .. tab-set::
 
   .. tab-item:: PYTHON
 
     >>> from qcportal import PortalClient
-    >>> client = PortalClient()
+    >>> client = PortalClient("https://ml.qcarchive.molssi.org")
     >>> print(client.server_name)
-    MolSSI Public QCArchive Server
+    The MolSSI ML QCFractal Server
 
 However, you can specify the address of another server. Here we connect to the MolSSI-hosted
 public demonstration server

@@ -361,13 +361,18 @@ class BaseDatasetSocket:
                 raise MissingDataError(f"Could not find dataset with type={self.dataset_type} and {dataset_id}")
 
             if ds.name != new_metadata.name:
-                stmt2 = select(self.dataset_orm.id)
-                stmt2 = stmt2.where(self.dataset_orm.dataset_type == self.dataset_type)
-                stmt2 = stmt2.where(self.dataset_orm.lname == new_metadata.name.lower())
-                existing = session.execute(stmt2).scalar_one_or_none()
 
-                if existing:
-                    raise AlreadyExistsError(f"{self.dataset_type} dataset named '{new_metadata.name}' already exists")
+                # If only change in case, no need to check if it already exists
+                if ds.name.lower() != new_metadata.name.lower():
+                    stmt2 = select(self.dataset_orm.id)
+                    stmt2 = stmt2.where(self.dataset_orm.dataset_type == self.dataset_type)
+                    stmt2 = stmt2.where(self.dataset_orm.lname == new_metadata.name.lower())
+                    existing = session.execute(stmt2).scalar_one_or_none()
+
+                    if existing:
+                        raise AlreadyExistsError(
+                            f"{self.dataset_type} dataset named '{new_metadata.name}' already exists"
+                        )
 
                 ds.name = new_metadata.name
 
@@ -570,6 +575,10 @@ class BaseDatasetSocket:
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
         """
+
+        specification_name_map = {k: v for k, v in specification_name_map.items() if k != v}
+        if not specification_name_map:
+            return
 
         stmt = select(self.specification_orm)
         stmt = stmt.where(self.specification_orm.dataset_id == dataset_id)
@@ -804,6 +813,11 @@ class BaseDatasetSocket:
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
         """
+
+        # strip out any renames that don't rename
+        entry_name_map = {k: v for k, v in entry_name_map.items() if k != v}
+        if not entry_name_map:
+            return
 
         stmt = select(self.entry_orm)
         stmt = stmt.where(self.entry_orm.dataset_id == dataset_id)

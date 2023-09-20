@@ -1,4 +1,4 @@
-from qcfractal.dashboard_v1.blueprint import dashboard_v1
+from qcfractal.flask_app.dashboard_v1.blueprint import dashboard_v1
 
 
 @dashboard_v1.route("/home", methods=["GET"])

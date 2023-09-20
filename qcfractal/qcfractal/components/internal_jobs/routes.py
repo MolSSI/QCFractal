@@ -1,8 +1,8 @@
 from flask import current_app
 
-from qcfractal.api_v1.blueprint import api_v1
-from qcfractal.api_v1.helpers import wrap_route
 from qcfractal.flask_app import storage_socket
+from qcfractal.flask_app.api_v1.blueprint import api_v1
+from qcfractal.flask_app.api_v1.helpers import wrap_route
 from qcportal.exceptions import InvalidUpdateError
 from qcportal.internal_jobs import InternalJobQueryFilters, InternalJobStatusEnum
 from qcportal.utils import calculate_limit

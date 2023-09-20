@@ -133,3 +133,81 @@ def test_dataset_client_query_dataset_records(
     ds.remove_records(entry_names="test_molecule_2", specification_names="spec_1", delete_records=True)
     rec_info = snowflake_client.query_dataset_records([rec_id_2])
     assert len(rec_info) == 0
+
+
+def test_dataset_rename(snowflake_client: PortalClient):
+
+    ds = snowflake_client.add_dataset("singlepoint", "Test dataset")
+    assert ds.name == "Test dataset"
+    ds_id = ds.id
+    assert ds.status() == {}
+
+    ds.set_name("Different name")
+    ds = snowflake_client.get_dataset_by_id(ds_id)
+    assert ds.name == "Different name"
+
+    ds.set_name("different name")
+    ds = snowflake_client.get_dataset_by_id(ds_id)
+    assert ds.name == "different name"
+
+
+def test_dataset_rename_specifications(snowflake_client: PortalClient):
+
+    ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
+    assert ds.status() == {}
+
+    input_spec, molecule, _ = load_test_data("sp_psi4_peroxide_energy_wfn")
+    ds.add_specification("spec_1", input_spec)
+
+    assert len(ds.specifications) == 1
+
+    ds = snowflake_client.get_dataset_by_id(ds.id)
+    assert len(ds.specifications) == 1
+    ds.rename_specification("spec_1", "spec_2")
+
+    assert "spec_2" in ds.specifications
+    assert "spec_1" not in ds.specifications
+
+    ds = snowflake_client.get_dataset_by_id(ds.id)
+    assert "spec_2" in ds.specifications
+    assert "spec_1" not in ds.specifications
+
+    # Rename without actually renaming
+    ds.rename_specification("spec_2", "spec_2")
+    assert "spec_2" in ds.specifications
+    assert "spec_1" not in ds.specifications
+
+    ds = snowflake_client.get_dataset_by_id(ds.id)
+    assert "spec_2" in ds.specifications
+    assert "spec_1" not in ds.specifications
+
+
+def test_dataset_rename_entries(snowflake_client: PortalClient):
+
+    ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
+    assert ds.status() == {}
+
+    input_spec, molecule, _ = load_test_data("sp_psi4_peroxide_energy_wfn")
+    molecule_2 = Molecule(symbols=["b"], geometry=[0, 0, 0])
+
+    ds.add_entry(name="test_molecule", molecule=molecule)
+    ds.add_entry(name="test_molecule_2", molecule=molecule_2)
+
+    assert len(ds.entry_names) == 2
+
+    ds = snowflake_client.get_dataset_by_id(ds.id)
+    assert len(ds.entry_names) == 2
+    ds.rename_entries({"test_molecule": "different_name"})
+
+    assert "different_name" in ds.entry_names
+    assert "test_molecule" not in ds.entry_names
+    assert "test_molecule_2" in ds.entry_names
+
+    ds.rename_entries({"test_molecule_2": "test_molecule_2"})
+
+    ds = snowflake_client.get_dataset_by_id(ds.id)
+    assert len(ds.entry_names) == 2
+
+    assert "different_name" in ds.entry_names
+    assert "test_molecule" not in ds.entry_names
+    assert "test_molecule_2" in ds.entry_names

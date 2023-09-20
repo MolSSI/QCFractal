@@ -2,9 +2,9 @@ from typing import Optional, Tuple, Union
 
 from flask import current_app, g
 
-from qcfractal.api_v1.blueprint import api_v1
-from qcfractal.api_v1.helpers import wrap_route
 from qcfractal.flask_app import storage_socket
+from qcfractal.flask_app.api_v1.blueprint import api_v1
+from qcfractal.flask_app.api_v1.helpers import wrap_route
 from qcportal.auth import UserInfo, RoleInfo, GroupInfo
 from qcportal.exceptions import (
     InconsistentUpdateError,

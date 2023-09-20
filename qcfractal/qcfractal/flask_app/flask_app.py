@@ -10,11 +10,11 @@ from flask_jwt_extended import JWTManager
 from werkzeug.routing import IntegerConverter
 
 from qcfractal.db_socket.socket import SQLAlchemySocket
-from .home import home_blueprint
-from ..api_v1.blueprint import api_v1
-from ..auth_v1.blueprint import auth_v1
-from ..compute_v1.blueprint import compute_v1
-from ..dashboard_v1.blueprint import dashboard_v1
+from qcfractal.flask_app.auth_v1.blueprint import auth_v1
+from qcfractal.flask_app.dashboard_v1.blueprint import dashboard_v1
+from .api_v1.blueprint import api_v1
+from .compute_v1.blueprint import compute_v1
+from .home_v1 import home_v1
 
 if TYPE_CHECKING:
     from ..config import FractalConfig
@@ -86,12 +86,12 @@ def create_flask_app(
 
     # Register all the routes in the other files.
     # Must be done before registering the blueprint
-    importlib.import_module("qcfractal.api_v1.routes")
-    importlib.import_module("qcfractal.auth_v1.routes")
-    importlib.import_module("qcfractal.dashboard_v1.routes")
+    importlib.import_module("qcfractal.flask_app.api_v1.routes")
+    importlib.import_module("qcfractal.flask_app.auth_v1.routes")
+    importlib.import_module("qcfractal.flask_app.dashboard_v1.routes")
     importlib.import_module("qcfractal.components.register_all")
 
-    app.register_blueprint(home_blueprint)
+    app.register_blueprint(home_v1)
     app.register_blueprint(api_v1)
     app.register_blueprint(auth_v1)
     app.register_blueprint(compute_v1)
