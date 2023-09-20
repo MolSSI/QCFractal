@@ -1,8 +1,6 @@
 from flask import current_app
 
 from qcfractal import __version__ as qcfractal_version
-from qcfractal.api_v1.blueprint import api_v1
-from qcfractal.api_v1.helpers import wrap_route
 from qcfractal.client_versions import (
     client_version_lower_limit,
     client_version_upper_limit,
@@ -10,6 +8,8 @@ from qcfractal.client_versions import (
     manager_version_upper_limit,
 )
 from qcfractal.flask_app import storage_socket
+from qcfractal.flask_app.api_v1.blueprint import api_v1
+from qcfractal.flask_app.api_v1.helpers import wrap_route
 from qcportal.serverinfo import (
     AccessLogSummaryFilters,
     AccessLogQueryFilters,
