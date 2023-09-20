@@ -121,7 +121,8 @@ class PortalClient(PortalClientBase):
         Parameters
         ----------
         address
-            The IP and port of the FractalServer instance ("192.168.1.1:8888")
+            The host or IP address of the FractalServer instance, including protocol and port if necessary
+            ("https://ml.qcarchive.molssi.org", "http://192.168.1.10:8888")
         username
             The username to authenticate with.
         password
