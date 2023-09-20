@@ -12,8 +12,8 @@ from flask_jwt_extended import (
 )
 from werkzeug.exceptions import InternalServerError, HTTPException
 
-from qcfractal.auth_v1.helpers import access_token_from_user
 from qcfractal.flask_app import storage_socket
+from qcfractal.flask_app.helpers import access_token_from_user
 from qcportal.auth import UserInfo, RoleInfo
 from qcportal.exceptions import UserReportableError, AuthenticationFailure, ComputeManagerError
 from .home import home_blueprint

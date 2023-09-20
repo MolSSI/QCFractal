@@ -9,9 +9,8 @@ from flask_jwt_extended import (
 )
 
 from qcfractal.auth_v1.blueprint import auth_v1
-from qcfractal.auth_v1.helpers import login_and_get_jwt, access_token_from_user
 from qcfractal.flask_app import storage_socket
-from qcfractal.flask_app.helpers import get_all_endpoints
+from qcfractal.flask_app.helpers import get_all_endpoints, access_token_from_user, login_and_get_jwt
 from qcportal.auth import UserInfo, RoleInfo
 
 
