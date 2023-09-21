@@ -94,6 +94,7 @@ def add_dataset_v1(dataset_type: str, body_data: DatasetAddBody):
         metadata=body_data.metadata,
         owner_user=g.username,
         owner_group=body_data.owner_group,
+        existing_ok=body_data.existing_ok,
     )
 
 

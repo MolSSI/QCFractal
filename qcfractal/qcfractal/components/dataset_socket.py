@@ -284,6 +284,7 @@ class BaseDatasetSocket:
         metadata: Dict[str, Any],
         owner_user: Optional[Union[int, str]],
         owner_group: Optional[Union[int, str]],
+        existing_ok: bool,
         *,
         session: Optional[Session] = None,
     ) -> int:
@@ -321,10 +322,15 @@ class BaseDatasetSocket:
             stmt = select(self.dataset_orm.id)
             stmt = stmt.where(self.dataset_orm.lname == name.lower())
             stmt = stmt.where(self.dataset_orm.dataset_type == self.dataset_type)
-            existing = session.execute(stmt).scalar_one_or_none()
+            existing_id = session.execute(stmt).scalar_one_or_none()
 
-            if existing is not None:
-                raise AlreadyExistsError(f"Dataset with type='{self.dataset_type}' and name='{name}' already exists")
+            if existing_id is not None:
+                if existing_ok:
+                    return existing_id
+                else:
+                    raise AlreadyExistsError(
+                        f"Dataset with type='{self.dataset_type}' and name='{name}' already exists"
+                    )
 
             ds_orm.owner_user_id = user_id
             ds_orm.owner_group_id = group_id

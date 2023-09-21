@@ -65,10 +65,14 @@ def test_dataset_client_add_same_name(snowflake_client: PortalClient):
 
 
 def test_dataset_client_add_duplicate(snowflake_client: PortalClient):
-    snowflake_client.add_dataset("singlepoint", "Test dataset")
+    ds = snowflake_client.add_dataset("singlepoint", "Test dataset")
 
     with pytest.raises(PortalRequestError, match=r"Dataset.*already exists"):
+        # existing_ok = False by default
         snowflake_client.add_dataset("singlepoint", "TEST DATASET")
+
+    ds2 = snowflake_client.add_dataset("singlepoint", "Test dataset", existing_ok=True)
+    assert ds.id == ds2.id
 
 
 def test_dataset_client_delete_empty(snowflake_client: PortalClient):

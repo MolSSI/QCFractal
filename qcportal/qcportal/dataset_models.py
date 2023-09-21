@@ -1174,6 +1174,7 @@ class DatasetAddBody(RestModelBase):
     default_priority: PriorityEnum
     metadata: Dict[str, Any]
     owner_group: Optional[str]
+    existing_ok: bool = False
 
 
 class DatasetModifyMetadata(RestModelBase):
