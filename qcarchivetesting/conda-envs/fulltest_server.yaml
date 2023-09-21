@@ -20,6 +20,7 @@ dependencies:
   - tqdm
   - pandas
   - pyjwt
+  - retry
 
   # QCFractal dependencies
   - flask

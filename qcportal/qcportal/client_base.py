@@ -16,6 +16,7 @@ import pydantic
 import requests
 import yaml
 from pkg_resources import parse_version
+from retry.api import retry_call
 
 from . import __version__
 from .exceptions import AuthenticationFailure
@@ -283,7 +284,8 @@ class PortalClientBase:
         *,
         body: Optional[Union[bytes, str]] = None,
         url_params: Optional[Dict[str, Any]] = None,
-        retry: Optional[bool] = True,
+        internal_retry: Optional[bool] = True,
+        allow_retries: bool = True,
     ) -> requests.Response:
 
         # If JWT token is expired, automatically renew it
@@ -303,7 +305,24 @@ class PortalClientBase:
             pretty_print_request(prep_req)
 
         try:
-            r = self._req_session.send(prep_req, verify=self._verify, timeout=self._timeout)
+            if allow_retries:
+                # Use the retry package. This will catch exceptions
+                r = retry_call(
+                    self._req_session.send,
+                    fkwargs={
+                        "request": prep_req,
+                        "verify": self._verify,
+                        "timeout": self._timeout,
+                    },
+                    exceptions=(requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout),
+                    tries=5,
+                    delay=0.5,
+                    max_delay=5,
+                    backoff=2,
+                )
+            else:
+                r = self._req_session.send(prep_req, verify=self._verify, timeout=self._timeout)
+
             if self.debug_requests:
                 pretty_print_response(r)
 
@@ -315,9 +334,9 @@ class PortalClientBase:
         # If JWT token expired, automatically renew it and retry once. This should have been caught above,
         # but can happen in rare instances where the token expires between the time we check it and the time
         # we use it.
-        if retry and (r.status_code == 401) and "Token has expired" in r.json()["msg"]:
+        if internal_retry and (r.status_code == 401) and "Token has expired" in r.json()["msg"]:
             self._refresh_JWT_token()
-            return self._request(method, endpoint, body=body, url_params=url_params, retry=False)
+            return self._request(method, endpoint, body=body, url_params=url_params, internal_retry=False)
 
         if r.status_code != 200:
             try:
@@ -343,6 +362,7 @@ class PortalClientBase:
         url_params_model: Optional[Type[_U]] = None,
         body: Optional[Union[_T, Dict[str, Any]]] = None,
         url_params: Optional[Union[_U, Dict[str, Any]]] = None,
+        allow_retries: bool = True,
     ) -> _V:
 
         # If body_model or url_params_model are None, then use the type given
@@ -364,7 +384,9 @@ class PortalClientBase:
         if isinstance(parsed_url_params, pydantic.BaseModel):
             parsed_url_params = parsed_url_params.dict()
 
-        r = self._request(method, endpoint, body=serialized_body, url_params=parsed_url_params)
+        r = self._request(
+            method, endpoint, body=serialized_body, url_params=parsed_url_params, allow_retries=allow_retries
+        )
         d = deserialize(r.content, r.headers["Content-Type"])
 
         if response_model is None:
