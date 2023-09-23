@@ -89,15 +89,15 @@ class BaseDataset(BaseModel):
     ########################################
     # Caches of information
     ########################################
-    entry_names_: List[str] = Field([], alias="entry_names")
+    _entry_names: List[str] = PrivateAttr([])
 
     # To be overridden by the derived class with more specific types
-    specifications_: Dict[str, Any] = {}
-    entries_: Dict[str, Any] = {}
-    record_map_: Dict[Tuple[str, str], Any] = {}
+    _specifications: Dict[str, Any] = PrivateAttr({})
+    _entries: Dict[str, Any] = PrivateAttr({})
+    _record_map: Dict[Tuple[str, str], Any] = PrivateAttr({})
 
     # Values computed outside QCA
-    contributed_values_: Optional[Dict[str, ContributedValues]] = None
+    _contributed_values: Optional[Dict[str, ContributedValues]] = PrivateAttr(None)
 
     #############################
     # Private non-pydantic fields
@@ -153,7 +153,7 @@ class BaseDataset(BaseModel):
         This may also be called from derived class propagate_client functions as well
         """
         self._client = client
-        for record in self.record_map_.values():
+        for record in self._record_map.values():
             record.populate_client(client)
 
     def _add_entries(self, entries: Union[BaseModel, Sequence[BaseModel]]) -> InsertMetadata:
@@ -182,8 +182,8 @@ class BaseDataset(BaseModel):
 
             # If entry names have been fetched, add the new entry names
             # This should still be ok if there are no entries - they will be fetched if the list is empty
-            if self.entry_names_:
-                self.entry_names_.extend(x.name for x in entry_batch if x not in self.entry_names_)
+            if self._entry_names:
+                self._entry_names.extend(x.name for x in entry_batch if x not in self._entry_names)
 
             all_meta.append(meta)
 
@@ -397,10 +397,10 @@ class BaseDataset(BaseModel):
         if self.is_view:
             return self._view_data.get_specifications(self._specification_type)
         else:
-            if not self.specifications_:
+            if not self._specifications:
                 self.fetch_specifications()
 
-            return self.specifications_
+            return self._specifications
 
     @property
     def specification_names(self) -> List[str]:
@@ -415,7 +415,7 @@ class BaseDataset(BaseModel):
         self.assert_is_not_view()
         self.assert_online()
 
-        self.specifications_ = self._client.make_request(
+        self._specifications = self._client.make_request(
             "get",
             f"api/v1/datasets/{self.dataset_type}/{self.id}/specifications",
             Dict[str, self._specification_type],
@@ -431,10 +431,10 @@ class BaseDataset(BaseModel):
             "patch", f"api/v1/datasets/{self.dataset_type}/{self.id}/specifications", None, body=name_map
         )
 
-        self.specifications_ = {name_map.get(k, k): v for k, v in self.specifications_.items()}
+        self._specifications = {name_map.get(k, k): v for k, v in self._specifications.items()}
 
         # Renames the specifications in the record map
-        self.record_map_ = {(e, name_map.get(s, s)): r for (e, s), r in self.record_map_.items()}
+        self._record_map = {(e, name_map.get(s, s)): r for (e, s), r in self._record_map.items()}
 
     def delete_specification(self, name: str, delete_records: bool = False) -> DeleteMetadata:
         self.assert_is_not_view()
@@ -450,8 +450,8 @@ class BaseDataset(BaseModel):
         )
 
         # Delete locally-cached stuff
-        self.specifications_.pop(name, None)
-        self.record_map_ = {(e, s): r for (e, s), r in self.record_map_.items() if s != name}
+        self._specifications.pop(name, None)
+        self._record_map = {(e, s): r for (e, s), r in self._record_map.items() if s != name}
 
         return ret
 
@@ -467,7 +467,7 @@ class BaseDataset(BaseModel):
         self.assert_is_not_view()
         self.assert_online()
 
-        self.entry_names_ = self._client.make_request(
+        self._entry_names = self._client.make_request(
             "get",
             f"api/v1/datasets/{self.dataset_type}/{self.id}/entry_names",
             List[str],
@@ -504,7 +504,7 @@ class BaseDataset(BaseModel):
             body=body,
         )
 
-        self.entries_.update(fetched_entries)
+        self._entries.update(fetched_entries)
 
     def fetch_entries(
         self,
@@ -540,7 +540,7 @@ class BaseDataset(BaseModel):
 
         # Strip out existing entries if we aren't forcing refetching
         if not force_refetch:
-            entry_names = [x for x in entry_names if x not in self.entries_]
+            entry_names = [x for x in entry_names if x not in self._entries]
 
         batch_size: int = self._client.api_limits["get_dataset_entries"] // 4
         for entry_names_batch in chunk_iterable(entry_names, batch_size):
@@ -562,7 +562,7 @@ class BaseDataset(BaseModel):
             return entry_dict.get(entry_name)
         else:
             self.fetch_entries(entry_name, force_refetch=force_refetch)
-            return self.entries_.get(entry_name, None)
+            return self._entries.get(entry_name, None)
 
     def iterate_entries(
         self,
@@ -608,8 +608,8 @@ class BaseDataset(BaseModel):
             # Fetch from server
             batch_size: int = self._client.api_limits["get_dataset_entries"] // 4
 
-            if self.entries_ is None:
-                self.entries_ = {}
+            if self._entries is None:
+                self._entries = {}
 
             for entry_names_batch in chunk_iterable(entry_names, batch_size):
                 # If forcing refetching, then use the whole batch. Otherwise, strip out
@@ -617,13 +617,13 @@ class BaseDataset(BaseModel):
                 if force_refetch:
                     names_tofetch = entry_names_batch
                 else:
-                    names_tofetch = [x for x in entry_names_batch if x not in self.entries_]
+                    names_tofetch = [x for x in entry_names_batch if x not in self._entries]
 
                 self._internal_fetch_entries(names_tofetch)
 
                 # Loop over the whole batch (not just what we fetched)
                 for entry_name in entry_names_batch:
-                    entry = self.entries_.get(entry_name, None)
+                    entry = self._entries.get(entry_name, None)
 
                     if entry is not None:
                         yield entry
@@ -633,10 +633,10 @@ class BaseDataset(BaseModel):
         if self.is_view:
             return self._view_data.get_entry_names()
 
-        if not self.entry_names_:
+        if not self._entry_names:
             self.fetch_entry_names()
 
-        return self.entry_names_
+        return self._entry_names
 
     def rename_entries(self, name_map: Dict[str, str]):
         self.assert_is_not_view()
@@ -647,11 +647,11 @@ class BaseDataset(BaseModel):
         )
 
         # rename locally cached entries and stuff
-        self.entry_names_ = [name_map.get(x, x) for x in self.entry_names_]
-        self.entries_ = {name_map.get(k, k): v for k, v in self.entries_.items()}
+        self._entry_names = [name_map.get(x, x) for x in self._entry_names]
+        self._entries = {name_map.get(k, k): v for k, v in self._entries.items()}
 
         # Renames the entries in the record map
-        self.record_map_ = {(name_map.get(e, e), s): r for (e, s), r in self.record_map_.items()}
+        self._record_map = {(name_map.get(e, e), s): r for (e, s), r in self._record_map.items()}
 
     def delete_entries(self, names: Union[str, Iterable[str]], delete_records: bool = False) -> DeleteMetadata:
         self.assert_is_not_view()
@@ -668,9 +668,9 @@ class BaseDataset(BaseModel):
         )
 
         # Delete locally-cached stuff
-        self.entry_names_ = [x for x in self.entry_names_ if x not in names]
-        self.entries_ = {x: y for x, y in self.entries_.items() if x not in names}
-        self.record_map_ = {(e, s): r for (e, s), r in self.record_map_.items() if e not in names}
+        self._entry_names = [x for x in self._entry_names if x not in names]
+        self._entries = {x: y for x, y in self._entries.items() if x not in names}
+        self._record_map = {(e, s): r for (e, s), r in self._record_map.items() if e not in names}
 
         return ret
 
@@ -678,7 +678,7 @@ class BaseDataset(BaseModel):
     # Records
     ###########################
     def _lookup_record(self, entry_name: str, specification_name: str):
-        return self.record_map_.get((entry_name, specification_name), None)
+        return self._record_map.get((entry_name, specification_name), None)
 
     def _internal_fetch_records(
         self,
@@ -726,7 +726,7 @@ class BaseDataset(BaseModel):
         # Update the locally-stored records
         for rec_item, rec in zip(record_info, records):
             assert rec_item[2] == rec.id
-            self.record_map_[(rec_item[0], rec_item[1])] = rec
+            self._record_map[(rec_item[0], rec_item[1])] = rec
 
     def _internal_update_records(
         self,
@@ -758,7 +758,7 @@ class BaseDataset(BaseModel):
 
         # Get all the record ids that we store that correspond to the entries/specs
         existing_record_info = [
-            (e, s, r) for (e, s), r in self.record_map_.items() if e in entry_names and s in specification_names
+            (e, s, r) for (e, s), r in self._record_map.items() if e in entry_names and s in specification_names
         ]
 
         # Subset that we should check for updated records on the server
@@ -877,7 +877,7 @@ class BaseDataset(BaseModel):
 
                 # Prune records that already exist, and then fetch them
                 if not force_refetch:
-                    entry_names_batch = [x for x in entry_names_batch if (x, spec_name) not in self.record_map_]
+                    entry_names_batch = [x for x in entry_names_batch if (x, spec_name) not in self._record_map]
 
                 if entry_names_batch:
                     self._internal_fetch_records(entry_names_batch, [spec_name], status, include)
@@ -960,14 +960,14 @@ class BaseDataset(BaseModel):
 
                     # Handle existing records that need to be updated
                     if fetch_updated and not force_refetch:
-                        existing_batch = [x for x in entries_batch if (x, spec_name) in self.record_map_]
+                        existing_batch = [x for x in entries_batch if (x, spec_name) in self._record_map]
                         self._internal_update_records(existing_batch, [spec_name], status, include)
 
                     if force_refetch:
                         batch_tofetch = entries_batch
                     else:
                         # Filter if they already exist
-                        batch_tofetch = [x for x in entries_batch if (x, spec_name) not in self.record_map_]
+                        batch_tofetch = [x for x in entries_batch if (x, spec_name) not in self._record_map]
 
                     self._internal_fetch_records(batch_tofetch, [spec_name], status, include)
 
@@ -1003,8 +1003,8 @@ class BaseDataset(BaseModel):
         )
 
         # Delete locally-cached stuff
-        self.record_map_ = {
-            (e, s): r for (e, s), r in self.record_map_.items() if e not in entry_names and s not in specification_names
+        self._record_map = {
+            (e, s): r for (e, s), r in self._record_map.items() if e not in entry_names and s not in specification_names
         }
 
         return ret
@@ -1318,7 +1318,7 @@ class BaseDataset(BaseModel):
         self.assert_is_not_view()
         self.assert_online()
 
-        self.contributed_values_ = self._client.make_request(
+        self._contributed_values = self._client.make_request(
             "get",
             f"api/v1/datasets/{self.id}/contributed_values",
             Optional[Dict[str, ContributedValues]],

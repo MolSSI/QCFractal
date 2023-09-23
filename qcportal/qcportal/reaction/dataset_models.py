@@ -60,9 +60,9 @@ class ReactionDataset(BaseDataset):
     ########################################
     # Caches of information
     ########################################
-    specifications_: Dict[str, ReactionDatasetSpecification] = {}
-    entries_: Dict[str, ReactionDatasetEntry] = {}
-    record_map_: Dict[Tuple[str, str], ReactionRecord] = {}
+    _specifications: Dict[str, ReactionDatasetSpecification]
+    _entries: Dict[str, ReactionDatasetEntry]
+    _record_map: Dict[Tuple[str, str], ReactionRecord]
 
     # Needed by the base class
     _entry_type = ReactionDatasetEntry

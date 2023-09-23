@@ -49,9 +49,9 @@ class ManybodyDataset(BaseDataset):
     ########################################
     # Caches of information
     ########################################
-    specifications_: Dict[str, ManybodyDatasetSpecification] = {}
-    entries_: Dict[str, ManybodyDatasetEntry] = {}
-    record_map_: Dict[Tuple[str, str], ManybodyRecord] = {}
+    _specifications: Dict[str, ManybodyDatasetSpecification]
+    _entries: Dict[str, ManybodyDatasetEntry]
+    _record_map: Dict[Tuple[str, str], ManybodyRecord]
 
     # Needed by the base class
     _entry_type = ManybodyDatasetEntry

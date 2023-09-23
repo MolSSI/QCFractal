@@ -55,9 +55,9 @@ class TorsiondriveDataset(BaseDataset):
     ########################################
     # Caches of information
     ########################################
-    specifications_: Dict[str, TorsiondriveDatasetSpecification] = {}
-    entries_: Dict[str, TorsiondriveDatasetEntry] = {}
-    record_map_: Dict[Tuple[str, str], TorsiondriveRecord] = {}
+    _specifications: Dict[str, TorsiondriveDatasetSpecification]
+    _entries: Dict[str, TorsiondriveDatasetEntry]
+    _record_map: Dict[Tuple[str, str], TorsiondriveRecord]
 
     # Needed by the base class
     _entry_type = TorsiondriveDatasetEntry
