@@ -329,7 +329,7 @@ class BaseDataset(BaseModel):
 
     def assert_online(self):
         if self.offline:
-            raise RuntimeError("Dataset does not connected to a QCFractal server")
+            raise RuntimeError("Dataset is not connected to a QCFractal server")
 
     @property
     def record_count(self) -> int:
