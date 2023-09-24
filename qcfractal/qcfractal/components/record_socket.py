@@ -19,6 +19,7 @@ from sqlalchemy.orm import (
 )
 
 from qcfractal.components.auth.db_models import UserIDMapSubquery, GroupIDMapSubquery
+from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.db_socket.helpers import (
@@ -27,6 +28,7 @@ from qcfractal.db_socket.helpers import (
 )
 from qcportal.compression import CompressionEnum, compress, decompress
 from qcportal.exceptions import UserReportableError, MissingDataError
+from qcportal.managers.models import ManagerStatusEnum
 from qcportal.metadata_models import DeleteMetadata, UpdateMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
 from qcportal.utils import chunk_iterable
@@ -1832,3 +1834,59 @@ class RecordSocket:
             return self.undelete(record_id)
 
         raise RuntimeError(f"Unknown status to revert: ", revert_status)
+
+    def get_waiting_reason(self, record_id: int, *, session: Optional[Session] = None) -> Dict[str, Any]:
+        """
+        Determines why a record/task is waiting
+
+        This function takes the record ID, not the task ID
+        """
+
+        # For getting the record and task info
+        rec_stmt = select(
+            BaseRecordORM.status, BaseRecordORM.is_service, TaskQueueORM.tag, TaskQueueORM.required_programs
+        )
+        rec_stmt = rec_stmt.join(TaskQueueORM, TaskQueueORM.record_id == BaseRecordORM.id, isouter=True)
+        rec_stmt = rec_stmt.where(BaseRecordORM.id == record_id)
+
+        # All active managers
+        manager_stmt = select(ComputeManagerORM.name, ComputeManagerORM.tags, ComputeManagerORM.programs)
+        manager_stmt = manager_stmt.where(ComputeManagerORM.status == ManagerStatusEnum.active)
+
+        with self.root_socket.optional_session(session, True) as session:
+            rec = session.execute(rec_stmt).one_or_none()
+
+            if rec is None:
+                return {"reason": "Record does not exist"}
+
+            rec_status, rec_isservice, rec_tag, rec_programs = rec
+
+            if rec_isservice is True:
+                return {"reason": "Record is a service"}
+
+            if rec_status != RecordStatusEnum.waiting:
+                return {"reason": "Record is not waiting"}
+
+            if rec_tag is None or rec_programs is None:
+                return {"reason": "Missing task? This is a developer error"}
+
+            # Record is waiting. Test each active manager
+            managers = session.execute(manager_stmt).all()
+
+            if len(managers) == 0:
+                return {"reason": "No active managers"}
+
+            rec_programs = set(rec_programs)
+
+            ret = {"details": {}, "reason": "No manager matches programs & tags"}
+            for m_name, m_tags, m_programs in managers:
+                missing_programs = rec_programs - m_programs.keys()
+                if missing_programs:
+                    ret["details"][m_name] = f"Manager missing programs: {missing_programs}"
+                elif rec_tag not in m_tags and "*" not in m_tags:
+                    ret["details"][m_name] = f'Manager does not handle tag "{rec_tag}"'
+                else:
+                    ret["details"][m_name] = f"Manager is busy"
+                    ret["reason"] = f"Waiting for a free manager"
+
+            return ret

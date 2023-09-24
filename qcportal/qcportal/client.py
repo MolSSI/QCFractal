@@ -897,6 +897,26 @@ class PortalClient(PortalClientBase):
         body_data = RecordModifyBody(record_ids=record_ids, comment=comment)
         return self.make_request("patch", "api/v1/records", UpdateMetadata, body=body_data)
 
+    def get_waiting_reason(self, record_id: int) -> Dict[str, Any]:
+        """
+        Get the reason a record is in the waiting status
+
+        The return is a dictionary, with a 'reason' key containing the overall reason the record is
+        waiting. If appropriate, there is a 'details' key that contains information for each
+        active compute manager on why that manager is not able to pick up the record's task.
+
+        Parameters
+        ----------
+        record_id
+            The record ID to test
+
+        Returns
+        -------
+        :
+            A dictionary containing information about why the record is not being picked up by compute managers
+        """
+        return self.make_request("get", f"api/v1/records/{record_id}/waiting_reason", Dict[str, Any])
+
     ##############################################################
     # Singlepoint calculations
     ##############################################################
