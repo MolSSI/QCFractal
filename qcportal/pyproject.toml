@@ -32,7 +32,6 @@ dependencies = [
     "tqdm",
     "pandas",
     "pyjwt",
-    "retry",
 ]
 
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 import time
 from typing import (
@@ -16,7 +17,6 @@ import pydantic
 import requests
 import yaml
 from pkg_resources import parse_version
-from retry.api import retry_call
 
 from . import __version__
 from .exceptions import AuthenticationFailure
@@ -87,6 +87,8 @@ class PortalClientBase:
             If a Message-of-the-Day is available, display it
         """
 
+        self._logger = logging.getLogger("PortalClientBase")
+
         # For developer use and debugging
         self.debug_requests = False
 
@@ -111,11 +113,14 @@ class PortalClientBase:
 
         self._req_session.headers.update({"User-Agent": f"qcportal/{__version__}"})
 
-        self._timeout = 60
         self.encoding = "application/json"
 
-        # Mode toggle for network error testing, not public facing
-        self._mock_network_error = False
+        self.timeout = 60
+
+        # Handling retries of requests
+        self.retry_max = 5
+        self.retry_delay = 0.5
+        self.retry_backoff = 2
 
         # If no 3rd party verification, quiet urllib
         if self._verify is False:
@@ -305,23 +310,26 @@ class PortalClientBase:
             pretty_print_request(prep_req)
 
         try:
-            if allow_retries:
-                # Use the retry package. This will catch exceptions
-                r = retry_call(
-                    self._req_session.send,
-                    fkwargs={
-                        "request": prep_req,
-                        "verify": self._verify,
-                        "timeout": self._timeout,
-                    },
-                    exceptions=(requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout),
-                    tries=5,
-                    delay=0.5,
-                    max_delay=5,
-                    backoff=2,
-                )
+            if not allow_retries:
+                r = self._req_session.send(prep_req, verify=self._verify, timeout=self.timeout)
             else:
-                r = self._req_session.send(prep_req, verify=self._verify, timeout=self._timeout)
+                current_retries = 0
+                while True:
+                    try:
+                        r = self._req_session.send(prep_req, verify=self._verify, timeout=self.timeout)
+                        break
+                    except (requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout) as e:
+                        if current_retries >= self.retry_max:
+                            raise
+
+                        time_to_wait = self.retry_delay * (self.retry_backoff**current_retries)
+
+                        current_retries += 1
+                        self._logger.warning(
+                            f"Connection failed: {str(e)} - retrying in {time_to_wait} seconds "
+                            f"[{current_retries}/{self.retry_max}]"
+                        )
+                        time.sleep(time_to_wait)
 
             if self.debug_requests:
                 pretty_print_response(r)
