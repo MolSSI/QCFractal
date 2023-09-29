@@ -315,6 +315,7 @@ class PortalClient(PortalClientBase):
         default_priority: PriorityEnum = PriorityEnum.normal,
         metadata: Optional[Dict[str, Any]] = None,
         owner_group: Optional[str] = None,
+        existing_ok: bool = False,
     ) -> BaseDataset:
 
         if description is None:
@@ -342,6 +343,7 @@ class PortalClient(PortalClientBase):
             default_priority=default_priority,
             metadata=metadata,
             owner_group=owner_group,
+            existing_ok=existing_ok,
         )
 
         ds_id = self.make_request("post", f"api/v1/datasets/{dataset_type}", int, body=body)

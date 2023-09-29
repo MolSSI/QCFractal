@@ -44,6 +44,7 @@ def test_dataset_socket_submit_defaults(
         metadata={},
         owner_user=default_user,
         owner_group=default_group,
+        existing_ok=False,
     )
 
     ds = storage_socket.datasets.get(ds_id)
