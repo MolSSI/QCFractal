@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+import random
 import time
 from typing import (
     Any,
@@ -121,6 +122,7 @@ class PortalClientBase:
         self.retry_max = 5
         self.retry_delay = 0.5
         self.retry_backoff = 2
+        self.retry_jitter_fraction = 0.05
 
         # If no 3rd party verification, quiet urllib
         if self._verify is False:
@@ -322,11 +324,13 @@ class PortalClientBase:
                         if current_retries >= self.retry_max:
                             raise
 
-                        time_to_wait = self.retry_delay * (self.retry_backoff**current_retries)
+                        # eg, if jitter fraction is 0.05, then multiply by something on the range 0.95 to 1.05
+                        jitter = random.uniform(1.0 - self.retry_jitter_fraction, 1.0 + self.retry_jitter_fraction)
+                        time_to_wait = self.retry_delay * (self.retry_backoff**current_retries) * jitter
 
                         current_retries += 1
                         self._logger.warning(
-                            f"Connection failed: {str(e)} - retrying in {time_to_wait} seconds "
+                            f"Connection failed: {str(e)} - retrying in {time_to_wait:.2f} seconds "
                             f"[{current_retries}/{self.retry_max}]"
                         )
                         time.sleep(time_to_wait)
