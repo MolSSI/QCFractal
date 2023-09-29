@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>QCPortal API Reference &#8212; QCArchive 0.50.post48+ga262ad4c documentation</title>
+    <title>QCPortal API Reference &#8212; QCArchive 0.50.post50+g23c41033 documentation</title>
   
   
   
@@ -979,6 +979,26 @@ happen later. Soft delete can be undone with undelete</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="metadata.html#qcportal.metadata_models.UpdateMetadata" title="qcportal.metadata_models.UpdateMetadata"><em>UpdateMetadata</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.client.PortalClient.get_waiting_reason">
+<span class="sig-name descname"><span class="pre">get_waiting_reason</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/client.html#PortalClient.get_waiting_reason"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.client.PortalClient.get_waiting_reason" title="Permalink to this definition">#</a></dt>
+<dd><p>Get the reason a record is in the waiting status</p>
+<p>The return is a dictionary, with a ‘reason’ key containing the overall reason the record is
+waiting. If appropriate, there is a ‘details’ key that contains information for each
+active compute manager on why that manager is not able to pick up the record’s task.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>record_id</strong> (<em>int</em>) – The record ID to test</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary containing information about why the record is not being picked up by compute managers</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Dict</em>[str, <em>Any</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2300,6 +2320,7 @@ of a molecule query.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.undelete_records"><code class="docutils literal notranslate"><span class="pre">PortalClient.undelete_records()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.modify_records"><code class="docutils literal notranslate"><span class="pre">PortalClient.modify_records()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.add_comment"><code class="docutils literal notranslate"><span class="pre">PortalClient.add_comment()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.get_waiting_reason"><code class="docutils literal notranslate"><span class="pre">PortalClient.get_waiting_reason()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.add_singlepoints"><code class="docutils literal notranslate"><span class="pre">PortalClient.add_singlepoints()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.get_singlepoints"><code class="docutils literal notranslate"><span class="pre">PortalClient.get_singlepoints()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.query_singlepoints"><code class="docutils literal notranslate"><span class="pre">PortalClient.query_singlepoints()</span></code></a></li>

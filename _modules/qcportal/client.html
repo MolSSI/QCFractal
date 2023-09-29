@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.client &#8212; QCArchive 0.50.post48+ga262ad4c documentation</title>
+    <title>qcportal.client &#8212; QCArchive 0.50.post50+g23c41033 documentation</title>
   
   
   
@@ -1348,6 +1348,26 @@ document.write(`
 
         <span class="n">body_data</span> <span class="o">=</span> <span class="n">RecordModifyBody</span><span class="p">(</span><span class="n">record_ids</span><span class="o">=</span><span class="n">record_ids</span><span class="p">,</span> <span class="n">comment</span><span class="o">=</span><span class="n">comment</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;patch&quot;</span><span class="p">,</span> <span class="s2">&quot;api/v1/records&quot;</span><span class="p">,</span> <span class="n">UpdateMetadata</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body_data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PortalClient.get_waiting_reason"><a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_waiting_reason">[docs]</a>    <span class="k">def</span> <span class="nf">get_waiting_reason</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the reason a record is in the waiting status</span>
+
+<span class="sd">        The return is a dictionary, with a &#39;reason&#39; key containing the overall reason the record is</span>
+<span class="sd">        waiting. If appropriate, there is a &#39;details&#39; key that contains information for each</span>
+<span class="sd">        active compute manager on why that manager is not able to pick up the record&#39;s task.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        record_id</span>
+<span class="sd">            The record ID to test</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :</span>
+<span class="sd">            A dictionary containing information about why the record is not being picked up by compute managers</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/records/</span><span class="si">{</span><span class="n">record_id</span><span class="si">}</span><span class="s2">/waiting_reason&quot;</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span></div>
 
     <span class="c1">##############################################################</span>
     <span class="c1"># Singlepoint calculations</span>
