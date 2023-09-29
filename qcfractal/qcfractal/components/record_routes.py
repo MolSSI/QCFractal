@@ -56,6 +56,12 @@ def bulk_delete_records_v1(body_data: RecordDeleteBody):
     )
 
 
+@api_v1.route("/records/<int:record_id>/waiting_reason", methods=["GET"])
+@wrap_route("READ")
+def get_record_waiting_reason_v1(record_id: int):
+    return storage_socket.records.get_waiting_reason(record_id)
+
+
 #################################################################
 # Routes for individual record types
 # These can also be accessed through /records

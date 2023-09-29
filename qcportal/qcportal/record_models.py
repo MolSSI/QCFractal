@@ -540,6 +540,9 @@ class BaseRecord(BaseModel):
             self._fetch_service()
         return self.service_
 
+    def get_waiting_reason(self) -> Dict[str, Any]:
+        return self._client.make_request("get", f"api/v1/records/{self.id}/waiting_reason", Dict[str, Any])
+
     @property
     def comments(self) -> Optional[List[RecordComment]]:
         if self.comments_ is None:
