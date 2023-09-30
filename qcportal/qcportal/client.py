@@ -270,8 +270,8 @@ class PortalClient(PortalClientBase):
 
     def list_datasets_table(self) -> str:
         ds_list = self.list_datasets()
-        headers = ["id", "type", "name"]
-        table = [(x["id"], x["dataset_type"], x["dataset_name"]) for x in ds_list]
+        headers = ["id", "type", "record_count", "name"]
+        table = [(x["id"], x["dataset_type"], x["record_count"], x["dataset_name"]) for x in ds_list]
         return tabulate(table, headers=headers)
 
     def print_datasets_table(self) -> None:

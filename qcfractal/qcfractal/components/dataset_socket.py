@@ -77,6 +77,20 @@ class BaseDatasetSocket:
 
         return [stmt]
 
+    def get_record_counts_select(self):
+        """
+        Create a statement that selects the dataset id, entry_name, specification_name, and record_id
+        from a dataset (with appropriate labels).
+        """
+
+        # Use the common stuff here, but this function can be overridden
+
+        stmt = select(self.record_item_orm.dataset_id.label("dataset_id"), func.count().label("record_count")).group_by(
+            self.record_item_orm.dataset_id
+        )
+
+        return [stmt]
+
     def _submit(
         self,
         session: Session,
@@ -270,6 +284,35 @@ class BaseDatasetSocket:
             stats = session.execute(stmt).all()
             return [tuple(x) for x in stats]
 
+    def get_record_count(self, dataset_id: int, *, session: Optional[Session] = None) -> int:
+        """
+        Retrieve the number of records stored by the dataset
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Number of records that this dataset contains
+        """
+
+        stmt = select(func.count()).select_from(self.record_item_orm)
+        stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
+
+        with self.root_socket.optional_session(session, True) as session:
+            count = session.execute(stmt).scalar_one_or_none()
+
+            if count is None:
+                raise MissingDataError(f"Could not find dataset with type={self.dataset_type} and id={dataset_id}")
+
+            return count
+
     def add(
         self,
         name: str,
@@ -364,7 +407,7 @@ class BaseDatasetSocket:
             ds = session.execute(stmt).scalar_one_or_none()
 
             if ds is None:
-                raise MissingDataError(f"Could not find dataset with type={self.dataset_type} and {dataset_id}")
+                raise MissingDataError(f"Could not find dataset with type={self.dataset_type} and id={dataset_id}")
 
             if ds.name != new_metadata.name:
 
@@ -1273,14 +1316,22 @@ class DatasetSocket:
             self.neb.dataset_type: self.neb,
         }
 
-        # Get the SQL 'select' statements from the handlers
-        selects = []
+        # Get the SQL 'select' statements for records belonging to a dataset
+        # and union them into a CTE
+        record_selects = []
         for h in self._handler_map.values():
             sel = h.get_records_select()
-            selects.extend(sel)
+            record_selects.extend(sel)
 
-        # Union them into a CTE
-        self._record_cte = union(*selects).cte()
+        self._record_cte = union(*record_selects).cte()
+
+        # Same for record counts
+        counts_selects = []
+        for h in self._handler_map.values():
+            sel = h.get_record_counts_select()
+            counts_selects.extend(sel)
+
+        self._record_count_cte = union(*counts_selects).cte()
 
     def get_socket(self, dataset_type: str) -> BaseDatasetSocket:
         """
@@ -1375,11 +1426,19 @@ class DatasetSocket:
         """
 
         with self.root_socket.optional_session(session, True) as session:
-            stmt = select(BaseDatasetORM.id, BaseDatasetORM.dataset_type, BaseDatasetORM.name)
+            stmt = select(
+                BaseDatasetORM.id,
+                BaseDatasetORM.dataset_type,
+                BaseDatasetORM.name,
+                func.coalesce(self._record_count_cte.c.record_count, 0),
+            )
+            stmt = stmt.join(
+                self._record_count_cte, self._record_count_cte.c.dataset_id == BaseDatasetORM.id, isouter=True
+            )
             stmt = stmt.order_by(BaseDatasetORM.id.asc())
             r = session.execute(stmt).all()
 
-            return [{"id": x[0], "dataset_type": x[1], "dataset_name": x[2]} for x in r]
+            return [{"id": x[0], "dataset_type": x[1], "dataset_name": x[2], "record_count": x[3]} for x in r]
 
     def query_dataset_records(
         self,

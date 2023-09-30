@@ -243,6 +243,9 @@ def run_dataset_model_remove_record(snowflake_client, ds, test_entries, test_spe
 
 def run_dataset_model_submit(ds, test_entries, test_spec, record_compare):
 
+    assert ds.record_count == 0
+    assert ds._client.list_datasets()[0]["record_count"] == 0
+
     # test_entries[2] should have additional keywords
     assert test_entries[2].additional_keywords
 
@@ -292,6 +295,10 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare):
     else:
         assert rec.task.tag == "default_tag"
         assert rec.task.priority == PriorityEnum.low
+
+    record_count = len(ds.entry_names) * len(ds.specifications)
+    assert ds.record_count == record_count
+    assert ds._client.list_datasets()[0]["record_count"] == record_count
 
 
 def run_dataset_model_submit_missing(ds):
