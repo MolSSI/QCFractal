@@ -95,11 +95,11 @@ def test_record_client_reset(snowflake: QCATestingSnowflake):
 
     all_id = populate_records_status(storage_socket)
 
-    # Can reset only running, error
+    # Can reset only error
     time_0 = datetime.utcnow()
     meta = snowflake_client.reset_records(all_id)
     time_1 = datetime.utcnow()
-    assert meta.n_updated == 2
+    assert meta.n_updated == 1
 
     with storage_socket.session_scope() as session:
         rec = [session.get(BaseRecordORM, i) for i in all_id]
@@ -110,7 +110,7 @@ def test_record_client_reset(snowflake: QCATestingSnowflake):
 
         assert rec[0].status == RecordStatusEnum.waiting
         assert rec[1].status == RecordStatusEnum.complete
-        assert rec[2].status == RecordStatusEnum.waiting
+        assert rec[2].status == RecordStatusEnum.running
         assert rec[3].status == RecordStatusEnum.waiting
         assert rec[4].status == RecordStatusEnum.cancelled
         assert rec[5].status == RecordStatusEnum.deleted
@@ -126,7 +126,7 @@ def test_record_client_reset(snowflake: QCATestingSnowflake):
 
         assert rec[0].manager_name is None
         assert rec[1].manager_name is not None
-        assert rec[2].manager_name is None
+        assert rec[2].manager_name is not None
         assert rec[3].manager_name is None
         assert rec[4].manager_name is None
         assert rec[5].manager_name is None
@@ -134,7 +134,7 @@ def test_record_client_reset(snowflake: QCATestingSnowflake):
 
         assert rec[0].modified_on < time_0
         assert rec[1].modified_on < time_0
-        assert time_0 < rec[2].modified_on < time_1
+        assert rec[2].modified_on < time_0
         assert time_0 < rec[3].modified_on < time_1
         assert rec[4].modified_on < time_0
         assert rec[5].modified_on < time_0
@@ -162,7 +162,7 @@ def test_record_client_reset_missing(snowflake: QCATestingSnowflake):
     snowflake_client = snowflake.client()
 
     all_id = populate_records_status(storage_socket)
-    meta = snowflake_client.reset_records([all_id[2], 9999])
+    meta = snowflake_client.reset_records([all_id[3], 9999])
     assert meta.success is False
     assert meta.n_updated == 1
 
