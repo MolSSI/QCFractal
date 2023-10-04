@@ -45,38 +45,6 @@ def _get_task_key_generator(name: str):
 
 
 @pytest.mark.parametrize("procedure_file", test_files)
-def test_record_client_reset_running_service(snowflake: QCATestingSnowflake, procedure_file: str):
-    storage_socket = snowflake.get_storage_socket()
-    activated_manager_name, _ = snowflake.activate_manager()
-    snowflake_client = snowflake.client()
-
-    svc_id, result_data = _submit_test_data(storage_socket, procedure_file)
-    keygen = _get_task_key_generator(procedure_file)
-
-    finished, n_optimizations = run_service(storage_socket, activated_manager_name, svc_id, keygen, result_data, 1)
-    while not finished:
-        snowflake_client.reset_records([svc_id])
-
-        with storage_socket.session_scope() as session:
-            rec = session.get(BaseRecordORM, svc_id)
-            assert rec.status == RecordStatusEnum.waiting
-
-            # We should have also reset all the dependencies
-            statuses = [x.record.status for x in rec.service.dependencies]
-            assert all(x in [RecordStatusEnum.waiting, RecordStatusEnum.complete] for x in statuses)
-
-            # we need two iterations. The first will move the service to running,
-            # the second will actually iterate if necessary
-            finished, n_optimizations = run_service(
-                storage_socket, activated_manager_name, svc_id, keygen, result_data, 2
-            )
-
-            session.expire(rec)
-            rec = session.get(BaseRecordORM, svc_id)
-            assert rec.status in [RecordStatusEnum.running, RecordStatusEnum.complete]
-
-
-@pytest.mark.parametrize("procedure_file", test_files)
 def test_record_client_reset_error_service(snowflake: QCATestingSnowflake, procedure_file: str):
     storage_socket = snowflake.get_storage_socket()
     activated_manager_name, _ = snowflake.activate_manager()
@@ -93,6 +61,9 @@ def test_record_client_reset_error_service(snowflake: QCATestingSnowflake, proce
     failed_data = {x: failed_op for x in result_data.keys()}
 
     run_service(storage_socket, activated_manager_name, svc_id, keygen, result_data, 1)
+
+    # Make initial check for waiting service work
+    storage_socket.records.reset_running([svc_id])
 
     while True:
         snowflake_client.reset_records([svc_id])

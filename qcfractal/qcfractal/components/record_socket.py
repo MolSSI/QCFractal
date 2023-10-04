@@ -1458,12 +1458,17 @@ class RecordSocket:
 
     def reset(self, record_ids: Sequence[int], *, session: Optional[Session] = None):
         """
-        Resets running or errored records to be waiting again
+        Resets errored records to be waiting again
         """
 
-        return self._revert_common(
-            record_ids, applicable_status=[RecordStatusEnum.running, RecordStatusEnum.error], session=session
-        )
+        return self._revert_common(record_ids, applicable_status=[RecordStatusEnum.error], session=session)
+
+    def reset_running(self, record_ids: Sequence[int], *, session: Optional[Session] = None):
+        """
+        Resets running records to be waiting again
+        """
+
+        return self._revert_common(record_ids, applicable_status=[RecordStatusEnum.running], session=session)
 
     def delete(
         self,

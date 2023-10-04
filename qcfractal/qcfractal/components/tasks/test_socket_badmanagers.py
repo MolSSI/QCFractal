@@ -209,7 +209,7 @@ def test_task_socket_return_manager_badstatus_1(storage_socket: SQLAlchemySocket
 
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname, _manager_programs, ["tag1"])
 
-    storage_socket.records.reset([record_id])
+    storage_socket.records.reset_running([record_id])
 
     with caplog_handler_at_level(caplog, logging.WARNING):
         rmeta = storage_socket.tasks.update_finished(mname1.fullname, {tasks[0]["id"]: result_data_compressed})
