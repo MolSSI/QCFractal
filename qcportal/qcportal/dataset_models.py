@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional, Dict, Any, List, Iterable, Type, Tuple, Union, Callable, ClassVar
+from typing import Optional, Dict, Any, List, Iterable, Type, Tuple, Union, Callable, ClassVar, Sequence
 
 import pandas as pd
 import pydantic
@@ -845,7 +845,6 @@ class BaseDataset(BaseModel):
         fetch_updated: bool = True,
         force_refetch: bool = False,
     ):
-
         #########################################################
         # We duplicate a little bit of fetch_records here, since
         # we want to yield in the middle
@@ -918,7 +917,6 @@ class BaseDataset(BaseModel):
         specification_names: Optional[Union[str, Iterable[str]]] = None,
         delete_records: bool = False,
     ) -> DeleteMetadata:
-
         self.assert_is_not_view()
         self.assert_online()
 
@@ -1118,14 +1116,15 @@ class BaseDataset(BaseModel):
     def compile_values(
         self,
         value_call: Callable,
-        value_name: str,
+        value_name: Union[List[str], str] = "value",
         entry_names: Optional[Union[str, Iterable[str]]] = None,
         specification_names: Optional[Union[str, Iterable[str]]] = None,
         include: Optional[Iterable[str]] = None,
         fetch_updated: bool = True,
         force_refetch: bool = False,
+        unpack: bool = False,
     ) -> pd.DataFrame:
-        def _data_generator():
+        def _data_generator(unpack=False):
             for entry_name, spec_name, record in self.iterate_records(
                 entry_names=entry_names,
                 specification_names=specification_names,
@@ -1134,11 +1133,53 @@ class BaseDataset(BaseModel):
                 fetch_updated=fetch_updated,
                 force_refetch=force_refetch,
             ):
-                yield entry_name, spec_name, value_call(record)
+                if unpack:
+                    yield entry_name, spec_name, *value_call(record)
+                else:
+                    yield entry_name, spec_name, value_call(record)
 
-        df = pd.DataFrame(_data_generator(), columns=("entry", "specification", value_name))
+        def _check_first():
+            gen = _data_generator()
+            _, _, first_value = next(gen)
 
-        return df.pivot(index="entry", columns="specification", values=value_name)
+            return first_value
+
+        first_value = _check_first()
+
+        if unpack and isinstance(first_value, Sequence) and not isinstance(first_value, str):
+            if isinstance(value_name, str):
+                column_names = [value_name + str(i) for i in range(len(first_value))]
+            else:
+                if len(first_value) != len(value_name):
+                    raise ValueError(
+                        "Number of column names must match number of values returned by provided function."
+                    )
+                column_names = value_name
+
+            df = pd.DataFrame(_data_generator(unpack=True), columns=("entry", "specification", *column_names))
+
+        else:
+            column_names = [value_name]
+            df = pd.DataFrame(_data_generator(), columns=("entry", "specification", value_name))
+
+        return_val = df.pivot(index="entry", columns="specification", values=column_names)
+
+        # Make specification top level index.
+        return return_val.swaplevel(axis=1)
+
+    def get_properties_df(self, properties_list: List):
+        from collections import defaultdict
+
+        dfs = []
+        for property_name in properties_list:
+            property_df = self.compile_values(
+                lambda x: defaultdict(None, x.properties).get(property_name), property_name
+            )
+            dfs.append(property_df)
+
+        result = pd.concat(dfs, axis=1)
+        result.dropna(how="all", axis=1, inplace=True)
+        return result
 
     ##############################
     # Contributed values
@@ -1283,7 +1324,6 @@ def dataset_from_dict(data: Dict[str, Any], client: Any, view_data: Optional[Dat
 
 
 def load_dataset_view(view_path: str):
-
     view_data = DatasetViewWrapper(view_path=view_path)
     raw_data = view_data.get_datamodel()
 
