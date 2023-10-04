@@ -283,6 +283,16 @@ class BaseDataset(BaseModel):
             raise RuntimeError("Dataset does not connected to a QCFractal server")
 
     @property
+    def record_count(self) -> int:
+        self.assert_online()
+
+        return self._client.make_request(
+            "get",
+            f"api/v1/datasets/{self.dataset_type}/{self.id}/record_count",
+            int,
+        )
+
+    @property
     def is_view(self) -> bool:
         return self._view_data is not None
 
