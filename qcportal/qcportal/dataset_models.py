@@ -1168,15 +1168,10 @@ class BaseDataset(BaseModel):
         return return_val.swaplevel(axis=1)
 
     def get_properties_df(self, properties_list: List):
+        func = lambda x: [x.properties.get(property_name) for property_name in properties_list]
 
-        dfs = []
-        for property_name in properties_list:
-            property_df = self.compile_values(
-                lambda x: x.properties.get(property_name), property_name
-            )
-            dfs.append(property_df)
+        result = self.compile_values(func, value_name=properties_list, unpack=True)
 
-        result = pd.concat(dfs, axis=1)
         result.dropna(how="all", axis=1, inplace=True)
         return result
 
