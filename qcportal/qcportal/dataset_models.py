@@ -1168,12 +1168,11 @@ class BaseDataset(BaseModel):
         return return_val.swaplevel(axis=1)
 
     def get_properties_df(self, properties_list: List):
-        from collections import defaultdict
 
         dfs = []
         for property_name in properties_list:
             property_df = self.compile_values(
-                lambda x: defaultdict(None, x.properties).get(property_name), property_name
+                lambda x: x.properties.get(property_name), property_name
             )
             dfs.append(property_df)
 
