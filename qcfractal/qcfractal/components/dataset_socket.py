@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select, delete, func, union
+from sqlalchemy import select, delete, func, union, text
 from sqlalchemy.orm import load_only, lazyload, joinedload, with_polymorphic
 
 from qcfractal.components.dataset_db_models import BaseDatasetORM, ContributedValuesORM
@@ -312,6 +312,47 @@ class BaseDatasetSocket:
                 raise MissingDataError(f"Could not find dataset with type={self.dataset_type} and id={dataset_id}")
 
             return count
+
+    def get_computed_properties(self, dataset_id: int, *, session: Optional[Session] = None) -> Dict[str, List[str]]:
+        """
+        Retrieve the typical properties computed by each specification
+
+        These should be the properties found in the properties dictionary.
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Dictionary with keys representing the specification name, and a list of
+            properties typically computed by that specification (as a list of strings).
+        """
+
+        # Easier to do raw SQL I think
+        stmt = text(
+            f"""
+             WITH cte AS (
+                 SELECT DISTINCT ON (dr.specification_name) dr.specification_name, br.id
+                 FROM base_record br
+                 INNER JOIN {self.record_item_orm.__tablename__} dr ON dr.record_id = br.id
+                 WHERE dr.dataset_id = :dataset_id and br.status = 'complete'
+             )
+             SELECT cte.specification_name, ARRAY(SELECT jsonb_object_keys(br.properties))
+             FROM cte INNER JOIN base_record br ON br.id = cte.id;
+        """
+        )
+
+        stmt = stmt.bindparams(dataset_id=dataset_id)
+
+        with self.root_socket.optional_session(session, True) as session:
+            rows = session.execute(stmt).all()
+            return {r[0]: r[1] for r in rows}
 
     def add(
         self,

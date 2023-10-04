@@ -143,6 +143,13 @@ def get_dataset_record_count_v1(dataset_type: str, dataset_id: int):
     return ds_socket.get_record_count(dataset_id)
 
 
+@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/computed_properties", methods=["GET"])
+@wrap_route("READ")
+def get_dataset_computed_properties_v1(dataset_type: str, dataset_id: int):
+    ds_socket = storage_socket.datasets.get_socket(dataset_type)
+    return ds_socket.get_computed_properties(dataset_id)
+
+
 #########################
 # Modifying metadata
 #########################

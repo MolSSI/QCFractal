@@ -12,8 +12,7 @@ from qcportal.singlepoint import SinglepointDataset
 
 if TYPE_CHECKING:
     from qcportal import PortalClient
-    from qcportal.managers import ManagerName
-    from qcfractal.db_socket import SQLAlchemySocket
+    from qcarchivetesting.testing_classes import QCATestingSnowflake
 
 
 @pytest.mark.parametrize(
@@ -94,14 +93,16 @@ def test_dataset_client_delete_empty(snowflake_client: PortalClient):
     len(all_ds) == 0
 
 
-def test_dataset_client_query_dataset_records(
-    storage_socket: SQLAlchemySocket, snowflake_client: PortalClient, activated_manager_name: ManagerName
-):
+def test_dataset_client_query_dataset_records(snowflake: QCATestingSnowflake):
+    snowflake_client = snowflake.client()
+    storage_socket = snowflake.get_storage_socket()
+    manager_name, _ = snowflake.activate_manager()
+
     ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
     assert ds.status() == {}
 
     input_spec, molecule, _ = load_test_data("sp_psi4_peroxide_energy_wfn")
-    run_test_data(storage_socket, activated_manager_name, "sp_psi4_peroxide_energy_wfn")
+    run_test_data(storage_socket, manager_name, "sp_psi4_peroxide_energy_wfn")
 
     molecule_2 = Molecule(symbols=["b"], geometry=[0, 0, 0])
 
@@ -215,3 +216,27 @@ def test_dataset_rename_entries(snowflake_client: PortalClient):
     assert "different_name" in ds.entry_names
     assert "test_molecule" not in ds.entry_names
     assert "test_molecule_2" in ds.entry_names
+
+
+def test_dataset_client_get_computed_properties(snowflake: QCATestingSnowflake):
+    snowflake_client = snowflake.client()
+    storage_socket = snowflake.get_storage_socket()
+    manager_name, _ = snowflake.activate_manager()
+
+    ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
+    assert ds.status() == {}
+
+    input_spec, molecule, _ = load_test_data("sp_psi4_peroxide_energy_wfn")
+    record_id = run_test_data(storage_socket, manager_name, "sp_psi4_peroxide_energy_wfn")
+
+    # Add this as a part of the dataset
+    ds.add_specification("spec_1", input_spec)
+    ds.add_entry(name="test_molecule", molecule=molecule)
+    ds.submit()
+
+    assert ds.status()["spec_1"]["complete"] == 1
+
+    computed_prop = ds.computed_properties
+    assert "spec_1" in computed_prop
+    assert "scf_total_energy" in computed_prop["spec_1"]
+    assert "calcinfo_natom" in computed_prop["spec_1"]
