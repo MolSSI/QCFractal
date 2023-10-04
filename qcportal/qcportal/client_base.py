@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import logging
 import os
+import random
 import time
 from typing import (
     Any,
@@ -86,6 +88,8 @@ class PortalClientBase:
             If a Message-of-the-Day is available, display it
         """
 
+        self._logger = logging.getLogger("PortalClientBase")
+
         # For developer use and debugging
         self.debug_requests = False
 
@@ -110,11 +114,15 @@ class PortalClientBase:
 
         self._req_session.headers.update({"User-Agent": f"qcportal/{__version__}"})
 
-        self._timeout = 60
         self.encoding = "application/json"
 
-        # Mode toggle for network error testing, not public facing
-        self._mock_network_error = False
+        self.timeout = 60
+
+        # Handling retries of requests
+        self.retry_max = 5
+        self.retry_delay = 0.5
+        self.retry_backoff = 2
+        self.retry_jitter_fraction = 0.05
 
         # If no 3rd party verification, quiet urllib
         if self._verify is False:
@@ -283,7 +291,8 @@ class PortalClientBase:
         *,
         body: Optional[Union[bytes, str]] = None,
         url_params: Optional[Dict[str, Any]] = None,
-        retry: Optional[bool] = True,
+        internal_retry: Optional[bool] = True,
+        allow_retries: bool = True,
     ) -> requests.Response:
 
         # If JWT token is expired, automatically renew it
@@ -303,7 +312,29 @@ class PortalClientBase:
             pretty_print_request(prep_req)
 
         try:
-            r = self._req_session.send(prep_req, verify=self._verify, timeout=self._timeout)
+            if not allow_retries:
+                r = self._req_session.send(prep_req, verify=self._verify, timeout=self.timeout)
+            else:
+                current_retries = 0
+                while True:
+                    try:
+                        r = self._req_session.send(prep_req, verify=self._verify, timeout=self.timeout)
+                        break
+                    except (requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout) as e:
+                        if current_retries >= self.retry_max:
+                            raise
+
+                        # eg, if jitter fraction is 0.05, then multiply by something on the range 0.95 to 1.05
+                        jitter = random.uniform(1.0 - self.retry_jitter_fraction, 1.0 + self.retry_jitter_fraction)
+                        time_to_wait = self.retry_delay * (self.retry_backoff**current_retries) * jitter
+
+                        current_retries += 1
+                        self._logger.warning(
+                            f"Connection failed: {str(e)} - retrying in {time_to_wait:.2f} seconds "
+                            f"[{current_retries}/{self.retry_max}]"
+                        )
+                        time.sleep(time_to_wait)
+
             if self.debug_requests:
                 pretty_print_response(r)
 
@@ -315,9 +346,9 @@ class PortalClientBase:
         # If JWT token expired, automatically renew it and retry once. This should have been caught above,
         # but can happen in rare instances where the token expires between the time we check it and the time
         # we use it.
-        if retry and (r.status_code == 401) and "Token has expired" in r.json()["msg"]:
+        if internal_retry and (r.status_code == 401) and "Token has expired" in r.json()["msg"]:
             self._refresh_JWT_token()
-            return self._request(method, endpoint, body=body, url_params=url_params, retry=False)
+            return self._request(method, endpoint, body=body, url_params=url_params, internal_retry=False)
 
         if r.status_code != 200:
             try:
@@ -343,6 +374,7 @@ class PortalClientBase:
         url_params_model: Optional[Type[_U]] = None,
         body: Optional[Union[_T, Dict[str, Any]]] = None,
         url_params: Optional[Union[_U, Dict[str, Any]]] = None,
+        allow_retries: bool = True,
     ) -> _V:
 
         # If body_model or url_params_model are None, then use the type given
@@ -364,7 +396,9 @@ class PortalClientBase:
         if isinstance(parsed_url_params, pydantic.BaseModel):
             parsed_url_params = parsed_url_params.dict()
 
-        r = self._request(method, endpoint, body=serialized_body, url_params=parsed_url_params)
+        r = self._request(
+            method, endpoint, body=serialized_body, url_params=parsed_url_params, allow_retries=allow_retries
+        )
         d = deserialize(r.content, r.headers["Content-Type"])
 
         if response_model is None:

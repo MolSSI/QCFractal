@@ -49,8 +49,13 @@ class ManagerClient(PortalClientBase):
         self.manager_name_data = name_data
 
     def _update_on_server(self, manager_update: ManagerUpdateBody) -> None:
+        # Don't allow retries - we handle that elsewhere in the manager (by trying again later)
         return self.make_request(
-            "patch", f"compute/v1/managers/{self.manager_name_data.fullname}", None, body=manager_update
+            "patch",
+            f"compute/v1/managers/{self.manager_name_data.fullname}",
+            None,
+            body=manager_update,
+            allow_retries=False,
         )
 
     def activate(

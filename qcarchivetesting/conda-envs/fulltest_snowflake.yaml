@@ -9,7 +9,6 @@ dependencies:
   - postgresql
 
   # QCPortal dependencies
-  # NOTE: msgpack-python in conda is msgpack in pypi (due to a rename around v0.5)
   - numpy
   - msgpack-python
   - requests
