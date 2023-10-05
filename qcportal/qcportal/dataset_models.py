@@ -293,6 +293,16 @@ class BaseDataset(BaseModel):
         )
 
     @property
+    def computed_properties(self):
+        self.assert_online()
+
+        return self._client.make_request(
+            "get",
+            f"api/v1/datasets/{self.dataset_type}/{self.id}/computed_properties",
+            Dict[str, List[str]],
+        )
+
+    @property
     def is_view(self) -> bool:
         return self._view_data is not None
 
