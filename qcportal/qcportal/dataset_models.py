@@ -1116,7 +1116,7 @@ class BaseDataset(BaseModel):
     def compile_values(
         self,
         value_call: Callable,
-        value_name: Union[List[str], str] = "value",
+        value_names: Union[List[str], str] = "value",
         entry_names: Optional[Union[str, Iterable[str]]] = None,
         specification_names: Optional[Union[str, Iterable[str]]] = None,
         include: Optional[Iterable[str]] = None,
@@ -1147,20 +1147,20 @@ class BaseDataset(BaseModel):
         first_value = _check_first()
 
         if unpack and isinstance(first_value, Sequence) and not isinstance(first_value, str):
-            if isinstance(value_name, str):
-                column_names = [value_name + str(i) for i in range(len(first_value))]
+            if isinstance(value_names, str):
+                column_names = [value_names + str(i) for i in range(len(first_value))]
             else:
-                if len(first_value) != len(value_name):
+                if len(first_value) != len(value_names):
                     raise ValueError(
                         "Number of column names must match number of values returned by provided function."
                     )
-                column_names = value_name
+                column_names = value_names
 
             df = pd.DataFrame(_data_generator(unpack=True), columns=("entry", "specification", *column_names))
 
         else:
-            column_names = [value_name]
-            df = pd.DataFrame(_data_generator(), columns=("entry", "specification", value_name))
+            column_names = [value_names]
+            df = pd.DataFrame(_data_generator(), columns=("entry", "specification", value_names))
 
         return_val = df.pivot(index="entry", columns="specification", values=column_names)
 
@@ -1170,7 +1170,7 @@ class BaseDataset(BaseModel):
     def get_properties_df(self, properties_list: List):
         func = lambda x: [x.properties.get(property_name) for property_name in properties_list]
 
-        result = self.compile_values(func, value_name=properties_list, unpack=True)
+        result = self.compile_values(func, value_names=properties_list, unpack=True)
 
         result.dropna(how="all", axis=1, inplace=True)
         return result
