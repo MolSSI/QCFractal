@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcfractalcompute.config &#8212; QCArchive 0.50.post57+ge35b59f9 documentation</title>
+    <title>qcfractalcompute.config &#8212; QCArchive 0.50.post59+gd1252ac5 documentation</title>
   
   
   
@@ -469,6 +469,7 @@ document.write(`
         <span class="n">path</span> <span class="o">=</span> <span class="n">default_filename</span>
 
     <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expandvars</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isabs</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">path</span>
     <span class="k">else</span><span class="p">:</span>
