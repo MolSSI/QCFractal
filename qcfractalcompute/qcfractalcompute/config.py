@@ -19,6 +19,7 @@ def _make_abs_path(path: Optional[str], base_folder: str, default_filename: Opti
         path = default_filename
 
     path = os.path.expanduser(path)
+    path = os.path.expandvars(path)
     if os.path.isabs(path):
         return path
     else:
