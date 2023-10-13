@@ -136,6 +136,7 @@ class NEBRecord(BaseRecord):
     # Caches
     ########################################
     initial_chain_: Optional[List[Molecule]] = None
+    final_chain_: Optional[List[SinglepointRecord]] = None
     optimizations_cache_: Optional[Dict[str, OptimizationRecord]] = None
     singlepoints_cache_: Optional[Dict[int, List[SinglepointRecord]]] = None
 
@@ -213,6 +214,8 @@ class NEBRecord(BaseRecord):
 
         if "initial_chain" in includes:
             self._fetch_initial_chain()
+        if "final_chain" in includes:
+            self._fetch_singlepoints()
         if "singlepoints" in includes:
             self._fetch_singlepoints()
         if "optimizations" in includes:
@@ -223,6 +226,10 @@ class NEBRecord(BaseRecord):
         if self.initial_chain_ is None:
             self._fetch_initial_chain()
         return self.initial_chain_
+
+    @property
+    def final_chain(self) -> List[SinglepointRecord]:
+        return self.singlepoints[max(self.singlepoints.keys())]
 
     @property
     def singlepoints(self) -> Dict[int, List[SinglepointRecord]]:
