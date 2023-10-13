@@ -42,6 +42,9 @@ dependencies:
   - psi4>=1.7
   - rdkit
 
+  # Testing packages
+  - pytest
+
   - pip:
       - "geometric @ git+https://github.com/hjnpark/geomeTRIC"
       - scipy # for geometric
