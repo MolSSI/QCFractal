@@ -58,6 +58,7 @@ class SinglepointDatasetSocket(BaseDatasetSocket):
                 molecule_id=molecule_id,
                 additional_keywords=entry.additional_keywords,
                 attributes=entry.attributes,
+                local_results=entry.local_results,
             )
 
             all_entries.append(new_ent)
