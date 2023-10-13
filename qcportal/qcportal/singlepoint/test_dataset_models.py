@@ -18,6 +18,7 @@ test_entries = [
         name="HYDrogen_4",
         comment="a comment",
         attributes={"internal": "h2"},
+        local_results={"energy": -1.0, "other_energy": -2.0},
     ),
     SinglepointDatasetNewEntry(
         molecule=Molecule(symbols=["h", "h"], geometry=[0, 0, 0, 0, 0, 6]),
@@ -42,6 +43,7 @@ test_specs = [
 def entry_extra_compare(ent1, ent2):
     assert ent1.molecule == ent2.molecule
     assert ent1.additional_keywords == ent2.additional_keywords
+    assert ent1.local_results == ent2.local_results
 
 
 def record_compare(rec, ent, spec):

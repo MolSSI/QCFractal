@@ -22,11 +22,11 @@ class SinglepointDatasetNewEntry(BaseModel):
     additional_keywords: Dict[str, Any] = {}
     attributes: Dict[str, Any] = {}
     comment: Optional[str] = None
+    local_results: Optional[Dict[str, Any]] = None
 
 
 class SinglepointDatasetEntry(SinglepointDatasetNewEntry):
     molecule: Molecule
-    local_results: Optional[Dict[str, Any]] = None
 
 
 class SinglepointDatasetSpecification(BaseModel):

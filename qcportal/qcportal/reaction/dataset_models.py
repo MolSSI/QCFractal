@@ -10,31 +10,27 @@ from qcportal.reaction.record_models import ReactionRecord, ReactionSpecificatio
 from qcportal.utils import make_list
 
 
-class ReactionDatasetNewEntry(BaseModel):
-    class Config:
-        extra = Extra.forbid
-
-    name: str
-    stoichiometries: List[Tuple[float, Union[int, Molecule]]]
-    additional_keywords: Dict[str, Any] = {}
-    attributes: Dict[str, Any] = {}
-    comment: Optional[str] = None
-
-
 class ReactionDatasetEntryStoichiometry(BaseModel):
     coefficient: float
     molecule: Molecule
 
 
-class ReactionDatasetEntry(BaseModel):
+class ReactionDatasetNewEntry(BaseModel):
     class Config:
         extra = Extra.forbid
 
     name: str
+    stoichiometries: List[Union[ReactionDatasetEntryStoichiometry, Tuple[float, Union[int, Molecule]]]]
+    additional_keywords: Dict[str, Any] = {}
+    attributes: Dict[str, Any] = {}
     comment: Optional[str] = None
+
+
+class ReactionDatasetEntry(ReactionDatasetNewEntry):
+    class Config:
+        extra = Extra.forbid
+
     stoichiometries: List[ReactionDatasetEntryStoichiometry]
-    additional_keywords: Optional[Dict[str, Any]] = {}
-    attributes: Optional[Dict[str, Any]] = {}
 
 
 class ReactionDatasetSpecification(BaseModel):
