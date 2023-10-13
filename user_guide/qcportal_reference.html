@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>QCPortal API Reference &#8212; QCArchive 0.50.post62+gb032eb03 documentation</title>
+    <title>QCPortal API Reference &#8212; QCArchive 0.50.post68+g5c83280c documentation</title>
   
   
   
@@ -825,7 +825,7 @@ that are common among all records.</p>
 <li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified after the given date/time</p></li>
 <li><p><strong>owner_user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a user in the given list (usernames or IDs)</p></li>
 <li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a group in the given list (group names or IDS)</p></li>
-<li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of records to return. Note that the server limit is always obeyed.</p></li>
+<li><p><strong>limit</strong> (<em>int</em>) – The maximum number of records to return. Note that the server limit is always obeyed.</p></li>
 <li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Additional fields to include in the returned record</p></li>
 </ul>
 </dd>

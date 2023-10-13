@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Base Record &#8212; QCArchive 0.50.post62+gb032eb03 documentation</title>
+    <title>Base Record &#8212; QCArchive 0.50.post68+g5c83280c documentation</title>
   
   
   
@@ -528,7 +528,7 @@ features from that library.</p>
 <dt class="field-odd">Config<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>allow_mutation</strong>: <em>bool = True</em></p></li>
-<li><p><strong>extra</strong>: <em>Extra = forbid</em></p></li>
+<li><p><strong>extra</strong>: <em>Extra = Extra.forbid</em></p></li>
 <li><p><strong>validate_assignment</strong>: <em>bool = True</em></p></li>
 </ul>
 </dd>
@@ -726,7 +726,7 @@ features from that library.</p>
 <dt class="field-odd">Config<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>allow_mutation</strong>: <em>bool = True</em></p></li>
-<li><p><strong>extra</strong>: <em>Extra = forbid</em></p></li>
+<li><p><strong>extra</strong>: <em>Extra = Extra.forbid</em></p></li>
 <li><p><strong>validate_assignment</strong>: <em>bool = True</em></p></li>
 </ul>
 </dd>
@@ -887,7 +887,7 @@ features from that library.</p>
 <li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
 <li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
 <li><p><strong>tag</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
-<li><p><strong>priority</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a><em>]</em>) – </p></li>
+<li><p><strong>priority</strong> (<a class="reference internal" href="#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a>) – </p></li>
 <li><p><strong>find_existing</strong> (<em>bool</em>) – </p></li>
 </ul>
 </dd>
@@ -1407,7 +1407,7 @@ If <cite>force_refetch</cite> is True, then this will always fetch the records.<
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RecordStatusEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/record_models.html#RecordStatusEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RecordStatusEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/record_models.html#RecordStatusEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
 <p>The state of a record object. The states which are available are a finite set.</p>
 <dl class="py attribute">
@@ -1459,11 +1459,435 @@ If <cite>force_refetch</cite> is True, then this will always fetch the records.<
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.capitalize">
+<span class="sig-name descname"><span class="pre">capitalize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.capitalize" title="Permalink to this definition">#</a></dt>
+<dd><p>Return a capitalized version of the string.</p>
+<p>More specifically, make the first character have upper case and the rest lower
+case.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.casefold">
+<span class="sig-name descname"><span class="pre">casefold</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.casefold" title="Permalink to this definition">#</a></dt>
+<dd><p>Return a version of the string suitable for caseless comparisons.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.center">
+<span class="sig-name descname"><span class="pre">center</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fillchar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.center" title="Permalink to this definition">#</a></dt>
+<dd><p>Return a centered string of length width.</p>
+<p>Padding is done using the specified fill character (default is a space).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.count">
+<span class="sig-name descname"><span class="pre">count</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sub</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.count" title="Permalink to this definition">#</a></dt>
+<dd><p>Return the number of non-overlapping occurrences of substring sub in
+string S[start:end].  Optional arguments start and end are
+interpreted as in slice notation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.encode">
+<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'utf-8'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'strict'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.encode" title="Permalink to this definition">#</a></dt>
+<dd><p>Encode the string using the codec registered for encoding.</p>
+<dl class="simple">
+<dt>encoding</dt><dd><p>The encoding in which to encode the string.</p>
+</dd>
+<dt>errors</dt><dd><p>The error handling scheme to use for encoding errors.
+The default is ‘strict’ meaning that encoding errors raise a
+UnicodeEncodeError.  Other possible values are ‘ignore’, ‘replace’ and
+‘xmlcharrefreplace’ as well as any other name registered with
+codecs.register_error that can handle UnicodeEncodeErrors.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.endswith">
+<span class="sig-name descname"><span class="pre">endswith</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">suffix</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.endswith" title="Permalink to this definition">#</a></dt>
+<dd><p>Return True if S ends with the specified suffix, False otherwise.
+With optional start, test S beginning at that position.
+With optional end, stop comparing S at that position.
+suffix can also be a tuple of strings to try.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.expandtabs">
+<span class="sig-name descname"><span class="pre">expandtabs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tabsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.expandtabs" title="Permalink to this definition">#</a></dt>
+<dd><p>Return a copy where all tab characters are expanded using spaces.</p>
+<p>If tabsize is not given, a tab size of 8 characters is assumed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.find">
+<span class="sig-name descname"><span class="pre">find</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sub</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.find" title="Permalink to this definition">#</a></dt>
+<dd><p>Return the lowest index in S where substring sub is found,
+such that sub is contained within S[start:end].  Optional
+arguments start and end are interpreted as in slice notation.</p>
+<p>Return -1 on failure.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.format" title="Permalink to this definition">#</a></dt>
+<dd><p>Return a formatted version of S, using substitutions from args and kwargs.
+The substitutions are identified by braces (‘{’ and ‘}’).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.format_map">
+<span class="sig-name descname"><span class="pre">format_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mapping</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.format_map" title="Permalink to this definition">#</a></dt>
+<dd><p>Return a formatted version of S, using substitutions from mapping.
+The substitutions are identified by braces (‘{’ and ‘}’).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.index">
+<span class="sig-name descname"><span class="pre">index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sub</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.index" title="Permalink to this definition">#</a></dt>
+<dd><p>Return the lowest index in S where substring sub is found,
+such that sub is contained within S[start:end].  Optional
+arguments start and end are interpreted as in slice notation.</p>
+<p>Raises ValueError when the substring is not found.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.isalnum">
+<span class="sig-name descname"><span class="pre">isalnum</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.isalnum" title="Permalink to this definition">#</a></dt>
+<dd><p>Return True if the string is an alpha-numeric string, False otherwise.</p>
+<p>A string is alpha-numeric if all characters in the string are alpha-numeric and
+there is at least one character in the string.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.isalpha">
+<span class="sig-name descname"><span class="pre">isalpha</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.isalpha" title="Permalink to this definition">#</a></dt>
+<dd><p>Return True if the string is an alphabetic string, False otherwise.</p>
+<p>A string is alphabetic if all characters in the string are alphabetic and there
+is at least one character in the string.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.isascii">
+<span class="sig-name descname"><span class="pre">isascii</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.isascii" title="Permalink to this definition">#</a></dt>
+<dd><p>Return True if all characters in the string are ASCII, False otherwise.</p>
+<p>ASCII characters have code points in the range U+0000-U+007F.
+Empty string is ASCII too.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.isdecimal">
+<span class="sig-name descname"><span class="pre">isdecimal</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.isdecimal" title="Permalink to this definition">#</a></dt>
+<dd><p>Return True if the string is a decimal string, False otherwise.</p>
+<p>A string is a decimal string if all characters in the string are decimal and
+there is at least one character in the string.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.isdigit">
+<span class="sig-name descname"><span class="pre">isdigit</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.isdigit" title="Permalink to this definition">#</a></dt>
+<dd><p>Return True if the string is a digit string, False otherwise.</p>
+<p>A string is a digit string if all characters in the string are digits and there
+is at least one character in the string.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.isidentifier">
+<span class="sig-name descname"><span class="pre">isidentifier</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.isidentifier" title="Permalink to this definition">#</a></dt>
+<dd><p>Return True if the string is a valid Python identifier, False otherwise.</p>
+<p>Call keyword.iskeyword(s) to test whether string s is a reserved identifier,
+such as “def” or “class”.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.islower">
+<span class="sig-name descname"><span class="pre">islower</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.islower" title="Permalink to this definition">#</a></dt>
+<dd><p>Return True if the string is a lowercase string, False otherwise.</p>
+<p>A string is lowercase if all cased characters in the string are lowercase and
+there is at least one cased character in the string.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.isnumeric">
+<span class="sig-name descname"><span class="pre">isnumeric</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.isnumeric" title="Permalink to this definition">#</a></dt>
+<dd><p>Return True if the string is a numeric string, False otherwise.</p>
+<p>A string is numeric if all characters in the string are numeric and there is at
+least one character in the string.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.isprintable">
+<span class="sig-name descname"><span class="pre">isprintable</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.isprintable" title="Permalink to this definition">#</a></dt>
+<dd><p>Return True if the string is printable, False otherwise.</p>
+<p>A string is printable if all of its characters are considered printable in
+repr() or if it is empty.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.isspace">
+<span class="sig-name descname"><span class="pre">isspace</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.isspace" title="Permalink to this definition">#</a></dt>
+<dd><p>Return True if the string is a whitespace string, False otherwise.</p>
+<p>A string is whitespace if all characters in the string are whitespace and there
+is at least one character in the string.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.istitle">
+<span class="sig-name descname"><span class="pre">istitle</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.istitle" title="Permalink to this definition">#</a></dt>
+<dd><p>Return True if the string is a title-cased string, False otherwise.</p>
+<p>In a title-cased string, upper- and title-case characters may only
+follow uncased characters and lowercase characters only cased ones.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.isupper">
+<span class="sig-name descname"><span class="pre">isupper</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.isupper" title="Permalink to this definition">#</a></dt>
+<dd><p>Return True if the string is an uppercase string, False otherwise.</p>
+<p>A string is uppercase if all cased characters in the string are uppercase and
+there is at least one cased character in the string.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.join">
+<span class="sig-name descname"><span class="pre">join</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.join" title="Permalink to this definition">#</a></dt>
+<dd><p>Concatenate any number of strings.</p>
+<p>The string whose method is called is inserted in between each given string.
+The result is returned as a new string.</p>
+<p>Example: ‘.’.join([‘ab’, ‘pq’, ‘rs’]) -&gt; ‘ab.pq.rs’</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.ljust">
+<span class="sig-name descname"><span class="pre">ljust</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fillchar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.ljust" title="Permalink to this definition">#</a></dt>
+<dd><p>Return a left-justified string of length width.</p>
+<p>Padding is done using the specified fill character (default is a space).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.lower">
+<span class="sig-name descname"><span class="pre">lower</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.lower" title="Permalink to this definition">#</a></dt>
+<dd><p>Return a copy of the string converted to lowercase.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.lstrip">
+<span class="sig-name descname"><span class="pre">lstrip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.lstrip" title="Permalink to this definition">#</a></dt>
+<dd><p>Return a copy of the string with leading whitespace removed.</p>
+<p>If chars is given and not None, remove characters in chars instead.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.maketrans">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">maketrans</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.maketrans" title="Permalink to this definition">#</a></dt>
+<dd><p>Return a translation table usable for str.translate().</p>
+<p>If there is only one argument, it must be a dictionary mapping Unicode
+ordinals (integers) or characters to Unicode ordinals, strings or None.
+Character keys will be then converted to ordinals.
+If there are two arguments, they must be strings of equal length, and
+in the resulting dictionary, each character in x will be mapped to the
+character at the same position in y. If there is a third argument, it
+must be a string, whose characters will be mapped to None in the result.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.partition">
+<span class="sig-name descname"><span class="pre">partition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sep</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.partition" title="Permalink to this definition">#</a></dt>
+<dd><p>Partition the string into three parts using the given separator.</p>
+<p>This will search for the separator in the string.  If the separator is found,
+returns a 3-tuple containing the part before the separator, the separator
+itself, and the part after it.</p>
+<p>If the separator is not found, returns a 3-tuple containing the original string
+and two empty strings.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.removeprefix">
+<span class="sig-name descname"><span class="pre">removeprefix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.removeprefix" title="Permalink to this definition">#</a></dt>
+<dd><p>Return a str with the given prefix string removed if present.</p>
+<p>If the string starts with the prefix string, return string[len(prefix):].
+Otherwise, return a copy of the original string.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.removesuffix">
+<span class="sig-name descname"><span class="pre">removesuffix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">suffix</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.removesuffix" title="Permalink to this definition">#</a></dt>
+<dd><p>Return a str with the given suffix string removed if present.</p>
+<p>If the string ends with the suffix string and that suffix is not empty,
+return string[:-len(suffix)]. Otherwise, return a copy of the original
+string.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.replace">
+<span class="sig-name descname"><span class="pre">replace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">old</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.replace" title="Permalink to this definition">#</a></dt>
+<dd><p>Return a copy with all occurrences of substring old replaced by new.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>count</dt><dd><p>Maximum number of occurrences to replace.
+-1 (the default value) means replace all occurrences.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>If the optional argument count is given, only the first count occurrences are
+replaced.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.rfind">
+<span class="sig-name descname"><span class="pre">rfind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sub</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.rfind" title="Permalink to this definition">#</a></dt>
+<dd><p>Return the highest index in S where substring sub is found,
+such that sub is contained within S[start:end].  Optional
+arguments start and end are interpreted as in slice notation.</p>
+<p>Return -1 on failure.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.rindex">
+<span class="sig-name descname"><span class="pre">rindex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sub</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.rindex" title="Permalink to this definition">#</a></dt>
+<dd><p>Return the highest index in S where substring sub is found,
+such that sub is contained within S[start:end].  Optional
+arguments start and end are interpreted as in slice notation.</p>
+<p>Raises ValueError when the substring is not found.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.rjust">
+<span class="sig-name descname"><span class="pre">rjust</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fillchar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.rjust" title="Permalink to this definition">#</a></dt>
+<dd><p>Return a right-justified string of length width.</p>
+<p>Padding is done using the specified fill character (default is a space).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.rpartition">
+<span class="sig-name descname"><span class="pre">rpartition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sep</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.rpartition" title="Permalink to this definition">#</a></dt>
+<dd><p>Partition the string into three parts using the given separator.</p>
+<p>This will search for the separator in the string, starting at the end. If
+the separator is found, returns a 3-tuple containing the part before the
+separator, the separator itself, and the part after it.</p>
+<p>If the separator is not found, returns a 3-tuple containing two empty strings
+and the original string.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.rsplit">
+<span class="sig-name descname"><span class="pre">rsplit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxsplit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.rsplit" title="Permalink to this definition">#</a></dt>
+<dd><p>Return a list of the substrings in the string, using sep as the separator string.</p>
+<blockquote>
+<div><dl>
+<dt>sep</dt><dd><p>The separator used to split the string.</p>
+<p>When set to None (the default value), will split on any whitespace
+character (including \n \r \t \f and spaces) and will discard
+empty strings from the result.</p>
+</dd>
+<dt>maxsplit</dt><dd><p>Maximum number of splits (starting from the left).
+-1 (the default value) means no limit.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>Splitting starts at the end of the string and works to the front.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.rstrip">
+<span class="sig-name descname"><span class="pre">rstrip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.rstrip" title="Permalink to this definition">#</a></dt>
+<dd><p>Return a copy of the string with trailing whitespace removed.</p>
+<p>If chars is given and not None, remove characters in chars instead.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.split">
+<span class="sig-name descname"><span class="pre">split</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxsplit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.split" title="Permalink to this definition">#</a></dt>
+<dd><p>Return a list of the substrings in the string, using sep as the separator string.</p>
+<blockquote>
+<div><dl>
+<dt>sep</dt><dd><p>The separator used to split the string.</p>
+<p>When set to None (the default value), will split on any whitespace
+character (including \n \r \t \f and spaces) and will discard
+empty strings from the result.</p>
+</dd>
+<dt>maxsplit</dt><dd><p>Maximum number of splits (starting from the left).
+-1 (the default value) means no limit.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>Note, str.split() is mainly useful for data that has been intentionally
+delimited.  With natural text that includes punctuation, consider using
+the regular expression module.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.splitlines">
+<span class="sig-name descname"><span class="pre">splitlines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keepends</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.splitlines" title="Permalink to this definition">#</a></dt>
+<dd><p>Return a list of the lines in the string, breaking at line boundaries.</p>
+<p>Line breaks are not included in the resulting list unless keepends is given and
+true.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.startswith">
+<span class="sig-name descname"><span class="pre">startswith</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.startswith" title="Permalink to this definition">#</a></dt>
+<dd><p>Return True if S starts with the specified prefix, False otherwise.
+With optional start, test S beginning at that position.
+With optional end, stop comparing S at that position.
+prefix can also be a tuple of strings to try.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.strip">
+<span class="sig-name descname"><span class="pre">strip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.strip" title="Permalink to this definition">#</a></dt>
+<dd><p>Return a copy of the string with leading and trailing whitespace removed.</p>
+<p>If chars is given and not None, remove characters in chars instead.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.swapcase">
+<span class="sig-name descname"><span class="pre">swapcase</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.swapcase" title="Permalink to this definition">#</a></dt>
+<dd><p>Convert uppercase characters to lowercase and lowercase characters to uppercase.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.title">
+<span class="sig-name descname"><span class="pre">title</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.title" title="Permalink to this definition">#</a></dt>
+<dd><p>Return a version of the string where each word is titlecased.</p>
+<p>More specifically, words start with uppercased characters and all remaining
+cased characters have lower case.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.translate">
+<span class="sig-name descname"><span class="pre">translate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.translate" title="Permalink to this definition">#</a></dt>
+<dd><p>Replace each character in the string using the given translation table.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>table</dt><dd><p>Translation table, which must be a mapping of Unicode ordinals to
+Unicode ordinals, strings, or None.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>The table must implement lookup/indexing via __getitem__, for instance a
+dictionary or list.  If this operation raises LookupError, the character is
+left untouched.  Characters mapped to None are deleted.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.upper">
+<span class="sig-name descname"><span class="pre">upper</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.upper" title="Permalink to this definition">#</a></dt>
+<dd><p>Return a copy of the string converted to uppercase.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.RecordStatusEnum.zfill">
+<span class="sig-name descname"><span class="pre">zfill</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordStatusEnum.zfill" title="Permalink to this definition">#</a></dt>
+<dd><p>Pad a numeric string with zeros on the left, to fill a field of the given width.</p>
+<p>The string is never truncated.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.record_models.PriorityEnum">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PriorityEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/record_models.html#PriorityEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.record_models.PriorityEnum" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PriorityEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/record_models.html#PriorityEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.record_models.PriorityEnum" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
 <p>The priority of a Task. Higher priority will be pulled first.</p>
 <dl class="py attribute">
@@ -1480,6 +1904,120 @@ If <cite>force_refetch</cite> is True, then this will always fetch the records.<
 <dt class="sig sig-object py" id="qcportal.record_models.PriorityEnum.low">
 <span class="sig-name descname"><span class="pre">low</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#qcportal.record_models.PriorityEnum.low" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.PriorityEnum.as_integer_ratio">
+<span class="sig-name descname"><span class="pre">as_integer_ratio</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.PriorityEnum.as_integer_ratio" title="Permalink to this definition">#</a></dt>
+<dd><p>Return integer ratio.</p>
+<p>Return a pair of integers, whose ratio is exactly equal to the original int
+and with a positive denominator.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">as_integer_ratio</span><span class="p">()</span>
+<span class="go">(10, 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">as_integer_ratio</span><span class="p">()</span>
+<span class="go">(-10, 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">as_integer_ratio</span><span class="p">()</span>
+<span class="go">(0, 1)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.PriorityEnum.bit_count">
+<span class="sig-name descname"><span class="pre">bit_count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.PriorityEnum.bit_count" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of ones in the binary representation of the absolute value of self.</p>
+<p>Also known as the population count.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">bin</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>
+<span class="go">&#39;0b1101&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="mi">13</span><span class="p">)</span><span class="o">.</span><span class="n">bit_count</span><span class="p">()</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.PriorityEnum.bit_length">
+<span class="sig-name descname"><span class="pre">bit_length</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.PriorityEnum.bit_length" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of bits necessary to represent self in binary.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">bin</span><span class="p">(</span><span class="mi">37</span><span class="p">)</span>
+<span class="go">&#39;0b100101&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="mi">37</span><span class="p">)</span><span class="o">.</span><span class="n">bit_length</span><span class="p">()</span>
+<span class="go">6</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.PriorityEnum.conjugate">
+<span class="sig-name descname"><span class="pre">conjugate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.PriorityEnum.conjugate" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns self, the complex conjugate of any int.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.record_models.PriorityEnum.denominator">
+<span class="sig-name descname"><span class="pre">denominator</span></span><a class="headerlink" href="#qcportal.record_models.PriorityEnum.denominator" title="Permalink to this definition">#</a></dt>
+<dd><p>the denominator of a rational number in lowest terms</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.PriorityEnum.from_bytes">
+<span class="sig-name descname"><span class="pre">from_bytes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">byteorder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'big'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.PriorityEnum.from_bytes" title="Permalink to this definition">#</a></dt>
+<dd><p>Return the integer represented by the given array of bytes.</p>
+<dl class="simple">
+<dt>bytes</dt><dd><p>Holds the array of bytes to convert.  The argument must either
+support the buffer protocol or be an iterable object producing bytes.
+Bytes and bytearray are examples of built-in objects that support the
+buffer protocol.</p>
+</dd>
+<dt>byteorder</dt><dd><p>The byte order used to represent the integer.  If byteorder is ‘big’,
+the most significant byte is at the beginning of the byte array.  If
+byteorder is ‘little’, the most significant byte is at the end of the
+byte array.  To request the native byte order of the host system, use
+<a href="#id1"><span class="problematic" id="id2">`</span></a>sys.byteorder’ as the byte order value.  Default is to use ‘big’.</p>
+</dd>
+<dt>signed</dt><dd><p>Indicates whether two’s complement is used to represent the integer.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.record_models.PriorityEnum.imag">
+<span class="sig-name descname"><span class="pre">imag</span></span><a class="headerlink" href="#qcportal.record_models.PriorityEnum.imag" title="Permalink to this definition">#</a></dt>
+<dd><p>the imaginary part of a complex number</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.record_models.PriorityEnum.numerator">
+<span class="sig-name descname"><span class="pre">numerator</span></span><a class="headerlink" href="#qcportal.record_models.PriorityEnum.numerator" title="Permalink to this definition">#</a></dt>
+<dd><p>the numerator of a rational number in lowest terms</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.record_models.PriorityEnum.real">
+<span class="sig-name descname"><span class="pre">real</span></span><a class="headerlink" href="#qcportal.record_models.PriorityEnum.real" title="Permalink to this definition">#</a></dt>
+<dd><p>the real part of a complex number</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.PriorityEnum.to_bytes">
+<span class="sig-name descname"><span class="pre">to_bytes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">byteorder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'big'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.PriorityEnum.to_bytes" title="Permalink to this definition">#</a></dt>
+<dd><p>Return an array of bytes representing an integer.</p>
+<dl class="simple">
+<dt>length</dt><dd><p>Length of bytes object to use.  An OverflowError is raised if the
+integer is not representable with the given number of bytes.  Default
+is length 1.</p>
+</dd>
+<dt>byteorder</dt><dd><p>The byte order used to represent the integer.  If byteorder is ‘big’,
+the most significant byte is at the beginning of the byte array.  If
+byteorder is ‘little’, the most significant byte is at the end of the
+byte array.  To request the native byte order of the host system, use
+<a href="#id3"><span class="problematic" id="id4">`</span></a>sys.byteorder’ as the byte order value.  Default is to use ‘big’.</p>
+</dd>
+<dt>signed</dt><dd><p>Determines whether two’s complement is used to represent the integer.
+If signed is False and a negative integer is given, an OverflowError
+is raised.</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -1674,12 +2212,69 @@ of a record query, and works with all kinds of records.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.cancelled"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.cancelled</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.deleted"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.deleted</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.make_ordered_status"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.make_ordered_status()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.capitalize"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.capitalize()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.casefold"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.casefold()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.center"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.center()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.count"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.count()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.encode"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.encode()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.endswith"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.endswith()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.expandtabs"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.expandtabs()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.find"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.find()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.format"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.format()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.format_map"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.format_map()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.index"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.index()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.isalnum"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.isalnum()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.isalpha"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.isalpha()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.isascii"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.isascii()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.isdecimal"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.isdecimal()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.isdigit"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.isdigit()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.isidentifier"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.isidentifier()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.islower"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.islower()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.isnumeric"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.isnumeric()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.isprintable"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.isprintable()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.isspace"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.isspace()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.istitle"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.istitle()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.isupper"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.isupper()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.join"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.join()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.ljust"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.ljust()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.lower"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.lower()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.lstrip"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.lstrip()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.maketrans"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.maketrans()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.partition"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.partition()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.removeprefix"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.removeprefix()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.removesuffix"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.removesuffix()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.replace"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.replace()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.rfind"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.rfind()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.rindex"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.rindex()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.rjust"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.rjust()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.rpartition"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.rpartition()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.rsplit"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.rsplit()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.rstrip"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.rstrip()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.split"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.split()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.splitlines"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.splitlines()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.startswith"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.startswith()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.strip"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.strip()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.swapcase"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.swapcase()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.title"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.title()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.translate"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.translate()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.upper"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.upper()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordStatusEnum.zfill"><code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.zfill()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.PriorityEnum"><code class="docutils literal notranslate"><span class="pre">PriorityEnum</span></code></a><ul class="visible nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.PriorityEnum.high"><code class="docutils literal notranslate"><span class="pre">PriorityEnum.high</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.PriorityEnum.normal"><code class="docutils literal notranslate"><span class="pre">PriorityEnum.normal</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.PriorityEnum.low"><code class="docutils literal notranslate"><span class="pre">PriorityEnum.low</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.PriorityEnum.as_integer_ratio"><code class="docutils literal notranslate"><span class="pre">PriorityEnum.as_integer_ratio()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.PriorityEnum.bit_count"><code class="docutils literal notranslate"><span class="pre">PriorityEnum.bit_count()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.PriorityEnum.bit_length"><code class="docutils literal notranslate"><span class="pre">PriorityEnum.bit_length()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.PriorityEnum.conjugate"><code class="docutils literal notranslate"><span class="pre">PriorityEnum.conjugate()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.PriorityEnum.denominator"><code class="docutils literal notranslate"><span class="pre">PriorityEnum.denominator</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.PriorityEnum.from_bytes"><code class="docutils literal notranslate"><span class="pre">PriorityEnum.from_bytes()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.PriorityEnum.imag"><code class="docutils literal notranslate"><span class="pre">PriorityEnum.imag</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.PriorityEnum.numerator"><code class="docutils literal notranslate"><span class="pre">PriorityEnum.numerator</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.PriorityEnum.real"><code class="docutils literal notranslate"><span class="pre">PriorityEnum.real</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.PriorityEnum.to_bytes"><code class="docutils literal notranslate"><span class="pre">PriorityEnum.to_bytes()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordQueryIterator"><code class="docutils literal notranslate"><span class="pre">RecordQueryIterator</span></code></a><ul class="visible nav section-nav flex-column">
