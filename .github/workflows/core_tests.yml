@@ -33,12 +33,12 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Clone the QCArchive repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Clone MaxMind test db repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: maxmind/MaxMind-DB
           path: qcarchivetesting/qcarchivetesting/MaxMind-DB
@@ -49,16 +49,10 @@ jobs:
           pip install -e ./qcportal -e ./qcfractalcompute -e ./qcfractal[services,geoip,snowflake] -e ./qcarchivetesting
           pip install scipy "geometric @ git+https://github.com/hjnpark/geomeTRIC"
 
-
       - name: Run tests
         shell: bash -l {0}
         run: |
           pytest --runslow --client-encoding="${{ matrix.encoding }}" \
-                 --cov=qcfractal --cov=qcportal --cov=qcfractalcompute --cov-report=xml \
                  --log-level=DEBUG \
                  qcfractal qcportal qcfractalcompute
 
-      - name: Code coverage
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./coverage.xml

@@ -24,8 +24,6 @@ dependencies = [
     "qcfractal",
     "qcengine",
     "pytest",
-    "pytest-cov",
-    "codecov",
 ]
 
 

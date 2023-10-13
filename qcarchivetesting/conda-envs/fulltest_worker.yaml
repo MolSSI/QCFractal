@@ -1,7 +1,7 @@
 name: qcarchive-worker
 channels:
-  - psi4
   - conda-forge
+  - conda-forge/label/libint_dev
   - defaults
 
 dependencies:
