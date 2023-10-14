@@ -121,6 +121,9 @@ class ComputeManager:
         # key = executor label, value = (key = task_id, value = parsl future)
         self._task_futures: Dict[str, Dict[int, ParslFuture]] = {exl: {} for exl in config.executors.keys()}
 
+        # Mapping of task_id to record_id
+        self._record_id_map: Dict[int, int] = {}
+
         self.all_queue_tags = []
         for ex_config in config.executors.values():
             self.all_queue_tags.extend(ex_config.queue_tags)
@@ -402,6 +405,7 @@ class ComputeManager:
                 executor_config=self.manager_config.executors[executor_label],
             )
             self._task_futures[executor_label][task.id] = task_future
+            self._record_id_map[task.id] = task.record_id
 
     def _return_finished(self, results: Dict[int, AppTaskResult]) -> TaskReturnMetadata:
         # Handling of exceptions is expected to be done in the calling function

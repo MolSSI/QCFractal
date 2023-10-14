@@ -25,7 +25,6 @@ class MockTestingComputeManager(ComputeManager):
     def __init__(self, qcf_config: FractalConfig, result_data: Dict[int, AllResultTypes]):
 
         self._qcf_config = qcf_config
-        self._record_id_map = {}  # Maps task id to record id
 
         host = self._qcf_config.api.host
         port = self._qcf_config.api.port
