@@ -1,12 +1,6 @@
 from flask import current_app
 
 from qcfractal import __version__ as qcfractal_version
-from qcfractal.client_versions import (
-    client_version_lower_limit,
-    client_version_upper_limit,
-    manager_version_lower_limit,
-    manager_version_upper_limit,
-)
 from qcfractal.flask_app import storage_socket
 from qcfractal.flask_app.api_v1.blueprint import api_v1
 from qcfractal.flask_app.api_v1.helpers import wrap_route
@@ -25,17 +19,17 @@ from qcportal.utils import calculate_limit
 def get_information():
     qcf_cfg = current_app.config["QCFRACTAL_CONFIG"]
 
-    # TODO FOR RELEASE - change lower and upper version limits?
+    # TODO - remove version limits after a while. They are there to support older clients
     public_info = {
         "name": qcf_cfg.name,
         "manager_heartbeat_frequency": qcf_cfg.heartbeat_frequency,
         "manager_heartbeat_max_missed": qcf_cfg.heartbeat_max_missed,
         "version": qcfractal_version,
         "api_limits": qcf_cfg.api_limits.dict(),
-        "client_version_lower_limit": client_version_lower_limit,
-        "client_version_upper_limit": client_version_upper_limit,
-        "manager_version_lower_limit": manager_version_lower_limit,
-        "manager_version_upper_limit": manager_version_upper_limit,
+        "client_version_lower_limit": "0.50",
+        "client_version_upper_limit": "1.00",
+        "manager_version_lower_limit": "0.50",
+        "manager_version_upper_limit": "1.00",
         "motd": storage_socket.serverinfo.get_motd(),
     }
 
