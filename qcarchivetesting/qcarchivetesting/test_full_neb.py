@@ -65,14 +65,12 @@ def test_neb_full_1(fulltest_client: PortalClient):
     optimizations = rec.optimizations
     singlepoints = rec.singlepoints
     ts_optimization = rec.ts_optimization
+    hessian = rec.ts_hessian
 
     # Finding the highest energy image from the last iteration SinglepointRecords.
-    neb_result_id = 0
-    energy = -9999999
-    for sp in singlepoints[max(singlepoints.keys())]:
-        if sp.properties["current energy"] > energy:
-            energy = sp.properties["current energy"]
-            neb_result_id = sp.molecule_id
+    last_sps = singlepoints[max(singlepoints.keys())]
+    sp_energies = [(sp.properties["current energy"], sp.molecule_id) for sp in last_sps]
+    energy, neb_result_id = max(sp_energies)
 
     # Completed?
     assert rec.status == RecordStatusEnum.complete
@@ -80,16 +78,16 @@ def test_neb_full_1(fulltest_client: PortalClient):
     assert len(initial_chain) == 11 and len(initial_chain) == len(final_chain)
     # SinglepointRecords ids of final chain should be the same as the last iteration SinglepointRecords from rec.singlepoints.
     assert sum([1 if i.id == j.id else 0 for i, j in zip(final_chain, singlepoints[max(singlepoints.keys())])]) == 11
-    # Total 3 OptimizationRecord
+    # Total 3 OptimizationRecords
     assert len(optimizations) == 3
     # rec.tsoptimization should have the same id as the transition record in rec.optimizations.
     assert optimizations.get("transition").id == ts_optimization.id
-    # When optimize_ts is True, rec.singlepoints should have -1 key.
-    assert -1 in singlepoints
-    # The singlepoints[-1] should have the Hessian used for the TS optimization.
-    assert singlepoints[-1][0].properties["return_hessian"] is not None
-    # And other SP records should not have 'return_hessian'
-    assert singlepoints[0][0].properties["return_hessian"] is None
+    # When optimize_ts is True, SinglepointRecord containing the Hessian should exist.
+    assert hessian
+    # The rec.hessian should have the Hessian used for the TS optimization.
+    assert hessian.properties["return_hessian"] is not None
+    # And other SinglepointRecords should not have 'return_hessian'
+    assert sum(1 if singlepoints[0][i].properties["return_hessian"] is None else 0 for i in range(11)) == 11
     # Result of the neb and the highest energy image of the last iteration should have the same molecule id.
     assert ts_guess.id == neb_result_id
 
@@ -140,6 +138,7 @@ def test_neb_full_2(fulltest_client: PortalClient):
     else:
         raise RuntimeError("Did not finish calculation in time")
 
+    hessian = rec.ts_hessian  # Calling the Hessian first
     ts_guess = rec.neb_result
     initial_chain = rec.initial_chain  # List[Molecule]
     final_chain = rec.final_chain  # List[Singlepoints]
@@ -147,12 +146,9 @@ def test_neb_full_2(fulltest_client: PortalClient):
     singlepoints = rec.singlepoints
 
     # Finding the highest energy image from the last iteration SinglepointRecords.
-    neb_result_id = 0
-    energy = -9999999
-    for sp in singlepoints[max(singlepoints.keys())]:
-        if sp.properties["current energy"] > energy:
-            energy = sp.properties["current energy"]
-            neb_result_id = sp.molecule_id
+    last_sps = singlepoints[max(singlepoints.keys())]
+    sp_energies = [(sp.properties["current energy"], sp.molecule_id) for sp in last_sps]
+    energy, neb_result_id = max(sp_energies)
 
     # Completed?
     assert rec.status == RecordStatusEnum.complete
@@ -164,7 +160,7 @@ def test_neb_full_2(fulltest_client: PortalClient):
     assert len(optimizations) == 0
     # There should not be ts_optimization record.
     assert rec.ts_optimization is None
-    # When optimize_ts is False, rec.singlepoints should not have -1 key.
-    assert -1 not in singlepoints
+    # When optimize_ts is False, there should not ba a record for the Hessian.
+    assert hessian is None
     # Result of the neb and the highest energy image of the last iteration should have the same molecule id.
     assert ts_guess.id == neb_result_id

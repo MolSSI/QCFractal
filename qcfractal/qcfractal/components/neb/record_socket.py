@@ -400,7 +400,6 @@ class NEBRecordSocket(BaseRecordSocket):
                 opt_spec = neb_orm.specification.optimization_specification.model_dict()
                 qc_spec = opt_spec["qc_specification"]
             qc_spec["driver"] = "hessian"
-            service_state.iteration = -1
 
         meta, sp_ids = self.root_socket.records.singlepoint.add(
             chain,

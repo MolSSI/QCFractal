@@ -121,7 +121,6 @@ class NEBQueryFilters(RecordQueryFilters):
 
 
 class NEBRecord(BaseRecord):
-
     record_type: Literal["neb"] = "neb"
     specification: NEBSpecification
 
@@ -131,6 +130,7 @@ class NEBRecord(BaseRecord):
     initial_chain_molecule_ids_: Optional[List[int]] = None
     singlepoints_: Optional[List[NEBSinglepoint]] = None
     optimizations_: Optional[Dict[str, NEBOptimization]] = None
+    ts_hessian_: Optional[SinglepointRecord] = None
 
     ########################################
     # Caches
@@ -214,8 +214,6 @@ class NEBRecord(BaseRecord):
 
         if "initial_chain" in includes:
             self._fetch_initial_chain()
-        if "final_chain" in includes:
-            self._fetch_singlepoints()
         if "singlepoints" in includes:
             self._fetch_singlepoints()
         if "optimizations" in includes:
@@ -229,12 +227,26 @@ class NEBRecord(BaseRecord):
 
     @property
     def final_chain(self) -> List[SinglepointRecord]:
+        if self.optimizations.get("transition", None) is not None and self.ts_hessian_ is None:
+            self.singlepoints
         return self.singlepoints[max(self.singlepoints.keys())]
+
+    @property
+    def ts_hessian(self) -> Optional[SinglepointRecord]:
+        if self.optimizations.get("transition", None) is not None:
+            if self.ts_hessian_ is None:
+                self.singlepoints
+            return self.ts_hessian_
+        else:
+            return None
 
     @property
     def singlepoints(self) -> Dict[int, List[SinglepointRecord]]:
         if self.singlepoints_cache_ is None:
             self._fetch_singlepoints()
+        if self.optimizations.get("transition", None) is not None and self.ts_hessian_ is None:
+            _, temp_list = self.singlepoints_cache_.popitem()
+            self.ts_hessian_ = temp_list[0]
         return self.singlepoints_cache_
 
     @property
