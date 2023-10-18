@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.dataset_models &#8212; QCArchive 0.50.post79+gfc3cd304 documentation</title>
+    <title>qcportal.dataset_models &#8212; QCArchive 0.50.post85+g0e2f3ef0 documentation</title>
   
   
   
@@ -458,10 +458,12 @@ document.write(`
 <span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">PrivateAttr</span><span class="p">,</span> <span class="n">Field</span>
 <span class="kn">from</span> <span class="nn">qcelemental.models.types</span> <span class="kn">import</span> <span class="n">Array</span>
 <span class="kn">from</span> <span class="nn">tabulate</span> <span class="kn">import</span> <span class="n">tabulate</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
 
 <span class="kn">from</span> <span class="nn">qcportal.base_models</span> <span class="kn">import</span> <span class="n">RestModelBase</span><span class="p">,</span> <span class="n">validate_list_to_single</span><span class="p">,</span> <span class="n">CommonBulkGetBody</span>
 <span class="kn">from</span> <span class="nn">qcportal.dataset_view</span> <span class="kn">import</span> <span class="n">DatasetViewWrapper</span>
 <span class="kn">from</span> <span class="nn">qcportal.metadata_models</span> <span class="kn">import</span> <span class="n">DeleteMetadata</span>
+<span class="kn">from</span> <span class="nn">qcportal.metadata_models</span> <span class="kn">import</span> <span class="n">InsertMetadata</span>
 <span class="kn">from</span> <span class="nn">qcportal.record_models</span> <span class="kn">import</span> <span class="n">PriorityEnum</span><span class="p">,</span> <span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="n">BaseRecord</span>
 <span class="kn">from</span> <span class="nn">qcportal.utils</span> <span class="kn">import</span> <span class="n">make_list</span><span class="p">,</span> <span class="n">chunk_iterable</span>
 
@@ -550,6 +552,7 @@ document.write(`
 
     <span class="c1"># To be overridden by the derived classes</span>
     <span class="n">_entry_type</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Type</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_new_entry_type</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Type</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">_specification_type</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Type</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">_record_item_type</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Type</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">_record_type</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Type</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -598,34 +601,62 @@ document.write(`
         <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_map_</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="n">record</span><span class="o">.</span><span class="n">populate_client</span><span class="p">(</span><span class="n">client</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">_post_add_entries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entry_names</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_add_entries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entries</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">InsertMetadata</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Perform some actions after entries have been added to the remote server</span>
+<span class="sd">        Internal function for adding entries to a dataset</span>
+
+<span class="sd">        This function handles batching and some type checking</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        entry_names</span>
-<span class="sd">            Names of the new entries that have been added to the remote server</span>
+<span class="sd">        entries</span>
+<span class="sd">            Entries to add. May be just a single entry or a sequence of entries</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="c1"># If entry names have been fetched, add the new entry names</span>
-        <span class="c1"># This should still be ok if there are no entries - they will be fetched if the list is empty</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">entry_names_</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">entry_names_</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">entry_names</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">entry_names_</span><span class="p">)</span>
+        <span class="n">entries</span> <span class="o">=</span> <span class="n">make_list</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">InsertMetadata</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">_post_add_specification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">specification_name</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new_entry_type</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">),</span> <span class="s2">&quot;Incorrect entry type&quot;</span>
+        <span class="n">uri</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/entries/bulkCreate&quot;</span>
+
+        <span class="n">n_batches</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span> <span class="o">//</span> <span class="mi">1000</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">all_meta</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">InsertMetadata</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">entry_batch</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">chunk_iterable</span><span class="p">(</span><span class="n">entries</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span> <span class="n">total</span><span class="o">=</span><span class="n">n_batches</span><span class="p">,</span> <span class="n">disable</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">InsertMetadata</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">entry_batch</span><span class="p">)</span>
+
+            <span class="c1"># If entry names have been fetched, add the new entry names</span>
+            <span class="c1"># This should still be ok if there are no entries - they will be fetched if the list is empty</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">entry_names_</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">entry_names_</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">entry_batch</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">entry_names_</span><span class="p">)</span>
+
+            <span class="n">all_meta</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">InsertMetadata</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">all_meta</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_add_specifications</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">specifications</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">InsertMetadata</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Perform some actions after specifications have been added to the remote server</span>
+<span class="sd">        Internal function for adding specifications to a dataset</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        specification_name</span>
-<span class="sd">            Name of the new specification that has been added to the remote server</span>
+<span class="sd">        specifications</span>
+<span class="sd">            Specifications to add. May be just a single specification or a sequence of entries</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="c1"># Ignoring the function argument for now... Just get all specs</span>
+        <span class="n">specifications</span> <span class="o">=</span> <span class="n">make_list</span><span class="p">(</span><span class="n">specifications</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">specifications</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">InsertMetadata</span><span class="p">()</span>
+
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_specification_type</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">specifications</span><span class="p">),</span> <span class="s2">&quot;Incorrect specification type&quot;</span>
+        <span class="n">uri</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/specifications&quot;</span>
+
+        <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">InsertMetadata</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">specifications</span><span class="p">)</span>
+
         <span class="c1"># TODO - very inefficient for lots of specs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fetch_specifications</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">ret</span>
 
     <span class="k">def</span> <span class="nf">_update_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
@@ -669,17 +700,30 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
 
-        <span class="n">body_data</span> <span class="o">=</span> <span class="n">DatasetSubmitBody</span><span class="p">(</span>
-            <span class="n">entry_names</span><span class="o">=</span><span class="n">make_list</span><span class="p">(</span><span class="n">entry_names</span><span class="p">),</span>
-            <span class="n">specification_names</span><span class="o">=</span><span class="n">make_list</span><span class="p">(</span><span class="n">specification_names</span><span class="p">),</span>
-            <span class="n">tag</span><span class="o">=</span><span class="n">tag</span><span class="p">,</span>
-            <span class="n">priority</span><span class="o">=</span><span class="n">priority</span><span class="p">,</span>
-            <span class="n">find_existing</span><span class="o">=</span><span class="n">find_existing</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="n">entry_names</span> <span class="o">=</span> <span class="n">make_list</span><span class="p">(</span><span class="n">entry_names</span><span class="p">)</span>
+        <span class="n">specification_names</span> <span class="o">=</span> <span class="n">make_list</span><span class="p">(</span><span class="n">specification_names</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
-            <span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/submit&quot;</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body_data</span>
-        <span class="p">)</span></div>
+        <span class="c1"># Do automatic batching here</span>
+        <span class="c1"># (will be removed when we move to async)</span>
+        <span class="k">if</span> <span class="n">entry_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">entry_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">entry_names</span>
+        <span class="k">if</span> <span class="n">specification_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">specification_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">specification_names</span>
+
+        <span class="n">n_batches</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">entry_names</span><span class="p">)</span> <span class="o">//</span> <span class="mi">1000</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">specification_names</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">entry_batch</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">chunk_iterable</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span> <span class="n">total</span><span class="o">=</span><span class="n">n_batches</span><span class="p">,</span> <span class="n">disable</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                <span class="n">body_data</span> <span class="o">=</span> <span class="n">DatasetSubmitBody</span><span class="p">(</span>
+                    <span class="n">entry_names</span><span class="o">=</span><span class="n">entry_batch</span><span class="p">,</span>
+                    <span class="n">specification_names</span><span class="o">=</span><span class="p">[</span><span class="n">spec</span><span class="p">],</span>
+                    <span class="n">tag</span><span class="o">=</span><span class="n">tag</span><span class="p">,</span>
+                    <span class="n">priority</span><span class="o">=</span><span class="n">priority</span><span class="p">,</span>
+                    <span class="n">find_existing</span><span class="o">=</span><span class="n">find_existing</span><span class="p">,</span>
+                <span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+                    <span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/submit&quot;</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body_data</span>
+                <span class="p">)</span></div>
 
     <span class="c1">#########################################</span>
     <span class="c1"># Various properties and getters/setters</span>
