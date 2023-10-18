@@ -250,17 +250,30 @@ class BaseDataset(BaseModel):
         self.assert_is_not_view()
         self.assert_online()
 
-        body_data = DatasetSubmitBody(
-            entry_names=make_list(entry_names),
-            specification_names=make_list(specification_names),
-            tag=tag,
-            priority=priority,
-            find_existing=find_existing,
-        )
+        entry_names = make_list(entry_names)
+        specification_names = make_list(specification_names)
 
-        return self._client.make_request(
-            "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/submit", Any, body=body_data
-        )
+        # Do automatic batching here
+        # (will be removed when we move to async)
+        if entry_names is None:
+            entry_names = self.entry_names
+        if specification_names is None:
+            specification_names = self.specification_names
+
+        n_batches = len(entry_names) // 1000 + 1
+        for spec in specification_names:
+            for entry_batch in tqdm(chunk_iterable(entry_names, 1000), total=n_batches, disable=None):
+                body_data = DatasetSubmitBody(
+                    entry_names=entry_batch,
+                    specification_names=[spec],
+                    tag=tag,
+                    priority=priority,
+                    find_existing=find_existing,
+                )
+
+                self._client.make_request(
+                    "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/submit", Any, body=body_data
+                )
 
     #########################################
     # Various properties and getters/setters

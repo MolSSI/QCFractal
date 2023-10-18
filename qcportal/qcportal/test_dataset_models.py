@@ -139,7 +139,7 @@ def test_dataset_model_status(snowflake: QCATestingSnowflake):
     assert ds.status() == {"spec_1": {RecordStatusEnum.complete: 1, RecordStatusEnum.waiting: 1}}
 
 
-def test_dataset_model_add_entry_many(snowflake_client: PortalClient):
+def test_dataset_model_add_submit_many(snowflake_client: PortalClient):
 
     ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
     assert ds.status() == {}
@@ -161,3 +161,14 @@ def test_dataset_model_add_entry_many(snowflake_client: PortalClient):
     assert meta.n_existing == 2999
     assert meta.existing_idx == list(range(2999))
     assert meta.n_errors == 0
+
+    ds.add_specification(
+        "test_spec", specification={"program": "test_prog", "driver": "energy", "method": "HF", "basis": "sto-3g"}
+    )
+    ds.add_specification(
+        "test_spec_2", specification={"program": "test_prog_2", "driver": "energy", "method": "HF", "basis": "sto-3g"}
+    )
+
+    ds.submit()
+
+    assert ds.record_count == 2999 * 2
