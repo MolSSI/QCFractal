@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Base Record &#8212; QCArchive 0.50.post72+g2c6890d4 documentation</title>
+    <title>Base Record &#8212; QCArchive 0.50.post79+gfc3cd304 documentation</title>
   
   
   
@@ -1374,18 +1374,71 @@ If <cite>force_refetch</cite> is True, then this will always fetch the records.<
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.compile_values">
-<span class="sig-name descname"><span class="pre">compile_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value_call</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fetch_updated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_refetch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.compile_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.compile_values" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<span class="sig-name descname"><span class="pre">compile_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value_call</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'value'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.compile_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.compile_values" title="Permalink to this definition">#</a></dt>
+<dd><p>Compile values from records into a pandas DataFrame.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>value_call</strong> (<em>Callable</em>) – </p></li>
-<li><p><strong>value_name</strong> (<em>str</em>) – </p></li>
-<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>fetch_updated</strong> (<em>bool</em>) – </p></li>
-<li><p><strong>force_refetch</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>value_call</strong> (<em>Callable</em>) – Function to call on each record to extract the desired value. Must return a scalar value or
+a sequence of values if ‘unpack’ is set to True.</p></li>
+<li><p><strong>value_names</strong> (<em>Union</em><em>[</em><em>Sequence</em><em>[</em><em>str</em><em>]</em><em>, </em><em>str</em><em>]</em>) – Column name(s) for the extracted value(s). If a string is provided and multiple values are
+returned by ‘value_call’, columns are named by appending an index to this string. If a list
+of strings is provided, it must match the length of the sequence returned by ‘value_call’.
+Default is “value”.</p></li>
+<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Entry names to filter records. If not provided, considers all entries.</p></li>
+<li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Specification names to filter records. If not provided, considers all specifications.</p></li>
+<li><p><strong>unpack</strong> (<em>bool</em>) – If True, unpack the sequence of values returned by ‘value_call’ into separate columns.
+Default is False.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A multi-index DataFrame where each row corresponds to an entry. Each column corresponds has a top level
+index as a specification, and a second level index as the appropriate value name.
+Values are extracted from records using ‘value_call’.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the length of ‘value_names’ does not match the number of values returned by ‘value_call’ when
+    ‘unpack’ is set to True.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ol class="arabic simple">
+<li><p>The DataFrame is structured such that the rows are entries and columns are specifications.</p></li>
+</ol>
+<p>2. If ‘unpack’ is True, the function assumes ‘value_call’ returns a sequence of values that need
+to be distributed across columns in the resulting DataFrame. ‘value_call’ should always return the
+same number of values for each record if unpack is True.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.get_properties_df">
+<span class="sig-name descname"><span class="pre">get_properties_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties_list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.get_properties_df"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.get_properties_df" title="Permalink to this definition">#</a></dt>
+<dd><p>Retrieve a DataFrame populated with the specified properties from dataset records.</p>
+<p>This function uses the provided list of property names to extract corresponding
+values from each record’s properties. It returns a DataFrame where rows represent
+each record. Each column corresponds has a top level index as a specification,
+and a second level index as the appropriate value name. Columns with all
+NaN values are dropped.</p>
+<section id="parameters">
+<h2>Parameters:<a class="headerlink" href="#parameters" title="Permalink to this heading">#</a></h2>
+<dl class="simple">
+<dt>properties_list</dt><dd><p>List of property names to retrieve from the records.</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h2>Returns:<a class="headerlink" href="#returns" title="Permalink to this heading">#</a></h2>
+<dl class="simple">
+<dt>pd.DataFrame</dt><dd><p>A DataFrame populated with the specified properties for each record.</p>
+</dd>
+</dl>
+</section>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>properties_list</strong> (<em>Sequence</em><em>[</em><em>str</em><em>]</em>) – </p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>DataFrame</em></p>
@@ -2199,6 +2252,7 @@ of a record query, and works with all kinds of records.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.invalidate_records"><code class="docutils literal notranslate"><span class="pre">BaseDataset.invalidate_records()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.uninvalidate_records"><code class="docutils literal notranslate"><span class="pre">BaseDataset.uninvalidate_records()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.compile_values"><code class="docutils literal notranslate"><span class="pre">BaseDataset.compile_values()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.get_properties_df"><code class="docutils literal notranslate"><span class="pre">BaseDataset.get_properties_df()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.fetch_contributed_values"><code class="docutils literal notranslate"><span class="pre">BaseDataset.fetch_contributed_values()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.contributed_values"><code class="docutils literal notranslate"><span class="pre">BaseDataset.contributed_values</span></code></a></li>
 </ul>
