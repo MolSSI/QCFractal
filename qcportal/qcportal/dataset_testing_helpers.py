@@ -301,13 +301,15 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare):
     assert ds._client.list_datasets()[0]["record_count"] == record_count
 
 
-def run_dataset_model_submit_missing(ds):
+def run_dataset_model_submit_missing(ds, test_entries, test_spec):
+    ds.add_specification("spec_1", test_spec)
+    ds.add_entries(test_entries)
     ds.submit()  # should be ok
 
     with pytest.raises(PortalRequestError, match="Could not find all entries"):
-        ds.submit(entry_names="entry_1")
+        ds.submit(entry_names="non_entry_1")
     with pytest.raises(PortalRequestError, match="Could not find all specifications"):
-        ds.submit(specification_names="spec_1")
+        ds.submit(specification_names="non_spec_1")
 
 
 def run_dataset_model_iterate_updated(ds, test_entries, test_spec):

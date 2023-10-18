@@ -155,7 +155,7 @@ def test_gridoptimization_dataset_model_submit(snowflake_client: PortalClient):
 
 def test_gridoptimization_dataset_model_submit_missing(snowflake_client: PortalClient):
     ds = snowflake_client.add_dataset("gridoptimization", "Test dataset")
-    ds_helpers.run_dataset_model_submit_missing(ds)
+    ds_helpers.run_dataset_model_submit_missing(ds, test_entries, test_specs[0])
 
 
 def test_gridoptimization_dataset_model_iterate_updated(snowflake_client: PortalClient):
