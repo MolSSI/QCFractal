@@ -10,7 +10,6 @@ from qcportal.gridoptimization.record_models import (
 )
 from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
-from qcportal.utils import make_list
 
 
 class GridoptimizationDatasetNewEntry(BaseModel):
@@ -60,6 +59,7 @@ class GridoptimizationDataset(BaseDataset):
 
     # Needed by the base class
     _entry_type = GridoptimizationDatasetEntry
+    _new_entry_type = GridoptimizationDatasetNewEntry
     _specification_type = GridoptimizationDatasetSpecification
     _record_item_type = GridoptimizationDatasetRecordItem
     _record_type = GridoptimizationRecord
@@ -69,32 +69,13 @@ class GridoptimizationDataset(BaseDataset):
     ) -> InsertMetadata:
 
         spec = GridoptimizationDatasetSpecification(name=name, specification=specification, description=description)
-
-        ret = self._client.make_request(
-            "post",
-            f"api/v1/datasets/gridoptimization/{self.id}/specifications",
-            InsertMetadata,
-            body=[spec],
-        )
-
-        self._post_add_specification(name)
-        return ret
+        return self._add_specifications(spec)
 
     def add_entries(
         self, entries: Union[GridoptimizationDatasetNewEntry, Iterable[GridoptimizationDatasetNewEntry]]
     ) -> InsertMetadata:
 
-        entries = make_list(entries)
-        ret = self._client.make_request(
-            "post",
-            f"api/v1/datasets/gridoptimization/{self.id}/entries/bulkCreate",
-            InsertMetadata,
-            body=entries,
-        )
-
-        new_names = [x.name for x in entries]
-        self._post_add_entries(new_names)
-        return ret
+        return self._add_entries(entries)
 
     def add_entry(
         self,

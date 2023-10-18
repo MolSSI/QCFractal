@@ -10,7 +10,6 @@ from qcportal.singlepoint.record_models import (
     SinglepointRecord,
     QCSpecification,
 )
-from qcportal.utils import make_list
 
 
 class SinglepointDatasetNewEntry(BaseModel):
@@ -60,6 +59,7 @@ class SinglepointDataset(BaseDataset):
 
     # Needed by the base class
     _entry_type = SinglepointDatasetEntry
+    _new_entry_type = SinglepointDatasetNewEntry
     _specification_type = SinglepointDatasetSpecification
     _record_item_type = SinglepointDatasetRecordItem
     _record_type = SinglepointRecord
@@ -69,33 +69,12 @@ class SinglepointDataset(BaseDataset):
     ) -> InsertMetadata:
 
         spec = SinglepointDatasetSpecification(name=name, specification=specification, description=description)
-
-        ret = self._client.make_request(
-            "post",
-            f"api/v1/datasets/singlepoint/{self.id}/specifications",
-            InsertMetadata,
-            body=[spec],
-        )
-
-        self._post_add_specification(name)
-        return ret
+        return self._add_specifications(spec)
 
     def add_entries(
         self, entries: Union[SinglepointDatasetNewEntry, Iterable[SinglepointDatasetNewEntry]]
     ) -> InsertMetadata:
-
-        entries = make_list(entries)
-        ret = self._client.make_request(
-            "post",
-            f"api/v1/datasets/singlepoint/{self.id}/entries/bulkCreate",
-            InsertMetadata,
-            body=entries,
-        )
-
-        new_names = [x.name for x in entries]
-        self._post_add_entries(new_names)
-
-        return ret
+        return self._add_entries(entries)
 
     def add_entry(
         self,

@@ -1,4 +1,4 @@
-from typing import Dict, Any, Union, Optional, List, Iterable, Tuple
+from typing import Dict, Any, Union, Optional, Iterable, Tuple
 
 from pydantic import BaseModel, Extra
 from typing_extensions import Literal
@@ -7,7 +7,6 @@ from qcportal.dataset_models import BaseDataset
 from qcportal.manybody.record_models import ManybodyRecord, ManybodySpecification
 from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
-from qcportal.utils import make_list
 
 
 class ManybodyDatasetNewEntry(BaseModel):
@@ -53,6 +52,7 @@ class ManybodyDataset(BaseDataset):
 
     # Needed by the base class
     _entry_type = ManybodyDatasetEntry
+    _new_entry_type = ManybodyDatasetNewEntry
     _specification_type = ManybodyDatasetSpecification
     _record_item_type = ManybodyDatasetRecordItem
     _record_type = ManybodyRecord
@@ -60,33 +60,12 @@ class ManybodyDataset(BaseDataset):
     def add_specification(
         self, name: str, specification: ManybodySpecification, description: Optional[str] = None
     ) -> InsertMetadata:
-        initial_molecules: Optional[List[Molecule]]
 
         spec = ManybodyDatasetSpecification(name=name, specification=specification, description=description)
-
-        ret = self._client.make_request(
-            "post",
-            f"api/v1/datasets/manybody/{self.id}/specifications",
-            InsertMetadata,
-            body=[spec],
-        )
-
-        self._post_add_specification(name)
-        return ret
+        return self._add_specifications(spec)
 
     def add_entries(self, entries: Union[ManybodyDatasetNewEntry, Iterable[ManybodyDatasetNewEntry]]) -> InsertMetadata:
-
-        entries = make_list(entries)
-        ret = self._client.make_request(
-            "post",
-            f"api/v1/datasets/manybody/{self.id}/entries/bulkCreate",
-            InsertMetadata,
-            body=entries,
-        )
-
-        new_names = [x.name for x in entries]
-        self._post_add_entries(new_names)
-        return ret
+        return self._add_entries(entries)
 
     def add_entry(
         self,

@@ -1,4 +1,4 @@
-from typing import Dict, Any, Union, Optional, List, Iterable, Tuple
+from typing import Dict, Any, Union, Optional, Iterable, Tuple
 
 from pydantic import BaseModel, Extra
 from typing_extensions import Literal
@@ -7,7 +7,6 @@ from qcportal.dataset_models import BaseDataset
 from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
 from qcportal.optimization.record_models import OptimizationRecord, OptimizationSpecification
-from qcportal.utils import make_list
 
 
 class OptimizationDatasetNewEntry(BaseModel):
@@ -56,6 +55,7 @@ class OptimizationDataset(BaseDataset):
 
     # Needed by the base class
     _entry_type = OptimizationDatasetEntry
+    _new_entry_type = OptimizationDatasetNewEntry
     _specification_type = OptimizationDatasetSpecification
     _record_item_type = OptimizationDatasetRecordItem
     _record_type = OptimizationRecord
@@ -63,36 +63,14 @@ class OptimizationDataset(BaseDataset):
     def add_specification(
         self, name: str, specification: OptimizationSpecification, description: Optional[str] = None
     ) -> InsertMetadata:
-        initial_molecules: Optional[List[Molecule]]
 
         spec = OptimizationDatasetSpecification(name=name, specification=specification, description=description)
-
-        ret = self._client.make_request(
-            "post",
-            f"api/v1/datasets/optimization/{self.id}/specifications",
-            InsertMetadata,
-            body=[spec],
-        )
-
-        self._post_add_specification(name)
-        return ret
+        return self._add_specifications(spec)
 
     def add_entries(
         self, entries: Union[OptimizationDatasetNewEntry, Iterable[OptimizationDatasetNewEntry]]
     ) -> InsertMetadata:
-
-        entries = make_list(entries)
-
-        ret = self._client.make_request(
-            "post",
-            f"api/v1/datasets/optimization/{self.id}/entries/bulkCreate",
-            InsertMetadata,
-            body=entries,
-        )
-
-        new_names = [x.name for x in entries]
-        self._post_add_entries(new_names)
-        return ret
+        return self._add_entries(entries)
 
     def add_entry(
         self,

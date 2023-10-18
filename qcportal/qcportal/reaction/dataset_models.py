@@ -7,7 +7,6 @@ from qcportal.dataset_models import BaseDataset
 from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
 from qcportal.reaction.record_models import ReactionRecord, ReactionSpecification
-from qcportal.utils import make_list
 
 
 class ReactionDatasetEntryStoichiometry(BaseModel):
@@ -64,6 +63,7 @@ class ReactionDataset(BaseDataset):
 
     # Needed by the base class
     _entry_type = ReactionDatasetEntry
+    _new_entry_type = ReactionDatasetNewEntry
     _specification_type = ReactionDatasetSpecification
     _record_item_type = ReactionDatasetRecordItem
     _record_type = ReactionRecord
@@ -73,30 +73,10 @@ class ReactionDataset(BaseDataset):
     ) -> InsertMetadata:
 
         spec = ReactionDatasetSpecification(name=name, specification=specification, description=description)
-
-        ret = self._client.make_request(
-            "post",
-            f"api/v1/datasets/reaction/{self.id}/specifications",
-            InsertMetadata,
-            body=[spec],
-        )
-
-        self._post_add_specification(name)
-        return ret
+        return self._add_specifications(spec)
 
     def add_entries(self, entries: Union[ReactionDatasetEntry, Iterable[ReactionDatasetNewEntry]]) -> InsertMetadata:
-
-        entries = make_list(entries)
-        ret = self._client.make_request(
-            "post",
-            f"api/v1/datasets/reaction/{self.id}/entries/bulkCreate",
-            InsertMetadata,
-            body=make_list(entries),
-        )
-
-        new_names = [x.name for x in entries]
-        self._post_add_entries(new_names)
-        return ret
+        return self._add_entries(entries)
 
     def add_entry(
         self,

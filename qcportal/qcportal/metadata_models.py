@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import dataclasses
-from typing import List, Optional, Tuple, Dict, Any
+from typing import List, Optional, Tuple, Dict, Sequence, Any
 
 from pydantic import validator, root_validator
 from pydantic.dataclasses import dataclass
@@ -89,6 +91,33 @@ class InsertMetadata:
         """
 
         return dataclasses.asdict(self)
+
+    @staticmethod
+    def merge(metadata: Sequence[InsertMetadata]) -> InsertMetadata:
+        new_inserted_idx: List[int] = []
+        new_existing_idx: List[int] = []
+        new_errors: List[Tuple[int, str]] = []
+        new_error_description: Optional[str] = None
+
+        base_idx = 0
+        for m in metadata:
+            new_inserted_idx.extend(i + base_idx for i in m.inserted_idx)
+            new_existing_idx.extend(i + base_idx for i in m.existing_idx)
+            new_errors.extend((i + base_idx, e) for i, e in m.errors)
+            if m.error_description is not None:
+                if new_error_description is None:
+                    new_error_description = m.error_description
+                else:
+                    new_error_description += "\n" + m.error_description
+
+            base_idx += len(m.inserted_idx) + len(m.existing_idx) + len(m.errors)
+
+        return InsertMetadata(
+            inserted_idx=new_inserted_idx,
+            existing_idx=new_existing_idx,
+            errors=new_errors,
+            error_description=new_error_description,
+        )
 
 
 @dataclass

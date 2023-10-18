@@ -10,7 +10,6 @@ from qcportal.neb.record_models import (
     NEBRecord,
     NEBSpecification,
 )
-from qcportal.utils import make_list
 
 
 class NEBDatasetNewEntry(BaseModel):
@@ -58,6 +57,7 @@ class NEBDataset(BaseDataset):
 
     # Needed by the base class
     _entry_type = NEBDatasetEntry
+    _new_entry_type = NEBDatasetNewEntry
     _specification_type = NEBDatasetSpecification
     _record_item_type = NEBDatasetRecordItem
     _record_type = NEBRecord
@@ -67,30 +67,10 @@ class NEBDataset(BaseDataset):
     ) -> InsertMetadata:
 
         spec = NEBDatasetSpecification(name=name, specification=specification, description=description)
-
-        ret = self._client.make_request(
-            "post",
-            f"api/v1/datasets/neb/{self.id}/specifications",
-            InsertMetadata,
-            body=[spec],
-        )
-
-        self._post_add_specification(name)
-        return ret
+        return self._add_specifications(spec)
 
     def add_entries(self, entries: Union[NEBDatasetNewEntry, Iterable[NEBDatasetNewEntry]]) -> InsertMetadata:
-
-        entries = make_list(entries)
-        ret = self._client.make_request(
-            "post",
-            f"api/v1/datasets/neb/{self.id}/entries/bulkCreate",
-            InsertMetadata,
-            body=entries,
-        )
-
-        new_names = [x.name for x in entries]
-        self._post_add_entries(new_names)
-        return ret
+        return self._add_entries(entries)
 
     def add_entry(
         self,

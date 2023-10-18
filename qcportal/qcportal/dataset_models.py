@@ -8,10 +8,12 @@ import pydantic
 from pydantic import BaseModel, Extra, validator, PrivateAttr, Field
 from qcelemental.models.types import Array
 from tabulate import tabulate
+from tqdm import tqdm
 
 from qcportal.base_models import RestModelBase, validate_list_to_single, CommonBulkGetBody
 from qcportal.dataset_view import DatasetViewWrapper
 from qcportal.metadata_models import DeleteMetadata
+from qcportal.metadata_models import InsertMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, BaseRecord
 from qcportal.utils import make_list, chunk_iterable
 
@@ -100,6 +102,7 @@ class BaseDataset(BaseModel):
 
     # To be overridden by the derived classes
     _entry_type: ClassVar[Optional[Type]] = None
+    _new_entry_type: ClassVar[Optional[Type]] = None
     _specification_type: ClassVar[Optional[Type]] = None
     _record_item_type: ClassVar[Optional[Type]] = None
     _record_type: ClassVar[Optional[Type]] = None
@@ -148,34 +151,62 @@ class BaseDataset(BaseModel):
         for record in self.record_map_.values():
             record.populate_client(client)
 
-    def _post_add_entries(self, entry_names) -> None:
+    def _add_entries(self, entries: Union[BaseModel, Sequence[BaseModel]]) -> InsertMetadata:
         """
-        Perform some actions after entries have been added to the remote server
+        Internal function for adding entries to a dataset
+
+        This function handles batching and some type checking
 
         Parameters
         ----------
-        entry_names
-            Names of the new entries that have been added to the remote server
+        entries
+            Entries to add. May be just a single entry or a sequence of entries
         """
 
-        # If entry names have been fetched, add the new entry names
-        # This should still be ok if there are no entries - they will be fetched if the list is empty
-        if self.entry_names_:
-            self.entry_names_.extend(x for x in entry_names if x not in self.entry_names_)
+        entries = make_list(entries)
+        if len(entries) == 0:
+            return InsertMetadata()
 
-    def _post_add_specification(self, specification_name) -> None:
+        assert all(isinstance(x, self._new_entry_type) for x in entries), "Incorrect entry type"
+        uri = f"api/v1/datasets/{self.dataset_type}/{self.id}/entries/bulkCreate"
+
+        n_batches = len(entries) // 1000 + 1
+        all_meta: List[InsertMetadata] = []
+        for entry_batch in tqdm(chunk_iterable(entries, 1000), total=n_batches, disable=None):
+            meta = self._client.make_request("post", uri, InsertMetadata, body=entry_batch)
+
+            # If entry names have been fetched, add the new entry names
+            # This should still be ok if there are no entries - they will be fetched if the list is empty
+            if self.entry_names_:
+                self.entry_names_.extend(x.name for x in entry_batch if x not in self.entry_names_)
+
+            all_meta.append(meta)
+
+        return InsertMetadata.merge(all_meta)
+
+    def _add_specifications(self, specifications: Union[BaseModel, Sequence[BaseModel]]) -> InsertMetadata:
         """
-        Perform some actions after specifications have been added to the remote server
+        Internal function for adding specifications to a dataset
 
         Parameters
         ----------
-        specification_name
-            Name of the new specification that has been added to the remote server
+        specifications
+            Specifications to add. May be just a single specification or a sequence of entries
         """
 
-        # Ignoring the function argument for now... Just get all specs
+        specifications = make_list(specifications)
+        if len(specifications) == 0:
+            return InsertMetadata()
+
+        assert all(isinstance(x, self._specification_type) for x in specifications), "Incorrect specification type"
+        uri = f"api/v1/datasets/{self.dataset_type}/{self.id}/specifications"
+
+        ret = self._client.make_request("post", uri, InsertMetadata, body=specifications)
+
         # TODO - very inefficient for lots of specs
         self.fetch_specifications()
+
+        return ret
 
     def _update_metadata(self, **kwargs):
         self.assert_online()
@@ -219,17 +250,30 @@ class BaseDataset(BaseModel):
         self.assert_is_not_view()
         self.assert_online()
 
-        body_data = DatasetSubmitBody(
-            entry_names=make_list(entry_names),
-            specification_names=make_list(specification_names),
-            tag=tag,
-            priority=priority,
-            find_existing=find_existing,
-        )
+        entry_names = make_list(entry_names)
+        specification_names = make_list(specification_names)
 
-        return self._client.make_request(
-            "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/submit", Any, body=body_data
-        )
+        # Do automatic batching here
+        # (will be removed when we move to async)
+        if entry_names is None:
+            entry_names = self.entry_names
+        if specification_names is None:
+            specification_names = self.specification_names
+
+        n_batches = len(entry_names) // 1000 + 1
+        for spec in specification_names:
+            for entry_batch in tqdm(chunk_iterable(entry_names, 1000), total=n_batches, disable=None):
+                body_data = DatasetSubmitBody(
+                    entry_names=entry_batch,
+                    specification_names=[spec],
+                    tag=tag,
+                    priority=priority,
+                    find_existing=find_existing,
+                )
+
+                self._client.make_request(
+                    "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/submit", Any, body=body_data
+                )
 
     #########################################
     # Various properties and getters/setters
