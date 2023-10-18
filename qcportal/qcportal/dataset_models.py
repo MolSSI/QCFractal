@@ -1116,7 +1116,7 @@ class BaseDataset(BaseModel):
     def compile_values(
         self,
         value_call: Callable,
-        value_names: Union[List[str], str] = "value",
+        value_names: Union[Sequence[str], str] = "value",
         entry_names: Optional[Union[str, Iterable[str]]] = None,
         specification_names: Optional[Union[str, Iterable[str]]] = None,
         unpack: bool = False,
@@ -1126,23 +1126,23 @@ class BaseDataset(BaseModel):
 
         Parameters
         -----------
-        value_call : Callable
+        value_call 
             Function to call on each record to extract the desired value. Must return a scalar value or 
             a sequence of values if 'unpack' is set to True.
 
-        value_names : Union[List[str], str], optional
+        value_names
             Column name(s) for the extracted value(s). If a string is provided and multiple values are 
             returned by 'value_call', columns are named by appending an index to this string. If a list 
             of strings is provided, it must match the length of the sequence returned by 'value_call'.
             Default is "value".
 
-        entry_names : Optional[Union[str, Iterable[str]]], optional
+        entry_names 
             Entry names to filter records. If not provided, considers all entries.
 
-        specification_names : Optional[Union[str, Iterable[str]]], optional
+        specification_names 
             Specification names to filter records. If not provided, considers all specifications.
 
-        unpack : bool, optional
+        unpack
             If True, unpack the sequence of values returned by 'value_call' into separate columns.
             Default is False.
 
@@ -1209,7 +1209,7 @@ class BaseDataset(BaseModel):
         # Make specification top level index.
         return return_val.swaplevel(axis=1)
 
-    def get_properties_df(self, properties_list: List[str]) -> pd.DataFrame:
+    def get_properties_df(self, properties_list: Sequence[str]) -> pd.DataFrame:
         """
         Retrieve a DataFrame populated with the specified properties from dataset records.
 
@@ -1221,7 +1221,7 @@ class BaseDataset(BaseModel):
 
         Parameters:
         -----------
-        properties_list : List[str]
+        properties_list 
             List of property names to retrieve from the records.
 
         Returns:
