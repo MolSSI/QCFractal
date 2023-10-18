@@ -25,3 +25,6 @@ def test_seconds_to_hms():
     assert seconds_to_hms(3601) == "01:00:01"
     assert seconds_to_hms(3600 * 2 + 50) == "02:00:50"
     assert seconds_to_hms(3600 * 25 + 9) == "25:00:09"
+
+    assert seconds_to_hms(31.0) == "00:00:31.00"
+    assert seconds_to_hms(3670.12) == "01:01:10.12"

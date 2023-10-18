@@ -65,14 +65,24 @@ def chunk_iterable(it: Iterable[_T], chunk_size: int) -> Generator[List[_T], Non
         batch = list(itertools.islice(i, chunk_size))
 
 
-def seconds_to_hms(seconds: int) -> str:
+def seconds_to_hms(seconds: Union[float, int]) -> str:
     """
     Converts a number of seconds (as an integer) to a string representing hh:mm:ss
     """
 
+    if isinstance(seconds, float):
+        fraction = seconds % 1
+        seconds = int(seconds)
+    else:
+        fraction = None
+
     hours, seconds = divmod(seconds, 3600)
     minutes, seconds = divmod(seconds, 60)
-    return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+
+    if fraction is None:
+        return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+    else:
+        return f"{hours:02d}:{minutes:02d}:{seconds+fraction:02.2f}"
 
 
 def recursive_normalizer(value: Any, digits: int = 10, lowercase: bool = True) -> Any:

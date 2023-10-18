@@ -8,9 +8,10 @@ import time
 import traceback
 import uuid
 from collections import defaultdict
-from typing import TYPE_CHECKING, Dict, List
+from typing import TYPE_CHECKING, Dict, List, Tuple
 
 import parsl.executors.high_throughput.interchange
+import tabulate
 from parsl.config import Config as ParslConfig
 from parsl.dataflow.dflow import DataFlowKernel
 from parsl.dataflow.futures import Future as ParslFuture
@@ -24,6 +25,7 @@ from qcportal import ManagerClient
 from qcportal.managers import ManagerName
 from qcportal.metadata_models import TaskReturnMetadata
 from qcportal.record_models import RecordTask
+from qcportal.utils import seconds_to_hms
 from . import __version__
 from .apps.models import AppTaskResult
 from .compress import compress_result
@@ -120,6 +122,9 @@ class ComputeManager:
 
         # key = executor label, value = (key = task_id, value = parsl future)
         self._task_futures: Dict[str, Dict[int, ParslFuture]] = {exl: {} for exl in config.executors.keys()}
+
+        # Mapping of task_id to record_id
+        self._record_id_map: Dict[int, int] = {}
 
         self.all_queue_tags = []
         for ex_config in config.executors.values():
@@ -387,6 +392,35 @@ class ComputeManager:
             for task_id in finished:
                 del task_futures[task_id]
 
+        # Print out the table of finished tasks
+        # columns: task_id, record_id, executor, walltime, status
+        table_rows: List[Tuple[int, int, str, str, str]] = []
+        for executor_label, executor_results in ret.items():
+            for task_id, task_result in executor_results.items():
+                if task_result.success:
+                    status_str = "success"
+                else:
+                    status_str = "error: " + task_result.result["error"]["error_type"]
+
+                table_rows.append(
+                    (
+                        task_id,
+                        self._record_id_map[task_id],
+                        executor_label,
+                        seconds_to_hms(task_result.walltime),
+                        status_str,
+                    )
+                )
+
+        log_str = f"Acquired {len(table_rows)} finished tasks from the executors"
+
+        if table_rows:
+            log_str += "\n" + tabulate.tabulate(
+                sorted(table_rows), headers=["task id", "record id", "executor", "walltime", "status"]
+            )
+
+        self.logger.info(log_str)
+
         return ret
 
     def _submit_tasks(self, executor_label: str, tasks: List[RecordTask]):
@@ -402,37 +436,34 @@ class ComputeManager:
                 executor_config=self.manager_config.executors[executor_label],
             )
             self._task_futures[executor_label][task.id] = task_future
+            self._record_id_map[task.id] = task.record_id
 
     def _return_finished(self, results: Dict[int, AppTaskResult]) -> TaskReturnMetadata:
         # Handling of exceptions is expected to be done in the calling function
-
         to_send = {k: v.result_compressed for k, v in results.items()}
         return_meta = self.client.return_finished(to_send)
-        self.logger.info(f"Successfully return tasks to the fractal server")
 
-        if return_meta.accepted_ids:
-            self.logger.info(f"Accepted task ids: " + " ".join(str(x) for x in return_meta.accepted_ids))
-        if return_meta.rejected_ids:
-            self.logger.info(f"Rejected task ids: ")
-            for tid, reason in return_meta.rejected_info:
-                self.logger.warning(f"    Task id {tid}: {reason}")
-
-            # Update the rejected stats here - no where else knows about them
-            self.statistics.total_rejected_tasks += len(return_meta.rejected_ids)
-
-        if not return_meta.success:
+        if return_meta.success:
+            self.logger.info(f"Successfully returned {return_meta.n_accepted} tasks to the fractal server")
+        else:
             self.logger.warning(f"Error in returning tasks: {str(return_meta.error_string)}")
+
         return return_meta
 
-    def _update_deferred_tasks(self) -> None:
+    def _update_deferred_tasks(self) -> Dict[int, TaskReturnMetadata]:
         """
         Attempt to post the previous payload failures
         """
         new_deferred_tasks = defaultdict(dict)
 
+        # key = number of attempts. value = metadata
+        ret: Dict[int, TaskReturnMetadata] = {}
+
         for attempts, results in self._deferred_tasks.items():
             try:
                 return_meta = self._return_finished(results)
+                ret[attempts] = return_meta
+
                 if return_meta.success:
                     self.logger.info(f"Successfully pushed jobs from {attempts+1} updates ago")
                 else:
@@ -448,6 +479,7 @@ class ComputeManager:
                 self.logger.warning(f"Could not post jobs from {attempts-1} updates ago, will retry on next update.")
 
         self._deferred_tasks = new_deferred_tasks
+        return ret
 
     def update(self, new_tasks) -> None:
         """Examines the queue for completed tasks and adds successful completions to the database
@@ -460,11 +492,29 @@ class ComputeManager:
         """
 
         # First, try pushing back any stale results
-        self._update_deferred_tasks()
+        deferred_return_info = self._update_deferred_tasks()
 
         results = self._acquire_complete_tasks()
 
         server_up = True
+
+        # Stores rows of the status table printed at the end
+        # Columns: task_id, status, reason
+        # record_id will be added later
+        status_rows: List[Tuple[int, str, str]] = []
+
+        # Add the info from updating deferred tasks to the table
+        for attempts, return_meta in deferred_return_info.items():
+            status_rows.extend(
+                [(task_id, f"sent (was deferred {attempts})", "") for task_id in return_meta.accepted_ids]
+            )
+            status_rows.extend(
+                [
+                    (task_id, f"rejected (was deferred {attempts})", reason)
+                    for task_id, reason in return_meta.rejected_info
+                ]
+            )
+            self.statistics.total_rejected_tasks += return_meta.n_rejected
 
         # Return results to the server (per executor)
         for executor_label, executor_results in results.items():
@@ -472,34 +522,34 @@ class ComputeManager:
             # Sometimes used for saving data for later
             self.postprocess_results(executor_results)
 
-            n_success = 0
             n_result = len(executor_results)
 
-            failure_messages = {}
-
             if n_result:
+                n_success = 0
+
                 try:
                     return_meta = self._return_finished(executor_results)
-                    task_status = {k: "sent" for k in executor_results.keys() if k in return_meta.accepted_ids}
-                    task_status.update(
-                        {k: "rejected" for k in executor_results.keys() if k in return_meta.rejected_ids}
-                    )
+
+                    status_rows.extend([(task_id, "sent", "") for task_id in return_meta.accepted_ids])
+
+                    status_rows.extend([(task_id, "rejected", reason) for task_id, reason in return_meta.rejected_info])
+                    self.statistics.total_rejected_tasks += return_meta.n_rejected
+
                 except (ConnectionError, Timeout):
                     self.logger.warning("Returning complete tasks failed. Attempting again on next update.")
                     self._deferred_tasks[0].update(executor_results)
-                    task_status = {k: "deferred" for k in executor_results.keys()}
+
+                    status_rows.extend([(task_id, "deferred", "") for task_id in executor_results.keys()])
                     server_up = False
 
-                for key, app_result in executor_results.items():
+                for task_id, app_result in executor_results.items():
                     walltime_seconds = app_result.walltime
 
                     if app_result.success:
                         n_success += 1
-                        task_status[key] += " / success"
                     else:
-                        task_status[key] += f" / failed"
-                        walltime_seconds += app_result.walltime
-                        failure_messages[key] = app_result.result["error"]
+                        self.logger.debug(f"Task {task_id} (record {self._record_id_map[task_id]}) failed:")
+                        self.logger.debug(app_result.result["error"]["error_message"])
 
                     cores_per_worker = self.manager_config.executors[executor_label].cores_per_worker
                     self.statistics.total_cpu_hours += walltime_seconds * cores_per_worker / 3600
@@ -509,13 +559,6 @@ class ComputeManager:
                 self.logger.info(
                     f"Executor {executor_label}: Processed {n_result} tasks: {n_success} success / {n_fail} failed"
                 )
-                self.logger.info(f"Executor {executor_label}: Task ids, submission status, calculation status below")
-                for task_id, status_msg in task_status.items():
-                    self.logger.info(f"    Task {task_id} : {status_msg}")
-                if n_fail:
-                    self.logger.debug("The following tasks failed with the errors:")
-                    for task_id, error_info in failure_messages.items():
-                        self.logger.debug(f"Error for task id {task_id}: {error_info['error_type']}")
 
                 # Update the statistics
                 self.statistics.total_successful_tasks += n_success
@@ -539,6 +582,17 @@ class ComputeManager:
             n_active_tasks[ex_label] * ex_config.memory_per_worker
             for ex_label, ex_config in self.manager_config.executors.items()
         )
+
+        if status_rows:
+            log_str = "Task return status:\n"
+
+            # Add record_id
+            new_status_rows = [
+                (task_id, self._record_id_map[task_id], status, reason)
+                for task_id, status, reason in sorted(status_rows)
+            ]
+            log_str += tabulate.tabulate(new_status_rows, headers=["task id", "record id", "status", "reason"])
+            self.logger.info(log_str)
 
         ###########################################
         # Write statistics to the log
