@@ -7,7 +7,6 @@ from qcportal.dataset_models import BaseDataset
 from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
 from qcportal.torsiondrive.record_models import TorsiondriveRecord, TorsiondriveSpecification
-from qcportal.utils import make_list
 
 
 class TorsiondriveDatasetNewEntry(BaseModel):
@@ -59,6 +58,7 @@ class TorsiondriveDataset(BaseDataset):
 
     # Needed by the base class
     _entry_type = TorsiondriveDatasetEntry
+    _new_entry_type = TorsiondriveDatasetNewEntry
     _specification_type = TorsiondriveDatasetSpecification
     _record_item_type = TorsiondriveDatasetRecordItem
     _record_type = TorsiondriveRecord
@@ -68,32 +68,13 @@ class TorsiondriveDataset(BaseDataset):
     ) -> InsertMetadata:
 
         spec = TorsiondriveDatasetSpecification(name=name, specification=specification, description=description)
-
-        ret = self._client.make_request(
-            "post",
-            f"api/v1/datasets/torsiondrive/{self.id}/specifications",
-            InsertMetadata,
-            body=[spec],
-        )
-
-        self._post_add_specification(name)
-        return ret
+        return self._add_specifications(spec)
 
     def add_entries(
         self, entries: Union[TorsiondriveDatasetNewEntry, Iterable[TorsiondriveDatasetNewEntry]]
     ) -> InsertMetadata:
 
-        entries = make_list(entries)
-        ret = self._client.make_request(
-            "post",
-            f"api/v1/datasets/torsiondrive/{self.id}/entries/bulkCreate",
-            InsertMetadata,
-            body=entries,
-        )
-
-        new_names = [x.name for x in entries]
-        self._post_add_entries(new_names)
-        return ret
+        return self._add_entries(entries)
 
     def add_entry(
         self,

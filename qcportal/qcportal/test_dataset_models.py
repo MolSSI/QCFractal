@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from qcportal.molecules import Molecule
 
 import pytest
 
@@ -136,3 +137,27 @@ def test_dataset_model_status(snowflake: QCATestingSnowflake):
     ds.submit()
 
     assert ds.status() == {"spec_1": {RecordStatusEnum.complete: 1, RecordStatusEnum.waiting: 1}}
+
+
+def test_dataset_model_add_entry_many(snowflake_client: PortalClient):
+
+    ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
+    assert ds.status() == {}
+
+    mols = [Molecule(symbols=["h", "h"], geometry=[0, 0, 0, 0, 0, x]) for x in range(1, 3000)]
+    entries = [SinglepointDatasetNewEntry(name=f"test_molecule_{idx}", molecule=m) for idx, m in enumerate(mols)]
+    assert len(entries) == 2999
+
+    meta = ds.add_entries(entries)
+    assert meta.n_inserted == 2999
+    assert meta.inserted_idx == list(range(2999))
+    assert meta.n_existing == 0
+    assert meta.existing_idx == []
+    assert meta.n_errors == 0
+
+    meta = ds.add_entries(entries)
+    assert meta.n_inserted == 0
+    assert meta.inserted_idx == []
+    assert meta.n_existing == 2999
+    assert meta.existing_idx == list(range(2999))
+    assert meta.n_errors == 0
