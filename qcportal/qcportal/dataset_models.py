@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional, Dict, Any, List, Iterable, Type, Tuple, Union, Callable, ClassVar
+from typing import Optional, Dict, Any, List, Iterable, Type, Tuple, Union, Callable, ClassVar, Sequence
 
 import pandas as pd
 import pydantic
@@ -865,7 +865,6 @@ class BaseDataset(BaseModel):
         fetch_updated: bool = True,
         force_refetch: bool = False,
     ):
-
         #########################################################
         # We duplicate a little bit of fetch_records here, since
         # we want to yield in the middle
@@ -938,7 +937,6 @@ class BaseDataset(BaseModel):
         specification_names: Optional[Union[str, Iterable[str]]] = None,
         delete_records: bool = False,
     ) -> DeleteMetadata:
-
         self.assert_is_not_view()
         self.assert_online()
 
@@ -1138,27 +1136,130 @@ class BaseDataset(BaseModel):
     def compile_values(
         self,
         value_call: Callable,
-        value_name: str,
+        value_names: Union[Sequence[str], str] = "value",
         entry_names: Optional[Union[str, Iterable[str]]] = None,
         specification_names: Optional[Union[str, Iterable[str]]] = None,
-        include: Optional[Iterable[str]] = None,
-        fetch_updated: bool = True,
-        force_refetch: bool = False,
+        unpack: bool = False,
     ) -> pd.DataFrame:
-        def _data_generator():
+        """
+        Compile values from records into a pandas DataFrame.
+
+        Parameters
+        -----------
+        value_call 
+            Function to call on each record to extract the desired value. Must return a scalar value or 
+            a sequence of values if 'unpack' is set to True.
+
+        value_names
+            Column name(s) for the extracted value(s). If a string is provided and multiple values are 
+            returned by 'value_call', columns are named by appending an index to this string. If a list 
+            of strings is provided, it must match the length of the sequence returned by 'value_call'.
+            Default is "value".
+
+        entry_names 
+            Entry names to filter records. If not provided, considers all entries.
+
+        specification_names 
+            Specification names to filter records. If not provided, considers all specifications.
+
+        unpack
+            If True, unpack the sequence of values returned by 'value_call' into separate columns.
+            Default is False.
+
+        Returns
+        --------
+        pd.DataFrame
+            A multi-index DataFrame where each row corresponds to an entry. Each column corresponds has a top level
+            index as a specification, and a second level index as the appropriate value name.
+            Values are extracted from records using 'value_call'.
+
+        Raises
+        -------
+        ValueError
+            If the length of 'value_names' does not match the number of values returned by 'value_call' when
+            'unpack' is set to True.
+
+        Notes
+        ------
+        1. The DataFrame is structured such that the rows are entries and columns are specifications.
+        2. If 'unpack' is True, the function assumes 'value_call' returns a sequence of values that need 
+        to be distributed across columns in the resulting DataFrame. 'value_call' should always return the
+        same number of values for each record if unpack is True.
+        """
+        
+        def _data_generator(unpack=False):
             for entry_name, spec_name, record in self.iterate_records(
                 entry_names=entry_names,
                 specification_names=specification_names,
                 status=RecordStatusEnum.complete,
-                include=include,
-                fetch_updated=fetch_updated,
-                force_refetch=force_refetch,
+                fetch_updated=True,
+                force_refetch=False,
             ):
-                yield entry_name, spec_name, value_call(record)
+                if unpack:
+                    yield entry_name, spec_name, *value_call(record)
+                else:
+                    yield entry_name, spec_name, value_call(record)
 
-        df = pd.DataFrame(_data_generator(), columns=("entry", "specification", value_name))
+        def _check_first():
+            gen = _data_generator()
+            _, _, first_value = next(gen)
 
-        return df.pivot(index="entry", columns="specification", values=value_name)
+            return first_value
+
+        first_value = _check_first()
+
+        if unpack and isinstance(first_value, Sequence) and not isinstance(first_value, str):
+            if isinstance(value_names, str):
+                column_names = [value_names + str(i) for i in range(len(first_value))]
+            else:
+                if len(first_value) != len(value_names):
+                    raise ValueError(
+                        "Number of column names must match number of values returned by provided function."
+                    )
+                column_names = value_names
+
+            df = pd.DataFrame(_data_generator(unpack=True), columns=("entry", "specification", *column_names))
+
+        else:
+            column_names = [value_names]
+            df = pd.DataFrame(_data_generator(), columns=("entry", "specification", value_names))
+
+        return_val = df.pivot(index="entry", columns="specification", values=column_names)
+
+        # Make specification top level index.
+        return return_val.swaplevel(axis=1)
+
+    def get_properties_df(self, properties_list: Sequence[str]) -> pd.DataFrame:
+        """
+        Retrieve a DataFrame populated with the specified properties from dataset records.
+
+        This function uses the provided list of property names to extract corresponding
+        values from each record's properties. It returns a DataFrame where rows represent
+        each record. Each column corresponds has a top level index as a specification, 
+        and a second level index as the appropriate value name. Columns with all 
+        NaN values are dropped.
+
+        Parameters:
+        -----------
+        properties_list 
+            List of property names to retrieve from the records.
+
+        Returns:
+        --------
+        pd.DataFrame
+            A DataFrame populated with the specified properties for each record.
+        """
+
+        # create lambda function to get all properties at once
+        extract_properties = lambda x: [x.properties.get(property_name) for property_name in properties_list]
+
+        # retrieve values.
+        result = self.compile_values(extract_properties, value_names=properties_list, unpack=True)
+
+        # Drop columns with all nan  values. This will occur if a property that is not part of a
+        # specification is requested.
+        result.dropna(how="all", axis=1, inplace=True)
+        return result
 
     ##############################
     # Contributed values
@@ -1303,7 +1404,6 @@ def dataset_from_dict(data: Dict[str, Any], client: Any, view_data: Optional[Dat
 
 
 def load_dataset_view(view_path: str):
-
     view_data = DatasetViewWrapper(view_path=view_path)
     raw_data = view_data.get_datamodel()
 
