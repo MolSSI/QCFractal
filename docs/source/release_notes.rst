@@ -1,7 +1,7 @@
 Release Notes
 =============
 
-0.51 / 2023-09-12
+0.51 / 2023-10-19
 -----------------
 
 Many new improvements, but very little in the way of breaking changes. Upgrading qcportal is recommended
@@ -10,8 +10,8 @@ due to efficiency gains, but is not required.
 Notable pull requests and features:
 
 - (:pr:`745`) Compute manager documentation (D. Dotson :contrib:`dotsdl`)
-- (:pr:`750`) Use a [computed/generated column](https://www.postgresql.org/docs/current/ddl-generated-columns.html) for lower-case dataset names (lname)
-- (:pr:`751`) Some cleanups, including removing dependence of `geometric_nextchain.py` on QCPortal
+- (:pr:`750`) Use a `computed/generated column <https://www.postgresql.org/docs/current/ddl-generated-columns.html>`_ for lower-case dataset names (lname)
+- (:pr:`751`) Some cleanups, including removing dependence of ``geometric_nextchain.py`` on QCPortal
 - (:pr:`752`) Tests requiring geoip test data are now automatically skipped if not available
 - (:pr:`753`) Improve/Fix JWT handling
 - (:pr:`757`) Gracefully handle missing User-Agent
