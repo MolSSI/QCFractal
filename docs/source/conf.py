@@ -44,6 +44,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
+    'sphinx.ext.extlinks',
     'sphinx_design',
     'sphinxcontrib.autodoc_pydantic',
     'sphinx_copybutton',
@@ -91,7 +92,7 @@ html_theme_options = {
       "molssi_dark": "molssi_main_logo_inverted_white.png",
     },
     "show_toc_level": 2,
-    "header_links_before_dropdown": 4,
+    "header_links_before_dropdown": 8,
     "external_links": [
       {"name": "MolSSI", "url": "https://molssi.org"}
   ],
@@ -108,3 +109,11 @@ html_css_files = ['css/custom.css']
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+# -- extlinks extension ----------------------------------------------------
+
+extlinks = {
+    'issue': ('https://github.com/MolSSI/QCFractal/issues/%s', 'Issue %s'),
+    'pr': ('https://github.com/MolSSI/QCFractal/pull/%s', 'PR %s'),
+    'contrib': ('https://github.com/%s', '@%s'),
+}
