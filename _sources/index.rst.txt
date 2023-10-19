@@ -78,6 +78,7 @@ ensures a streamlined experience with quantum computations.
    Quickstart <quickstart/index.rst>
    Overview <overview/index>
    User Guide <user_guide/index>
+   Release Notes <release_notes>
    Admin Guide <admin_guide/index>
    Web API <web_api/index>
    Developer Guide <developer_guide/index>
