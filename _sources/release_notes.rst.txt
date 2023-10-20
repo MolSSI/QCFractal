@@ -33,4 +33,4 @@ Notable pull requests and features:
 0.50 / 2023-09-12
 -----------------
 
-Major refactoring of everything. Too many changes to enumerate, but see [docs](https://molssi.github.io/QCFractal) for details.
+Major refactoring of everything. Too many changes to enumerate, but see `docs <https://molssi.github.io/QCFractal>`_ for details.
