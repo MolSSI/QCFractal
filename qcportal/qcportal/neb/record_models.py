@@ -193,6 +193,11 @@ class NEBRecord(BaseRecord):
             self.singlepoints_cache_.setdefault(sp_info.chain_iteration, list())
             self.singlepoints_cache_[sp_info.chain_iteration].append(sp_rec)
 
+        if len(self.singlepoints_cache_[max(self.singlepoints_cache_)]) == 1:
+            _, temp_list = self.singlepoints_cache_.popitem()
+            self.ts_hessian_ = temp_list[0]
+            assert self.ts_hessian_.specification.driver == 'hessian'
+
         self.propagate_client(self._client)
 
     def _fetch_initial_chain(self):
@@ -227,26 +232,18 @@ class NEBRecord(BaseRecord):
 
     @property
     def final_chain(self) -> List[SinglepointRecord]:
-        if self.optimizations.get("transition", None) is not None and self.ts_hessian_ is None:
-            self.singlepoints
         return self.singlepoints[max(self.singlepoints.keys())]
 
     @property
     def ts_hessian(self) -> Optional[SinglepointRecord]:
-        if self.optimizations.get("transition", None) is not None:
-            if self.ts_hessian_ is None:
-                self.singlepoints
-            return self.ts_hessian_
-        else:
-            return None
+        if self.singlepoints_cache_ is None:
+            self._fetch_singlepoints()
+        return self.ts_hessian_
 
     @property
     def singlepoints(self) -> Dict[int, List[SinglepointRecord]]:
         if self.singlepoints_cache_ is None:
             self._fetch_singlepoints()
-        if self.optimizations.get("transition", None) is not None and self.ts_hessian_ is None:
-            _, temp_list = self.singlepoints_cache_.popitem()
-            self.ts_hessian_ = temp_list[0]
         return self.singlepoints_cache_
 
     @property
