@@ -27,15 +27,16 @@ def test_periodics_server_stats(snowflake: QCATestingSnowflake):
     sleep_time = snowflake._qcf_config.statistics_frequency
 
     snowflake.start_job_runner()
-    time.sleep(0.25)
+    time.sleep(sleep_time / 2)
 
     for i in range(5):
         time_0 = datetime.utcnow()
         time.sleep(sleep_time)
         time_1 = datetime.utcnow()
 
-        stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
-        assert len(stats) == i + 1
+        filters = ServerStatsQueryFilters(before=time_1, after=time_0)
+        stats = storage_socket.serverinfo.query_server_stats(filters)
+        assert len(stats) == 1
         assert time_0 < stats[0]["timestamp"] < time_1
 
 
