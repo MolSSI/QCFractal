@@ -17,7 +17,7 @@ import jwt
 import pydantic
 import requests
 import yaml
-from pkg_resources import parse_version
+from packaging.version import parse as parse_version
 
 from . import __version__
 from .exceptions import AuthenticationFailure

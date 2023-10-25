@@ -32,6 +32,7 @@ requirements:
     - tqdm
     - pandas
     - pyjwt
+    - packaging
 
 
 test:

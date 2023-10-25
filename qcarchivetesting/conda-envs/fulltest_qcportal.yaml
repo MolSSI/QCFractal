@@ -16,3 +16,4 @@ dependencies:
   - tqdm
   - pandas
   - pyjwt
+  - packaging
