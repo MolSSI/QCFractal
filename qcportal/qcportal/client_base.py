@@ -280,7 +280,11 @@ class PortalClientBase:
             )
             self._jwt_access_exp = decoded_access_token["exp"]
 
-        else:  # shouldn't happen unless user is blacklisted
+        elif ret.status_code == 401 and "Token has expired" in ret.json()["msg"]:
+            # If the refresh token has expired, try to log in again
+            self._get_JWT_token()
+        else:  # shouldn't happen unless user is blacklisted or something
+            print(ret, ret.text)
             raise ConnectionRefusedError("Unable to refresh JWT authorization token! This is a server issue!!")
 
     def _request(
@@ -294,13 +298,13 @@ class PortalClientBase:
         allow_retries: bool = True,
     ) -> requests.Response:
 
-        # If JWT token is expired, automatically renew it
-        if self._jwt_access_exp and self._jwt_access_exp < time.time():
-            self._refresh_JWT_token()
-
         # If refresh token has expired, log in again
         if self._jwt_refresh_exp and self._jwt_refresh_exp < time.time():
             self._get_JWT_token()
+
+        # If only the JWT token is expired, automatically renew it
+        if self._jwt_access_exp and self._jwt_access_exp < time.time():
+            self._refresh_JWT_token()
 
         full_uri = self.address + endpoint
 
