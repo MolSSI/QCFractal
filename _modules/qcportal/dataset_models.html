@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.dataset_models &#8212; QCArchive 0.51.post9+gde33af2b documentation</title>
+    <title>qcportal.dataset_models &#8212; QCArchive 0.51.post14+ge53ffd9c documentation</title>
   
   
   
@@ -1639,20 +1639,20 @@ document.write(`
 
 <span class="sd">        Parameters</span>
 <span class="sd">        -----------</span>
-<span class="sd">        value_call </span>
-<span class="sd">            Function to call on each record to extract the desired value. Must return a scalar value or </span>
+<span class="sd">        value_call</span>
+<span class="sd">            Function to call on each record to extract the desired value. Must return a scalar value or</span>
 <span class="sd">            a sequence of values if &#39;unpack&#39; is set to True.</span>
 
 <span class="sd">        value_names</span>
-<span class="sd">            Column name(s) for the extracted value(s). If a string is provided and multiple values are </span>
-<span class="sd">            returned by &#39;value_call&#39;, columns are named by appending an index to this string. If a list </span>
+<span class="sd">            Column name(s) for the extracted value(s). If a string is provided and multiple values are</span>
+<span class="sd">            returned by &#39;value_call&#39;, columns are named by appending an index to this string. If a list</span>
 <span class="sd">            of strings is provided, it must match the length of the sequence returned by &#39;value_call&#39;.</span>
 <span class="sd">            Default is &quot;value&quot;.</span>
 
-<span class="sd">        entry_names </span>
+<span class="sd">        entry_names</span>
 <span class="sd">            Entry names to filter records. If not provided, considers all entries.</span>
 
-<span class="sd">        specification_names </span>
+<span class="sd">        specification_names</span>
 <span class="sd">            Specification names to filter records. If not provided, considers all specifications.</span>
 
 <span class="sd">        unpack</span>
@@ -1675,11 +1675,11 @@ document.write(`
 <span class="sd">        Notes</span>
 <span class="sd">        ------</span>
 <span class="sd">        1. The DataFrame is structured such that the rows are entries and columns are specifications.</span>
-<span class="sd">        2. If &#39;unpack&#39; is True, the function assumes &#39;value_call&#39; returns a sequence of values that need </span>
+<span class="sd">        2. If &#39;unpack&#39; is True, the function assumes &#39;value_call&#39; returns a sequence of values that need</span>
 <span class="sd">        to be distributed across columns in the resulting DataFrame. &#39;value_call&#39; should always return the</span>
 <span class="sd">        same number of values for each record if unpack is True.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="k">def</span> <span class="nf">_data_generator</span><span class="p">(</span><span class="n">unpack</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">entry_name</span><span class="p">,</span> <span class="n">spec_name</span><span class="p">,</span> <span class="n">record</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterate_records</span><span class="p">(</span>
                 <span class="n">entry_names</span><span class="o">=</span><span class="n">entry_names</span><span class="p">,</span>
@@ -1728,13 +1728,13 @@ document.write(`
 
 <span class="sd">        This function uses the provided list of property names to extract corresponding</span>
 <span class="sd">        values from each record&#39;s properties. It returns a DataFrame where rows represent</span>
-<span class="sd">        each record. Each column corresponds has a top level index as a specification, </span>
-<span class="sd">        and a second level index as the appropriate value name. Columns with all </span>
+<span class="sd">        each record. Each column corresponds has a top level index as a specification,</span>
+<span class="sd">        and a second level index as the appropriate value name. Columns with all</span>
 <span class="sd">        NaN values are dropped.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">        -----------</span>
-<span class="sd">        properties_list </span>
+<span class="sd">        properties_list</span>
 <span class="sd">            List of property names to retrieve from the records.</span>
 
 <span class="sd">        Returns:</span>
