@@ -12,11 +12,11 @@ from typing import TYPE_CHECKING, Dict, List, Tuple
 
 import parsl.executors.high_throughput.interchange
 import tabulate
+from packaging.version import parse as parse_version
 from parsl.config import Config as ParslConfig
 from parsl.dataflow.dflow import DataFlowKernel
 from parsl.dataflow.futures import Future as ParslFuture
 from parsl.executors import HighThroughputExecutor, ThreadPoolExecutor
-from pkg_resources import parse_version
 from pydantic import BaseModel, Extra, Field
 from requests.exceptions import Timeout
 

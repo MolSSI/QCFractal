@@ -1190,20 +1190,20 @@ class BaseDataset(BaseModel):
 
         Parameters
         -----------
-        value_call 
-            Function to call on each record to extract the desired value. Must return a scalar value or 
+        value_call
+            Function to call on each record to extract the desired value. Must return a scalar value or
             a sequence of values if 'unpack' is set to True.
 
         value_names
-            Column name(s) for the extracted value(s). If a string is provided and multiple values are 
-            returned by 'value_call', columns are named by appending an index to this string. If a list 
+            Column name(s) for the extracted value(s). If a string is provided and multiple values are
+            returned by 'value_call', columns are named by appending an index to this string. If a list
             of strings is provided, it must match the length of the sequence returned by 'value_call'.
             Default is "value".
 
-        entry_names 
+        entry_names
             Entry names to filter records. If not provided, considers all entries.
 
-        specification_names 
+        specification_names
             Specification names to filter records. If not provided, considers all specifications.
 
         unpack
@@ -1226,11 +1226,11 @@ class BaseDataset(BaseModel):
         Notes
         ------
         1. The DataFrame is structured such that the rows are entries and columns are specifications.
-        2. If 'unpack' is True, the function assumes 'value_call' returns a sequence of values that need 
+        2. If 'unpack' is True, the function assumes 'value_call' returns a sequence of values that need
         to be distributed across columns in the resulting DataFrame. 'value_call' should always return the
         same number of values for each record if unpack is True.
         """
-        
+
         def _data_generator(unpack=False):
             for entry_name, spec_name, record in self.iterate_records(
                 entry_names=entry_names,
@@ -1279,13 +1279,13 @@ class BaseDataset(BaseModel):
 
         This function uses the provided list of property names to extract corresponding
         values from each record's properties. It returns a DataFrame where rows represent
-        each record. Each column corresponds has a top level index as a specification, 
-        and a second level index as the appropriate value name. Columns with all 
+        each record. Each column corresponds has a top level index as a specification,
+        and a second level index as the appropriate value name. Columns with all
         NaN values are dropped.
 
         Parameters:
         -----------
-        properties_list 
+        properties_list
             List of property names to retrieve from the records.
 
         Returns:
