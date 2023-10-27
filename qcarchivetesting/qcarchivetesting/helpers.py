@@ -14,6 +14,7 @@ from contextlib import contextmanager
 from qcelemental.models import Molecule
 from qcelemental.models.results import WavefunctionProperties
 
+from qcfractal.components.serverinfo.socket import geoip2_found
 from qcportal.serialization import _json_decode
 
 # Valid client encodings
@@ -26,7 +27,7 @@ geoip_path = os.path.join(_my_path, "MaxMind-DB", "test-data")
 geoip_filename = "GeoLite2-City-Test.mmdb"
 ip_testdata_path = os.path.join(_my_path, "MaxMind-DB", "source-data", "GeoIP2-City-Test.json")
 
-ip_tests_enabled = os.path.exists(geoip_path) and os.path.exists(ip_testdata_path)
+ip_tests_enabled = os.path.exists(geoip_path) and os.path.exists(ip_testdata_path) and geoip2_found
 
 testconfig_path = os.path.join(_my_path, "config_files")
 migrationdata_path = os.path.join(_my_path, "migration_data")
