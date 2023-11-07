@@ -3,8 +3,12 @@ from __future__ import annotations
 import dataclasses
 from typing import List, Optional, Tuple, Dict, Sequence, Any
 
-from pydantic import validator, root_validator
-from pydantic.dataclasses import dataclass
+try:
+    from pydantic.v1 import validator, root_validator
+    from pydantic.v1.dataclasses import dataclass
+except ImportError:
+    from pydantic import validator, root_validator
+    from pydantic.dataclasses import dataclass
 
 
 @dataclass

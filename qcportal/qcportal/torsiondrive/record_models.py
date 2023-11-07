@@ -1,7 +1,10 @@
 import json
 from typing import List, Optional, Tuple, Union, Dict, Iterable, Sequence, Any
 
-from pydantic import BaseModel, Field, Extra, root_validator, constr, validator
+try:
+    from pydantic.v1 import BaseModel, Field, Extra, root_validator, constr, validator
+except ImportError:
+    from pydantic import BaseModel, Field, Extra, root_validator, constr, validator
 from typing_extensions import Literal
 
 from qcportal.molecules import Molecule

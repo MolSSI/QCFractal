@@ -1,6 +1,9 @@
 from typing import Dict, List
 
-from pydantic import Field, constr
+try:
+    from pydantic.v1 import Field, BaseModel, constr, Extra
+except ImportError:
+    from pydantic import Field, BaseModel, constr, Extra
 
 from qcportal.base_models import RestModelBase
 from qcportal.managers import ManagerName

@@ -9,7 +9,10 @@ import logging
 from typing import TYPE_CHECKING
 
 import sqlalchemy.orm.attributes
-from pydantic import BaseModel, Extra
+try:
+    from pydantic.v1 import BaseModel, Extra
+except ImportError:
+    from pydantic import BaseModel, Extra
 from sqlalchemy import select, func
 from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by, DOUBLE_PRECISION, TEXT
 from sqlalchemy.orm import lazyload, joinedload, defer, undefer

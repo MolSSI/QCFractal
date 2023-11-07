@@ -1,7 +1,10 @@
 from copy import deepcopy
 from typing import Optional, Union, Any, List, Dict, Iterable
 
-from pydantic import BaseModel, Field, constr, validator, Extra
+try:
+    from pydantic.v1 import BaseModel, Field, constr, validator, Extra
+except ImportError:
+    from pydantic import BaseModel, Field, constr, validator, Extra
 from qcelemental.models import Molecule
 from qcelemental.models.procedures import (
     OptimizationResult,

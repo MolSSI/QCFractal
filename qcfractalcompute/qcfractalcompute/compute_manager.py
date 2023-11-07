@@ -17,7 +17,10 @@ from parsl.config import Config as ParslConfig
 from parsl.dataflow.dflow import DataFlowKernel
 from parsl.dataflow.futures import Future as ParslFuture
 from parsl.executors import HighThroughputExecutor, ThreadPoolExecutor
-from pydantic import BaseModel, Extra, Field
+try:
+    from pydantic.v1 import BaseModel, Extra, Field
+except ImportError:
+    from pydantic import BaseModel, Extra, Field
 from requests.exceptions import Timeout
 
 from qcfractalcompute.apps.app_manager import AppManager
