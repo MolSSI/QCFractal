@@ -9,7 +9,10 @@ from pathlib import Path
 from typing import Optional
 
 import yaml
-from pydantic import Field, validator
+try:
+    from pydantic.v1 import Field, validator
+except ImportError:
+    from pydantic import Field, validator
 
 from .config import ConfigBase, ConfigCommon
 

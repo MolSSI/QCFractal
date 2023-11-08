@@ -4,8 +4,12 @@ from datetime import datetime
 from typing import Optional, Dict, Any, List, Iterable, Type, Tuple, Union, Callable, ClassVar, Sequence
 
 import pandas as pd
-import pydantic
-from pydantic import BaseModel, Extra, validator, PrivateAttr, Field
+try:
+    import pydantic.v1 as pydantic
+    from pydantic.v1 import BaseModel, Extra, validator, PrivateAttr, Field
+except ImportError:
+    import pydantic
+    from pydantic import BaseModel, Extra, validator, PrivateAttr, Field
 from qcelemental.models.types import Array
 from tabulate import tabulate
 from tqdm import tqdm

@@ -3,7 +3,10 @@ from __future__ import annotations
 from enum import Enum
 from typing import Optional, Union, List
 
-from pydantic import BaseModel, Field, validator, constr, Extra
+try:
+    from pydantic.v1 import BaseModel, Field, validator, constr, Extra
+except ImportError:
+    from pydantic import BaseModel, Field, validator, constr, Extra
 
 from ..exceptions import InvalidPasswordError, InvalidUsernameError, InvalidRolenameError, InvalidGroupnameError
 

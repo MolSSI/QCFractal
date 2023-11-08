@@ -7,7 +7,10 @@ from typing import List, Dict, Tuple, Optional, Sequence, Any, Union, Set, TYPE_
 
 import numpy as np
 import sqlalchemy.orm.attributes
-from pydantic import BaseModel, Extra, parse_obj_as
+try:
+    from pydantic.v1 import BaseModel, Extra, parse_obj_as
+except ImportError:
+    from pydantic import BaseModel, Extra, parse_obj_as
 from sqlalchemy import select, func
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import lazyload, joinedload, undefer, defer

@@ -4,7 +4,10 @@ from typing import Union, Any
 
 import msgpack
 import numpy as np
-from pydantic.json import pydantic_encoder
+try:
+    from pydantic.v1.json import pydantic_encoder
+except ImportError:
+    from pydantic.json import pydantic_encoder
 
 
 def _msgpack_encode(obj: Any) -> Any:

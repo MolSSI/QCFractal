@@ -14,7 +14,7 @@ dependencies:
   - msgpack-python
   - requests
   - pyyaml
-  - pydantic<2.0
+  - pydantic
   - zstandard
   - qcelemental
   - tabulate

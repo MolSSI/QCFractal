@@ -10,7 +10,10 @@ from sqlalchemy.orm import as_declarative
 
 if TYPE_CHECKING:
     from typing import Any, TypeVar, Type, Dict, Optional, Iterable, Union, List
-    from pydantic import BaseModel
+    try:
+        from pydantic.v1 import BaseModel
+    except ImportError:
+        from pydantic import BaseModel
 
     _T = TypeVar("_T")
 

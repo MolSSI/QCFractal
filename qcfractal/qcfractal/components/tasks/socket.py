@@ -5,7 +5,10 @@ import traceback
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-import pydantic
+try:
+    import pydantic.v1 as pydantic
+except ImportError:
+    import pydantic
 from qcelemental.models import FailedOperation
 from sqlalchemy import select, func
 from sqlalchemy.dialects.postgresql import array
