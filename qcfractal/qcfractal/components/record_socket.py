@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from qcelemental.models import FailedOperation
-from sqlalchemy import select, union, or_
+from sqlalchemy import select, union, or_, func
 from sqlalchemy.orm import (
     joinedload,
     selectinload,
@@ -452,6 +452,25 @@ class BaseRecordSocket:
                 )
 
             return nf_data[0], nf_data[1]
+
+    def get_children_status(self, record_id: int, *, session: Optional[Session] = None) -> Dict[RecordStatusEnum, int]:
+
+        # Get the SQL 'select' statements from the handlers
+        select_stmts = self.get_children_select()
+
+        if not select_stmts:
+            return {}
+
+        select_cte = union(*select_stmts).cte()
+
+        stmt = select(BaseRecordORM.status, func.count())
+        stmt = stmt.join(select_cte, select_cte.c.child_id == BaseRecordORM.id)
+        stmt = stmt.where(select_cte.c.parent_id == record_id)
+        stmt = stmt.group_by(BaseRecordORM.status)
+
+        with self.root_socket.optional_session(session, True) as session:
+            res = session.execute(stmt).all()
+            return {x: y for x, y in res}
 
 
 class RecordSocket:

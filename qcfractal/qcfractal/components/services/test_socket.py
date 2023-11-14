@@ -43,6 +43,9 @@ def test_service_socket_error(storage_socket: SQLAlchemySocket, session: Session
     rec = session.get(BaseRecordORM, id_1)
 
     assert rec.status == RecordStatusEnum.error
+
+    child_stat = storage_socket.records.torsiondrive.get_children_status(id_1, session=session)
+    assert child_stat[RecordStatusEnum.error] == 1
     assert len(rec.compute_history) == 1
     assert len(rec.compute_history[-1].outputs) == 2  # stdout and error
     assert rec.compute_history[-1].status == RecordStatusEnum.error

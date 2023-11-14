@@ -77,6 +77,9 @@ def test_torsiondrive_client_add_get(
         assert r.record_type == "torsiondrive"
         assert compare_torsiondrive_specs(spec, r.specification)
 
+        assert r.status == RecordStatusEnum.waiting
+        assert r.children_status == {}
+
         assert r.service.tag == "tag1"
         assert r.service.priority == PriorityEnum.low
 
@@ -195,6 +198,8 @@ def test_torsiondrive_client_delete(snowflake: QCATestingSnowflake):
 
     child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
     assert all(x.status == RecordStatusEnum.complete for x in child_recs)
+    td_rec = snowflake_client.get_records(td_id)
+    assert td_rec.children_status == {RecordStatusEnum.complete: len(child_ids)}
 
     snowflake_client.undelete_records(td_id)
 
@@ -205,6 +210,8 @@ def test_torsiondrive_client_delete(snowflake: QCATestingSnowflake):
 
     child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
     assert all(x.status == RecordStatusEnum.deleted for x in child_recs)
+    td_rec = snowflake_client.get_records(td_id)
+    assert td_rec.children_status == {RecordStatusEnum.deleted: len(child_ids)}
 
     meta = snowflake_client.delete_records(td_id, soft_delete=False, delete_children=True)
     assert meta.success

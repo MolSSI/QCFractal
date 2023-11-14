@@ -526,6 +526,17 @@ class BaseRecord(BaseModel):
         return self._client is None
 
     @property
+    def children_status(self) -> Dict[RecordStatusEnum, int]:
+        """Returns a dicionary of the status of all children of this record"""
+        self._assert_online()
+
+        return self._client.make_request(
+            "get",
+            f"{self._base_url}/children_status",
+            Dict[RecordStatusEnum, int],
+        )
+
+    @property
     def compute_history(self) -> List[ComputeHistory]:
         if self.compute_history_ is None:
             self._fetch_compute_history()

@@ -154,7 +154,7 @@ def run_test_data(
     assert finished
 
     with storage_socket.session_scope() as session:
-        record = storage_socket.records.get([record_id])[0]
-        assert record["status"] == end_status
+        record = session.get(TorsiondriveRecordORM, record_id)
+        assert record.status == end_status
 
     return record_id

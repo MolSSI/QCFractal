@@ -83,6 +83,9 @@ def test_optimization_client_add_get(
         assert r.record_type == "optimization"
         assert compare_optimization_specs(spec, r.specification)
 
+        assert r.status == RecordStatusEnum.waiting
+        assert r.children_status == {}
+
         assert r.task.function is None
         assert r.task.tag == "tag1"
         assert r.task.priority == PriorityEnum.low
@@ -198,6 +201,9 @@ def test_optimization_client_delete(snowflake: QCATestingSnowflake, opt_file: st
 
     child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
     assert all(x.status == RecordStatusEnum.complete for x in child_recs)
+    opt_rec = snowflake_client.get_records(opt_id)
+    if child_ids:
+        assert opt_rec.children_status == {RecordStatusEnum.complete: len(child_ids)}
 
     # Undo what we just did
     snowflake_client.undelete_records(opt_id)
@@ -209,6 +215,9 @@ def test_optimization_client_delete(snowflake: QCATestingSnowflake, opt_file: st
 
     child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
     assert all(x.status == RecordStatusEnum.deleted for x in child_recs)
+    opt_rec = snowflake_client.get_records(opt_id)
+    if child_ids:
+        assert opt_rec.children_status == {RecordStatusEnum.deleted: len(child_ids)}
 
     meta = snowflake_client.delete_records(opt_id, soft_delete=False, delete_children=True)
     assert meta.success
