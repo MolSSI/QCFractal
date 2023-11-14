@@ -69,6 +69,9 @@ def test_manybody_client_add_get(
         assert r.record_type == "manybody"
         assert compare_manybody_specs(spec, r.specification)
 
+        assert r.status == RecordStatusEnum.waiting
+        assert r.children_status == {}
+
         assert r.service.tag == "tag1"
         assert r.service.priority == PriorityEnum.low
 
@@ -177,6 +180,8 @@ def test_manybody_client_delete(snowflake: QCATestingSnowflake):
 
     child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
     assert all(x.status == RecordStatusEnum.complete for x in child_recs)
+    mb_rec = snowflake_client.get_records(mb_id)
+    assert mb_rec.children_status == {RecordStatusEnum.complete: len(child_ids)}
 
     snowflake_client.undelete_records(mb_id)
 
@@ -187,6 +192,8 @@ def test_manybody_client_delete(snowflake: QCATestingSnowflake):
 
     child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
     assert all(x.status == RecordStatusEnum.deleted for x in child_recs)
+    mb_rec = snowflake_client.get_records(mb_id)
+    assert mb_rec.children_status == {RecordStatusEnum.deleted: len(child_ids)}
 
     meta = snowflake_client.delete_records(mb_id, soft_delete=False, delete_children=True)
     assert meta.success

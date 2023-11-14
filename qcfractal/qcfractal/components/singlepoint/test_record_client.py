@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Optional
 import pytest
 
 from qcarchivetesting import load_molecule_data
-from qcportal.record_models import PriorityEnum
+from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import QCSpecification, SinglepointDriver
 from .testing_helpers import submit_test_data, run_test_data, compare_singlepoint_specs, test_specs
 
@@ -67,6 +67,10 @@ def test_singlepoint_client_add_get(submitter_client: PortalClient, spec: QCSpec
         assert r.record_type == "singlepoint"
         assert r.record_type == "singlepoint"
         assert compare_singlepoint_specs(spec, r.specification)
+
+        assert r.status == RecordStatusEnum.waiting
+        assert r.children_status == {}
+
         assert r.task.function is None
         assert r.task.tag == "tag1"
         assert r.task.priority == PriorityEnum.high
