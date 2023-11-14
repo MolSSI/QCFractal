@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 
 
@@ -7,9 +6,9 @@
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>QCPortal Installation &amp; Setup &#8212; QCArchive 0.51.post22+ge4910c3e documentation</title>
+    <title>QCPortal Installation &amp; Setup &#8212; QCArchive 0.51.post24+gdfed63b9 documentation</title>
   
   
   
@@ -29,27 +28,24 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=3f4ed3ce" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=365ca57ee442770a23c6" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=365ca57ee442770a23c6" />
   <script src="../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=365ca57ee442770a23c6"></script>
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
-    <script src="../_static/design-tabs.js"></script>
+    <script src="../_static/documentation_options.js?v=8ed36243"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/client_setup';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -486,9 +482,9 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="qcportal-installation-setup">
-<h1>QCPortal Installation &amp; Setup<a class="headerlink" href="#qcportal-installation-setup" title="Permalink to this heading">#</a></h1>
+<h1>QCPortal Installation &amp; Setup<a class="headerlink" href="#qcportal-installation-setup" title="Link to this heading">#</a></h1>
 <section id="installation-through-conda">
-<h2>Installation through conda<a class="headerlink" href="#installation-through-conda" title="Permalink to this heading">#</a></h2>
+<h2>Installation through conda<a class="headerlink" href="#installation-through-conda" title="Link to this heading">#</a></h2>
 <p>The QCPortal package can be installed via <a class="reference external" href="https://www.anaconda.com">conda/anaconda</a>
 or <a class="reference external" href="https://github.com/mamba-org/mamba">mamba</a>. The packages exist under the
 <a class="reference external" href="https://anaconda.org/QCArchive">QCArchive organization</a> on Anaconda.</p>
@@ -504,7 +500,7 @@ conda<span class="w"> </span>activate<span class="w"> </span>qcportal
 </div>
 </section>
 <section id="configuration-file">
-<span id="qcportal-setup-configfile"></span><h2>Configuration File<a class="headerlink" href="#configuration-file" title="Permalink to this heading">#</a></h2>
+<span id="qcportal-setup-configfile"></span><h2>Configuration File<a class="headerlink" href="#configuration-file" title="Link to this heading">#</a></h2>
 <p>The username and password used to connect to the remote QCFractal server
 can be placed in a configuration file. This file is then
 read by the <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.from_file" title="qcportal.client.PortalClient.from_file"><code class="xref py py-meth docutils literal notranslate"><span class="pre">~PortalClient.from_file</span></code></a> function.</p>
@@ -512,7 +508,7 @@ read by the <a class="reference internal" href="qcportal_reference.html#qcportal
 working directory or the <code class="docutils literal notranslate"><span class="pre">~/.qca</span></code> directory; on the latter two cases it should be given the name
 <code class="docutils literal notranslate"><span class="pre">qcportal_config.yaml</span></code>. See <a class="reference internal" href="connecting_qcportal.html#qcportal-connecting-file"><span class="std std-ref">Using user information from a file</span></a>.</p>
 <section id="single-server">
-<h3>Single Server<a class="headerlink" href="#single-server" title="Permalink to this heading">#</a></h3>
+<h3>Single Server<a class="headerlink" href="#single-server" title="Link to this heading">#</a></h3>
 <p>If you are only interested in a single server, then the configuration file can just
 contain the address and user information.</p>
 <div class="sd-tab-set docutils">
@@ -528,7 +524,7 @@ CONFIG FILE</label><div class="sd-tab-content docutils">
 </div>
 </section>
 <section id="multiple-servers">
-<h3>Multiple Servers<a class="headerlink" href="#multiple-servers" title="Permalink to this heading">#</a></h3>
+<h3>Multiple Servers<a class="headerlink" href="#multiple-servers" title="Link to this heading">#</a></h3>
 <p>If you are working with multiple servers, then the configuration file contains sections with a name, and then
 the address and other options. The name is arbitrary and is for the user to
 differentiate between different servers.</p>
@@ -665,7 +661,7 @@ CONFIG FILE</label><div class="sd-tab-content docutils">
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.2.6.<br>
         </p>
         
 

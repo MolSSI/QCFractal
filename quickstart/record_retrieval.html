@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 
 
@@ -7,9 +6,9 @@
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>How do I retrieve computation results by ID? &#8212; QCArchive 0.51.post22+ge4910c3e documentation</title>
+    <title>How do I retrieve computation results by ID? &#8212; QCArchive 0.51.post24+gdfed63b9 documentation</title>
   
   
   
@@ -29,27 +28,24 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=3f4ed3ce" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=365ca57ee442770a23c6" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=365ca57ee442770a23c6" />
   <script src="../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=365ca57ee442770a23c6"></script>
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
-    <script src="../_static/design-tabs.js"></script>
+    <script src="../_static/documentation_options.js?v=8ed36243"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'quickstart/record_retrieval';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -471,7 +467,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="how-do-i-retrieve-computation-results-by-id">
-<h1>How do I retrieve computation results by ID?<a class="headerlink" href="#how-do-i-retrieve-computation-results-by-id" title="Permalink to this heading">#</a></h1>
+<h1>How do I retrieve computation results by ID?<a class="headerlink" href="#how-do-i-retrieve-computation-results-by-id" title="Link to this heading">#</a></h1>
 <p>This tutorial introduces the basics of connecting to a QCArchive server and retrieving computation results.</p>
 <p>When you retrieve results from QCArchive, they can be in the form of single records or a larger dataset.</p>
 <p>A record represents a single quantum chemistry computation and contains the input details and the results.
@@ -487,7 +483,7 @@ If you’d like to learn more about records, see the “How do I work with recor
 </div>
 </div>
 <section id="create-a-client-object-and-connect-to-the-demo-server">
-<h2>Create a client object and connect to the demo server<a class="headerlink" href="#create-a-client-object-and-connect-to-the-demo-server" title="Permalink to this heading">#</a></h2>
+<h2>Create a client object and connect to the demo server<a class="headerlink" href="#create-a-client-object-and-connect-to-the-demo-server" title="Link to this heading">#</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">PortalClient</span></code> is how you interact with the server, including querying records and submitting computations.</p>
 <p>The demo server allows for unauthenticated guest access, so no username/password is necessary to read from the server. However, you will
 need to log in to submit or modify computations.</p>
@@ -499,7 +495,7 @@ need to log in to submit or modify computations.</p>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>WARNING: This client version is newer than the server version. This may work if the versions are close, but expect exceptions and errors if attempting things the server does not support. client version: 0.51.post22+ge4910c3e, server version: 0.51
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>WARNING: This client version is newer than the server version. This may work if the versions are close, but expect exceptions and errors if attempting things the server does not support. client version: 0.51.post24+gdfed63b9, server version: 0.51
 </pre></div>
 </div>
 </div>
@@ -514,7 +510,7 @@ need to log in to submit or modify computations.</p>
 </div>
 </section>
 <section id="retrieving-a-single-record-by-id">
-<h2>Retrieving a Single Record by ID<a class="headerlink" href="#retrieving-a-single-record-by-id" title="Permalink to this heading">#</a></h2>
+<h2>Retrieving a Single Record by ID<a class="headerlink" href="#retrieving-a-single-record-by-id" title="Link to this heading">#</a></h2>
 <p>To retrieve a record, you can use the <code class="docutils literal notranslate"><span class="pre">get_records</span></code> method. You pass in the IDs of the records you would like to retrieve.</p>
 <p>If a list of IDs is specified, then a list of records is returned. Otherwise, only a single record is returned.</p>
 <div class="cell docutils container">
@@ -532,7 +528,7 @@ need to log in to submit or modify computations.</p>
 </div>
 <p>From printing the record, we see that the record with ID 1 is a single point calculation (<code class="docutils literal notranslate"><span class="pre">SinglePointRecord</span></code>) and that this computation is “complete” (<code class="docutils literal notranslate"><span class="pre">RecordStatusEnum.complete</span></code>).</p>
 <section id="viewing-record-information">
-<h3>Viewing Record Information<a class="headerlink" href="#viewing-record-information" title="Permalink to this heading">#</a></h3>
+<h3>Viewing Record Information<a class="headerlink" href="#viewing-record-information" title="Link to this heading">#</a></h3>
 <p>Records have lots of features, and what they have depends on the type of record - we will only cover a few here.</p>
 <p>For the single point calculation we retrieved, we can see information about the molecule (<code class="docutils literal notranslate"><span class="pre">molecule</span></code> attribute), the method, basis, etc (<code class="docutils literal notranslate"><span class="pre">specification</span></code>), and more.</p>
 <p>To see information about the molecule used in the calculation, use <code class="docutils literal notranslate"><span class="pre">record.molecule</span></code>.</p>
@@ -576,7 +572,7 @@ with the Psi4 software using the <code class="docutils literal notranslate"><spa
 </section>
 </section>
 <section id="retrieving-multiple-records">
-<h2>Retrieving Multiple Records<a class="headerlink" href="#retrieving-multiple-records" title="Permalink to this heading">#</a></h2>
+<h2>Retrieving Multiple Records<a class="headerlink" href="#retrieving-multiple-records" title="Link to this heading">#</a></h2>
 <p>The previous example showed retrieving just one record from QCArchive using the <code class="docutils literal notranslate"><span class="pre">get_records</span></code> method.
 However, more than one record at a time can be retrieved by passing a list of computation IDs to the method.</p>
 <div class="cell docutils container">
@@ -603,19 +599,15 @@ However, more than one record at a time can be retrieved by passing a list of co
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;SinglepointRecord id=1 status=RecordStatusEnum.complete&gt; Molecule(name=&#39;He&#39;, formula=&#39;He&#39;, hash=&#39;b3855c6&#39;)
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;SinglepointRecord id=2 status=RecordStatusEnum.complete&gt; Molecule(name=&#39;B&#39;, formula=&#39;B&#39;, hash=&#39;52710ba&#39;)
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;SinglepointRecord id=3 status=RecordStatusEnum.complete&gt; Molecule(name=&#39;H&#39;, formula=&#39;H&#39;, hash=&#39;512c204&#39;)
+&lt;SinglepointRecord id=2 status=RecordStatusEnum.complete&gt; Molecule(name=&#39;B&#39;, formula=&#39;B&#39;, hash=&#39;52710ba&#39;)
+&lt;SinglepointRecord id=3 status=RecordStatusEnum.complete&gt; Molecule(name=&#39;H&#39;, formula=&#39;H&#39;, hash=&#39;512c204&#39;)
 </pre></div>
 </div>
 </div>
 </div>
 </section>
 <section id="retrieving-records-by-computation-type">
-<h2>Retrieving Records by Computation Type<a class="headerlink" href="#retrieving-records-by-computation-type" title="Permalink to this heading">#</a></h2>
+<h2>Retrieving Records by Computation Type<a class="headerlink" href="#retrieving-records-by-computation-type" title="Link to this heading">#</a></h2>
 <p>The QCArchive API also allows you to retrieve records based on the computation type.
 QCArchive supports different types of computations including single points, optimizations,
 torsion drives and more.
@@ -748,7 +740,7 @@ For example, to retrieve single point computations only, you can use the method 
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.2.6.<br>
         </p>
         
 

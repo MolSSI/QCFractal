@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 
 
@@ -7,9 +6,9 @@
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Retrieving records &#8212; QCArchive 0.51.post22+ge4910c3e documentation</title>
+    <title>Retrieving records &#8212; QCArchive 0.51.post24+gdfed63b9 documentation</title>
   
   
   
@@ -29,27 +28,24 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=3f4ed3ce" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=365ca57ee442770a23c6" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=365ca57ee442770a23c6" />
   <script src="../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=365ca57ee442770a23c6"></script>
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
-    <script src="../_static/design-tabs.js"></script>
+    <script src="../_static/documentation_options.js?v=8ed36243"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/record_retrieval';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -486,7 +482,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="retrieving-records">
-<h1>Retrieving records<a class="headerlink" href="#retrieving-records" title="Permalink to this heading">#</a></h1>
+<h1>Retrieving records<a class="headerlink" href="#retrieving-records" title="Link to this heading">#</a></h1>
 <p>A <em>record</em> is a representation of a single computation that is stored on the server. Records are generally
 not created by hand by the user, but retrieved from the server.</p>
 <p>Records contain an ID that uniquely identifies this record on the server.</p>
@@ -636,7 +632,7 @@ Raw API (bulk)</label><div class="sd-tab-content docutils">
 </div>
 </div>
 <section id="querying-records">
-<h2>Querying records<a class="headerlink" href="#querying-records" title="Permalink to this heading">#</a></h2>
+<h2>Querying records<a class="headerlink" href="#querying-records" title="Link to this heading">#</a></h2>
 <p>The second way of retrieving records is by querying the server using <code class="docutils literal notranslate"><span class="pre">query_</span></code> functions
 (<a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.query_records" title="qcportal.client.PortalClient.query_records"><code class="xref py py-func docutils literal notranslate"><span class="pre">query_records()</span></code></a>, <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.query_singlepoints" title="qcportal.client.PortalClient.query_singlepoints"><code class="xref py py-func docutils literal notranslate"><span class="pre">query_singlepoints()</span></code></a>, etc).
 These functions have a lot of parameters, allowing you to query based on dates, molecules, and other
@@ -687,7 +683,7 @@ take more parameters that are specific to that computation (such as basis set fo
 optimizations, etc).</p>
 </section>
 <section id="next-steps">
-<h2>Next steps<a class="headerlink" href="#next-steps" title="Permalink to this heading">#</a></h2>
+<h2>Next steps<a class="headerlink" href="#next-steps" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p>View the <a class="reference internal" href="records/base.html"><span class="doc">basic record information</span></a></p></li>
 <li><p>See <a class="reference internal" href="records/index.html"><span class="doc">documentation about the individual kinds of records</span></a></p></li>
@@ -801,7 +797,7 @@ optimizations, etc).</p>
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.2.6.<br>
         </p>
         
 

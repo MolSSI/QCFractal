@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 
 
@@ -7,9 +6,9 @@
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Managing Records &#8212; QCArchive 0.51.post22+ge4910c3e documentation</title>
+    <title>Managing Records &#8212; QCArchive 0.51.post24+gdfed63b9 documentation</title>
   
   
   
@@ -29,27 +28,24 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=3f4ed3ce" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=365ca57ee442770a23c6" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=365ca57ee442770a23c6" />
   <script src="../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=365ca57ee442770a23c6"></script>
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
-    <script src="../_static/design-tabs.js"></script>
+    <script src="../_static/documentation_options.js?v=8ed36243"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/record_management';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -486,7 +482,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="managing-records">
-<h1>Managing Records<a class="headerlink" href="#managing-records" title="Permalink to this heading">#</a></h1>
+<h1>Managing Records<a class="headerlink" href="#managing-records" title="Link to this heading">#</a></h1>
 <p>Computations are generally meant to be fire-and-forget. That is, they get submitted, after which they get
 run somewhere, and the results stored on the server where they can be queried. When dealing
 with lots of computations, though, there will always be a need for a user to manually manage them
@@ -497,30 +493,30 @@ in some way. This includes restarting, deleting, cancelling, or otherwise modify
 Datasets allow for coordinating large numbers of similar calculations.</p>
 </div>
 <section id="record-statuses">
-<span id="record-status"></span><h2>Record Statuses<a class="headerlink" href="#record-statuses" title="Permalink to this heading">#</a></h2>
+<span id="record-status"></span><h2>Record Statuses<a class="headerlink" href="#record-statuses" title="Link to this heading">#</a></h2>
 <p>One important property of records is its <a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">status</span></code></a>, which
 that represents its state in the server. This is accessed by the <a class="reference internal" href="records/base.html#qcportal.record_models.BaseRecord.status" title="qcportal.record_models.BaseRecord.status"><code class="xref py py-attr docutils literal notranslate"><span class="pre">status</span></code></a>
 property on any record.</p>
 <section id="waiting">
-<h3>waiting<a class="headerlink" href="#waiting" title="Permalink to this heading">#</a></h3>
+<h3>waiting<a class="headerlink" href="#waiting" title="Link to this heading">#</a></h3>
 <p>The record exists but has not be run, and is waiting to be picked up and run by a
 <a class="reference internal" href="../overview/glossary.html#glossary-manager"><span class="std std-ref">compute manager</span></a> (or, for a <a class="reference internal" href="../overview/glossary.html#glossary-service"><span class="std std-ref">service</span></a>,
 waiting for the first iteration to be run by the <a class="reference internal" href="../overview/glossary.html#glossary-internal-job"><span class="std std-ref">internal job</span></a> runner).</p>
 <p>This is the initial status of a newly-created record.</p>
 </section>
 <section id="running">
-<h3>running<a class="headerlink" href="#running" title="Permalink to this heading">#</a></h3>
+<h3>running<a class="headerlink" href="#running" title="Link to this heading">#</a></h3>
 <p>The record has been claimed by a <a class="reference internal" href="../overview/glossary.html#glossary-manager"><span class="std std-ref">compute manager</span></a>
 and is either being run or has been queued to be run.</p>
 </section>
 <section id="complete">
-<h3>complete<a class="headerlink" href="#complete" title="Permalink to this heading">#</a></h3>
+<h3>complete<a class="headerlink" href="#complete" title="Link to this heading">#</a></h3>
 <p>The record has been successfully computed.</p>
 <p>After completion, the <a class="reference internal" href="../overview/tasks_services.html"><span class="doc">task or service</span></a> associated with the
 record is no longer needed and has been removed.</p>
 </section>
 <section id="error">
-<h3>error<a class="headerlink" href="#error" title="Permalink to this heading">#</a></h3>
+<h3>error<a class="headerlink" href="#error" title="Link to this heading">#</a></h3>
 <p>The record encountered an error while it was being computed.</p>
 <p>Errors can have many different causes. These can include unknown methods or basis sets,
 computations not converging, or random compute node failures on compute clusters.</p>
@@ -536,7 +532,7 @@ does not lead to an error state. In that case, the record will (eventually) be r
 The server may also automatically reset errored records - see <a class="reference internal" href="../admin_guide/configuration.html#server-configuration-autoreset-error"><span class="std std-ref">autoreset error</span></a>.</p>
 </section>
 <section id="cancelled">
-<h3>cancelled<a class="headerlink" href="#cancelled" title="Permalink to this heading">#</a></h3>
+<h3>cancelled<a class="headerlink" href="#cancelled" title="Link to this heading">#</a></h3>
 <p>The record was waiting or running, but has been cancelled by the user for some reason.
 A cancelled record can be uncancelled again. In the case of a service, the service
 will continue from where it left off.</p>
@@ -544,7 +540,7 @@ will continue from where it left off.</p>
 <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.uncancel_records" title="qcportal.client.PortalClient.uncancel_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncancel_records()</span></code></a></p>
 </section>
 <section id="deleted">
-<h3>deleted<a class="headerlink" href="#deleted" title="Permalink to this heading">#</a></h3>
+<h3>deleted<a class="headerlink" href="#deleted" title="Link to this heading">#</a></h3>
 <p>The record has been soft-deleted.</p>
 <p>While a hard-deleted record is completely removed from the database, a user may
 opt to “soft” delete the record. This sets the status to <code class="docutils literal notranslate"><span class="pre">deleted</span></code> to mark that
@@ -553,7 +549,7 @@ the record may be removed in the future.</p>
 <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.undelete_records" title="qcportal.client.PortalClient.undelete_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">undelete_records()</span></code></a></p>
 </section>
 <section id="invalid">
-<h3>invalid<a class="headerlink" href="#invalid" title="Permalink to this heading">#</a></h3>
+<h3>invalid<a class="headerlink" href="#invalid" title="Link to this heading">#</a></h3>
 <p>A record that was successfully completed, but after manual review, was discovered to have
 some problem with it (for example, converging to an incorrect state). This state must be manually
 set by a user.</p>
@@ -565,9 +561,9 @@ computation can not be trusted.</p>
 </section>
 </section>
 <section id="modifying-records">
-<h2>Modifying Records<a class="headerlink" href="#modifying-records" title="Permalink to this heading">#</a></h2>
+<h2>Modifying Records<a class="headerlink" href="#modifying-records" title="Link to this heading">#</a></h2>
 <section id="resetting-errored-records">
-<h3>Resetting errored records<a class="headerlink" href="#resetting-errored-records" title="Permalink to this heading">#</a></h3>
+<h3>Resetting errored records<a class="headerlink" href="#resetting-errored-records" title="Link to this heading">#</a></h3>
 <p>If a record has a status of <code class="docutils literal notranslate"><span class="pre">error</span></code>, you can manually reset it back to <code class="docutils literal notranslate"><span class="pre">waiting</span></code> so that it will run again.
 This can be useful if you think the error may be spurious or random and that running it again will be successful.
 You can check what the error is with
@@ -604,7 +600,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 </div>
 </section>
 <section id="deleting-records">
-<h3>Deleting records<a class="headerlink" href="#deleting-records" title="Permalink to this heading">#</a></h3>
+<h3>Deleting records<a class="headerlink" href="#deleting-records" title="Link to this heading">#</a></h3>
 <p>Records can be deleted from the server with <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.delete_records" title="qcportal.client.PortalClient.delete_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_records()</span></code></a>.</p>
 <p>There are a couple important arguments to this function. The first is the option to “soft delete”.
 Soft deletion means that the record is marked for deletion, but otherwise remains on the server.
@@ -670,7 +666,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 </div>
 </section>
 <section id="cancelling-records">
-<h3>Cancelling records<a class="headerlink" href="#cancelling-records" title="Permalink to this heading">#</a></h3>
+<h3>Cancelling records<a class="headerlink" href="#cancelling-records" title="Link to this heading">#</a></h3>
 <p>Records that are <code class="docutils literal notranslate"><span class="pre">waiting</span></code> or <code class="docutils literal notranslate"><span class="pre">running</span></code> can be cancelled with
 <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.cancel_records" title="qcportal.client.PortalClient.cancel_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cancel_records()</span></code></a>. If they were <code class="docutils literal notranslate"><span class="pre">waiting</span></code>, then they will no longer
 be picked up by a compute manager.</p>
@@ -702,7 +698,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 </div>
 </section>
 <section id="invalidating-records">
-<h3>Invalidating records<a class="headerlink" href="#invalidating-records" title="Permalink to this heading">#</a></h3>
+<h3>Invalidating records<a class="headerlink" href="#invalidating-records" title="Link to this heading">#</a></h3>
 <p>A completed record can be marked as invalid with <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.invalidate_records" title="qcportal.client.PortalClient.invalidate_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">invalidate_records()</span></code></a>. This signals
 that the record, although “successfully” completed, contains other problems and can not be trusted. Normally,
 the record should be deleted, but in some cases it may be useful to keep the record and mark it as invalid instead.</p>
@@ -732,7 +728,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 </div>
 </section>
 <section id="changing-tag-and-priority">
-<h3>Changing tag and priority<a class="headerlink" href="#changing-tag-and-priority" title="Permalink to this heading">#</a></h3>
+<h3>Changing tag and priority<a class="headerlink" href="#changing-tag-and-priority" title="Link to this heading">#</a></h3>
 <p>A record’s tag and priority can be changed if it has not yet been successfully completed (ie, the task or service
 still exists - see <a class="reference internal" href="../overview/tasks_services.html"><span class="doc">Tasks and Services</span></a>).</p>
 <div class="sd-tab-set docutils">
@@ -756,7 +752,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 </div>
 </section>
 <section id="adding-comments">
-<h3>Adding comments<a class="headerlink" href="#adding-comments" title="Permalink to this heading">#</a></h3>
+<h3>Adding comments<a class="headerlink" href="#adding-comments" title="Link to this heading">#</a></h3>
 <p>Comments can be added to records with <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.add_comment" title="qcportal.client.PortalClient.add_comment"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_comment()</span></code></a>. These are then available
 with the <a class="reference internal" href="records/base.html#qcportal.record_models.BaseRecord.comments" title="qcportal.record_models.BaseRecord.comments"><code class="xref py py-attr docutils literal notranslate"><span class="pre">comments</span></code></a> property.</p>
 <p>The server will automatically add the time the comment was added and the name of the user adding the comment.</p>
@@ -903,7 +899,7 @@ PYTHON</label><div class="sd-tab-content docutils">
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.2.6.<br>
         </p>
         
 
