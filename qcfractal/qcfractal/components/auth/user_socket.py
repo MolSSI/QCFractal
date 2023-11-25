@@ -185,9 +185,9 @@ class UserSocket:
         if pwcheck is False:
             raise AuthenticationFailure("Incorrect username or password")
 
-    def verify(self, username: str, password: str, *, session: Optional[Session] = None) -> UserInfo:
+    def authenticate(self, username: str, password: str, *, session: Optional[Session] = None) -> UserInfo:
         """
-        Verifies a given username and password, returning all info about the user
+        Authenticates a given username and password, returning all info about the user
 
         If the user is not found, or is disabled, or the password is incorrect, an exception is raised.
 

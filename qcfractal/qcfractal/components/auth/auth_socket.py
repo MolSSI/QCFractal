@@ -49,7 +49,7 @@ class AuthSocket:
             All information about the user
         """
 
-        return self.root_socket.users.verify(username=username, password=password, session=session)
+        return self.root_socket.users.authenticate(username=username, password=password, session=session)
 
     def is_authorized(
         self, resource: Dict[str, Any], action: str, subject: Dict[str, Any], context: Dict[str, Any], policies: Any
