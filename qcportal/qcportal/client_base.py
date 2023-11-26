@@ -244,16 +244,17 @@ class PortalClientBase:
 
         if ret.status_code == 200:
             ret_json = ret.json()
-            self.refresh_token = ret_json["refresh_token"]
-            self._req_session.headers.update({"Authorization": f'Bearer {ret_json["access_token"]}'})
+            self._jwt_refresh_token = ret_json["refresh_token"]
+            self._jwt_access_token = ret_json["access_token"]
+            self._req_session.headers.update({"Authorization": f'Bearer {self._jwt_access_token}'})
 
             # Store the expiration time of the access and refresh tokens
             # (these are unix epoch timestamps)
             decoded_access_token = jwt.decode(
-                ret_json["access_token"], algorithms=["HS256"], options={"verify_signature": False}
+                self._jwt_access_token, algorithms=["HS256"], options={"verify_signature": False}
             )
             decoded_refresh_token = jwt.decode(
-                ret_json["refresh_token"], algorithms=["HS256"], options={"verify_signature": False}
+                self._jwt_refresh_token, algorithms=["HS256"], options={"verify_signature": False}
             )
             self._jwt_access_exp = decoded_access_token["exp"]
             self._jwt_refresh_exp = decoded_refresh_token["exp"]
@@ -268,24 +269,29 @@ class PortalClientBase:
 
         ret = self._req_session.post(
             self.address + "auth/v1/refresh",
-            headers={"Authorization": f"Bearer {self.refresh_token}"},
+            headers={"Authorization": f"Bearer {self._jwt_refresh_token}"},
             verify=self._verify,
         )
 
         if ret.status_code == 200:
             ret_json = ret.json()
-            self._req_session.headers.update({"Authorization": f'Bearer {ret_json["access_token"]}'})
+            self._jwt_access_token = ret_json["access_token"]
+            self._req_session.headers.update({"Authorization": f'Bearer {self._jwt_access_token}'})
 
             # Store the expiration time of the access and refresh tokens
             # (these are unix epoch timestamps)
             decoded_access_token = jwt.decode(
-                ret_json["access_token"], algorithms=["HS256"], options={"verify_signature": False}
+                self._jwt_access_token, algorithms=["HS256"], options={"verify_signature": False}
             )
             self._jwt_access_exp = decoded_access_token["exp"]
 
         elif ret.status_code == 401 and "Token has expired" in ret.json()["msg"]:
             # If the refresh token has expired, try to log in again
             self._get_JWT_token()
+        elif ret.status_code == 401 and f" is disabled" in ret.json()["msg"]:
+            raise AuthenticationFailure("User account has been disabled")
+        elif ret.status_code == 401 and f" does not exist" in ret.json()["msg"]:
+            raise AuthenticationFailure("User account no longer exists")
         else:  # shouldn't happen unless user is blacklisted or something
             print(ret, ret.text)
             raise ConnectionRefusedError("Unable to refresh JWT authorization token! This is a server issue!!")

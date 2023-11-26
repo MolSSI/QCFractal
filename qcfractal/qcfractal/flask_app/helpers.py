@@ -149,9 +149,7 @@ def login_and_get_jwt(get_refresh_token: bool) -> Tuple[str, Optional[str]]:
         raise AuthenticationFailure("No password provided for login")
 
     try:
-        user_info = storage_socket.auth.authenticate(username, password)
-        role_dict = storage_socket.roles.get(user_info.role)
-        role_info = RoleInfo(**role_dict)
+        user_info, role_info = storage_socket.auth.authenticate(username, password)
 
         # Used for logging (in the after_request_func)
         g.user_id = user_info.id

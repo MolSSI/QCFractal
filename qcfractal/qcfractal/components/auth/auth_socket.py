@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Tuple, List, Dict, Any, Optional
 
-from qcportal.auth import UserInfo
+from qcportal.auth import UserInfo, RoleInfo
 from qcportal.exceptions import AuthorizationFailure
 from .policyuniverse import Policy
 
@@ -27,9 +27,9 @@ class AuthSocket:
         self.unauth_read_permissions = self.root_socket.roles.get("read")["permissions"]
         self.protected_resources = {"users", "roles", "me"}
 
-    def authenticate(self, username: str, password: str, *, session: Optional[Session] = None) -> UserInfo:
+    def authenticate(self, username: str, password: str, *, session: Optional[Session] = None) -> Tuple[UserInfo, RoleInfo]:
         """
-        Authenticates a given username and password, returning the users permissions.
+        Authenticates a given username and password, returning info about the user and their role
 
         If the user is not found, or is disabled, or the password is incorrect, an exception is raised.
 
@@ -46,10 +46,40 @@ class AuthSocket:
         Returns
         --------
         :
-            All information about the user
+            All information about the user, and all information about the user's role
         """
 
-        return self.root_socket.users.authenticate(username=username, password=password, session=session)
+        with self.root_socket.optional_session(session, True) as session:
+            user_info = self.root_socket.users.authenticate(username=username, password=password, session=session)
+            role_info_dict = self.root_socket.roles.get(user_info.role, session=session)
+            return user_info, RoleInfo(**role_info_dict)
+
+    def verify(self, user_id: int, *, session: Optional[Session] = None) -> Tuple[UserInfo, RoleInfo]:
+        """
+        Verifies that a given user id exists and is enabled, returning info about the user and their role
+
+        This does not check the user's password.
+
+        If the user is not found, or is disabled, an exception is raised.
+
+        Parameters
+        ----------
+        user_id
+            The id of the user to check
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        --------
+        :
+            All information about the user, and all information about the user's role
+        """
+
+        with self.root_socket.optional_session(session, True) as session:
+            user_info = self.root_socket.users.verify(user_id=user_id, session=session)
+            role_info_dict = self.root_socket.roles.get(user_info.role, session=session)
+            return user_info, RoleInfo(**role_info_dict)
 
     def is_authorized(
         self, resource: Dict[str, Any], action: str, subject: Dict[str, Any], context: Dict[str, Any], policies: Any
