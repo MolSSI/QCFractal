@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime
-
 import pytest
 
 from qcarchivetesting import test_users
 from qcarchivetesting.testing_classes import QCATestingSnowflake
 from qcfractal.components.serverinfo.test_access_socket import test_ips
 from qcportal import PortalClient
+from qcportal.utils import now_at_utc
 
 
 @pytest.fixture(scope="module")
@@ -95,7 +94,7 @@ def test_serverinfo_client_access_summary(queryable_access_client: PortalClient)
 
     # Just test that it works
     # TODO - better way of testing. Prepopulated db?
-    now = datetime.utcnow()
+    now = now_at_utc()
     r = queryable_access_client.query_access_summary()
     assert list(r.entries.keys())[0] == now.strftime("%Y-%m-%d")
 

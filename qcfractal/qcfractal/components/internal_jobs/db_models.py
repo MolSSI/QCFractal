@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, DateTime, String, JSON, Index, Enum, UniqueConstraint, ForeignKey
+from sqlalchemy import Column, Integer, TIMESTAMP, String, JSON, Index, Enum, UniqueConstraint, ForeignKey
+from sqlalchemy import DDL, event
 from sqlalchemy.orm import relationship
 
 from qcfractal.components.auth.db_models import UserIDMapSubquery, UserORM
 from qcfractal.db_socket import BaseORM
 from qcportal.internal_jobs.models import InternalJobStatusEnum
-from sqlalchemy import DDL, event
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from typing import Optional, Iterable, Dict, Any
@@ -21,11 +21,11 @@ class InternalJobORM(BaseORM):
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
     status = Column(Enum(InternalJobStatusEnum), nullable=False)
-    added_date = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
-    scheduled_date = Column(DateTime, nullable=False)
-    started_date = Column(DateTime)
-    last_updated = Column(DateTime)
-    ended_date = Column(DateTime)
+    added_date = Column(TIMESTAMP(timezone=True), nullable=False, default=now_at_utc)
+    scheduled_date = Column(TIMESTAMP(timezone=True), nullable=False)
+    started_date = Column(TIMESTAMP(timezone=True))
+    last_updated = Column(TIMESTAMP(timezone=True))
+    ended_date = Column(TIMESTAMP(timezone=True))
     runner_hostname = Column(String)
     runner_uuid = Column(String)
 

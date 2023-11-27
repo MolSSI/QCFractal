@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import traceback
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select, or_
@@ -16,6 +16,7 @@ from qcfractal.db_socket.helpers import (
 from qcportal.generic_result import GenericTaskResult
 from qcportal.metadata_models import InsertMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
+from qcportal.utils import now_at_utc
 from .db_models import ServiceQueueORM, ServiceDependencyORM, ServiceSubtaskRecordORM
 from ..record_socket import BaseRecordSocket
 
@@ -55,7 +56,7 @@ class ServiceSocket:
         with self.root_socket.optional_session(session) as session:
             self.root_socket.internal_jobs.add(
                 "iterate_services",
-                datetime.utcnow() + timedelta(seconds=delay),
+                now_at_utc() + timedelta(seconds=delay),
                 "services.iterate_services",
                 {},
                 user_id=None,
@@ -69,9 +70,9 @@ class ServiceSocket:
         # If the service has successfully completed, delete the entry from the Service Queue
         self._logger.info(f"Record {service_orm.record_id} (service {service_orm.id}) has successfully completed!")
         service_orm.record.compute_history[-1].status = RecordStatusEnum.complete
-        service_orm.record.compute_history[-1].modified_on = datetime.utcnow()
+        service_orm.record.compute_history[-1].modified_on = now_at_utc()
         service_orm.record.status = RecordStatusEnum.complete
-        service_orm.record.modified_on = datetime.utcnow()
+        service_orm.record.modified_on = now_at_utc()
         session.delete(service_orm)
 
         session.commit()
@@ -126,7 +127,7 @@ class ServiceSocket:
                 f"Record {service_orm.record_id} (service {service_orm.id}) has all tasks completed. Iterating..."
             )
             completed = self.root_socket.records.iterate_service(session, service_orm)
-            service_orm.record.modified_on = datetime.utcnow()
+            service_orm.record.modified_on = now_at_utc()
         except Exception as err:
             session.rollback()
 
@@ -250,7 +251,7 @@ class ServiceSocket:
             jobname = f"iterate_service_{service_id}"
             job_id = self.root_socket.internal_jobs.add(
                 name=jobname,
-                scheduled_date=datetime.utcnow(),
+                scheduled_date=now_at_utc(),
                 unique_name=True,
                 function="services._iterate_service",
                 kwargs={"service_id": service_id},
@@ -300,7 +301,7 @@ class ServiceSocket:
 
             for service_orm in new_services:
 
-                now = datetime.utcnow()
+                now = now_at_utc()
                 service_orm.record.modified_on = now
                 service_orm.record.status = RecordStatusEnum.running
 
@@ -343,7 +344,7 @@ class ServiceSocket:
                         jobname = f"iterate_service_{service_orm.id}"
                         job_id = self.root_socket.internal_jobs.add(
                             name=jobname,
-                            scheduled_date=datetime.utcnow(),
+                            scheduled_date=now_at_utc(),
                             unique_name=True,
                             function="services._iterate_service",
                             kwargs={"service_id": service_orm.id},

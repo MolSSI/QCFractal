@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 import pytest
@@ -14,6 +13,7 @@ from qcfractal.components.singlepoint.testing_helpers import submit_test_data as
 from qcfractal.components.testing_helpers import populate_records_status
 from qcportal.managers import ManagerName
 from qcportal.record_models import RecordStatusEnum
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
@@ -55,9 +55,9 @@ def test_record_socket_reset_assigned_manager(storage_socket: SQLAlchemySocket, 
     assert len(tasks_1) == 4
     assert len(tasks_2) == 2
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     ids = storage_socket.records.reset_assigned(manager_name=[mname1.fullname])
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     assert set(ids) == {id_1, id_3, id_5, id_6}
 
     rec = [session.get(BaseRecordORM, i) for i in all_id]
@@ -96,9 +96,9 @@ def test_record_client_reset(snowflake: QCATestingSnowflake):
     all_id = populate_records_status(storage_socket)
 
     # Can reset only error
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     meta = snowflake_client.reset_records(all_id)
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     assert meta.n_updated == 1
 
     with storage_socket.session_scope() as session:
@@ -174,9 +174,9 @@ def test_record_client_cancel(snowflake: QCATestingSnowflake):
     all_id = populate_records_status(storage_socket)
 
     # waiting, running, error can be cancelled
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     meta = snowflake_client.cancel_records(all_id)
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     assert meta.n_updated == 3
 
     with storage_socket.session_scope() as session:
@@ -252,9 +252,9 @@ def test_record_client_invalidate(snowflake: QCATestingSnowflake):
     all_id = populate_records_status(storage_socket)
 
     # only completed can be invalidated
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     meta = snowflake_client.invalidate_records(all_id)
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     assert meta.n_updated == 1
 
     with storage_socket.session_scope() as session:
@@ -330,9 +330,9 @@ def test_record_client_softdelete(snowflake: QCATestingSnowflake):
     all_id = populate_records_status(storage_socket)
 
     # only deleted can't be deleted
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     meta = snowflake_client.delete_records(all_id, soft_delete=True)
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     assert meta.n_deleted == 6
     assert meta.deleted_idx == [0, 1, 2, 3, 4, 6]
     assert meta.error_idx == [5]  # deleted can't be deleted

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import ipaddress
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 import pytest
@@ -10,6 +9,7 @@ from qcarchivetesting import load_ip_test_data, ip_tests_enabled
 from qcarchivetesting.testing_classes import QCATestingSnowflake
 from qcfractal.testing_helpers import DummyJobProgress
 from qcportal.serverinfo.models import AccessLogQueryFilters
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     pass
@@ -31,7 +31,7 @@ def test_serverinfo_socket_save_access(secure_snowflake: QCATestingSnowflake):
 
     storage_socket = secure_snowflake.get_storage_socket()
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
 
     ip_data = load_ip_test_data()
 
@@ -121,7 +121,7 @@ def test_serverinfo_socket_save_access(secure_snowflake: QCATestingSnowflake):
     storage_socket.serverinfo.save_access(access5)
     storage_socket.serverinfo.save_access(access6)
 
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
 
     # Update the IP addresses with geo data
     with storage_socket.session_scope() as session:

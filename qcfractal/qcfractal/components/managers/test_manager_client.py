@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 import pytest
+
 try:
     from pydantic.v1 import ValidationError
 except ImportError:
@@ -12,6 +12,7 @@ except ImportError:
 from qcfractal.components.singlepoint.testing_helpers import submit_test_data
 from qcportal import PortalRequestError
 from qcportal.managers import ManagerName, ManagerStatusEnum
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
@@ -26,20 +27,20 @@ def test_manager_mclient_activate(snowflake: QCATestingSnowflake):
     mclient1 = snowflake.manager_client(mname1)
     mclient2 = snowflake.manager_client(mname2)
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     mclient1.activate(
         manager_version="v2.0",
         programs={"qcengine": ["unknown"], "program1": ["v3.0"]},
         tags=["tag1", "tag2"],
     )
 
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     mclient2.activate(
         manager_version="v2.0",
         programs={"qcengine": ["unknown"], "program1": ["v3.0"]},
         tags=["tag1"],
     )
-    time_2 = datetime.utcnow()
+    time_2 = now_at_utc()
 
     name1 = mname1.fullname
     name2 = mname2.fullname
@@ -198,7 +199,7 @@ def test_manager_mclient_deactivate_deactivated(snowflake: QCATestingSnowflake):
 
     mclient1 = snowflake.manager_client(mname1)
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     mclient1.activate(
         manager_version="v2.0",
         programs={"qcengine": ["unkonwn"], "program1": ["v3.0"]},
@@ -216,14 +217,14 @@ def test_manager_mclient_heartbeat(snowflake: QCATestingSnowflake):
 
     mclient1 = snowflake.manager_client(mname1)
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     mclient1.activate(
         manager_version="v2.0",
         programs={"qcengine": ["unknown"], "program1": ["v3.0"]},
         tags=["tag1", "tag2"],
     )
 
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
 
     name1 = mname1.fullname
 
@@ -234,7 +235,7 @@ def test_manager_mclient_heartbeat(snowflake: QCATestingSnowflake):
     # Now do a heartbeat
     mclient1.heartbeat(total_cpu_hours=5.678, active_tasks=3, active_cores=10, active_memory=3.45)
 
-    time_2 = datetime.utcnow()
+    time_2 = now_at_utc()
 
     manager = client.get_managers(name1)
     assert len(manager.log) == 1
@@ -263,7 +264,7 @@ def test_manager_mclient_heartbeat(snowflake: QCATestingSnowflake):
         active_memory=2 * 3.45,
     )
 
-    time_3 = datetime.utcnow()
+    time_3 = now_at_utc()
 
     manager = client.get_managers(name1)
     assert len(manager.log) == 2

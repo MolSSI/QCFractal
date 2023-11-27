@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import threading
 import time
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 import pytest
@@ -11,6 +10,7 @@ from qcfractalcompute.compute_manager import ComputeManager
 from qcfractalcompute.config import FractalComputeConfig, FractalServerSettings, LocalExecutorConfig
 from qcfractalcompute.testing_helpers import QCATestingComputeThread, populate_db
 from qcportal.managers import ManagerStatusEnum, ManagerQueryFilters
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
@@ -34,9 +34,9 @@ def test_manager_keepalive(snowflake: QCATestingSnowflake):
     max_missed = snowflake._qcf_config.heartbeat_max_missed
 
     for i in range(max_missed * 2):
-        time_0 = datetime.utcnow()
+        time_0 = now_at_utc()
         compute._compute.heartbeat()
-        time_1 = datetime.utcnow()
+        time_1 = now_at_utc()
         time.sleep(sleep_time)
         m = storage_socket.managers.get([manager_name])
         assert m[0]["status"] == ManagerStatusEnum.active

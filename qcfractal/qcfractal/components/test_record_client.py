@@ -3,7 +3,6 @@ Tests the general record socket
 """
 from __future__ import annotations
 
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 import pytest
@@ -25,6 +24,7 @@ from qcfractal.testing_helpers import DummyJobProgress
 from qcportal import PortalRequestError
 from qcportal.molecules import Molecule
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     pass
@@ -128,15 +128,15 @@ def test_record_client_add_comment(secure_snowflake: QCATestingSnowflake):
     for r in rec:
         assert r.comments_ == []
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     meta = client.add_comment([all_id[1], all_id[3]], comment="This is a test comment")
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     assert meta.success
     assert meta.n_updated == 2
     assert meta.updated_idx == [0, 1]
 
     meta = client.add_comment([all_id[2], all_id[3]], comment="This is another test comment")
-    time_2 = datetime.utcnow()
+    time_2 = now_at_utc()
     assert meta.success
     assert meta.n_updated == 2
     assert meta.updated_idx == [0, 1]
@@ -172,9 +172,9 @@ def test_record_client_add_comment_nouser(snowflake: QCATestingSnowflake):
     id4, _ = submit_opt_test_data(storage_socket, "opt_psi4_benzene")
     all_id = [id1, id2, id3, id4]
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     meta = snowflake_client.add_comment([all_id[1], all_id[3]], comment="This is a test comment")
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     assert meta.success
     assert meta.n_updated == 2
     assert meta.updated_idx == [0, 1]
@@ -213,7 +213,7 @@ def test_record_client_modify(snowflake: QCATestingSnowflake):
 
     all_id = populate_records_status(storage_socket)
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
 
     # record 2 is complete - can't change
     meta = snowflake_client.modify_records([all_id[0], all_id[1]], new_tag="new_tag")

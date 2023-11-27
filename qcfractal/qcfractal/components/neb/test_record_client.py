@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import itertools
-from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 import pytest
@@ -20,6 +19,7 @@ from qcportal.neb import (
 )
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
@@ -57,7 +57,7 @@ def test_neb_client_add_get(submitter_client: PortalClient, spec: NEBSpecificati
     chain1 = [load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)]
     chain2 = [load_molecule_data("neb/neb_C3H2N_%i" % i) for i in range(21)]
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     meta, id = submitter_client.add_nebs(
         initial_chains=[chain1, chain2],
         program=spec.program,
@@ -69,7 +69,7 @@ def test_neb_client_add_get(submitter_client: PortalClient, spec: NEBSpecificati
         owner_group=owner_group,
     )
 
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     assert meta.success
 
     recs = submitter_client.get_nebs(id, include=["service", "initial_chain"])

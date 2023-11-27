@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import TYPE_CHECKING, Tuple, Optional, Union, Dict, Any
 
 try:
@@ -15,6 +14,7 @@ from qcfractalcompute.compress import compress_result
 from qcportal.optimization import OptimizationSpecification
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import QCSpecification, SinglepointProtocols
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -105,9 +105,9 @@ def run_test_data(
     priority: PriorityEnum = PriorityEnum.normal,
     end_status: RecordStatusEnum = RecordStatusEnum.complete,
 ):
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     record_id, result = submit_test_data(storage_socket, name, tag, priority)
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
 
     with storage_socket.session_scope() as session:
         record = session.get(OptimizationRecordORM, record_id)
@@ -126,7 +126,7 @@ def run_test_data(
     result_dict = {tasks[0]["id"]: result_compressed}
     storage_socket.tasks.update_finished(manager_name.fullname, result_dict)
 
-    time_2 = datetime.utcnow()
+    time_2 = now_at_utc()
 
     with storage_socket.session_scope() as session:
         record = session.get(OptimizationRecordORM, record_id)

@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import threading
 import weakref
-from datetime import datetime
 
 from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from qcfractal.components.internal_jobs.db_models import InternalJobORM
 from qcportal.internal_jobs.models import InternalJobStatusEnum
+from qcportal.utils import now_at_utc
 
 
 class JobProgress:
@@ -45,7 +45,7 @@ class JobProgress:
     def _update_thread(self, session: Session, end_thread: threading.Event):
         while True:
             # Update progress
-            stmt = self._stmt.values(progress=self._progress, last_updated=datetime.utcnow())
+            stmt = self._stmt.values(progress=self._progress, last_updated=now_at_utc())
             ret = session.execute(stmt).one_or_none()
             session.commit()
 

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import itertools
-from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 import pytest
@@ -11,6 +10,7 @@ from qcfractal.components.record_db_models import BaseRecordORM
 from qcportal.reaction import ReactionSpecification, ReactionKeywords
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification
+from qcportal.utils import now_at_utc
 from .testing_helpers import compare_reaction_specs, test_specs, run_test_data, submit_test_data
 
 if TYPE_CHECKING:
@@ -55,7 +55,7 @@ def test_reaction_client_add_get(
     ne4 = load_molecule_data("neon_tetramer")
     water = load_molecule_data("water_dimer_minima")
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     meta1, id1 = submitter_client.add_reactions(
         [[(1.0, hooh), (2.0, ne4)], [(3.0, hooh), (4.0, water)]],
         spec.program,
@@ -66,7 +66,7 @@ def test_reaction_client_add_get(
         priority=PriorityEnum.low,
         owner_group=owner_group,
     )
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     assert meta1.success
 
     recs = submitter_client.get_reactions(id1, include=["service", "components"])
