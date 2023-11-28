@@ -17,6 +17,7 @@ from qcfractal.components.auth.db_models import UserIDMapSubquery
 from qcfractal.db_socket.helpers import get_query_proj_options
 from qcportal.exceptions import MissingDataError
 from qcportal.internal_jobs.models import InternalJobStatusEnum, InternalJobQueryFilters
+from qcportal.utils import now_at_utc
 from .db_models import InternalJobORM
 from .status import JobProgress
 
@@ -307,7 +308,7 @@ class InternalJobSocket:
             job_orm.status = InternalJobStatusEnum.error
 
         if not job_progress.deleted():
-            job_orm.ended_date = datetime.utcnow()
+            job_orm.ended_date = now_at_utc()
             job_orm.last_updated = job_orm.ended_date
             job_orm.result = result
 
@@ -351,7 +352,7 @@ class InternalJobSocket:
 
             # Find the next available job, and find out if we have to sleep until then
             next_job_time = session.execute(next_job_stmt).scalar_one_or_none()
-            now = datetime.utcnow()
+            now = now_at_utc()
             if next_job_time is None:
                 # Wait up to 5 minutes by default. This is just a catch all to prevent
                 # programming mistakes from causing infinite waits
@@ -446,7 +447,7 @@ class InternalJobSocket:
             logger.debug("checking for jobs")
 
             # Pick up anything waiting, or anything that hasn't been updated in a while (12 update periods)
-            now = datetime.utcnow()
+            now = now_at_utc()
             dead = now - timedelta(seconds=(self._update_frequency * 12))
             logger.debug(f"checking for jobs before date {now}")
             cond1 = and_(InternalJobORM.status == InternalJobStatusEnum.waiting, InternalJobORM.scheduled_date <= now)
@@ -472,8 +473,8 @@ class InternalJobSocket:
                 break
 
             logger.info(f"running job {job_orm.name} id={job_orm.id} scheduled_date={job_orm.scheduled_date}")
-            job_orm.started_date = datetime.utcnow()
-            job_orm.last_updated = datetime.utcnow()
+            job_orm.started_date = now_at_utc()
+            job_orm.last_updated = now_at_utc()
             job_orm.runner_hostname = self._hostname
             job_orm.runner_uuid = runner_uuid
             job_orm.status = InternalJobStatusEnum.running

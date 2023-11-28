@@ -9,7 +9,7 @@ Create Date: 2022-03-15 12:51:52.995657
 import json
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 
 import sqlalchemy as sa
 from alembic import op
@@ -52,7 +52,7 @@ def create_reaction_record(conn, ds_id, created_on, modified_on, spec_id, stoich
         ),
         parameters=dict(
             record_id=reaction_id,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             comment=f"Reaction is imported/migrated from dataset {ds_id}",
         ),
     )
@@ -141,7 +141,7 @@ def create_manybody_record(conn, ds_id, created_on, modified_on, spec_id, mol_id
         ),
         parameters=dict(
             record_id=manybody_id,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             comment=f"Manybody record is imported/migrated from reaction dataset {ds_id}",
         ),
     )

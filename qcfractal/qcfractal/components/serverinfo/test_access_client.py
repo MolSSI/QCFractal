@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 from qcarchivetesting import test_users
 from qcarchivetesting.testing_classes import QCATestingSnowflake
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from qcportal import PortalClient
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 def test_serverinfo_client_access_logged(secure_snowflake_allow_read: QCATestingSnowflake):
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     client = secure_snowflake_allow_read.client("admin_user", test_users["admin_user"]["pw"])
     read_client = secure_snowflake_allow_read.client()
 
@@ -20,7 +20,7 @@ def test_serverinfo_client_access_logged(secure_snowflake_allow_read: QCATesting
     client.query_molecules(molecular_formula=["C"])
 
     read_client.get_molecules([123], missing_ok=True)
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
 
     # This will return 6, because the requests to /login and /information was done in constructing the clients
     query_res = client.query_access_log()
@@ -82,13 +82,13 @@ def test_serverinfo_client_access_not_logged(postgres_server, pytestconfig):
 
 def test_serverinfo_client_access_delete(snowflake_client: PortalClient):
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     snowflake_client.query_access_log()
-    time_12 = datetime.utcnow()
+    time_12 = now_at_utc()
     snowflake_client.query_molecules(molecular_formula=["C"])
-    time_23 = datetime.utcnow()
+    time_23 = now_at_utc()
     snowflake_client.get_molecules([123], missing_ok=True)
-    time_4 = datetime.utcnow()
+    time_4 = now_at_utc()
 
     query_res = snowflake_client.query_access_log(after=time_0)
     query_res_l = list(query_res)
@@ -107,5 +107,5 @@ def test_serverinfo_client_access_delete(snowflake_client: PortalClient):
     assert n_deleted == 2
 
     # All of the above generated accesses!
-    n_deleted = snowflake_client.delete_access_log(datetime.utcnow())
+    n_deleted = snowflake_client.delete_access_log(now_at_utc())
     assert n_deleted == 7

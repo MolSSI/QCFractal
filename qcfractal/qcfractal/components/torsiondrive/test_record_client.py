@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import itertools
-from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 import pytest
@@ -12,6 +11,7 @@ from qcportal.optimization import OptimizationSpecification
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification
 from qcportal.torsiondrive import TorsiondriveKeywords, TorsiondriveSpecification
+from qcportal.utils import now_at_utc
 from .testing_helpers import compare_torsiondrive_specs, test_specs, submit_test_data, run_test_data
 
 if TYPE_CHECKING:
@@ -56,7 +56,7 @@ def test_torsiondrive_client_add_get(
     td_mol_1 = load_molecule_data("td_C9H11NO2_1")
     td_mol_2 = load_molecule_data("td_C9H11NO2_2")
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     meta, id = submitter_client.add_torsiondrives(
         [[hooh], [td_mol_1, td_mol_2]],
         "torsiondrive",
@@ -66,7 +66,7 @@ def test_torsiondrive_client_add_get(
         priority=PriorityEnum.low,
         owner_group=owner_group,
     )
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     assert meta.success
 
     recs = submitter_client.get_torsiondrives(id, include=["service", "initial_molecules"])

@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime
-
 import pytest
 
 from qcportal import PortalRequestError
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
+from qcportal.utils import now_at_utc
 
 
 def run_dataset_model_add_get_entry(snowflake_client, ds, test_entries, entry_extra_compare):
@@ -321,9 +320,9 @@ def run_dataset_model_iterate_updated(ds, test_entries, test_spec):
     assert all(x.status == RecordStatusEnum.waiting for _, _, x in ds.iterate_records())
     entry_name = test_entries[0].name
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     ds.cancel_records(entry_name, "spec_1")
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
 
     # Should be automatically updated when we iterate
     all_records = list(ds.iterate_records())

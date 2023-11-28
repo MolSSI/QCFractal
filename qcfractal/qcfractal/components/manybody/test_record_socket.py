@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 import pytest
@@ -13,6 +12,7 @@ from qcportal.auth import UserInfo, GroupInfo
 from qcportal.manybody import ManybodySpecification, ManybodyKeywords
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
+from qcportal.utils import now_at_utc
 from .testing_helpers import compare_manybody_specs, test_specs, load_test_data, generate_task_key
 
 if TYPE_CHECKING:
@@ -26,9 +26,9 @@ def test_manybody_socket_add_get(storage_socket: SQLAlchemySocket, session: Sess
     water2 = load_molecule_data("water_dimer_minima")
     water4 = load_molecule_data("water_stacked")
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     meta, ids = storage_socket.records.manybody.add([water2, water4], spec, "tag1", PriorityEnum.low, None, None, True)
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     assert meta.success
 
     recs = [session.get(ManybodyRecordORM, i) for i in ids]
@@ -101,11 +101,11 @@ def test_manybody_socket_run(
     id_1 = id_1[0]
     assert meta_1.success
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     finished, n_singlepoints = run_service(
         storage_socket, activated_manager_name, id_1, generate_task_key, result_data_1, 100
     )
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
 
     assert finished is True
 

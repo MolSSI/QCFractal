@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import itertools
-from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 import pytest
@@ -9,6 +8,7 @@ import pytest
 from qcarchivetesting import load_molecule_data
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import QCSpecification, SinglepointDriver
+from qcportal.utils import now_at_utc
 from .testing_helpers import submit_test_data, run_test_data, compare_singlepoint_specs, test_specs
 
 if TYPE_CHECKING:
@@ -46,7 +46,7 @@ def test_singlepoint_client_add_get(submitter_client: PortalClient, spec: QCSpec
     ne4 = load_molecule_data("neon_tetramer")
     all_mols = [water, hooh, ne4]
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     meta, id = submitter_client.add_singlepoints(
         all_mols,
         spec.program,
@@ -59,7 +59,7 @@ def test_singlepoint_client_add_get(submitter_client: PortalClient, spec: QCSpec
         PriorityEnum.high,
         owner_group,
     )
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
 
     recs = submitter_client.get_singlepoints(id, include=["task", "molecule"])
 

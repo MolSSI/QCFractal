@@ -10,6 +10,7 @@ from sqlalchemy.orm import selectinload, defer, undefer, lazyload, joinedload
 from qcfractal.db_socket.helpers import get_query_proj_options, get_count, get_general
 from qcportal.exceptions import MissingDataError, ComputeManagerError
 from qcportal.managers import ManagerStatusEnum, ManagerName, ManagerQueryFilters
+from qcportal.utils import now_at_utc
 from .db_models import ComputeManagerLogORM, ComputeManagerORM
 
 if TYPE_CHECKING:
@@ -49,7 +50,7 @@ class ManagerSocket:
         with self.root_socket.optional_session(session) as session:
             self.root_socket.internal_jobs.add(
                 "check_manager_heartbeats",
-                datetime.utcnow() + timedelta(seconds=delay),
+                now_at_utc() + timedelta(seconds=delay),
                 "managers.check_manager_heartbeats",
                 {},
                 user_id=None,
@@ -159,7 +160,7 @@ class ManagerSocket:
             manager.active_cores = active_cores
             manager.active_memory = active_memory
             manager.total_cpu_hours = total_cpu_hours
-            manager.modified_on = datetime.utcnow()
+            manager.modified_on = now_at_utc()
 
             self.save_snapshot(manager)
 
@@ -196,7 +197,7 @@ class ManagerSocket:
         if not name and not modified_before:
             return []
 
-        now = datetime.utcnow()
+        now = now_at_utc()
         query_and = []
         if name:
             query_and.append(ComputeManagerORM.name.in_(name))
@@ -339,7 +340,7 @@ class ManagerSocket:
         """
         self._logger.debug("Checking manager heartbeats")
         manager_window = self._manager_max_missed_heartbeats * self._manager_heartbeat_frequency
-        dt = datetime.utcnow() - timedelta(seconds=manager_window)
+        dt = now_at_utc() - timedelta(seconds=manager_window)
 
         dead_managers = self.deactivate(modified_before=dt, reason="missing heartbeat", session=session)
 

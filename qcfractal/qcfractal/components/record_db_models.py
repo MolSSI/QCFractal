@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
@@ -10,7 +9,7 @@ from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
     Enum,
-    DateTime,
+    TIMESTAMP,
     JSON,
     Index,
     Boolean,
@@ -28,6 +27,7 @@ from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.db_socket import BaseORM
 from qcportal.compression import CompressionEnum, decompress
 from qcportal.record_models import RecordStatusEnum, OutputTypeEnum
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Optional, Iterable
@@ -42,7 +42,7 @@ class RecordCommentORM(BaseORM):
 
     id = Column(Integer, primary_key=True)
     record_id = Column(Integer, ForeignKey("base_record.id", ondelete="cascade"), nullable=False)
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    timestamp = Column(TIMESTAMP(timezone=True), default=now_at_utc, nullable=False)
     comment = Column(String, nullable=False)
 
     user_id = Column(Integer, ForeignKey(UserORM.id), nullable=True)
@@ -78,7 +78,7 @@ class RecordInfoBackupORM(BaseORM):
     old_status = Column(Enum(RecordStatusEnum), nullable=False)
     old_tag = Column(String, nullable=True)
     old_priority = Column(Integer, nullable=True)
-    modified_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    modified_on = Column(TIMESTAMP(timezone=True), default=now_at_utc, nullable=False)
 
     __table_args__ = (Index("ix_record_info_backup_record_id", "record_id"),)
 
@@ -173,7 +173,7 @@ class RecordComputeHistoryORM(BaseORM):
 
     status = Column(Enum(RecordStatusEnum), nullable=False)
     manager_name = Column(String, ForeignKey(ComputeManagerORM.name), nullable=True)
-    modified_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    modified_on = Column(TIMESTAMP(timezone=True), default=now_at_utc, nullable=False)
     provenance = Column(JSON)
 
     outputs = relationship(
@@ -213,8 +213,8 @@ class BaseRecordORM(BaseORM):
     status = Column(Enum(RecordStatusEnum), nullable=False)
     manager_name = Column(String, ForeignKey("compute_manager.name"), nullable=True)
 
-    created_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
-    modified_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    created_on = Column(TIMESTAMP(timezone=True), default=now_at_utc, nullable=False)
+    modified_on = Column(TIMESTAMP(timezone=True), default=now_at_utc, nullable=False)
 
     # Ownership of this record
     owner_user_id = Column(Integer, ForeignKey(UserORM.id), nullable=True)

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import traceback
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 try:
@@ -24,7 +23,7 @@ from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerStatusEnum
 from qcportal.metadata_models import TaskReturnMetadata
 from qcportal.record_models import RecordStatusEnum
-from qcportal.utils import calculate_limit
+from qcportal.utils import calculate_limit, now_at_utc
 from .db_models import TaskQueueORM
 from .reset_logic import should_reset
 
@@ -340,7 +339,7 @@ class TaskSocket:
                 for _, record_orm in new_items:
                     record_orm.status = RecordStatusEnum.running
                     record_orm.manager_name = manager_name
-                    record_orm.modified_on = datetime.utcnow()
+                    record_orm.modified_on = now_at_utc()
 
                 # Store in dict form for returning, but no need to store the info from the base record
                 # Also, retrieve the actual function kwargs. Eventually we may want the managers

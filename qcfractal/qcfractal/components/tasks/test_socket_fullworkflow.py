@@ -3,7 +3,6 @@ Tests the tasks socket (claiming & returning data)
 """
 from __future__ import annotations
 
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 from qcelemental.models import ComputeError, FailedOperation
@@ -13,6 +12,7 @@ from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.singlepoint.testing_helpers import load_test_data, submit_test_data
 from qcfractalcompute.compress import compress_result
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
@@ -26,7 +26,7 @@ def test_task_socket_fullworkflow_success(snowflake: QCATestingSnowflake):
     id1, result_data1 = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1", PriorityEnum.normal)
     id2, result_data2 = submit_test_data(storage_socket, "sp_psi4_fluoroethane_wfn", "tag1", PriorityEnum.normal)
 
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
 
     result_map = {id1: result_data1, id2: result_data2}
 
@@ -97,7 +97,7 @@ def test_task_socket_fullworkflow_error(snowflake: QCATestingSnowflake):
     id1, _ = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1")
     id2, _ = submit_test_data(storage_socket, "sp_psi4_fluoroethane_wfn")
 
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
 
     tasks = storage_socket.tasks.claim_tasks(mname.fullname, activated_manager_programs, ["*"])
 
@@ -159,26 +159,26 @@ def test_task_socket_fullworkflow_error_retry(snowflake: QCATestingSnowflake):
     fop_compressed = compress_result(fop.dict())
 
     # Sends back an error. Do it a few times
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     tasks = storage_socket.tasks.claim_tasks(mname.fullname, activated_manager_programs, ["*"])
     storage_socket.tasks.update_finished(mname.fullname, {tasks[0]["id"]: fop_compressed})
     storage_socket.records.reset(id1)
 
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     tasks = storage_socket.tasks.claim_tasks(mname.fullname, activated_manager_programs, ["*"])
     storage_socket.tasks.update_finished(mname.fullname, {tasks[0]["id"]: fop_compressed})
     storage_socket.records.reset(id1)
 
-    time_2 = datetime.utcnow()
+    time_2 = now_at_utc()
     tasks = storage_socket.tasks.claim_tasks(mname.fullname, activated_manager_programs, ["*"])
     storage_socket.tasks.update_finished(mname.fullname, {tasks[0]["id"]: fop_compressed})
     storage_socket.records.reset(id1)
 
     # Now succeed
-    time_3 = datetime.utcnow()
+    time_3 = now_at_utc()
     tasks = storage_socket.tasks.claim_tasks(mname.fullname, activated_manager_programs, ["*"])
     storage_socket.tasks.update_finished(mname.fullname, {tasks[0]["id"]: result_data1_compressed})
-    time_4 = datetime.utcnow()
+    time_4 = now_at_utc()
 
     with storage_socket.session_scope() as session:
         rec = session.get(BaseRecordORM, id1)

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import io
 import itertools
 import json
@@ -156,3 +157,11 @@ def capture_all_output(top_logger: str):
         logger.handlers.clear()
         logger.handlers = old_handlers
         logger.propagate = old_prop
+
+
+def now_at_utc() -> datetime.datetime:
+    """Get the current time as a timezone-aware datetime object"""
+
+    # Note that the utcnow() function is deprecated, and does not result in a
+    # timezone-aware datetime object
+    return datetime.datetime.now(datetime.timezone.utc)

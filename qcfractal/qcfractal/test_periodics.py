@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import time
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 import pytest
@@ -11,6 +10,7 @@ from qcfractal.components.torsiondrive.testing_helpers import submit_test_data a
 from qcportal.managers import ManagerName, ManagerStatusEnum
 from qcportal.record_models import RecordStatusEnum
 from qcportal.serverinfo import ServerStatsQueryFilters
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
@@ -27,12 +27,12 @@ def test_periodics_server_stats(snowflake: QCATestingSnowflake):
     sleep_time = snowflake._qcf_config.statistics_frequency
 
     snowflake.start_job_runner()
-    time.sleep(sleep_time / 2)
+    time.sleep(sleep_time * 0.8)
 
     for i in range(5):
-        time_0 = datetime.utcnow()
+        time_0 = now_at_utc()
         time.sleep(sleep_time)
-        time_1 = datetime.utcnow()
+        time_1 = now_at_utc()
 
         filters = ServerStatsQueryFilters(before=time_1, after=time_0)
         stats = storage_socket.serverinfo.query_server_stats(filters)

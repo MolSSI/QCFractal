@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 import pytest
@@ -21,6 +20,7 @@ from qcportal.singlepoint import (
     SinglepointDriver,
     SinglepointProtocols,
 )
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -40,9 +40,9 @@ def test_optimization_socket_task_spec(
     ne4 = load_molecule_data("neon_tetramer")
     all_mols = [water, hooh, ne4]
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     meta, id = storage_socket.records.optimization.add(all_mols, spec, "tag1", PriorityEnum.low, None, None, True)
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     assert meta.success
 
     tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, activated_manager_programs, ["*"])

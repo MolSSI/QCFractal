@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import itertools
-from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 import pytest
@@ -12,6 +11,7 @@ from qcportal.optimization import (
 )
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
@@ -59,7 +59,7 @@ def test_optimization_client_add_get(
     ne4 = load_molecule_data("neon_tetramer")
     all_mols = [water, hooh, ne4]
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     meta, id = submitter_client.add_optimizations(
         initial_molecules=all_mols,
         program=spec.program,
@@ -71,7 +71,7 @@ def test_optimization_client_add_get(
         owner_group=owner_group,
     )
 
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     assert meta.success
 
     recs = submitter_client.get_optimizations(id, include=["task", "initial_molecule"])

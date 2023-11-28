@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 import pytest
@@ -11,6 +10,7 @@ from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule
 from qcportal.record_models import RecordStatusEnum, PriorityEnum, RecordTask
 from qcportal.singlepoint import QCSpecification, SinglepointDriver, SinglepointProtocols
+from qcportal.utils import now_at_utc
 from .record_db_models import SinglepointRecordORM
 from .testing_helpers import test_specs, load_test_data, run_test_data
 
@@ -38,9 +38,9 @@ def test_singlepoint_socket_task_spec(
     ne4 = load_molecule_data("neon_tetramer")
     all_mols = [water, hooh, ne4]
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     meta, id = storage_socket.records.singlepoint.add(all_mols, spec, "tag1", PriorityEnum.low, None, None, True)
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     assert meta.success
 
     tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, activated_manager_programs, ["*"])

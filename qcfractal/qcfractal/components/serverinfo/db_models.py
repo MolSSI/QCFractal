@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-import datetime
 from typing import Optional, Iterable, Dict, Any
 
-from sqlalchemy import Column, Integer, DateTime, String, Float, BigInteger, JSON, Index, CHAR, ForeignKey
+from sqlalchemy import Column, Integer, TIMESTAMP, String, Float, BigInteger, JSON, Index, CHAR, ForeignKey
 from sqlalchemy.dialects.postgresql import INET
 from sqlalchemy.orm import relationship
 
 from qcfractal.components.auth.db_models import UserORM, UserIDMapSubquery
 from qcfractal.db_socket import BaseORM
+from qcportal.utils import now_at_utc
 
 
 class ServerStatsMetadataORM(BaseORM):
@@ -16,7 +16,7 @@ class ServerStatsMetadataORM(BaseORM):
 
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
-    date_value = Column(DateTime, nullable=False)
+    date_value = Column(TIMESTAMP(timezone=True), nullable=False)
 
 
 class AccessLogORM(BaseORM):
@@ -27,7 +27,7 @@ class AccessLogORM(BaseORM):
     __tablename__ = "access_log"
 
     id = Column(Integer, primary_key=True)
-    timestamp = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    timestamp = Column(TIMESTAMP(timezone=True), nullable=False, default=now_at_utc)
     method = Column(String, nullable=False)
     module = Column(String, nullable=True)
     full_uri = Column(String, nullable=True)
@@ -82,7 +82,7 @@ class InternalErrorLogORM(BaseORM):
     __tablename__ = "internal_error_log"
 
     id = Column(Integer, primary_key=True)
-    error_date = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    error_date = Column(TIMESTAMP(timezone=True), nullable=False, default=now_at_utc)
     qcfractal_version = Column(String, nullable=False)
     error_text = Column(String)
     user_id = Column(Integer, ForeignKey(UserORM.id), nullable=True)
@@ -123,7 +123,7 @@ class ServerStatsLogORM(BaseORM):
     __tablename__ = "server_stats_log"
 
     id = Column(Integer, primary_key=True)
-    timestamp = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    timestamp = Column(TIMESTAMP(timezone=True), nullable=False, default=now_at_utc)
 
     # Raw counts
     collection_count = Column(Integer)

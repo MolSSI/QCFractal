@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 from qcelemental.models import FailedOperation
@@ -31,7 +30,7 @@ from qcportal.exceptions import UserReportableError, MissingDataError
 from qcportal.managers.models import ManagerStatusEnum
 from qcportal.metadata_models import DeleteMetadata, UpdateMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
-from qcportal.utils import chunk_iterable
+from qcportal.utils import chunk_iterable, now_at_utc
 from .record_db_models import (
     RecordComputeHistoryORM,
     BaseRecordORM,
@@ -863,7 +862,7 @@ class RecordSocket:
         history_orm = RecordComputeHistoryORM()
         history_orm.status = "complete" if result.success else "error"
         history_orm.provenance = result.provenance.dict()
-        history_orm.modified_on = datetime.utcnow()
+        history_orm.modified_on = now_at_utc()
 
         # Get the compressed outputs if they exist
         compressed_output = result.extras.pop("_qcfractal_compressed_outputs", None)
@@ -1072,7 +1071,7 @@ class RecordSocket:
         history_orm = RecordComputeHistoryORM()
         history_orm.status = RecordStatusEnum.error
         history_orm.manager_name = manager_name
-        history_orm.modified_on = datetime.utcnow()
+        history_orm.modified_on = now_at_utc()
         history_orm.outputs = all_outputs
 
         record_orm.status = RecordStatusEnum.error
@@ -1138,10 +1137,10 @@ class RecordSocket:
         record_orm.compute_history[-1].status = RecordStatusEnum.error
 
         self.upsert_output(session, record_orm, error_orm)
-        record_orm.compute_history[-1].modified_on = datetime.utcnow()
+        record_orm.compute_history[-1].modified_on = now_at_utc()
 
         record_orm.status = RecordStatusEnum.error
-        record_orm.modified_on = datetime.utcnow()
+        record_orm.modified_on = now_at_utc()
 
     def insert_complete_record(self, session: Session, results: Sequence[AllResultTypes]) -> List[int]:
         """
@@ -1267,7 +1266,7 @@ class RecordSocket:
 
             for r in record_orms:
                 r.status = RecordStatusEnum.waiting
-                r.modified_on = datetime.utcnow()
+                r.modified_on = now_at_utc()
                 r.manager_name = None
 
             return [r.id for r in record_orms]
@@ -1361,7 +1360,7 @@ class RecordSocket:
                                 f"resetting record with status {r_orm.status} without backup info present"
                             )
 
-                    r_orm.modified_on = datetime.utcnow()
+                    r_orm.modified_on = now_at_utc()
 
                 updated_ids.extend([r.id for r in record_data])
 
@@ -1457,11 +1456,11 @@ class RecordSocket:
                         old_status=r.status,
                         old_tag=old_tag,
                         old_priority=old_priority,
-                        modified_on=datetime.utcnow(),
+                        modified_on=now_at_utc(),
                     )
                     session.add(backup_info)
 
-                    r.modified_on = datetime.utcnow()
+                    r.modified_on = now_at_utc()
                     r.status = new_status
 
                 updated_ids.extend([r.id for r in record_orms])

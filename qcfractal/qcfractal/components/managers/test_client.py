@@ -1,16 +1,15 @@
 from __future__ import annotations
 
-from datetime import datetime
-
 import pytest
 
 from qcarchivetesting.testing_classes import QCATestingSnowflake
 from qcportal import PortalRequestError
 from qcportal.managers import ManagerName, ManagerStatusEnum
+from qcportal.utils import now_at_utc
 
 
 def test_manager_client_get(snowflake: QCATestingSnowflake):
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
 
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
 
@@ -22,20 +21,20 @@ def test_manager_client_get(snowflake: QCATestingSnowflake):
     mclient1 = snowflake.manager_client(mname1, username="bill")
     mclient2 = snowflake.manager_client(mname2, username="bill")
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     mclient1.activate(
         manager_version="v2.0",
         programs={"qcengine": ["unknown"], "qcprog": ["unknown"], "qcprog2": ["v3.0"]},
         tags=["tag1", "tag2"],
     )
 
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     mclient2.activate(
         manager_version="v2.0",
         programs={"qcengine": ["unknown"], "qcprog": ["unknown"], "qcprog2": ["v3.0"]},
         tags=["tag1"],
     )
-    time_2 = datetime.utcnow()
+    time_2 = now_at_utc()
 
     name1 = mname1.fullname
     name2 = mname2.fullname

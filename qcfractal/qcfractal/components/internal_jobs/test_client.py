@@ -3,7 +3,7 @@ from __future__ import annotations
 import socket
 import threading
 import time
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import TYPE_CHECKING
 
 import pytest
@@ -12,6 +12,7 @@ from qcarchivetesting import test_users
 from qcfractal.components.internal_jobs.socket import InternalJobSocket
 from qcportal import PortalRequestError
 from qcportal.internal_jobs import InternalJobStatusEnum
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
@@ -44,18 +45,18 @@ def test_internal_jobs_client_error(snowflake: QCATestingSnowflake):
     snowflake_client = snowflake.client()
 
     id_1 = storage_socket.internal_jobs.add(
-        "dummy_job_error", datetime.utcnow(), "internal_jobs.dummy_job_error", {}, None, unique_name=False
+        "dummy_job_error", now_at_utc(), "internal_jobs.dummy_job_error", {}, None, unique_name=False
     )
 
     # Faster updates for testing
     storage_socket.internal_jobs._update_frequency = 1
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     end_event = threading.Event()
     th = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
     th.start()
     time.sleep(3)
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     end_event.set()
     th.join()
 
@@ -72,7 +73,7 @@ def test_internal_jobs_client_cancel_waiting(snowflake: QCATestingSnowflake):
     snowflake_client = snowflake.client()
 
     id_1 = storage_socket.internal_jobs.add(
-        "dummy_job", datetime.utcnow(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
+        "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
     )
 
     snowflake_client.cancel_internal_job(id_1)
@@ -89,7 +90,7 @@ def test_internal_jobs_client_cancel_running(snowflake: QCATestingSnowflake):
     snowflake_client = snowflake.client()
 
     id_1 = storage_socket.internal_jobs.add(
-        "dummy_job", datetime.utcnow(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
+        "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
     )
 
     # Faster updates for testing
@@ -123,7 +124,7 @@ def test_internal_jobs_client_delete_waiting(snowflake: QCATestingSnowflake):
     snowflake_client = snowflake.client()
 
     id_1 = storage_socket.internal_jobs.add(
-        "dummy_job", datetime.utcnow(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
+        "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
     )
 
     snowflake_client.delete_internal_job(id_1)
@@ -137,7 +138,7 @@ def test_internal_jobs_client_delete_running(snowflake: QCATestingSnowflake):
     snowflake_client = snowflake.client()
 
     id_1 = storage_socket.internal_jobs.add(
-        "dummy_job", datetime.utcnow(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
+        "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
     )
 
     # Faster updates for testing
@@ -171,11 +172,11 @@ def test_internal_jobs_client_query(secure_snowflake: QCATestingSnowflake):
 
     read_id = client.get_user("read_user").id
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     id_1 = storage_socket.internal_jobs.add(
-        "dummy_job", datetime.utcnow(), "internal_jobs.dummy_job", {"iterations": 1}, read_id, unique_name=False
+        "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 1}, read_id, unique_name=False
     )
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
 
     # Faster updates for testing
     storage_socket.internal_jobs._update_frequency = 1
@@ -184,7 +185,7 @@ def test_internal_jobs_client_query(secure_snowflake: QCATestingSnowflake):
     th = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
     th.start()
     time.sleep(4)
-    time_2 = datetime.utcnow()
+    time_2 = now_at_utc()
 
     try:
         job_1 = client.get_internal_job(id_1)
@@ -196,10 +197,10 @@ def test_internal_jobs_client_query(secure_snowflake: QCATestingSnowflake):
 
     # Add one that will be waiting
     id_2 = storage_socket.internal_jobs.add(
-        "dummy_job", datetime.utcnow(), "internal_jobs.dummy_job", {"iterations": 1}, None, unique_name=False
+        "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 1}, None, unique_name=False
     )
 
-    time_3 = datetime.utcnow()
+    time_3 = now_at_utc()
 
     # Now do some queries
     result = client.query_internal_jobs(job_id=id_1)
@@ -257,12 +258,12 @@ def test_internal_jobs_client_query(secure_snowflake: QCATestingSnowflake):
     assert len(result_l) >= 2
 
     # Should also have a bunch
-    result = client.query_internal_jobs(scheduled_before=datetime.utcnow())
+    result = client.query_internal_jobs(scheduled_before=now_at_utc())
     result_l = list(result)
     assert len(result_l) >= 2
 
     # nothing scheduled 10 days from now
-    result = client.query_internal_jobs(scheduled_after=datetime.utcnow() + timedelta(days=10))
+    result = client.query_internal_jobs(scheduled_after=now_at_utc() + timedelta(days=10))
     result_l = list(result)
     assert len(result_l) == 0
 

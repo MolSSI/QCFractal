@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import itertools
-from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 import pytest
@@ -11,6 +10,7 @@ from qcfractal.components.manybody.record_db_models import ManybodyRecordORM
 from qcportal.manybody import ManybodySpecification, ManybodyKeywords
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification
+from qcportal.utils import now_at_utc
 from .testing_helpers import compare_manybody_specs, test_specs, submit_test_data, run_test_data
 
 if TYPE_CHECKING:
@@ -48,7 +48,7 @@ def test_manybody_client_add_get(
     water2 = load_molecule_data("water_dimer_minima")
     water4 = load_molecule_data("water_stacked")
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     meta1, id1 = submitter_client.add_manybodys(
         [water2, water4],
         spec.program,
@@ -58,7 +58,7 @@ def test_manybody_client_add_get(
         priority=PriorityEnum.low,
         owner_group=owner_group,
     )
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     assert meta1.success
 
     recs = submitter_client.get_manybodys(id1, include=["service", "clusters", "initial_molecule"])

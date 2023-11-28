@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import datetime
 from typing import TYPE_CHECKING
 
 from qcportal.serverinfo import ErrorLogQueryFilters
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
@@ -35,7 +35,7 @@ def test_serverinfo_socket_save_error(secure_snowflake: QCATestingSnowflake):
 
     all_errors = [error_data_1, error_data_2]
     id_1 = storage_socket.serverinfo.save_error(error_data_1)
-    time_12 = datetime.datetime.utcnow()
+    time_12 = now_at_utc()
     id_2 = storage_socket.serverinfo.save_error(error_data_2)
 
     errors = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters())
@@ -63,16 +63,16 @@ def test_serverinfo_socket_save_error(secure_snowflake: QCATestingSnowflake):
     assert len(err) == 1
     assert err[0]["error_text"] == error_data_1["error_text"]
 
-    err = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters(after=datetime.datetime.utcnow()))
+    err = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters(after=now_at_utc()))
     assert len(err) == 0
 
     err = storage_socket.serverinfo.query_error_log(
-        ErrorLogQueryFilters(before=datetime.datetime.utcnow(), after=time_12)
+        ErrorLogQueryFilters(before=now_at_utc(), after=time_12)
     )
     assert len(err) == 1
 
     err = storage_socket.serverinfo.query_error_log(
-        ErrorLogQueryFilters(after=datetime.datetime.utcnow(), before=time_12)
+        ErrorLogQueryFilters(after=now_at_utc(), before=time_12)
     )
     assert len(err) == 0
 

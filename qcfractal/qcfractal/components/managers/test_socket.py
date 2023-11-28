@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 import pytest
@@ -8,6 +7,7 @@ import pytest
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerName, ManagerStatusEnum
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -20,7 +20,7 @@ def test_manager_socket_deactivate_before_notasks(storage_socket: SQLAlchemySock
     # UUID is different
     mname2 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5679")
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
 
     mid1 = storage_socket.managers.activate(
         name_data=mname1,
@@ -30,7 +30,7 @@ def test_manager_socket_deactivate_before_notasks(storage_socket: SQLAlchemySock
         tags=["tag1", "tag2"],
     )
 
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     mid2 = storage_socket.managers.activate(
         name_data=mname2,
         manager_version="v2.0",
@@ -53,7 +53,7 @@ def test_manager_socket_deactivate_before_notasks(storage_socket: SQLAlchemySock
     assert manager1.status == ManagerStatusEnum.inactive
     assert manager2.status == ManagerStatusEnum.active
 
-    deactivated = storage_socket.managers.deactivate(modified_before=datetime.utcnow())
+    deactivated = storage_socket.managers.deactivate(modified_before=now_at_utc())
     assert deactivated == [name2]
 
     session.expire_all()
