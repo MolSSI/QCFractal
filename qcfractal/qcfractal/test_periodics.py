@@ -27,7 +27,7 @@ def test_periodics_server_stats(snowflake: QCATestingSnowflake):
     sleep_time = snowflake._qcf_config.statistics_frequency
 
     snowflake.start_job_runner()
-    time.sleep(sleep_time / 2)
+    time.sleep(sleep_time * 0.8)
 
     for i in range(5):
         time_0 = now_at_utc()
