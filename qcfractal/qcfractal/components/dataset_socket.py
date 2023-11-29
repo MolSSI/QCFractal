@@ -400,7 +400,6 @@ class BaseDatasetSocket:
         )
 
         with self.root_socket.optional_session(session) as session:
-
             user_id, group_id = self.root_socket.users.get_owner_ids(owner_user, owner_group)
             self.root_socket.users.assert_group_member(user_id, group_id, session=session)
 
@@ -452,7 +451,6 @@ class BaseDatasetSocket:
                 raise MissingDataError(f"Could not find dataset with type={self.dataset_type} and id={dataset_id}")
 
             if ds.name != new_metadata.name:
-
                 # If only change in case, no need to check if it already exists
                 if ds.name.lower() != new_metadata.name.lower():
                     stmt2 = select(self.dataset_orm.id)
@@ -1285,7 +1283,6 @@ class BaseDatasetSocket:
         """
 
         with self.root_socket.optional_session(session) as session:
-
             record_ids = self._lookup_record_ids(
                 session,
                 dataset_id,

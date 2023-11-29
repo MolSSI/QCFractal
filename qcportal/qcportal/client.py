@@ -152,7 +152,6 @@ class PortalClient(PortalClientBase):
         return ret
 
     def _repr_html_(self) -> str:
-
         output = f"""
         <h3>PortalClient</h3>
         <ul>
@@ -285,7 +284,6 @@ class PortalClient(PortalClientBase):
         print(self.list_datasets_table())
 
     def get_dataset(self, dataset_type: str, dataset_name: str):
-
         body = DatasetQueryModel(dataset_name=dataset_name, dataset_type=dataset_type)
         ds = self.make_request("post", f"api/v1/datasets/query", Dict[str, Any], body=body)
 
@@ -296,12 +294,10 @@ class PortalClient(PortalClientBase):
         record_id: Union[int, Iterable[int]],
         dataset_type: Optional[Iterable[str]] = None,
     ):
-
         body = DatasetQueryRecords(record_id=make_list(record_id), dataset_type=dataset_type)
         return self.make_request("post", f"api/v1/datasets/queryrecords", List[Dict], body=body)
 
     def get_dataset_by_id(self, dataset_id: int):
-
         ds = self.make_request("get", f"api/v1/datasets/{dataset_id}", Dict[str, Any])
         return dataset_from_dict(ds, self)
 
@@ -324,7 +320,6 @@ class PortalClient(PortalClientBase):
         owner_group: Optional[str] = None,
         existing_ok: bool = False,
     ) -> BaseDataset:
-
         if description is None:
             description = ""
         if tagline is None:

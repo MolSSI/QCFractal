@@ -11,7 +11,6 @@ if TYPE_CHECKING:
 
 
 def test_serverinfo_socket_update_stats(storage_socket: SQLAlchemySocket):
-
     stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
     assert len(stats) == 0
 
@@ -52,9 +51,7 @@ def test_serverinfo_socket_update_stats(storage_socket: SQLAlchemySocket):
     stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters(before=now_at_utc()))
     assert len(stats) == 3
 
-    stats = storage_socket.serverinfo.query_server_stats(
-        ServerStatsQueryFilters(before=now_at_utc(), after=time_1)
-    )
+    stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters(before=now_at_utc(), after=time_1))
     assert len(stats) == 2
 
     stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters(before=time_1))

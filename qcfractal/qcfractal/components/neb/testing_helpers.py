@@ -109,7 +109,6 @@ def submit_test_data(
     tag: Optional[str] = "*",
     priority: PriorityEnum = PriorityEnum.normal,
 ) -> Tuple[int, Dict[str, Any]]:
-
     input_spec, initial_chain, result = load_test_data(name)
     meta, record_ids = storage_socket.records.neb.add([initial_chain], input_spec, tag, priority, None, None, True)
     assert meta.success

@@ -118,7 +118,6 @@ def submit_test_data(
     tag: Optional[str] = "*",
     priority: PriorityEnum = PriorityEnum.normal,
 ) -> Tuple[int, Dict[str, OptimizationResult]]:
-
     input_spec, molecules, result = load_test_data(name)
     meta, record_ids = storage_socket.records.torsiondrive.add(
         [molecules], input_spec, True, tag, priority, None, None, True

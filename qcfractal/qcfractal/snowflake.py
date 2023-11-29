@@ -38,7 +38,6 @@ def _api_process(
     finished_queue: multiprocessing.Queue,
     started_event: multiprocessing.Event,
 ) -> None:
-
     import signal
 
     qh = logging.handlers.QueueHandler(logging_queue)
@@ -70,7 +69,6 @@ def _api_process(
 
 
 def _compute_process(compute_config: FractalComputeConfig, logging_queue: multiprocessing.Queue) -> None:
-
     import signal
 
     qh = logging.handlers.QueueHandler(logging_queue)
@@ -109,7 +107,6 @@ def _compute_process(compute_config: FractalComputeConfig, logging_queue: multip
 def _job_runner_process(
     qcf_config: FractalConfig, logging_queue: multiprocessing.Queue, finished_queue: multiprocessing.Queue
 ) -> None:
-
     import signal
 
     qh = logging.handlers.QueueHandler(logging_queue)

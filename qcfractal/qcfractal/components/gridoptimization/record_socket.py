@@ -7,6 +7,7 @@ from typing import List, Dict, Tuple, Optional, Sequence, Any, Union, Set, TYPE_
 
 import numpy as np
 import sqlalchemy.orm.attributes
+
 try:
     from pydantic.v1 import BaseModel, Extra, parse_obj_as
 except ImportError:
@@ -61,10 +62,8 @@ def expand_ndimensional_grid(
     connections = []
 
     for d in range(len(dimensions)):
-
         # Loop over all compute seeds
         for seed in seeds:
-
             # Iterate both directions
             for disp in [-1, 1]:
                 new_dim = seed[d] + disp
@@ -114,7 +113,6 @@ def calculate_starting_grid(scans_dict: Sequence[Dict[str, Any]], molecule: Mole
     scans = parse_obj_as(List[ScanDimension], scans_dict)
     starting_grid = []
     for scan in scans:
-
         # Find closest index
         if scan.step_type == StepTypeEnum.absolute:
             m = molecule.measure(scan.indices)
@@ -211,7 +209,6 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         session: Session,
         service_orm: ServiceQueueORM,
     ) -> bool:
-
         go_orm: GridoptimizationRecordORM = service_orm.record
 
         # Always update with the current provenance
@@ -234,7 +231,6 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
             output = "Starting preoptimization"
 
         elif service_state.iteration == -1:
-
             complete_deps = service_orm.dependencies
 
             if len(complete_deps) != 1:
@@ -256,7 +252,6 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
 
         # Special start iteration
         elif service_state.iteration == 0:
-
             # We set starting_molecule to initial_molecule
             go_orm.starting_molecule_id = go_orm.initial_molecule_id
             starting_molecule = go_orm.initial_molecule.to_model(Molecule)
@@ -591,7 +586,6 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         tag = tag.lower()
 
         with self.root_socket.optional_session(session, False) as session:
-
             self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
 
             # Lock for the entire transaction
@@ -675,7 +669,6 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         """
 
         with self.root_socket.optional_session(session, False) as session:
-
             owner_user_id, owner_group_id = self.root_socket.users.get_owner_ids(
                 owner_user, owner_group, session=session
             )
@@ -712,7 +705,6 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> List[Dict[str, Any]]:
-
         options = [lazyload("*"), defer("*"), joinedload(GridoptimizationRecordORM.optimizations).options(undefer("*"))]
 
         with self.root_socket.optional_session(session) as session:

@@ -35,7 +35,6 @@ from qcfractal.postgres_harness import PostgresHarness
     ],
 )
 def test_db_connection_uri_convert(host, port, username, password, dbname, mdbname, query):
-
     # Test all the different URI formats
     db_config = DatabaseConfig(
         data_directory="/tmp/fakedir",  # not used in this test
@@ -125,7 +124,6 @@ def test_db_connection_uri_convert(host, port, username, password, dbname, mdbna
 
 
 def test_db_connection_hosts(tmp_path_factory):
-
     base_path = tmp_path_factory.mktemp("basefolder")
     tmp_path = tmp_path_factory.mktemp("db_data")
 
@@ -162,7 +160,6 @@ def test_db_connection_hosts(tmp_path_factory):
 
 
 def test_db_connection_full_uri(tmp_path_factory):
-
     base_path = tmp_path_factory.mktemp("basefolder")
     tmp_path = tmp_path_factory.mktemp("db_data")
 

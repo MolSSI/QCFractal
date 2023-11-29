@@ -9,6 +9,7 @@ import logging
 from typing import TYPE_CHECKING
 
 import sqlalchemy.orm.attributes
+
 try:
     from pydantic.v1 import BaseModel, Extra
 except ImportError:
@@ -111,7 +112,6 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         session: Session,
         service_orm: ServiceQueueORM,
     ):
-
         td_orm: TorsiondriveRecordORM = service_orm.record
         specification = TorsiondriveSpecification(**td_orm.specification.model_dict())
         initial_molecules: List[Dict[str, Any]] = [x.molecule.model_dict() for x in td_orm.initial_molecules]
@@ -167,7 +167,6 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         session: Session,
         service_orm: ServiceQueueORM,
     ) -> bool:
-
         td_orm: TorsiondriveRecordORM = service_orm.record
 
         # Always update with the current provenance
@@ -516,7 +515,6 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         tag = tag.lower()
 
         with self.root_socket.optional_session(session, False) as session:
-
             self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
 
             # Lock for the entire transaction
@@ -668,7 +666,6 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         """
 
         with self.root_socket.optional_session(session, False) as session:
-
             owner_user_id, owner_group_id = self.root_socket.users.get_owner_ids(
                 owner_user, owner_group, session=session
             )
@@ -756,7 +753,6 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> List[Dict[str, Any]]:
-
         options = [lazyload("*"), defer("*"), joinedload(TorsiondriveRecordORM.optimizations).options(undefer("*"))]
 
         with self.root_socket.optional_session(session) as session:

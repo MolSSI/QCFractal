@@ -5,7 +5,6 @@ from qcportal.torsiondrive import TorsiondriveSpecification, TorsiondriveKeyword
 
 
 def test_torsiondrive_socket_basic_specification(storage_socket: SQLAlchemySocket):
-
     spec1 = TorsiondriveSpecification(
         program="torsiondrive",
         keywords=TorsiondriveKeywords(
@@ -108,7 +107,6 @@ common_opt_spec = OptimizationSpecification(
 
 
 def test_torsiondrive_socket_add_specification_same_0(storage_socket: SQLAlchemySocket):
-
     spec1 = TorsiondriveSpecification(
         program="torsiondrive",
         keywords=TorsiondriveKeywords(
@@ -136,7 +134,6 @@ def test_torsiondrive_socket_add_specification_same_0(storage_socket: SQLAlchemy
 
 
 def test_torsiondrive_socket_add_specification_same_1(storage_socket: SQLAlchemySocket):
-
     spec1 = TorsiondriveSpecification(
         program="torsiondrive",
         keywords=TorsiondriveKeywords(

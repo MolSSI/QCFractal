@@ -385,7 +385,6 @@ class SQLAlchemySocket:
         for (schema, table_name), fks in all_fkc.items():
             for fk in fks:
                 if fk["referred_table"] == this_table_name and this_column_name in fk["referred_columns"]:
-
                     # Find what column refers to this one. It may be part of a composite fk
                     col_idx = fk["referred_columns"].index(this_column_name)
                     tb = md.tables[table_name]

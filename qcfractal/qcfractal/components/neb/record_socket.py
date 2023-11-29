@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import sqlalchemy.orm.attributes
 import tabulate
+
 try:
     from pydantic.v1 import BaseModel, Extra
 except ImportError:
@@ -83,7 +84,6 @@ class NEBServiceState(BaseModel):
 
 
 class NEBRecordSocket(BaseRecordSocket):
-
     # Used by the base class
     record_orm = NEBRecordORM
 
@@ -113,7 +113,6 @@ class NEBRecordSocket(BaseRecordSocket):
         session: Session,
         service_orm: ServiceQueueORM,
     ):
-
         neb_orm: NEBRecordORM = service_orm.record
         output = "\n\nCreated NEB calculation\n"
         spec: NEBSpecification = neb_orm.specification.to_model(NEBSpecification)
@@ -164,7 +163,6 @@ class NEBRecordSocket(BaseRecordSocket):
         session: Session,
         service_orm: ServiceQueueORM,
     ) -> bool:
-
         finished = False
 
         neb_orm: NEBRecordORM = service_orm.record
@@ -323,7 +321,6 @@ class NEBRecordSocket(BaseRecordSocket):
         service_orm: ServiceQueueORM,
         molecules: List[Molecule],
     ):
-
         neb_orm: NEBRecordORM = service_orm.record
         # delete all existing entries in the dependency list
         service_orm.dependencies = []
@@ -388,7 +385,6 @@ class NEBRecordSocket(BaseRecordSocket):
         service_orm: ServiceQueueORM,
         chain: List[Molecule],
     ):
-
         neb_orm: NEBRecordORM = service_orm.record
         # delete all existing entries in the dependency list
         service_orm.dependencies = []
@@ -420,7 +416,6 @@ class NEBRecordSocket(BaseRecordSocket):
             raise RuntimeError("Error adding singlepoints - likely a developer error: " + meta.error_string)
 
         for pos, sp_id in enumerate(sp_ids):
-
             svc_dep = ServiceDependencyORM(
                 record_id=sp_id,
                 extras={"position": pos},
@@ -467,7 +462,6 @@ class NEBRecordSocket(BaseRecordSocket):
     def add_specification(
         self, neb_spec: NEBSpecification, *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, Optional[int]]:
-
         neb_kw_dict = neb_spec.keywords.dict()
         kw_hash = hash_dict(neb_kw_dict)
 
@@ -650,7 +644,6 @@ class NEBRecordSocket(BaseRecordSocket):
         tag = tag.lower()
 
         with self.root_socket.optional_session(session, False) as session:
-
             self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
 
             # Lock for the entire transaction
@@ -787,7 +780,6 @@ class NEBRecordSocket(BaseRecordSocket):
         """
         images = neb_spec.keywords.images
         with self.root_socket.optional_session(session, False) as session:
-
             owner_user_id, owner_group_id = self.root_socket.users.get_owner_ids(
                 owner_user, owner_group, session=session
             )
@@ -842,7 +834,6 @@ class NEBRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> List[int]:
-
         options = [
             lazyload("*"),
             defer("*"),
@@ -861,7 +852,6 @@ class NEBRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> List[Dict[str, Any]]:
-
         options = [lazyload("*"), defer("*"), joinedload(NEBRecordORM.singlepoints).options(undefer("*"))]
 
         with self.root_socket.optional_session(session) as session:
@@ -876,7 +866,6 @@ class NEBRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> Dict[str, Dict[str, Any]]:
-
         options = [lazyload("*"), defer("*"), joinedload(NEBRecordORM.optimizations).options(undefer("*"))]
 
         with self.root_socket.optional_session(session) as session:
@@ -902,7 +891,6 @@ class NEBRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> Dict[str, Any]:
-
         stmt = (
             select(MoleculeORM)
             .join(SinglepointRecordORM)

@@ -5,6 +5,7 @@ import sqlite3
 from typing import Optional, Dict, Any, List, Iterable
 
 import zstandard
+
 try:
     from pydantic.v1 import BaseModel, validator, PrivateAttr, parse_obj_as, Extra
 except ImportError:

@@ -39,7 +39,6 @@ converters = {
 
 
 def transformer(old_data):
-
     row = {}
     for k, v in old_data.items():
         if k == "id":

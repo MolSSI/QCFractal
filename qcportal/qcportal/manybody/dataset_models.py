@@ -63,7 +63,6 @@ class ManybodyDataset(BaseDataset):
     def add_specification(
         self, name: str, specification: ManybodySpecification, description: Optional[str] = None
     ) -> InsertMetadata:
-
         spec = ManybodyDatasetSpecification(name=name, specification=specification, description=description)
         return self._add_specifications(spec)
 

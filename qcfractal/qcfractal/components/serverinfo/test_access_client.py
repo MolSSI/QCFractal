@@ -11,7 +11,6 @@ if TYPE_CHECKING:
 
 
 def test_serverinfo_client_access_logged(secure_snowflake_allow_read: QCATestingSnowflake):
-
     time_0 = now_at_utc()
     client = secure_snowflake_allow_read.client("admin_user", test_users["admin_user"]["pw"])
     read_client = secure_snowflake_allow_read.client()
@@ -64,7 +63,6 @@ def test_serverinfo_client_access_logged(secure_snowflake_allow_read: QCATesting
 
 
 def test_serverinfo_client_access_not_logged(postgres_server, pytestconfig):
-
     pg_harness = postgres_server.get_new_harness("serverinfo_client_access_not_logged")
     encoding = pytestconfig.getoption("--client-encoding")
 
@@ -81,7 +79,6 @@ def test_serverinfo_client_access_not_logged(postgres_server, pytestconfig):
 
 
 def test_serverinfo_client_access_delete(snowflake_client: PortalClient):
-
     time_0 = now_at_utc()
     snowflake_client.query_access_log()
     time_12 = now_at_utc()

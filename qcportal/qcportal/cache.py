@@ -170,7 +170,6 @@ class MemCache:
         self.maxsize = maxsize
 
     def __setitem__(self, key, value):
-
         # check size; if we're beyond, chop least-recently-used value
         self.garbage_collect()
         self.data[key] = {"value": value, "last_used": time.time()}
@@ -194,7 +193,7 @@ class MemCache:
             newsize = self.maxsize // 4
             items = sorted(self.data.items(), key=lambda x: x[1]["last_used"])
             remove = items[:-newsize]
-            for (key, value) in remove:
+            for key, value in remove:
                 self.data.pop(key)
 
     def get(self, key, default=None):

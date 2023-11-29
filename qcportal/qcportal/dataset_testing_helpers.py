@@ -8,7 +8,6 @@ from qcportal.utils import now_at_utc
 
 
 def run_dataset_model_add_get_entry(snowflake_client, ds, test_entries, entry_extra_compare):
-
     ent_map = {x.name: x for x in test_entries}
 
     meta = ds.add_entries(test_entries)
@@ -73,7 +72,6 @@ def run_dataset_model_add_entry_duplicate(snowflake_client, ds, test_entries, en
 
 
 def run_dataset_model_delete_entry(snowflake_client, ds, test_entries, test_specs):
-
     ds.add_specification("spec_1", test_specs[0])
     ds.add_entries(test_entries)
     ds.submit()
@@ -116,7 +114,6 @@ def run_dataset_model_add_get_spec(
     ds,
     test_specs,
 ):
-
     meta = ds.add_specification("spec_1", test_specs[0])
     assert meta.success
     assert meta.n_inserted == 1
@@ -142,7 +139,6 @@ def run_dataset_model_add_get_spec(
 
 
 def run_dataset_model_add_spec_duplicate(snowflake_client, ds, test_specs):
-
     meta = ds.add_specification("spec_1", test_specs[0])
     assert meta.success
     assert meta.n_inserted == 1
@@ -166,7 +162,6 @@ def run_dataset_model_add_spec_duplicate(snowflake_client, ds, test_specs):
 
 
 def run_dataset_model_delete_spec(snowflake_client, ds, test_entries, test_specs):
-
     ds.add_specification("spec_1", test_specs[0])
     ds.add_specification("spec_2", test_specs[1])
     ds.add_entries(test_entries[0])
@@ -241,7 +236,6 @@ def run_dataset_model_remove_record(snowflake_client, ds, test_entries, test_spe
 
 
 def run_dataset_model_submit(ds, test_entries, test_spec, record_compare):
-
     assert ds.record_count == 0
     assert ds._client.list_datasets()[0]["record_count"] == 0
 
@@ -312,7 +306,6 @@ def run_dataset_model_submit_missing(ds, test_entries, test_spec):
 
 
 def run_dataset_model_iterate_updated(ds, test_entries, test_spec):
-
     ds.add_specification("spec_1", test_spec)
     ds.add_entries(test_entries)
     ds.submit()

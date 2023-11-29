@@ -57,7 +57,6 @@ def test_service_socket_error(storage_socket: SQLAlchemySocket, session: Session
 
 
 def test_service_socket_iterate_order(storage_socket: SQLAlchemySocket, session: Session):
-
     storage_socket.services._max_active_services = 1
 
     id_1, _ = submit_td_test_data(storage_socket, "td_H2O2_mopac_pm6", "*", PriorityEnum.normal)

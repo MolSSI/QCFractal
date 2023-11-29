@@ -17,7 +17,6 @@ depends_on = None
 
 
 def upgrade():
-
     # Removes (harmless) duplicate rows
     op.execute(
         "DELETE FROM torsion_init_mol_association a USING \

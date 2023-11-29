@@ -6,6 +6,7 @@ from enum import Enum
 from typing import Optional, Dict, Any, List, Union, Iterable, Tuple, Type, Sequence, ClassVar, TypeVar
 
 from dateutil.parser import parse as date_parser
+
 try:
     from pydantic.v1 import BaseModel, Extra, constr, validator, PrivateAttr, Field
 except ImportError:

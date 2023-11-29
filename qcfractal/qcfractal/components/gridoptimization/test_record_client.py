@@ -20,7 +20,6 @@ if TYPE_CHECKING:
 
 
 def test_gridoptimization_client_tag_priority(snowflake_client: PortalClient):
-
     peroxide2 = load_molecule_data("peroxide2")
 
     for tag, priority in itertools.product(["*", "tag99"], list(PriorityEnum)):
@@ -60,7 +59,6 @@ def test_gridoptimization_client_tag_priority(snowflake_client: PortalClient):
 def test_gridoptimization_client_add_get(
     submitter_client: PortalClient, spec: GridoptimizationSpecification, owner_group: Optional[str]
 ):
-
     hooh = load_molecule_data("peroxide2")
     h3ns = load_molecule_data("go_H3NS")
 
@@ -108,7 +106,6 @@ def test_gridoptimization_client_add_duplicate(
     spec: GridoptimizationSpecification,
     find_existing,
 ):
-
     hooh = load_molecule_data("peroxide2")
     h3ns = load_molecule_data("go_H3NS")
     all_mols = [hooh, h3ns]

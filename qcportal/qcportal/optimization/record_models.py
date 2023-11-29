@@ -44,7 +44,6 @@ class OptimizationSpecification(BaseModel):
 
 
 class OptimizationRecord(BaseRecord):
-
     record_type: Literal["optimization"] = "optimization"
     specification: OptimizationSpecification
     initial_molecule_id: int

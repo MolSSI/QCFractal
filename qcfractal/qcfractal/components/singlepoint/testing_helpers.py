@@ -70,7 +70,6 @@ def submit_test_data(
     priority: PriorityEnum = PriorityEnum.normal,
     find_existing: bool = True,
 ) -> Tuple[int, AtomicResult]:
-
     input_spec, molecule, result = load_test_data(name)
     meta, record_ids = storage_socket.records.singlepoint.add(
         [molecule], input_spec, tag, priority, None, None, find_existing

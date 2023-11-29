@@ -28,7 +28,6 @@ test_ips = [
 
 @pytest.mark.skipif(not ip_tests_enabled, reason="Test GeoIP data not found")
 def test_serverinfo_socket_save_access(secure_snowflake: QCATestingSnowflake):
-
     storage_socket = secure_snowflake.get_storage_socket()
 
     time_0 = now_at_utc()

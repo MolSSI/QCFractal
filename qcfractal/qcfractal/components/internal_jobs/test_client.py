@@ -166,7 +166,6 @@ def test_internal_jobs_client_delete_running(snowflake: QCATestingSnowflake):
 
 
 def test_internal_jobs_client_query(secure_snowflake: QCATestingSnowflake):
-
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
     storage_socket = secure_snowflake.get_storage_socket()
 

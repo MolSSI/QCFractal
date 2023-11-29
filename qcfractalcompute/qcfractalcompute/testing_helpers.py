@@ -23,7 +23,6 @@ from qcportal.record_models import PriorityEnum, RecordTask
 
 class MockTestingComputeManager(ComputeManager):
     def __init__(self, qcf_config: FractalConfig, result_data: Dict[int, AllResultTypes]):
-
         self._qcf_config = qcf_config
 
         host = self._qcf_config.api.host
@@ -75,7 +74,6 @@ class MockTestingComputeManager(ComputeManager):
 
     # We have an executor and everything running, but we short-circuit the actual compute
     def _submit_tasks(self, executor_label: str, tasks: List[RecordTask]):
-
         # A mock app that just returns the result data given to it after two seconds
         @parsl.python_app(data_flow_kernel=self.dflow_kernel)
         def _mock_app(result: AllResultTypes) -> AppTaskResult:

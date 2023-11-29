@@ -190,7 +190,6 @@ def caplog_handler_at_level(caplog_fixture, level, logger=None):
 
 def terminate_process(proc):
     if proc.poll() is None:
-
         # Interrupt (SIGINT)
         if sys.platform.startswith("win"):
             proc.send_signal(signal.CTRL_BREAK_EVENT)

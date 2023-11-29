@@ -20,7 +20,6 @@ if TYPE_CHECKING:
 )
 @pytest.mark.parametrize("owner_group", ["group1", None])
 def test_dataset_client_add_get(submitter_client: PortalClient, dataset_type: str, owner_group: Optional[str]):
-
     ds = submitter_client.add_dataset(
         dataset_type,
         "Test dataset",
@@ -141,7 +140,6 @@ def test_dataset_client_query_dataset_records(snowflake: QCATestingSnowflake):
 
 
 def test_dataset_rename(snowflake_client: PortalClient):
-
     ds = snowflake_client.add_dataset("singlepoint", "Test dataset")
     assert ds.name == "Test dataset"
     ds_id = ds.id
@@ -157,7 +155,6 @@ def test_dataset_rename(snowflake_client: PortalClient):
 
 
 def test_dataset_rename_specifications(snowflake_client: PortalClient):
-
     ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
     assert ds.status() == {}
 
@@ -188,7 +185,6 @@ def test_dataset_rename_specifications(snowflake_client: PortalClient):
 
 
 def test_dataset_rename_entries(snowflake_client: PortalClient):
-
     ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
     assert ds.status() == {}
 

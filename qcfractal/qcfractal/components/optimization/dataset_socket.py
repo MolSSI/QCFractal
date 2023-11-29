@@ -23,7 +23,6 @@ if TYPE_CHECKING:
 
 
 class OptimizationDatasetSocket(BaseDatasetSocket):
-
     # Used by the base class
     dataset_orm = OptimizationDatasetORM
     specification_orm = OptimizationDatasetSpecificationORM
@@ -45,7 +44,6 @@ class OptimizationDatasetSocket(BaseDatasetSocket):
         return self.root_socket.records.optimization.add_specification(specification, session=session)
 
     def _create_entries(self, session: Session, dataset_id: int, new_entries: Sequence[OptimizationDatasetNewEntry]):
-
         molecules = [x.initial_molecule for x in new_entries]
         meta, mol_ids = self.root_socket.molecules.add_mixed(molecules, session=session)
 
@@ -77,7 +75,6 @@ class OptimizationDatasetSocket(BaseDatasetSocket):
         owner_group_id: Optional[int],
         find_existing: bool,
     ):
-
         # Weed out any with additional keywords
         special_entries = [x for x in entry_orm if x.additional_keywords]
         normal_entries = [x for x in entry_orm if not x.additional_keywords]

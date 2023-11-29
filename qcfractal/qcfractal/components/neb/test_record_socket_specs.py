@@ -9,7 +9,6 @@ from qcportal.optimization import OptimizationSpecification
 
 
 def test_neb_socket_basic_specification(storage_socket: SQLAlchemySocket):
-
     spec1 = NEBSpecification(
         program="geometric",
         keywords=NEBKeywords(
@@ -96,7 +95,6 @@ common_sp_spec = QCSpecification(
 
 
 def test_neb_socket_add_specification_same_0(storage_socket: SQLAlchemySocket):
-
     spec1 = NEBSpecification(
         program="geometric",
         keywords=NEBKeywords(images=11, spring_constant=1.0, optimize_ts=True, optimize_endpoints=True),
@@ -130,7 +128,6 @@ def test_neb_socket_add_specification_same_0(storage_socket: SQLAlchemySocket):
 
 
 def test_neb_socket_add_specification_same_1(storage_socket: SQLAlchemySocket):
-
     spec1 = NEBSpecification(
         program="geometric",
         keywords=NEBKeywords(

@@ -32,7 +32,6 @@ setattr(InternalJobSocket, "dummy_job", dummmy_internal_job)
 
 
 def test_internal_jobs_socket_add_unique(storage_socket: SQLAlchemySocket):
-
     id_1 = storage_socket.internal_jobs.add(
         "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=True
     )
@@ -45,7 +44,6 @@ def test_internal_jobs_socket_add_unique(storage_socket: SQLAlchemySocket):
 
 
 def test_internal_jobs_socket_add_non_unique(storage_socket: SQLAlchemySocket):
-
     id_1 = storage_socket.internal_jobs.add(
         "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
     )

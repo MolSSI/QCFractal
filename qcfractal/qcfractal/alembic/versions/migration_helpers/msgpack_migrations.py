@@ -23,7 +23,6 @@ def _get_colnames(columns):
 
 
 def _intermediate_table(table_name, columns, read_columns=None):
-
     column_pairs, old_names, new_names = _get_colnames(columns)
     table_data = [table_name, sa.MetaData(), sa.Column("id", sa.Integer, primary_key=True)]
     table_data.extend([sa.Column(x, old_type) for x in old_names])
@@ -41,7 +40,6 @@ def _intermediate_table(table_name, columns, read_columns=None):
 
 
 def json_to_msgpack_table(table_name, block_size, update_columns, transformer, read_columns=None):
-
     if read_columns is None:
         read_columns = {}
 
@@ -67,7 +65,6 @@ def json_to_msgpack_table(table_name, block_size, update_columns, transformer, r
 
     logger.info("Converting data, this may take some time...")
     for block in tqdm.tqdm(range(0, num_records, block_size)):
-
         # Pull chunk to migrate
         data = connection.execute(
             sa.select([*read_columns], order_by=table.c.id.asc(), offset=block, limit=block_size)
@@ -84,14 +81,12 @@ def json_to_msgpack_table(table_name, block_size, update_columns, transformer, r
 
 
 def json_to_msgpack_table_dropcols(table_name, block_size, update_columns):
-
     column_pairs, old_names, new_names = _get_colnames(update_columns)
     for col in new_names:
         op.drop_column(table_name, col)
 
 
 def json_to_msgpack_table_altercolumns(table_name, update_columns, nullable_true=None):
-
     if nullable_true is None:
         nullable_true = set()
 

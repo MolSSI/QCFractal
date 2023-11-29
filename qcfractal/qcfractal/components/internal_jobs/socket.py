@@ -174,7 +174,6 @@ class InternalJobSocket:
             return job_orm.model_dict()
 
     def query(self, query_data: InternalJobQueryFilters, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
-
         """
         General query of internal jobs in the database
 

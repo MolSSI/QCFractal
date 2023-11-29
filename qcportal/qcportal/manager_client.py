@@ -108,7 +108,6 @@ class ManagerClient(PortalClientBase):
         active_memory: float,
         total_cpu_hours: float,
     ) -> None:
-
         manager_update = ManagerUpdateBody(
             status=ManagerStatusEnum.active,
             active_tasks=active_tasks,
@@ -120,13 +119,11 @@ class ManagerClient(PortalClientBase):
         return self._update_on_server(manager_update)
 
     def claim(self, programs: Dict[str, List[str]], tags: List[str], limit: int) -> List[RecordTask]:
-
         body = TaskClaimBody(name_data=self.manager_name_data, programs=programs, tags=tags, limit=limit)
 
         return self.make_request("post", "compute/v1/tasks/claim", List[RecordTask], body=body)
 
     def return_finished(self, results_compressed: Dict[int, bytes]) -> TaskReturnMetadata:
-
         # Chunk based on the server limit
         results_flat = list(results_compressed.items())
         n_results = len(results_flat)

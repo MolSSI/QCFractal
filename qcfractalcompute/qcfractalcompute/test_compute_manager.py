@@ -171,7 +171,6 @@ def test_manager_deferred_return(snowflake: QCATestingSnowflake):
 
 
 def test_manager_missed_heartbeats_shutdown(snowflake: QCATestingSnowflake):
-
     compute_thread = QCATestingComputeThread(snowflake._qcf_config)
     compute_thread.start(manual_updates=False)
 

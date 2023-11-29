@@ -66,7 +66,6 @@ class OptimizationDataset(BaseDataset):
     def add_specification(
         self, name: str, specification: OptimizationSpecification, description: Optional[str] = None
     ) -> InsertMetadata:
-
         spec = OptimizationDatasetSpecification(name=name, specification=specification, description=description)
         return self._add_specifications(spec)
 
@@ -83,7 +82,6 @@ class OptimizationDataset(BaseDataset):
         attributes: Optional[Dict[str, Any]] = None,
         comment: Optional[str] = None,
     ):
-
         if additional_keywords is None:
             additional_keywords = {}
         if attributes is None:

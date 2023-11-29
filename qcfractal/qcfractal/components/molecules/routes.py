@@ -66,7 +66,6 @@ def add_molecules_v1(body_data: List[Molecule]):
 @api_v1.route("/molecules/query", methods=["POST"])
 @wrap_route("READ")
 def query_molecules_v1(body_data: MoleculeQueryFilters):
-
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_molecules
     body_data.limit = calculate_limit(max_limit, body_data.limit)
 

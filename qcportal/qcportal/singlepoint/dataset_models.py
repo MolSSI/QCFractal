@@ -70,7 +70,6 @@ class SinglepointDataset(BaseDataset):
     def add_specification(
         self, name: str, specification: QCSpecification, description: Optional[str] = None
     ) -> InsertMetadata:
-
         spec = SinglepointDatasetSpecification(name=name, specification=specification, description=description)
         return self._add_specifications(spec)
 

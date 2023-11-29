@@ -9,12 +9,10 @@ from qcportal import PortalClient
 
 @pytest.fixture(scope="module")
 def queryable_error_client(postgres_server, pytestconfig):
-
     pg_harness = postgres_server.get_new_harness("serverinfo_test_errors")
     encoding = pytestconfig.getoption("--client-encoding")
 
     with QCATestingSnowflake(pg_harness, encoding, create_users=True, enable_security=True, log_access=False) as server:
-
         # generate a bunch of test data
         storage_socket = server.get_storage_socket()
 
@@ -38,7 +36,6 @@ def queryable_error_client(postgres_server, pytestconfig):
 
 
 def test_serverinfo_client_query_error(queryable_error_client: PortalClient):
-
     # Query by user
     query_res = queryable_error_client.query_error_log(user="read_user")
     errors = list(query_res)

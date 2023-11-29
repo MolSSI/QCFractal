@@ -30,7 +30,6 @@ depends_on = None
 
 
 def create_reaction_record(conn, ds_id, created_on, modified_on, spec_id, stoichiometries, records):
-
     # We do this allllll by hand. We don't want to depend on the real ORM code
     # First, add a base record
     r = conn.execute(
@@ -119,7 +118,6 @@ def create_reaction_record(conn, ds_id, created_on, modified_on, spec_id, stoich
 
 
 def create_manybody_record(conn, ds_id, created_on, modified_on, spec_id, mol_id, record):
-
     # We do this allllll by hand. We don't want to depend on the real ORM code
     # First, add a base record
     r = conn.execute(

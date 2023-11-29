@@ -352,7 +352,6 @@ class ManagerSocket:
     ####################################################
 
     def get_log(self, name: str, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
-
         stmt = select(ComputeManagerORM)
         stmt = stmt.options(defer("*"), lazyload("*"))
         stmt = stmt.options(joinedload(ComputeManagerORM.log).options(undefer("*")))

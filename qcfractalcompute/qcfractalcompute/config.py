@@ -3,6 +3,7 @@ import os
 from typing import List, Optional, Union, Dict, Any
 
 import yaml
+
 try:
     from pydantic.v1 import BaseModel, Field, validator
 except ImportError:
@@ -181,7 +182,6 @@ class FractalServerSettings(BaseModel):
 
 
 class FractalComputeConfig(BaseModel):
-
     base_folder: str = Field(
         ...,
         description="The base folder to use as the default for some options (logs, etc). Default is the location of the config file.",

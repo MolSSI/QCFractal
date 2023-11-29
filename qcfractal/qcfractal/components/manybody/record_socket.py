@@ -47,7 +47,6 @@ def nCr(n: int, r: int) -> int:
 
 
 def analyze_results(mb_orm: ManybodyRecordORM):
-
     keywords = ManybodyKeywords(**mb_orm.specification.keywords)
 
     # Total number of fragments present on the molecule
@@ -123,7 +122,6 @@ def analyze_results(mb_orm: ManybodyRecordORM):
 
 
 def build_mbe_clusters(mol: Molecule, keywords: ManybodyKeywords) -> List[Tuple[Set[int], Set[int], Molecule]]:
-
     """
     Fragments a larger molecule into clusters
 
@@ -255,7 +253,6 @@ class ManybodyRecordSocket(BaseRecordSocket):
 
         table_rows = []
         for (frag_idx, basis_idx, frag_mol), mol_id in zip(mol_clusters, mol_ids):
-
             if mol_id in done_ids:
                 continue
 
@@ -282,7 +279,6 @@ class ManybodyRecordSocket(BaseRecordSocket):
         session: Session,
         service_orm: ServiceQueueORM,
     ):
-
         mb_orm: ManybodyRecordORM = service_orm.record
 
         # Always update with the current provenance
@@ -318,7 +314,6 @@ class ManybodyRecordSocket(BaseRecordSocket):
             output += f"({meta.n_inserted} new, {meta.n_existing} existing):\n\n"
 
             for mol_id, sp_id in zip(mols_to_compute, sp_ids):
-
                 svc_dep = ServiceDependencyORM(record_id=sp_id, extras={})
 
                 cluster_orm = clusters_by_mol[mol_id]
@@ -560,7 +555,6 @@ class ManybodyRecordSocket(BaseRecordSocket):
         tag = tag.lower()
 
         with self.root_socket.optional_session(session, False) as session:
-
             self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
 
             all_orm = []
@@ -640,7 +634,6 @@ class ManybodyRecordSocket(BaseRecordSocket):
         """
 
         with self.root_socket.optional_session(session, False) as session:
-
             owner_user_id, owner_group_id = self.root_socket.users.get_owner_ids(
                 owner_user, owner_group, session=session
             )
@@ -677,7 +670,6 @@ class ManybodyRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> List[Dict[str, Any]]:
-
         options = [lazyload("*"), defer("*"), joinedload(ManybodyRecordORM.clusters).options(undefer("*"))]
 
         with self.root_socket.optional_session(session) as session:

@@ -59,7 +59,6 @@ class OptimizationRecordSocket(BaseRecordSocket):
         return [stmt]
 
     def generate_task_specification(self, record_orm: OptimizationRecordORM) -> Dict[str, Any]:
-
         specification = record_orm.specification
         initial_molecule = record_orm.initial_molecule.model_dict()
 
@@ -94,7 +93,6 @@ class OptimizationRecordSocket(BaseRecordSocket):
     def update_completed_task(
         self, session: Session, record_orm: OptimizationRecordORM, result: QCEl_OptimizationResult, manager_name: str
     ) -> None:
-
         # Add the final molecule
         meta, final_mol_id = self.root_socket.molecules.add([result.final_molecule], session=session)
         if not meta.success:
@@ -293,7 +291,6 @@ class OptimizationRecordSocket(BaseRecordSocket):
         tag = tag.lower()
 
         with self.root_socket.optional_session(session) as session:
-
             self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
 
             # Get the spec orm. The full orm will be needed for create_task
@@ -379,7 +376,6 @@ class OptimizationRecordSocket(BaseRecordSocket):
         """
 
         with self.root_socket.optional_session(session, False) as session:
-
             owner_user_id, owner_group_id = self.root_socket.users.get_owner_ids(
                 owner_user, owner_group, session=session
             )

@@ -314,7 +314,6 @@ def upgrade():
     services = session.query(service_table).all()
 
     for service in services:
-
         if "torsiondrive_state" not in service.service_state:
             continue
 

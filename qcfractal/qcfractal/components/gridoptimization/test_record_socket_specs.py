@@ -5,7 +5,6 @@ from qcportal.singlepoint import QCSpecification, SinglepointDriver, Singlepoint
 
 
 def test_gridoptimization_socket_basic_specification(storage_socket: SQLAlchemySocket):
-
     spec1 = GridoptimizationSpecification(
         program="gridoptimization",
         keywords=GridoptimizationKeywords(
@@ -106,7 +105,6 @@ common_opt_spec = OptimizationSpecification(
 
 
 def test_gridoptimization_socket_add_specification_same_0(storage_socket: SQLAlchemySocket):
-
     spec1 = GridoptimizationSpecification(
         program="gridoptimization",
         keywords=GridoptimizationKeywords(

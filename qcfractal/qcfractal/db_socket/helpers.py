@@ -59,7 +59,6 @@ def get_count(session, stmt):
 def _get_query_proj_options(
     orm_type: Type[_ORM_T], include: Optional[Tuple[str, ...]], exclude: Optional[Tuple[str, ...]]
 ) -> List[Any]:
-
     # Adjust include to be the default "None" if only * is specified
     if include == ("*",):
         include = None
@@ -320,7 +319,6 @@ def insert_mixed_general(
     returning: Sequence[InstrumentedAttribute],
     lock_id: int,
 ) -> Tuple[InsertMetadata, List[Optional[Tuple]]]:
-
     """
     Insert mixed input (ids or orm objects) taking into account existing data.
 
@@ -620,7 +618,6 @@ def _insert_mixed_general_batch(
     search_cols: Sequence[InstrumentedAttribute],
     returning: Sequence[InstrumentedAttribute],
 ) -> Tuple[List[int], List[int], List[Tuple[int, str]], List[Optional[Tuple]]]:
-
     """
     Insert a batched of mixed input (ids or orm objects) taking into account existing data.
 

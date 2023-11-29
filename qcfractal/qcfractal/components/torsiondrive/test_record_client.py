@@ -254,7 +254,6 @@ def test_torsiondrive_client_harddelete_nochildren(snowflake: QCATestingSnowflak
 
 
 def test_torsiondrive_client_delete_opt_inuse(snowflake: QCATestingSnowflake):
-
     storage_socket = snowflake.get_storage_socket()
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()

@@ -6,7 +6,6 @@ from qcarchivetesting.testing_classes import QCATestingSnowflake
 
 
 def test_homepage_redirect(postgres_server, pytestconfig):
-
     pg_harness = postgres_server.get_new_harness("test_homepage_redirect")
     encoding = pytestconfig.getoption("--client-encoding")
 

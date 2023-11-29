@@ -33,7 +33,6 @@ _activated_manager_programs = {
 
 class QCATestingPostgresHarness(PostgresHarness):
     def __init__(self, config: DatabaseConfig):
-
         PostgresHarness.__init__(self, config)
         self.db_name = self.config.database_name
         self.template_name = self.db_name + "_template"
@@ -108,7 +107,6 @@ class QCATestingSnowflake(FractalSnowflake):
         log_access=True,
         extra_config=None,
     ):
-
         self.pg_harness = pg_harness
         self.encoding = encoding
 

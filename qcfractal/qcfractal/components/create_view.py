@@ -43,7 +43,6 @@ def _serialize_orm(orm, exclude=None):
 
 
 def create_dataset_view(dataset_id: int, socket: SQLAlchemySocket, view_file_path: str):
-
     if os.path.exists(view_file_path):
         raise RuntimeError(f"File {view_file_path} exists - will not overwrite")
 

@@ -70,14 +70,12 @@ class GridoptimizationDataset(BaseDataset):
     def add_specification(
         self, name: str, specification: GridoptimizationSpecification, description: Optional[str] = None
     ) -> InsertMetadata:
-
         spec = GridoptimizationDatasetSpecification(name=name, specification=specification, description=description)
         return self._add_specifications(spec)
 
     def add_entries(
         self, entries: Union[GridoptimizationDatasetNewEntry, Iterable[GridoptimizationDatasetNewEntry]]
     ) -> InsertMetadata:
-
         return self._add_entries(entries)
 
     def add_entry(

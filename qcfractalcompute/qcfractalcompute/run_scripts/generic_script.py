@@ -7,7 +7,6 @@ import time
 from contextlib import redirect_stdout, redirect_stderr
 
 if __name__ == "__main__":
-
     function_call_data_file = sys.argv[1]
 
     with open(function_call_data_file, "r") as f:

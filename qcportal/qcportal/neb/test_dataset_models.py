@@ -105,7 +105,6 @@ def entry_extra_compare(ent1, ent2):
 
 
 def record_compare(rec, ent, spec):
-
     # Initial chain on the record may only be a subset
     assert set(x.get_hash() for x in rec.initial_chain) <= set(x.get_hash() for x in ent.initial_chain)
 

@@ -304,7 +304,6 @@ def test_record_client_modify_service(snowflake: QCATestingSnowflake):
 
 
 def test_record_client_query_owner(secure_snowflake: QCATestingSnowflake):
-
     submit_client = secure_snowflake.client("submit_user", test_users["submit_user"]["pw"])
     admin_client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 

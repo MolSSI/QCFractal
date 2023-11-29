@@ -2,7 +2,6 @@ from qcportal.utils import chunk_iterable, seconds_to_hms
 
 
 def test_chunk_iterable():
-
     # A list
     a = list(range(10))
     chunks = list(chunk_iterable(a, 3))

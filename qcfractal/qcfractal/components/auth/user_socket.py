@@ -415,7 +415,6 @@ class UserSocket:
     def assert_group_member(
         self, user_id: Optional[int], group_id: Optional[int], *, session: Optional[Session] = None
     ):
-
         # No user and group - ok
         if user_id is None and group_id is None:
             return

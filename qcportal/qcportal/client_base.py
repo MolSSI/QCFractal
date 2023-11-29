@@ -14,6 +14,7 @@ from typing import (
 )
 
 import jwt
+
 try:
     import pydantic.v1 as pydantic
 except ImportError:
@@ -230,7 +231,6 @@ class PortalClientBase:
         self._req_session.headers.update(enc_headers)
 
     def _get_JWT_token(self) -> None:
-
         try:
             ret = self._req_session.post(
                 self.address + "auth/v1/login",
@@ -246,7 +246,7 @@ class PortalClientBase:
             ret_json = ret.json()
             self._jwt_refresh_token = ret_json["refresh_token"]
             self._jwt_access_token = ret_json["access_token"]
-            self._req_session.headers.update({"Authorization": f'Bearer {self._jwt_access_token}'})
+            self._req_session.headers.update({"Authorization": f"Bearer {self._jwt_access_token}"})
 
             # Store the expiration time of the access and refresh tokens
             # (these are unix epoch timestamps)
@@ -266,7 +266,6 @@ class PortalClientBase:
             raise AuthenticationFailure(msg)
 
     def _refresh_JWT_token(self) -> None:
-
         ret = self._req_session.post(
             self.address + "auth/v1/refresh",
             headers={"Authorization": f"Bearer {self._jwt_refresh_token}"},
@@ -276,7 +275,7 @@ class PortalClientBase:
         if ret.status_code == 200:
             ret_json = ret.json()
             self._jwt_access_token = ret_json["access_token"]
-            self._req_session.headers.update({"Authorization": f'Bearer {self._jwt_access_token}'})
+            self._req_session.headers.update({"Authorization": f"Bearer {self._jwt_access_token}"})
 
             # Store the expiration time of the access and refresh tokens
             # (these are unix epoch timestamps)
@@ -306,7 +305,6 @@ class PortalClientBase:
         internal_retry: Optional[bool] = True,
         allow_retries: bool = True,
     ) -> requests.Response:
-
         # If refresh token has expired, log in again
         if self._jwt_refresh_exp and self._jwt_refresh_exp < time.time():
             self._get_JWT_token()
@@ -388,7 +386,6 @@ class PortalClientBase:
         url_params: Optional[Union[_U, Dict[str, Any]]] = None,
         allow_retries: bool = True,
     ) -> _V:
-
         # If body_model or url_params_model are None, then use the type given
         if body_model is None and body is not None:
             body_model = type(body)

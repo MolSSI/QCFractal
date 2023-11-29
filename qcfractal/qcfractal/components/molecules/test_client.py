@@ -151,7 +151,6 @@ def test_molecules_client_get_empty(snowflake_client: PortalClient):
 
 
 def test_molecules_client_delete(snowflake_client: PortalClient):
-
     water = load_molecule_data("water_dimer_minima")
     meta, ids = snowflake_client.add_molecules([water])
 
@@ -166,7 +165,6 @@ def test_molecules_client_delete(snowflake_client: PortalClient):
 
 
 def test_molecules_client_delete_nonexist(snowflake_client: PortalClient):
-
     water = load_molecule_data("water_dimer_minima")
     meta, ids = snowflake_client.add_molecules([water])
     assert meta.success
@@ -180,7 +178,6 @@ def test_molecules_client_delete_nonexist(snowflake_client: PortalClient):
 
 
 def test_molecules_client_delete_inuse(snowflake_client: PortalClient):
-
     water = load_molecule_data("water_dimer_minima")
 
     meta, water_ids = snowflake_client.add_molecules([water])

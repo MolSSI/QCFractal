@@ -11,7 +11,6 @@ from qcportal.utils import now_at_utc
 
 @pytest.fixture(scope="module")
 def queryable_access_client(postgres_server, pytestconfig):
-
     pg_harness = postgres_server.get_new_harness("serverinfo_test_access")
     encoding = pytestconfig.getoption("--client-encoding")
 
@@ -45,7 +44,6 @@ def queryable_access_client(postgres_server, pytestconfig):
 
 
 def test_serverinfo_client_query_access(queryable_access_client: PortalClient):
-
     query_res = queryable_access_client.query_access_log(method=["get"])
     all_entries = list(query_res)
     assert len(all_entries) == 80
@@ -91,7 +89,6 @@ def test_serverinfo_client_query_access_limit(queryable_access_client: PortalCli
 
 
 def test_serverinfo_client_access_summary(queryable_access_client: PortalClient):
-
     # Just test that it works
     # TODO - better way of testing. Prepopulated db?
     now = now_at_utc()

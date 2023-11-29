@@ -300,7 +300,6 @@ class ServiceSocket:
             running_count += len(new_services)
 
             for service_orm in new_services:
-
                 now = now_at_utc()
                 service_orm.record.modified_on = now
                 service_orm.record.status = RecordStatusEnum.running
@@ -312,7 +311,6 @@ class ServiceSocket:
 
                 existing_history = service_orm.record.compute_history
                 if len(existing_history) == 0:
-
                     # Add a compute history entry.
                     # The iterate functions expect that at least one history entry exists
                     # But only add if this wasn't a restart of a running service
@@ -391,7 +389,6 @@ class ServiceSubtaskRecordSocket(BaseRecordSocket):
         return []
 
     def generate_task_specification(self, record_orm: ServiceSubtaskRecordORM) -> Dict[str, Any]:
-
         # Normally, this function is a little more complicated (ie, for others the spec is
         # generated from data in the record). However, this record type is a pretty
         # transparent passthrough. The function and kwargs stored in the record, so just return them
@@ -400,7 +397,6 @@ class ServiceSubtaskRecordSocket(BaseRecordSocket):
     def update_completed_task(
         self, session: Session, record_orm: ServiceSubtaskRecordORM, result: GenericTaskResult, manager_name: str
     ) -> None:
-
         record_orm.results = result.results
 
     def add(
@@ -449,7 +445,6 @@ class ServiceSubtaskRecordSocket(BaseRecordSocket):
         """
 
         with self.root_socket.optional_session(session, False) as session:
-
             owner_user_id, owner_group_id = self.root_socket.users.get_owner_ids(
                 owner_user, owner_group, session=session
             )
