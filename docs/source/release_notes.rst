@@ -1,6 +1,22 @@
 Release Notes
 =============
 
+0.52 / 2023-11-29
+-----------------
+
+Some improvements and bugfixes, but no breaking changes. Upgrading qcportal is recommended
+due to fixes related to JWTs, but is not required. The same is true with compute managers.
+
+Notable pull requests and features:
+
+- (:pr:`781`) Fixes issues related to shutdown of snowflakes, particularly with Python 3.12
+- (:pr:`783`, :pr:`793`) Fixes JWT refresh issues that cause errors in clients
+- (:pr:`785`) Some cleanups related to Python 3.12 (including removing use of removing `pkg_resources` module)
+- (:pr:`787`) Pydantic v1/v2 dual compatibility (L. Naden :contrib:`lnaden`, M. Thompson `mattwthompson`, L. Burns `loriab`)
+- (:pr:`792`) Add ability to get status overview of child records (such as optimizations of a torsiondrive)
+- (:pr:`794`) Remove use of now-deprecated `utctime` function and improve handling of timezones
+
+
 0.51 / 2023-10-19
 -----------------
 
