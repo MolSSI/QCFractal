@@ -33,6 +33,9 @@ dependencies = [
     "pandas",
     "pyjwt",
     "packaging",
+    "typing_extensions",
+    "python-dateutil",
+    "pytz",
 ]
 
 
