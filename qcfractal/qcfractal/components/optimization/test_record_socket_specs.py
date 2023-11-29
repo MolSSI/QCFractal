@@ -4,7 +4,6 @@ from qcportal.singlepoint import QCSpecification, SinglepointDriver, Singlepoint
 
 
 def test_optimizationrecord_socket_basic_specification(storage_socket: SQLAlchemySocket):
-
     spec1 = OptimizationSpecification(
         program="optprog1",
         keywords={"k": "value"},
@@ -72,7 +71,6 @@ common_qc_spec = QCSpecification(
 
 
 def test_optimizationrecord_socket_add_specification_same_0(storage_socket: SQLAlchemySocket):
-
     spec1 = OptimizationSpecification(
         program="optprog1",
         keywords={"k": "value"},

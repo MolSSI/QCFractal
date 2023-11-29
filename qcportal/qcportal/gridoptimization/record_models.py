@@ -183,7 +183,6 @@ class GridoptimizationOptimization(BaseModel):
 
 
 class GridoptimizationRecord(BaseRecord):
-
     record_type: Literal["gridoptimization"] = "gridoptimization"
     specification: GridoptimizationSpecification
     starting_grid: Optional[List[int]]

@@ -117,7 +117,6 @@ def submit_test_data(
     tag: Optional[str] = "*",
     priority: PriorityEnum = PriorityEnum.normal,
 ) -> Tuple[int, Dict[str, OptimizationResult]]:
-
     input_spec, molecule, result = load_test_data(name)
     meta, record_ids = storage_socket.records.gridoptimization.add(
         [molecule], input_spec, tag, priority, None, None, True

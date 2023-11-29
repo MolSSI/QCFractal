@@ -49,7 +49,6 @@ class SinglepointRecordSocket(BaseRecordSocket):
         return []
 
     def generate_task_specification(self, record_orm: SinglepointRecordORM) -> Dict[str, Any]:
-
         specification = record_orm.specification
         molecule = record_orm.molecule.model_dict()
 
@@ -102,7 +101,6 @@ class SinglepointRecordSocket(BaseRecordSocket):
         session: Session,
         result: QCEl_AtomicResult,
     ) -> SinglepointRecordORM:
-
         qc_spec = QCSpecification(
             program=result.provenance.creator.lower(),
             driver=result.driver,
@@ -313,7 +311,6 @@ class SinglepointRecordSocket(BaseRecordSocket):
         tag = tag.lower()
 
         with self.root_socket.optional_session(session, False) as session:
-
             self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
 
             # Get the spec orm. The full orm will be needed for create_task
@@ -398,7 +395,6 @@ class SinglepointRecordSocket(BaseRecordSocket):
         """
 
         with self.root_socket.optional_session(session, False) as session:
-
             owner_user_id, owner_group_id = self.root_socket.users.get_owner_ids(
                 owner_user, owner_group, session=session
             )
@@ -432,7 +428,6 @@ class SinglepointRecordSocket(BaseRecordSocket):
     def get_wavefunction_metadata(
         self, record_id: int, *, session: Optional[Session] = None
     ) -> Optional[Dict[str, Any]]:
-
         options = [
             lazyload("*"),
             defer("*"),
@@ -452,7 +447,6 @@ class SinglepointRecordSocket(BaseRecordSocket):
     def get_wavefunction_rawdata(
         self, record_id: int, *, session: Optional[Session] = None
     ) -> Tuple[bytes, CompressionEnum]:
-
         options = [
             lazyload("*"),
             defer("*"),

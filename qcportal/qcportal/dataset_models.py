@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Optional, Dict, Any, List, Iterable, Type, Tuple, Union, Callable, ClassVar, Sequence
 
 import pandas as pd
+
 try:
     import pydantic.v1 as pydantic
     from pydantic.v1 import BaseModel, Extra, validator, PrivateAttr, Field

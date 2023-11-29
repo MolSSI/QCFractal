@@ -38,7 +38,6 @@ def singlepoint_ds(submitter_client: PortalClient):
 
 @pytest.mark.parametrize("find_existing", [True, False])
 def test_singlepoint_dataset_client_submit(singlepoint_ds: SinglepointDataset, find_existing: bool):
-
     input_spec_1, molecule_1, _ = load_test_data("sp_psi4_benzene_energy_1")
 
     singlepoint_ds.add_entry(name="test_molecule", molecule=molecule_1)

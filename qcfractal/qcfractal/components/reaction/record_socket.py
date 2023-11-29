@@ -98,7 +98,6 @@ class ReactionRecordSocket(BaseRecordSocket):
         session: Session,
         service_orm: ServiceQueueORM,
     ):
-
         rxn_orm: ReactionRecordORM = service_orm.record
 
         spec: ReactionSpecification = rxn_orm.specification.to_model(ReactionSpecification)
@@ -167,7 +166,6 @@ class ReactionRecordSocket(BaseRecordSocket):
             output += tabulate.tabulate(zip(opt_mols_to_compute, opt_ids), headers=["molecule id", "optimization id"])
 
         if sp_mols_to_compute:
-
             # If an optimization was specified, we need to get the final molecule from that
             if has_optimization:
                 real_mols_to_compute = {
@@ -505,7 +503,6 @@ class ReactionRecordSocket(BaseRecordSocket):
         tag = tag.lower()
 
         with self.root_socket.optional_session(session, False) as session:
-
             self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
 
             # Lock for the entire transaction
@@ -516,7 +513,6 @@ class ReactionRecordSocket(BaseRecordSocket):
             existing_idx = []
 
             if find_existing:
-
                 # Deduplication is a bit complicated we have a many-to-many relationship
                 # between reactions and molecules. So skip the general insert
 
@@ -650,7 +646,6 @@ class ReactionRecordSocket(BaseRecordSocket):
         """
 
         with self.root_socket.optional_session(session, False) as session:
-
             owner_user_id, owner_group_id = self.root_socket.users.get_owner_ids(
                 owner_user, owner_group, session=session
             )
@@ -695,7 +690,6 @@ class ReactionRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> List[Dict[str, Any]]:
-
         options = [lazyload("*"), defer("*"), joinedload(ReactionRecordORM.components).options(undefer("*"))]
 
         with self.root_socket.optional_session(session) as session:

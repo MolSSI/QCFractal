@@ -26,7 +26,6 @@ table_name = "base_result"
 
 
 def transformer(old_data):
-
     extras = old_data["extras"]
     extras.pop("_qcfractal_tags", None)  # cleanup old tags
 

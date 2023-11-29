@@ -23,7 +23,6 @@ molecule_H2O = Molecule(
 
 
 def test_reaction_full_1(fulltest_client: PortalClient):
-
     sp_spec = {"program": "psi4", "driver": "energy", "method": "b3lyp", "basis": "def2-tzvp", "keywords": {}}
 
     rxn_keywords = {}

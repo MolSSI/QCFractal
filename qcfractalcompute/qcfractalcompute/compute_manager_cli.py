@@ -13,7 +13,6 @@ from .config import read_configuration
 
 
 def main():
-
     parser = argparse.ArgumentParser(description="A CLI for a QCFractal QueueManager")
     parser.add_argument("--version", action="version", version=f"{__version__}")
     parser.add_argument("--verbose", action="store_true", help="Print verbose output")

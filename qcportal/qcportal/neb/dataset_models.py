@@ -68,7 +68,6 @@ class NEBDataset(BaseDataset):
     def add_specification(
         self, name: str, specification: NEBSpecification, description: Optional[str] = None
     ) -> InsertMetadata:
-
         spec = NEBDatasetSpecification(name=name, specification=specification, description=description)
         return self._add_specifications(spec)
 

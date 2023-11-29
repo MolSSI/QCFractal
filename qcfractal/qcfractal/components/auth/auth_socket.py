@@ -27,7 +27,9 @@ class AuthSocket:
         self.unauth_read_permissions = self.root_socket.roles.get("read")["permissions"]
         self.protected_resources = {"users", "roles", "me"}
 
-    def authenticate(self, username: str, password: str, *, session: Optional[Session] = None) -> Tuple[UserInfo, RoleInfo]:
+    def authenticate(
+        self, username: str, password: str, *, session: Optional[Session] = None
+    ) -> Tuple[UserInfo, RoleInfo]:
         """
         Authenticates a given username and password, returning info about the user and their role
 
@@ -166,7 +168,6 @@ class AuthSocket:
             raise AuthorizationFailure(msg)
 
     def allowed_actions(self, subject: Any, resources: Any, actions: Any, policies: Any) -> List[Tuple[str, str]]:
-
         allowed: List[Tuple[str, str]] = []
 
         # if no auth required, always allowed, except for protected endpoints

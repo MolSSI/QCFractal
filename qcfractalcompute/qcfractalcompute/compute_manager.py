@@ -17,6 +17,7 @@ from parsl.config import Config as ParslConfig
 from parsl.dataflow.dflow import DataFlowKernel
 from parsl.dataflow.futures import Future as ParslFuture
 from parsl.executors import HighThroughputExecutor, ThreadPoolExecutor
+
 try:
     from pydantic.v1 import BaseModel, Extra, Field
 except ImportError:
@@ -351,7 +352,6 @@ class ComputeManager:
                 self.stop()
 
     def _acquire_complete_tasks(self) -> Dict[str, Dict[int, AppTaskResult]]:
-
         # First key is name of executor
         # Second key is task_id
         # Value is the result (including compressed computation result)

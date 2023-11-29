@@ -565,7 +565,6 @@ class PostgresHarness:
             raise RuntimeError(err_msg)
 
     def restore_database(self, filepath) -> None:
-
         if not os.path.exists(filepath):
             raise RuntimeError(f"Backup file {filepath} does not exist or is not a file")
 

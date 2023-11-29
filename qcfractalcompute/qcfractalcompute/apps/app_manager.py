@@ -21,7 +21,6 @@ if TYPE_CHECKING:
 
 @lru_cache()
 def discover_programs_conda(conda_env_name: Optional[str]) -> Dict[str, Dict[str, Any]]:
-
     qcengine_list_path = get_script_path("qcengine_list.py")
 
     if conda_env_name:
@@ -59,7 +58,6 @@ def discover_programs_conda(conda_env_name: Optional[str]) -> Dict[str, Dict[str
 
 @lru_cache()
 def discover_programs_apptainer(sif_path: str) -> Dict[str, Dict[str, Any]]:
-
     qcengine_list_path = get_script_path("qcengine_list.py")
 
     program_info = run_apptainer(
@@ -89,7 +87,6 @@ def discover_programs_apptainer(sif_path: str) -> Dict[str, Dict[str, Any]]:
 
 class AppManager:
     def __init__(self, manager_config: FractalComputeConfig):
-
         # key is executor label
         self._parsl_apps = {}
 

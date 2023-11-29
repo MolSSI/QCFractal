@@ -33,7 +33,7 @@ def upgrade():
         )
     )
 
-    for (mol_hash, mol_ids, _) in duplicates:
+    for mol_hash, mol_ids, _ in duplicates:
         mol_ids = sorted(mol_ids)
 
         # Keep the first id, merge the rest

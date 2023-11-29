@@ -4,6 +4,7 @@ from typing import Union, Any
 
 import msgpack
 import numpy as np
+
 try:
     from pydantic.v1.json import pydantic_encoder
 except ImportError:
@@ -69,7 +70,6 @@ def deserialize(data: Union[bytes, str], content_type: str):
     if content_type == "msgpack":
         return msgpack.loads(data, object_hook=_msgpack_decode, raw=False)
     elif content_type == "json":
-
         # JSON stored as bytes? Decode into a string for json to load
         if isinstance(data, bytes):
             data = data.decode("utf-8")

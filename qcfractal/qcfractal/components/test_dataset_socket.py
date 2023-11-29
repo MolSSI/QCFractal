@@ -25,7 +25,6 @@ def test_dataset_socket_submit_defaults(
     default_user: Optional[str],
     default_group: Optional[str],
 ):
-
     storage_socket = secure_snowflake.get_storage_socket()
 
     default_user_id, default_group_id = storage_socket.users.get_owner_ids(default_user, default_group)

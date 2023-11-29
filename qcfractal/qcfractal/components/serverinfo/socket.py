@@ -157,7 +157,6 @@ class ServerInfoSocket:
             )
 
     def update_geoip2_file(self, session: Session, job_progress: JobProgress) -> None:
-
         # Possible to reach this if we changed the settings, but have a job still in the queue
         if not (self._geoip2_enabled and self._maxmind_license_key):
             return

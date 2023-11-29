@@ -28,7 +28,6 @@ def tmp_config(tmp_path_factory):
 # Test with both an own server and
 @pytest.fixture(scope="function", params=[True, False])
 def cli_runner_core(postgres_server, tmp_config, request):
-
     pg_harness = postgres_server.get_new_harness("qcfractal_default")
 
     # Don't actually use the database - we just want a placeholder
@@ -85,7 +84,6 @@ def cli_runner_core(postgres_server, tmp_config, request):
 
 @pytest.fixture(scope="function")
 def cli_runner(cli_runner_core):
-
     # Creates the postgres instance (if needed) and tables
     cli_runner_core(["init-db"])
 
@@ -109,7 +107,6 @@ def test_cli_info_alembic(cli_runner_core):
 
 @pytest.mark.parametrize("full", [True, False])
 def test_cli_init_config(cli_runner_core, full: bool):
-
     # Remove the old config
     os.remove(cli_runner_core.config_path)
 
@@ -137,7 +134,6 @@ def test_cli_init_config(cli_runner_core, full: bool):
 
 
 def test_cli_init(cli_runner_core):
-
     output = cli_runner_core(["init-db"])
 
     assert "Initializing QCFractal database from configuration" in output
@@ -323,7 +319,6 @@ def test_cli_upgrade(cli_runner_core):
 
 
 def test_cli_upgrade_noinit(cli_runner_core):
-
     output = cli_runner_core(["upgrade-db"], fail_expected=True)
     if cli_runner_core.own_db:
         assert "has not been initialized" in output

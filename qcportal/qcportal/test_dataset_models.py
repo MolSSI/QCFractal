@@ -140,7 +140,6 @@ def test_dataset_model_status(snowflake: QCATestingSnowflake):
 
 
 def test_dataset_model_add_submit_many(snowflake_client: PortalClient):
-
     ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
     assert ds.status() == {}
 

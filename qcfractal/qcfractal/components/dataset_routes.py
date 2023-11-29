@@ -32,7 +32,6 @@ def list_dataset_v1():
 @api_v1.route("/datasets/<int:dataset_id>", methods=["GET"])
 @wrap_route("READ")
 def get_general_dataset_v1(dataset_id: int, url_params: ProjURLParameters):
-
     with storage_socket.session_scope(True) as session:
         ds_type = storage_socket.datasets.lookup_type(dataset_id, session=session)
         ds_socket = storage_socket.datasets.get_socket(ds_type)
@@ -73,13 +72,13 @@ def delete_dataset_v1(dataset_id: int, url_params: DatasetDeleteParams):
 # are different
 #################################################################
 
+
 ########################
 # Adding a dataset
 ########################
 @api_v1.route("/datasets/<string:dataset_type>", methods=["POST"])
 @wrap_route("WRITE")
 def add_dataset_v1(dataset_type: str, body_data: DatasetAddBody):
-
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.add(
         name=body_data.name,

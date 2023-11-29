@@ -34,7 +34,6 @@ def clean_conda_env(d: Dict[str, Any]):
 
 class DataGeneratorManager(ComputeManager):
     def __init__(self, qcf_config: FractalConfig, result_queue: queue.Queue, n_workers: int = 2):
-
         self._qcf_config = qcf_config
         self._result_queue = result_queue
         self._record_id_map = {}  # Maps task id to record id

@@ -36,7 +36,6 @@ _qcvar_transitions = {
 }
 
 if __name__ == "__main__":
-
     function_kwargs_file = sys.argv[1]
 
     with open(function_kwargs_file, "r") as f:

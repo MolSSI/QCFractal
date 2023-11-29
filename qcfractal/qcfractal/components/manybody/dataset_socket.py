@@ -23,7 +23,6 @@ if TYPE_CHECKING:
 
 
 class ManybodyDatasetSocket(BaseDatasetSocket):
-
     # Used by the base class
     dataset_orm = ManybodyDatasetORM
     specification_orm = ManybodyDatasetSpecificationORM
@@ -45,7 +44,6 @@ class ManybodyDatasetSocket(BaseDatasetSocket):
         return self.root_socket.records.manybody.add_specification(specification, session=session)
 
     def _create_entries(self, session: Session, dataset_id: int, new_entries: Sequence[ManybodyDatasetNewEntry]):
-
         molecules = [x.initial_molecule for x in new_entries]
         meta, mol_ids = self.root_socket.molecules.add_mixed(molecules, session=session)
 
@@ -77,7 +75,6 @@ class ManybodyDatasetSocket(BaseDatasetSocket):
         owner_group_id: Optional[int],
         find_existing: bool,
     ):
-
         # Weed out any with additional keywords
         special_entries = [x for x in entry_orm if x.additional_keywords]
         normal_entries = [x for x in entry_orm if not x.additional_keywords]
@@ -98,7 +95,7 @@ class ManybodyDatasetSocket(BaseDatasetSocket):
                 session=session,
             )
 
-            for (entry, oid) in zip(new_normal_entries, mb_ids):
+            for entry, oid in zip(new_normal_entries, mb_ids):
                 rec = ManybodyDatasetRecordItemORM(
                     dataset_id=dataset_id, entry_name=entry.name, specification_name=spec.name, record_id=oid
                 )
@@ -106,7 +103,6 @@ class ManybodyDatasetSocket(BaseDatasetSocket):
 
         # Now the ones with additional keywords
         for spec in spec_orm:
-
             spec_obj = spec.specification.to_model(ManybodySpecification)
             spec_input_dict = spec_obj.dict()
 

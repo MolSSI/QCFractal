@@ -38,7 +38,6 @@ def manybody_ds(submitter_client: PortalClient):
 
 @pytest.mark.parametrize("find_existing", [True, False])
 def test_manybody_dataset_client_submit(manybody_ds: ManybodyDataset, find_existing: bool):
-
     input_spec_1, molecule_1, _ = load_test_data("mb_cp_he4_psi4_mp2")
 
     manybody_ds.add_entry(name="test_molecule", initial_molecule=molecule_1)

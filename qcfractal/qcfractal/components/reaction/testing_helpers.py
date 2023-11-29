@@ -87,7 +87,6 @@ def submit_test_data(
     tag: Optional[str] = "*",
     priority: PriorityEnum = PriorityEnum.normal,
 ) -> Tuple[int, Dict[str, Union[AtomicResult, OptimizationResult]]]:
-
     input_spec, stoich, result = load_test_data(name)
     meta, record_ids = storage_socket.records.reaction.add([stoich], input_spec, tag, priority, None, None, True)
     assert meta.success

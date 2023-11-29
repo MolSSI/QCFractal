@@ -11,6 +11,7 @@ from typing import Optional, Dict, Union, Any
 
 import yaml
 from psycopg2.extensions import make_dsn, parse_dsn
+
 try:
     from pydantic.v1 import BaseSettings, Field, validator, root_validator, ValidationError
     from pydantic.v1.env_settings import SettingsSourceCallable
@@ -56,7 +57,6 @@ def make_uri_string(
     dbname: Optional[str],
     query: Optional[Dict[str, str]],
 ) -> str:
-
     username = username if username is not None else ""
     password = ":" + password if password is not None else ""
     sep = "@" if username != "" or password != "" else ""
@@ -88,7 +88,6 @@ class ConfigCommon:
 
 
 class ConfigBase(BaseSettings):
-
     _type_map = {"string": str, "integer": int, "float": float, "boolean": bool}
 
     @classmethod

@@ -124,7 +124,6 @@ class NEBQueryFilters(RecordQueryFilters):
 
 
 class NEBRecord(BaseRecord):
-
     record_type: Literal["neb"] = "neb"
     specification: NEBSpecification
 

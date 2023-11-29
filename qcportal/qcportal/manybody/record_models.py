@@ -71,7 +71,6 @@ class ManybodyCluster(BaseModel):
 
 
 class ManybodyRecord(BaseRecord):
-
     record_type: Literal["manybody"] = "manybody"
     specification: ManybodySpecification
     results: Optional[Dict[str, Any]]

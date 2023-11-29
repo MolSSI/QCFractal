@@ -225,7 +225,6 @@ class BaseRecordSocket:
     # The ones here apply to all records
     ###########################################################################################
     def get_comments(self, record_id: int, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
-
         options = [
             lazyload("*"),
             defer("*"),
@@ -244,7 +243,6 @@ class BaseRecordSocket:
         *,
         session: Optional[Session] = None,
     ) -> Optional[Dict[str, Any]]:
-
         options = [lazyload("*"), defer("*"), joinedload(BaseRecordORM.task).options(undefer("*"), defaultload("*"))]
 
         with self.root_socket.optional_session(session) as session:
@@ -261,7 +259,6 @@ class BaseRecordSocket:
         *,
         session: Optional[Session] = None,
     ) -> Optional[Dict[str, Any]]:
-
         options = [
             lazyload("*"),
             defer("*"),
@@ -284,7 +281,6 @@ class BaseRecordSocket:
         *,
         session: Optional[Session] = None,
     ) -> List[Dict[str, Any]]:
-
         options = [
             lazyload("*"),
             defer("*"),
@@ -304,7 +300,6 @@ class BaseRecordSocket:
         *,
         session: Optional[Session] = None,
     ) -> Dict[str, Any]:
-
         # Slightly inefficient, but should be rarely called
         histories = self.get_all_compute_history(record_id, session=session)
 
@@ -321,7 +316,6 @@ class BaseRecordSocket:
         *,
         session: Optional[Session] = None,
     ) -> Dict[str, Dict[str, Any]]:
-
         # Outer join with the history and record orm table to ensure ids, types, etc, match
         stmt = select(self.record_orm.id, OutputStoreORM)
         stmt = stmt.join(RecordComputeHistoryORM, self.record_orm.id == RecordComputeHistoryORM.record_id, isouter=True)
@@ -352,7 +346,6 @@ class BaseRecordSocket:
         *,
         session: Optional[Session] = None,
     ) -> Dict[str, Any]:
-
         # Slightly inefficient, but should be ok
         all_outputs = self.get_all_output_metadata(record_id, history_id, session=session)
 
@@ -369,7 +362,6 @@ class BaseRecordSocket:
         *,
         session: Optional[Session] = None,
     ) -> Tuple[bytes, CompressionEnum]:
-
         stmt = select(OutputStoreORM.data, OutputStoreORM.compression_type)
         stmt = stmt.join(RecordComputeHistoryORM, RecordComputeHistoryORM.id == OutputStoreORM.history_id)
         stmt = stmt.join(self.record_orm, RecordComputeHistoryORM.record_id == self.record_orm.id)
@@ -402,7 +394,6 @@ class BaseRecordSocket:
         *,
         session: Optional[Session] = None,
     ) -> Dict[str, Dict[str, Any]]:
-
         options = [
             lazyload("*"),
             defer("*"),
@@ -422,7 +413,6 @@ class BaseRecordSocket:
         *,
         session: Optional[Session] = None,
     ) -> Dict[str, Any]:
-
         # Slightly inefficient, but should be ok
         all_nf = self.get_all_native_files_metadata(record_id, session=session)
 
@@ -438,7 +428,6 @@ class BaseRecordSocket:
         *,
         session: Optional[Session] = None,
     ) -> Tuple[bytes, CompressionEnum]:
-
         stmt = select(NativeFileORM.data, NativeFileORM.compression_type)
         stmt = stmt.join(self.record_orm, NativeFileORM.record_id == self.record_orm.id)
         stmt = stmt.where(NativeFileORM.name == name)
@@ -453,7 +442,6 @@ class BaseRecordSocket:
             return nf_data[0], nf_data[1]
 
     def get_children_status(self, record_id: int, *, session: Optional[Session] = None) -> Dict[RecordStatusEnum, int]:
-
         # Get the SQL 'select' statements from the handlers
         select_stmts = self.get_children_select()
 

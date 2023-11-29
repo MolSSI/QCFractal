@@ -10,7 +10,6 @@ if TYPE_CHECKING:
 
 
 def test_serverinfo_socket_save_error(secure_snowflake: QCATestingSnowflake):
-
     storage_socket = secure_snowflake.get_storage_socket()
     admin_id = storage_socket.users.get("admin_user")["id"]
     read_id = storage_socket.users.get("read_user")["id"]
@@ -66,14 +65,10 @@ def test_serverinfo_socket_save_error(secure_snowflake: QCATestingSnowflake):
     err = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters(after=now_at_utc()))
     assert len(err) == 0
 
-    err = storage_socket.serverinfo.query_error_log(
-        ErrorLogQueryFilters(before=now_at_utc(), after=time_12)
-    )
+    err = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters(before=now_at_utc(), after=time_12))
     assert len(err) == 1
 
-    err = storage_socket.serverinfo.query_error_log(
-        ErrorLogQueryFilters(after=now_at_utc(), before=time_12)
-    )
+    err = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters(after=now_at_utc(), before=time_12))
     assert len(err) == 0
 
     # query by user

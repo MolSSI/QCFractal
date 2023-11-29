@@ -204,7 +204,6 @@ def test_singlepoint_socket_find_existing_5(storage_socket: SQLAlchemySocket):
 def test_singlepoint_socket_run(
     storage_socket: SQLAlchemySocket, session: Session, activated_manager_name: ManagerName
 ):
-
     test_names = [
         "sp_psi4_benzene_energy_1",
         "sp_psi4_peroxide_energy_wfn",

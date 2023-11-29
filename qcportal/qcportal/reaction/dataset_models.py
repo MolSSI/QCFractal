@@ -74,7 +74,6 @@ class ReactionDataset(BaseDataset):
     def add_specification(
         self, name: str, specification: ReactionSpecification, description: Optional[str] = None
     ) -> InsertMetadata:
-
         spec = ReactionDatasetSpecification(name=name, specification=specification, description=description)
         return self._add_specifications(spec)
 

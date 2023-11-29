@@ -89,7 +89,6 @@ class TaskSocket:
             to_be_reset: List[int] = []
 
             for task_id, result_compressed in results_compressed.items():
-
                 result_dict = decompress(result_compressed, CompressionEnum.zstd)
                 result = pydantic.parse_obj_as(AllResultTypes, result_dict)
 
@@ -286,7 +285,6 @@ class TaskSocket:
             # Remove tags that we didn't say we handled, but keep the order
             search_tags = [x for x in tags if x in manager.tags]
             for tag in search_tags:
-
                 new_limit = limit - len(found)
 
                 # Have we found all we needed to find
@@ -345,7 +343,6 @@ class TaskSocket:
                 # Also, retrieve the actual function kwargs. Eventually we may want the managers
                 # to retrieve the kwargs themselves
                 for task_orm, _ in new_items:
-
                     task_dict = task_orm.model_dict(exclude=["record"])
 
                     if task_orm.function is None:

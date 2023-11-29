@@ -69,14 +69,12 @@ class TorsiondriveDataset(BaseDataset):
     def add_specification(
         self, name: str, specification: TorsiondriveSpecification, description: Optional[str] = None
     ) -> InsertMetadata:
-
         spec = TorsiondriveDatasetSpecification(name=name, specification=specification, description=description)
         return self._add_specifications(spec)
 
     def add_entries(
         self, entries: Union[TorsiondriveDatasetNewEntry, Iterable[TorsiondriveDatasetNewEntry]]
     ) -> InsertMetadata:
-
         return self._add_entries(entries)
 
     def add_entry(

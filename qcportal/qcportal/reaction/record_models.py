@@ -75,7 +75,6 @@ class ReactionComponent(BaseModel):
 
 
 class ReactionRecord(BaseRecord):
-
     record_type: Literal["reaction"] = "reaction"
     specification: ReactionSpecification
 

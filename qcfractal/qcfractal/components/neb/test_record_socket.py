@@ -29,7 +29,6 @@ if TYPE_CHECKING:
 
 @pytest.mark.parametrize("spec", test_specs)
 def test_neb_socket_add_get(storage_socket: SQLAlchemySocket, session: Session, spec: NEBSpecification):
-
     chain1 = [load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)]
     chain2 = [load_molecule_data("neb/neb_C3H2N_%i" % i) for i in range(21)]
 

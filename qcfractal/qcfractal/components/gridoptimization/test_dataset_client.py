@@ -38,7 +38,6 @@ def gridoptimization_ds(submitter_client: PortalClient):
 
 @pytest.mark.parametrize("find_existing", [True, False])
 def test_gridoptimization_dataset_client_submit(gridoptimization_ds: GridoptimizationDataset, find_existing: bool):
-
     input_spec_1, molecule_1, _ = load_test_data("go_H3NS_psi4_pbe")
 
     gridoptimization_ds.add_entry(name="test_molecule", initial_molecule=molecule_1)

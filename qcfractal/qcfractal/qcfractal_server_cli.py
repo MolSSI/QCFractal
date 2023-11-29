@@ -746,7 +746,6 @@ def server_role(args: argparse.Namespace, config: FractalConfig):
 
 
 def server_backup(args: argparse.Namespace, config: FractalConfig):
-
     pg_harness, _ = start_database(config)
 
     db_size = pg_harness.database_size()
@@ -803,7 +802,6 @@ def server_backup(args: argparse.Namespace, config: FractalConfig):
 
 
 def server_restore(args: argparse.Namespace, config: FractalConfig):
-
     if not os.path.isfile(args.filename):
         raise RuntimeError(f"Backup file {args.filename} does not exist or is not a file!")
 

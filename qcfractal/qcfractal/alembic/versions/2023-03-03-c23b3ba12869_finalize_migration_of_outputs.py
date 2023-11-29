@@ -37,7 +37,6 @@ def decompress_old_string(compressed_data: bytes, compression_type: CompressionE
 
 
 def upgrade():
-
     # Table with output data
     old_output_table = table(
         "output_store",

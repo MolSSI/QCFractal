@@ -38,7 +38,6 @@ def build_executor(executor_label: str, executor_config: ExecutorConfig) -> Pars
     lchannel = LocalChannel()
 
     if executor_config.type == "local":
-
         assert isinstance(executor_config, LocalExecutorConfig)
 
         # Use a thread pool with a local provider
@@ -69,7 +68,6 @@ def build_executor(executor_label: str, executor_config: ExecutorConfig) -> Pars
         # )
 
     elif executor_config.type == "slurm":
-
         assert isinstance(executor_config, SlurmExecutorConfig)
         # Use a HighThroughputExecutor with a Slurm provider
         # Use blocks of size 1, so number of nodes = number of blocks
@@ -104,7 +102,6 @@ def build_executor(executor_label: str, executor_config: ExecutorConfig) -> Pars
         )
 
     elif executor_config.type == "torque":
-
         assert isinstance(executor_config, TorqueExecutorConfig)
         # Use a HighThroughputExecutor with a Torque provider
         # Use blocks of size 1, so number of nodes = number of blocks
@@ -135,7 +132,6 @@ def build_executor(executor_label: str, executor_config: ExecutorConfig) -> Pars
         )
 
     elif executor_config.type == "lsf":
-
         assert isinstance(executor_config, LSFExecutorConfig)
         # Use a HighThroughputExecutor with a LSF provider
         # Use blocks of size 1, so number of nodes = number of blocks

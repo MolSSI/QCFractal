@@ -87,7 +87,6 @@ def run_service(
                 )
                 # The function that iterates a service returns True if it is finished
                 if job_orm.result is True:
-
                     rec: BaseRecordORM = session.get(BaseRecordORM, record_id)
 
                     if rec.status == RecordStatusEnum.error:

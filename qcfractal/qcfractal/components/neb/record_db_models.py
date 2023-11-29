@@ -15,7 +15,6 @@ from qcfractal.db_socket import BaseORM
 
 
 class NEBOptimizationsORM(BaseORM):
-
     __tablename__ = "neb_optimizations"
 
     neb_id = Column(Integer, ForeignKey("neb_record.id", ondelete="cascade"), primary_key=True)
@@ -32,7 +31,6 @@ class NEBOptimizationsORM(BaseORM):
 
 
 class NEBSinglepointsORM(BaseORM):
-
     __tablename__ = "neb_singlepoints"
 
     neb_id = Column(Integer, ForeignKey("neb_record.id", ondelete="cascade"), primary_key=True)
@@ -49,7 +47,6 @@ class NEBSinglepointsORM(BaseORM):
 
 
 class NEBInitialchainORM(BaseORM):
-
     __tablename__ = "neb_initialchain"
 
     neb_id = Column(Integer, ForeignKey("neb_record.id", ondelete="cascade"), primary_key=True)
@@ -109,7 +106,6 @@ class NEBSpecificationORM(BaseORM):
 
 
 class NEBRecordORM(BaseRecordORM):
-
     __tablename__ = "neb_record"
 
     id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="cascade"), primary_key=True)

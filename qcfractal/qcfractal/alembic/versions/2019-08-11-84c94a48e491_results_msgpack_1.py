@@ -27,7 +27,6 @@ table_name = "result"
 
 
 def transformer(old_data):
-
     arr = old_data["return_result"]
     if arr is None:
         pass
