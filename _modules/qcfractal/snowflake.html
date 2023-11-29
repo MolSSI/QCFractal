@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcfractal.snowflake &#8212; QCArchive 0.51.post30+g69a3e609 documentation</title>
+    <title>qcfractal.snowflake &#8212; QCArchive 0.51.post37+g1ca10b91 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd" />
   <script src="../../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=5b4479735964841361fd"></script>
 
-    <script src="../../_static/documentation_options.js?v=2d8e4476"></script>
+    <script src="../../_static/documentation_options.js?v=b578f46f"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -490,7 +490,6 @@ document.write(`
     <span class="n">finished_queue</span><span class="p">:</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span><span class="p">,</span>
     <span class="n">started_event</span><span class="p">:</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Event</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-
     <span class="kn">import</span> <span class="nn">signal</span>
 
     <span class="n">qh</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">QueueHandler</span><span class="p">(</span><span class="n">logging_queue</span><span class="p">)</span>
@@ -522,7 +521,6 @@ document.write(`
 
 
 <span class="k">def</span> <span class="nf">_compute_process</span><span class="p">(</span><span class="n">compute_config</span><span class="p">:</span> <span class="n">FractalComputeConfig</span><span class="p">,</span> <span class="n">logging_queue</span><span class="p">:</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-
     <span class="kn">import</span> <span class="nn">signal</span>
 
     <span class="n">qh</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">QueueHandler</span><span class="p">(</span><span class="n">logging_queue</span><span class="p">)</span>
@@ -561,7 +559,6 @@ document.write(`
 <span class="k">def</span> <span class="nf">_job_runner_process</span><span class="p">(</span>
     <span class="n">qcf_config</span><span class="p">:</span> <span class="n">FractalConfig</span><span class="p">,</span> <span class="n">logging_queue</span><span class="p">:</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span><span class="p">,</span> <span class="n">finished_queue</span><span class="p">:</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-
     <span class="kn">import</span> <span class="nn">signal</span>
 
     <span class="n">qh</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">QueueHandler</span><span class="p">(</span><span class="n">logging_queue</span><span class="p">)</span>
