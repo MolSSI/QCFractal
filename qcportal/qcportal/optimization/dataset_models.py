@@ -52,9 +52,9 @@ class OptimizationDataset(BaseDataset):
     ########################################
     # Caches of information
     ########################################
-    specifications_: Dict[str, OptimizationDatasetSpecification] = {}
-    entries_: Dict[str, OptimizationDatasetEntry] = {}
-    record_map_: Dict[Tuple[str, str], OptimizationRecord] = {}
+    _specifications: Dict[str, OptimizationDatasetSpecification]
+    _entries: Dict[str, OptimizationDatasetEntry]
+    _record_map: Dict[Tuple[str, str], OptimizationRecord]
 
     # Needed by the base class
     _entry_type = OptimizationDatasetEntry

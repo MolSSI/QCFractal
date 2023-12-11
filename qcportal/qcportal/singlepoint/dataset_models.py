@@ -56,9 +56,9 @@ class SinglepointDataset(BaseDataset):
     ########################################
     # Caches of information
     ########################################
-    specifications_: Dict[str, SinglepointDatasetSpecification] = {}
-    entries_: Dict[str, SinglepointDatasetEntry] = {}
-    record_map_: Dict[Tuple[str, str], SinglepointRecord] = {}
+    _specifications: Dict[str, SinglepointDatasetSpecification]
+    _entries: Dict[str, SinglepointDatasetEntry]
+    _record_map: Dict[Tuple[str, str], SinglepointRecord]
 
     # Needed by the base class
     _entry_type = SinglepointDatasetEntry

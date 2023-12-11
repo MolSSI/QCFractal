@@ -56,9 +56,9 @@ class GridoptimizationDataset(BaseDataset):
     ########################################
     # Caches of information
     ########################################
-    specifications_: Dict[str, GridoptimizationDatasetSpecification] = {}
-    entries_: Dict[str, GridoptimizationDatasetEntry] = {}
-    record_map_: Dict[Tuple[str, str], GridoptimizationRecord] = {}
+    _specifications: Dict[str, GridoptimizationDatasetSpecification]
+    _entries: Dict[str, GridoptimizationDatasetEntry]
+    _record_map: Dict[Tuple[str, str], GridoptimizationRecord]
 
     # Needed by the base class
     _entry_type = GridoptimizationDatasetEntry
