@@ -1368,6 +1368,11 @@ class DatasetQueryModel(RestModelBase):
     exclude: Optional[List[str]] = None
 
 
+class DatasetFetchSpecificationBody(RestModelBase):
+    names: List[str]
+    missing_ok: bool = False
+
+
 class DatasetFetchEntryBody(RestModelBase):
     names: List[str]
     missing_ok: bool = False
