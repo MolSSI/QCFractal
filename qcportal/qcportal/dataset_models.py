@@ -721,7 +721,7 @@ class BaseDataset(BaseModel):
         )
 
         record_ids = [x[2] for x in record_info]
-        records = self._client.get_records(record_ids, include=include)
+        records = self._client._get_records_by_type(self._record_type, record_ids, include=include)
 
         # Update the locally-stored records
         for rec_item, rec in zip(record_info, records):
