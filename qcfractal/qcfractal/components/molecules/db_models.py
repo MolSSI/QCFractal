@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import Column, Integer, String, JSON, Float, Index, CHAR, Boolean, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import column_property
 
 from qcfractal.db_socket.base_orm import BaseORM
 from qcfractal.db_socket.column_types import MsgpackExt
@@ -53,6 +54,9 @@ class MoleculeORM(BaseORM):
     fix_com = Column(Boolean, nullable=False, default=True)
     fix_orientation = Column(Boolean, nullable=False, default=True)
     fix_symmetry = Column(String)
+
+    # Molecule is always validated before going in the database
+    validated = column_property(True)
 
     # Extra
     provenance = Column(JSON)
