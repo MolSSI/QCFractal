@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
 
 
-def test_molecules_socket_get_validated(storage_socket: SQLAlchemySocket):
+def test_molecules_socket_validated_fix(storage_socket: SQLAlchemySocket):
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
 
@@ -18,7 +18,11 @@ def test_molecules_socket_get_validated(storage_socket: SQLAlchemySocket):
 
     mols = storage_socket.molecules.get(ids)
     assert mols[0]["validated"] is True
+    assert mols[0]["fix_com"] is True
+    assert mols[0]["fix_orientation"] is True
     assert mols[1]["validated"] is True
+    assert mols[1]["fix_com"] is True
+    assert mols[1]["fix_orientation"] is True
 
 
 def test_molecules_socket_get_proj(storage_socket: SQLAlchemySocket):

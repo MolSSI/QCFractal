@@ -51,9 +51,11 @@ class MoleculeORM(BaseORM):
     fragment_multiplicities = Column(JSON)  # Column(ARRAY(Integer))
 
     # Orientation & symmetry
-    fix_com = Column(Boolean, nullable=False, default=True)
-    fix_orientation = Column(Boolean, nullable=False, default=True)
     fix_symmetry = Column(String)
+
+    # These are always forced to be true
+    fix_com = column_property(True)
+    fix_orientation = column_property(True)
 
     # Molecule is always validated before going in the database
     validated = column_property(True)
