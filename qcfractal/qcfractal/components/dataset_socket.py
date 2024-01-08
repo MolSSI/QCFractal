@@ -536,16 +536,47 @@ class BaseDatasetSocket:
 
         return InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx)
 
+    def fetch_specification_names(
+        self,
+        dataset_id: int,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[str]:
+        """
+        Obtain all specification names for a dataset
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            All entry names as a list
+        """
+        stmt = select(self.specification_orm.name)
+        stmt = stmt.where(self.specification_orm.dataset_id == dataset_id)
+
+        with self.root_socket.optional_session(session, True) as session:
+            ret = session.execute(stmt).scalars().all()
+            return list(ret)
+
     def fetch_specifications(
         self,
         dataset_id: int,
+        specification_names: Optional[Sequence[str]] = None,
         include: Optional[Iterable[str]] = None,
         exclude: Optional[Iterable[str]] = None,
+        missing_ok: bool = False,
         *,
         session: Optional[Session] = None,
     ) -> Dict[str, Any]:
         """
-        Get specifications for a dataset from the database
+        Fetch specifications for a dataset from the database
 
         It's expected there aren't too many specifications, so this always fetches them all.
 
@@ -553,6 +584,8 @@ class BaseDatasetSocket:
         ----------
         dataset_id
             ID of a dataset
+        specification_names
+            Names of the specifications to fetch. If None, fetch all
         include
             Which fields of the result to return. Default is to return all fields.
         exclude
@@ -572,14 +605,24 @@ class BaseDatasetSocket:
         stmt = stmt.where(self.specification_orm.dataset_id == dataset_id)
         stmt = stmt.options(joinedload(self.specification_orm.specification))
 
+        if specification_names is not None:
+            stmt = stmt.where(self.specification_orm.name.in_(specification_names))
+
         if include or exclude:
-            query_opts = get_query_proj_options(self.entry_orm, include, exclude)
+            query_opts = get_query_proj_options(self.specification_orm, include, exclude)
             stmt = stmt.options(*query_opts)
 
         with self.root_socket.optional_session(session, True) as session:
-            entries = session.execute(stmt).scalars().all()
+            specifications = session.execute(stmt).scalars().all()
 
-        return {x.name: x.model_dict() for x in entries}
+        if specification_names is not None and missing_ok is False:
+            found_specifications = {x.name for x in specifications}
+            missing_specifications = set(specification_names) - found_specifications
+            if missing_specifications:
+                s = "\n".join(missing_specifications)
+                raise MissingDataError(f"Missing {len(missing_specifications)} specifications: {s}")
+
+        return {x.name: x.model_dict() for x in specifications}
 
     def delete_specifications(
         self,

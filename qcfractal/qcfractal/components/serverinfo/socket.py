@@ -576,9 +576,13 @@ class ServerInfoSocket:
             if query_data.group_by == "user":
                 group_col = UserIDMapSubquery.username.label("group_col")
             elif query_data.group_by == "day":
-                group_col = func.to_char(AccessLogORM.timestamp, "YYYY-MM-DD").label("group_col")
+                group_col = func.to_char(AccessLogORM.timestamp.op("AT TIME ZONE")("UTC"), "YYYY-MM-DD").label(
+                    "group_col"
+                )
             elif query_data.group_by == "hour":
-                group_col = func.to_char(AccessLogORM.timestamp, "YYYY-MM-DD HH24").label("group_col")
+                group_col = func.to_char(AccessLogORM.timestamp.op("AT TIME ZONE")("UTC"), "YYYY-MM-DD HH24").label(
+                    "group_col"
+                )
             elif query_data.group_by == "country":
                 group_col = AccessLogORM.country_code.label("group_col")
             elif query_data.group_by == "subdivision":

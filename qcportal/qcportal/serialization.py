@@ -78,14 +78,14 @@ def deserialize(data: Union[bytes, str], content_type: str):
         raise RuntimeError(f"Unknown content type for deserialization: {content_type}")
 
 
-def serialize(data, content_type: str) -> str:
+def serialize(data, content_type: str) -> bytes:
     if content_type.startswith("application/"):
         content_type = content_type[12:]
 
     if content_type == "msgpack":
         return msgpack.dumps(data, default=_msgpack_encode, use_bin_type=True)
     elif content_type == "json":
-        return json.dumps(data, cls=_JSONEncoder)
+        return json.dumps(data, cls=_JSONEncoder).encode("utf-8")
     else:
         raise RuntimeError(f"Unknown content type for serialization: {content_type}")
 
