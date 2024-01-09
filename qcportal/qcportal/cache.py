@@ -260,7 +260,9 @@ class DatasetCache:
             return None
 
         record = decompress_from_cache(record_data[1], self._record_type)
-        record._del_tasks.append(functools.partial(self.writeback_record, record_data[0]))  # give it the uid
+
+        if not self.read_only:
+            record._del_tasks.append(functools.partial(self.writeback_record, record_data[0]))  # give it the uid
 
         return record
 
@@ -281,7 +283,10 @@ class DatasetCache:
 
             for uid, ename, sname, compressed_record in rdata:
                 record = decompress_from_cache(compressed_record, self._record_type)
-                record._del_tasks.append(functools.partial(self.writeback_record, uid))  # give it the uid
+
+                if not self.read_only:
+                    record._del_tasks.append(functools.partial(self.writeback_record, uid))  # give it the uid
+
                 all_records.append((ename, sname, record))
 
         return all_records

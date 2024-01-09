@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict, Any, List, Union, Iterable, Tuple, Type, Sequence, ClassVar, TypeVar
+from typing import Optional, Dict, Any, List, Union, Iterable, Tuple, Type, Sequence, ClassVar, TypeVar, Callable
 
 from dateutil.parser import parse as date_parser
 
@@ -391,6 +391,9 @@ class BaseRecord(BaseModel):
     # A dictionary of all subclasses (calculation types) to actual class type
     _all_subclasses: ClassVar[Dict[str, Type[BaseRecord]]] = {}
 
+    # Stuff to run when being deleted
+    _del_tasks: List[Callable] = PrivateAttr([])
+
     def __init__(self, client=None, **kwargs):
         BaseModel.__init__(self, **kwargs)
 
@@ -410,6 +413,14 @@ class BaseRecord(BaseModel):
         # disambiguating (ie, via parse_obj_as)
         record_type = cls.__fields__["record_type"].default
         cls._all_subclasses[record_type] = cls
+
+    def __del__(self):
+        for f in reversed(self._del_tasks):
+            f(self)
+
+        s = super()
+        if hasattr(s, "__del__"):
+            s.__del__(self)
 
     @classmethod
     def get_subclass(cls, record_type: str) -> Type[BaseRecord]:

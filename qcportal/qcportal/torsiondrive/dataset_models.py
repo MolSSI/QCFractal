@@ -52,13 +52,6 @@ class TorsiondriveDatasetRecordItem(BaseModel):
 class TorsiondriveDataset(BaseDataset):
     dataset_type: Literal["torsiondrive"] = "torsiondrive"
 
-    ########################################
-    # Caches of information
-    ########################################
-    _specifications: Dict[str, TorsiondriveDatasetSpecification]
-    _entries: Dict[str, TorsiondriveDatasetEntry]
-    _record_map: Dict[Tuple[str, str], TorsiondriveRecord]
-
     # Needed by the base class
     _entry_type = TorsiondriveDatasetEntry
     _new_entry_type = TorsiondriveDatasetNewEntry

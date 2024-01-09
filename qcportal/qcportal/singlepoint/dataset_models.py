@@ -53,13 +53,6 @@ class SinglepointDatasetRecordItem(BaseModel):
 class SinglepointDataset(BaseDataset):
     dataset_type: Literal["singlepoint"] = "singlepoint"
 
-    ########################################
-    # Caches of information
-    ########################################
-    _specifications: Dict[str, SinglepointDatasetSpecification]
-    _entries: Dict[str, SinglepointDatasetEntry]
-    _record_map: Dict[Tuple[str, str], SinglepointRecord]
-
     # Needed by the base class
     _entry_type = SinglepointDatasetEntry
     _new_entry_type = SinglepointDatasetNewEntry
