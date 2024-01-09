@@ -1,6 +1,18 @@
 Release Notes
 =============
 
+0.53 / 2024-01-09
+-----------------
+
+The only real thing to report is fixing of molecules returned from the server. Other than that,
+a little bit of cleanup in preparation for implementing new features in the future
+No breaking changes. Upgrading qcportal is recommended, but is not required.
+
+Notable pull requests and features:
+
+- (:pr:`798`) Mark molecules coming from the server as already validated, and remove `fix_com` and `fix_orientation` from the database.
+
+
 0.52 / 2023-11-29
 -----------------
 
