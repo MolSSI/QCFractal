@@ -99,6 +99,11 @@ def test_reaction_dataset_model_add_entry_duplicate(snowflake_client: PortalClie
     ds_helpers.run_dataset_model_add_entry_duplicate(snowflake_client, ds, test_entries, entry_extra_compare)
 
 
+def test_reaction_dataset_model_rename_entry(snowflake_client: PortalClient):
+    ds = snowflake_client.add_dataset("reaction", "Test dataset")
+    ds_helpers.run_dataset_model_rename_entry(snowflake_client, ds, test_entries, test_specs)
+
+
 def test_reaction_dataset_model_delete_entry(snowflake_client: PortalClient):
     ds = snowflake_client.add_dataset("reaction", "Test dataset")
     ds_helpers.run_dataset_model_delete_entry(snowflake_client, ds, test_entries, test_specs)
@@ -112,6 +117,11 @@ def test_reaction_dataset_model_add_get_spec(snowflake_client: PortalClient):
 def test_reaction_dataset_model_add_spec_duplicate(snowflake_client: PortalClient):
     ds = snowflake_client.add_dataset("reaction", "Test dataset")
     ds_helpers.run_dataset_model_add_spec_duplicate(snowflake_client, ds, test_specs)
+
+
+def test_reaction_dataset_model_rename_spec(snowflake_client: PortalClient):
+    ds = snowflake_client.add_dataset("reaction", "Test dataset")
+    ds_helpers.run_dataset_model_rename_spec(snowflake_client, ds, test_entries, test_specs)
 
 
 def test_reaction_dataset_model_delete_spec(snowflake_client: PortalClient):
@@ -138,7 +148,7 @@ def test_reaction_dataset_model_submit_missing(snowflake_client: PortalClient):
 
 def test_reaction_dataset_model_iterate_updated(snowflake_client: PortalClient):
     ds = snowflake_client.add_dataset("reaction", "Test dataset")
-    ds_helpers.run_dataset_model_iterate_updated(ds, test_entries, test_specs[0])
+    ds_helpers.run_dataset_model_iterate_updated(snowflake_client, ds, test_entries, test_specs[0])
 
 
 def test_reaction_dataset_model_modify_records(snowflake_client: PortalClient):
