@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import os
 from datetime import datetime
 from typing import (
@@ -217,9 +218,11 @@ class BaseDataset(BaseModel):
         assert all(isinstance(x, self._new_entry_type) for x in entries), "Incorrect entry type"
         uri = f"api/v1/datasets/{self.dataset_type}/{self.id}/entries/bulkCreate"
 
-        n_batches = len(entries) // 1000 + 1
+        batch_size: int = math.ceil(self._client.api_limits["get_dataset_entries"] / 4)
+        n_batches = math.ceil(len(entries) / batch_size)
+
         all_meta: List[InsertMetadata] = []
-        for entry_batch in tqdm(chunk_iterable(entries, 1000), total=n_batches, disable=None):
+        for entry_batch in tqdm(chunk_iterable(entries, batch_size), total=n_batches, disable=None):
             meta = self._client.make_request("post", uri, InsertMetadata, body=entry_batch)
 
             # If entry names have been fetched, add the new entry names
@@ -309,9 +312,11 @@ class BaseDataset(BaseModel):
         if specification_names is None:
             specification_names = self.specification_names
 
-        n_batches = len(entry_names) // 1000 + 1
+        batch_size = math.ceil(self._client.api_limits["get_records"] / 4)
+        n_batches = math.ceil(len(entry_names) / batch_size)
+
         for spec in specification_names:
-            for entry_batch in tqdm(chunk_iterable(entry_names, 1000), total=n_batches, disable=None):
+            for entry_batch in tqdm(chunk_iterable(entry_names, batch_size), total=n_batches, disable=None):
                 body_data = DatasetSubmitBody(
                     entry_names=entry_batch,
                     specification_names=[spec],
@@ -518,7 +523,7 @@ class BaseDataset(BaseModel):
             cached_specifications = set(self._cache_data.get_specification_names())
             specifications_tofetch = set(specification_names) - cached_specifications
 
-        batch_size: int = self._client.api_limits["get_dataset_entries"] // 4
+        batch_size: int = math.ceil(self._client.api_limits["get_dataset_entries"] / 4)
 
         for specification_names_batch in chunk_iterable(specifications_tofetch, batch_size):
             self._internal_fetch_specifications(specification_names_batch)
@@ -677,7 +682,7 @@ class BaseDataset(BaseModel):
             cached_entries = set(self._cache_data.get_entry_names())
             entries_tofetch = set(entry_names) - cached_entries
 
-        batch_size: int = self._client.api_limits["get_dataset_entries"] // 4
+        batch_size: int = math.ceil(self._client.api_limits["get_dataset_entries"] / 4)
 
         for entry_names_batch in chunk_iterable(entries_tofetch, batch_size):
             self._internal_fetch_entries(entry_names_batch)
@@ -744,7 +749,7 @@ class BaseDataset(BaseModel):
                     yield entry
         else:
             # Check local cache, but fetch from server
-            batch_size: int = self._client.api_limits["get_dataset_entries"] // 4
+            batch_size: int = math.ceil(self._client.api_limits["get_dataset_entries"] / 4)
 
             # What we have cached already
             cached_entries = set(self._cache_data.get_entry_names())
@@ -908,7 +913,7 @@ class BaseDataset(BaseModel):
         if not updateable_record_info:
             return
 
-        batch_size = self._client.api_limits["get_records"] // 4
+        batch_size = math.ceil(self._client.api_limits["get_records"] / 4)
         record_modified_map: Dict[int, datetime] = {}  # record_id -> modified time
 
         for record_info_batch in chunk_iterable(updateable_record_info, batch_size):
@@ -1005,7 +1010,7 @@ class BaseDataset(BaseModel):
         # Assume there are many more entries than specifications, and that
         # everything has been submitted
         # Divide by 4 to go easy on the server
-        batch_size: int = self._client.api_limits["get_records"] // 4
+        batch_size: int = math.ceil(self._client.api_limits["get_records"] / 4)
 
         # Do all entries for one spec. This simplifies things, especially with handling
         # existing or update-able records
@@ -1107,7 +1112,7 @@ class BaseDataset(BaseModel):
                         yield entry_name, spec_name, rec
         else:
             # Smaller fetch limit for iteration (than in fetch_records)
-            batch_size: int = self._client.api_limits["get_records"] // 10
+            batch_size: int = math.ceil(self._client.api_limits["get_records"] / 10)
 
             for spec_name in specification_names:
                 for entry_names_batch in chunk_iterable(entry_names, batch_size):
@@ -1560,7 +1565,7 @@ class BaseDataset(BaseModel):
         # Assume there are many more entries than specifications, and that
         # everything has been submitted
         # Divide by 4 to go easy on the server
-        batch_size: int = self._client.api_limits["get_records"] // 4
+        batch_size: int = math.ceil(self._client.api_limits["get_records"] / 4)
 
         # Do all entries for one spec. This simplifies things, especially with handling
         # existing or update-able records
