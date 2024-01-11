@@ -61,9 +61,6 @@ class MoleculeSocket:
         mol_dict["identifiers"]["molecule_hash"] = mol_dict["molecule_hash"]
         mol_dict["identifiers"]["molecular_formula"] = molecule.get_molecular_formula()
 
-        mol_dict["fix_com"] = True
-        mol_dict["fix_orientation"] = True
-
         return MoleculeORM(**mol_dict)
 
     def add(
