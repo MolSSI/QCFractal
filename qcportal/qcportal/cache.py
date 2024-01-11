@@ -438,3 +438,22 @@ class PortalCache:
         if self.enabled:
             # TODO
             return
+
+
+def read_dataset_metadata(file_path: str):
+    """
+    Reads the type of dataset stored in a cache file
+
+    This is needed sometimes to construct the DatasetCache object with a type
+    """
+
+    if not os.path.isfile(file_path):
+        raise RuntimeError(f'Cannot open cache file "{file_path}" - does not exist or is not a file')
+    conn = sqlite3.connect(file_path)
+    r = conn.execute("SELECT value FROM dataset_metadata WHERE key = 'dataset_metadata'")
+    if r is None:
+        raise RuntimeError(f"Cannot find appropriate metadata in cache file {file_path}")
+
+    d = deserialize(r.fetchone()[0], "msgpack")
+    conn.close()
+    return d

@@ -37,7 +37,7 @@ from qcportal.metadata_models import DeleteMetadata
 from qcportal.metadata_models import InsertMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, BaseRecord
 from qcportal.utils import make_list, chunk_iterable
-from qcportal.cache import DatasetCache
+from qcportal.cache import DatasetCache, read_dataset_metadata
 
 if TYPE_CHECKING:
     from qcportal.client import PortalClient
@@ -137,10 +137,7 @@ class BaseDataset(BaseModel):
     # Some dataset options
     auto_fetch_missing: bool = True  # Automatically fetch missing records from the server
 
-    # Is this a read-only view
-    is_view: bool = False
-
-    def __init__(self, client: Optional[PortalClient] = None, view_data: Optional[DatasetCache] = None, **kwargs):
+    def __init__(self, client: Optional[PortalClient] = None, cache_data: Optional[DatasetCache] = None, **kwargs):
         BaseModel.__init__(self, **kwargs)
 
         # Calls derived class propagate_client
@@ -149,13 +146,8 @@ class BaseDataset(BaseModel):
 
         assert self._client is client, "Client not set in base dataset class?"
 
-        if view_data is not None:
-            if not view_data.read_only:
-                # TODO - write a warning
-                view_data.read_only = True
-
-            self._cache_data = view_data
-            self.is_view = True
+        if cache_data is not None:
+            self._cache_data = cache_data
 
         elif client and client.cache.enabled:
             cache_dir = client.cache.cache_dir
@@ -332,6 +324,10 @@ class BaseDataset(BaseModel):
     #########################################
     # Various properties and getters/setters
     #########################################
+
+    @property
+    def is_view(self) -> bool:
+        return self._cache_data is not None and self._cache_data.read_only
 
     def status(self) -> Dict[str, Any]:
         self.assert_online()
@@ -1058,7 +1054,13 @@ class BaseDataset(BaseModel):
         record = self._cache_data.get_record(entry_name, specification_name)
 
         if record is None and not self.is_view:
-            self.fetch_records(entry_name, specification_name, include=include, force_refetch=force_refetch)
+            self.fetch_records(
+                entry_name,
+                specification_name,
+                include=include,
+                fetch_updated=fetch_updated,
+                force_refetch=force_refetch,
+            )
             record = self._cache_data.get_record(entry_name, specification_name)
 
         if record is not None and self._client is not None:
@@ -1080,9 +1082,13 @@ class BaseDataset(BaseModel):
         # we want to yield in the middle
         #########################################################
 
+        if self.is_view:
+            fetch_updated = False
+            force_refetch = False
+
         # Get an up-to-date list of entry names and specifications
         # Nothing to fetch if this is a view
-        if force_refetch and not self.is_view:
+        if force_refetch:
             self.fetch_entry_names()
             self.fetch_specifications()
 
@@ -1102,14 +1108,12 @@ class BaseDataset(BaseModel):
 
         if self.is_view:
             for spec_name in specification_names:
-                for entry_name in entry_names:
-                    rec = self.get_record(entry_name, spec_name)
+                for entry_names_batch in chunk_iterable(entry_names, 125):
+                    record_data = self._cache_data.get_records(entry_names_batch, [spec_name])
 
-                    if rec is None:
-                        continue
-
-                    if status is None or rec.status in status:
-                        yield entry_name, spec_name, rec
+                    for e, s, r in record_data:
+                        if status is None or r.status in status:
+                            yield e, s, r
         else:
             # Smaller fetch limit for iteration (than in fetch_records)
             batch_size: int = math.ceil(self._client.api_limits["get_records"] / 10)
@@ -1754,7 +1758,7 @@ class DatasetDeleteSpecificationBody(RestModelBase):
     delete_records: bool = False
 
 
-def dataset_from_dict(data: Dict[str, Any], client: Any, view_data: Optional[DatasetViewWrapper] = None) -> BaseDataset:
+def dataset_from_dict(data: Dict[str, Any], client: Any, cache_data: Optional[DatasetCache] = None) -> BaseDataset:
     """
     Create a dataset object from a datamodel
 
@@ -1766,11 +1770,14 @@ def dataset_from_dict(data: Dict[str, Any], client: Any, view_data: Optional[Dat
 
     dataset_type = data["dataset_type"]
     cls = BaseDataset.get_subclass(dataset_type)
-    return cls(client, view_data, **data)
+    return cls(client=client, cache_data=cache_data, **data)
 
 
-def load_dataset_view(view_path: str):
-    view_data = DatasetViewWrapper(view_path=view_path)
-    raw_data = view_data.get_datamodel()
+def dataset_from_cache(file_path: str) -> BaseDataset:
+    # Reads this as a read-only "view"
+    ds_meta = read_dataset_metadata(file_path)
+    ds_type = BaseDataset.get_subclass(ds_meta["dataset_type"])
+    ds_cache = DatasetCache(file_path, ds_type, True)
 
-    return dataset_from_dict(raw_data, client=None, view_data=view_data)
+    # Views never have a client attached
+    return dataset_from_dict(ds_meta, None, cache_data=ds_cache)

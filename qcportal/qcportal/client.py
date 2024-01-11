@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Union, Sequence, Iterable, TypeVar, Type
 
 from tabulate import tabulate
 
+from qcportal.cache import DatasetCache, read_dataset_metadata
 from qcportal.gridoptimization import (
     GridoptimizationKeywords,
     GridoptimizationAddBody,
@@ -144,6 +146,7 @@ class PortalClient(PortalClientBase):
         """
 
         PortalClientBase.__init__(self, address, username, password, verify, show_motd)
+        self._logger = logging.getLogger("PortalClient")
         self.cache = PortalCache(address, cache_dir, cache_max_size)
 
     def __repr__(self) -> str:
@@ -240,6 +243,26 @@ class PortalClient(PortalClientBase):
     def get_dataset_by_id(self, dataset_id: int):
         ds = self.make_request("get", f"api/v1/datasets/{dataset_id}", Dict[str, Any])
         return dataset_from_dict(ds, self)
+
+    def dataset_from_cache(self, file_path: str) -> BaseDataset:
+        ds_meta = read_dataset_metadata(file_path)
+        ds_type = BaseDataset.get_subclass(ds_meta["dataset_type"])
+        ds_cache = DatasetCache(file_path, ds_type, False)
+
+        ds = dataset_from_dict(ds_meta, self, cache_data=ds_cache)
+
+        # Check to make sure we are connected to the same server
+        cache_address = ds_cache.get_metadata("client_address")
+        if cache_address != self.address:
+            raise RuntimeError(f"Cache file comes from {cache_address}, but currently connected to {self.address}")
+
+        try:
+            self.get_dataset_by_id(ds.id)
+        except:
+            self._logger.warning(f"Dataset {ds.id} could not be found on the server. Marking as read-only cache")
+            ds_cache.read_only = True
+
+        return ds
 
     def get_dataset_status_by_id(self, dataset_id: int) -> Dict[str, Dict[RecordStatusEnum, int]]:
         return self.make_request("get", f"api/v1/datasets/{dataset_id}/status", Dict[str, Dict[RecordStatusEnum, int]])
