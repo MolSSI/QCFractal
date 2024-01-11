@@ -32,7 +32,6 @@ from tabulate import tabulate
 from tqdm import tqdm
 
 from qcportal.base_models import RestModelBase, validate_list_to_single, CommonBulkGetBody
-from qcportal.dataset_view import DatasetViewWrapper
 from qcportal.metadata_models import DeleteMetadata
 from qcportal.metadata_models import InsertMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, BaseRecord
@@ -122,7 +121,6 @@ class BaseDataset(BaseModel):
     # Private non-pydantic fields
     #############################
     _client: Any = PrivateAttr(None)
-    _view_data: Optional[DatasetViewWrapper] = PrivateAttr(None)
 
     # To be overridden by the derived classes
     _entry_type: ClassVar[Optional[Type]] = None
