@@ -91,11 +91,9 @@ class BaseDatasetORM(BaseORM):
 
     __mapper_args__ = {"polymorphic_on": "dataset_type"}
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # lname is only for the server
-        # strip user/group ids
-        exclude = self.append_exclude(exclude, "lname", "owner_user_id", "owner_group_id")
+    _qcportal_model_excludes = ["lname", "owner_user_id", "owner_group_id"]
 
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         d = BaseORM.model_dict(self, exclude)
 
         # meta -> metadata
@@ -130,6 +128,4 @@ class ContributedValuesORM(BaseORM):
 
     __table_args__ = (Index("ix_contributed_values_dataset_id", "dataset_id"),)
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        exclude = self.append_exclude(exclude, "dataset_id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["dataset_id"]

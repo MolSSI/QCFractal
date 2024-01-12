@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from sqlalchemy import (
     select,
     UniqueConstraint,
@@ -26,9 +24,6 @@ from qcfractal.components.optimization.record_db_models import (
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.db_socket import BaseORM
 
-if TYPE_CHECKING:
-    from typing import Dict, Any, Optional, Iterable
-
 
 class GridoptimizationOptimizationORM(BaseORM):
     """
@@ -51,10 +46,7 @@ class GridoptimizationOptimizationORM(BaseORM):
 
     __table_args__ = (Index("ix_gridoptimization_optimization_id", "optimization_id"),)
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "gridoptimization_id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["gridoptimization_id"]
 
 
 class GridoptimizationSpecificationORM(BaseORM):
@@ -89,10 +81,7 @@ class GridoptimizationSpecificationORM(BaseORM):
         CheckConstraint("program = LOWER(program)", name="ck_gridoptimization_specification_program_lower"),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "id", "keywords_hash", "optimization_specification_id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["id", "keywords_hash", "optimization_specification_id"]
 
     @property
     def short_description(self) -> str:
@@ -125,10 +114,7 @@ class GridoptimizationRecordORM(BaseRecordORM):
         "polymorphic_identity": "gridoptimization",
     }
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "specification_id")
-        return BaseRecordORM.model_dict(self, exclude)
+    _qcportal_model_excludes = [*BaseRecordORM._qcportal_model_excludes, "specification_id"]
 
     @property
     def short_description(self) -> str:

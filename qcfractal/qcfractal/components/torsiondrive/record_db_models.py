@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from sqlalchemy import select, Column, Integer, ForeignKey, String, UniqueConstraint, Index, CheckConstraint, event, DDL
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.orderinglist import ordering_list
@@ -14,9 +12,6 @@ from qcfractal.components.optimization.record_db_models import (
 )
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.db_socket import BaseORM
-
-if TYPE_CHECKING:
-    from typing import Dict, Any, Optional, Iterable
 
 
 class TorsiondriveOptimizationORM(BaseORM):
@@ -39,10 +34,7 @@ class TorsiondriveOptimizationORM(BaseORM):
 
     __table_args__ = (Index("ix_torsiondrive_optimization_id", "optimization_id"),)
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "torsiondrive_id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["torsiondrive_id"]
 
 
 class TorsiondriveInitialMoleculeORM(BaseORM):
@@ -57,10 +49,7 @@ class TorsiondriveInitialMoleculeORM(BaseORM):
 
     molecule = relationship(MoleculeORM)
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "torsiondrive_id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["torsiondrive_id"]
 
 
 class TorsiondriveSpecificationORM(BaseORM):
@@ -95,10 +84,7 @@ class TorsiondriveSpecificationORM(BaseORM):
         CheckConstraint("program = LOWER(program)", name="ck_torsiondrive_specification_program_lower"),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "id", "keywords_hash", "optimization_specification_id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["id", "keywords_hash", "optimization_specification_id"]
 
     @property
     def short_description(self) -> str:
@@ -131,10 +117,7 @@ class TorsiondriveRecordORM(BaseRecordORM):
         "polymorphic_identity": "torsiondrive",
     }
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "specification_id")
-        return BaseRecordORM.model_dict(self, exclude)
+    _qcportal_model_excludes = [*BaseRecordORM._qcportal_model_excludes, "specification_id"]
 
     @property
     def short_description(self) -> str:

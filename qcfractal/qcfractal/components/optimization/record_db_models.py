@@ -31,10 +31,7 @@ class OptimizationTrajectoryORM(BaseORM):
 
     __table_args__ = (Index("ix_optimization_trajectory_singlepoint_id", "singlepoint_id"),)
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "optimization_id", "position")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["optimization_id", "position"]
 
 
 class OptimizationSpecificationORM(BaseORM):
@@ -72,10 +69,7 @@ class OptimizationSpecificationORM(BaseORM):
         CheckConstraint("program = LOWER(program)", name="ck_optimization_specification_program_lower"),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "id", "keywords_hash", "qc_specification_id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["id", "keywords_hash", "qc_specification_id"]
 
     @property
     def required_programs(self) -> Dict[str, Optional[str]]:
@@ -124,10 +118,14 @@ class OptimizationRecordORM(BaseRecordORM):
         Index("ix_optimization_record_final_molecule_id", "final_molecule_id"),
     )
 
+    _qcportal_model_excludes = [*BaseRecordORM._qcportal_model_excludes, "specification_id"]
+
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "specification_id")
-        return BaseRecordORM.model_dict(self, exclude)
+        d = BaseRecordORM.model_dict(self, exclude)
+        if "trajectory" in d:
+            d["trajectory_ids_"] = [x["singlepoint_id"] for x in d.pop("trajectory")]
+
+        return d
 
     @property
     def required_programs(self) -> Dict[str, Optional[str]]:
