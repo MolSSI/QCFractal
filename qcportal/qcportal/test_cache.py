@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import gc
+import logging
 from typing import TYPE_CHECKING
 
+from qcportal.dataset_models import dataset_from_cache
 from qcportal.record_models import RecordStatusEnum
 from qcportal.singlepoint import SinglepointDataset
 from qcportal.singlepoint.test_dataset_models import test_specs, test_entries
@@ -144,3 +146,88 @@ def test_dataset_cache_writeback(snowflake_client: PortalClient):
 
     r2 = ds._cache_data.get_record(test_entries[0].name, "spec_1")
     assert r2.molecule_ is not None
+
+
+def test_dataset_cache_fromfile(snowflake: QCATestingSnowflake, tmp_path):
+    cache_dir = tmp_path / "ptlcache"
+    client = snowflake.client(cache_dir=str(cache_dir))
+    ds: SinglepointDataset = client.add_dataset("singlepoint", "Test dataset")
+    ds_id = ds.id
+
+    ds.add_specification("spec_1", test_specs[0])
+    ds.add_specification("spec_2", test_specs[1])
+    ds.add_entries(test_entries[0])
+    ds.add_entries(test_entries[1])
+    ds.submit()
+    ds.fetch_records()
+    rid = ds.get_record(test_entries[0].name, "spec_1").id
+
+    cachefile_path = ds._cache_data.file_path
+
+    del ds, client
+    gc.collect()
+
+    client = snowflake.client()  # memory cache
+    # Cancel one of the records
+
+    client.cancel_records(rid)
+
+    ds2 = client.dataset_from_cache(cachefile_path)
+    assert ds2.id == ds_id
+
+    r2 = ds2._cache_data.get_record(test_entries[0].name, "spec_2")
+    assert r2 is not None
+
+    r3 = ds2.get_record(test_entries[0].name, "spec_2")
+    assert r3 is not None
+
+    r3 = ds2.get_record(test_entries[0].name, "spec_1")
+    assert r3.status == RecordStatusEnum.cancelled  # was updated from the server
+
+
+def test_dataset_cache_fromfile_deleted(snowflake: QCATestingSnowflake, tmp_path, caplog):
+    cache_dir = tmp_path / "ptlcache"
+    client = snowflake.client(cache_dir=str(cache_dir))
+    ds: SinglepointDataset = client.add_dataset("singlepoint", "Test dataset")
+    ds_id = ds.id
+
+    ds.add_specification("spec_1", test_specs[0])
+    ds.add_entries(test_entries[0])
+    ds.submit()
+    ds.fetch_records()
+
+    cachefile_path = ds._cache_data.file_path
+
+    del ds
+    gc.collect()
+
+    client.delete_dataset(ds_id, True)
+
+    with caplog.at_level(logging.WARNING):
+        ds2 = client.dataset_from_cache(cachefile_path)
+
+    assert caplog.records[0].msg.endswith("could not be found on the server. Marking as read-only cache")
+    assert ds2.is_view
+    assert ds2._cache_data.read_only is True
+
+    assert ds2.get_record(test_entries[0].name, "spec_1") is not None
+
+
+def test_dataset_cache_fromfile_view(snowflake: QCATestingSnowflake, tmp_path, caplog):
+    cache_dir = tmp_path / "ptlcache"
+    client = snowflake.client(cache_dir=str(cache_dir))
+    ds: SinglepointDataset = client.add_dataset("singlepoint", "Test dataset")
+
+    ds.add_specification("spec_1", test_specs[0])
+    ds.add_entries(test_entries[0])
+    ds.submit()
+    ds.fetch_records()
+
+    cachefile_path = ds._cache_data.file_path
+
+    del ds
+    gc.collect()
+
+    ds2 = dataset_from_cache(cachefile_path)
+    assert ds2.is_view
+    assert ds2.get_record(test_entries[0].name, "spec_1") is not None
