@@ -3,8 +3,6 @@ Tests the general record socket
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import pytest
 
 from qcarchivetesting import test_users
@@ -25,9 +23,6 @@ from qcportal import PortalRequestError
 from qcportal.molecules import Molecule
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.utils import now_at_utc
-
-if TYPE_CHECKING:
-    pass
 
 
 def test_record_client_get(snowflake: QCATestingSnowflake):

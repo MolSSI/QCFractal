@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-from sqlalchemy import Column, Integer, ForeignKey, String, ForeignKeyConstraint, UniqueConstraint, Index
+from sqlalchemy import Column, Integer, ForeignKey, String, ForeignKeyConstraint, Index
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
@@ -10,9 +8,6 @@ from qcfractal.components.dataset_db_models import BaseDatasetORM
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.neb.record_db_models import NEBRecordORM, NEBSpecificationORM
 from qcfractal.db_socket import BaseORM
-
-if TYPE_CHECKING:
-    from typing import Dict, Any, Optional, Iterable
 
 
 class NEBDatasetInitialMoleculeORM(BaseORM):
@@ -41,10 +36,7 @@ class NEBDatasetInitialMoleculeORM(BaseORM):
         ),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "dataset_id", "molecule_id", "entry_name", "position")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["dataset_id", "molecule_id", "entry_name", "position"]
 
 
 class NEBDatasetEntryORM(BaseORM):
@@ -81,10 +73,7 @@ class NEBDatasetEntryORM(BaseORM):
         Index("ix_neb_dataset_entry_name", "name"),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "dataset_id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["dataset_id"]
 
 
 class NEBDatasetSpecificationORM(BaseORM):
@@ -103,10 +92,7 @@ class NEBDatasetSpecificationORM(BaseORM):
         Index("ix_neb_dataset_specification_specification_id", "specification_id"),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "dataset_id", "specification_id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["dataset_id", "specification_id"]
 
 
 class NEBDatasetRecordItemORM(BaseORM):
@@ -135,10 +121,7 @@ class NEBDatasetRecordItemORM(BaseORM):
         Index("ix_neb_dataset_record_record_id", "record_id"),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "dataset_id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["dataset_id"]
 
 
 class NEBDatasetORM(BaseDatasetORM):

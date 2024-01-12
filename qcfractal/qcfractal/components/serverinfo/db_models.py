@@ -62,10 +62,9 @@ class AccessLogORM(BaseORM):
         Index("ix_access_log_user_id", "user_id"),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # strip user/group ids
-        exclude = self.append_exclude(exclude, "user_id")
+    _qcportal_model_excludes = ["user_id"]
 
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         d = BaseORM.model_dict(self, exclude)
         d["user"] = self.user.username if self.user is not None else None
         return d
@@ -103,10 +102,9 @@ class InternalErrorLogORM(BaseORM):
         Index("ix_internal_error_log_user_id", "user_id"),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # strip user/group ids
-        exclude = self.append_exclude(exclude, "user_id")
+    _qcportal_model_excludes = ["user_id"]
 
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         d = BaseORM.model_dict(self, exclude)
         d["user"] = self.user.username if self.user is not None else None
         return d

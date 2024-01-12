@@ -62,9 +62,9 @@ class InternalJobORM(BaseORM):
         UniqueConstraint("unique_name", name="ux_internal_jobs_unique_name"),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        exclude = self.append_exclude(exclude, "unique_name", "user_id")
+    _qcportal_model_excludes = ["unique_name", "user_id"]
 
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         d = BaseORM.model_dict(self, exclude)
         d["user"] = self.user.username if self.user is not None else None
         return d

@@ -1,13 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from sqlalchemy import event, DDL
 
 from qcfractal.components.record_db_models import OutputStoreORM
-
-if TYPE_CHECKING:
-    pass
 
 # Mark the storage of the data column as external
 event.listen(

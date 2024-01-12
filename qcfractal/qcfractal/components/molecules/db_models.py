@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, String, JSON, Float, Index, CHAR, Boolean, UniqueConstraint
+from sqlalchemy import Column, Integer, String, JSON, Float, Index, CHAR, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import column_property
 
@@ -69,10 +69,9 @@ class MoleculeORM(BaseORM):
         UniqueConstraint("molecule_hash", name="ux_molecule_molecule_hash"),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # molecule_hash is only used for indexing. It is otherwise stored in identifiers
-        exclude = self.append_exclude(exclude, "molecule_hash")
+    _qcportal_model_excludes = ["molecule_hash"]
 
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         d = BaseORM.model_dict(self, exclude)
 
         # TODO - this is because the pydantic models are goofy

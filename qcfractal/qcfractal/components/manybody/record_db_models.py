@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from sqlalchemy import Column, String, Integer, ForeignKey, UniqueConstraint, Index, CheckConstraint, event, DDL
 from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 from sqlalchemy.orm import relationship
@@ -10,9 +8,6 @@ from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.singlepoint.record_db_models import SinglepointRecordORM, QCSpecificationORM
 from qcfractal.db_socket import BaseORM
-
-if TYPE_CHECKING:
-    from typing import Dict, Any, Optional, Iterable
 
 
 class ManybodyClusterORM(BaseORM):
@@ -41,10 +36,7 @@ class ManybodyClusterORM(BaseORM):
         Index("ix_manybody_cluster_singlepoint_id", "singlepoint_id"),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "manybody_id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["manybody_id"]
 
 
 class ManybodySpecificationORM(BaseORM):
@@ -75,10 +67,7 @@ class ManybodySpecificationORM(BaseORM):
         CheckConstraint("program = LOWER(program)", name="ck_manybody_specification_program_lower"),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "id", "keywords_hash", "singlepoint_specification_id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["id", "keywords_hash", "singlepoint_specification_id"]
 
     @property
     def short_description(self) -> str:
@@ -107,10 +96,7 @@ class ManybodyRecordORM(BaseRecordORM):
         "polymorphic_identity": "manybody",
     }
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "specification_id")
-        return BaseRecordORM.model_dict(self, exclude)
+    _qcportal_model_excludes = [*BaseRecordORM._qcportal_model_excludes, "specification_id"]
 
     @property
     def short_description(self) -> str:

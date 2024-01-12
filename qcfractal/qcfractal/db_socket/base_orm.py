@@ -68,7 +68,7 @@ class BaseORM:
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         """
-        Converts the ORM to a dictionary that corresponds to the QCPortal pydantic model or type
+        Converts the ORM to a dictionary that corresponds to the QCPortal pydantic model
 
         All columns are included by default, but some can be removed using the exclude parameter.
         """
@@ -76,6 +76,12 @@ class BaseORM:
         d = self.__dict__.copy()
         d.pop("_sa_instance_state")
 
+        # remove typical model excludes
+        if hasattr(self, "_qcportal_model_excludes"):
+            for k in self._qcportal_model_excludes:
+                d.pop(k, None)
+
+        # remove any manually specified excludes
         if exclude is not None:
             for k in exclude:
                 d.pop(k, None)

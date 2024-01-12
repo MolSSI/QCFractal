@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-from sqlalchemy import select, Column, Integer, ForeignKey, String, ForeignKeyConstraint, UniqueConstraint, Index
+from sqlalchemy import select, Column, Integer, ForeignKey, String, ForeignKeyConstraint, Index
 from sqlalchemy.dialects.postgresql import JSONB, array_agg
 from sqlalchemy.orm import relationship, column_property
 
@@ -13,9 +11,6 @@ from qcfractal.components.torsiondrive.record_db_models import (
     TorsiondriveSpecificationORM,
 )
 from qcfractal.db_socket import BaseORM
-
-if TYPE_CHECKING:
-    from typing import Dict, Any, Optional, Iterable
 
 
 class TorsiondriveDatasetMoleculeORM(BaseORM):
@@ -76,11 +71,7 @@ class TorsiondriveDatasetEntryORM(BaseORM):
         Index("ix_torsiondrive_dataset_entry_name", "name"),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "dataset_id", "initial_molecules_assoc")
-        assert "initial_molecule_ids" not in BaseORM.model_dict(self, exclude)
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["dataset_id", "initial_molecules_assoc", "initial_molecules_id"]
 
 
 class TorsiondriveDatasetSpecificationORM(BaseORM):
@@ -99,10 +90,7 @@ class TorsiondriveDatasetSpecificationORM(BaseORM):
         Index("ix_torsiondrive_dataset_specification_specification_id", "specification_id"),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "dataset_id", "specification_id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["dataset_id", "specification_id"]
 
 
 class TorsiondriveDatasetRecordItemORM(BaseORM):
@@ -131,10 +119,7 @@ class TorsiondriveDatasetRecordItemORM(BaseORM):
         Index("ix_torsiondrive_dataset_record_record_id", "record_id"),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "dataset_id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["dataset_id"]
 
 
 class TorsiondriveDatasetORM(BaseDatasetORM):

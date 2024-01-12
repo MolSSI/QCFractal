@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-from sqlalchemy import Column, Integer, ForeignKey, String, ForeignKeyConstraint, UniqueConstraint, Index
+from sqlalchemy import Column, Integer, ForeignKey, String, ForeignKeyConstraint, Index
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
@@ -10,9 +8,6 @@ from qcfractal.components.dataset_db_models import BaseDatasetORM
 from qcfractal.components.manybody.record_db_models import ManybodySpecificationORM, ManybodyRecordORM
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.db_socket import BaseORM
-
-if TYPE_CHECKING:
-    from typing import Dict, Any, Optional, Iterable
 
 
 class ManybodyDatasetEntryORM(BaseORM):
@@ -35,10 +30,7 @@ class ManybodyDatasetEntryORM(BaseORM):
         Index("ix_manybody_dataset_entry_initial_molecule_id", "initial_molecule_id"),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "dataset_id", "initial_molecule_id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["dataset_id", "initial_molecule_id"]
 
 
 class ManybodyDatasetSpecificationORM(BaseORM):
@@ -57,10 +49,7 @@ class ManybodyDatasetSpecificationORM(BaseORM):
         Index("ix_manybody_dataset_specification_specification_id", "specification_id"),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "dataset_id", "specification_id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["dataset_id", "specification_id"]
 
 
 class ManybodyDatasetRecordItemORM(BaseORM):
@@ -89,10 +78,7 @@ class ManybodyDatasetRecordItemORM(BaseORM):
         Index("ix_manybody_dataset_record_record_id", "record_id"),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "dataset_id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["dataset_id"]
 
 
 class ManybodyDatasetORM(BaseDatasetORM):

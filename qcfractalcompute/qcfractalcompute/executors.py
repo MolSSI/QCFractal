@@ -183,6 +183,5 @@ def build_executor(executor_label: str, executor_config: ExecutorConfig) -> Pars
             self.tag_executor_map[tag] = ex.label
 
         self.executor_config_map[ex.label] = executor_config
-        pass
     else:
         raise ValueError("Unknown executor type: {}".format(executor_config.type))

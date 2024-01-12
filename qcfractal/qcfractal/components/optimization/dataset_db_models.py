@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-from sqlalchemy import Column, Integer, ForeignKey, String, ForeignKeyConstraint, UniqueConstraint, Index
+from sqlalchemy import Column, Integer, ForeignKey, String, ForeignKeyConstraint, Index
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
@@ -13,9 +11,6 @@ from qcfractal.components.optimization.record_db_models import (
     OptimizationRecordORM,
 )
 from qcfractal.db_socket import BaseORM
-
-if TYPE_CHECKING:
-    from typing import Dict, Any, Optional, Iterable
 
 
 class OptimizationDatasetEntryORM(BaseORM):
@@ -38,10 +33,7 @@ class OptimizationDatasetEntryORM(BaseORM):
         Index("ix_optimization_dataset_entry_initial_molecule_id", "initial_molecule_id"),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "dataset_id", "initial_molecule_id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["dataset_id", "initial_molecule_id"]
 
 
 class OptimizationDatasetSpecificationORM(BaseORM):
@@ -60,10 +52,7 @@ class OptimizationDatasetSpecificationORM(BaseORM):
         Index("ix_optimization_dataset_specification_specification_id", "specification_id"),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "dataset_id", "specification_id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["dataset_id", "specification_id"]
 
 
 class OptimizationDatasetRecordItemORM(BaseORM):
@@ -92,10 +81,7 @@ class OptimizationDatasetRecordItemORM(BaseORM):
         Index("ix_optimization_dataset_record_record_id", "record_id"),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "dataset_id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["dataset_id"]
 
 
 class OptimizationDatasetORM(BaseDatasetORM):

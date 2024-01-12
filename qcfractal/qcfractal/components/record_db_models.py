@@ -55,10 +55,11 @@ class RecordCommentORM(BaseORM):
 
     __table_args__ = (Index("ix_record_comment_record_id", "record_id"),)
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        exclude = self.append_exclude(exclude, "user_id", "user")
+    _qcportal_model_excludes = ["user_id", "user"]
 
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         d = BaseORM.model_dict(self, exclude)
+
         d["username"] = self.user.username if self.user is not None else None
         return d
 
@@ -82,10 +83,7 @@ class RecordInfoBackupORM(BaseORM):
 
     __table_args__ = (Index("ix_record_info_backup_record_id", "record_id"),)
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "id", "record_id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["id", "record_id"]
 
 
 class OutputStoreORM(BaseORM):
@@ -105,14 +103,11 @@ class OutputStoreORM(BaseORM):
 
     __table_args__ = (UniqueConstraint("history_id", "output_type", name="ux_output_store_id_type"),)
 
+    _qcportal_model_excludes = ["id", "history_id", "compression_level"]
+
     def get_output(self) -> Any:
         return decompress(self.data, self.compression_type)
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Fields not in model
-        exclude = self.append_exclude(exclude, "id", "history_id", "compression_level")
-
-        return BaseORM.model_dict(self, exclude)
 
 
 # Mark the storage of the data column as external
@@ -140,13 +135,10 @@ class NativeFileORM(BaseORM):
 
     __table_args__ = (UniqueConstraint("record_id", "name", name="ux_native_file_record_id_name"),)
 
+    _qcportal_model_excludes = ["id", "history_id", "compression_level"]
+
     def get_file(self) -> Any:
         return decompress(self.data, self.compression_type)
-
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "id", "record_id", "compression_level")
-        return BaseORM.model_dict(self, exclude)
 
 
 # Mark the storage of the data column of native files as external
@@ -290,11 +282,11 @@ class BaseRecordORM(BaseORM):
 
     __mapper_args__ = {"polymorphic_on": "record_type"}
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # strip user/group ids
-        # info_backup is also never part of models
-        exclude = self.append_exclude(exclude, "owner_user_id", "owner_group_id", "info_backup")
+    # strip user/group ids
+    # info_backup is also never part of models
+    _qcportal_model_excludes = ["owner_user_id", "owner_group_id", "info_backup"]
 
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         d = BaseORM.model_dict(self, exclude)
 
         d["owner_user"] = self.owner_user.username if self.owner_user is not None else None

@@ -26,7 +26,7 @@ from qcportal.compression import CompressionEnum, decompress
 from qcportal.singlepoint import SinglepointDriver
 
 if TYPE_CHECKING:
-    from typing import Dict, Any, Optional, Iterable
+    from typing import Dict, Optional
 
 
 class WavefunctionORM(BaseORM):
@@ -45,14 +45,11 @@ class WavefunctionORM(BaseORM):
 
     __table_args__ = (UniqueConstraint("record_id", name="ux_wavefunction_store_record_id"),)
 
+    _qcportal_model_excludes = ["id", "record_id", "compression_level"]
+
     def get_wavefunction(self) -> WavefunctionProperties:
         d = decompress(self.data, self.compression_type)
         return WavefunctionProperties(**d)
-
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "id", "record_id", "compression_level")
-        return BaseORM.model_dict(self, exclude)
 
 
 class QCSpecificationORM(BaseORM):
@@ -89,10 +86,7 @@ class QCSpecificationORM(BaseORM):
         CheckConstraint("basis = LOWER(basis)", name="ck_qc_specification_basis_lower"),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "id", "keywords_hash")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["id", "keywords_hash"]
 
     @property
     def required_programs(self) -> Dict[str, Optional[str]]:
@@ -129,10 +123,7 @@ class SinglepointRecordORM(BaseRecordORM):
         "polymorphic_identity": "singlepoint",
     }
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "specification_id")
-        return BaseRecordORM.model_dict(self, exclude)
+    _qcportal_model_excludes = [*BaseRecordORM._qcportal_model_excludes, "specification_id"]
 
     @property
     def required_programs(self) -> Dict[str, Optional[str]]:

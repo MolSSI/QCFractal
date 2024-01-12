@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from sqlalchemy import Column, String, Integer, ForeignKey, CheckConstraint, Index, UniqueConstraint, event, DDL
 from sqlalchemy.dialects.postgresql import DOUBLE_PRECISION, JSONB
 from sqlalchemy.orm import relationship
@@ -14,9 +12,6 @@ from qcfractal.components.optimization.record_db_models import (
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.singlepoint.record_db_models import SinglepointRecordORM, QCSpecificationORM
 from qcfractal.db_socket import BaseORM
-
-if TYPE_CHECKING:
-    from typing import Dict, Any, Optional, Iterable
 
 
 class ReactionComponentORM(BaseORM):
@@ -42,10 +37,7 @@ class ReactionComponentORM(BaseORM):
         Index("ix_reaction_component_optimization_id", "optimization_id"),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "reaction_id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["reaction_id"]
 
 
 class ReactionSpecificationORM(BaseORM):
@@ -84,12 +76,7 @@ class ReactionSpecificationORM(BaseORM):
         ),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(
-            exclude, "id", "keywords_hash", "singlepoint_specification_id", "optimization_specification_id"
-        )
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["id", "keywords_hash", "singlepoint_specification_id", "optimization_specification_id"]
 
     @property
     def short_description(self) -> str:
@@ -126,10 +113,7 @@ class ReactionRecordORM(BaseRecordORM):
         "polymorphic_identity": "reaction",
     }
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "specification_id")
-        return BaseRecordORM.model_dict(self, exclude)
+    _qcportal_model_excludes = [*BaseRecordORM._qcportal_model_excludes, "specification_id"]
 
     @property
     def short_description(self) -> str:
