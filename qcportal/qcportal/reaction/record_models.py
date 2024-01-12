@@ -23,8 +23,6 @@ class ReactionKeywords(BaseModel):
         pass
         # extra = Extra.forbid
 
-    pass
-
 
 class ReactionSpecification(BaseModel):
     class Config:

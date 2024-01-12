@@ -27,7 +27,6 @@ class DummyJobProgress:
 
     def __init__(self):
         self._runner_uuid = "1234-5678-9101-1213"
-        pass
 
     def update_progress(self, progress: int):
         pass

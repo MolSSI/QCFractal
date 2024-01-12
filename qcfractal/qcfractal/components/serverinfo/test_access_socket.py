@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import ipaddress
-from typing import TYPE_CHECKING
 
 import pytest
 
@@ -10,9 +9,6 @@ from qcarchivetesting.testing_classes import QCATestingSnowflake
 from qcfractal.testing_helpers import DummyJobProgress
 from qcportal.serverinfo.models import AccessLogQueryFilters
 from qcportal.utils import now_at_utc
-
-if TYPE_CHECKING:
-    pass
 
 # First part of the tuple is the ip address
 # second is the range, as stored in the MaxMind test JSON file
