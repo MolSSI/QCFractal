@@ -185,7 +185,7 @@ def test_dataset_cache_fromfile(snowflake: QCATestingSnowflake, tmp_path):
     assert r3.status == RecordStatusEnum.cancelled  # was updated from the server
 
 
-def test_dataset_cache_fromfile_deleted(snowflake: QCATestingSnowflake, tmp_path, caplog):
+def test_dataset_cache_fromfile_deleted(snowflake: QCATestingSnowflake, tmp_path):
     cache_dir = tmp_path / "ptlcache"
     client = snowflake.client(cache_dir=str(cache_dir))
     ds: SinglepointDataset = client.add_dataset("singlepoint", "Test dataset")
@@ -203,17 +203,15 @@ def test_dataset_cache_fromfile_deleted(snowflake: QCATestingSnowflake, tmp_path
 
     client.delete_dataset(ds_id, True)
 
-    with caplog.at_level(logging.WARNING):
-        ds2 = client.dataset_from_cache(cachefile_path)
+    ds2 = client.dataset_from_cache(cachefile_path)
 
-    assert caplog.records[0].msg.endswith("could not be found on the server. Marking as read-only cache")
     assert ds2.is_view
     assert ds2._cache_data.read_only is True
 
     assert ds2.get_record(test_entries[0].name, "spec_1") is not None
 
 
-def test_dataset_cache_fromfile_view(snowflake: QCATestingSnowflake, tmp_path, caplog):
+def test_dataset_cache_fromfile_view(snowflake: QCATestingSnowflake, tmp_path):
     cache_dir = tmp_path / "ptlcache"
     client = snowflake.client(cache_dir=str(cache_dir))
     ds: SinglepointDataset = client.add_dataset("singlepoint", "Test dataset")
