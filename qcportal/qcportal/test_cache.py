@@ -144,8 +144,16 @@ def test_dataset_cache_writeback(snowflake_client: PortalClient):
     del r  # should write back to the cache
     gc.collect()
 
-    r2 = ds._cache_data.get_record(test_entries[0].name, "spec_1")
-    assert r2.molecule_ is not None
+    r3 = ds._cache_data.get_record(test_entries[0].name, "spec_1")
+    assert r3.molecule_ is not None
+
+    # the record with the missing molecule doesn't get written back
+    r3.molecule_ = None
+    del r3
+    gc.collect()
+
+    r3 = ds._cache_data.get_record(test_entries[0].name, "spec_1")
+    assert r3.molecule_ is not None
 
 
 def test_dataset_cache_fromfile(snowflake: QCATestingSnowflake, tmp_path):
