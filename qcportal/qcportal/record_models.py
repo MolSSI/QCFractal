@@ -415,8 +415,11 @@ class BaseRecord(BaseModel):
         cls._all_subclasses[record_type] = cls
 
     def __del__(self):
-        for f in reversed(self._del_tasks):
-            f(self)
+        # _del_tasks may not exist if this is being called after
+        # a validation error or something
+        if hasattr(self, "_del_tasks"):
+            for f in reversed(self._del_tasks):
+                f(self)
 
         s = super()
         if hasattr(s, "__del__"):
