@@ -33,7 +33,7 @@ _query_chunk_size = 125
 
 def compress_for_cache(data: Any) -> sqlite3.Binary:
     serialized_data = serialize(data, "msgpack")
-    compressed_data = zstandard.compress(serialized_data, level=4)
+    compressed_data = zstandard.compress(serialized_data, level=1)
     return sqlite3.Binary(compressed_data)
 
 
