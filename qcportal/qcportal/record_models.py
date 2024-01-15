@@ -162,6 +162,9 @@ class ComputeHistory(BaseModel):
             for o in self.outputs_.values():
                 o.propagate_client(self._client, self._base_url)
 
+    def fetch_all(self):
+        self._fetch_outputs()
+
     def _fetch_outputs(self):
         if self._client is None:
             raise RuntimeError("This compute history is not connected to a client")
@@ -174,6 +177,7 @@ class ComputeHistory(BaseModel):
 
         for o in self.outputs_.values():
             o.propagate_client(self._client, self._base_url)
+            o._fetch_raw_data()
 
     @property
     def outputs(self) -> Dict[str, OutputStore]:
@@ -222,6 +226,9 @@ class NativeFile(BaseModel):
     def propagate_client(self, client, record_base_url):
         self._client = client
         self._data_url = f"{record_base_url}/native_files/{self.name}/data"
+
+    def fetch_all(self):
+        self._fetch_raw_data()
 
     def _fetch_raw_data(self):
         if self.data_ is not None:
@@ -450,6 +457,30 @@ class BaseRecord(BaseModel):
             for nf in self.native_files_.values():
                 nf.propagate_client(self._client, self._base_url)
 
+    def fetch_all(self):
+        """
+        Fetches all possible data for this record from the server
+        """
+
+        # Only these statuses should have tasks
+        if self.status in (RecordStatusEnum.waiting, RecordStatusEnum.running, RecordStatusEnum.error):
+            # is_service is checked in these functions
+            self._fetch_service()
+            self._fetch_task()
+        else:
+            self.service_ = None
+            self.task_ = None
+
+        self._fetch_comments()
+
+        self._fetch_compute_history()
+        for ch in self.compute_history_:
+            ch.fetch_all()
+
+        self._fetch_native_files()
+        for nf in self.native_files_.values():
+            nf.fetch_all()
+
     def _assert_online(self):
         """Raises an exception if this record does not have an associated client"""
         if self.offline:
@@ -470,6 +501,7 @@ class BaseRecord(BaseModel):
         self._assert_online()
 
         if self.is_service:
+            self.task_ = None
             return
 
         self.task_ = self._client.make_request(
@@ -482,6 +514,7 @@ class BaseRecord(BaseModel):
         self._assert_online()
 
         if not self.is_service:
+            self.service_ = None
             return
 
         self.service_ = self._client.make_request("get", f"{self._base_url}/service", Optional[RecordService])
@@ -492,7 +525,7 @@ class BaseRecord(BaseModel):
         self.comments_ = self._client.make_request(
             "get",
             f"{self._base_url}/comments",
-            Optional[List[RecordComment]],
+            List[RecordComment],
         )
 
     def _fetch_native_files(self):
@@ -501,7 +534,7 @@ class BaseRecord(BaseModel):
         self.native_files_ = self._client.make_request(
             "get",
             f"{self._base_url}/native_files",
-            Optional[Dict[str, NativeFile]],
+            Dict[str, NativeFile],
         )
 
         self.propagate_client(self._client)
@@ -553,13 +586,17 @@ class BaseRecord(BaseModel):
 
     @property
     def task(self) -> Optional[RecordTask]:
-        if self.task_ is None:
+        # task_ may be None because it either hasn't been fetched or it doesn't exist
+        # fetch only if it has been set at some point
+        if self.task_ is None and "task_" not in self.__fields_set__:
             self._fetch_task()
         return self.task_
 
     @property
     def service(self) -> Optional[RecordService]:
-        if self.service_ is None:
+        # service_ may be None because it either hasn't been fetched or it doesn't exist
+        # fetch only if it has been set at some point
+        if self.service_ is None and "service_" not in self.__fields_set__:
             self._fetch_service()
         return self.service_
 

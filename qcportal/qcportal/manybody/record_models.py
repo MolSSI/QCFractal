@@ -91,6 +91,16 @@ class ManybodyRecord(BaseRecord):
                 if cluster.singlepoint_record:
                     cluster.singlepoint_record.propagate_client(client)
 
+    def fetch_all(self):
+        BaseRecord.fetch_all(self)
+
+        self._fetch_initial_molecule()
+        self._fetch_clusters()
+
+        for cluster in self.clusters_:
+            if cluster.singlepoint_record:
+                cluster.singlepoint_record.fetch_all()
+
     def _fetch_initial_molecule(self):
         self._assert_online()
         self.initial_molecule_ = self._client.get_molecules([self.initial_molecule_id])[0]

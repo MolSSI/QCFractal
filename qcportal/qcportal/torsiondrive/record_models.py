@@ -155,6 +155,16 @@ class TorsiondriveRecord(BaseRecord):
             for opt in self.minimum_optimizations_cache_.values():
                 opt.propagate_client(client)
 
+    def fetch_all(self):
+        BaseRecord.fetch_all(self)
+
+        self._fetch_initial_molecules()
+        self._fetch_optimizations()
+
+        for opt_list in self.optimizations_cache_.values():
+            for opt in opt_list:
+                opt.fetch_all()
+
     def _fetch_initial_molecules(self):
         self._assert_online()
 

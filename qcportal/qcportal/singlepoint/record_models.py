@@ -13,6 +13,7 @@ from qcelemental.models.results import (
     AtomicResultProtocols as SinglepointProtocols,
     AtomicResultProperties,
     WavefunctionProperties,
+    WavefunctionProtocolEnum,
 )
 from typing_extensions import Literal
 
@@ -115,6 +116,15 @@ class SinglepointRecord(BaseRecord):
         if self.wavefunction_ is not None:
             self.wavefunction_.propagate_client(self._client, self._base_url)
 
+    def fetch_all(self):
+        BaseRecord.fetch_all(self)
+        self._fetch_molecule()
+
+        if self.specification.protocols.wavefunction != WavefunctionProtocolEnum.none:
+            self._fetch_wavefunction()
+        else:
+            self.wavefunction_ = None
+
     def _fetch_molecule(self):
         self._assert_online()
         self.molecule_ = self._client.get_molecules([self.molecule_id])[0]
@@ -154,7 +164,8 @@ class SinglepointRecord(BaseRecord):
 
     @property
     def wavefunction(self) -> Optional[WavefunctionProperties]:
-        if self.wavefunction_ is None:
+        # wavefunction may be None if it doesn't exist or hasn't been fetched yet
+        if self.wavefunction_ is None and "wavefunction_" not in self.__fields_set__:
             self._fetch_wavefunction()
 
         if self.wavefunction_ is not None:

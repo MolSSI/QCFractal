@@ -69,6 +69,15 @@ class OptimizationRecord(BaseRecord):
             for sp in self.trajectory_records_:
                 sp.propagate_client(client)
 
+    def fetch_all(self):
+        BaseRecord.fetch_all(self)
+        self._fetch_initial_molecule()
+        self._fetch_final_molecule()
+        self._fetch_trajectory()
+
+        for sp in self.trajectory_records_:
+            sp.fetch_all()
+
     def _fetch_initial_molecule(self):
         self._assert_online()
         self.initial_molecule_ = self._client.get_molecules([self.initial_molecule_id])[0]

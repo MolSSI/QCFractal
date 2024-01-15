@@ -93,6 +93,16 @@ class ReactionRecord(BaseRecord):
                 if comp.optimization_record:
                     comp.optimization_record.propagate_client(self._client)
 
+    def fetch_all(self):
+        BaseRecord.fetch_all(self)
+        self._fetch_components()
+
+        for comp in self.components_:
+            if comp.singlepoint_record:
+                comp.singlepoint_record.fetch_all()
+            if comp.optimization_record:
+                comp.optimization_record.fetch_all()
+
     def _fetch_components(self):
         self._assert_online()
 

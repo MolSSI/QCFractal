@@ -208,6 +208,16 @@ class GridoptimizationRecord(BaseRecord):
             for opt in self.optimizations_cache_.values():
                 opt.propagate_client(client)
 
+    def fetch_all(self):
+        BaseRecord.fetch_all(self)
+
+        self._fetch_initial_molecule()
+        self._fetch_starting_molecule()
+        self._fetch_optimizations()
+
+        for opt in self.optimizations_cache_.values():
+            opt.fetch_all()
+
     def _fetch_initial_molecule(self):
         self._assert_online()
         self.initial_molecule_ = self._client.get_molecules([self.initial_molecule_id])[0]

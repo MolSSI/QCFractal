@@ -133,6 +133,7 @@ class NEBRecord(BaseRecord):
     initial_chain_molecule_ids_: Optional[List[int]] = None
     singlepoints_: Optional[List[NEBSinglepoint]] = None
     optimizations_: Optional[Dict[str, NEBOptimization]] = None
+    neb_result_: Optional[Molecule] = None
 
     ########################################
     # Caches
@@ -152,6 +153,21 @@ class NEBRecord(BaseRecord):
             for splist in self.singlepoints_cache_.values():
                 for sp2 in splist:
                     sp2.propagate_client(client)
+
+    def fetch_all(self):
+        BaseRecord.fetch_all(self)
+
+        self._fetch_initial_chain()
+        self._fetch_singlepoints()
+        self._fetch_optimizations()
+        self._fetch_neb_result()
+
+        for opt in self.optimizations_cache_.values():
+            opt.fetch_all()
+
+        for splist in self.singlepoints_cache_.values():
+            for sp2 in splist:
+                sp2.fetch_all()
 
     def _fetch_optimizations(self):
         self._assert_online()
@@ -207,6 +223,15 @@ class NEBRecord(BaseRecord):
 
         self.initial_chain_ = self._client.get_molecules(self.initial_chain_molecule_ids_)
 
+    def _fetch_neb_result(self):
+        self._assert_online()
+
+        self.neb_result_ = self._client.make_request(
+            "get",
+            f"api/v1/records/neb/{self.id}/neb_result",
+            Optional[Molecule],
+        )
+
     def _handle_includes(self, includes: Optional[Iterable[str]]):
         if includes is None:
             return
@@ -219,6 +244,8 @@ class NEBRecord(BaseRecord):
             self._fetch_singlepoints()
         if "optimizations" in includes:
             self._fetch_optimizations()
+        if "result" in includes:
+            self._fetch_neb_result()
 
     @property
     def initial_chain(self) -> List[Molecule]:
@@ -234,13 +261,9 @@ class NEBRecord(BaseRecord):
 
     @property
     def neb_result(self):
-        r = self._client.make_request(
-            "get",
-            f"api/v1/records/neb/{self.id}/neb_result",
-            Molecule,
-        )
-
-        return r
+        if self.neb_result_ is None and "neb_result_" not in self.__fields_set__:
+            self._fetch_neb_result()
+        return self.neb_result_
 
     @property
     def optimizations(self) -> Optional[Dict[str, OptimizationRecord]]:
