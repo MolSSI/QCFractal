@@ -150,7 +150,7 @@ class BaseDataset(BaseModel):
         elif client and client.cache.enabled:
             cache_dir = client.cache.cache_dir
             cache_path = os.path.join(cache_dir, f"dataset_{self.id}.sqlite")
-            self._cache_data = DatasetCache(cache_path, type(self), read_only=False)
+            self._cache_data = DatasetCache(cache_path, False, type(self))
 
             # All fields that aren't private
             self._cache_data.update_metadata("dataset_metadata", self)
@@ -160,7 +160,7 @@ class BaseDataset(BaseModel):
                 # Only address, not username/password
                 self._cache_data.update_metadata("client_address", self._client.address)
         else:
-            self._cache_data = DatasetCache(None, type(self), read_only=False)
+            self._cache_data = DatasetCache(None, False, type(self))
 
     def __init_subclass__(cls):
         """
@@ -867,7 +867,7 @@ class BaseDataset(BaseModel):
         # Update the locally-stored records
         # zip(record_info, records) = ((entry_name, spec_name, record_id), record)
         update_info = [(ename, sname, r) for (ename, sname, _), r in zip(record_info, records)]
-        self._cache_data.update_records(update_info)
+        self._cache_data.update_dataset_records(update_info)
 
     def _internal_update_records(
         self,
@@ -902,7 +902,9 @@ class BaseDataset(BaseModel):
 
         # Returns list of tuple (entry name, spec_name, id, status, modified_on) of records
         # we have our local cache
-        updateable_record_info = self._cache_data.get_record_info(entry_names, specification_names, updateable_statuses)
+        updateable_record_info = self._cache_data.get_dataset_record_info(
+            entry_names, specification_names, updateable_statuses
+        )
         # print(f"UPDATEABLE RECORDS: {len(updateable_record_info)}")
         if not updateable_record_info:
             return
@@ -1018,7 +1020,7 @@ class BaseDataset(BaseModel):
                     batch_tofetch = entry_names_batch
                 else:
                     # Filter if they already exist in the local cache
-                    cached_records = self._cache_data.get_existing_records(entry_names_batch, [spec_name])
+                    cached_records = self._cache_data.get_existing_dataset_records(entry_names_batch, [spec_name])
                     cached_record_entries = [x[0] for x in cached_records]
                     batch_tofetch = [x for x in entry_names_batch if x not in cached_record_entries]
 
@@ -1049,7 +1051,7 @@ class BaseDataset(BaseModel):
         elif fetch_updated:
             self._internal_update_records([entry_name], [specification_name], None, include)
 
-        record = self._cache_data.get_record(entry_name, specification_name)
+        record = self._cache_data.get_dataset_record(entry_name, specification_name)
 
         if record is None and not self.is_view:
             self.fetch_records(
@@ -1059,7 +1061,7 @@ class BaseDataset(BaseModel):
                 fetch_updated=fetch_updated,
                 force_refetch=force_refetch,
             )
-            record = self._cache_data.get_record(entry_name, specification_name)
+            record = self._cache_data.get_dataset_record(entry_name, specification_name)
 
         if record is not None and self._client is not None:
             record.propagate_client(self._client)
@@ -1107,7 +1109,7 @@ class BaseDataset(BaseModel):
         if self.is_view:
             for spec_name in specification_names:
                 for entry_names_batch in chunk_iterable(entry_names, 125):
-                    record_data = self._cache_data.get_records(entry_names_batch, [spec_name])
+                    record_data = self._cache_data.get_dataset_records(entry_names_batch, [spec_name])
 
                     for e, s, r in record_data:
                         if status is None or r.status in status:
@@ -1126,7 +1128,7 @@ class BaseDataset(BaseModel):
                         batch_tofetch = entry_names_batch
                     else:
                         # Filter if they already exist in the local cache
-                        existing_records = self._cache_data.get_existing_records(entry_names_batch, [spec_name])
+                        existing_records = self._cache_data.get_existing_dataset_records(entry_names_batch, [spec_name])
                         existing_entries = [x[0] for x in existing_records]
                         batch_tofetch = [x for x in entry_names_batch if x not in existing_entries]
                         # print(f"BATCH TO FETCH: {len(batch_tofetch)}")
@@ -1135,7 +1137,7 @@ class BaseDataset(BaseModel):
                         self._internal_fetch_records(batch_tofetch, [spec_name], status, include)
 
                     # Now lookup the just-fetched records and yield them
-                    record_data = self._cache_data.get_records(entry_names_batch, [spec_name])
+                    record_data = self._cache_data.get_dataset_records(entry_names_batch, [spec_name])
 
                     if self._client is not None:
                         for _, _, r in record_data:
@@ -1170,7 +1172,7 @@ class BaseDataset(BaseModel):
             body=body,
         )
 
-        self._cache_data.delete_records(entry_names, specification_names)
+        self._cache_data.delete_dataset_records(entry_names, specification_names)
 
         return ret
 
@@ -1205,7 +1207,7 @@ class BaseDataset(BaseModel):
             body=body,
         )
 
-        self._cache_data.delete_records(entry_names, specification_names)
+        self._cache_data.delete_dataset_records(entry_names, specification_names)
 
         if refetch_records:
             self.fetch_records(entry_names, specification_names, force_refetch=True)
@@ -1238,7 +1240,7 @@ class BaseDataset(BaseModel):
             body=body,
         )
 
-        self._cache_data.delete_records(entry_names, specification_names)
+        self._cache_data.delete_dataset_records(entry_names, specification_names)
 
         if refetch_records:
             self.fetch_records(entry_names, specification_names, force_refetch=True)
@@ -1271,7 +1273,7 @@ class BaseDataset(BaseModel):
             body=body,
         )
 
-        self._cache_data.delete_records(entry_names, specification_names)
+        self._cache_data.delete_dataset_records(entry_names, specification_names)
 
         if refetch_records:
             self.fetch_records(entry_names, specification_names, force_refetch=True)
@@ -1304,7 +1306,7 @@ class BaseDataset(BaseModel):
             body=body,
         )
 
-        self._cache_data.delete_records(entry_names, specification_names)
+        self._cache_data.delete_dataset_records(entry_names, specification_names)
 
         if refetch_records:
             self.fetch_records(entry_names, specification_names, force_refetch=True)
@@ -1337,7 +1339,7 @@ class BaseDataset(BaseModel):
             body=body,
         )
 
-        self._cache_data.delete_records(entry_names, specification_names)
+        self._cache_data.delete_dataset_records(entry_names, specification_names)
 
         if refetch_records:
             self.fetch_records(entry_names, specification_names, force_refetch=True)
@@ -1370,7 +1372,7 @@ class BaseDataset(BaseModel):
             body=body,
         )
 
-        self._cache_data.delete_records(entry_names, specification_names)
+        self._cache_data.delete_dataset_records(entry_names, specification_names)
 
         if refetch_records:
             self.fetch_records(entry_names, specification_names, force_refetch=True)
@@ -1581,7 +1583,7 @@ class BaseDataset(BaseModel):
 
                 # What info do we have stored locally
                 # (entry_name, spec_name, record_id)
-                cached_records = self._cache_data.get_record_info(entry_names_batch, [spec_name], None)
+                cached_records = self._cache_data.get_dataset_record_info(entry_names_batch, [spec_name], None)
 
                 # Get the record info corresponding to this specification & these entries
                 body = DatasetFetchRecordsBody(entry_names=entry_names_batch, specification_names=specification_names)
@@ -1614,7 +1616,7 @@ class BaseDataset(BaseModel):
 
                     # If record does not exist on the server or has a different id, delete it locally from the cache
                     if server_ds_record_id is None or record_id != server_ds_record_id:
-                        self._cache_data.delete_record(ename, sname)
+                        self._cache_data.delete_dataset_record(ename, sname)
                         records_tofetch.append(server_ds_record_id)
                         continue
 
@@ -1775,7 +1777,7 @@ def dataset_from_cache(file_path: str) -> BaseDataset:
     # Reads this as a read-only "view"
     ds_meta = read_dataset_metadata(file_path)
     ds_type = BaseDataset.get_subclass(ds_meta["dataset_type"])
-    ds_cache = DatasetCache(file_path, ds_type, True)
+    ds_cache = DatasetCache(file_path, True, ds_type)
 
     # Views never have a client attached
     return dataset_from_dict(ds_meta, None, cache_data=ds_cache)

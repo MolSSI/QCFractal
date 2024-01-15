@@ -63,16 +63,16 @@ def test_dataset_cache_basic(snowflake: QCATestingSnowflake, tmp_path):
     # Records
     for ename, e in entry_map.items():
         for sname, s in spec_map.items():
-            assert ds._cache_data.record_exists(ename, sname)
-            r = ds._cache_data.get_record(ename, sname)
+            assert ds._cache_data.dataset_record_exists(ename, sname)
+            r = ds._cache_data.get_dataset_record(ename, sname)
             assert r is not None
             assert r.specification == s
             assert r.molecule == e.molecule
 
-            ri = ds._cache_data.get_record_info([ename], [sname], None)
+            ri = ds._cache_data.get_dataset_record_info([ename], [sname], None)
             assert len(ri) == 1
 
-            ri = ds._cache_data.get_record_info([ename], [sname], [RecordStatusEnum.waiting])
+            ri = ds._cache_data.get_dataset_record_info([ename], [sname], [RecordStatusEnum.waiting])
             assert len(ri) == 1
 
             assert ri[0][0] == ename
@@ -81,18 +81,18 @@ def test_dataset_cache_basic(snowflake: QCATestingSnowflake, tmp_path):
             assert ri[0][3] == r.status
             assert ri[0][4] == r.modified_on
 
-    recs = ds._cache_data.get_records(entry_names, spec_names)
+    recs = ds._cache_data.get_dataset_records(entry_names, spec_names)
     assert len(recs) == len(entry_names) * len(spec_names)
 
-    rinfo = ds._cache_data.get_record_info(entry_names, spec_names, [RecordStatusEnum.waiting])
+    rinfo = ds._cache_data.get_dataset_record_info(entry_names, spec_names, [RecordStatusEnum.waiting])
     assert len(rinfo) == len(entry_names) * len(spec_names)
 
-    rinfo = ds._cache_data.get_record_info(
+    rinfo = ds._cache_data.get_dataset_record_info(
         entry_names, spec_names, [RecordStatusEnum.waiting, RecordStatusEnum.running]
     )
     assert len(rinfo) == len(entry_names) * len(spec_names)
 
-    rinfo = ds._cache_data.get_record_info(entry_names, spec_names, [RecordStatusEnum.complete])
+    rinfo = ds._cache_data.get_dataset_record_info(entry_names, spec_names, [RecordStatusEnum.complete])
     assert len(rinfo) == 0
 
 
@@ -115,7 +115,7 @@ def test_dataset_cache_update(snowflake_client: PortalClient):
     assert r.status == RecordStatusEnum.cancelled
     del r
 
-    r2 = ds._cache_data.get_record(test_entries[0].name, "spec_1")
+    r2 = ds._cache_data.get_dataset_record(test_entries[0].name, "spec_1")
     assert r2.status == RecordStatusEnum.cancelled
     del r2
 
@@ -144,7 +144,7 @@ def test_dataset_cache_writeback(snowflake_client: PortalClient):
     del r  # should write back to the cache
     gc.collect()
 
-    r3 = ds._cache_data.get_record(test_entries[0].name, "spec_1")
+    r3 = ds._cache_data.get_dataset_record(test_entries[0].name, "spec_1")
     assert r3.molecule_ is not None
 
     # the record with the missing molecule doesn't get written back
@@ -152,7 +152,7 @@ def test_dataset_cache_writeback(snowflake_client: PortalClient):
     del r3
     gc.collect()
 
-    r3 = ds._cache_data.get_record(test_entries[0].name, "spec_1")
+    r3 = ds._cache_data.get_dataset_record(test_entries[0].name, "spec_1")
     assert r3.molecule_ is not None
 
 
@@ -183,7 +183,7 @@ def test_dataset_cache_fromfile(snowflake: QCATestingSnowflake, tmp_path):
     ds2 = client.dataset_from_cache(cachefile_path)
     assert ds2.id == ds_id
 
-    r2 = ds2._cache_data.get_record(test_entries[0].name, "spec_2")
+    r2 = ds2._cache_data.get_dataset_record(test_entries[0].name, "spec_2")
     assert r2 is not None
 
     r3 = ds2.get_record(test_entries[0].name, "spec_2")

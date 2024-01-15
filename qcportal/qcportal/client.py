@@ -247,7 +247,7 @@ class PortalClient(PortalClientBase):
     def dataset_from_cache(self, file_path: str) -> BaseDataset:
         ds_meta = read_dataset_metadata(file_path)
         ds_type = BaseDataset.get_subclass(ds_meta["dataset_type"])
-        ds_cache = DatasetCache(file_path, ds_type, False)
+        ds_cache = DatasetCache(file_path, False, ds_type)
 
         ds = dataset_from_dict(ds_meta, self, cache_data=ds_cache)
 
