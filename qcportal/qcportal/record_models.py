@@ -18,6 +18,8 @@ from qcportal.base_models import (
     QueryModelBase,
     QueryIteratorBase,
 )
+
+from qcportal.cache import RecordCache
 from qcportal.compression import CompressionEnum, decompress, get_compressed_ext
 
 
@@ -392,8 +394,10 @@ class BaseRecord(BaseModel):
     # A dictionary of all subclasses (calculation types) to actual class type
     _all_subclasses: ClassVar[Dict[str, Type[BaseRecord]]] = {}
 
-    # Stuff to run when being deleted
-    _del_tasks: List[Callable] = PrivateAttr([])
+    # Local record cache we can use for child records
+    # This record may also be part of the cache
+    _record_cache: Optional[RecordCache] = PrivateAttr(None)
+    _record_cache_uid: Optional[int] = PrivateAttr(None)
 
     def __init__(self, client=None, **kwargs):
         BaseModel.__init__(self, **kwargs)
@@ -416,11 +420,8 @@ class BaseRecord(BaseModel):
         cls._all_subclasses[record_type] = cls
 
     def __del__(self):
-        # _del_tasks may not exist if this is being called after
-        # a validation error or something
-        if hasattr(self, "_del_tasks"):
-            for f in reversed(self._del_tasks):
-                f(self)
+        if self._record_cache is not None and self._record_cache_uid is not None and not self._record_cache.read_only:
+            self._record_cache.writeback_record(self._record_cache_uid, self)
 
         s = super()
         if hasattr(s, "__del__"):

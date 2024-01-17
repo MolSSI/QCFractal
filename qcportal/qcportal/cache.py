@@ -371,7 +371,8 @@ class DatasetCache(RecordCache):
         record = decompress_from_cache(record_data[1], self._record_type)
 
         if not self.read_only:
-            record._del_tasks.append(functools.partial(self.writeback_record, record_data[0]))  # give it the uid
+            record._record_cache = self
+            record._record_cache_uid = record_data[0]
 
         return record
 
@@ -395,7 +396,8 @@ class DatasetCache(RecordCache):
                 record = decompress_from_cache(compressed_record, self._record_type)
 
                 if not self.read_only:
-                    record._del_tasks.append(functools.partial(self.writeback_record, uid))  # give it the uid
+                    record._record_cache = self
+                    record._record_cache_uid = uid
 
                 all_records.append((ename, sname, record))
 
