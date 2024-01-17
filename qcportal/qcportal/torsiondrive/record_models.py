@@ -2,9 +2,9 @@ import json
 from typing import List, Optional, Tuple, Union, Dict, Iterable, Sequence, Any
 
 try:
-    from pydantic.v1 import BaseModel, Field, Extra, root_validator, constr, validator
+    from pydantic.v1 import BaseModel, Field, Extra, root_validator, constr, validator, PrivateAttr
 except ImportError:
-    from pydantic import BaseModel, Field, Extra, root_validator, constr, validator
+    from pydantic import BaseModel, Field, Extra, root_validator, constr, validator, PrivateAttr
 from typing_extensions import Literal
 
 from qcportal.molecules import Molecule
@@ -134,25 +134,25 @@ class TorsiondriveRecord(BaseRecord):
     ######################################################
     initial_molecules_ids_: Optional[List[int]] = None
     optimizations_: Optional[List[TorsiondriveOptimization]] = None
+    initial_molecules_: Optional[List[Molecule]] = None
 
     ########################################
     # Caches
     ########################################
-    initial_molecules_: Optional[List[Molecule]] = None
-    optimizations_cache_: Optional[Dict[Any, List[OptimizationRecord]]] = None
-    minimum_optimizations_cache_: Optional[Dict[Any, OptimizationRecord]] = None
+    _optimizations_cache: Optional[Dict[Any, List[OptimizationRecord]]] = PrivateAttr(None)
+    _minimum_optimizations_cache: Optional[Dict[Any, OptimizationRecord]] = PrivateAttr(None)
 
     def propagate_client(self, client):
         BaseRecord.propagate_client(self, client)
 
-        if self.optimizations_cache_ is not None:
-            for opts in self.optimizations_cache_.values():
+        if self._optimizations_cache is not None:
+            for opts in self._optimizations_cache.values():
                 for opt in opts:
                     opt.propagate_client(client)
 
         # But may need to do minimum_optimizations_cache_, since they may have been obtained separately
-        if self.minimum_optimizations_cache_ is not None:
-            for opt in self.minimum_optimizations_cache_.values():
+        if self._minimum_optimizations_cache is not None:
+            for opt in self._minimum_optimizations_cache.values():
                 opt.propagate_client(client)
 
     def fetch_all(self):
@@ -161,7 +161,7 @@ class TorsiondriveRecord(BaseRecord):
         self._fetch_initial_molecules()
         self._fetch_optimizations()
 
-        for opt_list in self.optimizations_cache_.values():
+        for opt_list in self._optimizations_cache.values():
             for opt in opt_list:
                 opt.fetch_all()
 
@@ -189,20 +189,20 @@ class TorsiondriveRecord(BaseRecord):
         opt_ids = [x.optimization_id for x in self.optimizations_]
         opt_records = self._client.get_optimizations(opt_ids)
 
-        self.optimizations_cache_ = {}
+        self._optimizations_cache = {}
         for td_opt, opt_record in zip(self.optimizations_, opt_records):
             key = deserialize_key(td_opt.key)
-            self.optimizations_cache_.setdefault(key, list())
-            self.optimizations_cache_[key].append(opt_record)
+            self._optimizations_cache.setdefault(key, list())
+            self._optimizations_cache[key].append(opt_record)
 
         # find the minimum optimizations for each key
         # chooses the lowest id if there are records with the same energy
-        self.minimum_optimizations_cache_ = {}
-        for k, v in self.optimizations_cache_.items():
+        self._minimum_optimizations_cache = {}
+        for k, v in self._optimizations_cache.items():
             # Remove any optimizations without energies
             v2 = [x for x in v if x.energies]
             if v2:
-                self.minimum_optimizations_cache_[k] = min(v2, key=lambda x: (x.energies[-1], x.id))
+                self._minimum_optimizations_cache[k] = min(v2, key=lambda x: (x.energies[-1], x.id))
 
         self.propagate_client(self._client)
 
@@ -220,7 +220,7 @@ class TorsiondriveRecord(BaseRecord):
         opt_ids = [x[1] for x in opt_key_ids]
         opt_records = self._client.get_optimizations(opt_ids)
 
-        self.minimum_optimizations_cache_ = {deserialize_key(x[0]): y for x, y in zip(opt_key_ids, opt_records)}
+        self._minimum_optimizations_cache = {deserialize_key(x[0]): y for x, y in zip(opt_key_ids, opt_records)}
 
         self.propagate_client(self._client)
 
@@ -245,17 +245,17 @@ class TorsiondriveRecord(BaseRecord):
 
     @property
     def optimizations(self) -> Dict[str, List[OptimizationRecord]]:
-        if self.optimizations_cache_ is None:
+        if self._optimizations_cache is None:
             self._fetch_optimizations()
 
-        return self.optimizations_cache_
+        return self._optimizations_cache
 
     @property
     def minimum_optimizations(self) -> Dict[Tuple[float, ...], OptimizationRecord]:
-        if self.minimum_optimizations_cache_ is None:
+        if self._minimum_optimizations_cache is None:
             self._fetch_minimum_optimizations()
 
-        return self.minimum_optimizations_cache_
+        return self._minimum_optimizations_cache
 
     @property
     def final_energies(self) -> Dict[Tuple[float, ...], float]:

@@ -294,10 +294,10 @@ def test_optimization_client_traj(snowflake: QCATestingSnowflake, opt_file: str,
     if fetch_traj:
         rec._fetch_trajectory()
         assert rec.trajectory_ids_ is not None
-        assert rec.trajectory_records_ is not None
+        assert rec._trajectory_records is not None
     else:
         assert rec.trajectory_ids_ is None
-        assert rec.trajectory_records_ is None
+        assert rec._trajectory_records is None
 
     assert rec.trajectory_element(0).id == rec_traj.trajectory[0].id
     assert rec.trajectory_element(-1).id == rec_traj.trajectory[-1].id

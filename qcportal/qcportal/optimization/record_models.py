@@ -2,9 +2,9 @@ from copy import deepcopy
 from typing import Optional, Union, Any, List, Dict, Iterable
 
 try:
-    from pydantic.v1 import BaseModel, Field, constr, validator, Extra
+    from pydantic.v1 import BaseModel, Field, constr, validator, Extra, PrivateAttr
 except ImportError:
-    from pydantic import BaseModel, Field, constr, validator, Extra
+    from pydantic import BaseModel, Field, constr, validator, Extra, PrivateAttr
 from qcelemental.models import Molecule
 from qcelemental.models.procedures import (
     OptimizationResult,
@@ -60,13 +60,13 @@ class OptimizationRecord(BaseRecord):
     ########################################
     # Caches
     ########################################
-    trajectory_records_: Optional[List[SinglepointRecord]] = None
+    _trajectory_records: Optional[List[SinglepointRecord]] = PrivateAttr(None)
 
     def propagate_client(self, client):
         BaseRecord.propagate_client(self, client)
 
-        if self.trajectory_records_ is not None:
-            for sp in self.trajectory_records_:
+        if self._trajectory_records is not None:
+            for sp in self._trajectory_records:
                 sp.propagate_client(client)
 
     def fetch_all(self):
@@ -75,7 +75,7 @@ class OptimizationRecord(BaseRecord):
         self._fetch_final_molecule()
         self._fetch_trajectory()
 
-        for sp in self.trajectory_records_:
+        for sp in self._trajectory_records:
             sp.fetch_all()
 
     def _fetch_initial_molecule(self):
@@ -96,7 +96,7 @@ class OptimizationRecord(BaseRecord):
             List[int],
         )
 
-        self.trajectory_records_ = self._client.get_singlepoints(self.trajectory_ids_)
+        self._trajectory_records = self._client.get_singlepoints(self.trajectory_ids_)
         self.propagate_client(self._client)
 
     def _handle_includes(self, includes: Optional[Iterable[str]]):
@@ -126,14 +126,14 @@ class OptimizationRecord(BaseRecord):
 
     @property
     def trajectory(self) -> Optional[List[SinglepointRecord]]:
-        if self.trajectory_records_ is None:
+        if self._trajectory_records is None:
             self._fetch_trajectory()
 
-        return self.trajectory_records_
+        return self._trajectory_records
 
     def trajectory_element(self, trajectory_index: int) -> SinglepointRecord:
-        if self.trajectory_records_ is not None:
-            return self.trajectory_records_[trajectory_index]
+        if self._trajectory_records is not None:
+            return self._trajectory_records[trajectory_index]
         else:
             self._assert_online()
 

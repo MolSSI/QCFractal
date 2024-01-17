@@ -1,9 +1,9 @@
 from typing import List, Union, Optional, Tuple, Iterable
 
 try:
-    from pydantic.v1 import BaseModel, Extra, root_validator, constr
+    from pydantic.v1 import BaseModel, Extra, root_validator, constr, PrivateAttr
 except ImportError:
-    from pydantic import BaseModel, Extra, root_validator, constr
+    from pydantic import BaseModel, Extra, root_validator, constr, PrivateAttr
 from typing_extensions import Literal
 
 from qcportal.molecules import Molecule
@@ -81,13 +81,16 @@ class ReactionRecord(BaseRecord):
     ######################################################
     # Fields not included when fetching the record
     ######################################################
-    components_: Optional[List[ReactionComponent]] = None
+    ########################################
+    # Caches
+    ########################################
+    _components: Optional[List[ReactionComponent]] = PrivateAttr(None)
 
     def propagate_client(self, client):
         BaseRecord.propagate_client(self, client)
 
-        if self.components_ is not None:
-            for comp in self.components_:
+        if self._components is not None:
+            for comp in self._components:
                 if comp.singlepoint_record:
                     comp.singlepoint_record.propagate_client(self._client)
                 if comp.optimization_record:
@@ -97,7 +100,7 @@ class ReactionRecord(BaseRecord):
         BaseRecord.fetch_all(self)
         self._fetch_components()
 
-        for comp in self.components_:
+        for comp in self._components:
             if comp.singlepoint_record:
                 comp.singlepoint_record.fetch_all()
             if comp.optimization_record:
@@ -106,29 +109,29 @@ class ReactionRecord(BaseRecord):
     def _fetch_components(self):
         self._assert_online()
 
-        self.components_ = self._client.make_request(
+        self._components = self._client.make_request(
             "get",
             f"api/v1/records/reaction/{self.id}/components",
             List[ReactionComponent],
         )
 
         # Fetch records & molecules
-        sp_comp = [c for c in self.components_ if c.singlepoint_id is not None]
+        sp_comp = [c for c in self._components if c.singlepoint_id is not None]
         sp_ids = [c.singlepoint_id for c in sp_comp]
         sp_recs = self._client.get_singlepoints(sp_ids)
         for c, rec in zip(sp_comp, sp_recs):
             c.singlepoint_record = rec
 
-        opt_comp = [c for c in self.components_ if c.optimization_id is not None]
+        opt_comp = [c for c in self._components if c.optimization_id is not None]
         opt_ids = [c.optimization_id for c in opt_comp]
         opt_recs = self._client.get_optimizations(opt_ids)
         for c, rec in zip(opt_comp, opt_recs):
             assert rec.initial_molecule_id == c.molecule_id
             c.optimization_record = rec
 
-        mol_ids = [c.molecule_id for c in self.components_]
+        mol_ids = [c.molecule_id for c in self._components]
         mols = self._client.get_molecules(mol_ids)
-        for c, mol in zip(self.components_, mols):
+        for c, mol in zip(self._components, mols):
             assert mol.id == c.molecule_id
             c.molecule = mol
 
@@ -145,6 +148,6 @@ class ReactionRecord(BaseRecord):
 
     @property
     def components(self) -> List[ReactionComponent]:
-        if self.components_ is None:
+        if self._components is None:
             self._fetch_components()
-        return self.components_
+        return self._components

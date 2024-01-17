@@ -1,9 +1,9 @@
 from typing import List, Optional, Union, Dict, Iterable
 
 try:
-    from pydantic.v1 import BaseModel, Field, Extra, root_validator, constr, validator
+    from pydantic.v1 import BaseModel, Field, Extra, root_validator, constr, validator, PrivateAttr
 except ImportError:
-    from pydantic import BaseModel, Field, Extra, root_validator, constr, validator
+    from pydantic import BaseModel, Field, Extra, root_validator, constr, validator, PrivateAttr
 from typing_extensions import Literal
 
 from qcportal.molecules import Molecule
@@ -134,23 +134,23 @@ class NEBRecord(BaseRecord):
     singlepoints_: Optional[List[NEBSinglepoint]] = None
     optimizations_: Optional[Dict[str, NEBOptimization]] = None
     neb_result_: Optional[Molecule] = None
+    initial_chain_: Optional[List[Molecule]] = None
 
     ########################################
     # Caches
     ########################################
-    initial_chain_: Optional[List[Molecule]] = None
-    optimizations_cache_: Optional[Dict[str, OptimizationRecord]] = None
-    singlepoints_cache_: Optional[Dict[int, List[SinglepointRecord]]] = None
+    _optimizations_cache: Optional[Dict[str, OptimizationRecord]] = PrivateAttr(None)
+    _singlepoints_cache: Optional[Dict[int, List[SinglepointRecord]]] = PrivateAttr(None)
 
     def propagate_client(self, client):
         BaseRecord.propagate_client(self, client)
 
-        if self.optimizations_cache_ is not None:
-            for opt in self.optimizations_cache_.values():
+        if self._optimizations_cache is not None:
+            for opt in self._optimizations_cache.values():
                 opt.propagate_client(client)
 
-        if self.singlepoints_cache_ is not None:
-            for splist in self.singlepoints_cache_.values():
+        if self._singlepoints_cache is not None:
+            for splist in self._singlepoints_cache.values():
                 for sp2 in splist:
                     sp2.propagate_client(client)
 
@@ -162,10 +162,10 @@ class NEBRecord(BaseRecord):
         self._fetch_optimizations()
         self._fetch_neb_result()
 
-        for opt in self.optimizations_cache_.values():
+        for opt in self._optimizations_cache.values():
             opt.fetch_all()
 
-        for splist in self.singlepoints_cache_.values():
+        for splist in self._singlepoints_cache.values():
             for sp2 in splist:
                 sp2.fetch_all()
 
@@ -183,10 +183,10 @@ class NEBRecord(BaseRecord):
         opt_recs = self._client.get_optimizations(opt_ids)
         opt_map = {opt.id: opt for opt in opt_recs}
 
-        self.optimizations_cache_ = {}
+        self._optimizations_cache = {}
 
         for opt_key, opt_info in self.optimizations_.items():
-            self.optimizations_cache_[opt_key] = opt_map[opt_info.optimization_id]
+            self._optimizations_cache[opt_key] = opt_map[opt_info.optimization_id]
 
         self.propagate_client(self._client)
 
@@ -203,12 +203,12 @@ class NEBRecord(BaseRecord):
         sp_ids = [sp.singlepoint_id for sp in self.singlepoints_]
         sp_recs = self._client.get_singlepoints(sp_ids)
 
-        self.singlepoints_cache_ = {}
+        self._singlepoints_cache = {}
 
         # Singlepoints should be in order of (iteration, position)
         for sp_info, sp_rec in zip(self.singlepoints_, sp_recs):
-            self.singlepoints_cache_.setdefault(sp_info.chain_iteration, list())
-            self.singlepoints_cache_[sp_info.chain_iteration].append(sp_rec)
+            self._singlepoints_cache.setdefault(sp_info.chain_iteration, list())
+            self._singlepoints_cache[sp_info.chain_iteration].append(sp_rec)
 
         self.propagate_client(self._client)
 
@@ -255,9 +255,9 @@ class NEBRecord(BaseRecord):
 
     @property
     def singlepoints(self) -> Dict[int, List[SinglepointRecord]]:
-        if self.singlepoints_cache_ is None:
+        if self._singlepoints_cache is None:
             self._fetch_singlepoints()
-        return self.singlepoints_cache_
+        return self._singlepoints_cache
 
     @property
     def neb_result(self):
@@ -267,9 +267,9 @@ class NEBRecord(BaseRecord):
 
     @property
     def optimizations(self) -> Optional[Dict[str, OptimizationRecord]]:
-        if self.optimizations_cache_ is None:
+        if self._optimizations_cache is None:
             self._fetch_optimizations()
-        return self.optimizations_cache_
+        return self._optimizations_cache
 
     @property
     def ts_optimization(self) -> Optional[OptimizationRecord]:
