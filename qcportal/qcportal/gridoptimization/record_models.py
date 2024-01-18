@@ -227,17 +227,18 @@ class GridoptimizationRecord(BaseRecord):
         self.starting_molecule_ = self._client.get_molecules([self.starting_molecule_id])[0]
 
     def _fetch_optimizations(self):
-        self._assert_online()
+        # Always fetch optimization metadata if we can
+        if not self.offline or self.optimizations_ is None:
+            self._assert_online()
+            self.optimizations_ = self._client.make_request(
+                "get",
+                f"api/v1/records/gridoptimization/{self.id}/optimizations",
+                List[GridoptimizationOptimization],
+            )
 
-        self.optimizations_ = self._client.make_request(
-            "get",
-            f"api/v1/records/gridoptimization/{self.id}/optimizations",
-            List[GridoptimizationOptimization],
-        )
-
-        # Fetch optimization records from the server
+        # Fetch optimization records from the server or the cache
         opt_ids = [x.optimization_id for x in self.optimizations_]
-        opt_records = self._client.get_optimizations(opt_ids)
+        opt_records = self._get_child_records(opt_ids, OptimizationRecord)
 
         self._optimizations_cache = {deserialize_key(x.key): y for x, y in zip(self.optimizations_, opt_records)}
 

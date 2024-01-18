@@ -83,20 +83,20 @@ class OptimizationRecord(BaseRecord):
         self.initial_molecule_ = self._client.get_molecules([self.initial_molecule_id])[0]
 
     def _fetch_final_molecule(self):
-        self._assert_online()
         if self.final_molecule_id is not None:
+            self._assert_online()
             self.final_molecule_ = self._client.get_molecules([self.final_molecule_id])[0]
 
     def _fetch_trajectory(self):
-        self._assert_online()
+        if self.trajectory_ids_ is None:
+            self._assert_online()
+            self.trajectory_ids_ = self._client.make_request(
+                "get",
+                f"api/v1/records/optimization/{self.id}/trajectory",
+                List[int],
+            )
 
-        self.trajectory_ids_ = self._client.make_request(
-            "get",
-            f"api/v1/records/optimization/{self.id}/trajectory",
-            List[int],
-        )
-
-        self._trajectory_records = self._client.get_singlepoints(self.trajectory_ids_)
+        self._trajectory_records = self._get_child_records(self.trajectory_ids_, SinglepointRecord)
         self.propagate_client(self._client)
 
     def _handle_includes(self, includes: Optional[Iterable[str]]):
@@ -146,7 +146,7 @@ class OptimizationRecord(BaseRecord):
 
             if self.trajectory_ids_ is not None:
                 traj_id = self.trajectory_ids_[trajectory_index]
-                sp_rec = self._client.get_singlepoints(traj_id)
+                sp_rec = self._get_child_records([traj_id], SinglepointRecord)[0]
                 sp_rec.propagate_client(self._client)
                 return sp_rec
             else:

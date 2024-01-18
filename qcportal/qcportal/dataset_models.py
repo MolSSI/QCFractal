@@ -1131,7 +1131,6 @@ class BaseDataset(BaseModel):
                         existing_records = self._cache_data.get_existing_dataset_records(entry_names_batch, [spec_name])
                         existing_entries = [x[0] for x in existing_records]
                         batch_tofetch = [x for x in entry_names_batch if x not in existing_entries]
-                        # print(f"BATCH TO FETCH: {len(batch_tofetch)}")
 
                     if batch_tofetch:
                         self._internal_fetch_records(batch_tofetch, [spec_name], status, include)

@@ -177,17 +177,18 @@ class TorsiondriveRecord(BaseRecord):
         self.initial_molecules_ = self._client.get_molecules(self.initial_molecules_ids_)
 
     def _fetch_optimizations(self):
-        self._assert_online()
+        # Always fetch optimization metadata if we can
+        if not self.offline or self.optimizations_ is None:
+            self._assert_online()
+            self.optimizations_ = self._client.make_request(
+                "get",
+                f"api/v1/records/torsiondrive/{self.id}/optimizations",
+                List[TorsiondriveOptimization],
+            )
 
-        self.optimizations_ = self._client.make_request(
-            "get",
-            f"api/v1/records/torsiondrive/{self.id}/optimizations",
-            List[TorsiondriveOptimization],
-        )
-
-        # Fetch optimization records from the server
+        # Fetch optimization records from the server or cache
         opt_ids = [x.optimization_id for x in self.optimizations_]
-        opt_records = self._client.get_optimizations(opt_ids)
+        opt_records = self._get_child_records(opt_ids, OptimizationRecord)
 
         self._optimizations_cache = {}
         for td_opt, opt_record in zip(self.optimizations_, opt_records):
@@ -218,7 +219,7 @@ class TorsiondriveRecord(BaseRecord):
         # Fetch optimization records from the server
         opt_key_ids = list(min_opt_ids.items())
         opt_ids = [x[1] for x in opt_key_ids]
-        opt_records = self._client.get_optimizations(opt_ids)
+        opt_records = self._get_child_records(opt_ids, OptimizationRecord)
 
         self._minimum_optimizations_cache = {deserialize_key(x[0]): y for x, y in zip(opt_key_ids, opt_records)}
 

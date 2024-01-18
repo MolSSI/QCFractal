@@ -482,6 +482,65 @@ class BaseRecord(BaseModel):
         for nf in self.native_files_.values():
             nf.fetch_all()
 
+    def _cache_child_records(self, record_ids: Iterable[int], record_type: Type[_Record_T]) -> None:
+        """
+        Fetching child records and stores them in the cache
+
+        The cache will be checked for existing records
+        """
+
+        if self._record_cache is None:
+            return
+
+        existing_record_ids = self._record_cache.get_existing_records(record_ids)
+        records_tofetch = list(set(record_ids) - set(existing_record_ids))
+
+        if self.offline and records_tofetch:
+            raise RuntimeError("Need to fetch some records, but not connected to a client")
+
+        recs = self._client._get_records_by_type(record_type, records_tofetch)
+        self._record_cache.update_records(recs)
+
+    def _get_child_records(self, record_ids: Sequence[int], record_type: Type[_Record_T]) -> List[_Record_T]:
+        """
+        Helper function for obtaining child records either from the cache or from the server
+
+        The records are returned in the same order as the `record_ids` parameter.
+        """
+
+        if self._record_cache is None:
+            self._assert_online()
+            existing_records = []
+            records_tofetch = record_ids
+        else:
+            existing_records = self._record_cache.get_records(record_ids, record_type)
+            records_tofetch = set(record_ids) - {x.id for x in existing_records}
+
+        if self.offline and records_tofetch:
+            raise RuntimeError("Need to fetch some records, but not connected to a client")
+
+        if records_tofetch:
+            recs = self._client._get_records_by_type(record_type, list(records_tofetch))
+            if self._record_cache is not None:
+                uids = self._record_cache.update_records(recs)
+
+                for u, r in zip(uids, recs):
+                    r._record_cache = self._record_cache
+                    r._record_cache_uid = u
+
+            existing_records += recs
+
+        # Return everything in the same order as the input
+        all_recs = {r.id: r for r in existing_records}
+        ret = [all_recs.get(rid, None) for rid in record_ids]
+        if None in ret:
+            missing_ids = set(record_ids) - set(all_recs.keys())
+            raise RuntimeError(
+                f"Not all records found either in the cache or on the server. Missing records: {missing_ids}"
+            )
+
+        return ret
+
     def _assert_online(self):
         """Raises an exception if this record does not have an associated client"""
         if self.offline:

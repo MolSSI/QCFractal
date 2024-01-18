@@ -101,9 +101,8 @@ class RecordCache:
 
         record = decompress_from_cache(record_data[1], record_type)
 
-        if not self.read_only:
-            record._record_cache = self
-            record._record_cache_uid = record_data[0]
+        record._record_cache = self
+        record._record_cache_uid = record_data[0]
 
         return record
 
@@ -119,9 +118,8 @@ class RecordCache:
             for uid, compressed_record in rdata:
                 record = decompress_from_cache(compressed_record, record_type)
 
-                if not self.read_only:
-                    record._record_cache = self
-                    record._record_cache_uid = uid
+                record._record_cache = self
+                record._record_cache_uid = uid
 
                 all_records.append(record)
 
@@ -370,9 +368,8 @@ class DatasetCache(RecordCache):
 
         record = decompress_from_cache(record_data[1], self._record_type)
 
-        if not self.read_only:
-            record._record_cache = self
-            record._record_cache_uid = record_data[0]
+        record._record_cache = self
+        record._record_cache_uid = record_data[0]
 
         return record
 
@@ -395,9 +392,8 @@ class DatasetCache(RecordCache):
             for uid, ename, sname, compressed_record in rdata:
                 record = decompress_from_cache(compressed_record, self._record_type)
 
-                if not self.read_only:
-                    record._record_cache = self
-                    record._record_cache_uid = uid
+                record._record_cache = self
+                record._record_cache_uid = uid
 
                 all_records.append((ename, sname, record))
 

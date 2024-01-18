@@ -109,31 +109,33 @@ class ReactionRecord(BaseRecord):
     def _fetch_components(self):
         self._assert_online()
 
-        self._components = self._client.make_request(
-            "get",
-            f"api/v1/records/reaction/{self.id}/components",
-            List[ReactionComponent],
-        )
+        if not self.offline or self._components is None:
+            self._assert_online()
+            self._components = self._client.make_request(
+                "get",
+                f"api/v1/records/reaction/{self.id}/components",
+                List[ReactionComponent],
+            )
 
-        # Fetch records & molecules
+            mol_ids = [c.molecule_id for c in self._components]
+            mols = self._client.get_molecules(mol_ids)
+            for c, mol in zip(self._components, mols):
+                assert mol.id == c.molecule_id
+                c.molecule = mol
+
+        # Fetch records from server or cache
         sp_comp = [c for c in self._components if c.singlepoint_id is not None]
         sp_ids = [c.singlepoint_id for c in sp_comp]
-        sp_recs = self._client.get_singlepoints(sp_ids)
+        sp_recs = self._get_child_records(sp_ids, SinglepointRecord)
         for c, rec in zip(sp_comp, sp_recs):
             c.singlepoint_record = rec
 
         opt_comp = [c for c in self._components if c.optimization_id is not None]
         opt_ids = [c.optimization_id for c in opt_comp]
-        opt_recs = self._client.get_optimizations(opt_ids)
+        opt_recs = self._get_child_records(opt_ids, OptimizationRecord)
         for c, rec in zip(opt_comp, opt_recs):
             assert rec.initial_molecule_id == c.molecule_id
             c.optimization_record = rec
-
-        mol_ids = [c.molecule_id for c in self._components]
-        mols = self._client.get_molecules(mol_ids)
-        for c, mol in zip(self._components, mols):
-            assert mol.id == c.molecule_id
-            c.molecule = mol
 
         self.propagate_client(self._client)
 

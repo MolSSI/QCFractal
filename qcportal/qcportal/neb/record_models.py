@@ -172,15 +172,17 @@ class NEBRecord(BaseRecord):
     def _fetch_optimizations(self):
         self._assert_online()
 
-        self.optimizations_ = self._client.make_request(
-            "get",
-            f"api/v1/records/neb/{self.id}/optimizations",
-            Dict[str, NEBOptimization],
-        )
+        if not self.offline or self.optimizations_ is None:
+            self._assert_online()
+            self.optimizations_ = self._client.make_request(
+                "get",
+                f"api/v1/records/neb/{self.id}/optimizations",
+                Dict[str, NEBOptimization],
+            )
 
         # Fetch optimization records from server
         opt_ids = [opt.optimization_id for opt in self.optimizations_.values()]
-        opt_recs = self._client.get_optimizations(opt_ids)
+        opt_recs = self._get_child_records(opt_ids, OptimizationRecord)
         opt_map = {opt.id: opt for opt in opt_recs}
 
         self._optimizations_cache = {}
@@ -193,15 +195,17 @@ class NEBRecord(BaseRecord):
     def _fetch_singlepoints(self):
         self._assert_online()
 
-        self.singlepoints_ = self._client.make_request(
-            "get",
-            f"api/v1/records/neb/{self.id}/singlepoints",
-            List[NEBSinglepoint],
-        )
+        if not self.offline or self.singlepoints_ is None:
+            self._assert_online()
+            self.singlepoints_ = self._client.make_request(
+                "get",
+                f"api/v1/records/neb/{self.id}/singlepoints",
+                List[NEBSinglepoint],
+            )
 
-        # Fetch singlepoint records from server
+        # Fetch singlepoint records from server or the cache
         sp_ids = [sp.singlepoint_id for sp in self.singlepoints_]
-        sp_recs = self._client.get_singlepoints(sp_ids)
+        sp_recs = self._get_child_records(sp_ids, SinglepointRecord)
 
         self._singlepoints_cache = {}
 

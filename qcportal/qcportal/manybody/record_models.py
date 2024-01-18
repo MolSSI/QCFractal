@@ -112,24 +112,31 @@ class ManybodyRecord(BaseRecord):
     def _fetch_clusters(self):
         self._assert_online()
 
-        self._clusters = self._client.make_request(
-            "get",
-            f"api/v1/records/manybody/{self.id}/clusters",
-            List[ManybodyCluster],
-        )
+        if not self.offline or self._clusters is None:
+            self._clusters = self._client.make_request(
+                "get",
+                f"api/v1/records/manybody/{self.id}/clusters",
+                List[ManybodyCluster],
+            )
+
+            mol_ids = [x.molecule_id for x in self._clusters]
+            mols = self._client.get_molecules(mol_ids)
+
+            for cluster, mol in zip(self._clusters, mols):
+                assert mol.id == cluster.molecule_id
+                cluster.molecule = mol
 
         # Fetch singlepoint records and molecules
         sp_ids = [x.singlepoint_id for x in self._clusters]
-        sp_recs = self._client.get_singlepoints(sp_ids)
+        sp_recs = self._get_child_records(sp_ids, SinglepointRecord)
 
-        mol_ids = [x.molecule_id for x in self._clusters]
-        mols = self._client.get_molecules(mol_ids)
-
-        for cluster, sp, mol in zip(self._clusters, sp_recs, mols):
+        for (
+            cluster,
+            sp,
+        ) in zip(self._clusters, sp_recs):
             assert sp.id == cluster.singlepoint_id
-            assert sp.molecule_id == mol.id == cluster.molecule_id
+            assert sp.molecule_id == cluster.molecule_id
             cluster.singlepoint_record = sp
-            cluster.molecule = mol
 
         self.propagate_client(self._client)
 
