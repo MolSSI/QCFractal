@@ -122,6 +122,7 @@ class SinglepointRecord(BaseRecord):
 
         if self.specification.protocols.wavefunction != WavefunctionProtocolEnum.none:
             self._fetch_wavefunction()
+            self.wavefunction_._fetch_raw_data()
         else:
             self.wavefunction_ = None
 
