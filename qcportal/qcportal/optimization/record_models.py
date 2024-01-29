@@ -51,11 +51,11 @@ class OptimizationRecord(BaseRecord):
     energies: Optional[List[float]]
 
     ######################################################
-    # Fields not included when fetching the record
+    # Fields not always included when fetching the record
     ######################################################
-    initial_molecule_: Optional[Molecule] = None
-    final_molecule_: Optional[Molecule] = None
-    trajectory_ids_: Optional[List[int]] = None
+    initial_molecule_: Optional[Molecule] = Field(None, alias="initial_molecule")
+    final_molecule_: Optional[Molecule] = Field(None, alias="final_molecule")
+    trajectory_ids_: Optional[List[int]] = Field(None, alias="trajectory")
 
     ########################################
     # Caches

@@ -190,11 +190,11 @@ class GridoptimizationRecord(BaseRecord):
     starting_molecule_id: Optional[int]
 
     ######################################################
-    # Fields not included when fetching the record
+    # Fields not always included when fetching the record
     ######################################################
-    initial_molecule_: Optional[Molecule] = None
-    starting_molecule_: Optional[Molecule] = None
-    optimizations_: Optional[List[GridoptimizationOptimization]] = None
+    initial_molecule_: Optional[Molecule] = Field(None, alias="initial_molecule")
+    starting_molecule_: Optional[Molecule] = Field(None, alias="starting_molecule")
+    optimizations_: Optional[List[GridoptimizationOptimization]] = Field(None, alias="optimizations")
 
     ########################################
     # Caches

@@ -78,9 +78,6 @@ class ReactionRecord(BaseRecord):
 
     total_energy: Optional[float]
 
-    ######################################################
-    # Fields not included when fetching the record
-    ######################################################
     ########################################
     # Caches
     ########################################

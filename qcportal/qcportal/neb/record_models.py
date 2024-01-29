@@ -130,14 +130,14 @@ class NEBRecord(BaseRecord):
     specification: NEBSpecification
 
     ######################################################
-    # Fields not included when fetching the record
+    # Fields not always included when fetching the record
     ######################################################
-    initial_chain_molecule_ids_: Optional[List[int]] = None
-    singlepoints_: Optional[List[NEBSinglepoint]] = None
-    optimizations_: Optional[Dict[str, NEBOptimization]] = None
-    ts_hessian_: Optional[SinglepointRecord] = None
-    neb_result_: Optional[Molecule] = None
-    initial_chain_: Optional[List[Molecule]] = None
+    initial_chain_molecule_ids_: Optional[List[int]] = Field(None, alias="initial_chain_molecule_ids")
+    singlepoints_: Optional[List[NEBSinglepoint]] = Field(None, alias="singlepoints")
+    optimizations_: Optional[Dict[str, NEBOptimization]] = Field(None, alias="optimizations")
+    ts_hessian_: Optional[SinglepointRecord] = Field(None, alias="ts_hessian")
+    neb_result_: Optional[Molecule] = Field(None, alias="neb_result")
+    initial_chain_: Optional[List[Molecule]] = Field(None, alias="initial_chain")
 
     ########################################
     # Caches

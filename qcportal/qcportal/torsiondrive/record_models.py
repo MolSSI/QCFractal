@@ -130,11 +130,11 @@ class TorsiondriveRecord(BaseRecord):
     specification: TorsiondriveSpecification
 
     ######################################################
-    # Fields not included when fetching the record
+    # Fields not always included when fetching the record
     ######################################################
-    initial_molecules_ids_: Optional[List[int]] = None
-    optimizations_: Optional[List[TorsiondriveOptimization]] = None
-    initial_molecules_: Optional[List[Molecule]] = None
+    initial_molecules_ids_: Optional[List[int]] = Field(None, alias="initial_molecules_ids")
+    optimizations_: Optional[List[TorsiondriveOptimization]] = Field(None, alias="optimizations")
+    initial_molecules_: Optional[List[Molecule]] = Field(None, alias="initial_molecules")
 
     ########################################
     # Caches

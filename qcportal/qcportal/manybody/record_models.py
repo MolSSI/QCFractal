@@ -2,9 +2,9 @@ from enum import Enum
 from typing import List, Union, Optional, Dict, Any, Iterable
 
 try:
-    from pydantic.v1 import BaseModel, Extra, validator, constr, PrivateAttr
+    from pydantic.v1 import BaseModel, Extra, validator, constr, PrivateAttr, Field
 except ImportError:
-    from pydantic import BaseModel, Extra, validator, constr, PrivateAttr
+    from pydantic import BaseModel, Extra, validator, constr, PrivateAttr, Field
 from typing_extensions import Literal
 
 from qcportal.molecules import Molecule
@@ -78,9 +78,9 @@ class ManybodyRecord(BaseRecord):
     initial_molecule_id: int
 
     ######################################################
-    # Fields not included when fetching the record
+    # Fields not always included when fetching the record
     ######################################################
-    initial_molecule_: Optional[Molecule] = None
+    initial_molecule_: Optional[Molecule] = Field(None, alias="initial_molecule")
 
     ########################################
     # Caches
