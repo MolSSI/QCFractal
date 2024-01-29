@@ -388,23 +388,6 @@ class ReactionRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> List[int]:
-        """
-        Query reaction records
-
-        Parameters
-        ----------
-        query_data
-            Fields/filters to query for
-        session
-            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed (but not committed) before returning from this function.
-
-        Returns
-        -------
-        :
-            A list of record ids that were found in the database.
-        """
-
         and_query = []
         need_qc_spec_join = False
         need_opt_spec_join = False

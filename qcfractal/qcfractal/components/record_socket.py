@@ -160,6 +160,31 @@ class BaseRecordSocket:
         with self.root_socket.optional_session(session, True) as session:
             return get_general(session, self.record_orm, self.record_orm.id, record_ids, include, exclude, missing_ok)
 
+    def query(
+        self,
+        query_data: RecordQueryFilters,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[int]:
+        """
+        Query records of a particular type
+
+        Parameters
+        ----------
+        query_data
+            Fields/filters to query for
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            A list of record ids that were found in the database.
+        """
+
+        raise NotImplementedError(f"query function not implemented for {type(self)}! This is a developer error")
+
     def generate_task_specification(self, record_orm: BaseRecordORM) -> Dict[str, Any]:
         """
         Generate the actual QCSchema input and related fields for a task
