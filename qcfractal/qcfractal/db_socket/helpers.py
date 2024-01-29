@@ -133,8 +133,8 @@ def _get_default_attrs(orm_type: Type[_ORM_T]) -> _ProjectionDefaultInformation:
 def _get_query_proj_options(
     orm_type: Type[_ORM_T], include: Optional[Tuple[str, ...]], exclude: Optional[Tuple[str, ...]]
 ) -> List[Any]:
-    # Adjust include to be the default "None" if only * is specified
-    if include == ("*",):
+    # Adjust include to be the default "None" if * is specified and no exclude is given
+    if include and "*" in include and not exclude:
         include = None
 
     # If include and exclude are both none (common occurrence), then
@@ -168,6 +168,7 @@ def _get_query_proj_options(
     elif include_set is not None and not exclude_set:
         # Include, but with no excludes
         # Remove any columns/relationships not specified in the includes
+        # (handling of the * should have been done already)
         defer_columns = defaults.default_columns - include_set
         noload_rels = defaults.default_relationships - include_set
 
@@ -176,8 +177,14 @@ def _get_query_proj_options(
 
     elif include_set is not None and exclude_set:
         # Both includes and excludes specified
-        defer_columns = (defaults.default_columns - include_set) | (defaults.default_columns & exclude_set)
-        noload_rels = (defaults.default_relationships - include_set) | (defaults.default_relationships & exclude_set)
+        if "*" not in include_set:
+            defer_columns = (defaults.default_columns - include_set) | (defaults.default_columns & exclude_set)
+            noload_rels = (defaults.default_relationships - include_set) | (
+                defaults.default_relationships & exclude_set
+            )
+        else:
+            defer_columns = defaults.default_columns & exclude_set
+            noload_rels = defaults.default_relationships & exclude_set
 
         options += [lazyload(defaults.all_attrs[x]) for x in noload_rels]
         options += [defer(defaults.all_attrs[x]) for x in defer_columns]
@@ -202,6 +209,9 @@ def get_query_proj_options(
     .options() function call (as part of a statement) that implements a projection. That is,
     the options will select/deselect columns and relationships that are specified as strings
     to the `include` and `exclude` arguments of this function.
+
+    Not that this function does not allow for including columns or relationships that are not
+    included by default
     """
 
     # Wrap the include/exclude in tuples for memoization
@@ -461,6 +471,7 @@ def get_general(
     include: Optional[Iterable[str]],
     exclude: Optional[Iterable[str]],
     missing_ok: bool,
+    additional_options: Optional[Iterable[Any]] = None,
 ) -> List[Optional[Dict[str, Any]]]:
     """
     Perform a query for records based on a unique id
@@ -469,7 +480,8 @@ def get_general(
     to make sure that the returned ORM are in the same order as the input, and to optionally check that
     all required records exist.
 
-    Relationships that are to be loaded will be loaded via selectinload.
+    If additional options are specified, they are appended to the query statement. These are appended after
+    any projection objects created based on include/exclude
 
     Parameters
     ----------
@@ -488,6 +500,8 @@ def get_general(
     missing_ok
         If False, an exception is raised if one of the values is missing. Else, None is returned in the list
         in place of the missing data
+    additional_options
+        Extra SQLAlchemy options objects to append to the query
 
     Returns
     -------
@@ -512,6 +526,8 @@ def get_general(
 
     stmt = select(orm_type).filter(search_col.in_(unique_values))
     stmt = stmt.options(*proj_options)
+    if additional_options:
+        stmt = stmt.options(*additional_options)
 
     results = session.execute(stmt).scalars().all()
 
