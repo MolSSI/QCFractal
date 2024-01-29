@@ -184,23 +184,6 @@ class OptimizationRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> List[int]:
-        """
-        Query optimization records
-
-        Parameters
-        ----------
-        query_data
-            Fields/filters to query for
-        session
-            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed (but not committed) before returning from this function.
-
-        Returns
-        -------
-        :
-            A list of record ids that were found in the database.
-        """
-
         and_query = []
         need_spspec_join = False
         need_optspec_join = False
