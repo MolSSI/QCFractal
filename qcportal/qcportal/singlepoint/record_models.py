@@ -105,10 +105,10 @@ class SinglepointRecord(BaseRecord):
     molecule_id: int
 
     ######################################################
-    # Fields not included when fetching the record
+    # Fields not always included when fetching the record
     ######################################################
-    molecule_: Optional[Molecule] = None
-    wavefunction_: Optional[Wavefunction] = None
+    molecule_: Optional[Molecule] = Field(None, alias="molecule")
+    wavefunction_: Optional[Wavefunction] = Field(None, alias="wavefunction")
 
     def propagate_client(self, client):
         BaseRecord.propagate_client(self, client)
