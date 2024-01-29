@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+import dataclasses
 import logging
-from functools import lru_cache
 from typing import TYPE_CHECKING
 
 from sqlalchemy import tuple_, and_, or_, func, select, inspect
@@ -45,6 +45,30 @@ batchsize = 200
 logger = logging.getLogger(__name__)
 
 
+@dataclasses.dataclass
+class _ProjectionDefaultInformation:
+    """
+    Information about the default columns and relationships for a given ORM type
+
+    This is used to memoize the results of the _get_default_attrs function
+    """
+
+    all_attrs: Any
+    columns: Set[str]
+    relationships: Set[str]
+
+    deferred_columns: Set[str]
+    lazy_relationships: Set[str]
+
+    default_columns: Set[str]
+    default_relationships: Set[str]
+
+
+# Cache for inspection information and projection options
+_query_defaults_cache: Dict[str, _ProjectionDefaultInformation] = {}
+_query_proj_cache = {}
+
+
 def get_count(session, stmt):
     """
     Returns a total count of an sql query statement
@@ -55,7 +79,57 @@ def get_count(session, stmt):
     return session.scalar(select(func.count()).select_from(stmt.subquery()))
 
 
-@lru_cache(maxsize=1000)
+def _get_default_attrs(orm_type: Type[_ORM_T]) -> _ProjectionDefaultInformation:
+    """
+    Obtain default attributes for an ORM type
+
+    This function returns information about the default columns and relationships for a given ORM type.
+    This information is used to determine what columns and relationships are loaded by default when
+    querying for ORM objects. This information is memoized.
+
+    Parameters
+    ----------
+    orm_type
+        The ORM type to inspect
+
+    Returns
+    -------
+    :
+        Information about the default columns and relationships for the given ORM type
+    """
+
+    key = orm_type.__name__
+    if key in _query_defaults_cache:
+        return _query_defaults_cache[key]
+
+    mapper = inspect(orm_type)
+
+    # We use mapper.mapper. This works for the usual ORM, as well as
+    # with_polymorphic objects
+    all_attrs = mapper.mapper.attrs
+    columns = set(mapper.mapper.column_attrs.keys())
+    relationships = set(mapper.mapper.relationships.keys())
+
+    deferred_columns = set(k for k, v in mapper.mapper.column_attrs.items() if v.deferred)
+    lazy_relationships = set(k for k, v in mapper.mapper.relationships.items() if v.lazy in lazy_opts)
+
+    default_columns = set(columns) - set(deferred_columns)
+    default_relationships = set(relationships) - set(lazy_relationships)
+
+    ret = _ProjectionDefaultInformation(
+        all_attrs=all_attrs,
+        columns=columns,
+        relationships=relationships,
+        deferred_columns=deferred_columns,
+        lazy_relationships=lazy_relationships,
+        default_columns=default_columns,
+        default_relationships=default_relationships,
+    )
+
+    _query_defaults_cache[key] = ret
+    return ret
+
+
 def _get_query_proj_options(
     orm_type: Type[_ORM_T], include: Optional[Tuple[str, ...]], exclude: Optional[Tuple[str, ...]]
 ) -> List[Any]:
@@ -77,42 +151,36 @@ def _get_query_proj_options(
     if exclude is not None:
         exclude_set = set(exclude)
 
-    mapper = inspect(orm_type)
+    # Get information about the defaults
+    defaults = _get_default_attrs(orm_type)
 
-    # We use mapper.mapper. This works for the usual ORM, as well as
-    # with_polymorphic objects
-    all_attrs = mapper.mapper.attrs
-    columns = set(mapper.mapper.column_attrs.keys())
-    relationships = set(mapper.mapper.relationships.keys())
-
-    lazy_relationships = set(k for k, v in mapper.mapper.relationships.items() if v.lazy in lazy_opts)
-    default_relationships = relationships - lazy_relationships
-
+    options = []
     if include_set is None and exclude_set:
         # no includes, some excludes
         # load only the non-excluded columns
         # skip loading excluded relationships
-        defer_columns = columns & exclude_set
-        noload_rels = default_relationships & exclude_set
+        defer_columns = defaults.default_columns & exclude_set
+        noload_rels = defaults.default_relationships & exclude_set
 
-        options = [lazyload(all_attrs[x]) for x in noload_rels]
-        options += [defer(all_attrs[x]) for x in defer_columns]
+        options += [lazyload(defaults.all_attrs[x]) for x in noload_rels]
+        options += [defer(defaults.all_attrs[x]) for x in defer_columns]
 
     elif include_set is not None and not exclude_set:
         # Include, but with no excludes
-        defer_columns = columns - include_set
-        noload_rels = default_relationships - include_set
+        # Remove any columns/relationships not specified in the includes
+        defer_columns = defaults.default_columns - include_set
+        noload_rels = defaults.default_relationships - include_set
 
-        options = [lazyload(all_attrs[x]) for x in noload_rels]
-        options += [defer(all_attrs[x]) for x in defer_columns]
+        options += [lazyload(defaults.all_attrs[x]) for x in noload_rels]
+        options += [defer(defaults.all_attrs[x]) for x in defer_columns]
 
     elif include_set is not None and exclude_set:
         # Both includes and excludes specified
-        defer_columns = (columns - include_set) | (columns & exclude_set)
-        noload_rels = (default_relationships - include_set) | (default_relationships & exclude_set)
+        defer_columns = (defaults.default_columns - include_set) | (defaults.default_columns & exclude_set)
+        noload_rels = (defaults.default_relationships - include_set) | (defaults.default_relationships & exclude_set)
 
-        options = [lazyload(all_attrs[x]) for x in noload_rels]
-        options += [defer(all_attrs[x]) for x in defer_columns]
+        options += [lazyload(defaults.all_attrs[x]) for x in noload_rels]
+        options += [defer(defaults.all_attrs[x]) for x in defer_columns]
 
     else:
         raise RuntimeError(
@@ -134,19 +202,21 @@ def get_query_proj_options(
     .options() function call (as part of a statement) that implements a projection. That is,
     the options will select/deselect columns and relationships that are specified as strings
     to the `include` and `exclude` arguments of this function.
-
-    If `restrict` is true, this function can only be used to remove columns/relationships from
-    the default. If it is false, the additional columns and relationships can be
-    loaded
     """
 
     # Wrap the include/exclude in tuples for memoization
     if include is not None:
-        include = tuple(include)
+        include = tuple(sorted(include))
     if exclude is not None:
-        exclude = tuple(exclude)
+        exclude = tuple(sorted(exclude))
 
-    return _get_query_proj_options(orm_type, include, exclude)
+    key = (orm_type.__name__, include, exclude)
+    if key in _query_proj_cache:
+        return _query_proj_cache[key]
+    else:
+        ret = _get_query_proj_options(orm_type, include, exclude)
+        _query_proj_cache[key] = ret
+        return ret
 
 
 def find_all_indices(lst: Sequence[_T], value: _T) -> Tuple[int, ...]:
