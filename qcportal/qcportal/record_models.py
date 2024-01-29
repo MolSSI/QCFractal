@@ -378,13 +378,13 @@ class BaseRecord(BaseModel):
     owner_group: Optional[str]
 
     ######################################################
-    # Fields not included when fetching the record
+    # Fields not always included when fetching the record
     ######################################################
-    compute_history_: Optional[List[ComputeHistory]] = None
-    task_: Optional[RecordTask] = None
-    service_: Optional[RecordService] = None
-    comments_: Optional[List[RecordComment]] = None
-    native_files_: Optional[Dict[str, NativeFile]] = None
+    compute_history_: Optional[List[ComputeHistory]] = Field(None, alias="compute_history")
+    task_: Optional[RecordTask] = Field(None, alias="task")
+    service_: Optional[RecordService] = Field(None, alias="service")
+    comments_: Optional[List[RecordComment]] = Field(None, alias="comments")
+    native_files_: Optional[Dict[str, NativeFile]] = Field(None, alias="native_files")
 
     # Private non-pydantic fields
     _client: Any = PrivateAttr(None)
@@ -420,7 +420,14 @@ class BaseRecord(BaseModel):
         cls._all_subclasses[record_type] = cls
 
     def __del__(self):
-        if self._record_cache is not None and self._record_cache_uid is not None and not self._record_cache.read_only:
+        # Sometimes this won't exist if there is an exception during construction
+        if (
+            hasattr(self, "_record_cache")
+            and hasattr(self, "_record_cache_uid")
+            and self._record_cache is not None
+            and self._record_cache_uid is not None
+            and not self._record_cache.read_only
+        ):
             self._record_cache.writeback_record(self._record_cache_uid, self)
 
         s = super()
