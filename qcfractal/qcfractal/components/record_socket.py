@@ -157,8 +157,7 @@ class BaseRecordSocket:
             If missing_ok is True, then this list will contain None where the molecule was missing.
         """
 
-        with self.root_socket.optional_session(session, True) as session:
-            return get_general(session, self.record_orm, self.record_orm.id, record_ids, include, exclude, missing_ok)
+        raise NotImplementedError(f"get function not implemented for {type(self)}! This is a developer error")
 
     def query(
         self,
@@ -809,6 +808,20 @@ class RecordSocket:
             session=session,
         )
 
+    def get_base(
+        self,
+        orm_type: Type[BaseRecordORM],
+        record_ids: Sequence[int],
+        include: Optional[Sequence[str]] = None,
+        exclude: Optional[Sequence[str]] = None,
+        missing_ok: bool = False,
+        additional_options: Optional[List[Any]] = None,
+        *,
+        session: Optional[Session] = None,
+    ):
+        with self.root_socket.optional_session(session, True) as session:
+            return get_general(session, orm_type, orm_type.id, record_ids, include, exclude, missing_ok)
+
     def get(
         self,
         record_ids: Sequence[int],
@@ -845,13 +858,12 @@ class RecordSocket:
 
         # If all columns are included, then we can load
         # the data from derived classes as well.
-        if (include is None or "*" in include) and not exclude:
+        if include is None and not exclude:
             wp = with_polymorphic(BaseRecordORM, "*")
         else:
             wp = BaseRecordORM
 
-        with self.root_socket.optional_session(session, True) as session:
-            return get_general(session, wp, wp.id, record_ids, include, exclude, missing_ok)
+        return self.get_base(wp, record_ids, include, exclude, missing_ok, session=session)
 
     def generate_task_specification(self, task_orm: TaskQueueORM) -> Dict[str, Any]:
         """
