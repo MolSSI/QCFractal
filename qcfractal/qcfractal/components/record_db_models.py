@@ -109,7 +109,6 @@ class OutputStoreORM(BaseORM):
         return decompress(self.data, self.compression_type)
 
 
-
 # Mark the storage of the data column as external
 event.listen(
     OutputStoreORM.__table__,
