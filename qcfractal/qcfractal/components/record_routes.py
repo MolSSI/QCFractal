@@ -73,7 +73,7 @@ def get_record_waiting_reason_v1(record_id: int):
 @wrap_route("READ")
 def get_records_v1(record_id: int, url_params: ProjURLParameters, record_type: Optional[str] = None):
     record_socket = storage_socket.records.get_socket(record_type)
-    return record_socket.get([record_id], url_params.include, url_params.exclude)
+    return record_socket.get([record_id], url_params.include, url_params.exclude)[0]
 
 
 @api_v1.route("/records/<string:record_type>/bulkGet", methods=["POST"])
