@@ -1,6 +1,6 @@
 from copy import deepcopy
 from enum import Enum
-from typing import Optional, Union, Any, List, Dict, Iterable, Tuple
+from typing import Optional, Union, Any, List, Dict, Tuple
 
 try:
     from pydantic.v1 import BaseModel, Field, constr, validator, Extra, PrivateAttr
@@ -116,15 +116,12 @@ class SinglepointRecord(BaseRecord):
         if self.wavefunction_ is not None:
             self.wavefunction_.propagate_client(self._client, self._base_url)
 
-    def fetch_all(self):
-        BaseRecord.fetch_all(self)
-        self._fetch_molecule()
-
-        if self.specification.protocols.wavefunction != WavefunctionProtocolEnum.none:
-            self._fetch_wavefunction()
-            self.wavefunction_._fetch_raw_data()
-        else:
-            self.wavefunction_ = None
+    def _fetch_all(self, recursive: bool = False) -> Dict[str, Any]:
+        extra_data = BaseRecord._fetch_all(self, recursive=recursive)
+        self.molecule_ = extra_data.get("molecule", None)
+        self.wavefunction_ = extra_data.get("wavefunction", None)
+        self.propagate_client(self._client)
+        return extra_data
 
     def _fetch_molecule(self):
         self._assert_online()
