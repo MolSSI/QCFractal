@@ -819,8 +819,28 @@ class RecordSocket:
         *,
         session: Optional[Session] = None,
     ):
+        options = []
+        if include is not None:
+            if "**" in include or "compute_history" in include or "outputs" in include:
+                options.append(selectinload(orm_type.compute_history))
+            if "**" in include or "outputs" in include:
+                options.append(
+                    selectinload(orm_type.compute_history, RecordComputeHistoryORM.outputs).undefer(OutputStoreORM.data)
+                )
+            if "**" in include or "task" in include:
+                options.append(joinedload(orm_type.task))
+            if "**" in include or "service" in include:
+                options.append(joinedload(orm_type.service))
+            if "**" in include or "comments" in include:
+                options.append(selectinload(orm_type.comments))
+            if "**" in include or "native_files" in include:
+                options.append(selectinload(orm_type.native_files).options(undefer(NativeFileORM.data)))
+
+        if additional_options:
+            options.extend(additional_options)
+
         with self.root_socket.optional_session(session, True) as session:
-            return get_general(session, orm_type, orm_type.id, record_ids, include, exclude, missing_ok)
+            return get_general(session, orm_type, orm_type.id, record_ids, include, exclude, missing_ok, options)
 
     def get(
         self,
@@ -858,7 +878,7 @@ class RecordSocket:
 
         # If all columns are included, then we can load
         # the data from derived classes as well.
-        if include is None and not exclude:
+        if (include is None or "*" in include) and not exclude:
             wp = with_polymorphic(BaseRecordORM, "*")
         else:
             wp = BaseRecordORM
