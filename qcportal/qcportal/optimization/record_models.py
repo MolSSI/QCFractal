@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Optional, Union, Any, List, Dict, Iterable
+from typing import Optional, Union, Any, List, Dict
 
 try:
     from pydantic.v1 import BaseModel, Field, constr, validator, Extra, PrivateAttr
@@ -13,6 +13,7 @@ from qcelemental.models.procedures import (
     Model as AtomicResultModel,
 )
 from typing_extensions import Literal
+from typing import Iterable
 
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters, RecordStatusEnum
 from qcportal.singlepoint import SinglepointProtocols, SinglepointRecord, QCSpecification, SinglepointDriver
@@ -55,7 +56,7 @@ class OptimizationRecord(BaseRecord):
     ######################################################
     initial_molecule_: Optional[Molecule] = Field(None, alias="initial_molecule")
     final_molecule_: Optional[Molecule] = Field(None, alias="final_molecule")
-    trajectory_ids_: Optional[List[int]] = Field(None, alias="trajectory")
+    trajectory_ids_: Optional[List[int]] = Field(None, alias="trajectory_ids")
 
     ########################################
     # Caches
@@ -69,14 +70,17 @@ class OptimizationRecord(BaseRecord):
             for sp in self._trajectory_records:
                 sp.propagate_client(client)
 
-    def fetch_all(self):
-        BaseRecord.fetch_all(self)
-        self._fetch_initial_molecule()
-        self._fetch_final_molecule()
-        self._fetch_trajectory()
+    def _fetch_all(self, recursive: bool = False) -> Dict[str, Any]:
+        extra_data = BaseRecord._fetch_all(self, recursive=recursive)
+        self.initial_molecule_ = extra_data.get("initial_molecule", None)
+        self.final_molecule_ = extra_data.get("final_molecule", None)
+        self.trajectory_ids_ = extra_data.get("trajectory_ids", None)
 
-        for sp in self._trajectory_records:
-            sp.fetch_all()
+        if recursive and self.trajectory_ids_:
+            self._fetch_trajectory(include=["**"])
+
+        self.propagate_client(self._client)
+        return extra_data
 
     def _fetch_initial_molecule(self):
         self._assert_online()
@@ -87,7 +91,7 @@ class OptimizationRecord(BaseRecord):
             self._assert_online()
             self.final_molecule_ = self._client.get_molecules([self.final_molecule_id])[0]
 
-    def _fetch_trajectory(self):
+    def _fetch_trajectory(self, include: Optional[Iterable[str]] = None):
         if self.trajectory_ids_ is None:
             self._assert_online()
             self.trajectory_ids_ = self._client.make_request(
@@ -96,7 +100,7 @@ class OptimizationRecord(BaseRecord):
                 List[int],
             )
 
-        self._trajectory_records = self._get_child_records(self.trajectory_ids_, SinglepointRecord)
+        self._trajectory_records = self._get_child_records(self.trajectory_ids_, SinglepointRecord, include)
         self.propagate_client(self._client)
 
     @property
@@ -115,7 +119,6 @@ class OptimizationRecord(BaseRecord):
     def trajectory(self) -> Optional[List[SinglepointRecord]]:
         if self._trajectory_records is None:
             self._fetch_trajectory()
-
         return self._trajectory_records
 
     def trajectory_element(self, trajectory_index: int) -> SinglepointRecord:

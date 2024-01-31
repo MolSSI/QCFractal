@@ -27,6 +27,9 @@ def test_optimizationrecord_model(snowflake: QCATestingSnowflake, includes: Opti
     record = snowflake_client.get_optimizations(rec_id, include=includes)
 
     if includes is not None:
+        assert record.initial_molecule_ is not None
+        assert record.trajectory_ids_ is not None
+        record.fetch_all(True)
         record._client = None
         assert record.offline
 
