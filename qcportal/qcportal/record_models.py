@@ -749,7 +749,7 @@ class RecordQueryIterator(QueryIteratorBase[_Record_T]):
         self,
         client,
         query_filters: RecordQueryFilters,
-        record_type: Optional[str],
+        record_type: Type[_Record_T],
         include: Optional[Iterable[str]] = None,
     ):
         """
@@ -780,14 +780,16 @@ class RecordQueryIterator(QueryIteratorBase[_Record_T]):
                 body=self._query_filters,
             )
         else:
+            # Get the record type string. This is kind of ugly, but works.
+            record_type_str = self.record_type.__fields__["record_type"].default
             record_ids = self._client.make_request(
                 "post",
-                f"api/v1/records/{self.record_type}/query",
+                f"api/v1/records/{record_type_str}/query",
                 List[int],
                 body=self._query_filters,
             )
 
-        records: List[_Record_T] = self._client.get_records(record_ids, include=self.include)
+        records: List[_Record_T] = self._client._get_records_by_type(self.record_type, record_ids, include=self.include)
 
         return records
 
