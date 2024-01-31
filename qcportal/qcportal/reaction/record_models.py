@@ -136,15 +136,6 @@ class ReactionRecord(BaseRecord):
 
         self.propagate_client(self._client)
 
-    def _handle_includes(self, includes: Optional[Iterable[str]]):
-        if includes is None:
-            return
-
-        BaseRecord._handle_includes(self, includes)
-
-        if "components" in includes:
-            self._fetch_components()
-
     @property
     def components(self) -> List[ReactionComponent]:
         if self._components is None:
