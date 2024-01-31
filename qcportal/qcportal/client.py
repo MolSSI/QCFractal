@@ -1105,7 +1105,7 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = SinglepointQueryFilters(**filter_dict)
-        return RecordQueryIterator[SinglepointRecord](self, filter_data, "singlepoint", include)
+        return RecordQueryIterator[SinglepointRecord](self, filter_data, SinglepointRecord, include)
 
     ##############################################################
     # Optimization calculations
@@ -1328,7 +1328,7 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = OptimizationQueryFilters(**filter_dict)
-        return RecordQueryIterator[OptimizationRecord](self, filter_data, "optimization", include)
+        return RecordQueryIterator[OptimizationRecord](self, filter_data, OptimizationRecord, include)
 
     ##############################################################
     # Torsiondrive calculations
@@ -1541,7 +1541,7 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = TorsiondriveQueryFilters(**filter_dict)
-        return RecordQueryIterator[TorsiondriveRecord](self, filter_data, "torsiondrive", include)
+        return RecordQueryIterator[TorsiondriveRecord](self, filter_data, TorsiondriveRecord, include)
 
     ##############################################################
     # Grid optimization calculations
@@ -1754,7 +1754,7 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = GridoptimizationQueryFilters(**filter_dict)
-        return RecordQueryIterator[GridoptimizationRecord](self, filter_data, "gridoptimization", include)
+        return RecordQueryIterator[GridoptimizationRecord](self, filter_data, GridoptimizationRecord, include)
 
     ##############################################################
     # Reactions
@@ -1975,7 +1975,7 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = ReactionQueryFilters(**filter_dict)
-        return RecordQueryIterator[ReactionRecord](self, filter_data, "reaction", include)
+        return RecordQueryIterator[ReactionRecord](self, filter_data, ReactionRecord, include)
 
     ##############################################################
     # Manybody calculations
@@ -2183,7 +2183,7 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = ManybodyQueryFilters(**filter_dict)
-        return RecordQueryIterator[ManybodyRecord](self, filter_data, "manybody", include)
+        return RecordQueryIterator[ManybodyRecord](self, filter_data, ManybodyRecord, include)
 
     ##############################################################
     # NEB
@@ -2397,7 +2397,7 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = NEBQueryFilters(**filter_dict)
-        return RecordQueryIterator[NEBRecord](self, filter_data, "neb", include)
+        return RecordQueryIterator[NEBRecord](self, filter_data, NEBRecord, include)
 
     ##############################################################
     # Managers
