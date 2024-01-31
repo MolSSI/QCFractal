@@ -26,6 +26,9 @@ def test_gridoptimizationrecord_model(snowflake: QCATestingSnowflake, includes: 
     record = snowflake_client.get_gridoptimizations(rec_id, include=includes)
 
     if includes is not None:
+        assert record.initial_molecule_ is not None
+        assert record.optimizations_ is not None
+        record.fetch_all(True)
         record._client = None
         assert record.offline
 

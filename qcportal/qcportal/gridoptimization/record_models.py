@@ -208,15 +208,22 @@ class GridoptimizationRecord(BaseRecord):
             for opt in self._optimizations_cache.values():
                 opt.propagate_client(client)
 
-    def fetch_all(self):
-        BaseRecord.fetch_all(self)
+    def _fetch_all(self, recursive: bool = False) -> Dict[str, Any]:
+        extra_data = BaseRecord._fetch_all(self, recursive=recursive)
+        self.initial_molecule_ = extra_data.get("initial_molecule", None)
+        self.starting_molecule_ = extra_data.get("starting_molecule", None)
+        self.optimizations_ = extra_data.get("optimizations", None)
 
-        self._fetch_initial_molecule()
-        self._fetch_starting_molecule()
-        self._fetch_optimizations()
+        if recursive and self.optimizations_:
+            # Don't include ** here, we do fetch_all later (to also get trajectories)
+            self._fetch_optimizations()
 
-        for opt in self._optimizations_cache.values():
-            opt.fetch_all()
+            # Fetch everything about the optimizations
+            for opt in self._optimizations_cache.values():
+                opt.fetch_all(True)
+
+        self.propagate_client(self._client)
+        return extra_data
 
     def _fetch_initial_molecule(self):
         self._assert_online()
@@ -228,7 +235,7 @@ class GridoptimizationRecord(BaseRecord):
 
     def _fetch_optimizations(self):
         # Always fetch optimization metadata if we can
-        if not self.offline or self.optimizations_ is None:
+        if self.optimizations_ is None:
             self._assert_online()
             self.optimizations_ = self._client.make_request(
                 "get",
