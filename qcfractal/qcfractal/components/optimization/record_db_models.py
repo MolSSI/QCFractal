@@ -122,8 +122,10 @@ class OptimizationRecordORM(BaseRecordORM):
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         d = BaseRecordORM.model_dict(self, exclude)
+
+        # Models use ids for the trajectory, rather than the object we store
         if "trajectory" in d:
-            d["trajectory_ids_"] = [x["singlepoint_id"] for x in d.pop("trajectory")]
+            d["trajectory_ids"] = [x["singlepoint_id"] for x in d.pop("trajectory")]
 
         return d
 

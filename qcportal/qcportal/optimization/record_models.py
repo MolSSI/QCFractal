@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from copy import deepcopy
-from typing import Optional, Union, Any, List, Dict, Iterable
+from typing import Optional, Union, Any, List, Dict
 
 try:
     from pydantic.v1 import BaseModel, Field, constr, validator, Extra, PrivateAttr
@@ -13,8 +15,10 @@ from qcelemental.models.procedures import (
     Model as AtomicResultModel,
 )
 from typing_extensions import Literal
+from typing import Iterable
 
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters, RecordStatusEnum
+from qcportal.cache import get_records_with_cache
 from qcportal.singlepoint import SinglepointProtocols, SinglepointRecord, QCSpecification, SinglepointDriver
 
 
@@ -55,12 +59,36 @@ class OptimizationRecord(BaseRecord):
     ######################################################
     initial_molecule_: Optional[Molecule] = Field(None, alias="initial_molecule")
     final_molecule_: Optional[Molecule] = Field(None, alias="final_molecule")
-    trajectory_ids_: Optional[List[int]] = Field(None, alias="trajectory")
+    trajectory_ids_: Optional[List[int]] = Field(None, alias="trajectory_ids")
 
     ########################################
     # Caches
     ########################################
     _trajectory_records: Optional[List[SinglepointRecord]] = PrivateAttr(None)
+
+    @classmethod
+    def _fetch_children_multi(cls, client, record_cache, records: Iterable[OptimizationRecord], recursive: bool):
+        # Should be checked by the calling function
+        assert records
+        assert all(isinstance(x, OptimizationRecord) for x in records)
+
+        # collect all singlepoint ids for all optimizations
+        sp_ids = set()
+        for r in records:
+            if r.trajectory_ids_:
+                sp_ids.update(r.trajectory_ids_)
+
+        include = ["**"] if recursive else None
+        sp_ids = list(sp_ids)
+        sp_records = get_records_with_cache(client, record_cache, sp_ids, SinglepointRecord, include=include)
+        sp_map = {r.id: r for r in sp_records}
+
+        for r in records:
+            if r.trajectory_ids_ is None:
+                r._trajectory_records = None
+            else:
+                r._trajectory_records = [sp_map[x] for x in r.trajectory_ids_]
+            r.propagate_client(r._client)
 
     def propagate_client(self, client):
         BaseRecord.propagate_client(self, client)
@@ -68,15 +96,6 @@ class OptimizationRecord(BaseRecord):
         if self._trajectory_records is not None:
             for sp in self._trajectory_records:
                 sp.propagate_client(client)
-
-    def fetch_all(self):
-        BaseRecord.fetch_all(self)
-        self._fetch_initial_molecule()
-        self._fetch_final_molecule()
-        self._fetch_trajectory()
-
-        for sp in self._trajectory_records:
-            sp.fetch_all()
 
     def _fetch_initial_molecule(self):
         self._assert_online()
@@ -96,8 +115,7 @@ class OptimizationRecord(BaseRecord):
                 List[int],
             )
 
-        self._trajectory_records = self._get_child_records(self.trajectory_ids_, SinglepointRecord)
-        self.propagate_client(self._client)
+        self.fetch_children(False)
 
     @property
     def initial_molecule(self) -> Molecule:
@@ -115,7 +133,6 @@ class OptimizationRecord(BaseRecord):
     def trajectory(self) -> Optional[List[SinglepointRecord]]:
         if self._trajectory_records is None:
             self._fetch_trajectory()
-
         return self._trajectory_records
 
     def trajectory_element(self, trajectory_index: int) -> SinglepointRecord:
