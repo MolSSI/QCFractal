@@ -6,7 +6,7 @@ from typing import List, Dict, Tuple, Optional, Iterable, Sequence, Any, Union, 
 import tabulate
 from sqlalchemy import select, func
 from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by
-from sqlalchemy.orm import defer, undefer, joinedload, lazyload
+from sqlalchemy.orm import defer, undefer, joinedload, lazyload, selectinload
 
 from qcfractal import __version__ as qcfractal_version
 from qcfractal.components.optimization.record_db_models import OptimizationSpecificationORM
@@ -391,6 +391,14 @@ class ReactionRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> List[Optional[Dict[str, Any]]]:
+        options = []
+
+        if include:
+            if "**" in include or "components" in include:
+                options.append(
+                    selectinload(ReactionRecordORM.components).options(selectinload(ReactionComponentORM.molecule))
+                )
+
         with self.root_socket.optional_session(session, True) as session:
             return self.root_socket.records.get_base(
                 orm_type=self.record_orm,
@@ -398,6 +406,7 @@ class ReactionRecordSocket(BaseRecordSocket):
                 include=include,
                 exclude=exclude,
                 missing_ok=missing_ok,
+                additional_options=options,
                 session=session,
             )
 
@@ -694,7 +703,13 @@ class ReactionRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> List[Dict[str, Any]]:
-        options = [lazyload("*"), defer("*"), joinedload(ReactionRecordORM.components).options(undefer("*"))]
+        options = [
+            lazyload("*"),
+            defer("*"),
+            joinedload(ReactionRecordORM.components).options(
+                undefer("*"), joinedload(ReactionComponentORM.molecule).options(undefer("*"))
+            ),
+        ]
 
         with self.root_socket.optional_session(session) as session:
             rec = session.get(ReactionRecordORM, record_id, options=options)
