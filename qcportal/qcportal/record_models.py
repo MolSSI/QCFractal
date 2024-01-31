@@ -3,24 +3,27 @@ from __future__ import annotations
 import os
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict, Any, List, Union, Iterable, Tuple, Type, Sequence, ClassVar, TypeVar, Callable
+from typing import Optional, Dict, Any, List, Union, Iterable, Tuple, Type, Sequence, ClassVar, TypeVar
 
 from dateutil.parser import parse as date_parser
 
 try:
-    from pydantic.v1 import BaseModel, Extra, constr, validator, PrivateAttr, Field
+    from pydantic.v1 import BaseModel, Extra, constr, validator, PrivateAttr, Field, parse_obj_as
 except ImportError:
-    from pydantic import BaseModel, Extra, constr, validator, PrivateAttr, Field
+    from pydantic import BaseModel, Extra, constr, validator, PrivateAttr, Field, parse_obj_as
 from qcelemental.models.results import Provenance
 
 from qcportal.base_models import (
     RestModelBase,
     QueryModelBase,
     QueryIteratorBase,
+    ProjURLParameters,
 )
 
 from qcportal.cache import RecordCache
 from qcportal.compression import CompressionEnum, decompress, get_compressed_ext
+
+_T = TypeVar("_T")
 
 
 class PriorityEnum(int, Enum):
@@ -110,7 +113,7 @@ class OutputStore(BaseModel):
 
     output_type: OutputTypeEnum = Field(..., description="The type of output this is (stdout, error, etc)")
     compression_type: CompressionEnum = Field(CompressionEnum.none, description="Compression method (such as lzma)")
-    data_: Optional[bytes] = None
+    data_: Optional[bytes] = Field(None, alias="data")
 
     _data_url: Optional[str] = PrivateAttr(None)
     _client: Any = PrivateAttr(None)
@@ -151,7 +154,7 @@ class ComputeHistory(BaseModel):
     manager_name: Optional[str]
     modified_on: datetime
     provenance: Optional[Provenance]
-    outputs_: Optional[Dict[str, OutputStore]] = None
+    outputs_: Optional[Dict[str, OutputStore]] = Field(None, alias="outputs")
 
     _client: Any = PrivateAttr(None)
     _base_url: Optional[str] = PrivateAttr(None)
@@ -220,7 +223,7 @@ class NativeFile(BaseModel):
 
     name: str = Field(..., description="Name of the file")
     compression_type: CompressionEnum = Field(..., description="Compression method (such as lzma)")
-    data_: Optional[bytes] = None
+    data_: Optional[bytes] = Field(None, alias="data")
 
     _data_url: Optional[str] = PrivateAttr(None)
     _client: Any = PrivateAttr(None)
@@ -389,7 +392,6 @@ class BaseRecord(BaseModel):
     # Private non-pydantic fields
     _client: Any = PrivateAttr(None)
     _base_url: str = PrivateAttr(None)
-    """ Client connected to the server that this record belongs to """
 
     # A dictionary of all subclasses (calculation types) to actual class type
     _all_subclasses: ClassVar[Dict[str, Type[BaseRecord]]] = {}
@@ -465,29 +467,67 @@ class BaseRecord(BaseModel):
             for nf in self.native_files_.values():
                 nf.propagate_client(self._client, self._base_url)
 
-    def fetch_all(self):
+    def _fetch_include(self, include: Iterable[str]) -> Dict[str, Any]:
+        """
+        Fetches additional data for this record from the server
+
+        The returned dictionary may contain extra fields (such as ids)
+        """
+        self._assert_online()
+
+        url_params = {"include": include}
+
+        return self._client.make_request(
+            "get",
+            f"{self._base_url}",
+            Dict[str, Any],
+            url_params_model=ProjURLParameters,
+            url_params=url_params,
+        )
+
+    def _fetch_include_single(self, include: str, key: str, data_type: Type[_T]) -> _T:
+        """
+        Fetches additional data for this record from the server
+        """
+
+        d = self._fetch_include([include])
+        return parse_obj_as(data_type, d[key])
+
+    def _fetch_all(self, recursive: bool = False) -> Dict[str, Any]:
+        """
+        Internal function for fetching all possible data for this record from the server
+
+        This will always fetch all data, even if it has been fetched before
+
+        If `recursive` is True, then all child records will also be fetched, including all their data as well
+
+        This function is meant to be called from derived classes. This function fetches all the data for a record,
+        sets the data for the base record, then returns the extra data for processing by the derived class.
+        """
+
+        extra_data = self._fetch_include(["**"])
+
+        self.comments_ = extra_data.get("comments", [])
+        self.native_files_ = extra_data.get("native_files", {})
+        self.compute_history_ = extra_data.get("compute_history", [])
+        self.task_ = extra_data.get("task", None)
+        self.service_ = extra_data.get("service", None)
+
+        self.propagate_client(self._client)
+
+        return extra_data
+
+    def fetch_all(self, recursive: bool = False):
         """
         Fetches all possible data for this record from the server
+
+        This will always fetch all data, even if it has been fetched before
+
+        If `recursive` is True, then all child records will also be fetched, including all their data as well
         """
 
-        # Only these statuses should have tasks
-        if self.status in (RecordStatusEnum.waiting, RecordStatusEnum.running, RecordStatusEnum.error):
-            # is_service is checked in these functions
-            self._fetch_service()
-            self._fetch_task()
-        else:
-            self.service_ = None
-            self.task_ = None
-
-        self._fetch_comments()
-
-        self._fetch_compute_history()
-        for ch in self.compute_history_:
-            ch.fetch_all()
-
-        self._fetch_native_files()
-        for nf in self.native_files_.values():
-            nf.fetch_all()
+        # calls the derived class _fetch_all function, swallowing output
+        self._fetch_all(recursive)
 
     def _cache_child_records(self, record_ids: Iterable[int], record_type: Type[_Record_T]) -> None:
         """
@@ -508,11 +548,16 @@ class BaseRecord(BaseModel):
         recs = self._client._get_records_by_type(record_type, records_tofetch)
         self._record_cache.update_records(recs)
 
-    def _get_child_records(self, record_ids: Sequence[int], record_type: Type[_Record_T]) -> List[_Record_T]:
+    def _get_child_records(
+        self, record_ids: Sequence[int], record_type: Type[_Record_T], include: Optional[Iterable[str]] = None
+    ) -> List[_Record_T]:
         """
         Helper function for obtaining child records either from the cache or from the server
 
         The records are returned in the same order as the `record_ids` parameter.
+
+        If `include` is specified, additional fields will be fetched from the server. However, if the records are in the
+        cache already, they may be missing those fields.
         """
 
         if self._record_cache is None:
@@ -527,7 +572,7 @@ class BaseRecord(BaseModel):
             raise RuntimeError("Need to fetch some records, but not connected to a client")
 
         if records_tofetch:
-            recs = self._client._get_records_by_type(record_type, list(records_tofetch))
+            recs = self._client._get_records_by_type(record_type, list(records_tofetch), include=include)
             if self._record_cache is not None:
                 uids = self._record_cache.update_records(recs)
 
@@ -557,53 +602,30 @@ class BaseRecord(BaseModel):
         self._assert_online()
 
         self.compute_history_ = self._client.make_request(
-            "get",
-            f"{self._base_url}/compute_history",
-            List[ComputeHistory],
+            "get", f"{self._base_url}/compute_history", List[ComputeHistory]
         )
 
         self.propagate_client(self._client)
 
     def _fetch_task(self):
-        self._assert_online()
-
         if self.is_service:
             self.task_ = None
-            return
-
-        self.task_ = self._client.make_request(
-            "get",
-            f"{self._base_url}/task",
-            Optional[RecordTask],
-        )
+        else:
+            self.task_ = self._client.make_request("get", f"{self._base_url}/task", Optional[RecordTask])
 
     def _fetch_service(self):
-        self._assert_online()
-
         if not self.is_service:
             self.service_ = None
-            return
-
-        self.service_ = self._client.make_request("get", f"{self._base_url}/service", Optional[RecordService])
+        else:
+            self.service_ = self._client.make_request("get", f"{self._base_url}/service", Optional[RecordService])
 
     def _fetch_comments(self):
         self._assert_online()
 
-        self.comments_ = self._client.make_request(
-            "get",
-            f"{self._base_url}/comments",
-            List[RecordComment],
-        )
+        self.comments_ = self._client.make_request("get", f"{self._base_url}/comments", List[RecordComment])
 
     def _fetch_native_files(self):
-        self._assert_online()
-
-        self.native_files_ = self._client.make_request(
-            "get",
-            f"{self._base_url}/native_files",
-            Dict[str, NativeFile],
-        )
-
+        self.native_files_ = self._fetch_include_single("native_files", "native_files", Dict[str, NativeFile])
         self.propagate_client(self._client)
 
     def _get_output(self, output_type: OutputTypeEnum) -> Optional[Union[str, Dict[str, Any]]]:
@@ -789,7 +811,12 @@ class RecordQueryIterator(QueryIteratorBase[_Record_T]):
                 body=self._query_filters,
             )
 
-        records: List[_Record_T] = self._client._get_records_by_type(self.record_type, record_ids, include=self.include)
+        if self.record_type is None:
+            records: List[BaseRecord] = self._client.get_records(record_ids, include=self.include)
+        else:
+            records: List[_Record_T] = self._client._get_records_by_type(
+                self.record_type, record_ids, include=self.include
+            )
 
         return records
 
