@@ -244,19 +244,6 @@ class GridoptimizationRecord(BaseRecord):
 
         self.propagate_client(self._client)
 
-    def _handle_includes(self, includes: Optional[Iterable[str]]):
-        if includes is None:
-            return
-
-        BaseRecord._handle_includes(self, includes)
-
-        if "initial_molecule" in includes:
-            self._fetch_initial_molecule()
-        if "starting_molecule" in includes:
-            self._fetch_starting_molecule()
-        if "optimizations" in includes:
-            self._fetch_optimizations()
-
     @property
     def initial_molecule(self) -> Molecule:
         if self.initial_molecule_ is None:

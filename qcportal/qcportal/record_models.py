@@ -612,24 +612,6 @@ class BaseRecord(BaseModel):
             return None
         return history[-1].get_output(output_type)
 
-    def _handle_includes(self, includes: Optional[Iterable[str]]):
-        """
-        Fetches information specified by some iterable of strings
-        """
-        if includes is None:
-            return
-
-        if "task" in includes:
-            self._fetch_task()
-        if "service" in includes:
-            self._fetch_task()
-        if "compute_history" in includes:
-            self._fetch_compute_history()
-        if "comments" in includes:
-            self._fetch_comments()
-        if "native_files" in includes:
-            self._fetch_native_files()
-
     @property
     def offline(self) -> bool:
         return self._client is None
@@ -805,11 +787,7 @@ class RecordQueryIterator(QueryIteratorBase[_Record_T]):
                 body=self._query_filters,
             )
 
-        records: List[_Record_T] = self._client.get_records(record_ids)
-
-        if self.include:
-            for r in records:
-                r._handle_includes(self.include)
+        records: List[_Record_T] = self._client.get_records(record_ids, include=self.include)
 
         return records
 

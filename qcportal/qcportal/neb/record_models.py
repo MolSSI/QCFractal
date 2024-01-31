@@ -245,21 +245,6 @@ class NEBRecord(BaseRecord):
             Optional[Molecule],
         )
 
-    def _handle_includes(self, includes: Optional[Iterable[str]]):
-        if includes is None:
-            return
-
-        BaseRecord._handle_includes(self, includes)
-
-        if "initial_chain" in includes:
-            self._fetch_initial_chain()
-        if "singlepoints" in includes:
-            self._fetch_singlepoints()
-        if "optimizations" in includes:
-            self._fetch_optimizations()
-        if "result" in includes:
-            self._fetch_neb_result()
-
     @property
     def initial_chain(self) -> List[Molecule]:
         if self.initial_chain_ is None:

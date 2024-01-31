@@ -225,19 +225,6 @@ class TorsiondriveRecord(BaseRecord):
 
         self.propagate_client(self._client)
 
-    def _handle_includes(self, includes: Optional[Iterable[str]]):
-        if includes is None:
-            return
-
-        BaseRecord._handle_includes(self, includes)
-
-        if "initial_molecules" in includes:
-            self._fetch_initial_molecules()
-        if "minimum_optimizations" in includes and "optimizations" not in includes:
-            self._fetch_minimum_optimizations()
-        if "optimizations" in includes:
-            self._fetch_optimizations()
-
     @property
     def initial_molecules(self) -> List[Molecule]:
         if self.initial_molecules_ is None:
