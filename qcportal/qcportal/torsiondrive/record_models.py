@@ -133,8 +133,8 @@ class TorsiondriveRecord(BaseRecord):
     # Fields not always included when fetching the record
     ######################################################
     initial_molecules_ids_: Optional[List[int]] = Field(None, alias="initial_molecules_ids")
-    optimizations_: Optional[List[TorsiondriveOptimization]] = Field(None, alias="optimizations")
     initial_molecules_: Optional[List[Molecule]] = Field(None, alias="initial_molecules")
+    optimizations_: Optional[List[TorsiondriveOptimization]] = Field(None, alias="optimizations")
 
     ########################################
     # Caches
@@ -155,30 +155,38 @@ class TorsiondriveRecord(BaseRecord):
             for opt in self._minimum_optimizations_cache.values():
                 opt.propagate_client(client)
 
-    def fetch_all(self):
-        BaseRecord.fetch_all(self)
+    def _fetch_all(self, recursive: bool = False) -> Dict[str, Any]:
+        extra_data = BaseRecord._fetch_all(self, recursive=recursive)
+        self.initial_molecules_ids_ = extra_data.get("initial_molecules_ids", None)
+        self.initial_molecules_ = extra_data.get("initial_molecules", None)
+        self.optimizations_ = extra_data.get("optimizations", None)
 
-        self._fetch_initial_molecules()
-        self._fetch_optimizations()
+        if recursive and self.optimizations_:
+            # Don't include ** here, we do fetch_all later (to also get trajectories)
+            self._fetch_optimizations()
 
-        for opt_list in self._optimizations_cache.values():
-            for opt in opt_list:
-                opt.fetch_all()
+            # Fetch everything about the optimizations
+            for opts in self._optimizations_cache.values():
+                for opt in opts:
+                    opt.fetch_all(True)
+
+        self.propagate_client(self._client)
+        return extra_data
 
     def _fetch_initial_molecules(self):
         self._assert_online()
 
-        self.initial_molecules_ids_ = self._client.make_request(
-            "get",
-            f"api/v1/records/torsiondrive/{self.id}/initial_molecules",
-            List[int],
-        )
+        if self.initial_molecules_ids_ is None:
+            self.initial_molecules_ids_ = self._client.make_request(
+                "get",
+                f"api/v1/records/torsiondrive/{self.id}/initial_molecules",
+                List[int],
+            )
 
         self.initial_molecules_ = self._client.get_molecules(self.initial_molecules_ids_)
 
-    def _fetch_optimizations(self):
-        # Always fetch optimization metadata if we can
-        if not self.offline or self.optimizations_ is None:
+    def _fetch_optimizations(self, include: Optional[Iterable[str]] = None):
+        if self.optimizations_ is None:
             self._assert_online()
             self.optimizations_ = self._client.make_request(
                 "get",
@@ -188,7 +196,7 @@ class TorsiondriveRecord(BaseRecord):
 
         # Fetch optimization records from the server or cache
         opt_ids = [x.optimization_id for x in self.optimizations_]
-        opt_records = self._get_child_records(opt_ids, OptimizationRecord)
+        opt_records = self._get_child_records(opt_ids, OptimizationRecord, include)
 
         self._optimizations_cache = {}
         for td_opt, opt_record in zip(self.optimizations_, opt_records):

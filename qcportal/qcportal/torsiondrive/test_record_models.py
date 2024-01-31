@@ -26,6 +26,9 @@ def test_torsiondriverecord_model(snowflake: QCATestingSnowflake, includes: Opti
     record = snowflake_client.get_torsiondrives(rec_id, include=includes)
 
     if includes is not None:
+        assert record.initial_molecules_ is not None
+        assert record.optimizations_ is not None
+        record.fetch_all(True)
         record._client = None
         assert record.offline
 
