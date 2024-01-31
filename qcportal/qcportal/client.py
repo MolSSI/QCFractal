@@ -551,13 +551,13 @@ class PortalClient(PortalClientBase):
         all_records = []
 
         for record_id_batch in chunk_iterable(record_ids, batch_size):
-            body = CommonBulkGetBody(ids=record_id_batch, missing_ok=missing_ok)
+            if include is not None:
+                # Always include the base stuff
+                include = list(include) + ["*"]
+
+            body = CommonBulkGetBody(ids=record_id_batch, include=include, missing_ok=missing_ok)
             record_data = self.make_request("post", "api/v1/records/bulkGet", List[Optional[Dict[str, Any]]], body=body)
             record_batch = records_from_dicts(record_data, self)
-
-            if include:
-                for r in record_batch:
-                    r._handle_includes(include)
 
             all_records.extend(record_batch)
 
@@ -609,7 +609,11 @@ class PortalClient(PortalClientBase):
         all_records = []
 
         for record_id_batch in chunk_iterable(record_ids, batch_size):
-            body = CommonBulkGetBody(ids=record_id_batch, missing_ok=missing_ok)
+            if include is not None:
+                # Always include the base stuff
+                include = list(include) + ["*"]
+
+            body = CommonBulkGetBody(ids=record_id_batch, include=include, missing_ok=missing_ok)
 
             record_data = self.make_request(
                 "post",
@@ -619,11 +623,6 @@ class PortalClient(PortalClientBase):
             )
 
             record_batch = [record_type(self, **r) if r is not None else None for r in record_data]
-
-            if include:
-                for r in record_batch:
-                    r._handle_includes(include)
-
             all_records.extend(record_batch)
 
         if is_single:
