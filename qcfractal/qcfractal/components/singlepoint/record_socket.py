@@ -210,6 +210,13 @@ class SinglepointRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> List[Optional[Dict[str, Any]]]:
+        options = []
+        if include:
+            if "**" in include or "molecule" in include:
+                options.append(joinedload(SinglepointRecordORM.molecule))
+            if "**" in include or "wavefunction" in include:
+                options.append(joinedload(SinglepointRecordORM.wavefunction).undefer(WavefunctionORM.data))
+
         with self.root_socket.optional_session(session, True) as session:
             return self.root_socket.records.get_base(
                 orm_type=self.record_orm,
@@ -217,6 +224,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
                 include=include,
                 exclude=exclude,
                 missing_ok=missing_ok,
+                additional_options=options,
                 session=session,
             )
 
