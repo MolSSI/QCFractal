@@ -99,19 +99,6 @@ class OptimizationRecord(BaseRecord):
         self._trajectory_records = self._get_child_records(self.trajectory_ids_, SinglepointRecord)
         self.propagate_client(self._client)
 
-    def _handle_includes(self, includes: Optional[Iterable[str]]):
-        if includes is None:
-            return
-
-        BaseRecord._handle_includes(self, includes)
-
-        if "initial_molecule" in includes:
-            self._fetch_initial_molecule()
-        if "final_molecule" in includes:
-            self._fetch_final_molecule()
-        if "trajectory" in includes:
-            self._fetch_trajectory()
-
     @property
     def initial_molecule(self) -> Molecule:
         if self.initial_molecule_ is None:
