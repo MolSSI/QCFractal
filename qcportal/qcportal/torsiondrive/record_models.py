@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 from typing import List, Optional, Tuple, Union, Dict, Iterable, Sequence, Any
 
@@ -9,6 +11,7 @@ from typing_extensions import Literal
 
 from qcportal.molecules import Molecule
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
+from qcportal.cache import get_records_with_cache
 from qcportal.utils import recursive_normalizer
 from ..optimization.record_models import OptimizationSpecification, OptimizationRecord
 
@@ -133,14 +136,53 @@ class TorsiondriveRecord(BaseRecord):
     # Fields not always included when fetching the record
     ######################################################
     initial_molecules_ids_: Optional[List[int]] = Field(None, alias="initial_molecules_ids")
-    optimizations_: Optional[List[TorsiondriveOptimization]] = Field(None, alias="optimizations")
     initial_molecules_: Optional[List[Molecule]] = Field(None, alias="initial_molecules")
+    optimizations_: Optional[List[TorsiondriveOptimization]] = Field(None, alias="optimizations")
 
     ########################################
     # Caches
     ########################################
     _optimizations_cache: Optional[Dict[Any, List[OptimizationRecord]]] = PrivateAttr(None)
     _minimum_optimizations_cache: Optional[Dict[Any, OptimizationRecord]] = PrivateAttr(None)
+
+    @classmethod
+    def _fetch_children_multi(cls, client, record_cache, records: Iterable[TorsiondriveRecord], recursive: bool):
+        # Should be checked by the calling function
+        assert records
+        assert all(isinstance(x, TorsiondriveRecord) for x in records)
+
+        # Collect optimization id for all torsiondrives
+        opt_ids = set()
+        for r in records:
+            if r.optimizations_:
+                opt_ids.update(x.optimization_id for x in r.optimizations_)
+
+        include = ["**"] if recursive else None
+        opt_ids = list(opt_ids)
+        opt_records = get_records_with_cache(client, record_cache, opt_ids, OptimizationRecord, include=include)
+        opt_map = {x.id: x for x in opt_records}
+
+        for r in records:
+            if r.optimizations_ is None:
+                r._optimizations_cache = None
+                r._minimum_optimizations_cache = None
+            else:
+                r._optimizations_cache = {}
+                for td_opt in r.optimizations_:
+                    key = deserialize_key(td_opt.key)
+                    r._optimizations_cache.setdefault(key, list())
+                    r._optimizations_cache[key].append(opt_map[td_opt.optimization_id])
+
+                # find the minimum optimizations for each key
+                # chooses the lowest id if there are records with the same energy
+                r._minimum_optimizations_cache = {}
+                for k, v in r._optimizations_cache.items():
+                    # Remove any optimizations without energies
+                    v2 = [x for x in v if x.energies]
+                    if v2:
+                        r._minimum_optimizations_cache[k] = min(v2, key=lambda x: (x.energies[-1], x.id))
+
+            r.propagate_client(r._client)
 
     def propagate_client(self, client):
         BaseRecord.propagate_client(self, client)
@@ -155,30 +197,20 @@ class TorsiondriveRecord(BaseRecord):
             for opt in self._minimum_optimizations_cache.values():
                 opt.propagate_client(client)
 
-    def fetch_all(self):
-        BaseRecord.fetch_all(self)
-
-        self._fetch_initial_molecules()
-        self._fetch_optimizations()
-
-        for opt_list in self._optimizations_cache.values():
-            for opt in opt_list:
-                opt.fetch_all()
-
     def _fetch_initial_molecules(self):
         self._assert_online()
 
-        self.initial_molecules_ids_ = self._client.make_request(
-            "get",
-            f"api/v1/records/torsiondrive/{self.id}/initial_molecules",
-            List[int],
-        )
+        if self.initial_molecules_ids_ is None:
+            self.initial_molecules_ids_ = self._client.make_request(
+                "get",
+                f"api/v1/records/torsiondrive/{self.id}/initial_molecules",
+                List[int],
+            )
 
         self.initial_molecules_ = self._client.get_molecules(self.initial_molecules_ids_)
 
     def _fetch_optimizations(self):
-        # Always fetch optimization metadata if we can
-        if not self.offline or self.optimizations_ is None:
+        if self.optimizations_ is None:
             self._assert_online()
             self.optimizations_ = self._client.make_request(
                 "get",
@@ -186,26 +218,7 @@ class TorsiondriveRecord(BaseRecord):
                 List[TorsiondriveOptimization],
             )
 
-        # Fetch optimization records from the server or cache
-        opt_ids = [x.optimization_id for x in self.optimizations_]
-        opt_records = self._get_child_records(opt_ids, OptimizationRecord)
-
-        self._optimizations_cache = {}
-        for td_opt, opt_record in zip(self.optimizations_, opt_records):
-            key = deserialize_key(td_opt.key)
-            self._optimizations_cache.setdefault(key, list())
-            self._optimizations_cache[key].append(opt_record)
-
-        # find the minimum optimizations for each key
-        # chooses the lowest id if there are records with the same energy
-        self._minimum_optimizations_cache = {}
-        for k, v in self._optimizations_cache.items():
-            # Remove any optimizations without energies
-            v2 = [x for x in v if x.energies]
-            if v2:
-                self._minimum_optimizations_cache[k] = min(v2, key=lambda x: (x.energies[-1], x.id))
-
-        self.propagate_client(self._client)
+        self.fetch_children(False)
 
     def _fetch_minimum_optimizations(self):
         self._assert_online()

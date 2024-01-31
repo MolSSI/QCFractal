@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from sqlalchemy import select, Column, Integer, ForeignKey, String, UniqueConstraint, Index, CheckConstraint, event, DDL
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.orderinglist import ordering_list
@@ -12,6 +14,9 @@ from qcfractal.components.optimization.record_db_models import (
 )
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.db_socket import BaseORM
+
+if TYPE_CHECKING:
+    from typing import Dict, Any, Optional, Iterable
 
 
 class TorsiondriveOptimizationORM(BaseORM):
@@ -118,6 +123,18 @@ class TorsiondriveRecordORM(BaseRecordORM):
     }
 
     _qcportal_model_excludes = [*BaseRecordORM._qcportal_model_excludes, "specification_id"]
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        d = BaseRecordORM.model_dict(self, exclude)
+
+        # Return initial molecule or just the ids, depending on what we have
+        if "initial_molecules" in d:
+            init_mol = d.pop("initial_molecules")
+            d["initial_molecules_ids"] = [x["molecule_id"] for x in init_mol]
+            if "molecule" in init_mol[0]:
+                d["initial_molecules"] = [x["molecule"] for x in init_mol]
+
+        return d
 
     @property
     def short_description(self) -> str:

@@ -16,7 +16,7 @@ except ImportError:
     from pydantic import BaseModel, Extra
 from sqlalchemy import select, func
 from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by, DOUBLE_PRECISION, TEXT
-from sqlalchemy.orm import lazyload, joinedload, defer, undefer
+from sqlalchemy.orm import lazyload, selectinload, joinedload, defer, undefer
 
 from qcfractal.components.optimization.record_db_models import (
     OptimizationSpecificationORM,
@@ -401,6 +401,21 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> List[Optional[Dict[str, Any]]]:
+        options = []
+        if include:
+            # Initial molecules will get both the ids and the actual molecule
+            if "**" in include or "initial_molecules" in include:
+                options.append(
+                    selectinload(TorsiondriveRecordORM.initial_molecules).joinedload(
+                        TorsiondriveInitialMoleculeORM.molecule
+                    )
+                )
+            elif "initial_molecules_ids" in include:
+                options.append(selectinload(TorsiondriveRecordORM.initial_molecules))
+
+            if "**" in include or "optimizations" in include:
+                options.append(selectinload(TorsiondriveRecordORM.optimizations))
+
         with self.root_socket.optional_session(session, True) as session:
             return self.root_socket.records.get_base(
                 orm_type=self.record_orm,
@@ -408,6 +423,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                 include=include,
                 exclude=exclude,
                 missing_ok=missing_ok,
+                additional_options=options,
                 session=session,
             )
 
