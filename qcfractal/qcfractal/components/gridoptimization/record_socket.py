@@ -14,7 +14,7 @@ except ImportError:
     from pydantic import BaseModel, Extra, parse_obj_as
 from sqlalchemy import select, func
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import lazyload, joinedload, undefer, defer
+from sqlalchemy.orm import lazyload, joinedload, selectinload, undefer, defer
 
 from qcfractal import __version__ as qcfractal_version
 from qcfractal.components.optimization.record_db_models import OptimizationSpecificationORM
@@ -484,6 +484,16 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> List[Optional[Dict[str, Any]]]:
+        options = []
+
+        if include:
+            if "**" in include or "initial_molecule" in include:
+                options.append(joinedload(GridoptimizationRecordORM.initial_molecule))
+            if "**" in include or "starting_molecule" in include:
+                options.append(joinedload(GridoptimizationRecordORM.starting_molecule))
+            if "**" in include or "optimizations" in include:
+                options.append(selectinload(GridoptimizationRecordORM.optimizations))
+
         with self.root_socket.optional_session(session, True) as session:
             return self.root_socket.records.get_base(
                 orm_type=self.record_orm,
@@ -491,6 +501,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                 include=include,
                 exclude=exclude,
                 missing_ok=missing_ok,
+                additional_options=options,
                 session=session,
             )
 
