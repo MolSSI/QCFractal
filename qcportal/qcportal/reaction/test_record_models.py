@@ -27,6 +27,8 @@ def test_reactionrecord_model(snowflake: QCATestingSnowflake, includes: Optional
     record = snowflake_client.get_reactions(rec_id, include=includes)
 
     if includes is not None:
+        assert record.components_meta_ is not None
+        record.fetch_all(True)
         record._client = None
         assert record.offline
 

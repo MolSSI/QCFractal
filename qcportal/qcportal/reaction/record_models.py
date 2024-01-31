@@ -1,9 +1,9 @@
-from typing import List, Union, Optional, Tuple, Iterable
+from typing import List, Union, Optional, Tuple, Iterable, Dict, Any
 
 try:
-    from pydantic.v1 import BaseModel, Extra, root_validator, constr, PrivateAttr
+    from pydantic.v1 import BaseModel, Extra, root_validator, constr, PrivateAttr, Field
 except ImportError:
-    from pydantic import BaseModel, Extra, root_validator, constr, PrivateAttr
+    from pydantic import BaseModel, Extra, root_validator, constr, PrivateAttr, Field
 from typing_extensions import Literal
 
 from qcportal.molecules import Molecule
@@ -58,7 +58,7 @@ class ReactionQueryFilters(RecordQueryFilters):
     molecule_id: Optional[List[int]] = None
 
 
-class ReactionComponent(BaseModel):
+class ReactionComponentMeta(BaseModel):
     class Config:
         extra = Extra.forbid
 
@@ -68,8 +68,11 @@ class ReactionComponent(BaseModel):
     optimization_id: Optional[int]
 
     molecule: Optional[Molecule]
-    singlepoint_record: Optional[SinglepointRecord]
-    optimization_record: Optional[OptimizationRecord]
+
+
+class ReactionComponent(ReactionComponentMeta):
+    singlepoint_record: Optional[SinglepointRecord] = None
+    optimization_record: Optional[SinglepointRecord] = None
 
 
 class ReactionRecord(BaseRecord):
@@ -77,6 +80,11 @@ class ReactionRecord(BaseRecord):
     specification: ReactionSpecification
 
     total_energy: Optional[float]
+
+    ######################################################
+    # Fields not always included when fetching the record
+    ######################################################
+    components_meta_: Optional[List[ReactionComponentMeta]] = Field(None, alias="components")
 
     ########################################
     # Caches
@@ -93,44 +101,56 @@ class ReactionRecord(BaseRecord):
                 if comp.optimization_record:
                     comp.optimization_record.propagate_client(self._client)
 
-    def fetch_all(self):
-        BaseRecord.fetch_all(self)
-        self._fetch_components()
+    def _fetch_all(self, recursive: bool = False) -> Dict[str, Any]:
+        extra_data = BaseRecord._fetch_all(self, recursive=recursive)
+        self.components_meta_ = extra_data.get("components", None)
 
-        for comp in self._components:
-            if comp.singlepoint_record:
-                comp.singlepoint_record.fetch_all()
-            if comp.optimization_record:
-                comp.optimization_record.fetch_all()
+        if recursive and self.components_meta_:
+            self._fetch_components()
 
-    def _fetch_components(self):
+            # Fetch everything about the optimizations
+            if self._components:
+                for c in self._components:
+                    if c.singlepoint_record:
+                        c.singlepoint_record.fetch_all(True)
+                    if c.optimization_record:
+                        c.optimization_record.fetch_all(True)
+
+        self.propagate_client(self._client)
+        return extra_data
+
+    def _fetch_components(
+        self, singlepoint_include: Optional[Iterable[str]] = None, optimization_include: Optional[Iterable[str]] = None
+    ):
         self._assert_online()
 
-        if not self.offline or self._components is None:
+        if self.components_meta_ is None:
             self._assert_online()
-            self._components = self._client.make_request(
+
+            # Will include molecules
+            self.components_meta_ = self._client.make_request(
                 "get",
                 f"api/v1/records/reaction/{self.id}/components",
-                List[ReactionComponent],
+                List[ReactionComponentMeta],
             )
 
-            mol_ids = [c.molecule_id for c in self._components]
-            mols = self._client.get_molecules(mol_ids)
-            for c, mol in zip(self._components, mols):
-                assert mol.id == c.molecule_id
-                c.molecule = mol
-
         # Fetch records from server or cache
+        self._components = [ReactionComponent(**c.dict()) for c in self.components_meta_]
+
         sp_comp = [c for c in self._components if c.singlepoint_id is not None]
         sp_ids = [c.singlepoint_id for c in sp_comp]
-        sp_recs = self._get_child_records(sp_ids, SinglepointRecord)
-        for c, rec in zip(sp_comp, sp_recs):
-            c.singlepoint_record = rec
+        sp_recs = self._get_child_records(sp_ids, SinglepointRecord, include=singlepoint_include)
 
         opt_comp = [c for c in self._components if c.optimization_id is not None]
         opt_ids = [c.optimization_id for c in opt_comp]
-        opt_recs = self._get_child_records(opt_ids, OptimizationRecord)
+        opt_recs = self._get_child_records(opt_ids, OptimizationRecord, include=optimization_include)
+
+        for c, rec in zip(sp_comp, sp_recs):
+            assert rec.id == c.singlepoint_id
+            c.singlepoint_record = rec
+
         for c, rec in zip(opt_comp, opt_recs):
+            assert rec.id == c.optimization_id
             assert rec.initial_molecule_id == c.molecule_id
             c.optimization_record = rec
 
