@@ -5,6 +5,8 @@ import io
 import itertools
 import json
 import logging
+import math
+import time
 from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from hashlib import sha256
 from typing import Optional, Union, Sequence, List, TypeVar, Any, Dict, Generator, Iterable
@@ -43,6 +45,46 @@ def chunk_iterable(it: Iterable[_T], chunk_size: int) -> Generator[List[_T], Non
     batch = list(itertools.islice(i, chunk_size))
     while batch:
         yield batch
+        batch = list(itertools.islice(i, chunk_size))
+
+
+def chunk_iterable_time(
+    it: Iterable[_T], chunk_time: float, max_chunk_size: int, initial_chunk_size: int
+) -> Generator[List[_T], None, None]:
+    """
+    Split an iterable into chunks, trying to keep a constant time per chunk
+
+    This function keeps track of the time it takes to process each chunk and tries to keep the time per chunk
+    as close to 'chunk_time' as possible, increasing or decreasing the chunk size as needed (up to 'max_chunk_size')
+
+    The first chunk will be of size 'initial_chunk_size' (assuming there is enough elements in the iterable to fill it).
+    """
+
+    if chunk_time <= 0:
+        raise ValueError("chunk_time must be > 0")
+    if max_chunk_size < 1:
+        raise ValueError("max_chunk_size must be >= 1")
+    if initial_chunk_size < 1 or initial_chunk_size > max_chunk_size:
+        raise ValueError("initial_chunk_size must be >= 1 and <= max_chunk_size")
+
+    i = iter(it)
+
+    batch = list(itertools.islice(i, initial_chunk_size))
+
+    while batch:
+        # Time how long it takes the caller to process the first chunk
+        start = time.time()
+        yield batch
+        end = time.time()
+
+        # How many elements could we fit in the desired chunk_time
+        time_per_element = (end - start) / len(batch)
+        chunk_size = math.floor(int(chunk_time / time_per_element))
+
+        # Clamp to a valid size
+        chunk_size = max(1, min(chunk_size, max_chunk_size))
+
+        # Get the next chunk
         batch = list(itertools.islice(i, chunk_size))
 
 
