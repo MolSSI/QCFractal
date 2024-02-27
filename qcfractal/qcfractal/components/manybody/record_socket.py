@@ -8,7 +8,7 @@ from typing import List, Dict, Tuple, Optional, Sequence, Any, Union, Set, TYPE_
 import tabulate
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import defer, undefer, lazyload, joinedload
+from sqlalchemy.orm import defer, undefer, lazyload, joinedload, selectinload
 
 from qcfractal import __version__ as qcfractal_version
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
@@ -454,6 +454,13 @@ class ManybodyRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> List[Optional[Dict[str, Any]]]:
+        options = []
+        if include:
+            if "**" in include or "initial_molecule" in include:
+                options.append(joinedload(ManybodyRecordORM.initial_molecule))
+            if "**" in include or "clusters" in include:
+                options.append(selectinload(ManybodyRecordORM.clusters))
+
         with self.root_socket.optional_session(session, True) as session:
             return self.root_socket.records.get_base(
                 orm_type=self.record_orm,
@@ -461,6 +468,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
                 include=include,
                 exclude=exclude,
                 missing_ok=missing_ok,
+                additional_options=options,
                 session=session,
             )
 
@@ -672,7 +680,13 @@ class ManybodyRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> List[Dict[str, Any]]:
-        options = [lazyload("*"), defer("*"), joinedload(ManybodyRecordORM.clusters).options(undefer("*"))]
+        options = [
+            lazyload("*"),
+            defer("*"),
+            joinedload(ManybodyRecordORM.clusters).options(
+                undefer("*"), joinedload(ManybodyClusterORM.molecule).options(undefer("*"))
+            ),
+        ]
 
         with self.root_socket.optional_session(session) as session:
             rec = session.get(ManybodyRecordORM, record_id, options=options)
