@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Base Record &#8212; QCArchive 0.53.post4+g32a29a86 documentation</title>
+    <title>Base Record &#8212; QCArchive 0.53.post27+g345b92cb documentation</title>
   
   
   
@@ -18,12 +18,12 @@
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=bd9e20870c6007c4c509" rel="stylesheet" />
-<link href="../../_static/styles/bootstrap.css?digest=bd9e20870c6007c4c509" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=bd9e20870c6007c4c509" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
 
   
-  <link href="../../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=bd9e20870c6007c4c509" rel="stylesheet" />
+  <link href="../../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
   <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
@@ -36,11 +36,11 @@
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=3f4ed3ce" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=bd9e20870c6007c4c509" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=bd9e20870c6007c4c509" />
-  <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=bd9e20870c6007c4c509"></script>
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../_static/documentation_options.js?v=42e5010b"></script>
+    <script src="../../_static/documentation_options.js?v=73339749"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,6 @@
   <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
   
   <div id="pst-scroll-pixel-helper"></div>
-
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
     <i class="fa-solid fa-arrow-up"></i>
@@ -103,10 +102,8 @@
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
 </form></div>
   </div>
-
-  <header>
   
-    <div class="bd-header navbar navbar-expand-lg bd-navbar">
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
 <div class="bd-header__inner bd-page-width">
   <label class="sidebar-toggle primary-toggle" for="__primary">
     <span class="fa-solid fa-bars"></span>
@@ -280,9 +277,8 @@ document.write(`
   
 </div>
 
-    </div>
+    </header>
   
-  </header>
 
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
@@ -651,6 +647,12 @@ features from that library.</p>
 <p>This is expected to be called from derived class propagate_client functions as well</p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.record_models.BaseRecord.fetch_all">
+<span class="sig-name descname"><span class="pre">fetch_all</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/record_models.html#BaseRecord.fetch_all"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.record_models.BaseRecord.fetch_all" title="Link to this definition">#</a></dt>
+<dd><p>Fetches all possible data for this record from the server</p>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.record_models.BaseRecord.offline">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">offline</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.offline" title="Link to this definition">#</a></dt>
@@ -867,6 +869,11 @@ features from that library.</p>
 </dl>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.is_view">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_view</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.is_view" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.status">
 <span class="sig-name descname"><span class="pre">status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.status" title="Link to this definition">#</a></dt>
@@ -926,11 +933,6 @@ features from that library.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.computed_properties">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">computed_properties</span></span><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.computed_properties" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.is_view">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_view</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.is_view" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -1038,20 +1040,10 @@ features from that library.</p>
 </dl>
 </dd></dl>
 
-<dl class="py property">
-<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.specifications">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">specifications</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.specifications" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.specification_names">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">specification_names</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.specification_names" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
-<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.fetch_specifications">
-<span class="sig-name descname"><span class="pre">fetch_specifications</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.fetch_specifications"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.fetch_specifications" title="Link to this definition">#</a></dt>
-<dd><p>Fetch all specifications from the remote server</p>
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.fetch_specification_names">
+<span class="sig-name descname"><span class="pre">fetch_specification_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.fetch_specification_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.fetch_specification_names" title="Link to this definition">#</a></dt>
+<dd><p>Fetch all entry names from the remote server</p>
 <p>These are fetched and then stored internally, and not returned.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -1059,6 +1051,33 @@ features from that library.</p>
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.fetch_specifications">
+<span class="sig-name descname"><span class="pre">fetch_specifications</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_refetch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.fetch_specifications"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.fetch_specifications" title="Link to this definition">#</a></dt>
+<dd><p>Fetch specifications from the remote server, storing them internally</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names of specifications to fetch. If None, fetch all specifications</p></li>
+<li><p><strong>force_refetch</strong> (<em>bool</em>) – If true, fetch data from the server even if it already exists locally</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.specification_names">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">specification_names</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.specification_names" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.specifications">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">specifications</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.specifications" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.rename_specification">
@@ -1206,15 +1225,17 @@ If <cite>force_refetch</cite> is True, then this will always fetch the records.<
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.get_record">
-<span class="sig-name descname"><span class="pre">get_record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_refetch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.get_record"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.get_record" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fetch_updated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_refetch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.get_record"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.get_record" title="Link to this definition">#</a></dt>
 <dd><p>Obtain a calculation record related to this dataset</p>
-<p>The record will be automatically fetched from the remote server if needed.</p>
+<p>The record will be automatically fetched from the remote server if needed.
+If a record does not exist for this entry and specification, None is returned</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>entry_name</strong> (<em>str</em>) – </p></li>
 <li><p><strong>specification_name</strong> (<em>str</em>) – </p></li>
 <li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>fetch_updated</strong> (<em>bool</em>) – </p></li>
 <li><p><strong>force_refetch</strong> (<em>bool</em>) – </p></li>
 </ul>
 </dd>
@@ -1415,6 +1436,25 @@ NaN values are dropped.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>DataFrame</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.refresh_cache">
+<span class="sig-name descname"><span class="pre">refresh_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.refresh_cache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.refresh_cache" title="Link to this definition">#</a></dt>
+<dd><p>Refreshes some information in the cache with information on the server</p>
+<p>This can be used to fix some inconsistencies in the cache without deleting and starting over.
+For example, this can fix instances where the record attached to a given entry &amp; specification
+has changed (new record id) due to renaming specifications and entries, or via remove_records followed
+by a submit without duplicate checking.</p>
+<p>This will also fetch any updated records</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names of the entries whose records to fetch. If None, fetch all entries</p></li>
+<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names of the specifications whose records to fetch. If None, fetch all specifications</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -1806,7 +1846,7 @@ and the original string.</p>
 character (including n r t f and spaces) and will discard
 empty strings from the result.</p>
 </dd>
-<dt>maxsplit</dt><dd><p>Maximum number of splits (starting from the left).
+<dt>maxsplit</dt><dd><p>Maximum number of splits.
 -1 (the default value) means no limit.</p>
 </dd>
 </dl>
@@ -1832,11 +1872,12 @@ empty strings from the result.</p>
 character (including n r t f and spaces) and will discard
 empty strings from the result.</p>
 </dd>
-<dt>maxsplit</dt><dd><p>Maximum number of splits (starting from the left).
+<dt>maxsplit</dt><dd><p>Maximum number of splits.
 -1 (the default value) means no limit.</p>
 </dd>
 </dl>
 </div></blockquote>
+<p>Splitting starts at the front of the string and works to the end.</p>
 <p>Note, str.split() is mainly useful for data that has been intentionally
 delimited.  With natural text that includes punctuation, consider using
 the regular expression module.</p>
@@ -2147,6 +2188,7 @@ of a record query, and works with all kinds of records.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.BaseRecord.native_files_"><code class="docutils literal notranslate"><span class="pre">BaseRecord.native_files_</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.BaseRecord.get_subclass"><code class="docutils literal notranslate"><span class="pre">BaseRecord.get_subclass()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.BaseRecord.propagate_client"><code class="docutils literal notranslate"><span class="pre">BaseRecord.propagate_client()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.BaseRecord.fetch_all"><code class="docutils literal notranslate"><span class="pre">BaseRecord.fetch_all()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.BaseRecord.offline"><code class="docutils literal notranslate"><span class="pre">BaseRecord.offline</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.BaseRecord.children_status"><code class="docutils literal notranslate"><span class="pre">BaseRecord.children_status</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.BaseRecord.compute_history"><code class="docutils literal notranslate"><span class="pre">BaseRecord.compute_history</span></code></a></li>
@@ -2181,6 +2223,7 @@ of a record query, and works with all kinds of records.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.get_subclass"><code class="docutils literal notranslate"><span class="pre">BaseDataset.get_subclass()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.propagate_client"><code class="docutils literal notranslate"><span class="pre">BaseDataset.propagate_client()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.submit"><code class="docutils literal notranslate"><span class="pre">BaseDataset.submit()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.is_view"><code class="docutils literal notranslate"><span class="pre">BaseDataset.is_view</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.status"><code class="docutils literal notranslate"><span class="pre">BaseDataset.status()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.status_table"><code class="docutils literal notranslate"><span class="pre">BaseDataset.status_table()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.print_status"><code class="docutils literal notranslate"><span class="pre">BaseDataset.print_status()</span></code></a></li>
@@ -2189,7 +2232,6 @@ of a record query, and works with all kinds of records.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.assert_online"><code class="docutils literal notranslate"><span class="pre">BaseDataset.assert_online()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.record_count"><code class="docutils literal notranslate"><span class="pre">BaseDataset.record_count</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.computed_properties"><code class="docutils literal notranslate"><span class="pre">BaseDataset.computed_properties</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.is_view"><code class="docutils literal notranslate"><span class="pre">BaseDataset.is_view</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.assert_is_not_view"><code class="docutils literal notranslate"><span class="pre">BaseDataset.assert_is_not_view()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.set_name"><code class="docutils literal notranslate"><span class="pre">BaseDataset.set_name()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.set_description"><code class="docutils literal notranslate"><span class="pre">BaseDataset.set_description()</span></code></a></li>
@@ -2201,9 +2243,10 @@ of a record query, and works with all kinds of records.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.set_metadata"><code class="docutils literal notranslate"><span class="pre">BaseDataset.set_metadata()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.set_default_tag"><code class="docutils literal notranslate"><span class="pre">BaseDataset.set_default_tag()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.set_default_priority"><code class="docutils literal notranslate"><span class="pre">BaseDataset.set_default_priority()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.specifications"><code class="docutils literal notranslate"><span class="pre">BaseDataset.specifications</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.specification_names"><code class="docutils literal notranslate"><span class="pre">BaseDataset.specification_names</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.fetch_specification_names"><code class="docutils literal notranslate"><span class="pre">BaseDataset.fetch_specification_names()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.fetch_specifications"><code class="docutils literal notranslate"><span class="pre">BaseDataset.fetch_specifications()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.specification_names"><code class="docutils literal notranslate"><span class="pre">BaseDataset.specification_names</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.specifications"><code class="docutils literal notranslate"><span class="pre">BaseDataset.specifications</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.rename_specification"><code class="docutils literal notranslate"><span class="pre">BaseDataset.rename_specification()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.delete_specification"><code class="docutils literal notranslate"><span class="pre">BaseDataset.delete_specification()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.fetch_entry_names"><code class="docutils literal notranslate"><span class="pre">BaseDataset.fetch_entry_names()</span></code></a></li>
@@ -2225,6 +2268,7 @@ of a record query, and works with all kinds of records.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.uninvalidate_records"><code class="docutils literal notranslate"><span class="pre">BaseDataset.uninvalidate_records()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.compile_values"><code class="docutils literal notranslate"><span class="pre">BaseDataset.compile_values()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.get_properties_df"><code class="docutils literal notranslate"><span class="pre">BaseDataset.get_properties_df()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.refresh_cache"><code class="docutils literal notranslate"><span class="pre">BaseDataset.refresh_cache()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.fetch_contributed_values"><code class="docutils literal notranslate"><span class="pre">BaseDataset.fetch_contributed_values()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.contributed_values"><code class="docutils literal notranslate"><span class="pre">BaseDataset.contributed_values</span></code></a></li>
 </ul>
@@ -2335,8 +2379,8 @@ of a record query, and works with all kinds of records.</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../../_static/scripts/bootstrap.js?digest=bd9e20870c6007c4c509"></script>
-<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=bd9e20870c6007c4c509"></script>
+  <script src="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -2377,7 +2421,7 @@ of a record query, and works with all kinds of records.</p>
         
 
         <p class="theme-version">
-        Built with a customized <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.1.
+        Built with a customized <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.2.
         </p>
 
     </div>

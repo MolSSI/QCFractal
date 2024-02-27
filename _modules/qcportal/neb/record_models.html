@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.neb.record_models &#8212; QCArchive 0.53.post4+g32a29a86 documentation</title>
+    <title>qcportal.neb.record_models &#8212; QCArchive 0.53.post27+g345b92cb documentation</title>
   
   
   
@@ -17,12 +17,12 @@
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../../_static/styles/theme.css?digest=bd9e20870c6007c4c509" rel="stylesheet" />
-<link href="../../../_static/styles/bootstrap.css?digest=bd9e20870c6007c4c509" rel="stylesheet" />
-<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=bd9e20870c6007c4c509" rel="stylesheet" />
+  <link href="../../../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
 
   
-  <link href="../../../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=bd9e20870c6007c4c509" rel="stylesheet" />
+  <link href="../../../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
   <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
@@ -35,11 +35,11 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=3f4ed3ce" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=bd9e20870c6007c4c509" />
-<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=bd9e20870c6007c4c509" />
-  <script src="../../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=bd9e20870c6007c4c509"></script>
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../../_static/documentation_options.js?v=42e5010b"></script>
+    <script src="../../../_static/documentation_options.js?v=73339749"></script>
     <script src="../../../_static/doctools.js?v=888ff710"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -60,7 +60,6 @@
   <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
   
   <div id="pst-scroll-pixel-helper"></div>
-
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
     <i class="fa-solid fa-arrow-up"></i>
@@ -100,10 +99,8 @@
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
 </form></div>
   </div>
-
-  <header>
   
-    <div class="bd-header navbar navbar-expand-lg bd-navbar">
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
 <div class="bd-header__inner bd-page-width">
   <label class="sidebar-toggle primary-toggle" for="__primary">
     <span class="fa-solid fa-bars"></span>
@@ -271,15 +268,10 @@ document.write(`
   
 
   
-    <label class="sidebar-toggle secondary-toggle" for="__secondary" tabindex="0">
-      <span class="fa-solid fa-outdent"></span>
-    </label>
-  
 </div>
 
-    </div>
+    </header>
   
-  </header>
 
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
@@ -453,9 +445,9 @@ document.write(`
 <span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">pydantic.v1</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">root_validator</span><span class="p">,</span> <span class="n">constr</span><span class="p">,</span> <span class="n">validator</span>
+    <span class="kn">from</span> <span class="nn">pydantic.v1</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">root_validator</span><span class="p">,</span> <span class="n">constr</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">PrivateAttr</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">root_validator</span><span class="p">,</span> <span class="n">constr</span><span class="p">,</span> <span class="n">validator</span>
+    <span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">root_validator</span><span class="p">,</span> <span class="n">constr</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">PrivateAttr</span>
 <span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Literal</span>
 
 <span class="kn">from</span> <span class="nn">qcportal.molecules</span> <span class="kn">import</span> <span class="n">Molecule</span>
@@ -593,69 +585,92 @@ document.write(`
     <span class="n">initial_chain_molecule_ids_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">singlepoints_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">NEBSinglepoint</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">optimizations_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">NEBOptimization</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">neb_result_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Molecule</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">initial_chain_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Molecule</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="c1">########################################</span>
     <span class="c1"># Caches</span>
     <span class="c1">########################################</span>
-    <span class="n">initial_chain_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Molecule</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">optimizations_cache_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">OptimizationRecord</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">singlepoints_cache_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">SinglepointRecord</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_optimizations_cache</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">OptimizationRecord</span><span class="p">]]</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">_singlepoints_cache</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">SinglepointRecord</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
 
 <div class="viewcode-block" id="NEBRecord.propagate_client">
 <a class="viewcode-back" href="../../../user_guide/records/neb.html#qcportal.neb.NEBRecord.propagate_client">[docs]</a>
     <span class="k">def</span> <span class="nf">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">):</span>
         <span class="n">BaseRecord</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizations_cache_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">opt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizations_cache_</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimizations_cache</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">opt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimizations_cache</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
                 <span class="n">opt</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="n">client</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">singlepoints_cache_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">splist</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">singlepoints_cache_</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_singlepoints_cache</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">splist</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_singlepoints_cache</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
                 <span class="k">for</span> <span class="n">sp2</span> <span class="ow">in</span> <span class="n">splist</span><span class="p">:</span>
                     <span class="n">sp2</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="n">client</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="NEBRecord.fetch_all">
+<a class="viewcode-back" href="../../../user_guide/records/neb.html#qcportal.neb.NEBRecord.fetch_all">[docs]</a>
+    <span class="k">def</span> <span class="nf">fetch_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">BaseRecord</span><span class="o">.</span><span class="n">fetch_all</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_initial_chain</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_singlepoints</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_optimizations</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_neb_result</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">opt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimizations_cache</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">opt</span><span class="o">.</span><span class="n">fetch_all</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">splist</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_singlepoints_cache</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">sp2</span> <span class="ow">in</span> <span class="n">splist</span><span class="p">:</span>
+                <span class="n">sp2</span><span class="o">.</span><span class="n">fetch_all</span><span class="p">()</span></div>
 
 
     <span class="k">def</span> <span class="nf">_fetch_optimizations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_assert_online</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">optimizations_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
-            <span class="s2">&quot;get&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;api/v1/records/neb/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/optimizations&quot;</span><span class="p">,</span>
-            <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">NEBOptimization</span><span class="p">],</span>
-        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">offline</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizations_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_assert_online</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimizations_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+                <span class="s2">&quot;get&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;api/v1/records/neb/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/optimizations&quot;</span><span class="p">,</span>
+                <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">NEBOptimization</span><span class="p">],</span>
+            <span class="p">)</span>
 
         <span class="c1"># Fetch optimization records from server</span>
         <span class="n">opt_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">opt</span><span class="o">.</span><span class="n">optimization_id</span> <span class="k">for</span> <span class="n">opt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizations_</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
-        <span class="n">opt_recs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get_optimizations</span><span class="p">(</span><span class="n">opt_ids</span><span class="p">)</span>
+        <span class="n">opt_recs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_child_records</span><span class="p">(</span><span class="n">opt_ids</span><span class="p">,</span> <span class="n">OptimizationRecord</span><span class="p">)</span>
         <span class="n">opt_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">opt</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">opt</span> <span class="k">for</span> <span class="n">opt</span> <span class="ow">in</span> <span class="n">opt_recs</span><span class="p">}</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">optimizations_cache_</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_optimizations_cache</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="k">for</span> <span class="n">opt_key</span><span class="p">,</span> <span class="n">opt_info</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizations_</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">optimizations_cache_</span><span class="p">[</span><span class="n">opt_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">opt_map</span><span class="p">[</span><span class="n">opt_info</span><span class="o">.</span><span class="n">optimization_id</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_optimizations_cache</span><span class="p">[</span><span class="n">opt_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">opt_map</span><span class="p">[</span><span class="n">opt_info</span><span class="o">.</span><span class="n">optimization_id</span><span class="p">]</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_fetch_singlepoints</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_assert_online</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">singlepoints_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
-            <span class="s2">&quot;get&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;api/v1/records/neb/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/singlepoints&quot;</span><span class="p">,</span>
-            <span class="n">List</span><span class="p">[</span><span class="n">NEBSinglepoint</span><span class="p">],</span>
-        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">offline</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">singlepoints_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_assert_online</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">singlepoints_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+                <span class="s2">&quot;get&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;api/v1/records/neb/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/singlepoints&quot;</span><span class="p">,</span>
+                <span class="n">List</span><span class="p">[</span><span class="n">NEBSinglepoint</span><span class="p">],</span>
+            <span class="p">)</span>
 
-        <span class="c1"># Fetch singlepoint records from server</span>
+        <span class="c1"># Fetch singlepoint records from server or the cache</span>
         <span class="n">sp_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">singlepoint_id</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">singlepoints_</span><span class="p">]</span>
-        <span class="n">sp_recs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get_singlepoints</span><span class="p">(</span><span class="n">sp_ids</span><span class="p">)</span>
+        <span class="n">sp_recs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_child_records</span><span class="p">(</span><span class="n">sp_ids</span><span class="p">,</span> <span class="n">SinglepointRecord</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">singlepoints_cache_</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_singlepoints_cache</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="c1"># Singlepoints should be in order of (iteration, position)</span>
         <span class="k">for</span> <span class="n">sp_info</span><span class="p">,</span> <span class="n">sp_rec</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">singlepoints_</span><span class="p">,</span> <span class="n">sp_recs</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">singlepoints_cache_</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">sp_info</span><span class="o">.</span><span class="n">chain_iteration</span><span class="p">,</span> <span class="nb">list</span><span class="p">())</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">singlepoints_cache_</span><span class="p">[</span><span class="n">sp_info</span><span class="o">.</span><span class="n">chain_iteration</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sp_rec</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_singlepoints_cache</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">sp_info</span><span class="o">.</span><span class="n">chain_iteration</span><span class="p">,</span> <span class="nb">list</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_singlepoints_cache</span><span class="p">[</span><span class="n">sp_info</span><span class="o">.</span><span class="n">chain_iteration</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sp_rec</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="p">)</span>
 
@@ -670,6 +685,15 @@ document.write(`
 
         <span class="bp">self</span><span class="o">.</span><span class="n">initial_chain_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get_molecules</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_chain_molecule_ids_</span><span class="p">)</span>
 
+    <span class="k">def</span> <span class="nf">_fetch_neb_result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_online</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">neb_result_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+            <span class="s2">&quot;get&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;api/v1/records/neb/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/neb_result&quot;</span><span class="p">,</span>
+            <span class="n">Optional</span><span class="p">[</span><span class="n">Molecule</span><span class="p">],</span>
+        <span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">_handle_includes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">includes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]):</span>
         <span class="k">if</span> <span class="n">includes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span>
@@ -682,6 +706,8 @@ document.write(`
             <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_singlepoints</span><span class="p">()</span>
         <span class="k">if</span> <span class="s2">&quot;optimizations&quot;</span> <span class="ow">in</span> <span class="n">includes</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_optimizations</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s2">&quot;result&quot;</span> <span class="ow">in</span> <span class="n">includes</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_neb_result</span><span class="p">()</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">initial_chain</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Molecule</span><span class="p">]:</span>
@@ -691,25 +717,21 @@ document.write(`
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">singlepoints</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">SinglepointRecord</span><span class="p">]]:</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">singlepoints_cache_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_singlepoints_cache</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_singlepoints</span><span class="p">()</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">singlepoints_cache_</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_singlepoints_cache</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">neb_result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
-            <span class="s2">&quot;get&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;api/v1/records/neb/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/neb_result&quot;</span><span class="p">,</span>
-            <span class="n">Molecule</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">r</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">neb_result_</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">&quot;neb_result_&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__fields_set__</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_neb_result</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">neb_result_</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">optimizations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">OptimizationRecord</span><span class="p">]]:</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizations_cache_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimizations_cache</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_optimizations</span><span class="p">()</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizations_cache_</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimizations_cache</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">ts_optimization</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">OptimizationRecord</span><span class="p">]:</span>
@@ -746,8 +768,8 @@ document.write(`
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../../../_static/scripts/bootstrap.js?digest=bd9e20870c6007c4c509"></script>
-<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=bd9e20870c6007c4c509"></script>
+  <script src="../../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -788,7 +810,7 @@ document.write(`
         
 
         <p class="theme-version">
-        Built with a customized <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.1.
+        Built with a customized <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.2.
         </p>
 
     </div>
