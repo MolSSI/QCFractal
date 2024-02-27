@@ -1,9 +1,9 @@
 from typing import List, Optional, Union, Dict, Iterable
 
 try:
-    from pydantic.v1 import BaseModel, Field, Extra, root_validator, constr, validator
+    from pydantic.v1 import BaseModel, Field, Extra, root_validator, constr, validator, PrivateAttr
 except ImportError:
-    from pydantic import BaseModel, Field, Extra, root_validator, constr, validator
+    from pydantic import BaseModel, Field, Extra, root_validator, constr, validator, PrivateAttr
 from typing_extensions import Literal
 
 from qcportal.molecules import Molecule
@@ -133,66 +133,86 @@ class NEBRecord(BaseRecord):
     initial_chain_molecule_ids_: Optional[List[int]] = None
     singlepoints_: Optional[List[NEBSinglepoint]] = None
     optimizations_: Optional[Dict[str, NEBOptimization]] = None
+    neb_result_: Optional[Molecule] = None
+    initial_chain_: Optional[List[Molecule]] = None
 
     ########################################
     # Caches
     ########################################
-    initial_chain_: Optional[List[Molecule]] = None
-    optimizations_cache_: Optional[Dict[str, OptimizationRecord]] = None
-    singlepoints_cache_: Optional[Dict[int, List[SinglepointRecord]]] = None
+    _optimizations_cache: Optional[Dict[str, OptimizationRecord]] = PrivateAttr(None)
+    _singlepoints_cache: Optional[Dict[int, List[SinglepointRecord]]] = PrivateAttr(None)
 
     def propagate_client(self, client):
         BaseRecord.propagate_client(self, client)
 
-        if self.optimizations_cache_ is not None:
-            for opt in self.optimizations_cache_.values():
+        if self._optimizations_cache is not None:
+            for opt in self._optimizations_cache.values():
                 opt.propagate_client(client)
 
-        if self.singlepoints_cache_ is not None:
-            for splist in self.singlepoints_cache_.values():
+        if self._singlepoints_cache is not None:
+            for splist in self._singlepoints_cache.values():
                 for sp2 in splist:
                     sp2.propagate_client(client)
+
+    def fetch_all(self):
+        BaseRecord.fetch_all(self)
+
+        self._fetch_initial_chain()
+        self._fetch_singlepoints()
+        self._fetch_optimizations()
+        self._fetch_neb_result()
+
+        for opt in self._optimizations_cache.values():
+            opt.fetch_all()
+
+        for splist in self._singlepoints_cache.values():
+            for sp2 in splist:
+                sp2.fetch_all()
 
     def _fetch_optimizations(self):
         self._assert_online()
 
-        self.optimizations_ = self._client.make_request(
-            "get",
-            f"api/v1/records/neb/{self.id}/optimizations",
-            Dict[str, NEBOptimization],
-        )
+        if not self.offline or self.optimizations_ is None:
+            self._assert_online()
+            self.optimizations_ = self._client.make_request(
+                "get",
+                f"api/v1/records/neb/{self.id}/optimizations",
+                Dict[str, NEBOptimization],
+            )
 
         # Fetch optimization records from server
         opt_ids = [opt.optimization_id for opt in self.optimizations_.values()]
-        opt_recs = self._client.get_optimizations(opt_ids)
+        opt_recs = self._get_child_records(opt_ids, OptimizationRecord)
         opt_map = {opt.id: opt for opt in opt_recs}
 
-        self.optimizations_cache_ = {}
+        self._optimizations_cache = {}
 
         for opt_key, opt_info in self.optimizations_.items():
-            self.optimizations_cache_[opt_key] = opt_map[opt_info.optimization_id]
+            self._optimizations_cache[opt_key] = opt_map[opt_info.optimization_id]
 
         self.propagate_client(self._client)
 
     def _fetch_singlepoints(self):
         self._assert_online()
 
-        self.singlepoints_ = self._client.make_request(
-            "get",
-            f"api/v1/records/neb/{self.id}/singlepoints",
-            List[NEBSinglepoint],
-        )
+        if not self.offline or self.singlepoints_ is None:
+            self._assert_online()
+            self.singlepoints_ = self._client.make_request(
+                "get",
+                f"api/v1/records/neb/{self.id}/singlepoints",
+                List[NEBSinglepoint],
+            )
 
-        # Fetch singlepoint records from server
+        # Fetch singlepoint records from server or the cache
         sp_ids = [sp.singlepoint_id for sp in self.singlepoints_]
-        sp_recs = self._client.get_singlepoints(sp_ids)
+        sp_recs = self._get_child_records(sp_ids, SinglepointRecord)
 
-        self.singlepoints_cache_ = {}
+        self._singlepoints_cache = {}
 
         # Singlepoints should be in order of (iteration, position)
         for sp_info, sp_rec in zip(self.singlepoints_, sp_recs):
-            self.singlepoints_cache_.setdefault(sp_info.chain_iteration, list())
-            self.singlepoints_cache_[sp_info.chain_iteration].append(sp_rec)
+            self._singlepoints_cache.setdefault(sp_info.chain_iteration, list())
+            self._singlepoints_cache[sp_info.chain_iteration].append(sp_rec)
 
         self.propagate_client(self._client)
 
@@ -207,6 +227,15 @@ class NEBRecord(BaseRecord):
 
         self.initial_chain_ = self._client.get_molecules(self.initial_chain_molecule_ids_)
 
+    def _fetch_neb_result(self):
+        self._assert_online()
+
+        self.neb_result_ = self._client.make_request(
+            "get",
+            f"api/v1/records/neb/{self.id}/neb_result",
+            Optional[Molecule],
+        )
+
     def _handle_includes(self, includes: Optional[Iterable[str]]):
         if includes is None:
             return
@@ -219,6 +248,8 @@ class NEBRecord(BaseRecord):
             self._fetch_singlepoints()
         if "optimizations" in includes:
             self._fetch_optimizations()
+        if "result" in includes:
+            self._fetch_neb_result()
 
     @property
     def initial_chain(self) -> List[Molecule]:
@@ -228,25 +259,21 @@ class NEBRecord(BaseRecord):
 
     @property
     def singlepoints(self) -> Dict[int, List[SinglepointRecord]]:
-        if self.singlepoints_cache_ is None:
+        if self._singlepoints_cache is None:
             self._fetch_singlepoints()
-        return self.singlepoints_cache_
+        return self._singlepoints_cache
 
     @property
     def neb_result(self):
-        r = self._client.make_request(
-            "get",
-            f"api/v1/records/neb/{self.id}/neb_result",
-            Molecule,
-        )
-
-        return r
+        if self.neb_result_ is None and "neb_result_" not in self.__fields_set__:
+            self._fetch_neb_result()
+        return self.neb_result_
 
     @property
     def optimizations(self) -> Optional[Dict[str, OptimizationRecord]]:
-        if self.optimizations_cache_ is None:
+        if self._optimizations_cache is None:
             self._fetch_optimizations()
-        return self.optimizations_cache_
+        return self._optimizations_cache
 
     @property
     def ts_optimization(self) -> Optional[OptimizationRecord]:

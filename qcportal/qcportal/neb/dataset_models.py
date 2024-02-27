@@ -54,10 +54,6 @@ class NEBDatasetRecordItem(BaseModel):
 class NEBDataset(BaseDataset):
     dataset_type: Literal["neb"] = "neb"
 
-    _specifications: Dict[str, NEBDatasetSpecification]
-    _entries: Dict[str, NEBDatasetEntry]
-    _record_map: Dict[Tuple[str, str], NEBRecord]
-
     # Needed by the base class
     _entry_type = NEBDatasetEntry
     _new_entry_type = NEBDatasetNewEntry

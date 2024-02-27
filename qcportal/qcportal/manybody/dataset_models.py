@@ -46,13 +46,6 @@ class ManybodyDatasetRecordItem(BaseModel):
 class ManybodyDataset(BaseDataset):
     dataset_type: Literal["manybody"] = "manybody"
 
-    ########################################
-    # Caches of information
-    ########################################
-    _specifications: Dict[str, ManybodyDatasetSpecification]
-    _entries: Dict[str, ManybodyDatasetEntry]
-    _record_map: Dict[Tuple[str, str], ManybodyRecord]
-
     # Needed by the base class
     _entry_type = ManybodyDatasetEntry
     _new_entry_type = ManybodyDatasetNewEntry

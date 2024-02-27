@@ -57,13 +57,6 @@ class ReactionDatasetRecordItem(BaseModel):
 class ReactionDataset(BaseDataset):
     dataset_type: Literal["reaction"] = "reaction"
 
-    ########################################
-    # Caches of information
-    ########################################
-    _specifications: Dict[str, ReactionDatasetSpecification]
-    _entries: Dict[str, ReactionDatasetEntry]
-    _record_map: Dict[Tuple[str, str], ReactionRecord]
-
     # Needed by the base class
     _entry_type = ReactionDatasetEntry
     _new_entry_type = ReactionDatasetNewEntry

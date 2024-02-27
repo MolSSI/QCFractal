@@ -53,13 +53,6 @@ class GridoptimizationDatasetRecordItem(BaseModel):
 class GridoptimizationDataset(BaseDataset):
     dataset_type: Literal["gridoptimization"] = "gridoptimization"
 
-    ########################################
-    # Caches of information
-    ########################################
-    _specifications: Dict[str, GridoptimizationDatasetSpecification]
-    _entries: Dict[str, GridoptimizationDatasetEntry]
-    _record_map: Dict[Tuple[str, str], GridoptimizationRecord]
-
     # Needed by the base class
     _entry_type = GridoptimizationDatasetEntry
     _new_entry_type = GridoptimizationDatasetNewEntry

@@ -6,12 +6,18 @@ import msgpack
 import numpy as np
 
 try:
+    from pydantic.v1 import BaseModel
     from pydantic.v1.json import pydantic_encoder
 except ImportError:
+    from pydantic import BaseModel
     from pydantic.json import pydantic_encoder
 
 
 def _msgpack_encode(obj: Any) -> Any:
+    if isinstance(obj, BaseModel):
+        # Don't include unset fields in pydantic models
+        return obj.dict(exclude_unset=True)
+
     try:
         return pydantic_encoder(obj)
     except TypeError:
@@ -37,7 +43,11 @@ class _JSONEncoder(json.JSONEncoder):
         if isinstance(obj, bytes):
             return {"_bytes_base64_": base64.b64encode(obj).decode("ascii")}
 
-        # Now do aything with pydantic
+        # Now do anything with pydantic, excluding unset fields
+        if isinstance(obj, BaseModel):
+            return obj.dict(exclude_unset=True)
+
+        # Let pydantic handle other things
         try:
             return pydantic_encoder(obj)
         except TypeError:

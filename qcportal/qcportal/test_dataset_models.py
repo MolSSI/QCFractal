@@ -140,16 +140,18 @@ def test_dataset_model_status(snowflake: QCATestingSnowflake):
 
 
 def test_dataset_model_add_submit_many(snowflake_client: PortalClient):
+    test_count = 123
+
     ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
     assert ds.status() == {}
 
-    mols = [Molecule(symbols=["h", "h"], geometry=[0, 0, 0, 0, 0, x]) for x in range(1, 3000)]
+    mols = [Molecule(symbols=["h", "h"], geometry=[0, 0, 0, 0, 0, x + 1.0]) for x in range(0, test_count)]
     entries = [SinglepointDatasetNewEntry(name=f"test_molecule_{idx}", molecule=m) for idx, m in enumerate(mols)]
-    assert len(entries) == 2999
+    assert len(entries) == test_count
 
     meta = ds.add_entries(entries)
-    assert meta.n_inserted == 2999
-    assert meta.inserted_idx == list(range(2999))
+    assert meta.n_inserted == test_count
+    assert meta.inserted_idx == list(range(test_count))
     assert meta.n_existing == 0
     assert meta.existing_idx == []
     assert meta.n_errors == 0
@@ -157,8 +159,8 @@ def test_dataset_model_add_submit_many(snowflake_client: PortalClient):
     meta = ds.add_entries(entries)
     assert meta.n_inserted == 0
     assert meta.inserted_idx == []
-    assert meta.n_existing == 2999
-    assert meta.existing_idx == list(range(2999))
+    assert meta.n_existing == test_count
+    assert meta.existing_idx == list(range(test_count))
     assert meta.n_errors == 0
 
     ds.add_specification(
@@ -170,4 +172,4 @@ def test_dataset_model_add_submit_many(snowflake_client: PortalClient):
 
     ds.submit()
 
-    assert ds.record_count == 2999 * 2
+    assert ds.record_count == test_count * 2

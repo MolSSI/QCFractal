@@ -3,9 +3,9 @@ from enum import Enum
 from typing import List, Union, Optional, Dict, Iterable, Tuple, Sequence, Any
 
 try:
-    from pydantic.v1 import BaseModel, Extra, Field, constr, validator
+    from pydantic.v1 import BaseModel, Extra, Field, constr, validator, PrivateAttr
 except ImportError:
-    from pydantic import BaseModel, Extra, Field, constr, validator
+    from pydantic import BaseModel, Extra, Field, constr, validator, PrivateAttr
 from typing_extensions import Literal
 
 from qcportal.molecules import Molecule
@@ -199,14 +199,24 @@ class GridoptimizationRecord(BaseRecord):
     ########################################
     # Caches
     ########################################
-    optimizations_cache_: Optional[Dict[Any, OptimizationRecord]] = None
+    _optimizations_cache: Optional[Dict[Any, OptimizationRecord]] = PrivateAttr(None)
 
     def propagate_client(self, client):
         BaseRecord.propagate_client(self, client)
 
-        if self.optimizations_cache_ is not None:
-            for opt in self.optimizations_cache_.values():
+        if self._optimizations_cache is not None:
+            for opt in self._optimizations_cache.values():
                 opt.propagate_client(client)
+
+    def fetch_all(self):
+        BaseRecord.fetch_all(self)
+
+        self._fetch_initial_molecule()
+        self._fetch_starting_molecule()
+        self._fetch_optimizations()
+
+        for opt in self._optimizations_cache.values():
+            opt.fetch_all()
 
     def _fetch_initial_molecule(self):
         self._assert_online()
@@ -217,19 +227,20 @@ class GridoptimizationRecord(BaseRecord):
         self.starting_molecule_ = self._client.get_molecules([self.starting_molecule_id])[0]
 
     def _fetch_optimizations(self):
-        self._assert_online()
+        # Always fetch optimization metadata if we can
+        if not self.offline or self.optimizations_ is None:
+            self._assert_online()
+            self.optimizations_ = self._client.make_request(
+                "get",
+                f"api/v1/records/gridoptimization/{self.id}/optimizations",
+                List[GridoptimizationOptimization],
+            )
 
-        self.optimizations_ = self._client.make_request(
-            "get",
-            f"api/v1/records/gridoptimization/{self.id}/optimizations",
-            List[GridoptimizationOptimization],
-        )
-
-        # Fetch optimization records from the server
+        # Fetch optimization records from the server or the cache
         opt_ids = [x.optimization_id for x in self.optimizations_]
-        opt_records = self._client.get_optimizations(opt_ids)
+        opt_records = self._get_child_records(opt_ids, OptimizationRecord)
 
-        self.optimizations_cache_ = {deserialize_key(x.key): y for x, y in zip(self.optimizations_, opt_records)}
+        self._optimizations_cache = {deserialize_key(x.key): y for x, y in zip(self.optimizations_, opt_records)}
 
         self.propagate_client(self._client)
 
@@ -260,15 +271,15 @@ class GridoptimizationRecord(BaseRecord):
 
     @property
     def optimizations(self) -> Dict[Any, OptimizationRecord]:
-        if self.optimizations_cache_ is None:
+        if self._optimizations_cache is None:
             self._fetch_optimizations()
-        return self.optimizations_cache_
+        return self._optimizations_cache
 
     @property
     def preoptimization(self) -> Optional[OptimizationRecord]:
-        if self.optimizations_cache_ is None:
+        if self._optimizations_cache is None:
             self._fetch_optimizations()
-        return self.optimizations_cache_.get("preoptimization", None)
+        return self._optimizations_cache.get("preoptimization", None)
 
     @property
     def final_energies(self) -> Dict[Tuple[int, ...], float]:
