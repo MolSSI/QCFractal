@@ -16,7 +16,7 @@ except ImportError:
 
 from sqlalchemy import select, func
 from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by, DOUBLE_PRECISION, TEXT
-from sqlalchemy.orm import lazyload, joinedload, defer, undefer
+from sqlalchemy.orm import lazyload, joinedload, selectinload, defer, undefer
 
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
@@ -536,6 +536,16 @@ class NEBRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> List[Optional[Dict[str, Any]]]:
+        options = []
+
+        if include:
+            if "**" in include or "initial_chain" in include:
+                options.append(selectinload(NEBRecordORM.initial_chain).joinedload(NEBInitialchainORM.molecule))
+            if "**" in include or "singlepoints" in include:
+                options.append(selectinload(NEBRecordORM.singlepoints))
+            if "**" in include or "optimizations" in include:
+                options.append(selectinload(NEBRecordORM.optimizations))
+
         with self.root_socket.optional_session(session, True) as session:
             return self.root_socket.records.get_base(
                 orm_type=self.record_orm,
@@ -543,6 +553,7 @@ class NEBRecordSocket(BaseRecordSocket):
                 include=include,
                 exclude=exclude,
                 missing_ok=missing_ok,
+                additional_options=options,
                 session=session,
             )
 
@@ -875,17 +886,7 @@ class NEBRecordSocket(BaseRecordSocket):
             if rec is None:
                 raise MissingDataError(f"Cannot find record {record_id}")
 
-            ret = {}
-
-            for opt in rec.optimizations:
-                if opt.ts:
-                    ret["transition"] = opt.model_dict()
-                elif opt.position == 0:
-                    ret["initial"] = opt.model_dict()
-                else:
-                    ret["final"] = opt.model_dict()
-
-            return ret
+            return rec.model_dict()["optimizations"]
 
     def get_neb_result(
         self,
