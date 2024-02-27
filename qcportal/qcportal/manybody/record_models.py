@@ -56,7 +56,7 @@ class ManybodyQueryFilters(RecordQueryFilters):
     initial_molecule_id: Optional[List[int]] = None
 
 
-class ManybodyCluster(BaseModel):
+class ManybodyClusterMeta(BaseModel):
     class Config:
         extra = Extra.forbid
 
@@ -67,6 +67,9 @@ class ManybodyCluster(BaseModel):
     singlepoint_id: Optional[int]
 
     molecule: Optional[Molecule] = None
+
+
+class ManybodyCluster(ManybodyClusterMeta):
     singlepoint_record: Optional[SinglepointRecord] = None
 
 
@@ -81,6 +84,7 @@ class ManybodyRecord(BaseRecord):
     # Fields not always included when fetching the record
     ######################################################
     initial_molecule_: Optional[Molecule] = Field(None, alias="initial_molecule")
+    clusters_meta_: Optional[List[ManybodyClusterMeta]] = Field(None, alias="clusters")
 
     ########################################
     # Caches
@@ -95,15 +99,22 @@ class ManybodyRecord(BaseRecord):
                 if cluster.singlepoint_record:
                     cluster.singlepoint_record.propagate_client(client)
 
-    def fetch_all(self):
-        BaseRecord.fetch_all(self)
+    def _fetch_all(self, recursive: bool = False) -> Dict[str, Any]:
+        extra_data = BaseRecord._fetch_all(self, recursive=recursive)
+        self.initial_molecule_ = extra_data.get("initial_molecule", None)
+        self.clusters_meta_ = extra_data.get("clusters", None)
 
-        self._fetch_initial_molecule()
-        self._fetch_clusters()
+        if recursive and self.clusters_meta_:
+            self._fetch_clusters()
 
-        for cluster in self._clusters:
-            if cluster.singlepoint_record:
-                cluster.singlepoint_record.fetch_all()
+            # Fetch everything about the optimizations
+            if self._clusters:
+                for c in self._clusters:
+                    if c.singlepoint_record:
+                        c.singlepoint_record.fetch_all(True)
+
+        self.propagate_client(self._client)
+        return extra_data
 
     def _fetch_initial_molecule(self):
         self._assert_online()
@@ -112,28 +123,21 @@ class ManybodyRecord(BaseRecord):
     def _fetch_clusters(self):
         self._assert_online()
 
-        if not self.offline or self._clusters is None:
-            self._clusters = self._client.make_request(
+        if self.clusters_meta_ is None:
+            # Will include molecules
+            self.clusters_meta_ = self._client.make_request(
                 "get",
                 f"api/v1/records/manybody/{self.id}/clusters",
-                List[ManybodyCluster],
+                List[ManybodyClusterMeta],
             )
 
-            mol_ids = [x.molecule_id for x in self._clusters]
-            mols = self._client.get_molecules(mol_ids)
-
-            for cluster, mol in zip(self._clusters, mols):
-                assert mol.id == cluster.molecule_id
-                cluster.molecule = mol
+        self._clusters = [ManybodyCluster(**x.dict()) for x in self.clusters_meta_]
 
         # Fetch singlepoint records and molecules
         sp_ids = [x.singlepoint_id for x in self._clusters]
         sp_recs = self._get_child_records(sp_ids, SinglepointRecord)
 
-        for (
-            cluster,
-            sp,
-        ) in zip(self._clusters, sp_recs):
+        for cluster, sp in zip(self._clusters, sp_recs):
             assert sp.id == cluster.singlepoint_id
             assert sp.molecule_id == cluster.molecule_id
             cluster.singlepoint_record = sp
@@ -148,6 +152,6 @@ class ManybodyRecord(BaseRecord):
 
     @property
     def clusters(self) -> List[ManybodyCluster]:
-        if self._clusters is None:
+        if self.clusters_meta_ is None:
             self._fetch_clusters()
         return self._clusters

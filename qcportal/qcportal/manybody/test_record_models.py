@@ -26,6 +26,9 @@ def test_manybodyrecord_model(snowflake: QCATestingSnowflake, includes: Optional
     record = snowflake_client.get_manybodys(rec_id, include=includes)
 
     if includes is not None:
+        assert record.initial_molecule_ is not None
+        assert record.clusters_meta_ is not None
+        record.fetch_all(True)
         record._client = None
         assert record.offline
 
