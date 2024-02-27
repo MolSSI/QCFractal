@@ -122,8 +122,6 @@ class ReactionRecordSocket(BaseRecordSocket):
         # of an optimization)
         required_sp_mols = {x.molecule_id for x in rxn_orm.components if has_singlepoint}
 
-        complete_tasks = service_orm.dependencies
-
         # What was already completed and/or submitted
         sub_opt_mols = {x.molecule_id for x in rxn_orm.components if x.optimization_id is not None}
         sub_sp_mols = {x.molecule_id for x in rxn_orm.components if x.singlepoint_id is not None}
@@ -134,6 +132,10 @@ class ReactionRecordSocket(BaseRecordSocket):
 
         # Singlepoint calculations must wait for optimizations
         sp_mols_to_compute -= opt_mols_to_compute
+
+        # Convert to well-ordered lists
+        opt_mols_to_compute = list(opt_mols_to_compute)
+        sp_mols_to_compute = list(sp_mols_to_compute)
 
         service_orm.dependencies = []
         output = ""
@@ -168,11 +170,11 @@ class ReactionRecordSocket(BaseRecordSocket):
         if sp_mols_to_compute:
             # If an optimization was specified, we need to get the final molecule from that
             if has_optimization:
-                real_mols_to_compute = {
+                real_mols_to_compute = [
                     x.optimization_record.final_molecule_id
                     for x in rxn_orm.components
                     if x.molecule_id in sp_mols_to_compute
-                }
+                ]
             else:
                 real_mols_to_compute = sp_mols_to_compute
 
