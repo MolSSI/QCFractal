@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import List, Optional, Union, Dict, Iterable
 
 try:
@@ -6,6 +8,7 @@ except ImportError:
     from pydantic import BaseModel, Field, Extra, root_validator, constr, validator, PrivateAttr
 from typing_extensions import Literal
 
+from qcportal.cache import get_records_with_cache
 from qcportal.molecules import Molecule
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
 from qcportal.utils import recursive_normalizer
@@ -135,7 +138,6 @@ class NEBRecord(BaseRecord):
     initial_chain_molecule_ids_: Optional[List[int]] = Field(None, alias="initial_chain_molecule_ids")
     singlepoints_: Optional[List[NEBSinglepoint]] = Field(None, alias="singlepoints")
     optimizations_: Optional[Dict[str, NEBOptimization]] = Field(None, alias="optimizations")
-    ts_hessian_: Optional[SinglepointRecord] = Field(None, alias="ts_hessian")
     neb_result_: Optional[Molecule] = Field(None, alias="neb_result")
     initial_chain_: Optional[List[Molecule]] = Field(None, alias="initial_chain")
 
@@ -144,6 +146,7 @@ class NEBRecord(BaseRecord):
     ########################################
     _optimizations_cache: Optional[Dict[str, OptimizationRecord]] = PrivateAttr(None)
     _singlepoints_cache: Optional[Dict[int, List[SinglepointRecord]]] = PrivateAttr(None)
+    _ts_hessian: Optional[SinglepointRecord] = PrivateAttr(None)
 
     def propagate_client(self, client):
         BaseRecord.propagate_client(self, client)
@@ -157,25 +160,60 @@ class NEBRecord(BaseRecord):
                 for sp2 in splist:
                     sp2.propagate_client(client)
 
-    def fetch_all(self):
-        BaseRecord.fetch_all(self)
+    @classmethod
+    def _fetch_children_multi(cls, client, record_cache, records: Iterable[NEBRecord], recursive: bool):
+        # Should be checked by the calling function
+        assert records
+        assert all(isinstance(x, NEBRecord) for x in records)
 
-        self._fetch_initial_chain()
-        self._fetch_singlepoints()
-        self._fetch_optimizations()
-        self._fetch_neb_result()
+        # Collect optimization and singlepoint ids for all NEB
+        opt_ids = set()
+        sp_ids = set()
 
-        for opt in self._optimizations_cache.values():
-            opt.fetch_all()
+        for r in records:
+            if r.optimizations_ is not None:
+                opt_ids.update(x.optimization_id for x in r.optimizations_.values())
+            if r.singlepoints_ is not None:
+                sp_ids.update(x.singlepoint_id for x in r.singlepoints_)
 
-        for splist in self._singlepoints_cache.values():
-            for sp2 in splist:
-                sp2.fetch_all()
+        include = ["**"] if recursive else None
+        sp_ids = list(sp_ids)
+        opt_ids = list(opt_ids)
+
+        sp_records = get_records_with_cache(client, record_cache, sp_ids, SinglepointRecord, include=include)
+        opt_records = get_records_with_cache(client, record_cache, opt_ids, OptimizationRecord, include=include)
+
+        sp_map = {r.id: r for r in sp_records}
+        opt_map = {r.id: r for r in opt_records}
+
+        for r in records:
+            if r.optimizations_ is None:
+                r._optimizations_cache = None
+            else:
+                r._optimizations_cache = dict()
+                for opt_key, opt_info in r.optimizations_.items():
+                    r._optimizations_cache[opt_key] = opt_map[opt_info.optimization_id]
+
+            if r.singlepoints_ is None:
+                r._singlepoints_cache = None
+            else:
+                r._singlepoints_cache = dict()
+                for sp_info in r.singlepoints_:
+                    r._singlepoints_cache.setdefault(sp_info.chain_iteration, list())
+                    r._singlepoints_cache[sp_info.chain_iteration].append(sp_map[sp_info.singlepoint_id])
+
+                if len(r._singlepoints_cache) > 0:
+                    if len(r._singlepoints_cache[max(r._singlepoints_cache)]) == 1:
+                        _, temp_list = r._singlepoints_cache.popitem()
+                        r._ts_hessian = temp_list[0]
+                        assert r._ts_hessian.specification.driver == "hessian"
+
+            r.propagate_client(r._client)
 
     def _fetch_optimizations(self):
         self._assert_online()
 
-        if not self.offline or self.optimizations_ is None:
+        if self.optimizations_ is None:
             self._assert_online()
             self.optimizations_ = self._client.make_request(
                 "get",
@@ -183,22 +221,12 @@ class NEBRecord(BaseRecord):
                 Dict[str, NEBOptimization],
             )
 
-        # Fetch optimization records from server
-        opt_ids = [opt.optimization_id for opt in self.optimizations_.values()]
-        opt_recs = self._get_child_records(opt_ids, OptimizationRecord)
-        opt_map = {opt.id: opt for opt in opt_recs}
-
-        self._optimizations_cache = {}
-
-        for opt_key, opt_info in self.optimizations_.items():
-            self._optimizations_cache[opt_key] = opt_map[opt_info.optimization_id]
-
-        self.propagate_client(self._client)
+        self.fetch_children(False)
 
     def _fetch_singlepoints(self):
         self._assert_online()
 
-        if not self.offline or self.singlepoints_ is None:
+        if self.singlepoints_ is None:
             self._assert_online()
             self.singlepoints_ = self._client.make_request(
                 "get",
@@ -206,24 +234,7 @@ class NEBRecord(BaseRecord):
                 List[NEBSinglepoint],
             )
 
-        # Fetch singlepoint records from server or the cache
-        sp_ids = [sp.singlepoint_id for sp in self.singlepoints_]
-        sp_recs = self._get_child_records(sp_ids, SinglepointRecord)
-
-        self._singlepoints_cache = {}
-
-        # Singlepoints should be in order of (iteration, position)
-        for sp_info, sp_rec in zip(self.singlepoints_, sp_recs):
-            self._singlepoints_cache.setdefault(sp_info.chain_iteration, list())
-            self._singlepoints_cache[sp_info.chain_iteration].append(sp_rec)
-
-        if len(self._singlepoints_cache) > 0:
-            if len(self._singlepoints_cache[max(self._singlepoints_cache)]) == 1:
-                _, temp_list = self._singlepoints_cache.popitem()
-                self.ts_hessian_ = temp_list[0]
-                assert self.ts_hessian_.specification.driver == "hessian"
-
-        self.propagate_client(self._client)
+        self.fetch_children(False)
 
     def _fetch_initial_chain(self):
         self._assert_online()
@@ -281,4 +292,4 @@ class NEBRecord(BaseRecord):
     def ts_hessian(self) -> Optional[SinglepointRecord]:
         if self._singlepoints_cache is None:
             self._fetch_singlepoints()
-        return self.ts_hessian_
+        return self._ts_hessian
