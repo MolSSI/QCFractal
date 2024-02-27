@@ -10,7 +10,7 @@ from qcportal.record_models import RecordStatusEnum
 if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
 
-all_includes = ["initial_chain", "singlepoints", "optimizations"]
+all_includes = ["initial_chain", "singlepoints", "optimizations", "result"]
 
 
 @pytest.mark.parametrize("includes", [None, all_includes])
@@ -25,6 +25,12 @@ def test_neb_record_model(snowflake: QCATestingSnowflake, includes: Optional[Lis
     record = snowflake_client.get_nebs(rec_id, include=includes)
 
     if includes is not None:
+        assert record.initial_chain_ is not None
+        assert record.initial_chain_molecule_ids_ is not None
+        assert record.singlepoints_ is not None
+        assert record.optimizations_ is not None
+        record.fetch_all(True)
+        assert record.neb_result_ is not None
         record._client = None
         assert record.offline
 

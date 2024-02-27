@@ -1,4 +1,4 @@
-from typing import List, Optional, Union, Dict, Iterable
+from typing import List, Optional, Union, Dict, Any
 
 try:
     from pydantic.v1 import BaseModel, Field, Extra, root_validator, constr, validator, PrivateAttr
@@ -154,25 +154,35 @@ class NEBRecord(BaseRecord):
                 for sp2 in splist:
                     sp2.propagate_client(client)
 
-    def fetch_all(self):
-        BaseRecord.fetch_all(self)
+    def _fetch_all(self, recursive: bool = False) -> Dict[str, Any]:
+        extra_data = BaseRecord._fetch_all(self, recursive=recursive)
+        self.initial_chain_molecule_ids_ = extra_data.get("initial_chain_molecule_ids", None)
+        self.initial_chain_ = extra_data.get("initial_chain", None)
+        self.optimizations_ = extra_data.get("optimizations", None)
+        self.singlepoints_ = extra_data.get("singlepoints", None)
 
-        self._fetch_initial_chain()
-        self._fetch_singlepoints()
-        self._fetch_optimizations()
+        if recursive and self.optimizations_:
+            self._fetch_optimizations()
+
+            for opt in self._optimizations_cache.values():
+                opt.fetch_all(True)
+
+        if recursive and self.singlepoints_:
+            self._fetch_singlepoints()
+            for sp in self._singlepoints_cache.values():
+                for sp2 in sp:
+                    sp2.fetch_all(True)
+
+        # TODO - kinda awkward. Can we calculate this from what we have?
         self._fetch_neb_result()
 
-        for opt in self._optimizations_cache.values():
-            opt.fetch_all()
-
-        for splist in self._singlepoints_cache.values():
-            for sp2 in splist:
-                sp2.fetch_all()
+        self.propagate_client(self._client)
+        return extra_data
 
     def _fetch_optimizations(self):
         self._assert_online()
 
-        if not self.offline or self.optimizations_ is None:
+        if self.optimizations_ is None:
             self._assert_online()
             self.optimizations_ = self._client.make_request(
                 "get",
@@ -195,7 +205,7 @@ class NEBRecord(BaseRecord):
     def _fetch_singlepoints(self):
         self._assert_online()
 
-        if not self.offline or self.singlepoints_ is None:
+        if self.singlepoints_ is None:
             self._assert_online()
             self.singlepoints_ = self._client.make_request(
                 "get",
