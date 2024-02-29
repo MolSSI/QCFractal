@@ -1,13 +1,30 @@
 from __future__ import annotations
 
-from sqlalchemy import Column, String, Integer, ForeignKey, UniqueConstraint, Index, CheckConstraint, event, DDL
+from typing import TYPE_CHECKING
+
+from sqlalchemy import (
+    Column,
+    String,
+    Integer,
+    ForeignKey,
+    UniqueConstraint,
+    Index,
+    CheckConstraint,
+    Boolean,
+    event,
+    DDL,
+)
 from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 from sqlalchemy.orm import relationship
+from sqlalchemy.orm.collections import attribute_keyed_dict
 
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.singlepoint.record_db_models import SinglepointRecordORM, QCSpecificationORM
 from qcfractal.db_socket import BaseORM
+
+if TYPE_CHECKING:
+    from typing import Dict, Any, Optional, Iterable
 
 
 class ManybodyClusterORM(BaseORM):
@@ -49,29 +66,57 @@ class ManybodySpecificationORM(BaseORM):
     id = Column(Integer, primary_key=True)
 
     program = Column(String, nullable=False)
+    return_total_data = Column(Boolean, nullable=False)
+    bsse_correction = Column(ARRAY(String), nullable=False)
+
+    levels = relationship(
+        "ManybodySpecificationLevelsORM", lazy="selectin", collection_class=attribute_keyed_dict("level")
+    )
+
+    __table_args__ = (
+        Index("ix_manybody_specification_program", "program"),
+        CheckConstraint("program = LOWER(program)", name="ck_manybody_specification_program_lower"),
+    )
+
+    _qcportal_model_excludes = ["id"]
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        d = BaseORM.model_dict(self, exclude)
+
+        # Levels should just be key -> specification
+        # map -1 for levels to 'supersystem'
+        d["levels"] = {k if k != -1 else "supersystem": v["singlepoint_specification"] for k, v in d["levels"].items()}
+
+        return d
+
+    @property
+    def short_description(self) -> str:
+        return f"{self.program}~{sorted(self.levels.keys())}"
+
+
+class ManybodySpecificationLevelsORM(BaseORM):
+    """
+    Association table for storing singlepoint specifications that are part of a manybody specification
+    """
+
+    __tablename__ = "manybody_specification_levels"
+
+    id = Column(Integer, primary_key=True)
+
+    manybody_specification_id = Column(Integer, ForeignKey(ManybodySpecificationORM.id), nullable=False)
+
+    level = Column(Integer, nullable=False)
     singlepoint_specification_id = Column(Integer, ForeignKey(QCSpecificationORM.id), nullable=False)
-    keywords = Column(JSONB, nullable=False)
-    keywords_hash = Column(String, nullable=False)
 
     singlepoint_specification = relationship(QCSpecificationORM, lazy="joined")
 
     __table_args__ = (
-        UniqueConstraint(
-            "program",
-            "singlepoint_specification_id",
-            "keywords_hash",
-            name="ux_manybody_specification_keys",
-        ),
-        Index("ix_manybody_specification_program", "program"),
-        Index("ix_manybody_specification_singlepoint_specification_id", "singlepoint_specification_id"),
-        CheckConstraint("program = LOWER(program)", name="ck_manybody_specification_program_lower"),
+        UniqueConstraint("manybody_specification_id", "level", name="ux_manybody_specification_levels_unique"),
+        Index("ix_manybody_specifications_levels_manybody_specification_id", "manybody_specification_id"),
+        Index("ix_manybody_specifications_levels_singlepoint_specification_id", "singlepoint_specification_id"),
     )
 
-    _qcportal_model_excludes = ["id", "keywords_hash", "singlepoint_specification_id"]
-
-    @property
-    def short_description(self) -> str:
-        return f"{self.program}~{self.singlepoint_specification.short_description}"
+    _qcportal_model_excludes = ["id"]
 
 
 class ManybodyRecordORM(BaseRecordORM):

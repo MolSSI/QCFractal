@@ -6,8 +6,8 @@ import math
 from typing import List, Dict, Tuple, Optional, Sequence, Any, Union, Set, TYPE_CHECKING
 
 import tabulate
-from sqlalchemy import select
-from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy import select, func
+from sqlalchemy.dialects.postgresql import array_agg, aggregate_order_by
 from sqlalchemy.orm import defer, undefer, lazyload, joinedload, selectinload
 
 from qcfractal import __version__ as qcfractal_version
@@ -17,15 +17,18 @@ from qcfractal.db_socket.helpers import insert_general
 from qcportal.exceptions import MissingDataError
 from qcportal.manybody import (
     BSSECorrectionEnum,
-    ManybodyKeywords,
     ManybodySpecification,
     ManybodyQueryFilters,
 )
 from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
-from qcportal.utils import hash_dict
-from .record_db_models import ManybodyClusterORM, ManybodyRecordORM, ManybodySpecificationORM
+from .record_db_models import (
+    ManybodyClusterORM,
+    ManybodyRecordORM,
+    ManybodySpecificationORM,
+    ManybodySpecificationLevelsORM,
+)
 from ..record_socket import BaseRecordSocket
 
 if TYPE_CHECKING:
@@ -35,6 +38,7 @@ if TYPE_CHECKING:
 
 # Meaningless, but unique to manybody
 manybody_insert_lock_id = 14500
+manybody_insert_spec_lock_id = 14501
 
 
 def nCr(n: int, r: int) -> int:
@@ -403,47 +407,93 @@ class ManybodyRecordSocket(BaseRecordSocket):
             Metadata about the insertion, and the id of the specification.
         """
 
-        kw_dict = mb_spec.keywords.dict()
-        kw_hash = hash_dict(kw_dict)
+        # Map 'supersystem' to -1
+        # The reverse (mapping -1 to 'supersystem') happens in the specification orm model_dict function
+        levels = mb_spec.levels.copy()
+        if "supersystem" in levels:
+            levels[-1] = levels.pop("supersystem")
 
         with self.root_socket.optional_session(session) as session:
-            meta, sp_spec_id = self.root_socket.records.singlepoint.add_specification(
-                qc_spec=mb_spec.singlepoint_specification, session=session
+            # add all singlepoint specifications
+
+            # Level to singlepoint spec id
+            level_spec_id_map: Dict[int, int] = {}
+            for k, v in levels.items():
+                meta, sp_spec_id = self.root_socket.records.singlepoint.add_specification(qc_spec=v, session=session)
+
+                if not meta.success:
+                    return (
+                        InsertMetadata(
+                            error_description="Unable to add singlepoint specification: " + meta.error_string,
+                        ),
+                        None,
+                    )
+
+                level_spec_id_map[k] = sp_spec_id
+
+            # Now the full manybody specification. Lock due to query + insert
+            session.execute(select(func.pg_advisory_xact_lock(manybody_insert_spec_lock_id))).scalar()
+
+            # Create a cte with the specification + levels
+            mb_spec_cte = (
+                select(
+                    ManybodySpecificationORM.id,
+                    ManybodySpecificationORM.program,
+                    ManybodySpecificationORM.bsse_correction,
+                    ManybodySpecificationORM.return_total_data,
+                    array_agg(
+                        aggregate_order_by(
+                            ManybodySpecificationLevelsORM.singlepoint_specification_id,
+                            ManybodySpecificationLevelsORM.singlepoint_specification_id.asc(),
+                        )
+                    ).label("singlepoint_ids"),
+                    array_agg(
+                        aggregate_order_by(
+                            ManybodySpecificationLevelsORM.level,
+                            ManybodySpecificationLevelsORM.level.asc(),
+                        )
+                    ).label("levels"),
+                )
+                .join(
+                    ManybodySpecificationLevelsORM,
+                    ManybodySpecificationLevelsORM.manybody_specification_id == ManybodySpecificationORM.id,
+                )
+                .group_by(ManybodySpecificationORM.id)
+                .cte()
             )
 
-            if not meta.success:
-                return (
-                    InsertMetadata(
-                        error_description="Unable to add singlepoint specification: " + meta.error_string,
-                    ),
-                    None,
+            stmt = select(mb_spec_cte.c.id)
+            stmt = stmt.where(mb_spec_cte.c.program == mb_spec.program)
+            stmt = stmt.where(mb_spec_cte.c.bsse_correction == mb_spec.bsse_correction)
+            stmt = stmt.where(mb_spec_cte.c.return_total_data == mb_spec.return_total_data)
+            stmt = stmt.where(mb_spec_cte.c.levels == sorted(level_spec_id_map.keys()))
+            stmt = stmt.where(mb_spec_cte.c.singlepoint_ids == sorted(level_spec_id_map.values()))
+
+            existing_id = session.execute(stmt).scalar_one_or_none()
+
+            if existing_id is not None:
+                return InsertMetadata(existing_idx=[0]), existing_id
+
+            # Does not exist. Insert new
+            sp_spec_orms = {}
+            for level, sp_spec_id in level_spec_id_map.items():
+                sp_spec_orms[level] = ManybodySpecificationLevelsORM(
+                    level=level, singlepoint_specification_id=sp_spec_id
                 )
 
-            stmt = (
-                insert(ManybodySpecificationORM)
-                .values(
-                    program=mb_spec.program,
-                    singlepoint_specification_id=sp_spec_id,
-                    keywords=kw_dict,
-                    keywords_hash=kw_hash,
-                )
-                .on_conflict_do_nothing()
-                .returning(ManybodySpecificationORM.id)
+            if "supersystem" in sp_spec_orms:
+                sp_spec_orms[-1] = sp_spec_orms.pop("supersystem")
+
+            new_orm = ManybodySpecificationORM(
+                program=mb_spec.program,
+                bsse_correction=mb_spec.bsse_correction,
+                return_total_data=mb_spec.return_total_data,
+                levels=sp_spec_orms,
             )
 
-            r = session.execute(stmt).scalar_one_or_none()
-            if r is not None:
-                return InsertMetadata(inserted_idx=[0]), r
-            else:
-                # Specification was already existing
-                stmt = select(ManybodySpecificationORM.id).filter_by(
-                    program=mb_spec.program,
-                    singlepoint_specification_id=sp_spec_id,
-                    keywords_hash=kw_hash,
-                )
-
-                r = session.execute(stmt).scalar_one()
-                return InsertMetadata(existing_idx=[0]), r
+            session.add(new_orm)
+            session.flush()
+            return InsertMetadata(inserted_idx=[0]), new_orm.id
 
     def get(
         self,

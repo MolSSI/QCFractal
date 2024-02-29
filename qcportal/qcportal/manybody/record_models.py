@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Union, Optional, Dict, Any, Iterable
+from typing import List, Union, Optional, Dict, Any
 
 try:
     from pydantic.v1 import BaseModel, Extra, validator, constr, PrivateAttr, Field
@@ -18,6 +18,7 @@ from qcportal.singlepoint.record_models import (
 class BSSECorrectionEnum(str, Enum):
     none = "none"
     cp = "cp"
+    vmfc = "vmfc"
 
 
 class ManybodyKeywords(BaseModel):
@@ -39,8 +40,9 @@ class ManybodySpecification(BaseModel):
         extra = Extra.forbid
 
     program: constr(to_lower=True) = "manybody"
-    singlepoint_specification: QCSpecification
-    keywords: ManybodyKeywords
+    levels: Dict[Union[int, Literal["supersystem"]], QCSpecification]
+    return_total_data: bool
+    bsse_correction: List[BSSECorrectionEnum]
 
 
 class ManybodyAddBody(RecordAddBodyBase):
