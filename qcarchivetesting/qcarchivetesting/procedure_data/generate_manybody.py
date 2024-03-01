@@ -35,8 +35,9 @@ molecule = Molecule(**test_data["molecule"])
 _, ids = client.add_manybodys(
     [molecule],
     program=test_data["specification"]["program"],
-    singlepoint_specification=test_data["specification"]["singlepoint_specification"],
-    keywords=test_data["specification"]["keywords"],
+    bsse_correction=test_data["specification"]["bsse_correction"],
+    levels=test_data["specification"]["levels"],
+    return_total_data=test_data["specification"]["return_total_data"],
 )
 
 record_id = ids[0]

@@ -54,22 +54,28 @@ def _get_qcmanybody_computer(
 
     qcm_levels = {}
     level_spec_map = {}
+    sp_id_map = {}
 
-    for l, lvl in sorted(mb_orm.specification.levels.items()):
-        if l == -1:
-            l = "supersystem"
+    for nb, lvl in sorted(mb_orm.specification.levels.items()):
+        if nb == -1:
+            nb = "supersystem"
 
         sp_spec = lvl.singlepoint_specification
-        test_name = f"{sp_spec.program}/{sp_spec.method}/{sp_spec.basis}"
-        sp_name = test_name
+        if sp_spec.id in sp_id_map:
+            sp_name = sp_id_map[sp_spec.id]
+        else:
+            test_name = f"{sp_spec.program}/{sp_spec.method}/{sp_spec.basis}"
+            sp_name = test_name
 
-        # duplicates
-        i = 0
-        while sp_name in qcm_levels:
-            i += 1
-            sp_name = f"{test_name}_{i}"
+            # duplicates
+            i = 0
+            while sp_name in qcm_levels:
+                i += 1
+                sp_name = f"{test_name}_{i}"
 
-        qcm_levels[l] = sp_name
+            sp_id_map[sp_spec.id] = sp_name
+
+        qcm_levels[nb] = sp_name
         level_spec_map[sp_name] = lvl
 
     qcm = qcmanybody.ManyBodyCalculator(

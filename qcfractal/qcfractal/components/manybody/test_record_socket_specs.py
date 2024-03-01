@@ -17,7 +17,7 @@ def test_manybody_socket_add_specification_same_1(storage_socket: SQLAlchemySock
             )
         },
         return_total_data=True,
-        bsse_correction=["none"],
+        bsse_correction=["nocp"],
     )
 
     meta, id = storage_socket.records.manybody.add_specification(spec1)
@@ -49,7 +49,7 @@ def test_manybody_socket_add_specification_same_2(storage_socket: SQLAlchemySock
             )
         },
         return_total_data=True,
-        bsse_correction=["none"],
+        bsse_correction=["nocp"],
     )
 
     spec2 = ManybodySpecification(
@@ -65,7 +65,7 @@ def test_manybody_socket_add_specification_same_2(storage_socket: SQLAlchemySock
             )
         },
         return_total_data=True,
-        bsse_correction=["none"],
+        bsse_correction=["nocp"],
     )
 
     meta, id = storage_socket.records.manybody.add_specification(spec1)
@@ -98,7 +98,7 @@ def test_manybody_socket_add_specification_same_3(storage_socket: SQLAlchemySock
             ),
         },
         return_total_data=True,
-        bsse_correction=["none"],
+        bsse_correction=["nocp"],
     )
 
     meta, id = storage_socket.records.manybody.add_specification(spec1)
@@ -131,7 +131,7 @@ def test_manybody_socket_add_specification_same_4(storage_socket: SQLAlchemySock
             ),
         },
         return_total_data=True,
-        bsse_correction=["none"],
+        bsse_correction=["nocp"],
     )
 
     spec2 = ManybodySpecification(
@@ -155,7 +155,7 @@ def test_manybody_socket_add_specification_same_4(storage_socket: SQLAlchemySock
             ),
         },
         return_total_data=True,
-        bsse_correction=["none"],
+        bsse_correction=["nocp"],
     )
 
     meta, id = storage_socket.records.manybody.add_specification(spec1)
@@ -180,7 +180,7 @@ def test_manybody_socket_add_specification_diff_1(storage_socket: SQLAlchemySock
             )
         },
         return_total_data=True,
-        bsse_correction=["none"],
+        bsse_correction=["nocp"],
     )
 
     spec2 = ManybodySpecification(
@@ -221,7 +221,7 @@ def test_manybody_socket_add_specification_diff_2(storage_socket: SQLAlchemySock
             )
         },
         return_total_data=True,
-        bsse_correction=["none"],
+        bsse_correction=["nocp"],
     )
 
     spec2 = ManybodySpecification(

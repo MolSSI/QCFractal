@@ -23,7 +23,7 @@ test_specs = [
     ManybodySpecification(
         program="manybody",
         return_total_data=True,
-        bsse_correction=["none"],
+        bsse_correction=["nocp"],
         levels={
             1: QCSpecification(
                 program="Prog1",
@@ -38,7 +38,7 @@ test_specs = [
     ManybodySpecification(
         program="manybody",
         return_total_data=True,
-        bsse_correction=["none"],
+        bsse_correction=["cp"],
         levels={
             1: QCSpecification(
                 program="Prog2",
@@ -53,7 +53,7 @@ test_specs = [
     ManybodySpecification(
         program="manybody",
         return_total_data=False,
-        bsse_correction=["vmfc"],
+        bsse_correction=["cp", "vmfc"],
         levels={
             1: QCSpecification(
                 program="Prog3",
