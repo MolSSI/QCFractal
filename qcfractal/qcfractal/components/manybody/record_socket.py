@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 import itertools
 import logging
 import math
@@ -10,7 +11,6 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import defer, undefer, lazyload, joinedload, selectinload
 
-from qcfractal import __version__ as qcfractal_version
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
 from qcfractal.db_socket.helpers import insert_general
@@ -27,6 +27,12 @@ from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnu
 from qcportal.utils import hash_dict
 from .record_db_models import ManybodyClusterORM, ManybodyRecordORM, ManybodySpecificationORM
 from ..record_socket import BaseRecordSocket
+
+_qcm_spec = importlib.util.find_spec("qcmanybody")
+
+if _qcm_spec is not None:
+    qcmanybody = importlib.util.module_from_spec(_qcm_spec)
+    _qcm_spec.loader.exec_module(qcmanybody)
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -195,6 +201,9 @@ class ManybodyRecordSocket(BaseRecordSocket):
         BaseRecordSocket.__init__(self, root_socket)
         self._logger = logging.getLogger(__name__)
 
+    def available(self) -> bool:
+        return _qcm_spec is not None
+
     @staticmethod
     def get_children_select() -> List[Any]:
         stmt = select(
@@ -283,9 +292,9 @@ class ManybodyRecordSocket(BaseRecordSocket):
 
         # Always update with the current provenance
         mb_orm.compute_history[-1].provenance = {
-            "creator": "qcfractal",
-            "version": qcfractal_version,
-            "routine": "qcfractal.services.manybody",
+            "creator": "qcmanybody",
+            "version": qcmanybody.__version__,
+            "routine": "qcmanybody",
         }
 
         # Grab all the clusters for the computation and them map them to molecule ID

@@ -41,6 +41,7 @@ dependencies:
 
   # QCFractal Services
   - torsiondrive
+  - qcmanybody
 
   # Worker codes below
   - qcengine<0.70a0
