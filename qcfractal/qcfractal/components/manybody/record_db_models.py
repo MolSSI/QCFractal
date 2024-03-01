@@ -34,11 +34,12 @@ class ManybodyClusterORM(BaseORM):
 
     __tablename__ = "manybody_cluster"
 
-    manybody_id = Column(Integer, ForeignKey("manybody_record.id", ondelete="cascade"), primary_key=True)
-    molecule_id = Column(Integer, ForeignKey("molecule.id"), primary_key=True)
+    id = Column(Integer, primary_key=True)
+    manybody_id = Column(Integer, ForeignKey("manybody_record.id", ondelete="cascade"))
+    molecule_id = Column(Integer, ForeignKey("molecule.id"), nullable=False)
+    mc_level = Column(String, nullable=False)
     fragments = Column(ARRAY(Integer), nullable=False)
     basis = Column(ARRAY(Integer), nullable=False)
-    degeneracy = Column(Integer, nullable=False)
 
     singlepoint_id = Column(Integer, ForeignKey(SinglepointRecordORM.id), nullable=True)
 
@@ -46,14 +47,14 @@ class ManybodyClusterORM(BaseORM):
     singlepoint_record = relationship(SinglepointRecordORM)
 
     __table_args__ = (
-        CheckConstraint("degeneracy > 0", name="ck_manybody_cluster_degeneracy"),
         CheckConstraint("array_length(fragments, 1) > 0", name="ck_manybody_cluster_fragments"),
         CheckConstraint("array_length(basis, 1) > 0", name="ck_manybody_cluster_basis"),
+        UniqueConstraint("manybody_id", "mc_level", "fragments", "basis", name="ux_manybody_cluster_unique"),
         Index("ix_manybody_cluster_molecule_id", "molecule_id"),
         Index("ix_manybody_cluster_singlepoint_id", "singlepoint_id"),
     )
 
-    _qcportal_model_excludes = ["manybody_id"]
+    _qcportal_model_excludes = ["manybody_id", "id"]
 
 
 class ManybodySpecificationORM(BaseORM):

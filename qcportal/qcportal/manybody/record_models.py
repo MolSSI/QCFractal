@@ -16,7 +16,7 @@ from qcportal.singlepoint.record_models import (
 
 
 class BSSECorrectionEnum(str, Enum):
-    none = "none"
+    nocp = "nocp"
     cp = "cp"
     vmfc = "vmfc"
 
@@ -63,11 +63,11 @@ class ManybodyClusterMeta(BaseModel):
         extra = Extra.forbid
 
     molecule_id: int
+    mc_level: str
     fragments: List[int]
     basis: List[int]
-    degeneracy: int
-    singlepoint_id: Optional[int]
 
+    singlepoint_id: Optional[int]
     molecule: Optional[Molecule] = None
 
 
@@ -103,8 +103,11 @@ class ManybodyRecord(BaseRecord):
 
     def _fetch_all(self, recursive: bool = False) -> Dict[str, Any]:
         extra_data = BaseRecord._fetch_all(self, recursive=recursive)
-        self.initial_molecule_ = extra_data.get("initial_molecule", None)
-        self.clusters_meta_ = extra_data.get("clusters", None)
+        if self.initial_molecule_ is None:
+            self.initial_molecule_ = extra_data.get("initial_molecule", None)
+
+        if self.clusters_meta_ is None:
+            self.clusters_meta_ = extra_data.get("clusters", None)
 
         if recursive and self.clusters_meta_:
             self._fetch_clusters()
@@ -136,13 +139,16 @@ class ManybodyRecord(BaseRecord):
         self._clusters = [ManybodyCluster(**x.dict()) for x in self.clusters_meta_]
 
         # Fetch singlepoint records and molecules
-        sp_ids = [x.singlepoint_id for x in self._clusters]
+        sp_ids = [x.singlepoint_id for x in self._clusters if x.singlepoint_id is not None]
         sp_recs = self._get_child_records(sp_ids, SinglepointRecord)
+        sp_rec_map = {x.id: x for x in sp_recs}
 
-        for cluster, sp in zip(self._clusters, sp_recs):
-            assert sp.id == cluster.singlepoint_id
-            assert sp.molecule_id == cluster.molecule_id
-            cluster.singlepoint_record = sp
+        for cluster in self._clusters:
+            if cluster.singlepoint_id is not None:
+                sp = sp_rec_map[cluster.singlepoint_id]
+                assert sp.id == cluster.singlepoint_id
+                assert sp.molecule_id == cluster.molecule_id
+                cluster.singlepoint_record = sp
 
         self.propagate_client(self._client)
 
@@ -154,6 +160,6 @@ class ManybodyRecord(BaseRecord):
 
     @property
     def clusters(self) -> List[ManybodyCluster]:
-        if self.clusters_meta_ is None:
+        if self.clusters_meta_ is None or self._clusters is None:
             self._fetch_clusters()
         return self._clusters

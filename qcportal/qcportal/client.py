@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple, Union, Sequence, Iterable, TypeVar, Type
+from typing import Any, Dict, List, Optional, Tuple, Union, Sequence, Iterable, TypeVar, Type, Literal
 
 from tabulate import tabulate
 
@@ -14,7 +14,7 @@ from qcportal.gridoptimization import (
     GridoptimizationQueryFilters,
 )
 from qcportal.manybody import (
-    ManybodyKeywords,
+    BSSECorrectionEnum,
     ManybodyRecord,
     ManybodyAddBody,
     ManybodyQueryFilters,
@@ -37,9 +37,6 @@ from qcportal.reaction import (
     ReactionRecord,
     ReactionKeywords,
     ReactionQueryFilters,
-)
-from qcportal.services.models import (
-    ServiceSubtaskRecord,
 )
 from qcportal.singlepoint import (
     QCSpecification,
@@ -1985,8 +1982,9 @@ class PortalClient(PortalClientBase):
         self,
         initial_molecules: Sequence[Union[int, Molecule]],
         program: str,
-        singlepoint_specification: QCSpecification,
-        keywords: ManybodyKeywords,
+        levels: Dict[Union[int, Literal["supersystem"]], QCSpecification],
+        bsse_correction: Union[BSSECorrectionEnum, Sequence[BSSECorrectionEnum]],
+        return_total_data: bool,
         tag: str = "*",
         priority: PriorityEnum = PriorityEnum.normal,
         owner_group: Optional[str] = None,
@@ -2039,8 +2037,9 @@ class PortalClient(PortalClientBase):
             "initial_molecules": initial_molecules,
             "specification": {
                 "program": program,
-                "singlepoint_specification": singlepoint_specification,
-                "keywords": keywords,
+                "levels": levels,
+                "bsse_correction": make_list(bsse_correction),
+                "return_total_data": return_total_data,
             },
             "tag": tag,
             "priority": priority,

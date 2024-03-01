@@ -9,7 +9,7 @@ from qcfractal.components.manybody.record_db_models import ManybodyRecordORM
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service
 from qcportal.auth import UserInfo, GroupInfo
-from qcportal.manybody import ManybodySpecification, ManybodyKeywords
+from qcportal.manybody import ManybodySpecification
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 from qcportal.utils import now_at_utc
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
 
 
-@pytest.mark.parametrize("spec", test_specs[:1])
+@pytest.mark.parametrize("spec", test_specs)
 def test_manybody_socket_add_get(storage_socket: SQLAlchemySocket, session: Session, spec: ManybodySpecification):
     water2 = load_molecule_data("water_dimer_minima")
     water4 = load_molecule_data("water_stacked")
@@ -54,15 +54,26 @@ def test_manybody_socket_add_get(storage_socket: SQLAlchemySocket, session: Sess
 def test_manybody_socket_add_same_1(storage_socket: SQLAlchemySocket):
     spec = ManybodySpecification(
         program="manybody",
-        keywords=ManybodyKeywords(max_nbody=None, bsse_correction="none"),
-        singlepoint_specification=QCSpecification(
-            program="prog1",
-            driver="energy",
-            method="b3lyp",
-            basis="6-31G*",
-            keywords={"k": "value"},
-            protocols=SinglepointProtocols(wavefunction="all"),
-        ),
+        levels={
+            2: QCSpecification(
+                program="prog1",
+                driver="energy",
+                method="b3lyp",
+                basis="6-31G*",
+                keywords={"k": "value"},
+                protocols=SinglepointProtocols(wavefunction="all"),
+            ),
+            1: QCSpecification(
+                program="prog1",
+                driver="energy",
+                method="b3lyp",
+                basis="6-31G*",
+                keywords={"k": "value"},
+                protocols=SinglepointProtocols(wavefunction="all"),
+            ),
+        },
+        return_total_data=True,
+        bsse_correction=["none"],
     )
 
     water2 = load_molecule_data("water_dimer_minima")
