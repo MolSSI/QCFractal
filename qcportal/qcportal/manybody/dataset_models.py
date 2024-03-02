@@ -1,4 +1,4 @@
-from typing import Dict, Any, Union, Optional, Iterable, Tuple
+from typing import Dict, Any, Union, Optional, Iterable
 
 try:
     from pydantic.v1 import BaseModel, Extra
@@ -18,7 +18,7 @@ class ManybodyDatasetNewEntry(BaseModel):
 
     name: str
     initial_molecule: Union[Molecule, int]
-    additional_keywords: Dict[str, Any] = {}
+    additional_singlepoint_keywords: Dict[str, Any] = {}
     attributes: Dict[str, Any] = {}
     comment: Optional[str] = None
 
@@ -66,19 +66,19 @@ class ManybodyDataset(BaseDataset):
         self,
         name: str,
         initial_molecule: Union[int, Molecule],
-        additional_keywords: Optional[Dict[str, Any]] = None,
+        additional_singlepoint_keywords: Optional[Dict[str, Any]] = None,
         attributes: Optional[Dict[str, Any]] = None,
         comment: Optional[str] = None,
     ):
-        if additional_keywords is None:
-            additional_keywords = {}
+        if additional_singlepoint_keywords is None:
+            additional_singlepoint_keywords = {}
         if attributes is None:
             attributes = {}
 
         ent = ManybodyDatasetNewEntry(
             name=name,
             initial_molecule=initial_molecule,
-            additional_keywords=additional_keywords,
+            additional_singlepoint_keywords=additional_singlepoint_keywords,
             attributes=attributes,
             comment=comment,
         )

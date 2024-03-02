@@ -6,7 +6,6 @@ from .dataset_models import (
 )
 from .record_models import (
     BSSECorrectionEnum,
-    ManybodyKeywords,
     ManybodySpecification,
     ManybodyClusterMeta,
     ManybodyAddBody,

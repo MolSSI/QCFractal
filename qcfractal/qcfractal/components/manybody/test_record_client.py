@@ -7,7 +7,7 @@ import pytest
 
 from qcarchivetesting import load_molecule_data
 from qcfractal.components.manybody.record_db_models import ManybodyRecordORM
-from qcportal.manybody import ManybodySpecification, ManybodyKeywords
+from qcportal.manybody import ManybodySpecification
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification
 from qcportal.utils import now_at_utc
@@ -314,7 +314,7 @@ def test_manybody_client_query(snowflake: QCATestingSnowflake):
     # query for method
     query_res = snowflake_client.query_manybodys(qc_method=["hf"])
     query_res_l = list(query_res)
-    assert len(query_res_l) == 0
+    assert len(query_res_l) == 1
 
     query_res = snowflake_client.query_manybodys(qc_method=["mp2"])
     query_res_l = list(query_res)

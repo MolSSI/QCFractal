@@ -21,20 +21,6 @@ class BSSECorrectionEnum(str, Enum):
     vmfc = "vmfc"
 
 
-class ManybodyKeywords(BaseModel):
-    class Config:
-        extra = Extra.forbid
-
-    max_nbody: Optional[int] = None
-    bsse_correction: BSSECorrectionEnum
-
-    @validator("max_nbody")
-    def check_max_nbody(cls, v):
-        if v is not None and v <= 0:
-            raise ValueError("max_nbody must be None or > 0")
-        return v
-
-
 class ManybodySpecification(BaseModel):
     class Config:
         extra = Extra.forbid

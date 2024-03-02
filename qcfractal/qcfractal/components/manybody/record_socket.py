@@ -439,7 +439,9 @@ class ManybodyRecordSocket(BaseRecordSocket):
             stmt = stmt.join(ManybodyRecordORM.specification)
 
         if need_qcspec_join:
-            stmt = stmt.join(ManybodySpecificationORM.levels, ManybodySpecificationLevelsORM.singlepoint_specification)
+            stmt = stmt.join(ManybodySpecificationORM.levels).join(
+                ManybodySpecificationLevelsORM.singlepoint_specification
+            )
 
         stmt = stmt.where(*and_query)
 
