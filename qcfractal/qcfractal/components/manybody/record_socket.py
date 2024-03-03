@@ -23,6 +23,7 @@ from qcportal.manybody import (
 from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
+from qcportal.utils import chunk_iterable
 from .record_db_models import (
     ManybodyClusterORM,
     ManybodyRecordORM,
@@ -145,25 +146,34 @@ class ManybodyRecordSocket(BaseRecordSocket):
             output += f" {level:>13}: {mc_name}\n"
         output += "\n\n"
 
-        # Get what we need to compute
+        output += "\n\n" + "-" * 80 + "\nComputation count:\n\n"
         table_rows = []
-        for mc_level, label, molecule in qcm.iterate_molecules():
-            m, mol_id = self.root_socket.molecules.add([molecule], session=session)
-            if not m.success:
-                raise RuntimeError("Unable to add molecule to the database: " + m.error_string)
+        for mc, compute_dict in qcm.compute_map.items():
+            for nb, frags in compute_dict["all"].items():
+                table_rows.append((f"{mc} {nb}-mer", len(frags)))
+        output += tabulate.tabulate(table_rows, headers=["n-body", "count"])
 
-            mol_id = mol_id[0]
-            # Decode the label given by qcmanybody
-            _, frag, bas = qcmanybody.delabeler(label)
+        # Add what we need to compute to the database
+        table_rows = []
 
-            mb_cluster_orm = ManybodyClusterORM(
-                mc_level=mc_level,
-                fragments=frag,
-                basis=bas,
-                molecule_id=mol_id,
-            )
-            table_rows.append((mc_level, frag, bas, mol_id, molecule.get_molecular_formula(), molecule.get_hash()))
-            mb_orm.clusters.append(mb_cluster_orm)
+        for mol_batch in chunk_iterable(qcm.iterate_molecules(), 400):
+            to_add = [x[2] for x in mol_batch]
+            meta, mol_ids = self.root_socket.molecules.add(to_add, session=session)
+            if not meta.success:
+                raise RuntimeError("Unable to add molecules to the database: " + meta.error_string)
+
+            for (mc_level, label, molecule), mol_id in zip(mol_batch, mol_ids):
+                # Decode the label given by qcmanybody
+                _, frag, bas = qcmanybody.delabeler(label)
+
+                mb_cluster_orm = ManybodyClusterORM(
+                    mc_level=mc_level,
+                    fragments=frag,
+                    basis=bas,
+                    molecule_id=mol_id,
+                )
+                table_rows.append((mc_level, frag, bas, mol_id, molecule.get_molecular_formula(), molecule.get_hash()))
+                mb_orm.clusters.append(mb_cluster_orm)
 
         output += "\n\nMolecules to compute\n\n"
         output += tabulate.tabulate(
@@ -186,24 +196,27 @@ class ManybodyRecordSocket(BaseRecordSocket):
             "routine": "qcmanybody",
         }
 
-        # Grab all the clusters for the computation and them map them to molecule ID
-        clusters = mb_orm.clusters
-
         service_orm.dependencies = []
 
         submitted = []
 
         qcm, spec_map = _get_qcmanybody_computer(mb_orm)
+        done_sp_ids = set(c.singlepoint_id for c in mb_orm.clusters if c.singlepoint_id is not None)
 
-        done = set()
-        for cluster in clusters:
-            if cluster.singlepoint_id is not None:
-                done.add(cluster.singlepoint_id)
+        # what we need to submit, mapped by single spec id
+
+        clusters_to_submit = {}
+        for c in mb_orm.clusters:
+            if c.singlepoint_id is not None:
                 continue
+            clusters_to_submit.setdefault(c.mc_level, [])
+            clusters_to_submit[c.mc_level].append(c)
 
+        for mc_level, clusters in clusters_to_submit.items():
+            mol_ids = [c.molecule_id for c in clusters]
             meta, sp_ids = self.root_socket.records.singlepoint.add_internal(
-                [cluster.molecule_id],
-                spec_map[cluster.mc_level].singlepoint_specification_id,
+                mol_ids,
+                spec_map[mc_level].singlepoint_specification_id,
                 service_orm.tag,
                 service_orm.priority,
                 mb_orm.owner_user_id,
@@ -212,16 +225,15 @@ class ManybodyRecordSocket(BaseRecordSocket):
                 session=session,
             )
 
-            sp_id = sp_ids[0]
+            for cluster, sp_id in zip(clusters, sp_ids):
+                cluster.singlepoint_id = sp_id
+                submitted.append((cluster, sp_id))
 
-            cluster.singlepoint_id = sp_id
-            submitted.append((cluster, sp_id))
-
-            # Add as a dependency to the service, but only if it's not done yet
-            if sp_id not in done:
-                svc_dep = ServiceDependencyORM(record_id=sp_id, extras={})
-                service_orm.dependencies.append(svc_dep)
-                done.add(sp_id)
+                # Add as a dependency to the service, but only if it's not done yet
+                if sp_id not in done_sp_ids:
+                    svc_dep = ServiceDependencyORM(record_id=sp_id, extras={})
+                    service_orm.dependencies.append(svc_dep)
+                    done_sp_ids.add(sp_id)
 
         if len(submitted) != 0:
             output = f"\nSubmitted {len(submitted)} singlepoint calculations "
