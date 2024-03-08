@@ -202,7 +202,7 @@ class NEBRecordSocket(BaseRecordSocket):
                     initial_molecules[-1] = complete_opts[-1].record.final_molecule.to_model(Molecule)
 
                 with capture_all_output("geometric.nifty") as (rdout, _):
-                    respaced_chain = geometric.qcf_neb.arrange(initial_molecules, params["align"])
+                    respaced_chain = geometric.qcf_neb.arrange(initial_molecules, params.get("align"))
 
                 output += "\n" + rdout.getvalue()
 

@@ -61,10 +61,7 @@ class NEBKeywords(BaseModel):
         description="Setting it equal to True will optimize two end points of the initial chain before starting NEB.",
     )
 
-    align: bool = Field(
-        True,
-        description="Align the images before starting the NEB calculation."
-    )
+    align: bool = Field(True, description="Align the images before starting the NEB calculation.")
 
     epsilon: float = Field(1e-5, description="Small eigenvalue threshold for resetting Hessian.")
 
@@ -129,7 +126,6 @@ class NEBQueryFilters(RecordQueryFilters):
 
 
 class NEBRecord(BaseRecord):
-
     record_type: Literal["neb"] = "neb"
     specification: NEBSpecification
 
@@ -222,10 +218,11 @@ class NEBRecord(BaseRecord):
             self._singlepoints_cache.setdefault(sp_info.chain_iteration, list())
             self._singlepoints_cache[sp_info.chain_iteration].append(sp_rec)
 
-        if len(self._singlepoints_cache[max(self._singlepoints_cache)]) == 1:
-            _, temp_list = self._singlepoints_cache.popitem()
-            self.ts_hessian_ = temp_list[0]
-            assert self.ts_hessian_.specification.driver == 'hessian'
+        if len(self._singlepoints_cache) > 0:
+            if len(self._singlepoints_cache[max(self._singlepoints_cache)]) == 1:
+                _, temp_list = self._singlepoints_cache.popitem()
+                self.ts_hessian_ = temp_list[0]
+                assert self.ts_hessian_.specification.driver == "hessian"
 
         self.propagate_client(self._client)
 

@@ -18,12 +18,14 @@ def test_neb_full_1(fulltest_client: PortalClient):
     Full NEB test with optimizing end points and the guessed TS (result of the NEB method) optimization.
     """
     chain = [load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)]
+
+    # "maximum_force" and "average_force" are set to be high in orger to converge quickly.
     neb_keywords = NEBKeywords(
         images=11,
         spring_constant=1,
         optimize_endpoints=True,
-        maximum_force=0.05,
-        average_force=0.025,
+        maximum_force=3,
+        average_force=2,
         optimize_ts=True,
         epsilon=1e-6,
         hessian_reset=True,
@@ -34,7 +36,7 @@ def test_neb_full_1(fulltest_client: PortalClient):
         program="psi4",
         driver="gradient",
         method="hf",
-        basis="6-31g",
+        basis="3-21g",
         keywords={},
     )
 
@@ -94,26 +96,27 @@ def test_neb_full_1(fulltest_client: PortalClient):
 
 def test_neb_full_2(fulltest_client: PortalClient):
     """
-    Identical as the previous test without optimizing endpoints and transition state.
+    Identical as the previous test without aligning images, optimizing endpoints and transition state.
     """
     chain = [load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)]
     neb_keywords = NEBKeywords(
         images=11,
         spring_constant=1,
         optimize_endpoints=False,
-        maximum_force=0.05,
-        average_force=0.025,
+        maximum_force=0.5,
+        average_force=0.25,
         optimize_ts=False,
         epsilon=1e-6,
         hessian_reset=True,
         spring_type=0,
+        align=False,
     )
 
     sp_spec = QCSpecification(
         program="psi4",
         driver="gradient",
         method="hf",
-        basis="6-31g",
+        basis="3-21g",
         keywords={},
     )
 
