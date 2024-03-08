@@ -1,10 +1,8 @@
-import datetime
-
 from sqlalchemy import (
     Column,
     Integer,
     ForeignKey,
-    DateTime,
+    TIMESTAMP,
     Float,
     Index,
     String,
@@ -18,6 +16,7 @@ from sqlalchemy.orm import relationship
 
 from qcfractal.db_socket import BaseORM
 from qcportal.managers import ManagerStatusEnum
+from qcportal.utils import now_at_utc
 
 
 class ComputeManagerLogORM(BaseORM):
@@ -33,7 +32,7 @@ class ComputeManagerLogORM(BaseORM):
     id = Column(Integer, primary_key=True)
     manager_id = Column(Integer, ForeignKey("compute_manager.id", ondelete="cascade"), nullable=False)
 
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    timestamp = Column(TIMESTAMP(timezone=True), default=now_at_utc, nullable=False)
 
     claimed = Column(Integer, nullable=False)
     successes = Column(Integer, nullable=False)
@@ -76,8 +75,8 @@ class ComputeManagerORM(BaseORM):
 
     status = Column(Enum(ManagerStatusEnum), nullable=False)
 
-    created_on = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
-    modified_on = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    created_on = Column(TIMESTAMP(timezone=True), nullable=False, default=now_at_utc)
+    modified_on = Column(TIMESTAMP(timezone=True), nullable=False, default=now_at_utc)
 
     manager_version = Column(String, nullable=False)
     programs = Column(JSON, nullable=False)

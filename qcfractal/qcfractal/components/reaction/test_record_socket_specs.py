@@ -235,7 +235,6 @@ def test_reaction_socket_add_specification_same_3(storage_socket: SQLAlchemySock
 
 
 def test_reaction_socket_add_specification_diff_1(storage_socket: SQLAlchemySocket):
-
     spec1 = ReactionSpecification(
         program="reaction",
         keywords=ReactionKeywords(),

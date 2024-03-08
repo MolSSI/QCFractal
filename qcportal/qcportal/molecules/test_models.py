@@ -13,7 +13,6 @@ from .models import Molecule
 
 
 def test_molecule_constructors():
-
     ### Water Dimer
     water_psi = load_molecule_data("water_dimer_minima")
     ele = np.array([8, 1, 1, 8, 1, 1]).reshape(-1, 1)
@@ -69,7 +68,6 @@ def test_water_minima_data():
 
 
 def test_water_minima_fragment():
-
     mol = load_molecule_data("water_dimer_minima")
 
     frag_0 = mol.get_fragment(0, orient=True)
@@ -91,13 +89,11 @@ def test_water_minima_fragment():
 
 
 def test_pretty_print():
-
     mol = load_molecule_data("water_dimer_minima")
     assert isinstance(mol.pretty_print(), str)
 
 
 def test_to_string():
-
     mol = load_molecule_data("water_dimer_minima")
     assert isinstance(mol.to_string("psi4"), str)
 
@@ -145,7 +141,6 @@ def test_molecule_errors():
 
 
 def test_molecule_repeated_hashing():
-
     mol = Molecule(
         **{
             "symbols": ["H", "O", "O", "H"],
@@ -177,7 +172,6 @@ def test_molecule_repeated_hashing():
 
 
 def test_molecule_water_canary_hash():
-
     water_dimer_minima = Molecule.from_data(
         """
     0 1
@@ -208,7 +202,6 @@ def test_molecule_water_canary_hash():
     [[0, 0, 0, 0, 5, 0], [0, 0, 0, 0, 5, 0 + 1.0e-12], [0, 0, 0, 0, 5, 0 - 1.0e-12], [0, 0, 0, 0, 5, 0 + 1.0e-7]],
 )  # yapf: disable
 def test_molecule_geometry_canary_hash(geom):
-
     mol = Molecule(geometry=geom, symbols=["H", "H"])
 
     assert mol.get_hash() == "fb69e6744407b220a96d6ddab4ec2099619db791"

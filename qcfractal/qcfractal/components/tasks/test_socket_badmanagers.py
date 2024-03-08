@@ -5,7 +5,6 @@ Tests the tasks socket with respect to misbehaving managers
 from __future__ import annotations
 
 import logging
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 import pytest
@@ -18,6 +17,7 @@ from qcfractalcompute.compress import compress_result
 from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerName
 from qcportal.record_models import RecordStatusEnum
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
@@ -256,7 +256,7 @@ def test_task_socket_return_manager_badstatus_2(storage_socket: SQLAlchemySocket
         {tasks[0]["id"]: result_data_compressed},
     )
 
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
 
     with caplog_handler_at_level(caplog, logging.WARNING):
         rmeta = storage_socket.tasks.update_finished(
@@ -304,7 +304,7 @@ def test_task_socket_return_manager_badstatus_3(storage_socket: SQLAlchemySocket
 
     storage_socket.records.cancel([record_id])
 
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
 
     with caplog_handler_at_level(caplog, logging.WARNING):
         rmeta = storage_socket.tasks.update_finished(

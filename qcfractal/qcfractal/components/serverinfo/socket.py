@@ -28,6 +28,7 @@ from qcportal.serverinfo import (
     ErrorLogQueryFilters,
     ServerStatsQueryFilters,
 )
+from qcportal.utils import now_at_utc
 from .db_models import AccessLogORM, InternalErrorLogORM, ServerStatsLogORM, MessageOfTheDayORM, ServerStatsMetadataORM
 
 if TYPE_CHECKING:
@@ -102,7 +103,7 @@ class ServerInfoSocket:
         with self.root_socket.optional_session(session) as session:
             self.root_socket.internal_jobs.add(
                 "update_server_stats",
-                datetime.utcnow() + timedelta(seconds=delay),
+                now_at_utc() + timedelta(seconds=delay),
                 "serverinfo.update_server_stats",
                 {},
                 user_id=None,
@@ -124,7 +125,7 @@ class ServerInfoSocket:
         with self.root_socket.optional_session(session) as session:
             self.root_socket.internal_jobs.add(
                 "update_geoip2_file",
-                datetime.utcnow() + timedelta(seconds=delay),
+                now_at_utc() + timedelta(seconds=delay),
                 "serverinfo.update_geoip2_file",
                 {},
                 user_id=None,
@@ -145,7 +146,7 @@ class ServerInfoSocket:
         with self.root_socket.optional_session(session) as session:
             self.root_socket.internal_jobs.add(
                 "geolocate_accesses",
-                datetime.utcnow() + timedelta(seconds=delay),
+                now_at_utc() + timedelta(seconds=delay),
                 "serverinfo.geolocate_accesses",
                 {},
                 user_id=None,
@@ -156,7 +157,6 @@ class ServerInfoSocket:
             )
 
     def update_geoip2_file(self, session: Session, job_progress: JobProgress) -> None:
-
         # Possible to reach this if we changed the settings, but have a job still in the queue
         if not (self._geoip2_enabled and self._maxmind_license_key):
             return
@@ -319,7 +319,7 @@ class ServerInfoSocket:
             else:
                 self._motd = motd_orm.motd
 
-        self._motd_time = datetime.utcnow()
+        self._motd_time = now_at_utc()
 
     def set_motd(self, new_motd: str, *, session: Optional[Session] = None):
         stmt = select(MessageOfTheDayORM).order_by(MessageOfTheDayORM.id)
@@ -332,12 +332,12 @@ class ServerInfoSocket:
                 motd_orm.motd = new_motd
 
         self._motd = new_motd
-        self._motd_time = datetime.utcnow()
+        self._motd_time = now_at_utc()
 
     def get_motd(self, *, session: Optional[Session] = None):
         # If file is updated, reload it
         # Only load every 10 seconds though
-        now = datetime.utcnow()
+        now = now_at_utc()
         checktime = self._motd_time + timedelta(seconds=10)
 
         if now > checktime:
@@ -576,9 +576,13 @@ class ServerInfoSocket:
             if query_data.group_by == "user":
                 group_col = UserIDMapSubquery.username.label("group_col")
             elif query_data.group_by == "day":
-                group_col = func.to_char(AccessLogORM.timestamp, "YYYY-MM-DD").label("group_col")
+                group_col = func.to_char(AccessLogORM.timestamp.op("AT TIME ZONE")("UTC"), "YYYY-MM-DD").label(
+                    "group_col"
+                )
             elif query_data.group_by == "hour":
-                group_col = func.to_char(AccessLogORM.timestamp, "YYYY-MM-DD HH24").label("group_col")
+                group_col = func.to_char(AccessLogORM.timestamp.op("AT TIME ZONE")("UTC"), "YYYY-MM-DD HH24").label(
+                    "group_col"
+                )
             elif query_data.group_by == "country":
                 group_col = AccessLogORM.country_code.label("group_col")
             elif query_data.group_by == "subdivision":

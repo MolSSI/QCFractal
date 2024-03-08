@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 from qcelemental.models import FailedOperation
@@ -17,6 +16,7 @@ from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service, DummyJobProgress
 from qcportal.managers import ManagerName
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -32,17 +32,20 @@ def test_service_socket_error(storage_socket: SQLAlchemySocket, session: Session
         error={"error_type": "test_error", "error_message": "this is just a test error"},
     )
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     finished, n_optimizations = run_service(
         storage_socket, activated_manager_name, id_1, generate_td_task_key, result_data_1, 20
     )
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
 
     assert finished is True
 
     rec = session.get(BaseRecordORM, id_1)
 
     assert rec.status == RecordStatusEnum.error
+
+    child_stat = storage_socket.records.torsiondrive.get_children_status(id_1, session=session)
+    assert child_stat[RecordStatusEnum.error] == 1
     assert len(rec.compute_history) == 1
     assert len(rec.compute_history[-1].outputs) == 2  # stdout and error
     assert rec.compute_history[-1].status == RecordStatusEnum.error
@@ -54,7 +57,6 @@ def test_service_socket_error(storage_socket: SQLAlchemySocket, session: Session
 
 
 def test_service_socket_iterate_order(storage_socket: SQLAlchemySocket, session: Session):
-
     storage_socket.services._max_active_services = 1
 
     id_1, _ = submit_td_test_data(storage_socket, "td_H2O2_mopac_pm6", "*", PriorityEnum.normal)

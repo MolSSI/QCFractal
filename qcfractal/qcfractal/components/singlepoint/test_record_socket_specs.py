@@ -3,7 +3,6 @@ from qcportal.singlepoint import QCSpecification, SinglepointDriver, Singlepoint
 
 
 def test_singlepoint_socket_basic_specification(storage_socket: SQLAlchemySocket):
-
     spec1 = QCSpecification(
         program="prog1",
         driver=SinglepointDriver.energy,
@@ -46,7 +45,6 @@ def test_singlepoint_socket_basic_specification(storage_socket: SQLAlchemySocket
 
 
 def test_singlepoint_socket_add_specification_same_0(storage_socket: SQLAlchemySocket):
-
     spec1 = QCSpecification(
         program="prog1",
         driver=SinglepointDriver.energy,

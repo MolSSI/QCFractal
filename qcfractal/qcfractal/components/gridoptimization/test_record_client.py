@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import itertools
-from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 import pytest
@@ -12,6 +11,7 @@ from qcportal.gridoptimization import GridoptimizationKeywords, Gridoptimization
 from qcportal.optimization import OptimizationSpecification
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification
+from qcportal.utils import now_at_utc
 from .testing_helpers import compare_gridoptimization_specs, test_specs, submit_test_data, run_test_data
 
 if TYPE_CHECKING:
@@ -20,7 +20,6 @@ if TYPE_CHECKING:
 
 
 def test_gridoptimization_client_tag_priority(snowflake_client: PortalClient):
-
     peroxide2 = load_molecule_data("peroxide2")
 
     for tag, priority in itertools.product(["*", "tag99"], list(PriorityEnum)):
@@ -60,11 +59,10 @@ def test_gridoptimization_client_tag_priority(snowflake_client: PortalClient):
 def test_gridoptimization_client_add_get(
     submitter_client: PortalClient, spec: GridoptimizationSpecification, owner_group: Optional[str]
 ):
-
     hooh = load_molecule_data("peroxide2")
     h3ns = load_molecule_data("go_H3NS")
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     meta, id = submitter_client.add_gridoptimizations(
         [hooh, h3ns],
         spec.program,
@@ -74,7 +72,7 @@ def test_gridoptimization_client_add_get(
         priority=PriorityEnum.low,
         owner_group=owner_group,
     )
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     assert meta.success
 
     recs = submitter_client.get_gridoptimizations(id, include=["service", "initial_molecule"])
@@ -84,6 +82,9 @@ def test_gridoptimization_client_add_get(
         assert r.record_type == "gridoptimization"
         assert r.record_type == "gridoptimization"
         assert compare_gridoptimization_specs(spec, r.specification)
+
+        assert r.status == RecordStatusEnum.waiting
+        assert r.children_status == {}
 
         assert r.service.tag == "tag1"
         assert r.service.priority == PriorityEnum.low
@@ -105,7 +106,6 @@ def test_gridoptimization_client_add_duplicate(
     spec: GridoptimizationSpecification,
     find_existing,
 ):
-
     hooh = load_molecule_data("peroxide2")
     h3ns = load_molecule_data("go_H3NS")
     all_mols = [hooh, h3ns]
@@ -195,6 +195,8 @@ def test_gridoptimization_client_delete(snowflake: QCATestingSnowflake):
 
     child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
     assert all(x.status == RecordStatusEnum.complete for x in child_recs)
+    go_rec = snowflake_client.get_records(go_id)
+    assert go_rec.children_status == {RecordStatusEnum.complete: len(child_ids)}
 
     snowflake_client.undelete_records(go_id)
 
@@ -205,6 +207,8 @@ def test_gridoptimization_client_delete(snowflake: QCATestingSnowflake):
 
     child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
     assert all(x.status == RecordStatusEnum.deleted for x in child_recs)
+    go_rec = snowflake_client.get_records(go_id)
+    assert go_rec.children_status == {RecordStatusEnum.deleted: len(child_ids)}
 
     meta = snowflake_client.delete_records(go_id, soft_delete=False, delete_children=True)
     assert meta.success

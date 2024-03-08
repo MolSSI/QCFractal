@@ -83,7 +83,6 @@ def upgrade():
     services = session.query(service_table).all()
 
     for service in services:
-
         if "torsiondrive_state" in service.extra:
             # We have a torsiondrive
             service_state = {}

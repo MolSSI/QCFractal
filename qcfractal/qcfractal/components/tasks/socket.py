@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import logging
 import traceback
-from datetime import datetime
 from typing import TYPE_CHECKING
 
-import pydantic
+try:
+    import pydantic.v1 as pydantic
+except ImportError:
+    import pydantic
 from qcelemental.models import FailedOperation
 from sqlalchemy import select, func
 from sqlalchemy.dialects.postgresql import array
@@ -21,7 +23,7 @@ from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerStatusEnum
 from qcportal.metadata_models import TaskReturnMetadata
 from qcportal.record_models import RecordStatusEnum
-from qcportal.utils import calculate_limit
+from qcportal.utils import calculate_limit, now_at_utc
 from .db_models import TaskQueueORM
 from .reset_logic import should_reset
 
@@ -87,7 +89,6 @@ class TaskSocket:
             to_be_reset: List[int] = []
 
             for task_id, result_compressed in results_compressed.items():
-
                 result_dict = decompress(result_compressed, CompressionEnum.zstd)
                 result = pydantic.parse_obj_as(AllResultTypes, result_dict)
 
@@ -284,7 +285,6 @@ class TaskSocket:
             # Remove tags that we didn't say we handled, but keep the order
             search_tags = [x for x in tags if x in manager.tags]
             for tag in search_tags:
-
                 new_limit = limit - len(found)
 
                 # Have we found all we needed to find
@@ -337,13 +337,12 @@ class TaskSocket:
                 for _, record_orm in new_items:
                     record_orm.status = RecordStatusEnum.running
                     record_orm.manager_name = manager_name
-                    record_orm.modified_on = datetime.utcnow()
+                    record_orm.modified_on = now_at_utc()
 
                 # Store in dict form for returning, but no need to store the info from the base record
                 # Also, retrieve the actual function kwargs. Eventually we may want the managers
                 # to retrieve the kwargs themselves
                 for task_orm, _ in new_items:
-
                     task_dict = task_orm.model_dict(exclude=["record"])
 
                     if task_orm.function is None:

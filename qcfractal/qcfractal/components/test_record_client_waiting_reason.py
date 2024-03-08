@@ -4,7 +4,6 @@ Tests the tasks socket (claiming & returning data)
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING
 
 from qcarchivetesting.testing_classes import QCATestingSnowflake
 from qcfractal.components.optimization.testing_helpers import load_test_data as load_opt_test_data
@@ -14,9 +13,6 @@ from qcfractal.components.singlepoint.testing_helpers import (
 from qcfractal.components.torsiondrive.testing_helpers import load_test_data as load_td_test_data
 from qcportal.managers import ManagerName
 from qcportal.record_models import PriorityEnum
-
-if TYPE_CHECKING:
-    pass
 
 
 def test_record_client_waiting_reason(snowflake: QCATestingSnowflake):

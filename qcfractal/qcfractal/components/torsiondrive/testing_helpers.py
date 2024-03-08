@@ -3,7 +3,10 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING, Tuple, Optional, Dict, List, Union, Any
 
-import pydantic
+try:
+    import pydantic.v1 as pydantic
+except ImportError:
+    import pydantic
 from qcelemental.models import Molecule, FailedOperation, ComputeError, OptimizationResult
 from qcelemental.models.procedures import OptimizationProtocols
 
@@ -115,7 +118,6 @@ def submit_test_data(
     tag: Optional[str] = "*",
     priority: PriorityEnum = PriorityEnum.normal,
 ) -> Tuple[int, Dict[str, OptimizationResult]]:
-
     input_spec, molecules, result = load_test_data(name)
     meta, record_ids = storage_socket.records.torsiondrive.add(
         [molecules], input_spec, True, tag, priority, None, None, True
@@ -151,7 +153,7 @@ def run_test_data(
     assert finished
 
     with storage_socket.session_scope() as session:
-        record = storage_socket.records.get([record_id])[0]
-        assert record["status"] == end_status
+        record = session.get(TorsiondriveRecordORM, record_id)
+        assert record.status == end_status
 
     return record_id

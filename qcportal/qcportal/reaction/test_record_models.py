@@ -15,14 +15,15 @@ all_includes = ["components"]
 
 
 @pytest.mark.parametrize("includes", [None, all_includes])
-def test_reactionrecord_model(snowflake: QCATestingSnowflake, includes: Optional[List[str]]):
+@pytest.mark.parametrize("testfile", ["rxn_H2O_psi4_mp2_optsp", "rxn_H2O_psi4_mp2_opt", "rxn_H2O_psi4_b3lyp_sp"])
+def test_reactionrecord_model(snowflake: QCATestingSnowflake, includes: Optional[List[str]], testfile: str):
     storage_socket = snowflake.get_storage_socket()
     snowflake_client = snowflake.client()
     activated_manager_name, _ = snowflake.activate_manager()
 
-    input_spec, stoichiometry, results = load_test_data("rxn_H2O_psi4_mp2_optsp")
+    input_spec, stoichiometry, results = load_test_data(testfile)
 
-    rec_id = run_test_data(storage_socket, activated_manager_name, "rxn_H2O_psi4_mp2_optsp")
+    rec_id = run_test_data(storage_socket, activated_manager_name, testfile)
     record = snowflake_client.get_reactions(rec_id, include=includes)
 
     if includes is not None:
@@ -42,6 +43,15 @@ def test_reactionrecord_model(snowflake: QCATestingSnowflake, includes: Optional
 
     for c in com:
         if c.singlepoint_id is not None:
+            # Molecule id may represent the initial molecule for the optimization, not
+            # necessarily the single point calculation
+            if c.optimization_id is None:
+                assert c.singlepoint_record.molecule.id == c.molecule_id
+            else:
+                assert c.singlepoint_record.molecule.id == c.optimization_record.final_molecule.id
+
+            assert list(c.singlepoint_record.molecule.symbols) == list(c.molecule.symbols)
             assert c.singlepoint_record.id == c.singlepoint_id
         if c.optimization_id is not None:
+            assert c.optimization_record.initial_molecule.id == c.molecule_id
             assert c.optimization_record.id == c.optimization_id

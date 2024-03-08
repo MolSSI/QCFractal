@@ -3,12 +3,12 @@ from __future__ import annotations
 import threading
 import time
 import uuid
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 from qcfractal.components.internal_jobs.db_models import InternalJobORM
 from qcfractal.components.internal_jobs.socket import InternalJobSocket
 from qcportal.internal_jobs import InternalJobStatusEnum
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -32,30 +32,28 @@ setattr(InternalJobSocket, "dummy_job", dummmy_internal_job)
 
 
 def test_internal_jobs_socket_add_unique(storage_socket: SQLAlchemySocket):
-
     id_1 = storage_socket.internal_jobs.add(
-        "dummy_job", datetime.utcnow(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=True
+        "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=True
     )
 
     id_2 = storage_socket.internal_jobs.add(
-        "dummy_job", datetime.utcnow(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=True
+        "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=True
     )
 
     assert id_1 == id_2
 
 
 def test_internal_jobs_socket_add_non_unique(storage_socket: SQLAlchemySocket):
-
     id_1 = storage_socket.internal_jobs.add(
-        "dummy_job", datetime.utcnow(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
+        "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
     )
 
     id_2 = storage_socket.internal_jobs.add(
-        "dummy_job", datetime.utcnow(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
+        "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
     )
 
     id_3 = storage_socket.internal_jobs.add(
-        "dummy_job", datetime.utcnow(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
+        "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
     )
 
     assert len({id_1, id_2, id_3}) == 3
@@ -63,18 +61,18 @@ def test_internal_jobs_socket_add_non_unique(storage_socket: SQLAlchemySocket):
 
 def test_internal_jobs_socket_run(storage_socket: SQLAlchemySocket, session: Session):
     id_1 = storage_socket.internal_jobs.add(
-        "dummy_job", datetime.utcnow(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
+        "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
     )
 
     # Faster updates for testing
     storage_socket.internal_jobs._update_frequency = 1
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     end_event = threading.Event()
     th = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
     th.start()
     time.sleep(6)
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
 
     try:
         job_1 = session.get(InternalJobORM, id_1)
@@ -83,7 +81,7 @@ def test_internal_jobs_socket_run(storage_socket: SQLAlchemySocket, session: Ses
         assert time_0 < job_1.last_updated < time_1
 
         time.sleep(8)
-        time_2 = datetime.utcnow()
+        time_2 = now_at_utc()
 
         session.expire(job_1)
         job_1 = session.get(InternalJobORM, id_1)
@@ -100,7 +98,7 @@ def test_internal_jobs_socket_run(storage_socket: SQLAlchemySocket, session: Ses
 
 def test_internal_jobs_socket_recover(storage_socket: SQLAlchemySocket, session: Session):
     id_1 = storage_socket.internal_jobs.add(
-        "dummy_job", datetime.utcnow(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
+        "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
     )
 
     # Faster updates for testing

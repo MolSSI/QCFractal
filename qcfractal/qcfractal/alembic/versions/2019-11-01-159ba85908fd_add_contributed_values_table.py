@@ -22,7 +22,6 @@ depends_on = None
 
 
 def migrate_contributed_values_data():
-
     bind = op.get_bind()
     session = orm.Session(bind=bind)
 
@@ -41,7 +40,6 @@ def migrate_contributed_values_data():
             continue
 
         for key, dict_values in ds_contrib.items():
-
             idx, vals = [], []
             for key, value in dict_values["values"].items():
                 idx.append(key)
@@ -59,7 +57,6 @@ def migrate_contributed_values_data():
 
 
 def upgrade():
-
     # rename old column with data
     op.alter_column("dataset", "contributed_values", new_column_name="contributed_values_data")
     op.alter_column("reaction_dataset", "contributed_values", new_column_name="contributed_values_data")

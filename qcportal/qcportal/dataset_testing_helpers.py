@@ -1,15 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime
-
 import pytest
 
 from qcportal import PortalRequestError
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
+from qcportal.utils import now_at_utc
 
 
 def run_dataset_model_add_get_entry(snowflake_client, ds, test_entries, entry_extra_compare):
-
     ent_map = {x.name: x for x in test_entries}
 
     meta = ds.add_entries(test_entries)
@@ -17,6 +15,8 @@ def run_dataset_model_add_get_entry(snowflake_client, ds, test_entries, entry_ex
     assert meta.n_inserted == len(test_entries)
 
     assert set(ds.entry_names) == set(ent_map.keys())
+    assert set(ds._entry_names) == set(ent_map.keys())
+    assert set(ds.entry_names) == set(ds._cache_data.get_entry_names())
     ents = list(ds.iterate_entries())
     assert set(x.name for x in ents) == set(ent_map.keys())
 
@@ -24,8 +24,8 @@ def run_dataset_model_add_get_entry(snowflake_client, ds, test_entries, entry_ex
     ds = snowflake_client.get_dataset_by_id(ds.id)
 
     assert set(ds.entry_names) == set(ent_map.keys())
-
     ents = list(ds.iterate_entries())
+    assert set(ds.entry_names) == set(ds._cache_data.get_entry_names())
     assert set(x.name for x in ents) == set(ent_map.keys())
 
     # Another fresh dataset
@@ -33,6 +33,16 @@ def run_dataset_model_add_get_entry(snowflake_client, ds, test_entries, entry_ex
 
     for ent in ent_map.values():
         test_ent = ds.get_entry(ent.name)
+        assert test_ent.name == ent.name
+        assert test_ent.comment == ent.comment
+        assert test_ent.attributes == ent.attributes
+
+        # Compare molecules or other stuff
+        entry_extra_compare(test_ent, ent)
+
+    # Get directly from the cache
+    for ent in ent_map.values():
+        test_ent = ds._cache_data.get_entry(ent.name)
         assert test_ent.name == ent.name
         assert test_ent.comment == ent.comment
         assert test_ent.attributes == ent.attributes
@@ -60,6 +70,7 @@ def run_dataset_model_add_entry_duplicate(snowflake_client, ds, test_entries, en
     assert ds.entry_names == [test_entries[0].name]
     ents = list(ds.iterate_entries())
     assert len(ents) == 1
+    assert ds._cache_data.get_entry_names() == [test_entries[0].name]
 
     # Now with a fresh dataset
     ds = snowflake_client.get_dataset_by_id(ds.id)
@@ -68,22 +79,83 @@ def run_dataset_model_add_entry_duplicate(snowflake_client, ds, test_entries, en
 
     ents = list(ds.iterate_entries())
     assert len(ents) == 1
+    assert ds._cache_data.get_entry_names() == [test_entries[0].name]
 
     # Should be the molecule from the first entry
     entry_extra_compare(ents[0], test_entries[0])
 
 
-def run_dataset_model_delete_entry(snowflake_client, ds, test_entries, test_specs):
-
+def run_dataset_model_rename_entry(snowflake_client, ds, test_entries, test_specs):
     ds.add_specification("spec_1", test_specs[0])
     ds.add_entries(test_entries)
     ds.submit()
+    ds.fetch_records()
 
     ent_rec_map = {entry_name: record for entry_name, _, record in ds.iterate_records()}
     assert len(ent_rec_map) == 3
 
     entry_name_1 = test_entries[0].name
     entry_name_2 = test_entries[1].name
+    entry_name_3 = test_entries[2].name
+
+    ds.rename_entries({entry_name_1: entry_name_1 + "new", entry_name_2: entry_name_2 + "new"})
+
+    assert set(ds.entry_names) == {entry_name_1 + "new", entry_name_2 + "new", entry_name_3}
+    assert set(ds._entry_names) == {entry_name_1 + "new", entry_name_2 + "new", entry_name_3}
+    assert set(ds._cache_data.get_entry_names()) == {entry_name_1 + "new", entry_name_2 + "new", entry_name_3}
+
+    with pytest.raises(PortalRequestError, match=r"Missing 1 entries"):
+        ds.get_record(entry_name_1, "spec_1")
+    with pytest.raises(PortalRequestError, match=r"Missing 1 entries"):
+        ds.get_record(entry_name_2, "spec_1")
+
+    assert ds.get_record(entry_name_3, "spec_1").id == ent_rec_map[entry_name_3].id
+    assert ds._cache_data.get_entry(entry_name_1 + "new").name == entry_name_1 + "new"
+    assert ds._cache_data.get_entry(entry_name_2 + "new").name == entry_name_2 + "new"
+
+    assert ds._cache_data.get_dataset_record(entry_name_1, "spec_1") is None
+    assert ds._cache_data.get_dataset_record(entry_name_2, "spec_1") is None
+
+    assert ds._cache_data.get_dataset_record(entry_name_1 + "new", "spec_1").id == ent_rec_map[entry_name_1].id
+    assert ds._cache_data.get_dataset_record(entry_name_2 + "new", "spec_1").id == ent_rec_map[entry_name_2].id
+    assert ds._cache_data.get_dataset_record(entry_name_3, "spec_1").id == ent_rec_map[entry_name_3].id
+
+    # Now with a fresh dataset
+    ds = snowflake_client.get_dataset_by_id(ds.id)
+    assert set(ds.entry_names) == {entry_name_1 + "new", entry_name_2 + "new", entry_name_3}
+    ents = list(ds.iterate_entries())
+    ent_names = [x.name for x in ents]
+    assert set(ent_names) == {entry_name_1 + "new", entry_name_2 + "new", entry_name_3}
+    assert set(ent_names) == set(ds.entry_names)
+    assert set(ent_names) == set(ds._cache_data.get_entry_names())
+
+    ds.fetch_records()
+    assert ds._cache_data.get_dataset_record(entry_name_1, "spec_1") is None
+    assert ds._cache_data.get_dataset_record(entry_name_2, "spec_1") is None
+
+    assert ds._cache_data.get_dataset_record(entry_name_1 + "new", "spec_1").id == ent_rec_map[entry_name_1].id
+    assert ds._cache_data.get_dataset_record(entry_name_2 + "new", "spec_1").id == ent_rec_map[entry_name_2].id
+    assert ds._cache_data.get_dataset_record(entry_name_3, "spec_1").id == ent_rec_map[entry_name_3].id
+
+
+def run_dataset_model_delete_entry(snowflake_client, ds, test_entries, test_specs):
+    ds.add_specification("spec_1", test_specs[0])
+    ds.add_entries(test_entries)
+    ds.submit()
+    ds.fetch_records()
+
+    ent_rec_map = {entry_name: record for entry_name, _, record in ds.iterate_records()}
+    assert len(ent_rec_map) == 3
+
+    entry_name_1 = test_entries[0].name
+    entry_name_2 = test_entries[1].name
+    entry_name_3 = test_entries[2].name
+
+    for name in [entry_name_1, entry_name_2, entry_name_3]:
+        assert name in ds.entry_names
+        assert ds._cache_data.get_entry(name) is not None
+        assert ds._cache_data.get_dataset_record(name, "spec_1") is not None
+
     meta = ds.delete_entries(entry_name_1, False)
     assert meta.success
     assert meta.n_deleted == 1
@@ -97,12 +169,12 @@ def run_dataset_model_delete_entry(snowflake_client, ds, test_entries, test_spec
     assert snowflake_client.get_records(ent_rec_map[entry_name_2].id, missing_ok=True) is None
 
     # Were removed from the model
+    assert ds._cache_data.get_entry_names() == [entry_name_3]
+    assert ds._entry_names == [entry_name_3]
     for name in [entry_name_1, entry_name_2]:
-        assert len(ds.record_map_) == 1
-        assert name not in ds.entries_
         assert name not in ds.entry_names
-        assert all(name != x for x, _ in ds.record_map_.keys())
-        assert all(name != ent_name for ent_name, _, _ in ds.iterate_records())
+        assert ds._cache_data.get_entry(name) is None
+        assert ds._cache_data.get_dataset_record(name, "spec_1") is None
 
     # Delete when it doesn't exist
     meta = ds.delete_entries(entry_name_2, True)
@@ -117,7 +189,6 @@ def run_dataset_model_add_get_spec(
     ds,
     test_specs,
 ):
-
     meta = ds.add_specification("spec_1", test_specs[0])
     assert meta.success
     assert meta.n_inserted == 1
@@ -126,6 +197,7 @@ def run_dataset_model_add_get_spec(
     assert meta.success
     assert meta.n_inserted == 1
 
+    assert set(ds._specification_names) == {"spec_1", "spec_2"}
     assert set(ds.specifications.keys()) == {"spec_1", "spec_2"}
 
     # Now with a fresh dataset
@@ -143,7 +215,6 @@ def run_dataset_model_add_get_spec(
 
 
 def run_dataset_model_add_spec_duplicate(snowflake_client, ds, test_specs):
-
     meta = ds.add_specification("spec_1", test_specs[0])
     assert meta.success
     assert meta.n_inserted == 1
@@ -166,12 +237,64 @@ def run_dataset_model_add_spec_duplicate(snowflake_client, ds, test_specs):
     assert ds.specifications["spec_1"].description is None
 
 
-def run_dataset_model_delete_spec(snowflake_client, ds, test_entries, test_specs):
+def run_dataset_model_rename_spec(snowflake_client, ds, test_entries, test_specs):
+    ds.add_specification("spec_1", test_specs[0])
+    ds.add_specification("spec_2", test_specs[1])
+    entry_name = test_entries[0].name
+    ds.add_entries(test_entries[0])
+    ds.submit()
+    ds.fetch_records()
 
+    spec_rec_map = {spec_name: record for _, spec_name, record in ds.iterate_records()}
+    assert len(spec_rec_map) == 2
+
+    ds.rename_specification("spec_1", "spec_1_new")
+
+    assert set(ds.specifications.keys()) == {"spec_2", "spec_1_new"}
+    assert set(ds._specification_names) == {"spec_2", "spec_1_new"}
+    assert set(ds._cache_data.get_specification_names()) == {"spec_2", "spec_1_new"}
+    assert ds._cache_data.get_specification("spec_1_new").name == "spec_1_new"
+
+    with pytest.raises(PortalRequestError, match=r"Missing.*spec"):
+        ds.get_record(entry_name, "spec_1")
+
+    assert ds._cache_data.get_dataset_record(entry_name, "spec_1") is None
+
+    assert ds.get_record(entry_name, "spec_1_new").id == spec_rec_map["spec_1"].id
+    assert ds._cache_data.get_dataset_record(entry_name, "spec_1_new").id == spec_rec_map["spec_1"].id
+
+    # Now with a fresh dataset
+    ds = snowflake_client.get_dataset_by_id(ds.id)
+    specs = ds.specifications.values()
+    spec_names = [x.name for x in specs]
+
+    assert set(spec_names) == {"spec_2", "spec_1_new"}
+    assert set(ds.specifications.keys()) == {"spec_2", "spec_1_new"}
+    assert set(ds._specification_names) == {"spec_2", "spec_1_new"}
+    assert set(ds._cache_data.get_specification_names()) == {"spec_2", "spec_1_new"}
+    assert ds._cache_data.get_specification("spec_1_new").name == "spec_1_new"
+
+    with pytest.raises(PortalRequestError, match=r"Missing.*spec"):
+        ds.get_record(entry_name, "spec_1")
+
+    assert ds._cache_data.get_dataset_record(entry_name, "spec_1") is None
+
+    assert ds.get_record(entry_name, "spec_1_new").id == spec_rec_map["spec_1"].id
+    assert ds._cache_data.get_dataset_record(entry_name, "spec_1_new").id == spec_rec_map["spec_1"].id
+
+
+def run_dataset_model_delete_spec(snowflake_client, ds, test_entries, test_specs):
     ds.add_specification("spec_1", test_specs[0])
     ds.add_specification("spec_2", test_specs[1])
     ds.add_entries(test_entries[0])
     ds.submit()
+    ds.fetch_records()
+
+    entry_name = test_entries[0].name
+
+    for name in ["spec_1", "spec_2"]:
+        assert ds._cache_data.get_specification(name) is not None
+        assert ds._cache_data.get_dataset_record(entry_name, name) is not None
 
     spec_rec_map = {spec_name: record for _, spec_name, record in ds.iterate_records()}
     assert len(spec_rec_map) == 2
@@ -189,11 +312,14 @@ def run_dataset_model_delete_spec(snowflake_client, ds, test_entries, test_specs
     assert snowflake_client.get_records(spec_rec_map["spec_2"].id, missing_ok=True) is None
 
     # Were removed from the model
+    assert ds._cache_data.get_specification_names() == []
+    assert ds._specification_names == []
+    assert ds.specification_names == []
+    assert ds.specifications == {}
+
     for name in ["spec_1", "spec_2"]:
-        assert len(ds.record_map_) == 0
-        assert name not in ds.specifications
-        assert all(name != x for _, x in ds.record_map_.keys())
-        assert all(name != spec_name for _, spec_name, _ in ds.iterate_records())
+        assert ds._cache_data.get_specification(name) is None
+        assert ds._cache_data.get_dataset_record(name, entry_name) is None
 
     # Delete when it doesn't exist
     meta = ds.delete_specification("spec_1", True)
@@ -242,7 +368,6 @@ def run_dataset_model_remove_record(snowflake_client, ds, test_entries, test_spe
 
 
 def run_dataset_model_submit(ds, test_entries, test_spec, record_compare):
-
     assert ds.record_count == 0
     assert ds._client.list_datasets()[0]["record_count"] == 0
 
@@ -312,8 +437,7 @@ def run_dataset_model_submit_missing(ds, test_entries, test_spec):
         ds.submit(specification_names="non_spec_1")
 
 
-def run_dataset_model_iterate_updated(ds, test_entries, test_spec):
-
+def run_dataset_model_iterate_updated(snowflake_client, ds, test_entries, test_spec):
     ds.add_specification("spec_1", test_spec)
     ds.add_entries(test_entries)
     ds.submit()
@@ -321,9 +445,10 @@ def run_dataset_model_iterate_updated(ds, test_entries, test_spec):
     assert all(x.status == RecordStatusEnum.waiting for _, _, x in ds.iterate_records())
     entry_name = test_entries[0].name
 
-    time_0 = datetime.utcnow()
-    ds.cancel_records(entry_name, "spec_1")
-    time_1 = datetime.utcnow()
+    time_0 = now_at_utc()
+    rid = ds.get_record(entry_name, "spec_1").id
+    snowflake_client.cancel_records(rid)
+    time_1 = now_at_utc()
 
     # Should be automatically updated when we iterate
     all_records = list(ds.iterate_records())
@@ -335,7 +460,8 @@ def run_dataset_model_iterate_updated(ds, test_entries, test_spec):
 
     # Do another one
     entry_name = test_entries[1].name
-    ds.cancel_records([entry_name], "spec_1")
+    rid = ds.get_record(entry_name, "spec_1").id
+    snowflake_client.cancel_records(rid)
 
     # Disable auto updating
     all_records = list(ds.iterate_records(fetch_updated=False))

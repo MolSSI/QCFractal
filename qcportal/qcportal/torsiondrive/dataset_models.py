@@ -1,6 +1,9 @@
 from typing import Dict, Any, Union, Optional, List, Iterable, Tuple
 
-from pydantic import BaseModel, Extra
+try:
+    from pydantic.v1 import BaseModel, Extra
+except ImportError:
+    from pydantic import BaseModel, Extra
 from typing_extensions import Literal
 
 from qcportal.dataset_models import BaseDataset
@@ -49,13 +52,6 @@ class TorsiondriveDatasetRecordItem(BaseModel):
 class TorsiondriveDataset(BaseDataset):
     dataset_type: Literal["torsiondrive"] = "torsiondrive"
 
-    ########################################
-    # Caches of information
-    ########################################
-    specifications_: Dict[str, TorsiondriveDatasetSpecification] = {}
-    entries_: Dict[str, TorsiondriveDatasetEntry] = {}
-    record_map_: Dict[Tuple[str, str], TorsiondriveRecord] = {}
-
     # Needed by the base class
     _entry_type = TorsiondriveDatasetEntry
     _new_entry_type = TorsiondriveDatasetNewEntry
@@ -66,14 +62,12 @@ class TorsiondriveDataset(BaseDataset):
     def add_specification(
         self, name: str, specification: TorsiondriveSpecification, description: Optional[str] = None
     ) -> InsertMetadata:
-
         spec = TorsiondriveDatasetSpecification(name=name, specification=specification, description=description)
         return self._add_specifications(spec)
 
     def add_entries(
         self, entries: Union[TorsiondriveDatasetNewEntry, Iterable[TorsiondriveDatasetNewEntry]]
     ) -> InsertMetadata:
-
         return self._add_entries(entries)
 
     def add_entry(

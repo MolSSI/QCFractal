@@ -197,3 +197,10 @@ def get_record_native_file_single_v1(record_id: int, name: str, record_type: Opt
 def get_record_native_file_data_v1(record_id: int, name: str, record_type: Optional[str] = None):
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_single_native_file_rawdata(record_id, name)
+
+
+@api_v1.route("/records/<string:record_type>/<int:record_id>/children_status", methods=["GET"])
+@wrap_route("READ")
+def get_record_children_status_v1(record_id: int, record_type: Optional[str] = None):
+    record_socket = storage_socket.records.get_socket(record_type)
+    return record_socket.get_children_status(record_id)

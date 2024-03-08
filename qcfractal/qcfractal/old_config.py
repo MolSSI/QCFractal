@@ -9,7 +9,11 @@ from pathlib import Path
 from typing import Optional
 
 import yaml
-from pydantic import Field, validator
+
+try:
+    from pydantic.v1 import Field, validator
+except ImportError:
+    from pydantic import Field, validator
 
 from .config import ConfigBase, ConfigCommon
 
@@ -123,7 +127,6 @@ class OldFractalConfig(ConfigBase):
         pass
 
     def __init__(self, **kwargs):
-
         # If no base_folder provided, read it from ~/.qca/qcfractal_defaults.yaml (if it exists)
         # else, use the default base_folder
         if "base_folder" in kwargs:
@@ -183,7 +186,6 @@ class OldFractalConfig(ConfigBase):
             return Path(os.path.expanduser(self.view.directory))
 
     def geo_file_path(self):
-
         if self.fractal.geo_file_path:
             return self.fractal.geo_file_path
         else:

@@ -4,10 +4,20 @@ from typing import Union, Any
 
 import msgpack
 import numpy as np
-from pydantic.json import pydantic_encoder
+
+try:
+    from pydantic.v1 import BaseModel
+    from pydantic.v1.json import pydantic_encoder
+except ImportError:
+    from pydantic import BaseModel
+    from pydantic.json import pydantic_encoder
 
 
 def _msgpack_encode(obj: Any) -> Any:
+    if isinstance(obj, BaseModel):
+        # Don't include unset fields in pydantic models
+        return obj.dict(exclude_unset=True)
+
     try:
         return pydantic_encoder(obj)
     except TypeError:
@@ -33,7 +43,11 @@ class _JSONEncoder(json.JSONEncoder):
         if isinstance(obj, bytes):
             return {"_bytes_base64_": base64.b64encode(obj).decode("ascii")}
 
-        # Now do aything with pydantic
+        # Now do anything with pydantic, excluding unset fields
+        if isinstance(obj, BaseModel):
+            return obj.dict(exclude_unset=True)
+
+        # Let pydantic handle other things
         try:
             return pydantic_encoder(obj)
         except TypeError:
@@ -66,7 +80,6 @@ def deserialize(data: Union[bytes, str], content_type: str):
     if content_type == "msgpack":
         return msgpack.loads(data, object_hook=_msgpack_decode, raw=False)
     elif content_type == "json":
-
         # JSON stored as bytes? Decode into a string for json to load
         if isinstance(data, bytes):
             data = data.decode("utf-8")
@@ -75,14 +88,14 @@ def deserialize(data: Union[bytes, str], content_type: str):
         raise RuntimeError(f"Unknown content type for deserialization: {content_type}")
 
 
-def serialize(data, content_type: str) -> str:
+def serialize(data, content_type: str) -> bytes:
     if content_type.startswith("application/"):
         content_type = content_type[12:]
 
     if content_type == "msgpack":
         return msgpack.dumps(data, default=_msgpack_encode, use_bin_type=True)
     elif content_type == "json":
-        return json.dumps(data, cls=_JSONEncoder)
+        return json.dumps(data, cls=_JSONEncoder).encode("utf-8")
     else:
         raise RuntimeError(f"Unknown content type for serialization: {content_type}")
 

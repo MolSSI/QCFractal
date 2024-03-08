@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 from qcelemental.models import FailedOperation
-from sqlalchemy import select, union, or_
+from sqlalchemy import select, union, or_, func
 from sqlalchemy.orm import (
     joinedload,
     selectinload,
@@ -31,7 +30,7 @@ from qcportal.exceptions import UserReportableError, MissingDataError
 from qcportal.managers.models import ManagerStatusEnum
 from qcportal.metadata_models import DeleteMetadata, UpdateMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
-from qcportal.utils import chunk_iterable
+from qcportal.utils import chunk_iterable, now_at_utc
 from .record_db_models import (
     RecordComputeHistoryORM,
     BaseRecordORM,
@@ -226,7 +225,6 @@ class BaseRecordSocket:
     # The ones here apply to all records
     ###########################################################################################
     def get_comments(self, record_id: int, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
-
         options = [
             lazyload("*"),
             defer("*"),
@@ -245,7 +243,6 @@ class BaseRecordSocket:
         *,
         session: Optional[Session] = None,
     ) -> Optional[Dict[str, Any]]:
-
         options = [lazyload("*"), defer("*"), joinedload(BaseRecordORM.task).options(undefer("*"), defaultload("*"))]
 
         with self.root_socket.optional_session(session) as session:
@@ -262,7 +259,6 @@ class BaseRecordSocket:
         *,
         session: Optional[Session] = None,
     ) -> Optional[Dict[str, Any]]:
-
         options = [
             lazyload("*"),
             defer("*"),
@@ -285,7 +281,6 @@ class BaseRecordSocket:
         *,
         session: Optional[Session] = None,
     ) -> List[Dict[str, Any]]:
-
         options = [
             lazyload("*"),
             defer("*"),
@@ -305,7 +300,6 @@ class BaseRecordSocket:
         *,
         session: Optional[Session] = None,
     ) -> Dict[str, Any]:
-
         # Slightly inefficient, but should be rarely called
         histories = self.get_all_compute_history(record_id, session=session)
 
@@ -322,7 +316,6 @@ class BaseRecordSocket:
         *,
         session: Optional[Session] = None,
     ) -> Dict[str, Dict[str, Any]]:
-
         # Outer join with the history and record orm table to ensure ids, types, etc, match
         stmt = select(self.record_orm.id, OutputStoreORM)
         stmt = stmt.join(RecordComputeHistoryORM, self.record_orm.id == RecordComputeHistoryORM.record_id, isouter=True)
@@ -353,7 +346,6 @@ class BaseRecordSocket:
         *,
         session: Optional[Session] = None,
     ) -> Dict[str, Any]:
-
         # Slightly inefficient, but should be ok
         all_outputs = self.get_all_output_metadata(record_id, history_id, session=session)
 
@@ -370,7 +362,6 @@ class BaseRecordSocket:
         *,
         session: Optional[Session] = None,
     ) -> Tuple[bytes, CompressionEnum]:
-
         stmt = select(OutputStoreORM.data, OutputStoreORM.compression_type)
         stmt = stmt.join(RecordComputeHistoryORM, RecordComputeHistoryORM.id == OutputStoreORM.history_id)
         stmt = stmt.join(self.record_orm, RecordComputeHistoryORM.record_id == self.record_orm.id)
@@ -403,7 +394,6 @@ class BaseRecordSocket:
         *,
         session: Optional[Session] = None,
     ) -> Dict[str, Dict[str, Any]]:
-
         options = [
             lazyload("*"),
             defer("*"),
@@ -423,7 +413,6 @@ class BaseRecordSocket:
         *,
         session: Optional[Session] = None,
     ) -> Dict[str, Any]:
-
         # Slightly inefficient, but should be ok
         all_nf = self.get_all_native_files_metadata(record_id, session=session)
 
@@ -439,7 +428,6 @@ class BaseRecordSocket:
         *,
         session: Optional[Session] = None,
     ) -> Tuple[bytes, CompressionEnum]:
-
         stmt = select(NativeFileORM.data, NativeFileORM.compression_type)
         stmt = stmt.join(self.record_orm, NativeFileORM.record_id == self.record_orm.id)
         stmt = stmt.where(NativeFileORM.name == name)
@@ -452,6 +440,24 @@ class BaseRecordSocket:
                 )
 
             return nf_data[0], nf_data[1]
+
+    def get_children_status(self, record_id: int, *, session: Optional[Session] = None) -> Dict[RecordStatusEnum, int]:
+        # Get the SQL 'select' statements from the handlers
+        select_stmts = self.get_children_select()
+
+        if not select_stmts:
+            return {}
+
+        select_cte = union(*select_stmts).cte()
+
+        stmt = select(BaseRecordORM.status, func.count())
+        stmt = stmt.join(select_cte, select_cte.c.child_id == BaseRecordORM.id)
+        stmt = stmt.where(select_cte.c.parent_id == record_id)
+        stmt = stmt.group_by(BaseRecordORM.status)
+
+        with self.root_socket.optional_session(session, True) as session:
+            res = session.execute(stmt).all()
+            return {x: y for x, y in res}
 
 
 class RecordSocket:
@@ -844,7 +850,7 @@ class RecordSocket:
         history_orm = RecordComputeHistoryORM()
         history_orm.status = "complete" if result.success else "error"
         history_orm.provenance = result.provenance.dict()
-        history_orm.modified_on = datetime.utcnow()
+        history_orm.modified_on = now_at_utc()
 
         # Get the compressed outputs if they exist
         compressed_output = result.extras.pop("_qcfractal_compressed_outputs", None)
@@ -1053,7 +1059,7 @@ class RecordSocket:
         history_orm = RecordComputeHistoryORM()
         history_orm.status = RecordStatusEnum.error
         history_orm.manager_name = manager_name
-        history_orm.modified_on = datetime.utcnow()
+        history_orm.modified_on = now_at_utc()
         history_orm.outputs = all_outputs
 
         record_orm.status = RecordStatusEnum.error
@@ -1119,10 +1125,10 @@ class RecordSocket:
         record_orm.compute_history[-1].status = RecordStatusEnum.error
 
         self.upsert_output(session, record_orm, error_orm)
-        record_orm.compute_history[-1].modified_on = datetime.utcnow()
+        record_orm.compute_history[-1].modified_on = now_at_utc()
 
         record_orm.status = RecordStatusEnum.error
-        record_orm.modified_on = datetime.utcnow()
+        record_orm.modified_on = now_at_utc()
 
     def insert_complete_record(self, session: Session, results: Sequence[AllResultTypes]) -> List[int]:
         """
@@ -1248,7 +1254,7 @@ class RecordSocket:
 
             for r in record_orms:
                 r.status = RecordStatusEnum.waiting
-                r.modified_on = datetime.utcnow()
+                r.modified_on = now_at_utc()
                 r.manager_name = None
 
             return [r.id for r in record_orms]
@@ -1342,7 +1348,7 @@ class RecordSocket:
                                 f"resetting record with status {r_orm.status} without backup info present"
                             )
 
-                    r_orm.modified_on = datetime.utcnow()
+                    r_orm.modified_on = now_at_utc()
 
                 updated_ids.extend([r.id for r in record_data])
 
@@ -1438,11 +1444,11 @@ class RecordSocket:
                         old_status=r.status,
                         old_tag=old_tag,
                         old_priority=old_priority,
-                        modified_on=datetime.utcnow(),
+                        modified_on=now_at_utc(),
                     )
                     session.add(backup_info)
 
-                    r.modified_on = datetime.utcnow()
+                    r.modified_on = now_at_utc()
                     r.status = new_status
 
                 updated_ids.extend([r.id for r in record_orms])

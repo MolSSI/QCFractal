@@ -51,10 +51,7 @@ class RoleORM(BaseORM):
 
     __table_args__ = (UniqueConstraint("rolename", name="ux_role_rolename"),)
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["id"]
 
 
 class UserORM(BaseORM):
@@ -82,9 +79,9 @@ class UserORM(BaseORM):
 
     __table_args__ = (UniqueConstraint("username", name="ux_user_username"),)
 
+    _qcportal_model_excludes = ["role_orm", "groups_orm", "role_id", "password"]
+
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Removes some sensitive or useless fields
-        exclude = self.append_exclude(exclude, "role_orm", "groups_orm", "role_id", "password")
         d = BaseORM.model_dict(self, exclude)
 
         d["role"] = self.role_orm.rolename

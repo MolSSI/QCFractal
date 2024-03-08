@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Union, Sequence, Iterable, TypeVar, Type
 
 from tabulate import tabulate
 
+from qcportal.cache import DatasetCache, read_dataset_metadata
 from qcportal.gridoptimization import (
     GridoptimizationKeywords,
     GridoptimizationAddBody,
@@ -63,6 +65,7 @@ from .auth import (
     is_valid_groupname,
 )
 from .base_models import CommonBulkGetNamesBody, CommonBulkGetBody
+from .cache import PortalCache
 from .client_base import PortalClientBase
 from .dataset_models import (
     BaseDataset,
@@ -116,6 +119,9 @@ class PortalClient(PortalClientBase):
         password: Optional[str] = None,
         verify: bool = True,
         show_motd: bool = True,
+        *,
+        cache_dir: Optional[str] = None,
+        cache_max_size: int = 0,
     ) -> None:
         """
         Parameters
@@ -133,10 +139,15 @@ class PortalClient(PortalClientBase):
             SSL keys.
         show_motd
             If a Message-of-the-Day is available, display it
+        cache_dir
+            Directory to store an internal cache of records and other data
+        cache_max_size
+            Maximum size of the cache directory
         """
 
         PortalClientBase.__init__(self, address, username, password, verify, show_motd)
-        # self._cache = PortalCache(self, cachedir=cache, max_memcache_size=max_memcache_size)
+        self._logger = logging.getLogger("PortalClient")
+        self.cache = PortalCache(address, cache_dir, cache_max_size)
 
     def __repr__(self) -> str:
         """A short representation of the current PortalClient.
@@ -152,7 +163,6 @@ class PortalClient(PortalClientBase):
         return ret
 
     def _repr_html_(self) -> str:
-
         output = f"""
         <h3>PortalClient</h3>
         <ul>
@@ -164,74 +174,6 @@ class PortalClient(PortalClientBase):
 
         # postprocess due to raw spacing above
         return "\n".join([substr.strip() for substr in output.split("\n")])
-
-    # @property
-    # def cache(self):
-    #    if self._cache.cachedir is not None:
-    #        return os.path.relpath(self._cache.cachedir)
-    #    else:
-    #        return None
-
-    # TODO - reimplement
-    # def _get_with_cache(self, func, id, missing_ok, entity_type, include=None):
-    #    str_id = make_str(id)
-    #    ids = make_list(str_id)
-
-    #    # pass through the cache first
-    #    # remove any ids that were found in cache
-    #    # if `include` filters passed, don't use cache, just query DB, as it's often faster
-    #    # for a few fields
-    #    if include is None:
-    #        cached = self._cache.get(ids, entity_type=entity_type)
-    #    else:
-    #        cached = {}
-
-    #    for i in cached:
-    #        ids.remove(i)
-
-    #    # if all ids found in cache, no need to go further
-    #    if len(ids) == 0:
-    #        if isinstance(id, list):
-    #            return [cached[i] for i in str_id]
-    #        else:
-    #            return cached[str_id]
-
-    #    # molecule getting does *not* support "include"
-    #    if include is None:
-    #        payload = {
-    #            "data": {"ids": ids},
-    #        }
-    #    else:
-    #        if "ids" not in include:
-    #            include.append("ids")
-
-    #        payload = {
-    #            "meta": {"includes": include},
-    #            "data": {"ids": ids},
-    #        }
-
-    #    results, to_cache = func(payload)
-
-    #    # we only cache if no field filtering was done
-    #    if include is None:
-    #        self._cache.put(to_cache, entity_type=entity_type)
-
-    #    # combine cached records with queried results
-    #    results.update(cached)
-
-    #    # check that we have results for all ids asked for
-    #    missing = set(make_list(str_id)) - set(results.keys())
-
-    #    if missing and not missing_ok:
-    #        raise KeyError(f"No objects found for `id`: {missing}")
-
-    #    # order the results by input id list
-    #    if isinstance(id, list):
-    #        ordered = [results.get(i, None) for i in str_id]
-    #    else:
-    #        ordered = results.get(str_id, None)
-
-    #    return ordered
 
     def get_server_information(self) -> Dict[str, Any]:
         """Request general information about the server
@@ -285,7 +227,6 @@ class PortalClient(PortalClientBase):
         print(self.list_datasets_table())
 
     def get_dataset(self, dataset_type: str, dataset_name: str):
-
         body = DatasetQueryModel(dataset_name=dataset_name, dataset_type=dataset_type)
         ds = self.make_request("post", f"api/v1/datasets/query", Dict[str, Any], body=body)
 
@@ -296,14 +237,32 @@ class PortalClient(PortalClientBase):
         record_id: Union[int, Iterable[int]],
         dataset_type: Optional[Iterable[str]] = None,
     ):
-
         body = DatasetQueryRecords(record_id=make_list(record_id), dataset_type=dataset_type)
         return self.make_request("post", f"api/v1/datasets/queryrecords", List[Dict], body=body)
 
     def get_dataset_by_id(self, dataset_id: int):
-
         ds = self.make_request("get", f"api/v1/datasets/{dataset_id}", Dict[str, Any])
         return dataset_from_dict(ds, self)
+
+    def dataset_from_cache(self, file_path: str) -> BaseDataset:
+        ds_meta = read_dataset_metadata(file_path)
+        ds_type = BaseDataset.get_subclass(ds_meta["dataset_type"])
+        ds_cache = DatasetCache(file_path, False, ds_type)
+
+        ds = dataset_from_dict(ds_meta, self, cache_data=ds_cache)
+
+        # Check to make sure we are connected to the same server
+        cache_address = ds_cache.get_metadata("client_address")
+        if cache_address != self.address:
+            raise RuntimeError(f"Cache file comes from {cache_address}, but currently connected to {self.address}")
+
+        try:
+            self.get_dataset_by_id(ds.id)
+        except:
+            self._logger.warning(f"Dataset {ds.id} could not be found on the server. Marking as read-only cache")
+            ds_cache.read_only = True
+
+        return ds
 
     def get_dataset_status_by_id(self, dataset_id: int) -> Dict[str, Dict[RecordStatusEnum, int]]:
         return self.make_request("get", f"api/v1/datasets/{dataset_id}/status", Dict[str, Dict[RecordStatusEnum, int]])
@@ -324,7 +283,6 @@ class PortalClient(PortalClientBase):
         owner_group: Optional[str] = None,
         existing_ok: bool = False,
     ) -> BaseDataset:
-
         if description is None:
             description = ""
         if tagline is None:

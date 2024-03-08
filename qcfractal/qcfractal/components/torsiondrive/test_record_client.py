@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import itertools
-from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 import pytest
@@ -12,6 +11,7 @@ from qcportal.optimization import OptimizationSpecification
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification
 from qcportal.torsiondrive import TorsiondriveKeywords, TorsiondriveSpecification
+from qcportal.utils import now_at_utc
 from .testing_helpers import compare_torsiondrive_specs, test_specs, submit_test_data, run_test_data
 
 if TYPE_CHECKING:
@@ -56,7 +56,7 @@ def test_torsiondrive_client_add_get(
     td_mol_1 = load_molecule_data("td_C9H11NO2_1")
     td_mol_2 = load_molecule_data("td_C9H11NO2_2")
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     meta, id = submitter_client.add_torsiondrives(
         [[hooh], [td_mol_1, td_mol_2]],
         "torsiondrive",
@@ -66,7 +66,7 @@ def test_torsiondrive_client_add_get(
         priority=PriorityEnum.low,
         owner_group=owner_group,
     )
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     assert meta.success
 
     recs = submitter_client.get_torsiondrives(id, include=["service", "initial_molecules"])
@@ -76,6 +76,9 @@ def test_torsiondrive_client_add_get(
         assert r.record_type == "torsiondrive"
         assert r.record_type == "torsiondrive"
         assert compare_torsiondrive_specs(spec, r.specification)
+
+        assert r.status == RecordStatusEnum.waiting
+        assert r.children_status == {}
 
         assert r.service.tag == "tag1"
         assert r.service.priority == PriorityEnum.low
@@ -195,6 +198,8 @@ def test_torsiondrive_client_delete(snowflake: QCATestingSnowflake):
 
     child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
     assert all(x.status == RecordStatusEnum.complete for x in child_recs)
+    td_rec = snowflake_client.get_records(td_id)
+    assert td_rec.children_status == {RecordStatusEnum.complete: len(child_ids)}
 
     snowflake_client.undelete_records(td_id)
 
@@ -205,6 +210,8 @@ def test_torsiondrive_client_delete(snowflake: QCATestingSnowflake):
 
     child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
     assert all(x.status == RecordStatusEnum.deleted for x in child_recs)
+    td_rec = snowflake_client.get_records(td_id)
+    assert td_rec.children_status == {RecordStatusEnum.deleted: len(child_ids)}
 
     meta = snowflake_client.delete_records(td_id, soft_delete=False, delete_children=True)
     assert meta.success
@@ -247,7 +254,6 @@ def test_torsiondrive_client_harddelete_nochildren(snowflake: QCATestingSnowflak
 
 
 def test_torsiondrive_client_delete_opt_inuse(snowflake: QCATestingSnowflake):
-
     storage_socket = snowflake.get_storage_socket()
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()

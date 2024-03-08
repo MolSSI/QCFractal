@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import TYPE_CHECKING, Tuple, Optional, Union, Dict, Any
 
-import pydantic
+try:
+    import pydantic.v1 as pydantic
+except ImportError:
+    import pydantic
 from qcelemental.models import Molecule, FailedOperation, ComputeError, OptimizationResult
 
 from qcarchivetesting.helpers import read_record_data
@@ -12,6 +14,7 @@ from qcfractalcompute.compress import compress_result
 from qcportal.optimization import OptimizationSpecification
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import QCSpecification, SinglepointProtocols
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -84,7 +87,6 @@ def submit_test_data(
     tag: Optional[str] = "*",
     priority: PriorityEnum = PriorityEnum.normal,
 ) -> Tuple[int, OptimizationResult]:
-
     input_spec, molecule, result = load_test_data(name)
     meta, record_ids = storage_socket.records.optimization.add([molecule], input_spec, tag, priority, None, None, True)
     assert meta.success
@@ -102,9 +104,9 @@ def run_test_data(
     priority: PriorityEnum = PriorityEnum.normal,
     end_status: RecordStatusEnum = RecordStatusEnum.complete,
 ):
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     record_id, result = submit_test_data(storage_socket, name, tag, priority)
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
 
     with storage_socket.session_scope() as session:
         record = session.get(OptimizationRecordORM, record_id)
@@ -123,7 +125,7 @@ def run_test_data(
     result_dict = {tasks[0]["id"]: result_compressed}
     storage_socket.tasks.update_finished(manager_name.fullname, result_dict)
 
-    time_2 = datetime.utcnow()
+    time_2 = now_at_utc()
 
     with storage_socket.session_scope() as session:
         record = session.get(OptimizationRecordORM, record_id)

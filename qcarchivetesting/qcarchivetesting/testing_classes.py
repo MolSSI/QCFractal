@@ -33,7 +33,6 @@ _activated_manager_programs = {
 
 class QCATestingPostgresHarness(PostgresHarness):
     def __init__(self, config: DatabaseConfig):
-
         PostgresHarness.__init__(self, config)
         self.db_name = self.config.database_name
         self.template_name = self.db_name + "_template"
@@ -108,7 +107,6 @@ class QCATestingSnowflake(FractalSnowflake):
         log_access=True,
         extra_config=None,
     ):
-
         self.pg_harness = pg_harness
         self.encoding = encoding
 
@@ -250,7 +248,7 @@ class QCATestingSnowflake(FractalSnowflake):
         """
         self._stop_job_runner()
 
-    def client(self, username=None, password=None) -> PortalClient:
+    def client(self, username=None, password=None, cache_dir=None) -> PortalClient:
         """
         Obtain a client connected to this snowflake
 
@@ -260,6 +258,8 @@ class QCATestingSnowflake(FractalSnowflake):
             The username to connect as
         password
             The password to use
+        cache_dir
+            Directory to store cache files in
 
         Returns
         -------
@@ -267,11 +267,7 @@ class QCATestingSnowflake(FractalSnowflake):
             A PortalClient that is connected to this snowflake
         """
 
-        client = PortalClient(
-            self.get_uri(),
-            username=username,
-            password=password,
-        )
+        client = PortalClient(self.get_uri(), username=username, password=password, cache_dir=cache_dir)
         client.encoding = self.encoding
         return client
 

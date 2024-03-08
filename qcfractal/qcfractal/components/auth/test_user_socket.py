@@ -180,7 +180,7 @@ def test_user_socket_use_unknown_user(storage_socket: SQLAlchemySocket):
         storage_socket.users.get("geoff")
 
     with pytest.raises(AuthenticationFailure, match=r"Incorrect username or password"):
-        storage_socket.users.verify("geoff", "a password")
+        storage_socket.users.authenticate("geoff", "a password")
 
     with pytest.raises(UserManagementError, match=r"User.*not found"):
         uinfo = UserInfo(id=1234, username="geoff", role="read", enabled=True)
@@ -207,11 +207,11 @@ def test_user_socket_verify_password(storage_socket: SQLAlchemySocket):
 
         add_pw = storage_socket.users.add(uinfo, password=password)
         assert add_pw == password
-        storage_socket.users.verify(username, add_pw)
+        storage_socket.users.authenticate(username, add_pw)
 
         for guess in ["Simple", "ABC%1234", "ÃØ©þꝎB"]:
             with pytest.raises(AuthenticationFailure):
-                storage_socket.users.verify(username, guess)
+                storage_socket.users.authenticate(username, guess)
 
 
 def test_user_socket_verify_user_disabled(storage_socket: SQLAlchemySocket):
@@ -223,13 +223,13 @@ def test_user_socket_verify_user_disabled(storage_socket: SQLAlchemySocket):
 
     gen_pw = storage_socket.users.add(uinfo)
 
-    uinfo2 = storage_socket.users.verify("george", gen_pw)
+    uinfo2 = storage_socket.users.authenticate("george", gen_pw)
 
     uinfo2.enabled = False
     storage_socket.users.modify(uinfo2, as_admin=True)
 
     with pytest.raises(AuthenticationFailure):
-        storage_socket.users.verify("george", gen_pw)
+        storage_socket.users.authenticate("george", gen_pw)
 
 
 def test_user_socket_change_password(storage_socket: SQLAlchemySocket):
@@ -242,16 +242,16 @@ def test_user_socket_change_password(storage_socket: SQLAlchemySocket):
     old_pw = storage_socket.users.add(uinfo, "oldpw123")
     assert old_pw == "oldpw123"
 
-    storage_socket.users.verify("george", "oldpw123")
+    storage_socket.users.authenticate("george", "oldpw123")
 
     # update password...
     storage_socket.users.change_password("george", password="newpw123")
 
     # Raises exception on failure
-    storage_socket.users.verify("george", "newpw123")
+    storage_socket.users.authenticate("george", "newpw123")
 
     with pytest.raises(AuthenticationFailure):
-        storage_socket.users.verify("george", "oldpw123")
+        storage_socket.users.authenticate("george", "oldpw123")
 
 
 def test_user_socket_password_generation(storage_socket: SQLAlchemySocket):
@@ -262,16 +262,16 @@ def test_user_socket_password_generation(storage_socket: SQLAlchemySocket):
     )
 
     gen_pw = storage_socket.users.add(uinfo)
-    storage_socket.users.verify("george", gen_pw)
+    storage_socket.users.authenticate("george", gen_pw)
     is_valid_password(gen_pw)
-    storage_socket.users.verify("george", gen_pw)
+    storage_socket.users.authenticate("george", gen_pw)
 
     gen_pw_2 = storage_socket.users.change_password("george", None)
-    storage_socket.users.verify("george", gen_pw_2)
+    storage_socket.users.authenticate("george", gen_pw_2)
     is_valid_password(gen_pw)
 
     with pytest.raises(AuthenticationFailure):
-        storage_socket.users.verify("george", gen_pw)
+        storage_socket.users.authenticate("george", gen_pw)
 
 
 @pytest.mark.parametrize("as_admin", [True, False])
@@ -351,7 +351,7 @@ def test_user_socket_use_invalid_username(storage_socket: SQLAlchemySocket):
             storage_socket.users.get(username)
 
         with pytest.raises(InvalidUsernameError):
-            storage_socket.users.verify(username, "a_password")
+            storage_socket.users.authenticate(username, "a_password")
 
         with pytest.raises(InvalidUsernameError):
             storage_socket.users.change_password(username, "a_password")
@@ -386,4 +386,4 @@ def test_user_socket_use_invalid_password(storage_socket: SQLAlchemySocket):
             storage_socket.users.change_password(uid, password)
 
         with pytest.raises(InvalidPasswordError):
-            storage_socket.users.verify(username, password)
+            storage_socket.users.authenticate(username, password)

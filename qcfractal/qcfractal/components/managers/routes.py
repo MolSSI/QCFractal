@@ -81,7 +81,6 @@ def get_manager_log_v1(name: str):
 @api_v1.route("/managers/query", methods=["POST"])
 @wrap_route("READ")
 def query_managers_v1(body_data: ManagerQueryFilters):
-
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_managers
     body_data.limit = calculate_limit(max_limit, body_data.limit)
 

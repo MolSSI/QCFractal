@@ -3,7 +3,10 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING, Tuple, Optional, Dict, Union, Any
 
-import pydantic
+try:
+    import pydantic.v1 as pydantic
+except ImportError:
+    import pydantic
 from qcelemental.models import Molecule, FailedOperation, ComputeError, OptimizationResult
 from qcelemental.models.procedures import OptimizationProtocols
 
@@ -114,7 +117,6 @@ def submit_test_data(
     tag: Optional[str] = "*",
     priority: PriorityEnum = PriorityEnum.normal,
 ) -> Tuple[int, Dict[str, OptimizationResult]]:
-
     input_spec, molecule, result = load_test_data(name)
     meta, record_ids = storage_socket.records.gridoptimization.add(
         [molecule], input_spec, tag, priority, None, None, True

@@ -29,7 +29,6 @@ def get_apptainer_cmd() -> str:
 
 
 def run_apptainer(sif_path: str, command: List[str], volumes: List[Tuple[str, str]]) -> AppTaskResult:
-
     cmd = [get_apptainer_cmd()]
 
     volumes_tmp = [f"{v[0]}:{v[1]}" for v in volumes]
@@ -61,7 +60,6 @@ def run_apptainer(sif_path: str, command: List[str], volumes: List[Tuple[str, st
 def run_conda_subprocess(
     conda_env_name: Optional[str], cmd: List[str], cwd: Optional[str], env: Dict[str, str]
 ) -> AppTaskResult:
-
     if cwd:
         cwd = os.path.expandvars(cwd)
 

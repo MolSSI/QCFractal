@@ -39,7 +39,6 @@ def capture_all_output(top_logger: str):
 
 
 if __name__ == "__main__":
-
     record_id = sys.argv[1]
     nextchain_info_file = sys.argv[2]
 

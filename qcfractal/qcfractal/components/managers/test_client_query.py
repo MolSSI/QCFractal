@@ -61,7 +61,6 @@ def test_manager_client_query(queryable_managers_client: PortalClient):
 
 
 def test_manager_client_query_empty_iter(queryable_managers_client: PortalClient):
-
     query_res = queryable_managers_client.query_managers()
     assert len(query_res._current_batch) < queryable_managers_client.api_limits["get_managers"]
 
@@ -70,7 +69,6 @@ def test_manager_client_query_empty_iter(queryable_managers_client: PortalClient
 
 
 def test_manager_client_query_limit(queryable_managers_client: PortalClient):
-
     query_res = queryable_managers_client.query_managers(limit=19)
     query_res_l = list(query_res)
     assert len(query_res_l) == 19

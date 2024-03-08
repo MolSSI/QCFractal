@@ -13,13 +13,17 @@ dependencies:
   - msgpack-python
   - requests
   - pyyaml
-  - pydantic<2.0
+  - pydantic
   - zstandard
   - qcelemental
   - tabulate
   - tqdm
   - pandas
   - pyjwt
+  - packaging
+  - typing_extensions
+  - python-dateutil
+  - pytz
 
   # QCFractalCompute dependencies
   - parsl

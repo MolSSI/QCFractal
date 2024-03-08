@@ -8,7 +8,6 @@ from qcportal import PortalClient
 
 @pytest.fixture(scope="module")
 def queryable_molecules_client(session_snowflake):
-
     client = session_snowflake.client()
     elements1 = ["h", "he", "li", "be", "b", "c", "n", "o", "f", "ne"]
     elements2 = ["na", "mg", "al", "si", "p", "s", "cl", "ar", "k", "ca"]

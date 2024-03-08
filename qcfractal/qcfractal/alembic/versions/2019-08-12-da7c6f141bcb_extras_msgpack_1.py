@@ -25,7 +25,6 @@ block_size = 100
 
 
 def transformer(old_data):
-
     extras = old_data["extras"]
     extras.pop("_qcfractal_tags", None)  # cleanup old tags
 
@@ -33,13 +32,11 @@ def transformer(old_data):
 
 
 def upgrade():
-
     ## Task Queue
     table_name = "task_queue"
     update_columns = {"spec"}
 
     def transformer(old_data):
-
         spec = old_data["spec"]
 
         return {"spec_": msgpackext_dumps(spec)}
@@ -51,7 +48,6 @@ def upgrade():
     update_columns = {"extra"}
 
     def transformer(old_data):
-
         spec = old_data["extra"]
 
         return {"extra_": msgpackext_dumps(spec)}
@@ -60,7 +56,6 @@ def upgrade():
 
 
 def downgrade():
-
     ## Task Queue
     table_name = "task_queue"
     update_columns = {"spec"}

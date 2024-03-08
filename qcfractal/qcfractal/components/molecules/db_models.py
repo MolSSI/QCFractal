@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, String, JSON, Float, Index, CHAR, Boolean, UniqueConstraint
+from sqlalchemy import Column, Integer, String, JSON, Float, Index, CHAR, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import column_property
 
 from qcfractal.db_socket.base_orm import BaseORM
 from qcfractal.db_socket.column_types import MsgpackExt
@@ -50,9 +51,14 @@ class MoleculeORM(BaseORM):
     fragment_multiplicities = Column(JSON)  # Column(ARRAY(Integer))
 
     # Orientation & symmetry
-    fix_com = Column(Boolean, nullable=False, default=True)
-    fix_orientation = Column(Boolean, nullable=False, default=True)
     fix_symmetry = Column(String)
+
+    # These are always forced to be true
+    fix_com = column_property(True)
+    fix_orientation = column_property(True)
+
+    # Molecule is always validated before going in the database
+    validated = column_property(True)
 
     # Extra
     provenance = Column(JSON)
@@ -63,10 +69,9 @@ class MoleculeORM(BaseORM):
         UniqueConstraint("molecule_hash", name="ux_molecule_molecule_hash"),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # molecule_hash is only used for indexing. It is otherwise stored in identifiers
-        exclude = self.append_exclude(exclude, "molecule_hash")
+    _qcportal_model_excludes = ["molecule_hash"]
 
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         d = BaseORM.model_dict(self, exclude)
 
         # TODO - this is because the pydantic models are goofy

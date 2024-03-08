@@ -24,7 +24,6 @@ if TYPE_CHECKING:
 
 
 class ReactionDatasetSocket(BaseDatasetSocket):
-
     # Used by the base class
     dataset_orm = ReactionDatasetORM
     specification_orm = ReactionDatasetSpecificationORM
@@ -46,7 +45,6 @@ class ReactionDatasetSocket(BaseDatasetSocket):
         return self.root_socket.records.reaction.add_specification(specification, session=session)
 
     def _create_entries(self, session: Session, dataset_id: int, new_entries: Sequence[ReactionDatasetNewEntry]):
-
         all_entries = []
         for entry in new_entries:
             # stoichiometries = list of tuples
@@ -110,7 +108,7 @@ class ReactionDatasetSocket(BaseDatasetSocket):
                 session=session,
             )
 
-            for (entry, oid) in zip(new_normal_entries, rxn_ids):
+            for entry, oid in zip(new_normal_entries, rxn_ids):
                 rec = ReactionDatasetRecordItemORM(
                     dataset_id=dataset_id, entry_name=entry.name, specification_name=spec.name, record_id=oid
                 )
@@ -118,7 +116,6 @@ class ReactionDatasetSocket(BaseDatasetSocket):
 
         # Now the ones with additional keywords
         for spec in spec_orm:
-
             spec_obj = spec.specification.to_model(ReactionSpecification)
             spec_input_dict = spec_obj.dict()
 

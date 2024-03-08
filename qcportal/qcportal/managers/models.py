@@ -5,7 +5,11 @@ from enum import Enum
 from typing import Optional, Dict, Any, List
 
 from dateutil.parser import parse as date_parser
-from pydantic import BaseModel, Field, constr, validator, Extra, PrivateAttr
+
+try:
+    from pydantic.v1 import BaseModel, Field, constr, validator, Extra, PrivateAttr
+except ImportError:
+    from pydantic import BaseModel, Field, constr, validator, Extra, PrivateAttr
 
 from qcportal.base_models import RestModelBase, QueryProjModelBase
 from ..base_models import QueryIteratorBase

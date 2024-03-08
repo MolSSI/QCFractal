@@ -9,6 +9,22 @@ if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
 
 
+def test_molecules_socket_validated_fix(storage_socket: SQLAlchemySocket):
+    water = load_molecule_data("water_dimer_minima")
+    hooh = load_molecule_data("hooh")
+
+    # Add once
+    meta, ids = storage_socket.molecules.add([water, hooh])
+
+    mols = storage_socket.molecules.get(ids)
+    assert mols[0]["validated"] is True
+    assert mols[0]["fix_com"] is True
+    assert mols[0]["fix_orientation"] is True
+    assert mols[1]["validated"] is True
+    assert mols[1]["fix_com"] is True
+    assert mols[1]["fix_orientation"] is True
+
+
 def test_molecules_socket_get_proj(storage_socket: SQLAlchemySocket):
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
@@ -25,6 +41,13 @@ def test_molecules_socket_get_proj(storage_socket: SQLAlchemySocket):
     assert len(mols) == 2
     assert set(mols[0].keys()).intersection({"symbols", "geometry", "fix_com"}) == set()
     assert set(mols[1].keys()).intersection({"symbols", "geometry", "fix_com"}) == set()
+
+    mols = storage_socket.molecules.get(ids, include=["symbols", "geometry", "fix_com", "fix_orientation", "validated"])
+    assert len(mols) == 2
+    assert set(mols[0].keys()) == {"id", "symbols", "geometry", "fix_com", "fix_orientation", "validated"}
+    assert set(mols[1].keys()) == {"id", "symbols", "geometry", "fix_com", "fix_orientation", "validated"}
+    assert mols[0]["validated"] is True
+    assert mols[1]["validated"] is True
 
 
 def test_molecules_socket_add_mixed_1(storage_socket: SQLAlchemySocket):

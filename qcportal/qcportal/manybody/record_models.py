@@ -1,7 +1,10 @@
 from enum import Enum
 from typing import List, Union, Optional, Dict, Any, Iterable
 
-from pydantic import BaseModel, Extra, validator, constr
+try:
+    from pydantic.v1 import BaseModel, Extra, validator, constr, PrivateAttr
+except ImportError:
+    from pydantic import BaseModel, Extra, validator, constr, PrivateAttr
 from typing_extensions import Literal
 
 from qcportal.molecules import Molecule
@@ -68,7 +71,6 @@ class ManybodyCluster(BaseModel):
 
 
 class ManybodyRecord(BaseRecord):
-
     record_type: Literal["manybody"] = "manybody"
     specification: ManybodySpecification
     results: Optional[Dict[str, Any]]
@@ -79,15 +81,29 @@ class ManybodyRecord(BaseRecord):
     # Fields not included when fetching the record
     ######################################################
     initial_molecule_: Optional[Molecule] = None
-    clusters_: Optional[List[ManybodyCluster]] = None
+
+    ########################################
+    # Caches
+    ########################################
+    _clusters: Optional[List[ManybodyCluster]] = PrivateAttr(None)
 
     def propagate_client(self, client):
         BaseRecord.propagate_client(self, client)
 
-        if self.clusters_ is not None:
-            for cluster in self.clusters_:
+        if self._clusters is not None:
+            for cluster in self._clusters:
                 if cluster.singlepoint_record:
                     cluster.singlepoint_record.propagate_client(client)
+
+    def fetch_all(self):
+        BaseRecord.fetch_all(self)
+
+        self._fetch_initial_molecule()
+        self._fetch_clusters()
+
+        for cluster in self._clusters:
+            if cluster.singlepoint_record:
+                cluster.singlepoint_record.fetch_all()
 
     def _fetch_initial_molecule(self):
         self._assert_online()
@@ -96,24 +112,31 @@ class ManybodyRecord(BaseRecord):
     def _fetch_clusters(self):
         self._assert_online()
 
-        self.clusters_ = self._client.make_request(
-            "get",
-            f"api/v1/records/manybody/{self.id}/clusters",
-            List[ManybodyCluster],
-        )
+        if not self.offline or self._clusters is None:
+            self._clusters = self._client.make_request(
+                "get",
+                f"api/v1/records/manybody/{self.id}/clusters",
+                List[ManybodyCluster],
+            )
+
+            mol_ids = [x.molecule_id for x in self._clusters]
+            mols = self._client.get_molecules(mol_ids)
+
+            for cluster, mol in zip(self._clusters, mols):
+                assert mol.id == cluster.molecule_id
+                cluster.molecule = mol
 
         # Fetch singlepoint records and molecules
-        sp_ids = [x.singlepoint_id for x in self.clusters_]
-        sp_recs = self._client.get_singlepoints(sp_ids)
+        sp_ids = [x.singlepoint_id for x in self._clusters]
+        sp_recs = self._get_child_records(sp_ids, SinglepointRecord)
 
-        mol_ids = [x.molecule_id for x in self.clusters_]
-        mols = self._client.get_molecules(mol_ids)
-
-        for cluster, sp, mol in zip(self.clusters_, sp_recs, mols):
+        for (
+            cluster,
+            sp,
+        ) in zip(self._clusters, sp_recs):
             assert sp.id == cluster.singlepoint_id
-            assert sp.molecule_id == mol.id == cluster.molecule_id
+            assert sp.molecule_id == cluster.molecule_id
             cluster.singlepoint_record = sp
-            cluster.molecule = mol
 
         self.propagate_client(self._client)
 
@@ -136,6 +159,6 @@ class ManybodyRecord(BaseRecord):
 
     @property
     def clusters(self) -> List[ManybodyCluster]:
-        if self.clusters_ is None:
+        if self._clusters is None:
             self._fetch_clusters()
-        return self.clusters_
+        return self._clusters

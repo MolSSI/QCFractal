@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
@@ -10,7 +9,7 @@ from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
     Enum,
-    DateTime,
+    TIMESTAMP,
     JSON,
     Index,
     Boolean,
@@ -28,6 +27,7 @@ from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.db_socket import BaseORM
 from qcportal.compression import CompressionEnum, decompress
 from qcportal.record_models import RecordStatusEnum, OutputTypeEnum
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Optional, Iterable
@@ -42,7 +42,7 @@ class RecordCommentORM(BaseORM):
 
     id = Column(Integer, primary_key=True)
     record_id = Column(Integer, ForeignKey("base_record.id", ondelete="cascade"), nullable=False)
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    timestamp = Column(TIMESTAMP(timezone=True), default=now_at_utc, nullable=False)
     comment = Column(String, nullable=False)
 
     user_id = Column(Integer, ForeignKey(UserORM.id), nullable=True)
@@ -55,10 +55,11 @@ class RecordCommentORM(BaseORM):
 
     __table_args__ = (Index("ix_record_comment_record_id", "record_id"),)
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        exclude = self.append_exclude(exclude, "user_id", "user")
+    _qcportal_model_excludes = ["user_id", "user"]
 
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         d = BaseORM.model_dict(self, exclude)
+
         d["username"] = self.user.username if self.user is not None else None
         return d
 
@@ -78,14 +79,11 @@ class RecordInfoBackupORM(BaseORM):
     old_status = Column(Enum(RecordStatusEnum), nullable=False)
     old_tag = Column(String, nullable=True)
     old_priority = Column(Integer, nullable=True)
-    modified_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    modified_on = Column(TIMESTAMP(timezone=True), default=now_at_utc, nullable=False)
 
     __table_args__ = (Index("ix_record_info_backup_record_id", "record_id"),)
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "id", "record_id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["id", "record_id"]
 
 
 class OutputStoreORM(BaseORM):
@@ -105,14 +103,11 @@ class OutputStoreORM(BaseORM):
 
     __table_args__ = (UniqueConstraint("history_id", "output_type", name="ux_output_store_id_type"),)
 
+    _qcportal_model_excludes = ["id", "history_id", "compression_level"]
+
     def get_output(self) -> Any:
         return decompress(self.data, self.compression_type)
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Fields not in model
-        exclude = self.append_exclude(exclude, "id", "history_id", "compression_level")
-
-        return BaseORM.model_dict(self, exclude)
 
 
 # Mark the storage of the data column as external
@@ -140,13 +135,10 @@ class NativeFileORM(BaseORM):
 
     __table_args__ = (UniqueConstraint("record_id", "name", name="ux_native_file_record_id_name"),)
 
+    _qcportal_model_excludes = ["id", "history_id", "compression_level"]
+
     def get_file(self) -> Any:
         return decompress(self.data, self.compression_type)
-
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "id", "record_id", "compression_level")
-        return BaseORM.model_dict(self, exclude)
 
 
 # Mark the storage of the data column of native files as external
@@ -173,7 +165,7 @@ class RecordComputeHistoryORM(BaseORM):
 
     status = Column(Enum(RecordStatusEnum), nullable=False)
     manager_name = Column(String, ForeignKey(ComputeManagerORM.name), nullable=True)
-    modified_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    modified_on = Column(TIMESTAMP(timezone=True), default=now_at_utc, nullable=False)
     provenance = Column(JSON)
 
     outputs = relationship(
@@ -213,8 +205,8 @@ class BaseRecordORM(BaseORM):
     status = Column(Enum(RecordStatusEnum), nullable=False)
     manager_name = Column(String, ForeignKey("compute_manager.name"), nullable=True)
 
-    created_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
-    modified_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    created_on = Column(TIMESTAMP(timezone=True), default=now_at_utc, nullable=False)
+    modified_on = Column(TIMESTAMP(timezone=True), default=now_at_utc, nullable=False)
 
     # Ownership of this record
     owner_user_id = Column(Integer, ForeignKey(UserORM.id), nullable=True)
@@ -290,11 +282,11 @@ class BaseRecordORM(BaseORM):
 
     __mapper_args__ = {"polymorphic_on": "record_type"}
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # strip user/group ids
-        # info_backup is also never part of models
-        exclude = self.append_exclude(exclude, "owner_user_id", "owner_group_id", "info_backup")
+    # strip user/group ids
+    # info_backup is also never part of models
+    _qcportal_model_excludes = ["owner_user_id", "owner_group_id", "info_backup"]
 
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         d = BaseORM.model_dict(self, exclude)
 
         d["owner_user"] = self.owner_user.username if self.owner_user is not None else None

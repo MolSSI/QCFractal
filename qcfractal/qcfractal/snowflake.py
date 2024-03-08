@@ -38,18 +38,6 @@ def _api_process(
     finished_queue: multiprocessing.Queue,
     started_event: multiprocessing.Event,
 ) -> None:
-
-    qh = logging.handlers.QueueHandler(logging_queue)
-    logger = logging.getLogger()
-    logger.handlers.clear()
-    logger.addHandler(qh)
-
-    api = FractalGunicornApp(qcf_config, finished_queue, started_event)
-    api.run()
-
-
-def _compute_process(compute_config: FractalComputeConfig, logging_queue: multiprocessing.Queue) -> None:
-
     import signal
 
     qh = logging.handlers.QueueHandler(logging_queue)
@@ -57,7 +45,51 @@ def _compute_process(compute_config: FractalComputeConfig, logging_queue: multip
     logger.handlers.clear()
     logger.addHandler(qh)
 
+    early_stop = False
+
+    def signal_handler(signum, frame):
+        nonlocal early_stop
+        early_stop = True
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+    api = FractalGunicornApp(qcf_config, finished_queue, started_event)
+
+    if early_stop:
+        logging_queue.close()
+        logging_queue.join_thread()
+        return
+
+    try:
+        api.run()
+    finally:
+        logging_queue.close()
+        logging_queue.join_thread()
+
+
+def _compute_process(compute_config: FractalComputeConfig, logging_queue: multiprocessing.Queue) -> None:
+    import signal
+
+    qh = logging.handlers.QueueHandler(logging_queue)
+    logger = logging.getLogger()
+    logger.handlers.clear()
+    logger.addHandler(qh)
+
+    early_stop = False
+
+    def signal_handler(signum, frame):
+        nonlocal early_stop
+        early_stop = True
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
     compute = ComputeManager(compute_config)
+    if early_stop:
+        logging_queue.close()
+        logging_queue.join_thread()
+        return
 
     def signal_handler(signum, frame):
         compute.stop()
@@ -65,13 +97,16 @@ def _compute_process(compute_config: FractalComputeConfig, logging_queue: multip
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
-    compute.start()
+    try:
+        compute.start()
+    finally:
+        logging_queue.close()
+        logging_queue.join_thread()
 
 
 def _job_runner_process(
     qcf_config: FractalConfig, logging_queue: multiprocessing.Queue, finished_queue: multiprocessing.Queue
 ) -> None:
-
     import signal
 
     qh = logging.handlers.QueueHandler(logging_queue)
@@ -79,7 +114,21 @@ def _job_runner_process(
     logger.handlers.clear()
     logger.addHandler(qh)
 
+    early_stop = False
+
+    def signal_handler(signum, frame):
+        nonlocal early_stop
+        early_stop = True
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
     job_runner = FractalJobRunner(qcf_config, finished_queue)
+
+    if early_stop:
+        logging_queue.close()
+        logging_queue.join_thread()
+        return
 
     def signal_handler(signum, frame):
         job_runner.stop()
@@ -87,17 +136,24 @@ def _job_runner_process(
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
-    job_runner.start()
+    try:
+        job_runner.start()
+    finally:
+        logging_queue.close()
+        logging_queue.join_thread()
 
 
-def _logging_thread(logging_queue):
+def _logging_thread(logging_queue, logging_thread_stop):
     while True:
-        record = logging_queue.get()
-        if record is None:
-            break
-        logger = logging.getLogger(record.name)
-
-        logger.handle(record)
+        try:
+            record = logging_queue.get(timeout=0.5)
+            logger = logging.getLogger(record.name)
+            logger.handle(record)
+        except Empty:
+            if logging_thread_stop.is_set():
+                break
+            else:
+                continue
 
 
 class FractalSnowflake:
@@ -128,7 +184,10 @@ class FractalSnowflake:
         # See https://docs.python.org/3/howto/logging-cookbook.html#logging-to-a-single-file-from-multiple-processes
 
         self._logging_queue = self._mp_context.Queue()
-        self._logging_thread = threading.Thread(target=_logging_thread, args=(self._logging_queue,), daemon=True)
+        self._logging_thread_stop = threading.Event()
+        self._logging_thread = threading.Thread(
+            target=_logging_thread, args=(self._logging_queue, self._logging_thread_stop), daemon=True
+        )
         self._logging_thread.start()
 
         # Create a temporary directory for everything
@@ -235,8 +294,9 @@ class FractalSnowflake:
             self._compute_proc,
             self._api_proc,
             self._job_runner_proc,
-            self._logging_thread,
             self._logging_queue,
+            self._logging_thread,
+            self._logging_thread_stop,
         )
 
     def _start_api(self):
@@ -292,7 +352,7 @@ class FractalSnowflake:
             self._update_finalizer()
 
     @classmethod
-    def _stop(cls, compute_proc, api_proc, job_runner_proc, logging_thread, logging_queue):
+    def _stop(cls, compute_proc, api_proc, job_runner_proc, logging_queue, logging_thread, logging_thread_stop):
         ####################################################################################
         # This is written as a class method so that it can be called by a weakref finalizer
         ####################################################################################
@@ -301,7 +361,6 @@ class FractalSnowflake:
         # First the compute, since it will communicate its demise to the api server
         # Flask must be last. It was started first and owns the db
 
-        # First, stop all, then join all for better performance
         if compute_proc is not None:
             compute_proc.terminate()
             compute_proc.join()
@@ -314,8 +373,10 @@ class FractalSnowflake:
             api_proc.terminate()
             api_proc.join()
 
-        logging_queue.put(None)
+        logging_thread_stop.set()
         logging_thread.join()
+        logging_queue.close()
+        logging_queue.join_thread()
 
     def wait_for_api(self):
         """
@@ -363,12 +424,22 @@ class FractalSnowflake:
         Stops all components of the snowflake
         """
 
-        if self._finalizer is not None:
-            self._finalizer()
+        if self._compute_proc is not None:
+            self._compute_proc.terminate()
+            self._compute_proc.join()
+            self._compute_proc = None
 
-        self._api_proc = None
-        self._compute_proc = None
-        self._job_runner_proc = None
+        if self._job_runner_proc is not None:
+            self._job_runner_proc.terminate()
+            self._job_runner_proc.join()
+            self._job_runner_proc = None
+
+        if self._api_proc is not None:
+            self._api_proc.terminate()
+            self._api_proc.join()
+            self._api_proc = None
+
+        self._update_finalizer()
 
     def get_uri(self) -> str:
         """

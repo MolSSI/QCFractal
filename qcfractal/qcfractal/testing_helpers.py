@@ -27,7 +27,6 @@ class DummyJobProgress:
 
     def __init__(self):
         self._runner_uuid = "1234-5678-9101-1213"
-        pass
 
     def update_progress(self, progress: int):
         pass
@@ -87,7 +86,6 @@ def run_service(
                 )
                 # The function that iterates a service returns True if it is finished
                 if job_orm.result is True:
-
                     rec: BaseRecordORM = session.get(BaseRecordORM, record_id)
 
                     if rec.status == RecordStatusEnum.error:

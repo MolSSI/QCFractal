@@ -24,7 +24,6 @@ if TYPE_CHECKING:
 
 
 class TorsiondriveDatasetSocket(BaseDatasetSocket):
-
     # Used by the base class
     dataset_orm = TorsiondriveDatasetORM
     specification_orm = TorsiondriveDatasetSpecificationORM
@@ -46,7 +45,6 @@ class TorsiondriveDatasetSocket(BaseDatasetSocket):
         return self.root_socket.records.torsiondrive.add_specification(specification, session=session)
 
     def _create_entries(self, session: Session, dataset_id: int, new_entries: Sequence[TorsiondriveDatasetNewEntry]):
-
         all_entries = []
         for entry in new_entries:
             meta, mol_ids = self.root_socket.molecules.add_mixed(entry.initial_molecules, session=session)

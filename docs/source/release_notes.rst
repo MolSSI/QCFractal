@@ -1,6 +1,34 @@
 Release Notes
 =============
 
+0.53 / 2024-01-09
+-----------------
+
+The only real thing to report is fixing of molecules returned from the server. Other than that,
+a little bit of cleanup in preparation for implementing new features in the future
+No breaking changes. Upgrading qcportal is recommended, but is not required.
+
+Notable pull requests and features:
+
+- (:pr:`798`) Mark molecules coming from the server as already validated, and remove `fix_com` and `fix_orientation` from the database.
+
+
+0.52 / 2023-11-29
+-----------------
+
+Some improvements and bugfixes, but no breaking changes. Upgrading qcportal is recommended
+due to fixes related to JWTs, but is not required. The same is true with compute managers.
+
+Notable pull requests and features:
+
+- (:pr:`781`) Fixes issues related to shutdown of snowflakes, particularly with Python 3.12
+- (:pr:`783`, :pr:`793`) Fixes JWT refresh issues that cause errors in clients
+- (:pr:`785`) Some cleanups related to Python 3.12 (including removing use of removing `pkg_resources` module)
+- (:pr:`787`) Pydantic v1/v2 dual compatibility (L. Naden :contrib:`lnaden`, M. Thompson :contrib:`mattwthompson`, L. Burns :contrib:`loriab`)
+- (:pr:`792`) Add ability to get status overview of child records (such as optimizations of a torsiondrive)
+- (:pr:`794`) Remove use of now-deprecated `utctime` function and improve handling of timezones
+
+
 0.51 / 2023-10-19
 -----------------
 

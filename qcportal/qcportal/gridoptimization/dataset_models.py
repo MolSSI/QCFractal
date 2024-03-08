@@ -1,6 +1,9 @@
 from typing import Dict, Any, Union, Optional, Iterable, Tuple
 
-from pydantic import BaseModel, Extra
+try:
+    from pydantic.v1 import BaseModel, Extra
+except ImportError:
+    from pydantic import BaseModel, Extra
 from typing_extensions import Literal
 
 from qcportal.dataset_models import BaseDataset
@@ -50,13 +53,6 @@ class GridoptimizationDatasetRecordItem(BaseModel):
 class GridoptimizationDataset(BaseDataset):
     dataset_type: Literal["gridoptimization"] = "gridoptimization"
 
-    ########################################
-    # Caches of information
-    ########################################
-    specifications_: Dict[str, GridoptimizationDatasetSpecification] = {}
-    entries_: Dict[str, GridoptimizationDatasetEntry] = {}
-    record_map_: Dict[Tuple[str, str], GridoptimizationRecord] = {}
-
     # Needed by the base class
     _entry_type = GridoptimizationDatasetEntry
     _new_entry_type = GridoptimizationDatasetNewEntry
@@ -67,14 +63,12 @@ class GridoptimizationDataset(BaseDataset):
     def add_specification(
         self, name: str, specification: GridoptimizationSpecification, description: Optional[str] = None
     ) -> InsertMetadata:
-
         spec = GridoptimizationDatasetSpecification(name=name, specification=specification, description=description)
         return self._add_specifications(spec)
 
     def add_entries(
         self, entries: Union[GridoptimizationDatasetNewEntry, Iterable[GridoptimizationDatasetNewEntry]]
     ) -> InsertMetadata:
-
         return self._add_entries(entries)
 
     def add_entry(

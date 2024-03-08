@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import itertools
-from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 import pytest
@@ -20,6 +19,7 @@ from qcportal.neb import (
 )
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
@@ -57,7 +57,7 @@ def test_neb_client_add_get(submitter_client: PortalClient, spec: NEBSpecificati
     chain1 = [load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)]
     chain2 = [load_molecule_data("neb/neb_C3H2N_%i" % i) for i in range(21)]
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     meta, id = submitter_client.add_nebs(
         initial_chains=[chain1, chain2],
         program=spec.program,
@@ -69,7 +69,7 @@ def test_neb_client_add_get(submitter_client: PortalClient, spec: NEBSpecificati
         owner_group=owner_group,
     )
 
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     assert meta.success
 
     recs = submitter_client.get_nebs(id, include=["service", "initial_chain"])
@@ -80,6 +80,9 @@ def test_neb_client_add_get(submitter_client: PortalClient, spec: NEBSpecificati
         assert r.record_type == "neb"
         assert r.record_type == "neb"
         assert compare_neb_specs(spec, r.specification)
+
+        assert r.status == RecordStatusEnum.waiting
+        assert r.children_status == {}
 
         assert r.service.tag == "tag1"
         assert r.service.priority == PriorityEnum.low
@@ -180,15 +183,17 @@ def test_neb_client_delete(snowflake: QCATestingSnowflake):
         rec = session.get(NEBRecordORM, neb_id)
 
         # Children are singlepoints, optimizations, and the trajectory of the optimizations (also singlepoints)
-        child_ids = [x.singlepoint_id for x in rec.singlepoints]
+        direct_child_ids = [x.singlepoint_id for x in rec.singlepoints]
         opt_ids = [x.optimization_id for x in rec.optimizations]
-        child_ids.extend(opt_ids)
+        direct_child_ids.extend(opt_ids)
 
+        child_ids = direct_child_ids.copy()
         for opt in rec.optimizations:
             traj_ids = [x.singlepoint_id for x in opt.optimization_record.trajectory]
             child_ids.extend(traj_ids)
 
     # Some duplicates here
+    direct_child_ids = list(set(direct_child_ids))
     child_ids = list(set(child_ids))
 
     meta = snowflake_client.delete_records(neb_id, soft_delete=True, delete_children=False)
@@ -196,9 +201,10 @@ def test_neb_client_delete(snowflake: QCATestingSnowflake):
     assert meta.deleted_idx == [0]
     assert meta.n_children_deleted == 0
 
-    for cid in child_ids:
-        child_rec = snowflake_client.get_records(cid, missing_ok=True)
-        assert child_rec.status == RecordStatusEnum.complete
+    child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
+    assert all(x.status == RecordStatusEnum.complete for x in child_recs)
+    neb_rec = snowflake_client.get_records(neb_id)
+    assert neb_rec.children_status == {RecordStatusEnum.complete: len(direct_child_ids)}
 
     snowflake_client.undelete_records(neb_id)
 
@@ -207,9 +213,10 @@ def test_neb_client_delete(snowflake: QCATestingSnowflake):
     assert meta.deleted_idx == [0]
     assert meta.n_children_deleted == len(child_ids)
 
-    for cid in child_ids:
-        child_rec = snowflake_client.get_records(cid, missing_ok=True)
-        assert child_rec.status == RecordStatusEnum.deleted
+    child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
+    assert all(x.status == RecordStatusEnum.deleted for x in child_recs)
+    neb_rec = snowflake_client.get_records(neb_id)
+    assert neb_rec.children_status == {RecordStatusEnum.deleted: len(direct_child_ids)}
 
     meta = snowflake_client.delete_records(neb_id, soft_delete=False, delete_children=True)
     assert meta.success
@@ -219,9 +226,8 @@ def test_neb_client_delete(snowflake: QCATestingSnowflake):
     recs = snowflake_client.get_nebs(neb_id, missing_ok=True)
     assert recs is None
 
-    for cid in child_ids:
-        child_rec = snowflake_client.get_records(cid, missing_ok=True)
-        assert child_rec is None
+    child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
+    assert all(x is None for x in child_recs)
 
     # DB should be pretty empty now
     query_res = snowflake_client.query_records()

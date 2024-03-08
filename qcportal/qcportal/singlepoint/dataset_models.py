@@ -1,6 +1,9 @@
 from typing import Dict, Any, Union, Optional, Iterable, Tuple
 
-from pydantic import BaseModel, Extra
+try:
+    from pydantic.v1 import BaseModel, Extra
+except ImportError:
+    from pydantic import BaseModel, Extra
 from typing_extensions import Literal
 
 from qcportal.dataset_models import BaseDataset
@@ -50,13 +53,6 @@ class SinglepointDatasetRecordItem(BaseModel):
 class SinglepointDataset(BaseDataset):
     dataset_type: Literal["singlepoint"] = "singlepoint"
 
-    ########################################
-    # Caches of information
-    ########################################
-    specifications_: Dict[str, SinglepointDatasetSpecification] = {}
-    entries_: Dict[str, SinglepointDatasetEntry] = {}
-    record_map_: Dict[Tuple[str, str], SinglepointRecord] = {}
-
     # Needed by the base class
     _entry_type = SinglepointDatasetEntry
     _new_entry_type = SinglepointDatasetNewEntry
@@ -67,7 +63,6 @@ class SinglepointDataset(BaseDataset):
     def add_specification(
         self, name: str, specification: QCSpecification, description: Optional[str] = None
     ) -> InsertMetadata:
-
         spec = SinglepointDatasetSpecification(name=name, specification=specification, description=description)
         return self._add_specifications(spec)
 

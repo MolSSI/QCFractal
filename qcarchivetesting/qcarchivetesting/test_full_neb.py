@@ -59,7 +59,7 @@ def test_neb_full_1(fulltest_client: PortalClient):
     else:
         raise RuntimeError("Did not finish calculation in time")
 
-    ts_guess = rec.neb_result
+    ts_guess = rec.result
     initial_chain = rec.initial_chain  # List[Molecule]
     final_chain = rec.final_chain  # List[Singlepoints]
     optimizations = rec.optimizations
@@ -139,7 +139,7 @@ def test_neb_full_2(fulltest_client: PortalClient):
         raise RuntimeError("Did not finish calculation in time")
 
     hessian = rec.ts_hessian  # Calling the Hessian first
-    ts_guess = rec.neb_result
+    ts_guess = rec.result
     initial_chain = rec.initial_chain  # List[Molecule]
     final_chain = rec.final_chain  # List[Singlepoints]
     optimizations = rec.optimizations

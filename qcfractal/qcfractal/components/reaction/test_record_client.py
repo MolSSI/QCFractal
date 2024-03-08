@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import itertools
-from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 import pytest
@@ -11,6 +10,7 @@ from qcfractal.components.record_db_models import BaseRecordORM
 from qcportal.reaction import ReactionSpecification, ReactionKeywords
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification
+from qcportal.utils import now_at_utc
 from .testing_helpers import compare_reaction_specs, test_specs, run_test_data, submit_test_data
 
 if TYPE_CHECKING:
@@ -55,7 +55,7 @@ def test_reaction_client_add_get(
     ne4 = load_molecule_data("neon_tetramer")
     water = load_molecule_data("water_dimer_minima")
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     meta1, id1 = submitter_client.add_reactions(
         [[(1.0, hooh), (2.0, ne4)], [(3.0, hooh), (4.0, water)]],
         spec.program,
@@ -66,7 +66,7 @@ def test_reaction_client_add_get(
         priority=PriorityEnum.low,
         owner_group=owner_group,
     )
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     assert meta1.success
 
     recs = submitter_client.get_reactions(id1, include=["service", "components"])
@@ -76,6 +76,9 @@ def test_reaction_client_add_get(
         assert r.record_type == "reaction"
         assert r.record_type == "reaction"
         assert compare_reaction_specs(spec, r.specification)
+
+        assert r.status == RecordStatusEnum.waiting
+        assert r.children_status == {}
 
         assert r.service.tag == "tag1"
         assert r.service.priority == PriorityEnum.low
@@ -205,6 +208,8 @@ def test_reaction_client_delete(snowflake: QCATestingSnowflake):
 
     child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
     assert all(x.status == RecordStatusEnum.complete for x in child_recs)
+    rxn_rec = snowflake_client.get_records(rxn_id)
+    assert rxn_rec.children_status == {RecordStatusEnum.complete: len(child_ids)}
 
     snowflake_client.undelete_records(rxn_id)
 
@@ -215,6 +220,8 @@ def test_reaction_client_delete(snowflake: QCATestingSnowflake):
 
     child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
     assert all(x.status == RecordStatusEnum.deleted for x in child_recs)
+    rxn_rec = snowflake_client.get_records(rxn_id)
+    assert rxn_rec.children_status == {RecordStatusEnum.deleted: len(child_ids)}
 
     meta = snowflake_client.delete_records(rxn_id, soft_delete=False, delete_children=True)
     assert meta.success

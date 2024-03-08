@@ -1,6 +1,9 @@
 from typing import Dict, Any, Union, Optional, Iterable, Tuple
 
-from pydantic import BaseModel, Extra
+try:
+    from pydantic.v1 import BaseModel, Extra
+except ImportError:
+    from pydantic import BaseModel, Extra
 from typing_extensions import Literal
 
 from qcportal.dataset_models import BaseDataset
@@ -43,13 +46,6 @@ class ManybodyDatasetRecordItem(BaseModel):
 class ManybodyDataset(BaseDataset):
     dataset_type: Literal["manybody"] = "manybody"
 
-    ########################################
-    # Caches of information
-    ########################################
-    specifications_: Dict[str, ManybodyDatasetSpecification] = {}
-    entries_: Dict[str, ManybodyDatasetEntry] = {}
-    record_map_: Dict[Tuple[str, str], ManybodyRecord] = {}
-
     # Needed by the base class
     _entry_type = ManybodyDatasetEntry
     _new_entry_type = ManybodyDatasetNewEntry
@@ -60,7 +56,6 @@ class ManybodyDataset(BaseDataset):
     def add_specification(
         self, name: str, specification: ManybodySpecification, description: Optional[str] = None
     ) -> InsertMetadata:
-
         spec = ManybodyDatasetSpecification(name=name, specification=specification, description=description)
         return self._add_specifications(spec)
 

@@ -1,9 +1,9 @@
 from __future__ import annotations, annotations
 
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 from qcarchivetesting import test_users
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
@@ -32,9 +32,9 @@ def test_serverinfo_client_delete_error(secure_snowflake: QCATestingSnowflake):
         "request_body": "fake body",
     }
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     storage_socket.serverinfo.save_error(error_data_1)
-    time_12 = datetime.utcnow()
+    time_12 = now_at_utc()
     storage_socket.serverinfo.save_error(error_data_2)
 
     n_deleted = client.delete_error_log(before=time_0)

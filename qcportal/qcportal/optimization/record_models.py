@@ -1,7 +1,10 @@
 from copy import deepcopy
 from typing import Optional, Union, Any, List, Dict, Iterable
 
-from pydantic import BaseModel, Field, constr, validator, Extra
+try:
+    from pydantic.v1 import BaseModel, Field, constr, validator, Extra, PrivateAttr
+except ImportError:
+    from pydantic import BaseModel, Field, constr, validator, Extra, PrivateAttr
 from qcelemental.models import Molecule
 from qcelemental.models.procedures import (
     OptimizationResult,
@@ -41,7 +44,6 @@ class OptimizationSpecification(BaseModel):
 
 
 class OptimizationRecord(BaseRecord):
-
     record_type: Literal["optimization"] = "optimization"
     specification: OptimizationSpecification
     initial_molecule_id: int
@@ -58,34 +60,43 @@ class OptimizationRecord(BaseRecord):
     ########################################
     # Caches
     ########################################
-    trajectory_records_: Optional[List[SinglepointRecord]] = None
+    _trajectory_records: Optional[List[SinglepointRecord]] = PrivateAttr(None)
 
     def propagate_client(self, client):
         BaseRecord.propagate_client(self, client)
 
-        if self.trajectory_records_ is not None:
-            for sp in self.trajectory_records_:
+        if self._trajectory_records is not None:
+            for sp in self._trajectory_records:
                 sp.propagate_client(client)
+
+    def fetch_all(self):
+        BaseRecord.fetch_all(self)
+        self._fetch_initial_molecule()
+        self._fetch_final_molecule()
+        self._fetch_trajectory()
+
+        for sp in self._trajectory_records:
+            sp.fetch_all()
 
     def _fetch_initial_molecule(self):
         self._assert_online()
         self.initial_molecule_ = self._client.get_molecules([self.initial_molecule_id])[0]
 
     def _fetch_final_molecule(self):
-        self._assert_online()
         if self.final_molecule_id is not None:
+            self._assert_online()
             self.final_molecule_ = self._client.get_molecules([self.final_molecule_id])[0]
 
     def _fetch_trajectory(self):
-        self._assert_online()
+        if self.trajectory_ids_ is None:
+            self._assert_online()
+            self.trajectory_ids_ = self._client.make_request(
+                "get",
+                f"api/v1/records/optimization/{self.id}/trajectory",
+                List[int],
+            )
 
-        self.trajectory_ids_ = self._client.make_request(
-            "get",
-            f"api/v1/records/optimization/{self.id}/trajectory",
-            List[int],
-        )
-
-        self.trajectory_records_ = self._client.get_singlepoints(self.trajectory_ids_)
+        self._trajectory_records = self._get_child_records(self.trajectory_ids_, SinglepointRecord)
         self.propagate_client(self._client)
 
     def _handle_includes(self, includes: Optional[Iterable[str]]):
@@ -115,14 +126,14 @@ class OptimizationRecord(BaseRecord):
 
     @property
     def trajectory(self) -> Optional[List[SinglepointRecord]]:
-        if self.trajectory_records_ is None:
+        if self._trajectory_records is None:
             self._fetch_trajectory()
 
-        return self.trajectory_records_
+        return self._trajectory_records
 
     def trajectory_element(self, trajectory_index: int) -> SinglepointRecord:
-        if self.trajectory_records_ is not None:
-            return self.trajectory_records_[trajectory_index]
+        if self._trajectory_records is not None:
+            return self._trajectory_records[trajectory_index]
         else:
             self._assert_online()
 
@@ -135,7 +146,7 @@ class OptimizationRecord(BaseRecord):
 
             if self.trajectory_ids_ is not None:
                 traj_id = self.trajectory_ids_[trajectory_index]
-                sp_rec = self._client.get_singlepoints(traj_id)
+                sp_rec = self._get_child_records([traj_id], SinglepointRecord)[0]
                 sp_rec.propagate_client(self._client)
                 return sp_rec
             else:

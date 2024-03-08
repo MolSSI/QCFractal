@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 import pytest
@@ -19,6 +18,7 @@ from qcportal.singlepoint import (
     QCSpecification,
     SinglepointProtocols,
 )
+from qcportal.utils import now_at_utc
 from .testing_helpers import compare_neb_specs, test_specs, load_test_data, generate_task_key
 
 if TYPE_CHECKING:
@@ -29,13 +29,12 @@ if TYPE_CHECKING:
 
 @pytest.mark.parametrize("spec", test_specs)
 def test_neb_socket_add_get(storage_socket: SQLAlchemySocket, session: Session, spec: NEBSpecification):
-
     chain1 = [load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)]
     chain2 = [load_molecule_data("neb/neb_C3H2N_%i" % i) for i in range(21)]
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     meta, ids = storage_socket.records.neb.add([chain1, chain2], spec, "tag1", PriorityEnum.low, None, None, True)
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     assert meta.success
 
     recs = [session.get(NEBRecordORM, i) for i in ids]
@@ -219,11 +218,11 @@ def test_neb_socket_run(
     )
     assert meta_1.success
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     finished, n_spopt = run_service(
         storage_socket, activated_manager_name, id_1[0], generate_task_key, result_data_1, 100
     )
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
 
     rec = session.get(NEBRecordORM, id_1)
 

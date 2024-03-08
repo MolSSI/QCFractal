@@ -1,6 +1,9 @@
 from typing import Dict, Any, Union, Optional, List, Iterable, Tuple
 
-from pydantic import BaseModel, Extra
+try:
+    from pydantic.v1 import BaseModel, Extra
+except ImportError:
+    from pydantic import BaseModel, Extra
 from typing_extensions import Literal
 
 from qcportal.dataset_models import BaseDataset
@@ -54,13 +57,6 @@ class ReactionDatasetRecordItem(BaseModel):
 class ReactionDataset(BaseDataset):
     dataset_type: Literal["reaction"] = "reaction"
 
-    ########################################
-    # Caches of information
-    ########################################
-    specifications_: Dict[str, ReactionDatasetSpecification] = {}
-    entries_: Dict[str, ReactionDatasetEntry] = {}
-    record_map_: Dict[Tuple[str, str], ReactionRecord] = {}
-
     # Needed by the base class
     _entry_type = ReactionDatasetEntry
     _new_entry_type = ReactionDatasetNewEntry
@@ -71,7 +67,6 @@ class ReactionDataset(BaseDataset):
     def add_specification(
         self, name: str, specification: ReactionSpecification, description: Optional[str] = None
     ) -> InsertMetadata:
-
         spec = ReactionDatasetSpecification(name=name, specification=specification, description=description)
         return self._add_specifications(spec)
 

@@ -14,10 +14,14 @@ from typing import (
 )
 
 import jwt
-import pydantic
+
+try:
+    import pydantic.v1 as pydantic
+except ImportError:
+    import pydantic
 import requests
 import yaml
-from pkg_resources import parse_version
+from packaging.version import parse as parse_version
 
 from . import __version__
 from .exceptions import AuthenticationFailure
@@ -227,7 +231,6 @@ class PortalClientBase:
         self._req_session.headers.update(enc_headers)
 
     def _get_JWT_token(self) -> None:
-
         try:
             ret = self._req_session.post(
                 self.address + "auth/v1/login",
@@ -241,16 +244,17 @@ class PortalClientBase:
 
         if ret.status_code == 200:
             ret_json = ret.json()
-            self.refresh_token = ret_json["refresh_token"]
-            self._req_session.headers.update({"Authorization": f'Bearer {ret_json["access_token"]}'})
+            self._jwt_refresh_token = ret_json["refresh_token"]
+            self._jwt_access_token = ret_json["access_token"]
+            self._req_session.headers.update({"Authorization": f"Bearer {self._jwt_access_token}"})
 
             # Store the expiration time of the access and refresh tokens
             # (these are unix epoch timestamps)
             decoded_access_token = jwt.decode(
-                ret_json["access_token"], algorithms=["HS256"], options={"verify_signature": False}
+                self._jwt_access_token, algorithms=["HS256"], options={"verify_signature": False}
             )
             decoded_refresh_token = jwt.decode(
-                ret_json["refresh_token"], algorithms=["HS256"], options={"verify_signature": False}
+                self._jwt_refresh_token, algorithms=["HS256"], options={"verify_signature": False}
             )
             self._jwt_access_exp = decoded_access_token["exp"]
             self._jwt_refresh_exp = decoded_refresh_token["exp"]
@@ -262,25 +266,33 @@ class PortalClientBase:
             raise AuthenticationFailure(msg)
 
     def _refresh_JWT_token(self) -> None:
-
         ret = self._req_session.post(
             self.address + "auth/v1/refresh",
-            headers={"Authorization": f"Bearer {self.refresh_token}"},
+            headers={"Authorization": f"Bearer {self._jwt_refresh_token}"},
             verify=self._verify,
         )
 
         if ret.status_code == 200:
             ret_json = ret.json()
-            self._req_session.headers.update({"Authorization": f'Bearer {ret_json["access_token"]}'})
+            self._jwt_access_token = ret_json["access_token"]
+            self._req_session.headers.update({"Authorization": f"Bearer {self._jwt_access_token}"})
 
             # Store the expiration time of the access and refresh tokens
             # (these are unix epoch timestamps)
             decoded_access_token = jwt.decode(
-                ret_json["access_token"], algorithms=["HS256"], options={"verify_signature": False}
+                self._jwt_access_token, algorithms=["HS256"], options={"verify_signature": False}
             )
             self._jwt_access_exp = decoded_access_token["exp"]
 
-        else:  # shouldn't happen unless user is blacklisted
+        elif ret.status_code == 401 and "Token has expired" in ret.json()["msg"]:
+            # If the refresh token has expired, try to log in again
+            self._get_JWT_token()
+        elif ret.status_code == 401 and f" is disabled" in ret.json()["msg"]:
+            raise AuthenticationFailure("User account has been disabled")
+        elif ret.status_code == 401 and f" does not exist" in ret.json()["msg"]:
+            raise AuthenticationFailure("User account no longer exists")
+        else:  # shouldn't happen unless user is blacklisted or something
+            print(ret, ret.text)
             raise ConnectionRefusedError("Unable to refresh JWT authorization token! This is a server issue!!")
 
     def _request(
@@ -293,14 +305,13 @@ class PortalClientBase:
         internal_retry: Optional[bool] = True,
         allow_retries: bool = True,
     ) -> requests.Response:
-
-        # If JWT token is expired, automatically renew it
-        if self._jwt_access_exp and self._jwt_access_exp < time.time():
-            self._refresh_JWT_token()
-
         # If refresh token has expired, log in again
         if self._jwt_refresh_exp and self._jwt_refresh_exp < time.time():
             self._get_JWT_token()
+
+        # If only the JWT token is expired, automatically renew it
+        if self._jwt_access_exp and self._jwt_access_exp < time.time():
+            self._refresh_JWT_token()
 
         full_uri = self.address + endpoint
 
@@ -375,7 +386,6 @@ class PortalClientBase:
         url_params: Optional[Union[_U, Dict[str, Any]]] = None,
         allow_retries: bool = True,
     ) -> _V:
-
         # If body_model or url_params_model are None, then use the type given
         if body_model is None and body is not None:
             body_model = type(body)

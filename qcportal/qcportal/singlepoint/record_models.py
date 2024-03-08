@@ -2,7 +2,10 @@ from copy import deepcopy
 from enum import Enum
 from typing import Optional, Union, Any, List, Dict, Iterable, Tuple
 
-from pydantic import BaseModel, Field, constr, validator, Extra, PrivateAttr
+try:
+    from pydantic.v1 import BaseModel, Field, constr, validator, Extra, PrivateAttr
+except ImportError:
+    from pydantic import BaseModel, Field, constr, validator, Extra, PrivateAttr
 from qcelemental.models import Molecule
 from qcelemental.models.results import (
     AtomicResult,
@@ -10,6 +13,7 @@ from qcelemental.models.results import (
     AtomicResultProtocols as SinglepointProtocols,
     AtomicResultProperties,
     WavefunctionProperties,
+    WavefunctionProtocolEnum,
 )
 from typing_extensions import Literal
 
@@ -63,39 +67,36 @@ class Wavefunction(BaseModel):
         extra = Extra.forbid
 
     compression_type: CompressionEnum
+    data_: Optional[bytes] = None
 
-    data_url_: Optional[str] = None
-    compressed_data_: Optional[bytes] = None
-    decompressed_data_: Optional[WavefunctionProperties] = None
-
+    _data_url: Optional[str] = PrivateAttr(None)
     _client: Any = PrivateAttr(None)
 
     def propagate_client(self, client, record_base_url):
         self._client = client
-        self.data_url_ = f"{record_base_url}/wavefunction/data"
+        self._data_url = f"{record_base_url}/wavefunction/data"
 
     def _fetch_raw_data(self):
-        if self.compressed_data_ is None and self.decompressed_data_ is None:
-            cdata, ctype = self._client.make_request(
-                "get",
-                self.data_url_,
-                Tuple[bytes, CompressionEnum],
-            )
+        if self.data_ is not None:
+            return
 
-            assert self.compression_type == ctype
-            self.compressed_data_ = cdata
+        if self._client is None:
+            raise RuntimeError("No client to fetch wavefunction data from")
+
+        cdata, ctype = self._client.make_request(
+            "get",
+            self._data_url,
+            Tuple[bytes, CompressionEnum],
+        )
+
+        assert self.compression_type == ctype
+        self.data_ = cdata
 
     @property
     def data(self) -> WavefunctionProperties:
         self._fetch_raw_data()
-
-        # Decompress, then remove compressed form
-        if self.decompressed_data_ is None:
-            wfn_dict = decompress(self.compressed_data_, self.compression_type)
-            self.decompressed_data_ = WavefunctionProperties(**wfn_dict)
-            self.compressed_data_ = None
-
-        return self.decompressed_data_
+        wfn_dict = decompress(self.data_, self.compression_type)
+        return WavefunctionProperties(**wfn_dict)
 
 
 class SinglepointRecord(BaseRecord):
@@ -114,6 +115,16 @@ class SinglepointRecord(BaseRecord):
 
         if self.wavefunction_ is not None:
             self.wavefunction_.propagate_client(self._client, self._base_url)
+
+    def fetch_all(self):
+        BaseRecord.fetch_all(self)
+        self._fetch_molecule()
+
+        if self.specification.protocols.wavefunction != WavefunctionProtocolEnum.none:
+            self._fetch_wavefunction()
+            self.wavefunction_._fetch_raw_data()
+        else:
+            self.wavefunction_ = None
 
     def _fetch_molecule(self):
         self._assert_online()
@@ -154,7 +165,8 @@ class SinglepointRecord(BaseRecord):
 
     @property
     def wavefunction(self) -> Optional[WavefunctionProperties]:
-        if self.wavefunction_ is None:
+        # wavefunction may be None if it doesn't exist or hasn't been fetched yet
+        if self.wavefunction_ is None and "wavefunction_" not in self.__fields_set__:
             self._fetch_wavefunction()
 
         if self.wavefunction_ is not None:

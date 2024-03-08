@@ -25,7 +25,6 @@ if TYPE_CHECKING:
 
 
 class NEBDatasetSocket(BaseDatasetSocket):
-
     # Used by the base class
     dataset_orm = NEBDatasetORM
     specification_orm = NEBDatasetSpecificationORM
@@ -47,7 +46,6 @@ class NEBDatasetSocket(BaseDatasetSocket):
         return self.root_socket.records.neb.add_specification(specification, session=session)
 
     def _create_entries(self, session: Session, dataset_id: int, new_entries: Sequence[NEBDatasetNewEntry]):
-
         all_entries = []
         for entry in new_entries:
             meta, mol_ids = self.root_socket.molecules.add_mixed(entry.initial_chain, session=session)

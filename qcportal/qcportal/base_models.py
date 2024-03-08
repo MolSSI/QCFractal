@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from typing import Optional, List, Iterator, Generic, TypeVar
 
-from pydantic import BaseModel, validator, Extra
+try:
+    from pydantic.v1 import BaseModel, validator, Extra
+except ImportError:
+    from pydantic import BaseModel, validator, Extra
 
 T = TypeVar("T")
 

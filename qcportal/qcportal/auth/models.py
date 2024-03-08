@@ -3,7 +3,10 @@ from __future__ import annotations
 from enum import Enum
 from typing import Optional, Union, List
 
-from pydantic import BaseModel, Field, validator, constr, Extra
+try:
+    from pydantic.v1 import BaseModel, Field, validator, constr, Extra
+except ImportError:
+    from pydantic import BaseModel, Field, validator, constr, Extra
 
 from ..exceptions import InvalidPasswordError, InvalidUsernameError, InvalidRolenameError, InvalidGroupnameError
 
@@ -13,7 +16,6 @@ class AuthTypeEnum(str, Enum):
 
 
 def is_valid_password(password: str) -> None:
-
     # Null character not allowed
     if "\x00" in password:
         raise InvalidPasswordError("Password contains a NUL character")
@@ -27,7 +29,6 @@ def is_valid_password(password: str) -> None:
 
 
 def is_valid_username(username: str) -> None:
-
     if len(username) == 0:
         raise InvalidUsernameError("Username is empty")
 
@@ -45,7 +46,6 @@ def is_valid_username(username: str) -> None:
 
 
 def is_valid_groupname(groupname: str) -> None:
-
     if len(groupname) == 0:
         raise InvalidGroupnameError("Groupname is empty")
 
@@ -63,7 +63,6 @@ def is_valid_groupname(groupname: str) -> None:
 
 
 def is_valid_rolename(rolename: str) -> None:
-
     if len(rolename) == 0:
         raise InvalidRolenameError("Rolename is empty")
 

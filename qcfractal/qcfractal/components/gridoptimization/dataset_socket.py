@@ -23,7 +23,6 @@ if TYPE_CHECKING:
 
 
 class GridoptimizationDatasetSocket(BaseDatasetSocket):
-
     # Used by the base class
     dataset_orm = GridoptimizationDatasetORM
     specification_orm = GridoptimizationDatasetSpecificationORM
@@ -47,7 +46,6 @@ class GridoptimizationDatasetSocket(BaseDatasetSocket):
     def _create_entries(
         self, session: Session, dataset_id: int, new_entries: Sequence[GridoptimizationDatasetNewEntry]
     ):
-
         all_entries = []
         for entry in new_entries:
             meta, mol_ids = self.root_socket.molecules.add_mixed([entry.initial_molecule], session=session)

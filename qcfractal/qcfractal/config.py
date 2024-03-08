@@ -11,8 +11,13 @@ from typing import Optional, Dict, Union, Any
 
 import yaml
 from psycopg2.extensions import make_dsn, parse_dsn
-from pydantic import BaseSettings, Field, validator, root_validator, ValidationError
-from pydantic.env_settings import SettingsSourceCallable
+
+try:
+    from pydantic.v1 import BaseSettings, Field, validator, root_validator, ValidationError
+    from pydantic.v1.env_settings import SettingsSourceCallable
+except ImportError:
+    from pydantic import BaseSettings, Field, validator, root_validator, ValidationError
+    from pydantic.env_settings import SettingsSourceCallable
 from sqlalchemy.engine.url import URL, make_url
 
 from qcfractal.port_util import find_open_port
@@ -52,7 +57,6 @@ def make_uri_string(
     dbname: Optional[str],
     query: Optional[Dict[str, str]],
 ) -> str:
-
     username = username if username is not None else ""
     password = ":" + password if password is not None else ""
     sep = "@" if username != "" or password != "" else ""
@@ -84,7 +88,6 @@ class ConfigCommon:
 
 
 class ConfigBase(BaseSettings):
-
     _type_map = {"string": str, "integer": int, "float": float, "boolean": bool}
 
     @classmethod

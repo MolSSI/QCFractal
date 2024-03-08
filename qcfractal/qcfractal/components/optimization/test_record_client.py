@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import itertools
-from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 import pytest
@@ -12,6 +11,7 @@ from qcportal.optimization import (
 )
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
@@ -59,7 +59,7 @@ def test_optimization_client_add_get(
     ne4 = load_molecule_data("neon_tetramer")
     all_mols = [water, hooh, ne4]
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     meta, id = submitter_client.add_optimizations(
         initial_molecules=all_mols,
         program=spec.program,
@@ -71,7 +71,7 @@ def test_optimization_client_add_get(
         owner_group=owner_group,
     )
 
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     assert meta.success
 
     recs = submitter_client.get_optimizations(id, include=["task", "initial_molecule"])
@@ -82,6 +82,9 @@ def test_optimization_client_add_get(
         assert r.record_type == "optimization"
         assert r.record_type == "optimization"
         assert compare_optimization_specs(spec, r.specification)
+
+        assert r.status == RecordStatusEnum.waiting
+        assert r.children_status == {}
 
         assert r.task.function is None
         assert r.task.tag == "tag1"
@@ -198,6 +201,9 @@ def test_optimization_client_delete(snowflake: QCATestingSnowflake, opt_file: st
 
     child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
     assert all(x.status == RecordStatusEnum.complete for x in child_recs)
+    opt_rec = snowflake_client.get_records(opt_id)
+    if child_ids:
+        assert opt_rec.children_status == {RecordStatusEnum.complete: len(child_ids)}
 
     # Undo what we just did
     snowflake_client.undelete_records(opt_id)
@@ -209,6 +215,9 @@ def test_optimization_client_delete(snowflake: QCATestingSnowflake, opt_file: st
 
     child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
     assert all(x.status == RecordStatusEnum.deleted for x in child_recs)
+    opt_rec = snowflake_client.get_records(opt_id)
+    if child_ids:
+        assert opt_rec.children_status == {RecordStatusEnum.deleted: len(child_ids)}
 
     meta = snowflake_client.delete_records(opt_id, soft_delete=False, delete_children=True)
     assert meta.success
@@ -285,10 +294,10 @@ def test_optimization_client_traj(snowflake: QCATestingSnowflake, opt_file: str,
     if fetch_traj:
         rec._fetch_trajectory()
         assert rec.trajectory_ids_ is not None
-        assert rec.trajectory_records_ is not None
+        assert rec._trajectory_records is not None
     else:
         assert rec.trajectory_ids_ is None
-        assert rec.trajectory_records_ is None
+        assert rec._trajectory_records is None
 
     assert rec.trajectory_element(0).id == rec_traj.trajectory[0].id
     assert rec.trajectory_element(-1).id == rec_traj.trajectory[-1].id

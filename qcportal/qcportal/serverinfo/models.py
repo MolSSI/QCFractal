@@ -3,7 +3,11 @@ from enum import Enum
 from typing import Optional, List, Dict, Any, Union
 
 from dateutil.parser import parse as date_parser
-from pydantic import BaseModel, Extra, validator, IPvAnyAddress, constr
+
+try:
+    from pydantic.v1 import BaseModel, Extra, validator, IPvAnyAddress, constr
+except ImportError:
+    from pydantic import BaseModel, Extra, validator, IPvAnyAddress, constr
 
 from qcportal.base_models import (
     RestModelBase,

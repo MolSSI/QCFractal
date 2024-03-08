@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Dict, Optional, Iterable, Any
-
 from sqlalchemy import Column, Integer, ForeignKey, String, UniqueConstraint, Index, Boolean, event, DDL
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.orderinglist import ordering_list
@@ -15,7 +13,6 @@ from qcfractal.db_socket import BaseORM
 
 
 class NEBOptimizationsORM(BaseORM):
-
     __tablename__ = "neb_optimizations"
 
     neb_id = Column(Integer, ForeignKey("neb_record.id", ondelete="cascade"), primary_key=True)
@@ -26,13 +23,10 @@ class NEBOptimizationsORM(BaseORM):
 
     __table_args__ = (Index("ix_neb_optimizations_optimization_id", "optimization_id"),)
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        exclude = self.append_exclude(exclude, "neb_id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["neb_id"]
 
 
 class NEBSinglepointsORM(BaseORM):
-
     __tablename__ = "neb_singlepoints"
 
     neb_id = Column(Integer, ForeignKey("neb_record.id", ondelete="cascade"), primary_key=True)
@@ -43,13 +37,10 @@ class NEBSinglepointsORM(BaseORM):
 
     __table_args__ = (Index("ix_neb_singlepoints_singlepoint_id", "singlepoint_id"),)
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        exclude = self.append_exclude(exclude, "neb_id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["neb_id"]
 
 
 class NEBInitialchainORM(BaseORM):
-
     __tablename__ = "neb_initialchain"
 
     neb_id = Column(Integer, ForeignKey("neb_record.id", ondelete="cascade"), primary_key=True)
@@ -58,9 +49,7 @@ class NEBInitialchainORM(BaseORM):
 
     molecule = relationship(MoleculeORM)
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        exclude = self.append_exclude(exclude, "neb_id")
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["neb_id"]
 
 
 class NEBSpecificationORM(BaseORM):
@@ -97,11 +86,7 @@ class NEBSpecificationORM(BaseORM):
         # Enforce lowercase on some fields
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        exclude = self.append_exclude(
-            exclude, "id", "keywords_hash", "singlepoint_specification_id", "optimization_specification_id"
-        )
-        return BaseORM.model_dict(self, exclude)
+    _qcportal_model_excludes = ["id", "keywords_hash", "singlepoint_specification_id", "optimization_specification_id"]
 
     @property
     def short_description(self) -> str:
@@ -109,7 +94,6 @@ class NEBSpecificationORM(BaseORM):
 
 
 class NEBRecordORM(BaseRecordORM):
-
     __tablename__ = "neb_record"
 
     id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="cascade"), primary_key=True)
@@ -145,9 +129,7 @@ class NEBRecordORM(BaseRecordORM):
         "polymorphic_identity": "neb",
     }
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        exclude = self.append_exclude(exclude, "specification_id")
-        return BaseRecordORM.model_dict(self, exclude)
+    _qcportal_model_excludes = [*BaseRecordORM._qcportal_model_excludes, "specification_id"]
 
     @property
     def short_description(self) -> str:

@@ -1,18 +1,16 @@
 from __future__ import annotations
 
-from datetime import datetime
-
 import pytest
 
 from qcarchivetesting import test_users
 from qcarchivetesting.testing_classes import QCATestingSnowflake
 from qcfractal.components.serverinfo.test_access_socket import test_ips
 from qcportal import PortalClient
+from qcportal.utils import now_at_utc
 
 
 @pytest.fixture(scope="module")
 def queryable_access_client(postgres_server, pytestconfig):
-
     pg_harness = postgres_server.get_new_harness("serverinfo_test_access")
     encoding = pytestconfig.getoption("--client-encoding")
 
@@ -46,7 +44,6 @@ def queryable_access_client(postgres_server, pytestconfig):
 
 
 def test_serverinfo_client_query_access(queryable_access_client: PortalClient):
-
     query_res = queryable_access_client.query_access_log(method=["get"])
     all_entries = list(query_res)
     assert len(all_entries) == 80
@@ -92,10 +89,9 @@ def test_serverinfo_client_query_access_limit(queryable_access_client: PortalCli
 
 
 def test_serverinfo_client_access_summary(queryable_access_client: PortalClient):
-
     # Just test that it works
     # TODO - better way of testing. Prepopulated db?
-    now = datetime.utcnow()
+    now = now_at_utc()
     r = queryable_access_client.query_access_summary()
     assert list(r.entries.keys())[0] == now.strftime("%Y-%m-%d")
 

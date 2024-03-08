@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 import pytest
@@ -14,6 +13,7 @@ from qcportal.optimization import OptimizationSpecification, OptimizationProtoco
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification, SinglepointProtocols
 from qcportal.torsiondrive import TorsiondriveSpecification, TorsiondriveKeywords
+from qcportal.utils import now_at_utc
 from .testing_helpers import compare_torsiondrive_specs, test_specs, load_test_data, generate_task_key
 
 if TYPE_CHECKING:
@@ -30,11 +30,11 @@ def test_torsiondrive_socket_add_get(
     td_mol_1 = load_molecule_data("td_C9H11NO2_1")
     td_mol_2 = load_molecule_data("td_C9H11NO2_2")
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     meta, ids = storage_socket.records.torsiondrive.add(
         [[hooh], [td_mol_1, td_mol_2]], spec, True, "tag1", PriorityEnum.low, None, None, True
     )
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
     assert meta.success
 
     recs = [session.get(TorsiondriveRecordORM, i) for i in ids]
@@ -296,11 +296,11 @@ def test_torsiondrive_socket_run(
     id_1 = id_1[0]
     assert meta_1.success
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     finished, n_optimizations = run_service(
         storage_socket, activated_manager_name, id_1, generate_task_key, result_data_1, 1000
     )
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
 
     rec = session.get(TorsiondriveRecordORM, id_1)
 

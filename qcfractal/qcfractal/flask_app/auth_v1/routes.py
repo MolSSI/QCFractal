@@ -11,7 +11,6 @@ from flask_jwt_extended import (
 from qcfractal.flask_app import storage_socket
 from qcfractal.flask_app.auth_v1.blueprint import auth_v1
 from qcfractal.flask_app.helpers import get_all_endpoints, access_token_from_user, login_and_get_jwt
-from qcportal.auth import UserInfo, RoleInfo
 
 
 @auth_v1.route("/login", methods=["POST"])
@@ -41,11 +40,7 @@ def browser_logout():
 def refresh():
     user_id = get_jwt_identity()
 
-    user_dict = storage_socket.users.get(user_id)
-    role_dict = storage_socket.roles.get(user_dict["role"])
-    user_info = UserInfo(**user_dict)
-    role_info = RoleInfo(**role_dict)
-
+    user_info, role_info = storage_socket.auth.verify(user_id)
     access_token = access_token_from_user(user_info, role_info)
 
     # For logging purposes (in the after_request_func)

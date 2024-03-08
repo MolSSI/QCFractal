@@ -38,7 +38,6 @@ def optimization_ds(submitter_client: PortalClient):
 
 @pytest.mark.parametrize("find_existing", [True, False])
 def test_optimization_dataset_client_submit(optimization_ds: OptimizationDataset, find_existing: bool):
-
     input_spec_1, molecule_1, _ = load_test_data("opt_psi4_benzene")
 
     optimization_ds.add_entry(name="test_molecule", initial_molecule=molecule_1)

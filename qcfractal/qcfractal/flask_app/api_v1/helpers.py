@@ -1,7 +1,10 @@
 from functools import wraps
 from typing import Callable
 
-import pydantic
+try:
+    import pydantic.v1 as pydantic
+except ImportError:
+    import pydantic
 from flask import request, Response
 from werkzeug.exceptions import BadRequest
 
@@ -40,7 +43,6 @@ def wrap_route(
     def decorate(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):
-
             assert_role_permissions(requested_action)
 
             ##################################################################

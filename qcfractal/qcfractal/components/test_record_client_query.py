@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import time
+from typing import Optional
 
 import pytest
+import pytz
 
 from qcfractal.components.testing_helpers import populate_records_status
 from qcportal import PortalClient
@@ -12,7 +14,6 @@ from qcportal.record_models import RecordStatusEnum
 
 @pytest.fixture(scope="module")
 def queryable_records_client(session_snowflake):
-
     # First populate all the statuses
     populate_records_status(session_snowflake.get_storage_socket())
 
@@ -80,13 +81,13 @@ def test_record_client_query(queryable_records_client: PortalClient):
 
     sorted_records = sorted(all_records, key=lambda x: x.modified_on)
     query_res = queryable_records_client.query_records(
-        record_type="singlepoint", modified_before=sorted_records[165].created_on
+        record_type="singlepoint", modified_before=sorted_records[165].modified_on
     )
     query_res_l = list(query_res)
-    assert len(query_res_l) == 165
+    assert len(query_res_l) == 166
 
     query_res = queryable_records_client.query_records(
-        record_type="singlepoint", modified_after=sorted_records[165].created_on
+        record_type="singlepoint", modified_after=sorted_records[165].modified_on
     )
     query_res_l = list(query_res)
     assert len(query_res_l) == 160
@@ -135,6 +136,40 @@ def test_record_client_query(queryable_records_client: PortalClient):
     assert recs[0].compute_history_ is not None
 
 
+@pytest.mark.parametrize("timezone", [None, "UTC", "ETC/UTC", "America/New_York", "Asia/Singapore"])
+def test_record_client_query_timezones(queryable_records_client: PortalClient, timezone: Optional[str]):
+    tzinfo = pytz.timezone(timezone) if timezone is not None else None
+    query_res = queryable_records_client.query_records(record_type="singlepoint")
+    all_records = list(query_res)
+    assert len(all_records) == 325
+
+    sorted_records = sorted(all_records, key=lambda x: x.created_on)
+    created_before = sorted_records[164].created_on.astimezone(tzinfo)
+    # print("CREATED BEFORE", created_before)
+    query_res = queryable_records_client.query_records(record_type="singlepoint", created_before=created_before)
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 165
+
+    created_after = sorted_records[165].created_on.astimezone(tzinfo)
+    # print("CREATED AFTER", created_after)
+    query_res = queryable_records_client.query_records(record_type="singlepoint", created_after=created_after)
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 160
+
+    sorted_records = sorted(all_records, key=lambda x: x.modified_on)
+    modified_before = sorted_records[165].modified_on.astimezone(tzinfo)
+    # print("MODIFIED BEFORE", modified_before)
+    query_res = queryable_records_client.query_records(record_type="singlepoint", modified_before=modified_before)
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 166
+
+    modified_after = sorted_records[165].modified_on.astimezone(tzinfo)
+    # print("MODIFIED AFTER", modified_after)
+    query_res = queryable_records_client.query_records(record_type="singlepoint", modified_after=modified_after)
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 160
+
+
 def test_record_client_query_empty_iter(queryable_records_client: PortalClient):
     # Empty query
     query_res = queryable_records_client.query_records()
@@ -145,7 +180,6 @@ def test_record_client_query_empty_iter(queryable_records_client: PortalClient):
 
 
 def test_record_client_query_limit(queryable_records_client: PortalClient):
-
     query_res = queryable_records_client.query_records(record_type="singlepoint", limit=100)
     all_recs = list(query_res)
     assert len(all_recs) == 100

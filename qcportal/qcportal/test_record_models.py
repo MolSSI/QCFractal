@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import TYPE_CHECKING, Optional, List
 
 import pytest
@@ -13,6 +12,7 @@ from qcfractal.components.singlepoint.testing_helpers import (
 from qcfractal.components.torsiondrive.testing_helpers import submit_test_data as submit_td_test_data
 from qcportal.compression import decompress
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
@@ -28,12 +28,12 @@ def test_baserecord_model_common(snowflake: QCATestingSnowflake, includes: Optio
 
     input_spec, _, result = load_sp_test_data("sp_psi4_benzene_energy_1")
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     rec_id = run_sp_test_data(storage_socket, activated_manager_name, "sp_psi4_benzene_energy_1")
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
 
     snowflake_client.add_comment(rec_id, "This is a comment")
-    time_2 = datetime.utcnow()
+    time_2 = now_at_utc()
 
     record = snowflake_client.get_records(rec_id, include=includes)
 
@@ -95,11 +95,11 @@ def test_baserecord_model_task(snowflake: QCATestingSnowflake, includes: Optiona
     snowflake_client = snowflake.client()
     activated_manager_name, _ = snowflake.activate_manager()
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     rec_id, _ = submit_sp_test_data(
         storage_socket, "sp_psi4_benzene_energy_1", tag="test_tag_123", priority=PriorityEnum.low
     )
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
 
     record = snowflake_client.get_records(rec_id, include=includes)
 
@@ -117,9 +117,9 @@ def test_baserecord_model_service(snowflake: QCATestingSnowflake, includes: Opti
     snowflake_client = snowflake.client()
     activated_manager_name, _ = snowflake.activate_manager()
 
-    time_0 = datetime.utcnow()
+    time_0 = now_at_utc()
     rec_id, _ = submit_td_test_data(storage_socket, "td_H2O2_mopac_pm6", tag="test_tag_123", priority=PriorityEnum.low)
-    time_1 = datetime.utcnow()
+    time_1 = now_at_utc()
 
     record = snowflake_client.get_records(rec_id, include=includes)
 

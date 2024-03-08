@@ -11,6 +11,7 @@ from qcportal.dataset_models import (
     DatasetQueryModel,
     DatasetFetchRecordsBody,
     DatasetFetchEntryBody,
+    DatasetFetchSpecificationBody,
     DatasetSubmitBody,
     DatasetDeleteStrBody,
     DatasetRecordModifyBody,
@@ -32,7 +33,6 @@ def list_dataset_v1():
 @api_v1.route("/datasets/<int:dataset_id>", methods=["GET"])
 @wrap_route("READ")
 def get_general_dataset_v1(dataset_id: int, url_params: ProjURLParameters):
-
     with storage_socket.session_scope(True) as session:
         ds_type = storage_socket.datasets.lookup_type(dataset_id, session=session)
         ds_socket = storage_socket.datasets.get_socket(ds_type)
@@ -73,13 +73,13 @@ def delete_dataset_v1(dataset_id: int, url_params: DatasetDeleteParams):
 # are different
 #################################################################
 
+
 ########################
 # Adding a dataset
 ########################
 @api_v1.route("/datasets/<string:dataset_type>", methods=["POST"])
 @wrap_route("WRITE")
 def add_dataset_v1(dataset_type: str, body_data: DatasetAddBody):
-
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.add(
         name=body_data.name,
@@ -182,11 +182,35 @@ def submit_dataset_v1(dataset_type: str, dataset_id: int, body_data: DatasetSubm
 ###################
 # Specifications
 ###################
+@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/specification_names", methods=["GET"])
+@wrap_route("READ")
+def fetch_dataset_specification_names_v1(dataset_type: str, dataset_id: int):
+    ds_socket = storage_socket.datasets.get_socket(dataset_type)
+    return ds_socket.fetch_specification_names(dataset_id)
+
+
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/specifications", methods=["GET"])
 @wrap_route("READ")
-def fetch_dataset_specifications_v1(dataset_type: str, dataset_id: int):
+def fetch_all_dataset_specifications_v1(dataset_type: str, dataset_id: int):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.fetch_specifications(dataset_id)
+
+
+@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/specifications/bulkFetch", methods=["POST"])
+@wrap_route("READ")
+def fetch_dataset_specifications_v1(dataset_type: str, dataset_id: int, body_data: DatasetFetchSpecificationBody):
+    # use the entry limit I guess?
+    limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_dataset_entries
+
+    if len(body_data.names) > limit:
+        raise LimitExceededError(f"Cannot get {len(body_data.names)} dataset specifications - limit is {limit}")
+
+    ds_socket = storage_socket.datasets.get_socket(dataset_type)
+    return ds_socket.fetch_specifications(
+        dataset_id,
+        specification_names=body_data.names,
+        missing_ok=body_data.missing_ok,
+    )
 
 
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/specifications/bulkDelete", methods=["POST"])
