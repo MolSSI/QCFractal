@@ -82,7 +82,7 @@ def _get_qcmanybody_computer(
     qcm = qcmanybody.ManyBodyCalculator(
         molecule=init_mol,
         levels=qcm_levels,
-        bsse_type=mb_orm.specification.bsse_correction,
+        bsse_type=[qcmanybody.BsseEnum[x] for x in mb_orm.specification.bsse_correction],
         return_total_data=mb_orm.specification.return_total_data,
     )
 
