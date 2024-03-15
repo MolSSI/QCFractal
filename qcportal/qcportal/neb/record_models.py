@@ -137,13 +137,12 @@ class NEBRecord(BaseRecord):
     optimizations_: Optional[Dict[str, NEBOptimization]] = None
     ts_hessian_: Optional[SinglepointRecord] = None
     neb_result_: Optional[Molecule] = None
+    initial_chain_: Optional[List[Molecule]] = None
 
     ########################################
     # Caches
     ########################################
     _optimizations_cache: Optional[Dict[str, OptimizationRecord]] = PrivateAttr(None)
-    _final_chain: Optional[List[SinglepointRecord]] = PrivateAttr(None)
-    _initial_chain: Optional[List[Molecule]] = PrivateAttr(None)
     _singlepoints_cache: Optional[Dict[int, List[SinglepointRecord]]] = PrivateAttr(None)
 
     def propagate_client(self, client):
@@ -235,7 +234,7 @@ class NEBRecord(BaseRecord):
             List[int],
         )
 
-        self._initial_chain = self._client.get_molecules(self.initial_chain_molecule_ids_)
+        self.initial_chain_ = self._client.get_molecules(self.initial_chain_molecule_ids_)
 
     def _fetch_neb_result(self):
         self._assert_online()
@@ -263,9 +262,9 @@ class NEBRecord(BaseRecord):
 
     @property
     def initial_chain(self) -> List[Molecule]:
-        if self._initial_chain is None:
+        if self.initial_chain_ is None:
             self._fetch_initial_chain()
-        return self._initial_chain
+        return self.initial_chain_
 
     @property
     def final_chain(self) -> List[SinglepointRecord]:
