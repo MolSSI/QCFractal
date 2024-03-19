@@ -39,5 +39,5 @@ dependencies:
   - torsiondrive
 
   - pip:
-      - "geometric @ git+https://github.com/hjnpark/geomeTRIC"
+      - "geometric @ git+https://github.com/leeping/geomeTRIC"
       - scipy # for geometric
