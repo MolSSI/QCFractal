@@ -40,4 +40,3 @@ dependencies:
 
   - pip:
       - "geometric @ git+https://github.com/leeping/geomeTRIC"
-      - scipy # for geometric
