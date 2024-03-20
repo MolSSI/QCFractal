@@ -40,13 +40,11 @@ def test_neb_record_model(snowflake: QCATestingSnowflake, includes: Optional[Lis
 
     assert len(record.singlepoints) > 0
 
-    # last one is a hessian calculation?
-    all_sps = list(record.singlepoints.values())
-    for sps in all_sps[:-1]:
-        assert len(sps) == len(molecules)
+    assert all(len(sp) == len(molecules) for sp in record.singlepoints.values())
 
-    assert len(all_sps[-1]) == 1
-    assert all_sps[-1][0].specification.driver == "hessian"
+    ts_hessian = record.ts_hessian
+    if ts_hessian is not None:
+        assert ts_hessian.specification.driver == "hessian"
 
     assert "initial" in record.optimizations
     assert "final" in record.optimizations

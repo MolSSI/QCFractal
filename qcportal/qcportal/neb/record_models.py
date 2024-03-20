@@ -61,6 +61,8 @@ class NEBKeywords(BaseModel):
         description="Setting it equal to True will optimize two end points of the initial chain before starting NEB.",
     )
 
+    align: bool = Field(True, description="Align the images before starting the NEB calculation.")
+
     epsilon: float = Field(1e-5, description="Small eigenvalue threshold for resetting Hessian.")
 
     hessian_reset: bool = Field(
@@ -133,6 +135,7 @@ class NEBRecord(BaseRecord):
     initial_chain_molecule_ids_: Optional[List[int]] = None
     singlepoints_: Optional[List[NEBSinglepoint]] = None
     optimizations_: Optional[Dict[str, NEBOptimization]] = None
+    ts_hessian_: Optional[SinglepointRecord] = None
     neb_result_: Optional[Molecule] = None
     initial_chain_: Optional[List[Molecule]] = None
 
@@ -214,6 +217,12 @@ class NEBRecord(BaseRecord):
             self._singlepoints_cache.setdefault(sp_info.chain_iteration, list())
             self._singlepoints_cache[sp_info.chain_iteration].append(sp_rec)
 
+        if len(self._singlepoints_cache) > 0:
+            if len(self._singlepoints_cache[max(self._singlepoints_cache)]) == 1:
+                _, temp_list = self._singlepoints_cache.popitem()
+                self.ts_hessian_ = temp_list[0]
+                assert self.ts_hessian_.specification.driver == "hessian"
+
         self.propagate_client(self._client)
 
     def _fetch_initial_chain(self):
@@ -258,13 +267,17 @@ class NEBRecord(BaseRecord):
         return self.initial_chain_
 
     @property
+    def final_chain(self) -> List[SinglepointRecord]:
+        return self.singlepoints[max(self.singlepoints.keys())]
+
+    @property
     def singlepoints(self) -> Dict[int, List[SinglepointRecord]]:
         if self._singlepoints_cache is None:
             self._fetch_singlepoints()
         return self._singlepoints_cache
 
     @property
-    def neb_result(self):
+    def result(self):
         if self.neb_result_ is None and "neb_result_" not in self.__fields_set__:
             self._fetch_neb_result()
         return self.neb_result_
@@ -278,3 +291,9 @@ class NEBRecord(BaseRecord):
     @property
     def ts_optimization(self) -> Optional[OptimizationRecord]:
         return self.optimizations.get("transition", None)
+
+    @property
+    def ts_hessian(self) -> Optional[SinglepointRecord]:
+        if self._singlepoints_cache is None:
+            self._fetch_singlepoints()
+        return self.ts_hessian_
