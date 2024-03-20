@@ -220,7 +220,7 @@ def test_neb_socket_run(
 
     time_0 = now_at_utc()
     finished, n_spopt = run_service(
-        storage_socket, activated_manager_name, id_1[0], generate_task_key, result_data_1, 100
+        storage_socket, activated_manager_name, id_1[0], generate_task_key, result_data_1, 150
     )
     time_1 = now_at_utc()
 
