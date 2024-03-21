@@ -145,7 +145,10 @@ class ComputeManager:
         self.dflow_kernel = None
 
         # Set up the app manager
-        self.app_manager = AppManager(self.manager_config)
+        # A bit hacky, but the app_manager may already be set if
+        # we are running in a testing environment
+        if not hasattr(self, "app_manager"):
+            self.app_manager = AppManager(self.manager_config)
 
         self.executor_programs = {}
         for ex in self.manager_config.executors.keys():
