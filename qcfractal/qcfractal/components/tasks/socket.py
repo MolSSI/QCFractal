@@ -279,11 +279,20 @@ class TaskSocket:
                 self._logger.warning(f"Manager {manager_name} exists but is not active! Will not give it tasks")
                 raise ComputeManagerError("Manager is not active!")
 
-            manager_programs = array(programs.keys())
-            found: List[Dict[str, Any]] = []
-
-            # Remove tags that we didn't say we handled, but keep the order
+            # Remove tags & programs that we didn't say we handled
+            # (order is important for tags)
+            search_programs = array(p for p in programs.keys() if p in manager.programs.keys())
             search_tags = [x for x in tags if x in manager.tags]
+
+            if len(search_programs) == 0:
+                self._logger.warning(f"Manager {manager_name} did not send any valid programs to claim")
+                raise ComputeManagerError(f"Manager {manager_name} did not send any valid programs to claim")
+
+            if len(search_tags) == 0:
+                self._logger.warning(f"Manager {manager_name} did not send any valid queue tags to claim")
+                raise ComputeManagerError(f"Manager {manager_name} did not send any valid queue tags to claim")
+
+            found: List[Dict[str, Any]] = []
             for tag in search_tags:
                 new_limit = limit - len(found)
 
@@ -316,7 +325,7 @@ class TaskSocket:
 
                 stmt = stmt.join(svcdate_cte, svcdate_cte.c.record_id == BaseRecordORM.id, isouter=True)
                 stmt = stmt.filter(BaseRecordORM.status == RecordStatusEnum.waiting)
-                stmt = stmt.filter(manager_programs.contains(TaskQueueORM.required_programs))
+                stmt = stmt.filter(search_programs.contains(TaskQueueORM.required_programs))
 
                 # Order by priority, then created_on (earliest first)
                 # Where the created_on may be the created_on of the parent service (see CTE above)

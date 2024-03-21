@@ -21,6 +21,11 @@ from qcportal.all_results import AllResultTypes
 from qcportal.record_models import PriorityEnum, RecordTask
 
 
+class MockTestingAppManager:
+    def all_program_info(self, executor_label: Optional[str] = None) -> Dict[str, List[str]]:
+        return _activated_manager_programs
+
+
 class MockTestingComputeManager(ComputeManager):
     def __init__(self, qcf_config: FractalConfig, result_data: Dict[int, AllResultTypes]):
         self._qcf_config = qcf_config
@@ -57,10 +62,10 @@ class MockTestingComputeManager(ComputeManager):
                 )
             },
         )
-        ComputeManager.__init__(self, self._compute_config)
 
-        # overwrite the executor programs for testing
-        self.executor_programs = {"local": _activated_manager_programs}
+        # Set the app manager already
+        self.app_manager = MockTestingAppManager()
+        ComputeManager.__init__(self, self._compute_config)
 
         def cleanup(d):
             d.cleanup()

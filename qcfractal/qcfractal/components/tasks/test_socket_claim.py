@@ -5,10 +5,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import pytest
+
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.optimization.testing_helpers import load_test_data as load_opt_test_data
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.singlepoint.testing_helpers import load_test_data as load_sp_test_data
+from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerName
 from qcportal.record_models import PriorityEnum
 
@@ -363,3 +366,37 @@ def test_task_socket_claim_program_subset(storage_socket: SQLAlchemySocket, sess
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname, claim_prog, ["*"], 100)
     assert len(tasks) == 1
     assert tasks[0]["id"] == recs[0].task.id
+
+
+def test_task_socket_claim_program_missing(storage_socket: SQLAlchemySocket):
+    mname1 = ManagerName(cluster="test_cluster", hostname="a_host1", uuid="1234-5678-1234-5678")
+    mprog1 = {"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"], "rdkit": ["unknown"]}
+    storage_socket.managers.activate(
+        name_data=mname1,
+        manager_version="v2.0",
+        username="bill",
+        programs=mprog1,
+        tags=["*"],
+    )
+
+    claim_prog = {}
+
+    with pytest.raises(ComputeManagerError, match="did not send any valid programs to claim"):
+        storage_socket.tasks.claim_tasks(mname1.fullname, claim_prog, ["*"], 100)
+
+
+def test_task_socket_claim_tags_missing(storage_socket: SQLAlchemySocket):
+    mname1 = ManagerName(cluster="test_cluster", hostname="a_host1", uuid="1234-5678-1234-5678")
+    mprog1 = {"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"], "rdkit": ["unknown"]}
+    storage_socket.managers.activate(
+        name_data=mname1,
+        manager_version="v2.0",
+        username="bill",
+        programs=mprog1,
+        tags=["*"],
+    )
+
+    claim_prog = {"qcengine": ["unknown"], "rdkit": ["unknown"]}
+
+    with pytest.raises(ComputeManagerError, match="did not send any valid queue tags to claim"):
+        storage_socket.tasks.claim_tasks(mname1.fullname, claim_prog, [], 100)

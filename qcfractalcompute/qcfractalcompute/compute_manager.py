@@ -131,18 +131,33 @@ class ComputeManager:
         self._record_id_map: Dict[int, int] = {}
 
         self.all_queue_tags = []
-        for ex_config in config.executors.values():
+        for ex_label, ex_config in config.executors.items():
+            if len(ex_config.queue_tags) == 0:
+                raise ValueError(f"Executor {ex_label} has no queue tags")
+
             self.all_queue_tags.extend(ex_config.queue_tags)
+
+        # Merge queue tags, preserving order
+        self.all_queue_tags = list(dict.fromkeys(self.all_queue_tags))
 
         # These are more properly set up in the start() method
         self.parsl_config = None
         self.dflow_kernel = None
 
         # Set up the app manager
-        self.app_manager = AppManager(self.manager_config)
-        self.executor_programs = {
-            ex: self.app_manager.all_program_info(ex) for ex in self.manager_config.executors.keys()
-        }
+        # A bit hacky, but the app_manager may already be set if
+        # we are running in a testing environment
+        if not hasattr(self, "app_manager"):
+            self.app_manager = AppManager(self.manager_config)
+
+        self.executor_programs = {}
+        for ex in self.manager_config.executors.keys():
+            ex_programs = self.app_manager.all_program_info(ex)
+            if len(ex_programs) == 0:
+                raise ValueError(f"Executor {ex} has no available programs")
+
+            self.executor_programs[ex] = ex_programs
+
         self.all_program_info = self.app_manager.all_program_info()
 
         self.logger.info("-" * 80)
