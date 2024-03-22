@@ -7,7 +7,7 @@ from __future__ import annotations
 import datetime
 import os
 import sqlite3
-from typing import TYPE_CHECKING, Optional, TypeVar, Type, Any, List, Iterable, Tuple
+from typing import TYPE_CHECKING, Optional, TypeVar, Type, Any, List, Iterable, Tuple, Sequence
 from urllib.parse import urlparse
 
 from .utils import chunk_iterable
@@ -24,6 +24,7 @@ from .serialization import serialize, deserialize
 
 if TYPE_CHECKING:
     from qcportal.record_models import RecordStatusEnum
+    from qcportal.client import PortalClient
 
 _DATASET_T = TypeVar("_DATASET_T")
 _RECORD_T = TypeVar("_RECORD_T")
@@ -565,3 +566,52 @@ def read_dataset_metadata(file_path: str):
     d = deserialize(r.fetchone()[0], "msgpack")
     conn.close()
     return d
+
+
+def get_records_with_cache(
+    client: Optional[PortalClient],
+    record_cache: Optional[RecordCache],
+    record_ids: Sequence[int],
+    record_type: Type[_RECORD_T],
+    include: Optional[Iterable[str]] = None,
+) -> List[_RECORD_T]:
+    """
+    Helper function for obtaining child records either from the cache or from the server
+
+    The records are returned in the same order as the `record_ids` parameter.
+
+    If `include` is specified, additional fields will be fetched from the server. However, if the records are in the
+    cache already, they may be missing those fields.
+    """
+
+    if record_cache is None:
+        existing_records = []
+        records_tofetch = record_ids
+    else:
+        existing_records = record_cache.get_records(record_ids, record_type)
+        records_tofetch = set(record_ids) - {x.id for x in existing_records}
+
+    if client is None and records_tofetch:
+        raise RuntimeError("Need to fetch some records, but not connected to a client")
+
+    if records_tofetch:
+        recs = client._get_records_by_type(record_type, list(records_tofetch), include=include)
+        if record_cache is not None:
+            uids = record_cache.update_records(recs)
+
+            for u, r in zip(uids, recs):
+                r._record_cache = record_cache
+                r._record_cache_uid = u
+
+        existing_records += recs
+
+    # Return everything in the same order as the input
+    all_recs = {r.id: r for r in existing_records}
+    ret = [all_recs.get(rid, None) for rid in record_ids]
+    if None in ret:
+        missing_ids = set(record_ids) - set(all_recs.keys())
+        raise RuntimeError(
+            f"Not all records found either in the cache or on the server. Missing records: {missing_ids}"
+        )
+
+    return ret
