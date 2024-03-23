@@ -625,6 +625,11 @@ class PortalClient(PortalClientBase):
             record_batch = [record_type(self, **r) if r is not None else None for r in record_data]
             all_records.extend(record_batch)
 
+        # In general, fetching children should only happen if the metadata for the children
+        # is requested via include. So we always say True here, and it won't recursively download
+        # children if that data is missing.
+        record_type.fetch_children_multi(all_records, True)
+
         if is_single:
             return all_records[0]
         else:
