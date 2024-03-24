@@ -17,7 +17,6 @@ from qcportal.base_models import (
     RestModelBase,
     QueryModelBase,
     QueryIteratorBase,
-    ProjURLParameters,
 )
 
 from qcportal.cache import RecordCache, get_records_with_cache
@@ -447,6 +446,55 @@ class BaseRecord(BaseModel):
             raise RuntimeError(f"Cannot find subclass for record type {record_type}")
         return subcls
 
+    @classmethod
+    def _fetch_children_multi(cls, client, record_cache, records: Iterable[BaseRecord], recursive: bool):
+        """
+        Fetches all children of the given records recursively
+
+        This tries to work efficiently, fetching larger batches of children
+        that can span multiple records
+
+        Meant to be overridden by derived classes
+        """
+        pass
+
+    @classmethod
+    def fetch_children_multi(cls, records: Iterable[Optional[BaseRecord]], recursive: bool):
+        """
+        Fetches all children of the given records recursively
+
+        This tries to work efficiently, fetching larger batches of children
+        that can span multiple records
+        """
+
+        # Remove any None records
+        # can happen if missing_ok=True in some function calls
+        records = [r for r in records if r is not None]
+
+        if not records:
+            return
+
+        # Get the first record (for the client and other info)
+        template_record = next(iter(records))
+
+        if not all(type(r) == type(template_record) for r in records):
+            raise RuntimeError("Fetching children of records with different types is not supported.")
+
+        if not all(r._client is template_record._client for r in records):
+            raise RuntimeError("Fetching children of records with different clients is not supported.")
+
+        if not all(r._record_cache is template_record._record_cache for r in records):
+            raise RuntimeError("Fetching children of records with different record caches is not supported.")
+
+        # Call the derived class function
+        cls._fetch_children_multi(template_record._client, template_record._record_cache, records, recursive)
+
+    def fetch_children(self, recursive: bool):
+        """
+        Fetches all children of this record recursively
+        """
+        self.fetch_children_multi([self], recursive)
+
     def __str__(self) -> str:
         return f"<{self.__class__.__name__} id={self.id} status={self.status}>"
 
@@ -466,87 +514,6 @@ class BaseRecord(BaseModel):
         if self.native_files_ is not None:
             for nf in self.native_files_.values():
                 nf.propagate_client(self._client, self._base_url)
-
-    def _fetch_include(self, include: Iterable[str]) -> Dict[str, Any]:
-        """
-        Fetches additional data for this record from the server
-
-        The returned dictionary may contain extra fields (such as ids)
-        """
-        self._assert_online()
-
-        url_params = {"include": include}
-
-        return self._client.make_request(
-            "get",
-            f"{self._base_url}",
-            Dict[str, Any],
-            url_params_model=ProjURLParameters,
-            url_params=url_params,
-        )
-
-    def _fetch_include_single(self, include: str, key: str, data_type: Type[_T]) -> _T:
-        """
-        Fetches additional data for this record from the server
-        """
-
-        d = self._fetch_include([include])
-        return parse_obj_as(data_type, d[key])
-
-    def _fetch_all(self, recursive: bool = False) -> Dict[str, Any]:
-        """
-        Internal function for fetching all possible data for this record from the server
-
-        This will always fetch all data, even if it has been fetched before
-
-        If `recursive` is True, then all child records will also be fetched, including all their data as well
-
-        This function is meant to be called from derived classes. This function fetches all the data for a record,
-        sets the data for the base record, then returns the extra data for processing by the derived class.
-        """
-
-        extra_data = self._fetch_include(["**"])
-
-        self.comments_ = extra_data.get("comments", [])
-        self.native_files_ = extra_data.get("native_files", {})
-        self.compute_history_ = extra_data.get("compute_history", [])
-        self.task_ = extra_data.get("task", None)
-        self.service_ = extra_data.get("service", None)
-
-        self.propagate_client(self._client)
-
-        return extra_data
-
-    def fetch_all(self, recursive: bool = False):
-        """
-        Fetches all possible data for this record from the server
-
-        This will always fetch all data, even if it has been fetched before
-
-        If `recursive` is True, then all child records will also be fetched, including all their data as well
-        """
-
-        # calls the derived class _fetch_all function, swallowing output
-        self._fetch_all(recursive)
-
-    def _cache_child_records(self, record_ids: Iterable[int], record_type: Type[_Record_T]) -> None:
-        """
-        Fetch child records and stores them in the cache
-
-        The cache will be checked for existing records
-        """
-
-        if self._record_cache is None:
-            return
-
-        existing_record_ids = self._record_cache.get_existing_records(record_ids)
-        records_tofetch = list(set(record_ids) - set(existing_record_ids))
-
-        if self.offline and records_tofetch:
-            raise RuntimeError("Need to fetch some records, but not connected to a client")
-
-        recs = self._client._get_records_by_type(record_type, records_tofetch)
-        self._record_cache.update_records(recs)
 
     def _get_child_records(
         self,
@@ -597,7 +564,7 @@ class BaseRecord(BaseModel):
         self.comments_ = self._client.make_request("get", f"{self._base_url}/comments", List[RecordComment])
 
     def _fetch_native_files(self):
-        self.native_files_ = self._fetch_include_single("native_files", "native_files", Dict[str, NativeFile])
+        self.native_files_ = self._client.make_request("get", f"{self._base_url}/native_files", Dict[str, NativeFile])
         self.propagate_client(self._client)
 
     def _get_output(self, output_type: OutputTypeEnum) -> Optional[Union[str, Dict[str, Any]]]:
