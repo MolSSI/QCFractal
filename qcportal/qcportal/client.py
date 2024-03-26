@@ -102,7 +102,7 @@ from .serverinfo import (
     ServerStatsQueryIterator,
     DeleteBeforeDateBody,
 )
-from .utils import make_list, chunk_iterable
+from .utils import make_list, chunk_iterable, process_chunk_iterable
 
 _T = TypeVar("_T", bound=BaseRecord)
 
@@ -541,34 +541,11 @@ class PortalClient(PortalClientBase):
             that was not found.
         """
 
-        is_single = not isinstance(record_ids, Sequence)
-
-        record_ids = make_list(record_ids)
-        if not record_ids:
-            return []
-
-        batch_size = self.api_limits["get_records"] // 4
-        all_records = []
-
-        for record_id_batch in chunk_iterable(record_ids, batch_size):
-            if include is not None:
-                # Always include the base stuff
-                include = list(include) + ["*"]
-
-            body = CommonBulkGetBody(ids=record_id_batch, include=include, missing_ok=missing_ok)
-            record_data = self.make_request("post", "api/v1/records/bulkGet", List[Optional[Dict[str, Any]]], body=body)
-            record_batch = records_from_dicts(record_data, self)
-
-            all_records.extend(record_batch)
-
-        if is_single:
-            return all_records[0]
-        else:
-            return all_records
+        return self._get_records_by_type(None, record_ids, missing_ok, include)
 
     def _get_records_by_type(
         self,
-        record_type: Type[_T],
+        record_type: Optional[Type[_T]],
         record_ids: Union[int, Sequence[int]],
         missing_ok: bool = False,
         include: Optional[Iterable[str]] = None,
@@ -602,33 +579,57 @@ class PortalClient(PortalClientBase):
         if not record_ids:
             return []
 
-        # A little hacky
-        record_type_str = record_type.__fields__["record_type"].default
+        if include is not None:
+            # Always include the base stuff
+            include = list(include) + ["*"]
 
-        batch_size = self.api_limits["get_records"] // 4
+        if record_type is None:
+            endpoint = "api/v1/records/bulkGet"
+        else:
+            # A little hacky
+            record_type_str = record_type.__fields__["record_type"].default
+            endpoint = f"api/v1/records/{record_type_str}/bulkGet"
+
+        max_batch_size = self.api_limits["get_records"]
+        initial_batch_size = max_batch_size // 4
+
+        def _download_chunk(id_chunk: List[int]):
+            body = CommonBulkGetBody(ids=id_chunk, include=include, missing_ok=missing_ok)
+            return self.make_request("post", endpoint, List[Optional[Dict[str, Any]]], body=body)
+
         all_records = []
+        for record_dicts in process_chunk_iterable(
+            _download_chunk,
+            record_ids,
+            self.download_target_time,
+            max_batch_size,
+            initial_batch_size,
+            self.n_download_threads,
+            keep_order=True,
+        ):
+            if record_type is None:
+                all_records.extend(records_from_dicts(record_dicts, self))
+            else:
+                all_records.extend([record_type(self, **r) if r is not None else None for r in record_dicts])
 
-        for record_id_batch in chunk_iterable(record_ids, batch_size):
-            if include is not None:
-                # Always include the base stuff
-                include = list(include) + ["*"]
-
-            body = CommonBulkGetBody(ids=record_id_batch, include=include, missing_ok=missing_ok)
-
-            record_data = self.make_request(
-                "post",
-                f"api/v1/records/{record_type_str}/bulkGet",
-                List[Optional[Dict[str, Any]]],
-                body=body,
-            )
-
-            record_batch = [record_type(self, **r) if r is not None else None for r in record_data]
-            all_records.extend(record_batch)
+        # Just to really make sure the process_chunk_iterable code is correct
+        assert all((x is None or x.id == rid) for x, rid in zip(all_records, record_ids))
 
         # In general, fetching children should only happen if the metadata for the children
         # is requested via include. So we always say True here, and it won't recursively download
         # children if that data is missing.
-        record_type.fetch_children_multi(all_records, True)
+
+        if record_type is None:
+            # Handle disparate record types
+            record_groups = {}
+            for r in all_records:
+                if r is not None:
+                    record_groups.setdefault(r.record_type, [])
+                    record_groups[r.record_type].append(r)
+            for v in record_groups.values():
+                v[0].fetch_children_multi(v, True)
+        else:
+            record_type.fetch_children_multi(all_records, True)
 
         if is_single:
             return all_records[0]

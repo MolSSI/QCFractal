@@ -128,6 +128,14 @@ class PortalClientBase:
         self.retry_backoff = 2
         self.retry_jitter_fraction = 0.05
 
+        # Processing/downloading in threads
+        # Number of threads to use when fetching from the server
+        self.n_download_threads = 2
+
+        # Target time for how long a request should take (in seconds)
+        # Chunk size will be adjusted to try to reach this target time
+        self.download_target_time = 0.50
+
         # If no 3rd party verification, quiet urllib
         if self._verify is False:
             from urllib3.exceptions import InsecureRequestWarning
