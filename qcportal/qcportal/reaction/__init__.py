@@ -7,7 +7,7 @@ from .dataset_models import (
 from .record_models import (
     ReactionSpecification,
     ReactionKeywords,
-    ReactionComponent,
+    ReactionComponentMeta,
     ReactionAddBody,
     ReactionRecord,
     ReactionQueryFilters,

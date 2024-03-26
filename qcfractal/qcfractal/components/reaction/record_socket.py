@@ -6,7 +6,7 @@ from typing import List, Dict, Tuple, Optional, Iterable, Sequence, Any, Union, 
 import tabulate
 from sqlalchemy import select, func
 from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by
-from sqlalchemy.orm import defer, undefer, joinedload, lazyload
+from sqlalchemy.orm import defer, undefer, joinedload, lazyload, selectinload
 
 from qcfractal import __version__ as qcfractal_version
 from qcfractal.components.optimization.record_db_models import OptimizationSpecificationORM
@@ -382,29 +382,40 @@ class ReactionRecordSocket(BaseRecordSocket):
             r = session.execute(stmt).scalar_one()
             return InsertMetadata(inserted_idx=[0]), r
 
+    def get(
+        self,
+        record_ids: Sequence[int],
+        include: Optional[Sequence[str]] = None,
+        exclude: Optional[Sequence[str]] = None,
+        missing_ok: bool = False,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[Optional[Dict[str, Any]]]:
+        options = []
+
+        if include:
+            if "**" in include or "components" in include:
+                options.append(
+                    selectinload(ReactionRecordORM.components).options(selectinload(ReactionComponentORM.molecule))
+                )
+
+        with self.root_socket.optional_session(session, True) as session:
+            return self.root_socket.records.get_base(
+                orm_type=self.record_orm,
+                record_ids=record_ids,
+                include=include,
+                exclude=exclude,
+                missing_ok=missing_ok,
+                additional_options=options,
+                session=session,
+            )
+
     def query(
         self,
         query_data: ReactionQueryFilters,
         *,
         session: Optional[Session] = None,
     ) -> List[int]:
-        """
-        Query reaction records
-
-        Parameters
-        ----------
-        query_data
-            Fields/filters to query for
-        session
-            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed (but not committed) before returning from this function.
-
-        Returns
-        -------
-        :
-            A list of record ids that were found in the database.
-        """
-
         and_query = []
         need_qc_spec_join = False
         need_opt_spec_join = False
@@ -692,7 +703,13 @@ class ReactionRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> List[Dict[str, Any]]:
-        options = [lazyload("*"), defer("*"), joinedload(ReactionRecordORM.components).options(undefer("*"))]
+        options = [
+            lazyload("*"),
+            defer("*"),
+            joinedload(ReactionRecordORM.components).options(
+                undefer("*"), joinedload(ReactionComponentORM.molecule).options(undefer("*"))
+            ),
+        ]
 
         with self.root_socket.optional_session(session) as session:
             rec = session.get(ReactionRecordORM, record_id, options=options)

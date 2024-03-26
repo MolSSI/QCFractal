@@ -8,7 +8,7 @@ from .record_models import (
     BSSECorrectionEnum,
     ManybodyKeywords,
     ManybodySpecification,
-    ManybodyCluster,
+    ManybodyClusterMeta,
     ManybodyAddBody,
     ManybodyRecord,
     ManybodyQueryFilters,

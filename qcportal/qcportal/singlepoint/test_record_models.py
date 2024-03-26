@@ -48,8 +48,8 @@ def test_singlepoint_models_basis_convert():
     assert s.basis is None
 
 
-@pytest.mark.parametrize("includes", [None, all_includes])
-def test_singlepointrecord_model(snowflake: QCATestingSnowflake, includes: Optional[List[str]]):
+@pytest.mark.parametrize("includes", [None, ["**"], all_includes])
+def test_singlepoint_record_model(snowflake: QCATestingSnowflake, includes: Optional[List[str]]):
     storage_socket = snowflake.get_storage_socket()
     snowflake_client = snowflake.client()
     activated_manager_name, _ = snowflake.activate_manager()
@@ -60,8 +60,13 @@ def test_singlepointrecord_model(snowflake: QCATestingSnowflake, includes: Optio
     record = snowflake_client.get_singlepoints(rec_id, include=includes)
 
     if includes is not None:
-        record._client = None
+        record.propagate_client(None)
+        assert record.wavefunction_ is not None
+        assert record.molecule_ is not None
         assert record.offline
+    else:
+        assert record.wavefunction_ is None
+        assert record.molecule_ is None
 
     assert record.id == rec_id
     assert record.status == RecordStatusEnum.complete
@@ -80,6 +85,4 @@ def test_singlepointrecord_model(snowflake: QCATestingSnowflake, includes: Optio
     all_properties["return_result"] = result_dict["return_result"]
     assert record.properties == all_properties
 
-    # Wfn always require a client
-    if includes is None:
-        assert record.wavefunction.dict(encoding="json") == result.wavefunction.dict(encoding="json")
+    assert record.wavefunction.dict(encoding="json") == result.wavefunction.dict(encoding="json")

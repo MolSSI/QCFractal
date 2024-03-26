@@ -157,8 +157,32 @@ class BaseRecordSocket:
             If missing_ok is True, then this list will contain None where the molecule was missing.
         """
 
-        with self.root_socket.optional_session(session, True) as session:
-            return get_general(session, self.record_orm, self.record_orm.id, record_ids, include, exclude, missing_ok)
+        raise NotImplementedError(f"get function not implemented for {type(self)}! This is a developer error")
+
+    def query(
+        self,
+        query_data: RecordQueryFilters,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[int]:
+        """
+        Query records of a particular type
+
+        Parameters
+        ----------
+        query_data
+            Fields/filters to query for
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            A list of record ids that were found in the database.
+        """
+
+        raise NotImplementedError(f"query function not implemented for {type(self)}! This is a developer error")
 
     def generate_task_specification(self, record_orm: BaseRecordORM) -> Dict[str, Any]:
         """
@@ -784,6 +808,40 @@ class RecordSocket:
             session=session,
         )
 
+    def get_base(
+        self,
+        orm_type: Type[BaseRecordORM],
+        record_ids: Sequence[int],
+        include: Optional[Sequence[str]] = None,
+        exclude: Optional[Sequence[str]] = None,
+        missing_ok: bool = False,
+        additional_options: Optional[List[Any]] = None,
+        *,
+        session: Optional[Session] = None,
+    ):
+        options = []
+        if include is not None:
+            if "**" in include or "compute_history" in include or "outputs" in include:
+                options.append(selectinload(orm_type.compute_history))
+            if "**" in include or "outputs" in include:
+                options.append(
+                    selectinload(orm_type.compute_history, RecordComputeHistoryORM.outputs).undefer(OutputStoreORM.data)
+                )
+            if "**" in include or "task" in include:
+                options.append(joinedload(orm_type.task))
+            if "**" in include or "service" in include:
+                options.append(joinedload(orm_type.service))
+            if "**" in include or "comments" in include:
+                options.append(selectinload(orm_type.comments))
+            if "**" in include or "native_files" in include:
+                options.append(selectinload(orm_type.native_files).options(undefer(NativeFileORM.data)))
+
+        if additional_options:
+            options.extend(additional_options)
+
+        with self.root_socket.optional_session(session, True) as session:
+            return get_general(session, orm_type, orm_type.id, record_ids, include, exclude, missing_ok, options)
+
     def get(
         self,
         record_ids: Sequence[int],
@@ -825,8 +883,7 @@ class RecordSocket:
         else:
             wp = BaseRecordORM
 
-        with self.root_socket.optional_session(session, True) as session:
-            return get_general(session, wp, wp.id, record_ids, include, exclude, missing_ok)
+        return self.get_base(wp, record_ids, include, exclude, missing_ok, session=session)
 
     def generate_task_specification(self, task_orm: TaskQueueORM) -> Dict[str, Any]:
         """

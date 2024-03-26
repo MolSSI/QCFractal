@@ -16,7 +16,7 @@ except ImportError:
 def _msgpack_encode(obj: Any) -> Any:
     if isinstance(obj, BaseModel):
         # Don't include unset fields in pydantic models
-        return obj.dict(exclude_unset=True)
+        return obj.dict(exclude_unset=True, by_alias=True)
 
     try:
         return pydantic_encoder(obj)
@@ -44,8 +44,9 @@ class _JSONEncoder(json.JSONEncoder):
             return {"_bytes_base64_": base64.b64encode(obj).decode("ascii")}
 
         # Now do anything with pydantic, excluding unset fields
+        # Also always use aliases when serializing
         if isinstance(obj, BaseModel):
-            return obj.dict(exclude_unset=True)
+            return obj.dict(exclude_unset=True, by_alias=True)
 
         # Let pydantic handle other things
         try:

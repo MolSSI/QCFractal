@@ -10,7 +10,7 @@ from qcelemental.models import (
 from qcelemental.models.procedures import QCInputSpecification as QCEl_QCInputSpecification
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import lazyload, joinedload, defer, undefer
+from sqlalchemy.orm import lazyload, joinedload, selectinload, defer, undefer
 
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
 from qcfractal.db_socket.helpers import insert_general
@@ -178,29 +178,41 @@ class OptimizationRecordSocket(BaseRecordSocket):
                 r = session.execute(stmt).scalar_one()
                 return InsertMetadata(existing_idx=[0]), r
 
+    def get(
+        self,
+        record_ids: Sequence[int],
+        include: Optional[Sequence[str]] = None,
+        exclude: Optional[Sequence[str]] = None,
+        missing_ok: bool = False,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[Optional[Dict[str, Any]]]:
+        options = []
+        if include:
+            if "**" in include or "initial_molecule" in include:
+                options.append(joinedload(OptimizationRecordORM.initial_molecule))
+            if "**" in include or "final_molecule" in include:
+                options.append(joinedload(OptimizationRecordORM.final_molecule))
+            if "**" in include or "trajectory" in include or "trajectory_ids" in include:
+                options.append(selectinload(OptimizationRecordORM.trajectory))
+
+        with self.root_socket.optional_session(session, True) as session:
+            return self.root_socket.records.get_base(
+                orm_type=self.record_orm,
+                record_ids=record_ids,
+                include=include,
+                exclude=exclude,
+                missing_ok=missing_ok,
+                additional_options=options,
+                session=session,
+            )
+
     def query(
         self,
         query_data: OptimizationQueryFilters,
         *,
         session: Optional[Session] = None,
     ) -> List[int]:
-        """
-        Query optimization records
-
-        Parameters
-        ----------
-        query_data
-            Fields/filters to query for
-        session
-            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed (but not committed) before returning from this function.
-
-        Returns
-        -------
-        :
-            A list of record ids that were found in the database.
-        """
-
         and_query = []
         need_spspec_join = False
         need_optspec_join = False

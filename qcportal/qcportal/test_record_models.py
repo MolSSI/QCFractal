@@ -17,11 +17,11 @@ from qcportal.utils import now_at_utc
 if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
 
-all_includes = ["task", "service", "outputs", "comments"]
+all_includes = ["task", "service", "outputs", "comments", "native_files"]
 
 
-@pytest.mark.parametrize("includes", [None, all_includes])
-def test_baserecord_model_common(snowflake: QCATestingSnowflake, includes: Optional[List[str]]):
+@pytest.mark.parametrize("includes", [None, ["**"], all_includes])
+def test_base_record_model_common(snowflake: QCATestingSnowflake, includes: Optional[List[str]]):
     storage_socket = snowflake.get_storage_socket()
     snowflake_client = snowflake.client()
     activated_manager_name, _ = snowflake.activate_manager()
@@ -36,6 +36,17 @@ def test_baserecord_model_common(snowflake: QCATestingSnowflake, includes: Optio
     time_2 = now_at_utc()
 
     record = snowflake_client.get_records(rec_id, include=includes)
+
+    if includes is not None:
+        assert record.native_files_ is not None
+        assert record.comments_ is not None
+        assert record.compute_history_ is not None
+        record.propagate_client(None)
+        assert record.offline
+    else:
+        assert record.native_files_ is None
+        assert record.comments_ is None
+        assert record.compute_history_ is None
 
     assert record.id == rec_id
     assert record.is_service is False
@@ -65,8 +76,8 @@ def test_baserecord_model_common(snowflake: QCATestingSnowflake, includes: Optio
     assert record.compute_history[0].outputs["stdout"].data == ro
 
 
-@pytest.mark.parametrize("includes", [None, all_includes])
-def test_baserecord_model_error(snowflake: QCATestingSnowflake, includes: Optional[List[str]]):
+@pytest.mark.parametrize("includes", [None, ["**"], all_includes])
+def test_base_record_model_error(snowflake: QCATestingSnowflake, includes: Optional[List[str]]):
     storage_socket = snowflake.get_storage_socket()
     snowflake_client = snowflake.client()
     activated_manager_name, _ = snowflake.activate_manager()
@@ -89,19 +100,24 @@ def test_baserecord_model_error(snowflake: QCATestingSnowflake, includes: Option
     assert err["error_message"] == "this is just a test error"
 
 
-@pytest.mark.parametrize("includes", [None, all_includes])
-def test_baserecord_model_task(snowflake: QCATestingSnowflake, includes: Optional[List[str]]):
+@pytest.mark.parametrize("includes", [None, ["**"], all_includes])
+def test_base_record_model_task(snowflake: QCATestingSnowflake, includes: Optional[List[str]]):
     storage_socket = snowflake.get_storage_socket()
     snowflake_client = snowflake.client()
     activated_manager_name, _ = snowflake.activate_manager()
 
-    time_0 = now_at_utc()
     rec_id, _ = submit_sp_test_data(
         storage_socket, "sp_psi4_benzene_energy_1", tag="test_tag_123", priority=PriorityEnum.low
     )
-    time_1 = now_at_utc()
 
     record = snowflake_client.get_records(rec_id, include=includes)
+
+    if includes is not None:
+        assert record.task_ is not None
+        record.propagate_client(None)
+        assert record.offline
+    else:
+        assert record.task_ is None
 
     assert record.manager_name is None
     assert record.task.tag == "test_tag_123"
@@ -111,17 +127,22 @@ def test_baserecord_model_task(snowflake: QCATestingSnowflake, includes: Optiona
     assert record.service is None
 
 
-@pytest.mark.parametrize("includes", [None, all_includes])
-def test_baserecord_model_service(snowflake: QCATestingSnowflake, includes: Optional[List[str]]):
+@pytest.mark.parametrize("includes", [None, ["**"], all_includes])
+def test_base_record_model_service(snowflake: QCATestingSnowflake, includes: Optional[List[str]]):
     storage_socket = snowflake.get_storage_socket()
     snowflake_client = snowflake.client()
     activated_manager_name, _ = snowflake.activate_manager()
 
-    time_0 = now_at_utc()
     rec_id, _ = submit_td_test_data(storage_socket, "td_H2O2_mopac_pm6", tag="test_tag_123", priority=PriorityEnum.low)
-    time_1 = now_at_utc()
 
     record = snowflake_client.get_records(rec_id, include=includes)
+
+    if includes is not None:
+        assert record.service_ is not None
+        record.propagate_client(None)
+        assert record.offline
+    else:
+        assert record.service_ is None
 
     assert record.is_service is True
     assert record.service.dependencies is not None

@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 all_includes = ["initial_chain", "singlepoints", "optimizations"]
 
 
-@pytest.mark.parametrize("includes", [None, all_includes])
+@pytest.mark.parametrize("includes", [None, ["**"], all_includes])
 def test_neb_record_model(snowflake: QCATestingSnowflake, includes: Optional[List[str]]):
     storage_socket = snowflake.get_storage_socket()
     snowflake_client = snowflake.client()
@@ -25,8 +25,25 @@ def test_neb_record_model(snowflake: QCATestingSnowflake, includes: Optional[Lis
     record = snowflake_client.get_nebs(rec_id, include=includes)
 
     if includes is not None:
-        record._client = None
+        assert record.initial_chain_ is not None
+        assert record.initial_chain_molecule_ids_ is not None
+        assert record.singlepoints_ is not None
+        assert record.optimizations_ is not None
+        record.propagate_client(None)
         assert record.offline
+
+        # children have all data fetched
+        assert all(x.initial_molecule_ is not None for x in record.optimizations.values())
+        assert all(x.comments_ is not None for x in record.optimizations.values())
+
+        for sp in record.singlepoints.values():
+            assert all(x.molecule_ is not None for x in sp)
+            assert all(x.comments_ is not None for x in sp)
+    else:
+        assert record.initial_chain_ is None
+        assert record.initial_chain_molecule_ids_ is None
+        assert record.singlepoints_ is None
+        assert record.optimizations_ is None
 
     assert record.id == rec_id
     assert record.status == RecordStatusEnum.complete

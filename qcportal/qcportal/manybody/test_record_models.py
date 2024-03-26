@@ -14,8 +14,8 @@ if TYPE_CHECKING:
 all_includes = ["initial_molecule", "clusters"]
 
 
-@pytest.mark.parametrize("includes", [None, all_includes])
-def test_manybodyrecord_model(snowflake: QCATestingSnowflake, includes: Optional[List[str]]):
+@pytest.mark.parametrize("includes", [None, ["**"], all_includes])
+def test_manybody_record_model(snowflake: QCATestingSnowflake, includes: Optional[List[str]]):
     storage_socket = snowflake.get_storage_socket()
     snowflake_client = snowflake.client()
     activated_manager_name, _ = snowflake.activate_manager()
@@ -26,8 +26,22 @@ def test_manybodyrecord_model(snowflake: QCATestingSnowflake, includes: Optional
     record = snowflake_client.get_manybodys(rec_id, include=includes)
 
     if includes is not None:
-        record._client = None
+        assert record.initial_molecule_ is not None
+        assert record.clusters_meta_ is not None
+        assert record._clusters is not None
+        record.propagate_client(None)
         assert record.offline
+
+        # children have all data fetched
+        for cl in record.clusters:
+            assert cl.singlepoint_id is not None
+            assert cl.singlepoint_record is not None
+            assert cl.singlepoint_record.molecule_ is not None
+            assert cl.singlepoint_record.comments_ is not None
+    else:
+        assert record.initial_molecule_ is None
+        assert record.clusters_meta_ is None
+        assert record._clusters is None
 
     assert record.id == rec_id
     assert record.status == RecordStatusEnum.complete
