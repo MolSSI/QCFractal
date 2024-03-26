@@ -137,7 +137,9 @@ class TorsiondriveRecord(BaseRecord):
     ######################################################
     initial_molecules_ids_: Optional[List[int]] = Field(None, alias="initial_molecules_ids")
     initial_molecules_: Optional[List[Molecule]] = Field(None, alias="initial_molecules")
+
     optimizations_: Optional[List[TorsiondriveOptimization]] = Field(None, alias="optimizations")
+    minimum_optimizations_: Optional[Dict[str, int]] = Field(None, alias="minimum_optimizations")
 
     ########################################
     # Caches
@@ -156,6 +158,8 @@ class TorsiondriveRecord(BaseRecord):
         for r in records:
             if r.optimizations_:
                 opt_ids.update(x.optimization_id for x in r.optimizations_)
+            if r.minimum_optimizations_:
+                opt_ids.update(r.minimum_optimizations_.values())
 
         include = ["**"] if recursive else None
         opt_ids = list(opt_ids)
@@ -163,24 +167,34 @@ class TorsiondriveRecord(BaseRecord):
         opt_map = {x.id: x for x in opt_records}
 
         for r in records:
-            if r.optimizations_ is None:
-                r._optimizations_cache = None
-                r._minimum_optimizations_cache = None
-            else:
+            r._optimizations_cache = None
+            r._minimum_optimizations_cache = None
+
+            if r.optimizations_ is None and r.minimum_optimizations_ is None:
+                continue
+
+            if r.optimizations_ is not None:
                 r._optimizations_cache = {}
                 for td_opt in r.optimizations_:
                     key = deserialize_key(td_opt.key)
                     r._optimizations_cache.setdefault(key, list())
                     r._optimizations_cache[key].append(opt_map[td_opt.optimization_id])
 
-                # find the minimum optimizations for each key
+            if r.minimum_optimizations_ is None and r.optimizations_ is not None:
+                # find the minimum optimizations for each key from what we have in the optimizations
                 # chooses the lowest id if there are records with the same energy
-                r._minimum_optimizations_cache = {}
+                r.minimum_optimizations_ = {}
                 for k, v in r._optimizations_cache.items():
                     # Remove any optimizations without energies
                     v2 = [x for x in v if x.energies]
                     if v2:
-                        r._minimum_optimizations_cache[k] = min(v2, key=lambda x: (x.energies[-1], x.id))
+                        lowest_opt = min(v2, key=lambda x: (x.energies[-1], x.id))
+                        r.minimum_optimizations_[serialize_key(k)] = lowest_opt.id
+
+            if r.minimum_optimizations_ is not None:  # either from the server or from above
+                r._minimum_optimizations_cache = {
+                    deserialize_key(k): opt_map[v] for k, v in r.minimum_optimizations_.items()
+                }
 
             r.propagate_client(r._client)
 
@@ -223,20 +237,13 @@ class TorsiondriveRecord(BaseRecord):
     def _fetch_minimum_optimizations(self):
         self._assert_online()
 
-        min_opt_ids = self._client.make_request(
+        self.minimum_optimizations_ = self._client.make_request(
             "get",
             f"api/v1/records/torsiondrive/{self.id}/minimum_optimizations",
             Dict[str, int],
         )
 
-        # Fetch optimization records from the server
-        opt_key_ids = list(min_opt_ids.items())
-        opt_ids = [x[1] for x in opt_key_ids]
-        opt_records = self._get_child_records(opt_ids, OptimizationRecord)
-
-        self._minimum_optimizations_cache = {deserialize_key(x[0]): y for x, y in zip(opt_key_ids, opt_records)}
-
-        self.propagate_client(self._client)
+        self.fetch_children(False)
 
     @property
     def initial_molecules(self) -> List[Molecule]:
