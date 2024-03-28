@@ -7,6 +7,7 @@ from __future__ import annotations
 import datetime
 import os
 import sqlite3
+import threading
 from typing import TYPE_CHECKING, Optional, TypeVar, Type, Any, List, Iterable, Tuple, Sequence
 from urllib.parse import urlparse
 
@@ -45,34 +46,44 @@ def decompress_from_cache(data: sqlite3.Binary, value_type) -> Any:
 
 
 class RecordCache:
-    def __init__(self, file_path: Optional[str], read_only: bool):
-        if file_path is None and read_only:
-            raise RuntimeError("Cannot open a read-only memory-backed cache")
-        if read_only and not os.path.isfile(file_path):
-            raise RuntimeError("Cannot open existing read-only cache - file does not exist or is not a file")
-
-        if file_path is None:
-            file_path = ":memory:"
-
-        self.file_path = file_path
+    def __init__(self, cache_uri: str, read_only: bool):
+        self.cache_uri = cache_uri
         self.read_only = read_only
 
-        self._conn = sqlite3.connect(self.file_path)
-
-        # Some common settings
-        self._conn.execute("PRAGMA foreign_keys = ON")
+        # There is a chance that this is used from multiple threads
+        # So store the connection in thread-local storage
+        self._th_local = threading.local()
 
         if not read_only:
             self._create_tables()
             self._conn.commit()
 
+    @property
+    def _conn(self):
+        # Get the connection object that is used for this thread
+        if hasattr(self._th_local, "_conn"):
+            # print(threading.get_ident(), "EXISTING CONNECTION TO ", self.cache_uri)
+            return self._th_local._conn
+        else:
+            # This thread currently doesn't have a connection. so create one
+            # Note the uri=True flag, which is needed for the sqlite3 module to recognize full URIs
+            # print(threading.get_ident(), "NEW CONNECTION TO ", self.cache_uri)
+            self._th_local._conn = sqlite3.connect(self.cache_uri, uri=True)
+
+            # Some common settings
+            self._th_local._conn.execute("PRAGMA foreign_keys = ON")
+
+            return self._th_local._conn
+
     def __str__(self):
-        return f"<{self.__class__.__name__} path={self.file_path} {'ro' if self.read_only else 'rw'}>"
+        return f"<{self.__class__.__name__} path={self.cache_uri} {'ro' if self.read_only else 'rw'}>"
 
     def _assert_writable(self):
-        assert not self.read_only, "This dataset cache is read-only"
+        assert not self.read_only, "This cache is read-only"
 
     def _create_tables(self):
+        self._assert_writable()
+
         self._conn.execute(
             """
             CREATE TABLE IF NOT EXISTS records (
@@ -89,6 +100,7 @@ class RecordCache:
         self._conn.execute("CREATE INDEX IF NOT EXISTS records_status ON records (status)")
 
     def update_metadata(self, key: str, value: Any) -> None:
+        self._assert_writable()
         stmt = "REPLACE INTO metadata (key, value) VALUES (?, ?)"
         self._conn.execute(stmt, (key, serialize(value, "msgpack")))
         self._conn.commit()
@@ -139,6 +151,8 @@ class RecordCache:
         return ret
 
     def update_records(self, records: Iterable[_RECORD_T]):
+        self._assert_writable()
+
         # TODO - update multiple at once (VALUES ((?, ?, ?, ?), (?, ?, ?, ?))
         stmt = "REPLACE INTO records (id, status, modified_on, record) VALUES (?, ?, ?, ?) RETURNING uid"
 
@@ -170,19 +184,14 @@ class RecordCache:
 
 
 class DatasetCache(RecordCache):
-    def __init__(self, file_path: Optional[str], read_only: bool, dataset_type: Type[_DATASET_T]):
+    def __init__(self, cache_uri: str, read_only: bool, dataset_type: Type[_DATASET_T]):
         self._entry_type = dataset_type._entry_type
         self._specification_type = dataset_type._specification_type
         self._record_type = dataset_type._record_type
 
-        RecordCache.__init__(self, file_path=file_path, read_only=read_only)
-
-    def _assert_writable(self):
-        assert not self.read_only, "This dataset cache is read-only"
+        RecordCache.__init__(self, cache_uri=cache_uri, read_only=read_only)
 
     def _create_tables(self):
-        self._assert_writable()
-
         RecordCache._create_tables(self)
 
         self._conn.execute(
@@ -521,30 +530,43 @@ class DatasetCache(RecordCache):
 
 
 class PortalCache:
-    def __init__(self, server_uri: str, cache_dir: Optional[str], max_size: int):
+    def __init__(self, server_uri: str, cache_dir: Optional[str], max_size: int, shared_memory: bool = True):
         parsed_url = urlparse(server_uri)
 
         # Should work as a reasonable fingerprint?
         self.server_fingerprint = f"{parsed_url.hostname}_{parsed_url.port}"
 
         if cache_dir:
-            self.enabled = True
-
+            # _shared_memory shouldn't be used, so we don't set it and wait for errors
+            self._is_disk = True
             self.cache_dir = os.path.join(os.path.abspath(cache_dir), self.server_fingerprint)
             os.makedirs(self.cache_dir, exist_ok=True)
-
         else:
-            self.enabled = False
+            self._is_disk = False
+            self._shared_memory = shared_memory
             self.cache_dir = None
 
-    def get_cache_path(self, cache_name: str) -> str:
-        if self.enabled:
-            return os.path.join(self.cache_dir, f"{cache_name}.sqlite")
+    def get_cache_uri(self, cache_name: str) -> str:
+        if self._is_disk:
+            file_path = os.path.join(self.cache_dir, f"{cache_name}.sqlite")
+            uri = f"file:{file_path}"
+        elif self._shared_memory:
+            # vfs=memdb seems to be a better way than mode=memory&cache=shared . Very little docs about it though
+            # The / after the : is apparently very important. Otherwise, the shared stuff doesn't work
+            uri = f"file:/qca_cache_{cache_name}?vfs=memdb"
         else:
-            return ":memory:"
+            uri = f"file:/qca_cache_{cache_name}?mode=memory"
+
+        return uri
+
+    def get_dataset_cache(self, dataset_id: int, dataset_type: Type[_DATASET_T]) -> DatasetCache:
+        uri = self.get_cache_uri(f"dataset_{dataset_id}.sqlite")
+
+        # If you are asking this for a dataset cache, it should be writable
+        return DatasetCache(uri, False, dataset_type)
 
     def vacuum(self, cache_name: Optional[str] = None):
-        if self.enabled:
+        if self._is_disk:
             # TODO
             return
 
@@ -556,9 +578,14 @@ def read_dataset_metadata(file_path: str):
     This is needed sometimes to construct the DatasetCache object with a type
     """
 
+    file_path = os.path.abspath(file_path)
+
     if not os.path.isfile(file_path):
         raise RuntimeError(f'Cannot open cache file "{file_path}" - does not exist or is not a file')
-    conn = sqlite3.connect(file_path)
+
+    uri = f"file:{file_path}?mode=ro"
+    conn = sqlite3.connect(uri, uri=True)
+
     r = conn.execute("SELECT value FROM metadata WHERE key = 'dataset_metadata'")
     if r is None:
         raise RuntimeError(f"Cannot find appropriate metadata in cache file {file_path}")

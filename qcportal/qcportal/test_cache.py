@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import gc
-import logging
+import threading
 from typing import TYPE_CHECKING
+from urllib.parse import urlparse
 
 from qcportal.dataset_models import dataset_from_cache
 from qcportal.record_models import RecordStatusEnum
@@ -129,6 +130,44 @@ def test_dataset_cache_update(snowflake_client: PortalClient):
             assert r.status == RecordStatusEnum.cancelled
 
 
+def test_dataset_cache_multithread(snowflake: QCATestingSnowflake):
+    # Use shared memory cache
+    # This is the default for a regular client, but a testing snowflake uses :memory:
+    snowflake_client: PortalClient = snowflake.client(shared_memory_cache=True)
+
+    ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
+
+    ds.add_specification("spec_1", test_specs[0])
+    ds.add_specification("spec_2", test_specs[1])
+    ds.add_entries(test_entries[0])
+    ds.add_entries(test_entries[1])
+    ds.submit()
+
+    success = True
+
+    def _test_thread():
+        nonlocal success
+
+        try:
+            records = list(ds.iterate_records())
+            assert len(records) == 4
+        except Exception as e:
+            print(threading.get_ident(), "EXCEPTION: ", str(e))
+            success = False
+            raise
+
+    threads = [threading.Thread(target=_test_thread) for _ in range(1)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    records = list(ds.iterate_records())
+    assert len(records) == 4
+
+    assert success
+
+
 def test_dataset_cache_writeback(snowflake_client: PortalClient):
     ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
 
@@ -170,7 +209,7 @@ def test_dataset_cache_fromfile(snowflake: QCATestingSnowflake, tmp_path):
     ds.fetch_records()
     rid = ds.get_record(test_entries[0].name, "spec_1").id
 
-    cachefile_path = ds._cache_data.file_path
+    cachefile_path = urlparse(ds._cache_data.cache_uri).path
 
     del ds, client
     gc.collect()
@@ -204,7 +243,7 @@ def test_dataset_cache_fromfile_deleted(snowflake: QCATestingSnowflake, tmp_path
     ds.submit()
     ds.fetch_records()
 
-    cachefile_path = ds._cache_data.file_path
+    cachefile_path = urlparse(ds._cache_data.cache_uri).path
 
     del ds
     gc.collect()
@@ -229,7 +268,7 @@ def test_dataset_cache_fromfile_view(snowflake: QCATestingSnowflake, tmp_path):
     ds.submit()
     ds.fetch_records()
 
-    cachefile_path = ds._cache_data.file_path
+    cachefile_path = urlparse(ds._cache_data.cache_uri).path
 
     del ds
     gc.collect()

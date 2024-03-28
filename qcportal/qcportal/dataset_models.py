@@ -145,22 +145,22 @@ class BaseDataset(BaseModel):
         assert self._client is client, "Client not set in base dataset class?"
 
         if cache_data is not None:
+            # Passed in cache data. That takes priority
             self._cache_data = cache_data
+        elif self._client:
+            # Ask the client cache for our cache
+            self._cache_data = client.cache.get_dataset_cache(self.id, type(self))
+        else:
+            # Memory_backed cache, not shared
+            # TODO - share? Use class id as a key? Would allow for threading
+            self._cache_data = DatasetCache("file:/?mode=memory", False, type(self))
 
-        elif client and client.cache.enabled:
-            cache_dir = client.cache.cache_dir
-            cache_path = os.path.join(cache_dir, f"dataset_{self.id}.sqlite")
-            self._cache_data = DatasetCache(cache_path, False, type(self))
-
-            # All fields that aren't private
+        if not self._cache_data.read_only:
+            # Add metadata to cache file (in case the user wants to share it)
             self._cache_data.update_metadata("dataset_metadata", self)
 
-            # Add metadata to cache file (in case the user wants to share it)
-            if self._client is not None:
-                # Only address, not username/password
-                self._cache_data.update_metadata("client_address", self._client.address)
-        else:
-            self._cache_data = DatasetCache(None, False, type(self))
+            # Only address, not username/password
+            self._cache_data.update_metadata("client_address", self._client.address)
 
     def __init_subclass__(cls):
         """
@@ -1776,7 +1776,10 @@ def dataset_from_cache(file_path: str) -> BaseDataset:
     # Reads this as a read-only "view"
     ds_meta = read_dataset_metadata(file_path)
     ds_type = BaseDataset.get_subclass(ds_meta["dataset_type"])
-    ds_cache = DatasetCache(file_path, True, ds_type)
+
+    file_path = os.path.abspath(file_path)
+    cache_uri = f"file:{file_path}?mode=ro"
+    ds_cache = DatasetCache(cache_uri, True, ds_type)
 
     # Views never have a client attached
     return dataset_from_dict(ds_meta, None, cache_data=ds_cache)

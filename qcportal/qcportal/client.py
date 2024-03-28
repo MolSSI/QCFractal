@@ -122,6 +122,7 @@ class PortalClient(PortalClientBase):
         *,
         cache_dir: Optional[str] = None,
         cache_max_size: int = 0,
+        shared_memory_cache: bool = True,
     ) -> None:
         """
         Parameters
@@ -143,11 +144,15 @@ class PortalClient(PortalClientBase):
             Directory to store an internal cache of records and other data
         cache_max_size
             Maximum size of the cache directory
+        shared_memory_cache
+            If True (and cache_dir is not specified), the memory-backed cache will be marked as shared,
+            meaning that multiple instances of the PortalClient can share the same cache, as well as making the
+            cache shared among threads. Generally, this is what you want, but
         """
 
         PortalClientBase.__init__(self, address, username, password, verify, show_motd)
         self._logger = logging.getLogger("PortalClient")
-        self.cache = PortalCache(address, cache_dir, cache_max_size)
+        self.cache = PortalCache(address, cache_dir, cache_max_size, shared_memory_cache)
 
     def __repr__(self) -> str:
         """A short representation of the current PortalClient.
