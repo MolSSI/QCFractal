@@ -36,7 +36,7 @@ from qcportal.metadata_models import DeleteMetadata
 from qcportal.metadata_models import InsertMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, BaseRecord
 from qcportal.utils import make_list, chunk_iterable
-from qcportal.cache import DatasetCache, read_dataset_metadata
+from qcportal.cache import DatasetCache, read_dataset_metadata, get_records_with_cache
 
 if TYPE_CHECKING:
     from qcportal.client import PortalClient
@@ -862,7 +862,9 @@ class BaseDataset(BaseModel):
         )
 
         record_ids = [x[2] for x in record_info]
-        records = self._client._get_records_by_type(self._record_type, record_ids, include=include)
+
+        # This function always fetches, so force_fetch = True
+        records = get_records_with_cache(self._client, self._cache_data, self._record_type, record_ids, include, True)
 
         # Update the locally-stored records
         # zip(record_info, records) = ((entry_name, spec_name, record_id), record)

@@ -512,56 +512,24 @@ class PortalClient(PortalClientBase):
     # General record functions
     ##############################################################
 
-    def get_records(
-        self,
-        record_ids: Union[int, Sequence[int]],
-        missing_ok: bool = False,
-        *,
-        include: Optional[Iterable[str]] = None,
-    ) -> Union[List[Optional[BaseRecord]], Optional[BaseRecord]]:
-        """
-        Obtain records of all types with specified IDs
-
-        This function will return record objects of the given ID no matter
-        what the type is. All records are unique by ID (ie, an optimization will never
-        have the same ID as a singlepoint).
-
-        Records will be returned in the same order as the record ids.
-
-        Parameters
-        ----------
-        record_ids
-            Single ID or sequence/list of records to obtain
-        missing_ok
-            If set to True, then missing records will be tolerated, and the returned
-            records will contain None for the corresponding IDs that were not found.
-        include
-            Additional fields to include in the returned record
-
-        Returns
-        -------
-        :
-            If a single ID was specified, returns just that record. Otherwise, returns
-            a list of records.  If missing_ok was specified, None will be substituted for a record
-            that was not found.
-        """
-
-        return self._get_records_by_type(None, record_ids, missing_ok, include)
-
-    def _get_records_by_type(
+    def _fetch_records(
         self,
         record_type: Optional[Type[_T]],
-        record_ids: Union[int, Sequence[int]],
+        record_ids: Sequence[int],
         missing_ok: bool = False,
         include: Optional[Iterable[str]] = None,
-    ) -> Union[Optional[Optional[_T]], List[Optional[_T]]]:
+    ) -> List[Optional[_T]]:
         """
-        Obtain records of a particular type with the specified IDs.
+        Fetches records of a particular type with the specified IDs from the remove server.
 
-        Records will be returned in the same order as the record ids.
+        Records will be returned in the same order as the record ids. This function always returns a list.
+
+        This function only fetches the top-level records - it does not fetch the children of the records.
 
         Parameters
         ----------
+        record_type
+            The type of record to fetch
         record_ids
             Single ID or sequence/list of records to obtain
         missing_ok
@@ -578,9 +546,6 @@ class PortalClient(PortalClientBase):
             that was not found.
         """
 
-        is_single = not isinstance(record_ids, Sequence)
-
-        record_ids = make_list(record_ids)
         if not record_ids:
             return []
 
@@ -619,9 +584,86 @@ class PortalClient(PortalClientBase):
 
         # Just to really make sure the process_chunk_iterable code is correct
         assert all((x is None or x.id == rid) for x, rid in zip(all_records, record_ids))
+        return all_records
+
+    def get_records(
+        self,
+        record_ids: Union[int, Sequence[int]],
+        missing_ok: bool = False,
+        *,
+        include: Optional[Iterable[str]] = None,
+    ) -> Union[List[Optional[BaseRecord]], Optional[BaseRecord]]:
+        """
+        Obtain records of all types with specified IDs
+
+        This function will return record objects of the given ID no matter
+        what the type is. All records are unique by ID (ie, an optimization will never
+        have the same ID as a singlepoint).
+
+        Records will be returned in the same order as the record ids.
+
+        Parameters
+        ----------
+        record_ids
+            Single ID or sequence/list of records to obtain
+        missing_ok
+            If set to True, then missing records will be tolerated, and the returned
+            records will contain None for the corresponding IDs that were not found.
+        include
+            Additional fields to include in the returned record
+
+        Returns
+        -------
+        :
+            A list of records.  If missing_ok was specified, None will be substituted for a record
+            that was not found.
+        """
+
+        return self._get_records_by_type(None, record_ids, missing_ok, include)
+
+    def _get_records_by_type(
+        self,
+        record_type: Optional[Type[_T]],
+        record_ids: Union[int, Sequence[int]],
+        missing_ok: bool = False,
+        include: Optional[Iterable[str]] = None,
+    ) -> Union[Optional[_T], List[Optional[_T]]]:
+        """
+        Obtain records of a particular type with the specified IDs.
+
+        Records will be returned in the same order as the record ids.
+
+        This function will fetch the children of the records if enough information
+        is fetched of the parent record. This is handled by the various fetch_children_multi
+        class functions of the record types.
+
+        Parameters
+        ----------
+        record_type
+            The type of record to fetch
+        record_ids
+            Single ID or sequence/list of records to obtain
+        missing_ok
+            If set to True, then missing records will be tolerated, and the returned
+            records will contain None for the corresponding IDs that were not found.
+        include
+            Additional fields to include in the returned record
+
+        Returns
+        -------
+        :
+            If a single ID was specified, returns just that record. Otherwise, returns
+            a list of records.  If missing_ok was specified, None will be substituted for a record
+            that was not found.
+        """
+
+        is_single = not isinstance(record_ids, Sequence)
+
+        record_ids = make_list(record_ids)
+        all_records = self._fetch_records(record_type, record_ids, missing_ok, include)
 
         # In general, fetching children should only happen if the metadata for the children
-        # is requested via include. So we always say True here, and it won't recursively download
+        # is requested via include. So we always say recursive=True here, and it won't recursively download
         # children if that data is missing.
 
         if record_type is None:

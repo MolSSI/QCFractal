@@ -117,7 +117,7 @@ class ManybodyRecord(BaseRecord):
 
         include = ["**"] if recursive else None
         sp_ids = list(sp_ids)
-        sp_recs = get_records_with_cache(client, record_cache, sp_ids, SinglepointRecord, include=include)
+        sp_recs = get_records_with_cache(client, record_cache, SinglepointRecord, sp_ids, include=include)
         sp_map = {x.id: x for x in sp_recs}
 
         for r in records:

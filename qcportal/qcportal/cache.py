@@ -409,24 +409,13 @@ class DatasetCache(RecordCache):
 
         return all_records
 
-    def update_dataset_records(self, record_info: Iterable[Tuple[str, str, Any]]):
+    def update_dataset_records(self, record_info: Iterable[Tuple[str, str, int]]):
         self._assert_writable()
 
         assert all(isinstance(r, self._record_type) for _, _, r in record_info)
 
         # TODO - update multiple at once (VALUES ((?, ?, ?, ?), (?, ?, ?, ?))
         for entry_name, specification_name, record in record_info:
-            stmt = """REPLACE INTO records (id, status, modified_on, record)
-                      VALUES (?, ?, ?, ?)"""
-
-            row_data = (
-                record.id,
-                record.status,
-                record.modified_on.timestamp(),
-                compress_for_cache(record),
-            )
-            self._conn.execute(stmt, row_data)
-
             stmt = """REPLACE INTO dataset_records (entry_name, specification_name, record_id)
                       VALUES (?, ?, ?)"""
 
@@ -560,7 +549,7 @@ class PortalCache:
         return uri
 
     def get_dataset_cache(self, dataset_id: int, dataset_type: Type[_DATASET_T]) -> DatasetCache:
-        uri = self.get_cache_uri(f"dataset_{dataset_id}.sqlite")
+        uri = self.get_cache_uri(f"dataset_{dataset_id}")
 
         # If you are asking this for a dataset cache, it should be writable
         return DatasetCache(uri, False, dataset_type)
@@ -598,22 +587,52 @@ def read_dataset_metadata(file_path: str):
 def get_records_with_cache(
     client: Optional[PortalClient],
     record_cache: Optional[RecordCache],
-    record_ids: Sequence[int],
     record_type: Type[_RECORD_T],
+    record_ids: Sequence[int],
     include: Optional[Iterable[str]] = None,
+    force_fetch: bool = False,
 ) -> List[_RECORD_T]:
     """
     Helper function for obtaining child records either from the cache or from the server
 
     The records are returned in the same order as the `record_ids` parameter.
 
+    If records are missing from the cache, and client is None, and exception is raised.
+
     If `include` is specified, additional fields will be fetched from the server. However, if the records are in the
     cache already, they may be missing those fields.
+
+    This function will fetch the children of the records if enough information
+    is fetched of the parent record. This is handled by the various fetch_children_multi
+    class functions of the record types.
+
+    Parameters
+    ----------
+    client
+        The client to use for fetching records from the server.
+        If `None`, the function will only use the cache
+    record_cache
+        The cache to use for fetching records from the cache.
+        If `None`, the function will only use the client
+    record_type
+        The type of record to fetch
+    record_ids
+        Single ID or sequence/list of records to obtain
+    include
+        Additional fields to include in the returned record (if fetching from the client)
+    force_fetch
+        If `True`, the function will fetch all records from the server,
+        regardless of whether they are in the cache
+
+    Returns
+    -------
+    :
+        List of records in the same order as the input `record_ids`.
     """
 
-    if record_cache is None:
+    if record_cache is None or force_fetch:
         existing_records = []
-        records_tofetch = record_ids
+        records_tofetch = set(record_ids)
     else:
         existing_records = record_cache.get_records(record_ids, record_type)
         records_tofetch = set(record_ids) - {x.id for x in existing_records}
@@ -622,7 +641,7 @@ def get_records_with_cache(
         raise RuntimeError("Need to fetch some records, but not connected to a client")
 
     if records_tofetch:
-        recs = client._get_records_by_type(record_type, list(records_tofetch), include=include)
+        recs = client._fetch_records(record_type, list(records_tofetch), include=include)
         if record_cache is not None:
             uids = record_cache.update_records(recs)
 
@@ -632,9 +651,13 @@ def get_records_with_cache(
 
         existing_records += recs
 
+    # Fetch all children as well
+    record_type.fetch_children_multi(existing_records, True)
+
     # Return everything in the same order as the input
     all_recs = {r.id: r for r in existing_records}
     ret = [all_recs.get(rid, None) for rid in record_ids]
+
     if None in ret:
         missing_ids = set(record_ids) - set(all_recs.keys())
         raise RuntimeError(

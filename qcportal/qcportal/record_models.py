@@ -530,7 +530,7 @@ class BaseRecord(BaseModel):
         cache already, they may be missing those fields.
         """
 
-        return get_records_with_cache(self._client, self._record_cache, child_record_ids, child_record_type, include)
+        return get_records_with_cache(self._client, self._record_cache, child_record_type, child_record_ids, include)
 
     def _assert_online(self):
         """Raises an exception if this record does not have an associated client"""
@@ -750,14 +750,7 @@ class RecordQueryIterator(QueryIteratorBase[_Record_T]):
                 body=self._query_filters,
             )
 
-        if self.record_type is None:
-            records: List[BaseRecord] = self._client.get_records(record_ids, include=self.include)
-        else:
-            records: List[_Record_T] = self._client._get_records_by_type(
-                self.record_type, record_ids, include=self.include
-            )
-
-        return records
+        return self._client._get_records_by_type(self.record_type, record_ids, include=self.include)
 
 
 def record_from_dict(data: Dict[str, Any], client: Any = None) -> BaseRecord:

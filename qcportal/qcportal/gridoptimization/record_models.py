@@ -225,7 +225,7 @@ class GridoptimizationRecord(BaseRecord):
 
         include = ["**"] if recursive else None
         opt_ids = list(opt_ids)
-        opt_records = get_records_with_cache(client, record_cache, opt_ids, OptimizationRecord, include=include)
+        opt_records = get_records_with_cache(client, record_cache, OptimizationRecord, opt_ids, include=include)
         opt_map = {x.id: x for x in opt_records}
 
         for r in records:

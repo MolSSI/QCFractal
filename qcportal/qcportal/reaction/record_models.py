@@ -126,8 +126,8 @@ class ReactionRecord(BaseRecord):
         sp_ids = list(sp_ids)
         opt_ids = list(opt_ids)
 
-        sp_records = get_records_with_cache(client, record_cache, sp_ids, SinglepointRecord, include=include)
-        opt_records = get_records_with_cache(client, record_cache, opt_ids, OptimizationRecord, include=include)
+        sp_records = get_records_with_cache(client, record_cache, SinglepointRecord, sp_ids, include=include)
+        opt_records = get_records_with_cache(client, record_cache, OptimizationRecord, opt_ids, include=include)
 
         sp_map = {r.id: r for r in sp_records}
         opt_map = {r.id: r for r in opt_records}
