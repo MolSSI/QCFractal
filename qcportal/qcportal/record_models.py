@@ -447,7 +447,9 @@ class BaseRecord(BaseModel):
         return subcls
 
     @classmethod
-    def _fetch_children_multi(cls, client, record_cache, records: Iterable[BaseRecord], recursive: bool):
+    def _fetch_children_multi(
+        cls, client, record_cache, records: Iterable[BaseRecord], recursive: bool, force_fetch: bool = False
+    ):
         """
         Fetches all children of the given records recursively
 
@@ -459,7 +461,7 @@ class BaseRecord(BaseModel):
         pass
 
     @classmethod
-    def fetch_children_multi(cls, records: Iterable[Optional[BaseRecord]], recursive: bool):
+    def fetch_children_multi(cls, records: Iterable[Optional[BaseRecord]], recursive: bool, force_fetch: bool = False):
         """
         Fetches all children of the given records recursively
 
@@ -530,7 +532,9 @@ class BaseRecord(BaseModel):
         cache already, they may be missing those fields.
         """
 
-        return get_records_with_cache(self._client, self._record_cache, child_record_type, child_record_ids, include)
+        return get_records_with_cache(
+            self._client, self._record_cache, child_record_type, child_record_ids, include, force_fetch=False
+        )
 
     def _assert_online(self):
         """Raises an exception if this record does not have an associated client"""

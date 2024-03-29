@@ -105,7 +105,9 @@ class ReactionRecord(BaseRecord):
                     comp.optimization_record.propagate_client(self._client)
 
     @classmethod
-    def _fetch_children_multi(cls, client, record_cache, records: Iterable[ReactionRecord], recursive: bool):
+    def _fetch_children_multi(
+        cls, client, record_cache, records: Iterable[ReactionRecord], recursive: bool, force_fetch: bool = False
+    ):
         # Should be checked by the calling function
         assert records
         assert all(isinstance(x, ReactionRecord) for x in records)
@@ -126,8 +128,12 @@ class ReactionRecord(BaseRecord):
         sp_ids = list(sp_ids)
         opt_ids = list(opt_ids)
 
-        sp_records = get_records_with_cache(client, record_cache, SinglepointRecord, sp_ids, include=include)
-        opt_records = get_records_with_cache(client, record_cache, OptimizationRecord, opt_ids, include=include)
+        sp_records = get_records_with_cache(
+            client, record_cache, SinglepointRecord, sp_ids, include=include, force_fetch=force_fetch
+        )
+        opt_records = get_records_with_cache(
+            client, record_cache, OptimizationRecord, opt_ids, include=include, force_fetch=force_fetch
+        )
 
         sp_map = {r.id: r for r in sp_records}
         opt_map = {r.id: r for r in opt_records}
@@ -150,8 +156,6 @@ class ReactionRecord(BaseRecord):
             r.propagate_client(r._client)
 
     def _fetch_components(self):
-        self._assert_online()
-
         if self.components_meta_ is None:
             self._assert_online()
 

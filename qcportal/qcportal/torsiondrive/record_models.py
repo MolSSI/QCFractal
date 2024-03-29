@@ -148,7 +148,9 @@ class TorsiondriveRecord(BaseRecord):
     _minimum_optimizations_cache: Optional[Dict[Any, OptimizationRecord]] = PrivateAttr(None)
 
     @classmethod
-    def _fetch_children_multi(cls, client, record_cache, records: Iterable[TorsiondriveRecord], recursive: bool):
+    def _fetch_children_multi(
+        cls, client, record_cache, records: Iterable[TorsiondriveRecord], recursive: bool, force_fetch: bool = False
+    ):
         # Should be checked by the calling function
         assert records
         assert all(isinstance(x, TorsiondriveRecord) for x in records)
@@ -163,7 +165,9 @@ class TorsiondriveRecord(BaseRecord):
 
         include = ["**"] if recursive else None
         opt_ids = list(opt_ids)
-        opt_records = get_records_with_cache(client, record_cache, OptimizationRecord, opt_ids, include=include)
+        opt_records = get_records_with_cache(
+            client, record_cache, OptimizationRecord, opt_ids, include=include, force_fetch=force_fetch
+        )
         opt_map = {x.id: x for x in opt_records}
 
         for r in records:
@@ -213,7 +217,6 @@ class TorsiondriveRecord(BaseRecord):
 
     def _fetch_initial_molecules(self):
         self._assert_online()
-
         if self.initial_molecules_ids_ is None:
             self.initial_molecules_ids_ = self._client.make_request(
                 "get",
@@ -235,13 +238,13 @@ class TorsiondriveRecord(BaseRecord):
         self.fetch_children(False)
 
     def _fetch_minimum_optimizations(self):
-        self._assert_online()
-
-        self.minimum_optimizations_ = self._client.make_request(
-            "get",
-            f"api/v1/records/torsiondrive/{self.id}/minimum_optimizations",
-            Dict[str, int],
-        )
+        if self.minimum_optimizations_ is None:
+            self._assert_online()
+            self.minimum_optimizations_ = self._client.make_request(
+                "get",
+                f"api/v1/records/torsiondrive/{self.id}/minimum_optimizations",
+                Dict[str, int],
+            )
 
         self.fetch_children(False)
 

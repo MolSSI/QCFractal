@@ -103,7 +103,9 @@ class ManybodyRecord(BaseRecord):
                     cluster.singlepoint_record.propagate_client(client)
 
     @classmethod
-    def _fetch_children_multi(cls, client, record_cache, records: Iterable[ManybodyRecord], recursive: bool):
+    def _fetch_children_multi(
+        cls, client, record_cache, records: Iterable[ManybodyRecord], recursive: bool, force_fetch: bool = False
+    ):
         # Should be checked by the calling function
         assert records
         assert all(isinstance(x, ManybodyRecord) for x in records)
@@ -117,7 +119,9 @@ class ManybodyRecord(BaseRecord):
 
         include = ["**"] if recursive else None
         sp_ids = list(sp_ids)
-        sp_recs = get_records_with_cache(client, record_cache, SinglepointRecord, sp_ids, include=include)
+        sp_recs = get_records_with_cache(
+            client, record_cache, SinglepointRecord, sp_ids, include=include, force_fetch=force_fetch
+        )
         sp_map = {x.id: x for x in sp_recs}
 
         for r in records:
@@ -140,10 +144,8 @@ class ManybodyRecord(BaseRecord):
         self.initial_molecule_ = self._client.get_molecules([self.initial_molecule_id])[0]
 
     def _fetch_clusters(self):
-        self._assert_online()
-
         if self.clusters_meta_ is None:
-            # Will include molecules
+            self._assert_online()
             self.clusters_meta_ = self._client.make_request(
                 "get",
                 f"api/v1/records/manybody/{self.id}/clusters",
@@ -160,6 +162,6 @@ class ManybodyRecord(BaseRecord):
 
     @property
     def clusters(self) -> List[ManybodyCluster]:
-        if self.clusters_meta_ is None:
+        if self._clusters is None:
             self._fetch_clusters()
         return self._clusters

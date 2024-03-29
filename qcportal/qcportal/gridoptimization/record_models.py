@@ -212,7 +212,9 @@ class GridoptimizationRecord(BaseRecord):
                 opt.propagate_client(client)
 
     @classmethod
-    def _fetch_children_multi(cls, client, record_cache, records: Iterable[GridoptimizationRecord], recursive: bool):
+    def _fetch_children_multi(
+        cls, client, record_cache, records: Iterable[GridoptimizationRecord], recursive: bool, force_fetch: bool = False
+    ):
         # Should be checked by the calling function
         assert records
         assert all(isinstance(x, GridoptimizationRecord) for x in records)
@@ -225,7 +227,9 @@ class GridoptimizationRecord(BaseRecord):
 
         include = ["**"] if recursive else None
         opt_ids = list(opt_ids)
-        opt_records = get_records_with_cache(client, record_cache, OptimizationRecord, opt_ids, include=include)
+        opt_records = get_records_with_cache(
+            client, record_cache, OptimizationRecord, opt_ids, include=include, force_fetch=force_fetch
+        )
         opt_map = {x.id: x for x in opt_records}
 
         for r in records:
@@ -248,7 +252,6 @@ class GridoptimizationRecord(BaseRecord):
         self.starting_molecule_ = self._client.get_molecules([self.starting_molecule_id])[0]
 
     def _fetch_optimizations(self):
-        # Always fetch optimization metadata if we can
         if self.optimizations_ is None:
             self._assert_online()
             self.optimizations_ = self._client.make_request(

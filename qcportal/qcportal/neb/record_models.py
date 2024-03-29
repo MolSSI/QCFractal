@@ -161,7 +161,9 @@ class NEBRecord(BaseRecord):
                     sp2.propagate_client(client)
 
     @classmethod
-    def _fetch_children_multi(cls, client, record_cache, records: Iterable[NEBRecord], recursive: bool):
+    def _fetch_children_multi(
+        cls, client, record_cache, records: Iterable[NEBRecord], recursive: bool, force_fetch: bool = False
+    ):
         # Should be checked by the calling function
         assert records
         assert all(isinstance(x, NEBRecord) for x in records)
@@ -180,8 +182,12 @@ class NEBRecord(BaseRecord):
         sp_ids = list(sp_ids)
         opt_ids = list(opt_ids)
 
-        sp_records = get_records_with_cache(client, record_cache, SinglepointRecord, sp_ids, include=include)
-        opt_records = get_records_with_cache(client, record_cache, OptimizationRecord, opt_ids, include=include)
+        sp_records = get_records_with_cache(
+            client, record_cache, SinglepointRecord, sp_ids, include=include, force_fetch=force_fetch
+        )
+        opt_records = get_records_with_cache(
+            client, record_cache, OptimizationRecord, opt_ids, include=include, force_fetch=force_fetch
+        )
 
         sp_map = {r.id: r for r in sp_records}
         opt_map = {r.id: r for r in opt_records}
@@ -211,8 +217,6 @@ class NEBRecord(BaseRecord):
             r.propagate_client(r._client)
 
     def _fetch_optimizations(self):
-        self._assert_online()
-
         if self.optimizations_ is None:
             self._assert_online()
             self.optimizations_ = self._client.make_request(
@@ -224,8 +228,6 @@ class NEBRecord(BaseRecord):
         self.fetch_children(False)
 
     def _fetch_singlepoints(self):
-        self._assert_online()
-
         if self.singlepoints_ is None:
             self._assert_online()
             self.singlepoints_ = self._client.make_request(
@@ -237,24 +239,25 @@ class NEBRecord(BaseRecord):
         self.fetch_children(False)
 
     def _fetch_initial_chain(self):
-        self._assert_online()
-
-        self.initial_chain_molecule_ids_ = self._client.make_request(
-            "get",
-            f"api/v1/records/neb/{self.id}/initial_chain",
-            List[int],
-        )
+        if self.initial_chain_molecule_ids_ is None:
+            self._assert_online()
+            self.initial_chain_molecule_ids_ = self._client.make_request(
+                "get",
+                f"api/v1/records/neb/{self.id}/initial_chain",
+                List[int],
+            )
 
         self.initial_chain_ = self._client.get_molecules(self.initial_chain_molecule_ids_)
 
     def _fetch_neb_result(self):
-        self._assert_online()
+        if self.neb_result_ is None:
+            self._assert_online()
 
-        self.neb_result_ = self._client.make_request(
-            "get",
-            f"api/v1/records/neb/{self.id}/neb_result",
-            Optional[Molecule],
-        )
+            self.neb_result_ = self._client.make_request(
+                "get",
+                f"api/v1/records/neb/{self.id}/neb_result",
+                Optional[Molecule],
+            )
 
     @property
     def initial_chain(self) -> List[Molecule]:

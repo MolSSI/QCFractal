@@ -67,7 +67,9 @@ class OptimizationRecord(BaseRecord):
     _trajectory_records: Optional[List[SinglepointRecord]] = PrivateAttr(None)
 
     @classmethod
-    def _fetch_children_multi(cls, client, record_cache, records: Iterable[OptimizationRecord], recursive: bool):
+    def _fetch_children_multi(
+        cls, client, record_cache, records: Iterable[OptimizationRecord], recursive: bool, force_fetch: bool = False
+    ):
         # Should be checked by the calling function
         assert records
         assert all(isinstance(x, OptimizationRecord) for x in records)
@@ -80,7 +82,9 @@ class OptimizationRecord(BaseRecord):
 
         include = ["**"] if recursive else None
         sp_ids = list(sp_ids)
-        sp_records = get_records_with_cache(client, record_cache, SinglepointRecord, sp_ids, include=include)
+        sp_records = get_records_with_cache(
+            client, record_cache, SinglepointRecord, sp_ids, include=include, force_fetch=force_fetch
+        )
         sp_map = {r.id: r for r in sp_records}
 
         for r in records:
