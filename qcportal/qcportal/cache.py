@@ -153,18 +153,24 @@ class RecordCache:
     def update_records(self, records: Iterable[_RECORD_T]):
         self._assert_writable()
 
-        # TODO - update multiple at once (VALUES ((?, ?, ?, ?), (?, ?, ?, ?))
-        stmt = "REPLACE INTO records (id, status, modified_on, record) VALUES (?, ?, ?, ?) RETURNING uid"
-
         uids = []
-        for record in records:
-            r = self._conn.execute(
-                stmt, (record.id, record.status, record.modified_on.timestamp(), compress_for_cache(record))
-            )
-            uids.append(r.fetchone()[0])
+        for record_batch in chunk_iterable(records, 10):
+            n_batch = len(record_batch)
+
+            values_params = ",".join(["(?, ?, ?, ?)"] * n_batch)
+
+            all_params = []
+            for r in record_batch:
+                all_params.extend((r.id, r.status, r.modified_on.timestamp(), compress_for_cache(r)))
+
+            stmt = f"REPLACE INTO records (id, status, modified_on, record) VALUES {values_params} RETURNING uid"
+
+            u = self._conn.execute(stmt, all_params)
+            uids.extend(x[0] for x in u.fetchall())
 
         self._conn.commit()
         assert None not in uids
+        assert len(uids) == len(records)
         return uids
 
     def writeback_record(self, uid, record):
@@ -275,11 +281,16 @@ class DatasetCache(RecordCache):
 
         assert all(isinstance(e, self._entry_type) for e in entries)
 
-        # TODO - update multiple at once (VALUES ((?, ?, ?, ?), (?, ?, ?, ?))
-        for entry in entries:
-            stmt = "REPLACE INTO dataset_entries (name, entry) VALUES (?, ?)"
-            row_data = (entry.name, compress_for_cache(entry))
-            self._conn.execute(stmt, row_data)
+        for entry_batch in chunk_iterable(entries, 50):
+            n_batch = len(entry_batch)
+            values_params = ",".join(["(?, ?)"] * n_batch)
+
+            all_params = []
+            for e in entry_batch:
+                all_params.extend((e.name, compress_for_cache(e)))
+
+            stmt = f"REPLACE INTO dataset_entries (name, entry) VALUES {values_params}"
+            self._conn.execute(stmt, all_params)
 
         self._conn.commit()
 
@@ -335,11 +346,16 @@ class DatasetCache(RecordCache):
 
         assert all(isinstance(s, self._specification_type) for s in specifications)
 
-        # TODO - update multiple at once (VALUES ((?, ?, ?, ?), (?, ?, ?, ?))
-        for specification in specifications:
-            stmt = "REPLACE INTO dataset_specifications (name, specification) VALUES (?, ?)"
-            row_data = (specification.name, compress_for_cache(specification))
-            self._conn.execute(stmt, row_data)
+        for specification_batch in chunk_iterable(specifications, 50):
+            n_batch = len(specification_batch)
+            values_params = ",".join(["(?, ?)"] * n_batch)
+
+            all_params = []
+            for s in specification_batch:
+                all_params.extend((s.name, compress_for_cache(s)))
+
+            stmt = f"REPLACE INTO dataset_specifications (name, specification) VALUES {values_params}"
+            self._conn.execute(stmt, all_params)
 
         self._conn.commit()
 
@@ -409,22 +425,22 @@ class DatasetCache(RecordCache):
 
         return all_records
 
-    def update_dataset_records(self, record_info: Iterable[Tuple[str, str, int]]):
+    def update_dataset_records(self, record_info: Iterable[Tuple[str, str, _RECORD_T]]):
         self._assert_writable()
 
         assert all(isinstance(r, self._record_type) for _, _, r in record_info)
 
-        # TODO - update multiple at once (VALUES ((?, ?, ?, ?), (?, ?, ?, ?))
-        for entry_name, specification_name, record in record_info:
-            stmt = """REPLACE INTO dataset_records (entry_name, specification_name, record_id)
-                      VALUES (?, ?, ?)"""
+        for info_batch in chunk_iterable(record_info, 10):
+            n_batch = len(info_batch)
+            values_params = ",".join(["(?, ?, ?)"] * n_batch)
 
-            row_data = (
-                entry_name,
-                specification_name,
-                record.id,
-            )
-            self._conn.execute(stmt, row_data)
+            all_params = []
+            for e, s, r in info_batch:
+                all_params.extend((e, s, r.id))
+
+            stmt = f"""REPLACE INTO dataset_records (entry_name, specification_name, record_id)
+                      VALUES {values_params}"""
+            self._conn.execute(stmt, all_params)
 
         self._conn.commit()
 
