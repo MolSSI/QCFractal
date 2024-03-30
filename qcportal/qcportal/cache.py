@@ -87,13 +87,12 @@ class RecordCache:
         self._conn.execute(
             """
             CREATE TABLE IF NOT EXISTS records (
-                uid INTEGER PRIMARY KEY AUTOINCREMENT,
-                id INTEGER NOT NULL,
+                id INTEGER NOT NULL PRIMARY KEY,
                 status TEXT NOT NULL,
                 modified_on INTEGER NOT NULL,
                 record BLOB NOT NULL,
                 UNIQUE(id)
-            )
+            ) WITHOUT ROWID
             """
         )
 
@@ -106,7 +105,7 @@ class RecordCache:
         self._conn.commit()
 
     def get_record(self, record_id: int, record_type: Type[_RECORD_T]) -> Optional[_RECORD_T]:
-        stmt = "SELECT uid, record FROM records WHERE id = ?"
+        stmt = "SELECT record FROM records WHERE id = ?"
 
         record_data = self._conn.execute(stmt, (record_id,)).fetchone()
         if record_data is None:
@@ -115,7 +114,6 @@ class RecordCache:
         record = decompress_from_cache(record_data[1], record_type)
 
         record._record_cache = self
-        record._record_cache_uid = record_data[0]
 
         return record
 
@@ -124,15 +122,14 @@ class RecordCache:
 
         for record_id_batch in chunk_iterable(record_ids, _query_chunk_size):
             id_params = ",".join("?" * len(record_id_batch))
-            stmt = f"SELECT uid, record FROM records WHERE id IN ({id_params})"
+            stmt = f"SELECT record FROM records WHERE id IN ({id_params})"
 
             rdata = self._conn.execute(stmt, record_id_batch).fetchall()
 
-            for uid, compressed_record in rdata:
+            for compressed_record in rdata:
                 record = decompress_from_cache(compressed_record, record_type)
 
                 record._record_cache = self
-                record._record_cache_uid = uid
 
                 all_records.append(record)
 
@@ -153,7 +150,6 @@ class RecordCache:
     def update_records(self, records: Iterable[_RECORD_T]):
         self._assert_writable()
 
-        uids = []
         for record_batch in chunk_iterable(records, 10):
             n_batch = len(record_batch)
 
@@ -163,28 +159,25 @@ class RecordCache:
             for r in record_batch:
                 all_params.extend((r.id, r.status, r.modified_on.timestamp(), compress_for_cache(r)))
 
-            stmt = f"REPLACE INTO records (id, status, modified_on, record) VALUES {values_params} RETURNING uid"
+            stmt = f"REPLACE INTO records (id, status, modified_on, record) VALUES {values_params}"
 
-            u = self._conn.execute(stmt, all_params)
-            uids.extend(x[0] for x in u.fetchall())
+            self._conn.execute(stmt, all_params)
 
         self._conn.commit()
-        assert None not in uids
-        assert len(uids) == len(records)
-        return uids
+        for r in records:
+            r._record_cache = self
 
-    def writeback_record(self, uid, record):
+    def writeback_record(self, record):
         self._assert_writable()
 
         compressed_record = compress_for_cache(record)
 
-        # Only update if ids and uid match, and if this record is larger
+        # Only update if timestamp is same or newer, and if this record is larger
         # than what is stored already
-        # The record (based on uid) may not exist anymore in the cache, but that is ok
         stmt = """UPDATE records SET record = ?
-                  WHERE uid = ? AND id = ? AND length(record) < ?"""
+                  WHERE id = ? AND modified_on <= ? AND length(record) < ?"""
 
-        row_data = (compressed_record, uid, record.id, len(compressed_record))
+        row_data = (compressed_record, record.id, record.modified_on.timestamp(), len(compressed_record))
         self._conn.execute(stmt, row_data)
         self._conn.commit()
 
@@ -384,7 +377,7 @@ class DatasetCache(RecordCache):
         return self._conn.execute(stmt, (entry_name, specification_name)).fetchone() is not None
 
     def get_dataset_record(self, entry_name: str, specification_name: str):
-        stmt = """SELECT r.uid, r.record FROM records r
+        stmt = """SELECT r.record FROM records r
                   INNER JOIN dataset_records dr ON r.id = dr.record_id
                   WHERE dr.entry_name=? and dr.specification_name=?"""
 
@@ -392,10 +385,8 @@ class DatasetCache(RecordCache):
         if record_data is None:
             return None
 
-        record = decompress_from_cache(record_data[1], self._record_type)
-
+        record = decompress_from_cache(record_data[0], self._record_type)
         record._record_cache = self
-        record._record_cache_uid = record_data[0]
 
         return record
 
@@ -406,7 +397,7 @@ class DatasetCache(RecordCache):
         for entry_names_batch in chunk_iterable(entry_names, _query_chunk_size):
             entry_params = ",".join("?" * len(entry_names_batch))
 
-            stmt = f"""SELECT r.uid, dr.entry_name, dr.specification_name, r.record
+            stmt = f"""SELECT dr.entry_name, dr.specification_name, r.record
                        FROM dataset_records dr
                        INNER JOIN records r ON r.id = dr.record_id
                        WHERE dr.entry_name IN ({entry_params})
@@ -415,11 +406,9 @@ class DatasetCache(RecordCache):
             all_params = (*entry_names_batch, *specification_names)
             rdata = self._conn.execute(stmt, all_params).fetchall()
 
-            for uid, ename, sname, compressed_record in rdata:
+            for ename, sname, compressed_record in rdata:
                 record = decompress_from_cache(compressed_record, self._record_type)
-
                 record._record_cache = self
-                record._record_cache_uid = uid
 
                 all_records.append((ename, sname, record))
 
@@ -659,11 +648,7 @@ def get_records_with_cache(
     if records_tofetch:
         recs = client._fetch_records(record_type, list(records_tofetch), include=include)
         if record_cache is not None:
-            uids = record_cache.update_records(recs)
-
-            for u, r in zip(uids, recs):
-                r._record_cache = record_cache
-                r._record_cache_uid = u
+            record_cache.update_records(recs)
 
         existing_records += recs
 

@@ -398,7 +398,6 @@ class BaseRecord(BaseModel):
     # Local record cache we can use for child records
     # This record may also be part of the cache
     _record_cache: Optional[RecordCache] = PrivateAttr(None)
-    _record_cache_uid: Optional[int] = PrivateAttr(None)
 
     def __init__(self, client=None, **kwargs):
         BaseModel.__init__(self, **kwargs)
@@ -422,14 +421,8 @@ class BaseRecord(BaseModel):
 
     def __del__(self):
         # Sometimes this won't exist if there is an exception during construction
-        if (
-            hasattr(self, "_record_cache")
-            and hasattr(self, "_record_cache_uid")
-            and self._record_cache is not None
-            and self._record_cache_uid is not None
-            and not self._record_cache.read_only
-        ):
-            self._record_cache.writeback_record(self._record_cache_uid, self)
+        if hasattr(self, "_record_cache") and self._record_cache is not None and not self._record_cache.read_only:
+            self.sync_to_cache(True)  # Don't really *have* to detach, but why not
 
         s = super()
         if hasattr(s, "__del__"):
@@ -496,6 +489,23 @@ class BaseRecord(BaseModel):
         Fetches all children of this record recursively
         """
         self.fetch_children_multi([self], recursive)
+
+    def sync_to_cache(self, detach: bool = False):
+        """
+        Syncs this record to the cache
+
+        If `detach` is True, then the record will be removed from the cache
+        """
+
+        if self._record_cache is None:
+            return
+        if self._record_cache.read_only:
+            return
+
+        self._record_cache.writeback_record(self)
+
+        if detach:
+            self._record_cache = None
 
     def __str__(self) -> str:
         return f"<{self.__class__.__name__} id={self.id} status={self.status}>"

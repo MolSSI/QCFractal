@@ -501,9 +501,12 @@ def run_dataset_model_modify_records(ds, test_entries, test_spec):
     assert rec2.status == RecordStatusEnum.waiting
 
     # Single record
+    print("cancelling")
     ds.cancel_records(entry_name, spec_name)
     rec = ds.get_record(entry_name, spec_name)
     rec2 = ds.get_record(entry_name_2, spec_name)
+    print(rec)
+    print(rec2)
     assert rec.status == RecordStatusEnum.cancelled
     assert rec2.status == RecordStatusEnum.waiting
 
