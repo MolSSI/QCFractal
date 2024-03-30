@@ -90,8 +90,7 @@ class RecordCache:
                 id INTEGER NOT NULL PRIMARY KEY,
                 status TEXT NOT NULL,
                 modified_on INTEGER NOT NULL,
-                record BLOB NOT NULL,
-                UNIQUE(id)
+                record BLOB NOT NULL
             ) WITHOUT ROWID
             """
         )
@@ -127,7 +126,7 @@ class RecordCache:
             rdata = self._conn.execute(stmt, record_id_batch).fetchall()
 
             for compressed_record in rdata:
-                record = decompress_from_cache(compressed_record, record_type)
+                record = decompress_from_cache(compressed_record[0], record_type)
 
                 record._record_cache = self
 
@@ -174,10 +173,19 @@ class RecordCache:
 
         # Only update if timestamp is same or newer, and if this record is larger
         # than what is stored already
-        stmt = """UPDATE records SET record = ?
-                  WHERE id = ? AND modified_on <= ? AND length(record) < ?"""
+        # stmt = f"""UPDATE records (status, modified_on, record) VALUES (?,?,?)
+        #           WHERE id = ? AND modified_on <= ? AND length(record) < ?"""
+        stmt = f"""INSERT OR REPLACE INTO records (id, status, modified_on, record)
+                   SELECT ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM records WHERE id = ? AND modified_on > ?)"""
 
-        row_data = (compressed_record, record.id, record.modified_on.timestamp(), len(compressed_record))
+        row_data = (
+            record.id,
+            record.status,
+            record.modified_on.timestamp(),
+            compressed_record,
+            record.id,
+            record.modified_on.timestamp(),
+        )
         self._conn.execute(stmt, row_data)
         self._conn.commit()
 
@@ -604,12 +612,16 @@ def get_records_with_cache(
 
     If records are missing from the cache, and client is None, and exception is raised.
 
+    Newly-fetched records will not be immediately written to the cache. Instead, they will be attached to this cache
+    and will be written back to the cache when the record is destructed.
+
     If `include` is specified, additional fields will be fetched from the server. However, if the records are in the
     cache already, they may be missing those fields.
 
     This function will fetch the children of the records if enough information
     is fetched of the parent record. This is handled by the various fetch_children_multi
     class functions of the record types.
+
 
     Parameters
     ----------
@@ -647,8 +659,13 @@ def get_records_with_cache(
 
     if records_tofetch:
         recs = client._fetch_records(record_type, list(records_tofetch), include=include)
-        if record_cache is not None:
-            record_cache.update_records(recs)
+
+        # Set up for the writeback
+        for r in recs:
+            r._record_cache = record_cache
+
+        # Don't write to the cache yet. Let the writeback mechanism handle it
+        # record_cache.update_records(recs)
 
         existing_records += recs
 

@@ -866,6 +866,13 @@ class BaseDataset(BaseModel):
         # This function always fetches, so force_fetch = True
         records = get_records_with_cache(self._client, self._cache_data, self._record_type, record_ids, include, True)
 
+        # TODO - kinda hacky? We don't want the records to write themselves back to the cache on
+        #        destruction, so detach them
+        # Update the records in bulk, then detach from the record_cache so they don't write back on destruction
+        self._cache_data.update_records(records)
+        for record in records:
+            record._record_cache = None
+
         # Update the locally-stored records
         # zip(record_info, records) = ((entry_name, spec_name, record_id), record)
         update_info = [(ename, sname, r) for (ename, sname, _), r in zip(record_info, records)]
