@@ -398,6 +398,7 @@ class BaseRecord(BaseModel):
     # Local record cache we can use for child records
     # This record may also be part of the cache
     _record_cache: Optional[RecordCache] = PrivateAttr(None)
+    _cache_dirty: bool = PrivateAttr(False)
 
     def __init__(self, client=None, **kwargs):
         BaseModel.__init__(self, **kwargs)
@@ -421,7 +422,12 @@ class BaseRecord(BaseModel):
 
     def __del__(self):
         # Sometimes this won't exist if there is an exception during construction
-        if hasattr(self, "_record_cache") and self._record_cache is not None and not self._record_cache.read_only:
+        if (
+            hasattr(self, "_record_cache")
+            and self._record_cache is not None
+            and not self._record_cache.read_only
+            and self._cache_dirty
+        ):
             self.sync_to_cache(True)  # Don't really *have* to detach, but why not
 
         s = super()
@@ -509,6 +515,7 @@ class BaseRecord(BaseModel):
             return
 
         self._record_cache.writeback_record(self)
+        self._cache_dirty = False
 
         if detach:
             self._record_cache = None

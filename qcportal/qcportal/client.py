@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import math
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Union, Sequence, Iterable, TypeVar, Type
 
@@ -561,7 +562,7 @@ class PortalClient(PortalClientBase):
             endpoint = f"api/v1/records/{record_type_str}/bulkGet"
 
         max_batch_size = self.api_limits["get_records"]
-        initial_batch_size = max_batch_size // 4
+        initial_batch_size = math.ceil(max_batch_size // 10)
 
         def _download_chunk(id_chunk: List[int]):
             body = CommonBulkGetBody(ids=id_chunk, include=include, missing_ok=missing_ok)
@@ -666,6 +667,8 @@ class PortalClient(PortalClientBase):
         # is requested via include. So we always say recursive=True here, and it won't recursively download
         # children if that data is missing.
 
+        # We always force fetch here. Given that this record is not part of the cache, it shouldn't be using any
+        # Cache anyway. But the semantics of this function is that is always fetches everything
         if record_type is None:
             # Handle disparate record types
             record_groups = {}

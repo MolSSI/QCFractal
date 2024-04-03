@@ -662,10 +662,9 @@ def get_records_with_cache(
 
         # Set up for the writeback
         for r in recs:
+            # Don't write to the cache yet. Let the writeback mechanism handle it
             r._record_cache = record_cache
-
-        # Don't write to the cache yet. Let the writeback mechanism handle it
-        # record_cache.update_records(recs)
+            r._cache_dirty = True
 
         existing_records += recs
 
@@ -676,7 +675,7 @@ def get_records_with_cache(
     all_recs = {r.id: r for r in existing_records}
     ret = [all_recs.get(rid, None) for rid in record_ids]
 
-    if None in ret:
+    if any(x is None for x in ret):
         missing_ids = set(record_ids) - set(all_recs.keys())
         raise RuntimeError(
             f"Not all records found either in the cache or on the server. Missing records: {missing_ids}"
