@@ -68,31 +68,36 @@ class OptimizationRecord(BaseRecord):
 
     @classmethod
     def _fetch_children_multi(
-        cls, client, record_cache, records: Iterable[OptimizationRecord], recursive: bool, force_fetch: bool = False
+        cls,
+        client,
+        record_cache,
+        records: Iterable[OptimizationRecord],
+        include: Iterable[str],
+        force_fetch: bool = False,
     ):
         # Should be checked by the calling function
         assert records
         assert all(isinstance(x, OptimizationRecord) for x in records)
 
-        # collect all singlepoint ids for all optimizations
-        sp_ids = set()
-        for r in records:
-            if r.trajectory_ids_:
-                sp_ids.update(r.trajectory_ids_)
+        if "trajectory" in include or "**" in include:
+            # collect all singlepoint ids for all optimizations
+            sp_ids = set()
+            for r in records:
+                if r.trajectory_ids_:
+                    sp_ids.update(r.trajectory_ids_)
 
-        include = ["**"] if recursive else None
-        sp_ids = list(sp_ids)
-        sp_records = get_records_with_cache(
-            client, record_cache, SinglepointRecord, sp_ids, include=include, force_fetch=force_fetch
-        )
-        sp_map = {r.id: r for r in sp_records}
+            sp_ids = list(sp_ids)
+            sp_records = get_records_with_cache(
+                client, record_cache, SinglepointRecord, sp_ids, include=include, force_fetch=force_fetch
+            )
+            sp_map = {r.id: r for r in sp_records}
 
-        for r in records:
-            if r.trajectory_ids_ is None:
-                r._trajectory_records = None
-            else:
-                r._trajectory_records = [sp_map[x] for x in r.trajectory_ids_]
-            r.propagate_client(r._client)
+            for r in records:
+                if r.trajectory_ids_ is None:
+                    r._trajectory_records = None
+                else:
+                    r._trajectory_records = [sp_map[x] for x in r.trajectory_ids_]
+                r.propagate_client(r._client)
 
     def propagate_client(self, client):
         BaseRecord.propagate_client(self, client)
@@ -119,7 +124,7 @@ class OptimizationRecord(BaseRecord):
                 List[int],
             )
 
-        self.fetch_children(False)
+        self.fetch_children(["trajectory"])
 
     @property
     def initial_molecule(self) -> Molecule:

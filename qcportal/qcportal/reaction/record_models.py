@@ -106,54 +106,54 @@ class ReactionRecord(BaseRecord):
 
     @classmethod
     def _fetch_children_multi(
-        cls, client, record_cache, records: Iterable[ReactionRecord], recursive: bool, force_fetch: bool = False
+        cls, client, record_cache, records: Iterable[ReactionRecord], include: Iterable[str], force_fetch: bool = False
     ):
         # Should be checked by the calling function
         assert records
         assert all(isinstance(x, ReactionRecord) for x in records)
 
-        # collect all singlepoint * optimization ids for all optimization
-        sp_ids = set()
-        opt_ids = set()
+        if "components" in include or "**" in include:
+            # collect all singlepoint * optimization ids for all optimization
+            sp_ids = set()
+            opt_ids = set()
 
-        for r in records:
-            if r.components_meta_:
-                for cm in r.components_meta_:
-                    if cm.singlepoint_id is not None:
-                        sp_ids.add(cm.singlepoint_id)
-                    if cm.optimization_id is not None:
-                        opt_ids.add(cm.optimization_id)
+            for r in records:
+                if r.components_meta_:
+                    for cm in r.components_meta_:
+                        if cm.singlepoint_id is not None:
+                            sp_ids.add(cm.singlepoint_id)
+                        if cm.optimization_id is not None:
+                            opt_ids.add(cm.optimization_id)
 
-        include = ["**"] if recursive else None
-        sp_ids = list(sp_ids)
-        opt_ids = list(opt_ids)
+            sp_ids = list(sp_ids)
+            opt_ids = list(opt_ids)
 
-        sp_records = get_records_with_cache(
-            client, record_cache, SinglepointRecord, sp_ids, include=include, force_fetch=force_fetch
-        )
-        opt_records = get_records_with_cache(
-            client, record_cache, OptimizationRecord, opt_ids, include=include, force_fetch=force_fetch
-        )
+            sp_records = get_records_with_cache(
+                client, record_cache, SinglepointRecord, sp_ids, include=include, force_fetch=force_fetch
+            )
+            opt_records = get_records_with_cache(
+                client, record_cache, OptimizationRecord, opt_ids, include=include, force_fetch=force_fetch
+            )
 
-        sp_map = {r.id: r for r in sp_records}
-        opt_map = {r.id: r for r in opt_records}
+            sp_map = {r.id: r for r in sp_records}
+            opt_map = {r.id: r for r in opt_records}
 
-        for r in records:
-            if r.components_meta_ is None:
-                r._components = None
-            else:
-                r._components = []
-                for cm in r.components_meta_:
-                    rc = ReactionComponent(**cm.dict())
+            for r in records:
+                if r.components_meta_ is None:
+                    r._components = None
+                else:
+                    r._components = []
+                    for cm in r.components_meta_:
+                        rc = ReactionComponent(**cm.dict())
 
-                    if rc.singlepoint_id is not None:
-                        rc.singlepoint_record = sp_map[rc.singlepoint_id]
-                    if rc.optimization_id is not None:
-                        rc.optimization_record = opt_map[rc.optimization_id]
+                        if rc.singlepoint_id is not None:
+                            rc.singlepoint_record = sp_map[rc.singlepoint_id]
+                        if rc.optimization_id is not None:
+                            rc.optimization_record = opt_map[rc.optimization_id]
 
-                    r._components.append(rc)
+                        r._components.append(rc)
 
-            r.propagate_client(r._client)
+                r.propagate_client(r._client)
 
     def _fetch_components(self):
         if self.components_meta_ is None:
@@ -166,7 +166,7 @@ class ReactionRecord(BaseRecord):
                 List[ReactionComponentMeta],
             )
 
-        self.fetch_children(False)
+        self.fetch_children(["components"])
 
     @property
     def components(self) -> List[ReactionComponent]:

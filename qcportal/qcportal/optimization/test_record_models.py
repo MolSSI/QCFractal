@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
 
 
-all_includes = ["initial_molecule", "final_molecule", "trajectory"]
+all_includes = ["initial_molecule", "final_molecule", "trajectory", "molecule"]
 
 
 @pytest.mark.parametrize("includes", [None, ["**"], all_includes])

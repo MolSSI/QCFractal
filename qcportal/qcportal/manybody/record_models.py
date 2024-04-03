@@ -104,40 +104,40 @@ class ManybodyRecord(BaseRecord):
 
     @classmethod
     def _fetch_children_multi(
-        cls, client, record_cache, records: Iterable[ManybodyRecord], recursive: bool, force_fetch: bool = False
+        cls, client, record_cache, records: Iterable[ManybodyRecord], include: Iterable[str], force_fetch: bool = False
     ):
         # Should be checked by the calling function
         assert records
         assert all(isinstance(x, ManybodyRecord) for x in records)
 
-        # collect all singlepoint ids for all manybody records
-        sp_ids = set()
+        if "clusters" in include or "**" in include:
+            # collect all singlepoint ids for all manybody records
+            sp_ids = set()
 
-        for r in records:
-            if r.clusters_meta_:
-                sp_ids.update(x.singlepoint_id for x in r.clusters_meta_ if x.singlepoint_id is not None)
+            for r in records:
+                if r.clusters_meta_:
+                    sp_ids.update(x.singlepoint_id for x in r.clusters_meta_ if x.singlepoint_id is not None)
 
-        include = ["**"] if recursive else None
-        sp_ids = list(sp_ids)
-        sp_recs = get_records_with_cache(
-            client, record_cache, SinglepointRecord, sp_ids, include=include, force_fetch=force_fetch
-        )
-        sp_map = {x.id: x for x in sp_recs}
+            sp_ids = list(sp_ids)
+            sp_recs = get_records_with_cache(
+                client, record_cache, SinglepointRecord, sp_ids, include=include, force_fetch=force_fetch
+            )
+            sp_map = {x.id: x for x in sp_recs}
 
-        for r in records:
-            if r.clusters_meta_ is None:
-                r._clusters = None
-            else:
-                r._clusters = []
-                for cm in r.clusters_meta_:
-                    cluster = ManybodyCluster(**cm.dict())
+            for r in records:
+                if r.clusters_meta_ is None:
+                    r._clusters = None
+                else:
+                    r._clusters = []
+                    for cm in r.clusters_meta_:
+                        cluster = ManybodyCluster(**cm.dict())
 
-                    if cluster.singlepoint_id is not None:
-                        cluster.singlepoint_record = sp_map[cluster.singlepoint_id]
+                        if cluster.singlepoint_id is not None:
+                            cluster.singlepoint_record = sp_map[cluster.singlepoint_id]
 
-                    r._clusters.append(cluster)
+                        r._clusters.append(cluster)
 
-            r.propagate_client(client)
+                r.propagate_client(client)
 
     def _fetch_initial_molecule(self):
         self._assert_online()
@@ -152,7 +152,7 @@ class ManybodyRecord(BaseRecord):
                 List[ManybodyClusterMeta],
             )
 
-        self.fetch_children(False)
+        self.fetch_children(["clusters"])
 
     @property
     def initial_molecule(self) -> Molecule:

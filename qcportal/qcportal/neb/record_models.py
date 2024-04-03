@@ -162,11 +162,17 @@ class NEBRecord(BaseRecord):
 
     @classmethod
     def _fetch_children_multi(
-        cls, client, record_cache, records: Iterable[NEBRecord], recursive: bool, force_fetch: bool = False
+        cls, client, record_cache, records: Iterable[NEBRecord], include: Iterable[str], force_fetch: bool = False
     ):
         # Should be checked by the calling function
         assert records
         assert all(isinstance(x, NEBRecord) for x in records)
+
+        do_sp = "singlepoints" in include or "**" in include
+        do_opt = "optimizations" in include or "**" in include
+
+        if not do_sp and not do_opt:
+            return
 
         # Collect optimization and singlepoint ids for all NEB
         opt_ids = set()
@@ -178,31 +184,31 @@ class NEBRecord(BaseRecord):
             if r.singlepoints_ is not None:
                 sp_ids.update(x.singlepoint_id for x in r.singlepoints_)
 
-        include = ["**"] if recursive else None
         sp_ids = list(sp_ids)
         opt_ids = list(opt_ids)
 
-        sp_records = get_records_with_cache(
-            client, record_cache, SinglepointRecord, sp_ids, include=include, force_fetch=force_fetch
-        )
-        opt_records = get_records_with_cache(
-            client, record_cache, OptimizationRecord, opt_ids, include=include, force_fetch=force_fetch
-        )
-
-        sp_map = {r.id: r for r in sp_records}
-        opt_map = {r.id: r for r in opt_records}
+        if do_sp:
+            sp_records = get_records_with_cache(
+                client, record_cache, SinglepointRecord, sp_ids, include=include, force_fetch=force_fetch
+            )
+            sp_map = {r.id: r for r in sp_records}
+        if do_opt:
+            opt_records = get_records_with_cache(
+                client, record_cache, OptimizationRecord, opt_ids, include=include, force_fetch=force_fetch
+            )
+            opt_map = {r.id: r for r in opt_records}
 
         for r in records:
             if r.optimizations_ is None:
                 r._optimizations_cache = None
-            else:
+            elif do_opt:
                 r._optimizations_cache = dict()
                 for opt_key, opt_info in r.optimizations_.items():
                     r._optimizations_cache[opt_key] = opt_map[opt_info.optimization_id]
 
             if r.singlepoints_ is None:
                 r._singlepoints_cache = None
-            else:
+            elif do_sp:
                 r._singlepoints_cache = dict()
                 for sp_info in r.singlepoints_:
                     r._singlepoints_cache.setdefault(sp_info.chain_iteration, list())
@@ -225,7 +231,7 @@ class NEBRecord(BaseRecord):
                 Dict[str, NEBOptimization],
             )
 
-        self.fetch_children(False)
+        self.fetch_children(["optimizations"])
 
     def _fetch_singlepoints(self):
         if self.singlepoints_ is None:
@@ -236,7 +242,7 @@ class NEBRecord(BaseRecord):
                 List[NEBSinglepoint],
             )
 
-        self.fetch_children(False)
+        self.fetch_children(["singlepoints"])
 
     def _fetch_initial_chain(self):
         if self.initial_chain_molecule_ids_ is None:

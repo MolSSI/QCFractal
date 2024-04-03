@@ -213,35 +213,40 @@ class GridoptimizationRecord(BaseRecord):
 
     @classmethod
     def _fetch_children_multi(
-        cls, client, record_cache, records: Iterable[GridoptimizationRecord], recursive: bool, force_fetch: bool = False
+        cls,
+        client,
+        record_cache,
+        records: Iterable[GridoptimizationRecord],
+        include: Iterable[str],
+        force_fetch: bool = False,
     ):
         # Should be checked by the calling function
         assert records
         assert all(isinstance(x, GridoptimizationRecord) for x in records)
 
         # Collect optimization id for all grid optimizations
-        opt_ids = set()
-        for r in records:
-            if r.optimizations_:
-                opt_ids.update(x.optimization_id for x in r.optimizations_)
+        if "optimizations" in include or "**" in include:
+            opt_ids = set()
+            for r in records:
+                if r.optimizations_:
+                    opt_ids.update(x.optimization_id for x in r.optimizations_)
 
-        include = ["**"] if recursive else None
-        opt_ids = list(opt_ids)
-        opt_records = get_records_with_cache(
-            client, record_cache, OptimizationRecord, opt_ids, include=include, force_fetch=force_fetch
-        )
-        opt_map = {x.id: x for x in opt_records}
+            opt_ids = list(opt_ids)
+            opt_records = get_records_with_cache(
+                client, record_cache, OptimizationRecord, opt_ids, include=include, force_fetch=force_fetch
+            )
+            opt_map = {x.id: x for x in opt_records}
 
-        for r in records:
-            if r.optimizations_ is None:
-                r._optimizations_cache = None
-            else:
-                r._optimizations_cache = {}
-                for go_opt in r.optimizations_:
-                    key = deserialize_key(go_opt.key)
-                    r._optimizations_cache[key] = opt_map[go_opt.optimization_id]
+            for r in records:
+                if r.optimizations_ is None:
+                    r._optimizations_cache = None
+                else:
+                    r._optimizations_cache = {}
+                    for go_opt in r.optimizations_:
+                        key = deserialize_key(go_opt.key)
+                        r._optimizations_cache[key] = opt_map[go_opt.optimization_id]
 
-            r.propagate_client(r._client)
+                r.propagate_client(r._client)
 
     def _fetch_initial_molecule(self):
         self._assert_online()
@@ -260,7 +265,7 @@ class GridoptimizationRecord(BaseRecord):
                 List[GridoptimizationOptimization],
             )
 
-        self.fetch_children(False)
+        self.fetch_children(["optimizations"])
 
     @property
     def initial_molecule(self) -> Molecule:

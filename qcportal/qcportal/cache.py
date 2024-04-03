@@ -670,7 +670,7 @@ def get_records_with_cache(
         existing_records += recs
 
     # Fetch all children as well
-    record_type.fetch_children_multi(existing_records, True)
+    record_type.fetch_children_multi(existing_records, include=include, force_fetch=force_fetch)
 
     # Return everything in the same order as the input
     all_recs = {r.id: r for r in existing_records}

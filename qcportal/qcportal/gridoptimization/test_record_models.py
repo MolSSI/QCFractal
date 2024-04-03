@@ -12,7 +12,7 @@ from qcportal.record_models import RecordStatusEnum
 if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
 
-all_includes = ["initial_molecule", "starting_molecule", "optimizations"]
+all_includes = ["initial_molecule", "starting_molecule", "optimizations", "final_molecule", "initial_molecule"]
 
 
 @pytest.mark.parametrize("includes", [None, ["**"], all_includes])

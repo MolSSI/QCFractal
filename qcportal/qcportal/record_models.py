@@ -441,7 +441,7 @@ class BaseRecord(BaseModel):
 
     @classmethod
     def _fetch_children_multi(
-        cls, client, record_cache, records: Iterable[BaseRecord], recursive: bool, force_fetch: bool = False
+        cls, client, record_cache, records: Iterable[BaseRecord], include: Iterable[str], force_fetch: bool = False
     ):
         """
         Fetches all children of the given records recursively
@@ -454,9 +454,11 @@ class BaseRecord(BaseModel):
         pass
 
     @classmethod
-    def fetch_children_multi(cls, records: Iterable[Optional[BaseRecord]], recursive: bool, force_fetch: bool = False):
+    def fetch_children_multi(
+        cls, records: Iterable[Optional[BaseRecord]], include: Optional[Iterable[str]] = None, force_fetch: bool = False
+    ):
         """
-        Fetches all children of the given records recursively
+        Fetches all children of the given records
 
         This tries to work efficiently, fetching larger batches of children
         that can span multiple records
@@ -472,7 +474,7 @@ class BaseRecord(BaseModel):
         # Get the first record (for the client and other info)
         template_record = next(iter(records))
 
-        if not all(type(r) == type(template_record) for r in records):
+        if not all(isinstance(r, type(template_record)) for r in records):
             raise RuntimeError("Fetching children of records with different types is not supported.")
 
         if not all(r._client is template_record._client for r in records):
@@ -482,13 +484,17 @@ class BaseRecord(BaseModel):
             raise RuntimeError("Fetching children of records with different record caches is not supported.")
 
         # Call the derived class function
-        cls._fetch_children_multi(template_record._client, template_record._record_cache, records, recursive)
+        if include is None:
+            include = []
+        cls._fetch_children_multi(
+            template_record._client, template_record._record_cache, records, include=include, force_fetch=force_fetch
+        )
 
-    def fetch_children(self, recursive: bool):
+    def fetch_children(self, include: Optional[Iterable[str]] = None, force_fetch: bool = False):
         """
         Fetches all children of this record recursively
         """
-        self.fetch_children_multi([self], recursive)
+        self.fetch_children_multi([self], include, force_fetch)
 
     def sync_to_cache(self, detach: bool = False):
         """

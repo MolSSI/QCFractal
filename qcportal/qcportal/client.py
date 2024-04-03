@@ -674,9 +674,9 @@ class PortalClient(PortalClientBase):
                     record_groups.setdefault(r.record_type, [])
                     record_groups[r.record_type].append(r)
             for v in record_groups.values():
-                v[0].fetch_children_multi(v, True)
+                v[0].fetch_children_multi(v, include, force_fetch=True)
         else:
-            record_type.fetch_children_multi(all_records, True)
+            record_type.fetch_children_multi(all_records, include, force_fetch=True)
 
         if is_single:
             return all_records[0]

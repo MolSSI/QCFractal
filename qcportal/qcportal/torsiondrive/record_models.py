@@ -149,21 +149,34 @@ class TorsiondriveRecord(BaseRecord):
 
     @classmethod
     def _fetch_children_multi(
-        cls, client, record_cache, records: Iterable[TorsiondriveRecord], recursive: bool, force_fetch: bool = False
+        cls,
+        client,
+        record_cache,
+        records: Iterable[TorsiondriveRecord],
+        include: Iterable[str],
+        force_fetch: bool = False,
     ):
         # Should be checked by the calling function
         assert records
         assert all(isinstance(x, TorsiondriveRecord) for x in records)
 
+        do_opt = "optimizations" in include or "**" in include
+        do_minopt = "minimum_optimizations" in include or "**" in include
+
+        if not do_opt and not do_minopt:
+            return
+
         # Collect optimization id for all torsiondrives
         opt_ids = set()
         for r in records:
-            if r.optimizations_:
+            if r.optimizations_ and do_opt:
                 opt_ids.update(x.optimization_id for x in r.optimizations_)
-            if r.minimum_optimizations_:
+            if r.minimum_optimizations_ and do_minopt:
                 opt_ids.update(r.minimum_optimizations_.values())
 
-        include = ["**"] if recursive else None
+        if not opt_ids:
+            return
+
         opt_ids = list(opt_ids)
         opt_records = get_records_with_cache(
             client, record_cache, OptimizationRecord, opt_ids, include=include, force_fetch=force_fetch
@@ -171,20 +184,22 @@ class TorsiondriveRecord(BaseRecord):
         opt_map = {x.id: x for x in opt_records}
 
         for r in records:
-            r._optimizations_cache = None
-            r._minimum_optimizations_cache = None
+            if do_opt:
+                r._optimizations_cache = None
+            if do_minopt or do_opt:
+                r._minimum_optimizations_cache = None
 
             if r.optimizations_ is None and r.minimum_optimizations_ is None:
                 continue
 
-            if r.optimizations_ is not None:
+            if do_opt and r.optimizations_ is not None:
                 r._optimizations_cache = {}
                 for td_opt in r.optimizations_:
                     key = deserialize_key(td_opt.key)
                     r._optimizations_cache.setdefault(key, list())
                     r._optimizations_cache[key].append(opt_map[td_opt.optimization_id])
 
-            if r.minimum_optimizations_ is None and r.optimizations_ is not None:
+            if r.minimum_optimizations_ is None and r.optimizations_ is not None and do_opt:
                 # find the minimum optimizations for each key from what we have in the optimizations
                 # chooses the lowest id if there are records with the same energy
                 r.minimum_optimizations_ = {}
@@ -195,7 +210,7 @@ class TorsiondriveRecord(BaseRecord):
                         lowest_opt = min(v2, key=lambda x: (x.energies[-1], x.id))
                         r.minimum_optimizations_[serialize_key(k)] = lowest_opt.id
 
-            if r.minimum_optimizations_ is not None:  # either from the server or from above
+            if do_minopt or do_opt and r.minimum_optimizations_ is not None:  # either from the server or from above
                 r._minimum_optimizations_cache = {
                     deserialize_key(k): opt_map[v] for k, v in r.minimum_optimizations_.items()
                 }
@@ -235,7 +250,7 @@ class TorsiondriveRecord(BaseRecord):
                 List[TorsiondriveOptimization],
             )
 
-        self.fetch_children(False)
+        self.fetch_children(["optimizations"])
 
     def _fetch_minimum_optimizations(self):
         if self.minimum_optimizations_ is None:
@@ -246,7 +261,7 @@ class TorsiondriveRecord(BaseRecord):
                 Dict[str, int],
             )
 
-        self.fetch_children(False)
+        self.fetch_children(["minimum_optimizations"])
 
     @property
     def initial_molecules(self) -> List[Molecule]:
