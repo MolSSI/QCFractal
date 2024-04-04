@@ -9,13 +9,12 @@ try:
 except ImportError:
     import pydantic
 from qcelemental.models import FailedOperation
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import array
-from sqlalchemy.orm import joinedload, aliased, Load
+from sqlalchemy.orm import joinedload, Load
 
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.record_db_models import BaseRecordORM
-from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcportal.all_results import AllResultTypes
 from qcportal.compression import CompressionEnum, compress
 from qcportal.compression import decompress
@@ -250,23 +249,6 @@ class TaskSocket:
         # to claim absolutely everything. So double check here
         limit = calculate_limit(self._tasks_claim_limit, limit)
 
-        # CTE for finding the created_on from services which this record is a dependency of
-        # If a record is a dependency of a service, we use either the record's created_on or the service's created_on,
-        # whichever is earlier. That way a service doesn't have to wait for all other services to finish their tasks
-        # before it can finish.
-        br_task = aliased(BaseRecordORM)  # BaseRecord for the task
-        br_svc = aliased(BaseRecordORM)  # BaseRecord for services
-
-        least_date = func.least(br_task.created_on, func.min(br_svc.created_on)).label("created_on")
-        svcdate_cte = select(br_task.id.label("record_id"), least_date)
-        svcdate_cte = svcdate_cte.join(ServiceDependencyORM, ServiceDependencyORM.record_id == br_task.id)
-        svcdate_cte = svcdate_cte.join(ServiceQueueORM, ServiceQueueORM.id == ServiceDependencyORM.service_id)
-        svcdate_cte = svcdate_cte.join(br_svc, br_svc.id == ServiceQueueORM.record_id)
-        svcdate_cte = svcdate_cte.where(br_task.status == RecordStatusEnum.waiting)
-        svcdate_cte = svcdate_cte.group_by(br_task.id)
-        svcdate_cte = svcdate_cte.order_by(least_date.asc())
-        svcdate_cte = svcdate_cte.cte()
-
         with self.root_socket.optional_session(session) as session:
             stmt = select(ComputeManagerORM).where(ComputeManagerORM.name == manager_name)
             stmt = stmt.with_for_update(skip_locked=False)
@@ -311,27 +293,21 @@ class TaskSocket:
                 # TODO - we only test for the presence of the available_programs in the requirements. Eventually
                 #        we want to then verify the versions
 
-                # We do a plain .join() because we are querying, and then also supplying contains_eager() so that
-                # the TaskQueueORM.record gets populated
-                # See https://docs-sqlalchemy.readthedocs.io/ko/latest/orm/loading_relationships.html#routing-explicit-joins-statements-into-eagerly-loaded-collections
                 stmt = select(TaskQueueORM, BaseRecordORM).join(TaskQueueORM.record)
 
-                # Only load a few columns we need of the record
+                # Only load a few columns we need of the record itself
                 stmt = stmt.options(
                     Load(BaseRecordORM).load_only(
                         BaseRecordORM.status, BaseRecordORM.manager_name, BaseRecordORM.modified_on
                     )
                 )
 
-                stmt = stmt.join(svcdate_cte, svcdate_cte.c.record_id == BaseRecordORM.id, isouter=True)
                 stmt = stmt.filter(BaseRecordORM.status == RecordStatusEnum.waiting)
                 stmt = stmt.filter(search_programs.contains(TaskQueueORM.required_programs))
 
-                # Order by priority, then created_on (earliest first)
-                # Where the created_on may be the created_on of the parent service (see CTE above)
-                stmt = stmt.order_by(
-                    TaskQueueORM.priority.desc(), func.least(BaseRecordORM.created_on, svcdate_cte.c.created_on).asc()
-                )
+                # Order by priority, then date (earliest first)
+                # The sort_date usually comes from the created_on of the record, or the created_on of the record's parent service
+                stmt = stmt.order_by(TaskQueueORM.priority.desc(), TaskQueueORM.sort_date.asc(), TaskQueueORM.id.asc())
 
                 # If tag is "*", then the manager will pull anything
                 if tag != "*":

@@ -57,13 +57,18 @@ def test_service_socket_error(storage_socket: SQLAlchemySocket, session: Session
 
 
 def test_service_socket_iterate_order(storage_socket: SQLAlchemySocket, session: Session):
-    storage_socket.services._max_active_services = 1
+    # TODO - Ugly
+    max_active_services = storage_socket.services._max_active_services
+    try:
+        storage_socket.services._max_active_services = 1
 
-    id_1, _ = submit_td_test_data(storage_socket, "td_H2O2_mopac_pm6", "*", PriorityEnum.normal)
-    id_2, _ = submit_go_test_data(storage_socket, "go_H3NS_psi4_pbe", "*", PriorityEnum.high)
+        id_1, _ = submit_td_test_data(storage_socket, "td_H2O2_mopac_pm6", "*", PriorityEnum.normal)
+        id_2, _ = submit_go_test_data(storage_socket, "go_H3NS_psi4_pbe", "*", PriorityEnum.high)
 
-    with storage_socket.session_scope() as s:
-        storage_socket.services.iterate_services(s, DummyJobProgress())
+        with storage_socket.session_scope() as s:
+            storage_socket.services.iterate_services(s, DummyJobProgress())
 
-    assert session.get(BaseRecordORM, id_1).status == RecordStatusEnum.waiting
-    assert session.get(BaseRecordORM, id_2).status == RecordStatusEnum.running
+        assert session.get(BaseRecordORM, id_1).status == RecordStatusEnum.waiting
+        assert session.get(BaseRecordORM, id_2).status == RecordStatusEnum.running
+    finally:
+        storage_socket.services._max_active_services = max_active_services

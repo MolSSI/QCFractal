@@ -1112,8 +1112,41 @@ class RecordSocket:
             )
             return False
 
-        else:
-            return service_socket.iterate_service(session, service_orm)
+        # Actually iterate the service
+        finished = service_socket.iterate_service(session, service_orm)
+
+        if not finished:
+            # Update the sort_date on any tasks that were created
+            # The sort date should almost always be the created_on of the parent service
+            # This way, earlier services will have their tasks run first, rather than having to wait
+            # for all other services' tasks to finish
+            # But, it should be the earliest time for all services that depend on that record
+
+            br = aliased(BaseRecordORM)  # BaseRecord for a dependent record
+            br_svc = aliased(BaseRecordORM)  # BaseRecord for the parent service(s)
+
+            earliest = func.least(br.created_on, func.min(br_svc.created_on)).label("created_on")
+            stmt = select(br.id.label("record_id"), earliest)
+            stmt = stmt.join(ServiceDependencyORM, ServiceDependencyORM.record_id == br.id, isouter=True)
+            stmt = stmt.join(ServiceQueueORM, ServiceQueueORM.id == ServiceDependencyORM.service_id, isouter=True)
+            stmt = stmt.join(br_svc, br_svc.id == ServiceQueueORM.record_id, isouter=True)
+            stmt = stmt.where(ServiceQueueORM.id == service_orm.id)
+            stmt = stmt.group_by(br.id)
+
+            least_dates = session.execute(stmt).all()
+            least_dates = {x[0]: x[1] for x in least_dates}
+
+            for svc_record in service_orm.dependencies:
+                # print("HERE", svc_record.record_id, svc_record.record.status, svc_record.record.task)
+                if svc_record.record_id not in least_dates:
+                    continue
+
+                if svc_record.record.is_service:
+                    raise RuntimeError("Cannot have a service as a dependency of a service (yet)")
+                elif svc_record.record.task is not None:
+                    svc_record.record.task.sort_date = least_dates[svc_record.record_id]
+
+        return finished
 
     def update_failed_service(self, session, record_orm: BaseRecordORM, error_info: Dict[str, Any]):
         """
