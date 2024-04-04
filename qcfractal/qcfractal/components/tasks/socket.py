@@ -259,12 +259,13 @@ class TaskSocket:
 
         least_date = func.least(br_task.created_on, func.min(br_svc.created_on)).label("created_on")
         svcdate_cte = select(br_task.id.label("record_id"), least_date)
-        svcdate_cte = svcdate_cte.join(ServiceDependencyORM, ServiceDependencyORM.record_id == br_task.id)
-        svcdate_cte = svcdate_cte.join(ServiceQueueORM, ServiceQueueORM.id == ServiceDependencyORM.service_id)
-        svcdate_cte = svcdate_cte.join(br_svc, br_svc.id == ServiceQueueORM.record_id)
+        svcdate_cte = svcdate_cte.join(ServiceDependencyORM, ServiceDependencyORM.record_id == br_task.id, isouter=True)
+        svcdate_cte = svcdate_cte.join(
+            ServiceQueueORM, ServiceQueueORM.id == ServiceDependencyORM.service_id, isouter=True
+        )
+        svcdate_cte = svcdate_cte.join(br_svc, br_svc.id == ServiceQueueORM.record_id, isouter=True)
         svcdate_cte = svcdate_cte.where(br_task.status == RecordStatusEnum.waiting)
         svcdate_cte = svcdate_cte.group_by(br_task.id)
-        svcdate_cte = svcdate_cte.order_by(least_date.asc())
         svcdate_cte = svcdate_cte.cte()
 
         with self.root_socket.optional_session(session) as session:
@@ -323,14 +324,13 @@ class TaskSocket:
                     )
                 )
 
-                stmt = stmt.join(svcdate_cte, svcdate_cte.c.record_id == BaseRecordORM.id, isouter=True)
-                stmt = stmt.filter(BaseRecordORM.status == RecordStatusEnum.waiting)
+                stmt = stmt.join(svcdate_cte, svcdate_cte.c.record_id == BaseRecordORM.id)
                 stmt = stmt.filter(search_programs.contains(TaskQueueORM.required_programs))
 
                 # Order by priority, then created_on (earliest first)
                 # Where the created_on may be the created_on of the parent service (see CTE above)
                 stmt = stmt.order_by(
-                    TaskQueueORM.priority.desc(), func.least(BaseRecordORM.created_on, svcdate_cte.c.created_on).asc()
+                    TaskQueueORM.priority.desc(), svcdate_cte.c.created_on.asc(), TaskQueueORM.id.asc()
                 )
 
                 # If tag is "*", then the manager will pull anything
