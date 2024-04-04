@@ -8,11 +8,12 @@ from sqlalchemy import (
     CheckConstraint,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import ARRAY, TEXT
+from sqlalchemy.dialects.postgresql import ARRAY, TEXT, TIMESTAMP
 from sqlalchemy.orm import relationship
 
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.db_socket import BaseORM
+from qcportal.utils import now_at_utc
 
 
 class TaskQueueORM(BaseORM):
@@ -31,6 +32,7 @@ class TaskQueueORM(BaseORM):
     # when claiming tasks don't work
     required_programs = Column(ARRAY(TEXT), nullable=False)
 
+    sort_date = Column(TIMESTAMP(timezone=True), default=now_at_utc(), nullable=False)
     tag = Column(String, nullable=False)
     priority = Column(Integer, nullable=False)
 
@@ -43,7 +45,8 @@ class TaskQueueORM(BaseORM):
     # can be retrieved directly, without scanning the remainder at all.
     __table_args__ = (
         Index("ix_task_queue_tag", "tag"),
-        Index("ix_task_queue_required_programs", "required_programs"),
+        Index("ix_task_queue_required_programs", "required_programs", postgresql_using="gin"),
+        Index("ix_task_queue_sort", priority.desc(), sort_date.asc(), id.asc()),
         UniqueConstraint("record_id", name="ux_task_queue_record_id"),
         # WARNING - these are not autodetected by alembic
         CheckConstraint(
@@ -51,3 +54,6 @@ class TaskQueueORM(BaseORM):
         ),
         CheckConstraint("tag = LOWER(tag)", name="ck_task_queue_tag_lower"),
     )
+
+    # Remove sort_date from the model. For backwards compatibility (and because it's only used for sorting)
+    _qcportal_model_excludes = ["sort_date"]

@@ -109,7 +109,6 @@ class OutputStoreORM(BaseORM):
         return decompress(self.data, self.compression_type)
 
 
-
 # Mark the storage of the data column as external
 event.listen(
     OutputStoreORM.__table__,
@@ -272,7 +271,7 @@ class BaseRecordORM(BaseORM):
         Index("ix_base_record_manager_name", "manager_name"),
         Index("ix_base_record_owner_user_id", "owner_user_id"),
         Index("ix_base_record_owner_group_id", "owner_group_id"),
-        Index("ix_base_record_created_on", "created_on", postgresql_using="brin"),
+        Index("ix_base_record_created_on", "created_on"),
         Index("ix_base_record_modified_on", "modified_on"),
         ForeignKeyConstraint(
             ["owner_user_id", "owner_group_id"],

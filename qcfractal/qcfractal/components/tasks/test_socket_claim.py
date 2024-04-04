@@ -11,6 +11,11 @@ from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.optimization.testing_helpers import load_test_data as load_opt_test_data
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.singlepoint.testing_helpers import load_test_data as load_sp_test_data
+from qcfractal.components.torsiondrive.testing_helpers import (
+    load_test_data as load_td_test_data,
+    generate_task_key as generate_td_task_key,
+)
+from qcfractal.testing_helpers import run_service
 from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerName
 from qcportal.record_models import PriorityEnum
@@ -400,3 +405,58 @@ def test_task_socket_claim_tags_missing(storage_socket: SQLAlchemySocket):
 
     with pytest.raises(ComputeManagerError, match="did not send any valid queue tags to claim"):
         storage_socket.tasks.claim_tasks(mname1.fullname, claim_prog, [], 100)
+
+
+def test_task_socket_claim_service_order(storage_socket: SQLAlchemySocket, session: Session):
+    input_spec_1, molecules_1, result_data_1 = load_td_test_data("td_H2O2_psi4_pbe")
+    input_spec_2, molecules_2, result_data_2 = load_td_test_data("td_H2O2_mopac_pm6")
+
+    mname1 = ManagerName(cluster="test_cluster", hostname="a_host1", uuid="1234-5678-1234-5678")
+
+    mprog1 = {"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"], "mopac": ["unknown"]}
+
+    mid_1 = storage_socket.managers.activate(
+        name_data=mname1,
+        manager_version="v2.0",
+        username="bill",
+        programs=mprog1,
+        tags=["*"],
+    )
+
+    meta_1, id_1 = storage_socket.records.torsiondrive.add(
+        [molecules_1], input_spec_1, True, "tag1", PriorityEnum.low, None, None, True
+    )
+    meta_2, id_2 = storage_socket.records.torsiondrive.add(
+        [molecules_2], input_spec_2, True, "tag1", PriorityEnum.low, None, None, True
+    )
+
+    id_1 = id_1[0]
+    id_2 = id_2[0]
+
+    finished, n_records = run_service(storage_socket, mname1, id_1, generate_td_task_key, result_data_1, 1)
+    finished, n_records = run_service(storage_socket, mname1, id_2, generate_td_task_key, result_data_2, 1)
+    assert finished is False
+
+    # Iterate the second service first
+    with storage_socket.session_scope() as session:
+        service_orm = session.get(BaseRecordORM, id_2).service
+        finished = storage_socket.records.iterate_service(session, service_orm)
+        assert finished is False
+
+    with storage_socket.session_scope() as session:
+        service_orm = session.get(BaseRecordORM, id_1).service
+        finished = storage_socket.records.iterate_service(session, service_orm)
+        assert finished is False
+
+    # The manager should claim tasks belonging to that first service, not the second
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, mprog1, ["*"], 1)
+    assert len(tasks) == 1
+
+    with storage_socket.session_scope() as session:
+        service_orm = session.get(BaseRecordORM, id_1).service
+        dep_ids = [d.record_id for d in service_orm.dependencies]
+        assert tasks[0]["record_id"] in dep_ids
+
+        service_orm_2 = session.get(BaseRecordORM, id_2).service
+        dep_ids_2 = [d.record_id for d in service_orm_2.dependencies]
+        assert tasks[0]["record_id"] not in dep_ids_2
