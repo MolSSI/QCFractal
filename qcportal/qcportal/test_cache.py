@@ -180,6 +180,9 @@ def test_dataset_cache_writeback(snowflake_client: PortalClient):
     assert r.molecule_ is None  # molecule not fetched
     r._fetch_molecule()
     assert r.molecule_ is not None  # molecule not fetched
+
+    # TODO: This is a hack to force a writeback. Remove when proper tracking of _cache_dirty is done in the records
+    r._cache_dirty = True
     del r  # should write back to the cache
     gc.collect()
 

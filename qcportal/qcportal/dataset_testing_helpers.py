@@ -464,6 +464,10 @@ def run_dataset_model_iterate_updated(snowflake_client, ds, test_entries, test_s
     snowflake_client.cancel_records(rid)
 
     # Disable auto updating
+    # First, we need to sync the existing records to the cache
+    # Otherwise, the records may not exist in the cache and will be fetched fresh from the server
+    for _, _, r in all_records:
+        r.sync_to_cache(True)
     all_records = list(ds.iterate_records(fetch_updated=False))
     cancelled = [(e, s, r) for e, s, r in all_records if r.status == RecordStatusEnum.cancelled]
     assert len(cancelled) == 1  # did not fetch the newly-cancelled one
@@ -501,12 +505,9 @@ def run_dataset_model_modify_records(ds, test_entries, test_spec):
     assert rec2.status == RecordStatusEnum.waiting
 
     # Single record
-    print("cancelling")
     ds.cancel_records(entry_name, spec_name)
     rec = ds.get_record(entry_name, spec_name)
     rec2 = ds.get_record(entry_name_2, spec_name)
-    print(rec)
-    print(rec2)
     assert rec.status == RecordStatusEnum.cancelled
     assert rec2.status == RecordStatusEnum.waiting
 

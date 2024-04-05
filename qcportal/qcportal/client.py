@@ -525,7 +525,8 @@ class PortalClient(PortalClientBase):
 
         Records will be returned in the same order as the record ids. This function always returns a list.
 
-        This function only fetches the top-level records - it does not fetch the children of the records.
+        This function only fetches the top-level records - it does not fetch the children of the records. It also
+        does not use caching at all.
 
         Parameters
         ----------
@@ -630,13 +631,15 @@ class PortalClient(PortalClientBase):
         include: Optional[Iterable[str]] = None,
     ) -> Union[Optional[_T], List[Optional[_T]]]:
         """
-        Obtain records of a particular type with the specified IDs.
+        Obtain records of a particular type with the specified IDs from the server.
 
         Records will be returned in the same order as the record ids.
 
         This function will fetch the children of the records if enough information
         is fetched of the parent record. This is handled by the various fetch_children_multi
         class functions of the record types.
+
+        This function does not use the cache.
 
         Parameters
         ----------
@@ -663,12 +666,8 @@ class PortalClient(PortalClientBase):
         record_ids = make_list(record_ids)
         all_records = self._fetch_records(record_type, record_ids, missing_ok, include)
 
-        # In general, fetching children should only happen if the metadata for the children
-        # is requested via include. So we always say recursive=True here, and it won't recursively download
-        # children if that data is missing.
-
         # We always force fetch here. Given that this record is not part of the cache, it shouldn't be using any
-        # Cache anyway. But the semantics of this function is that is always fetches everything
+        # cache anyway. But the semantics of this function is that is always fetches everything
         if record_type is None:
             # Handle disparate record types
             record_groups = {}

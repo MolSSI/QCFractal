@@ -89,7 +89,7 @@ class RecordCache:
             CREATE TABLE IF NOT EXISTS records (
                 id INTEGER NOT NULL PRIMARY KEY,
                 status TEXT NOT NULL,
-                modified_on INTEGER NOT NULL,
+                modified_on DECIMAL NOT NULL,
                 record BLOB NOT NULL
             ) WITHOUT ROWID
             """
@@ -165,6 +165,7 @@ class RecordCache:
         self._conn.commit()
         for r in records:
             r._record_cache = self
+            r._cache_dirty = False
 
     def writeback_record(self, record):
         self._assert_writable()
@@ -173,20 +174,30 @@ class RecordCache:
 
         # Only update if timestamp is same or newer, and if this record is larger
         # than what is stored already
-        # stmt = f"""UPDATE records (status, modified_on, record) VALUES (?,?,?)
-        #           WHERE id = ? AND modified_on <= ? AND length(record) < ?"""
         stmt = f"""INSERT OR REPLACE INTO records (id, status, modified_on, record)
-                   SELECT ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM records WHERE id = ? AND modified_on > ?)"""
+                   SELECT ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM records WHERE id = ?
+                   AND (modified_on > ? OR (modified_on = ? and length(record) > ?)))"""
 
-        row_data = (
-            record.id,
-            record.status,
-            record.modified_on.timestamp(),
-            compressed_record,
-            record.id,
-            record.modified_on.timestamp(),
-        )
+        ts = record.modified_on.timestamp()
+        row_data = (record.id, record.status, ts, compressed_record, record.id, ts, ts, len(compressed_record))
         self._conn.execute(stmt, row_data)
+        self._conn.commit()
+
+    def delete_record(self, record_id: int):
+        self._assert_writable()
+
+        stmt = "DELETE FROM records WHERE id=?"
+        self._conn.execute(stmt, (record_id,))
+        self._conn.commit()
+
+    def delete_records(self, record_ids: Iterable[int]):
+        self._assert_writable()
+
+        for record_id_batch in chunk_iterable(record_ids, _query_chunk_size):
+            record_id_params = ",".join("?" * len(record_id_batch))
+            stmt = f"DELETE FROM records WHERE id IN ({record_id_params})"
+            self._conn.execute(stmt, record_id_batch)
+
         self._conn.commit()
 
 
@@ -236,8 +247,7 @@ class DatasetCache(RecordCache):
                 record_id INTEGER NOT NULL,
                 PRIMARY KEY (entry_name, specification_name),
                 FOREIGN KEY (entry_name) REFERENCES dataset_entries(name) ON DELETE CASCADE ON UPDATE CASCADE,
-                FOREIGN KEY (specification_name) REFERENCES dataset_specifications(name) ON DELETE CASCADE ON UPDATE CASCADE,
-                FOREIGN KEY (record_id) REFERENCES records (id)
+                FOREIGN KEY (specification_name) REFERENCES dataset_specifications(name) ON DELETE CASCADE ON UPDATE CASCADE
             )
         """
         )
@@ -384,7 +394,7 @@ class DatasetCache(RecordCache):
         stmt = "SELECT 1 FROM dataset_records WHERE entry_name=? and specification_name=?"
         return self._conn.execute(stmt, (entry_name, specification_name)).fetchone() is not None
 
-    def get_dataset_record(self, entry_name: str, specification_name: str):
+    def get_dataset_record(self, entry_name: str, specification_name: str) -> Optional[_RECORD_T]:
         stmt = """SELECT r.record FROM records r
                   INNER JOIN dataset_records dr ON r.id = dr.record_id
                   WHERE dr.entry_name=? and dr.specification_name=?"""
@@ -398,7 +408,12 @@ class DatasetCache(RecordCache):
 
         return record
 
-    def get_dataset_records(self, entry_names: Iterable[str], specification_names: Iterable[str]):
+    def get_dataset_records(
+        self,
+        entry_names: Iterable[str],
+        specification_names: Iterable[str],
+        status: Optional[Iterable[RecordStatusEnum]] = None,
+    ) -> List[Tuple[str, str, _RECORD_T]]:
         specification_params = ",".join("?" * len(specification_names))
         all_records = []
 
@@ -412,6 +427,12 @@ class DatasetCache(RecordCache):
                        AND dr.specification_name IN ({specification_params})"""
 
             all_params = (*entry_names_batch, *specification_names)
+
+            if status:
+                status_params = ",".join("?" * len(status))
+                stmt = stmt + f"AND r.status IN ({status_params})"
+                all_params = (*all_params, *status)
+
             rdata = self._conn.execute(stmt, all_params).fetchall()
 
             for ename, sname, compressed_record in rdata:
@@ -613,10 +634,11 @@ def get_records_with_cache(
     If records are missing from the cache, and client is None, and exception is raised.
 
     Newly-fetched records will not be immediately written to the cache. Instead, they will be attached to this cache
-    and will be written back to the cache when the record is destructed.
+    and will be written back to the cache when the record object is destructed.
 
     If `include` is specified, additional fields will be fetched from the server. However, if the records are in the
-    cache already, they may be missing those fields.
+    cache already, they may be missing those fields. In that case, the additional information may be fetched
+    from the server. If a client is not provided, an exception will be raised.
 
     This function will fetch the children of the records if enough information
     is fetched of the parent record. This is handled by the various fetch_children_multi
@@ -654,10 +676,10 @@ def get_records_with_cache(
         existing_records = record_cache.get_records(record_ids, record_type)
         records_tofetch = set(record_ids) - {x.id for x in existing_records}
 
-    if client is None and records_tofetch:
-        raise RuntimeError("Need to fetch some records, but not connected to a client")
-
     if records_tofetch:
+        if client is None:
+            raise RuntimeError("Need to fetch some records, but not connected to a client")
+
         recs = client._fetch_records(record_type, list(records_tofetch), include=include)
 
         # Set up for the writeback
