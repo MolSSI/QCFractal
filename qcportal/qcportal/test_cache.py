@@ -5,7 +5,7 @@ import threading
 from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
-from qcportal.dataset_models import dataset_from_cache
+from qcportal.dataset_models import load_dataset_view
 from qcportal.record_models import RecordStatusEnum
 from qcportal.singlepoint import SinglepointDataset
 from qcportal.singlepoint.test_dataset_models import test_specs, test_entries
@@ -276,6 +276,6 @@ def test_dataset_cache_fromfile_view(snowflake: QCATestingSnowflake, tmp_path):
     del ds
     gc.collect()
 
-    ds2 = dataset_from_cache(cachefile_path)
+    ds2 = load_dataset_view(cachefile_path)
     assert ds2.is_view
     assert ds2.get_record(test_entries[0].name, "spec_1") is not None

@@ -75,6 +75,8 @@ from .dataset_models import (
     DatasetDeleteParams,
     DatasetAddBody,
     dataset_from_dict,
+    load_dataset_view,
+    create_dataset_view,
 )
 from .internal_jobs import InternalJob, InternalJobQueryFilters, InternalJobQueryIterator, InternalJobStatusEnum
 from .managers import ManagerQueryFilters, ManagerQueryIterator, ComputeManager
@@ -269,6 +271,11 @@ class PortalClient(PortalClientBase):
             ds_cache.read_only = True
 
         return ds
+
+    def create_dataset_view(
+        self, dataset_id: int, file_path: str, include: Optional[Iterable[str]] = None, overwrite: bool = False
+    ):
+        return create_dataset_view(self, dataset_id, file_path, include, overwrite)
 
     def get_dataset_status_by_id(self, dataset_id: int) -> Dict[str, Dict[RecordStatusEnum, int]]:
         return self.make_request("get", f"api/v1/datasets/{dataset_id}/status", Dict[str, Dict[RecordStatusEnum, int]])

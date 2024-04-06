@@ -1803,7 +1803,7 @@ def dataset_from_dict(data: Dict[str, Any], client: Any, cache_data: Optional[Da
     return cls(client=client, cache_data=cache_data, **data)
 
 
-def dataset_from_cache(file_path: str) -> BaseDataset:
+def load_dataset_view(file_path: str) -> BaseDataset:
     # Reads this as a read-only "view"
     ds_meta = read_dataset_metadata(file_path)
     ds_type = BaseDataset.get_subclass(ds_meta["dataset_type"])
@@ -1814,3 +1814,34 @@ def dataset_from_cache(file_path: str) -> BaseDataset:
 
     # Views never have a client attached
     return dataset_from_dict(ds_meta, None, cache_data=ds_cache)
+
+
+def dataset_from_cache(file_path: str) -> BaseDataset:
+    # Keep old name around
+    return load_dataset_view(file_path)
+
+
+def create_dataset_view(
+    client: PortalClient,
+    dataset_id: int,
+    file_path: str,
+    include: Optional[Iterable[str]] = None,
+    overwrite: bool = False,
+):
+    file_path = os.path.abspath(file_path)
+
+    if os.path.exists(file_path) and not os.path.isfile(file_path):
+        raise ValueError(f"Path {file_path} exists and is not a file")
+
+    if os.path.exists(file_path) and not overwrite:
+        raise ValueError(f"File {file_path} exists and overwrite is False")
+
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+    # Manually get it, because we want to use a different cache file
+    ds_dict = client.make_request("get", f"api/v1/datasets/{dataset_id}", Dict[str, Any])
+    ds_cache = DatasetCache(f"file:{file_path}", False, BaseDataset.get_subclass(ds_dict["dataset_type"]))
+
+    ds = dataset_from_dict(ds_dict, client, ds_cache)
+
+    ds.fetch_records(include=include, force_refetch=True)
