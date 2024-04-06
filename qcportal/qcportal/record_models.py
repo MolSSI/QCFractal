@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from datetime import datetime
 from enum import Enum
 from typing import Optional, Dict, Any, List, Union, Iterable, Tuple, Type, Sequence, ClassVar, TypeVar
@@ -422,11 +423,16 @@ class BaseRecord(BaseModel):
 
     def __del__(self):
         # Sometimes this won't exist if there is an exception during construction
+
+        # TODO - we check sys.meta_path. Pydantic attempts an import of something, which is
+        #        not good if the interpreter is shutting down. This is a hack to avoid that.
+        #        Pydantic v2 may fix this
         if (
             hasattr(self, "_record_cache")
             and self._record_cache is not None
             and not self._record_cache.read_only
             and self._cache_dirty
+            and sys.meta_path is not None
         ):
             self.sync_to_cache(True)  # Don't really *have* to detach, but why not
 
