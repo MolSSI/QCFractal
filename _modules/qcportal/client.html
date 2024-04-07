@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.client &#8212; QCArchive 0.53.post49+g89818749 documentation</title>
+    <title>qcportal.client &#8212; QCArchive 0.53.post86+gf0cd1833 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../_static/documentation_options.js?v=dbe57317"></script>
+    <script src="../../_static/documentation_options.js?v=e362d4a3"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -445,6 +445,7 @@ document.write(`
 <span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Type</span>
 
@@ -518,6 +519,8 @@ document.write(`
     <span class="n">DatasetDeleteParams</span><span class="p">,</span>
     <span class="n">DatasetAddBody</span><span class="p">,</span>
     <span class="n">dataset_from_dict</span><span class="p">,</span>
+    <span class="n">load_dataset_view</span><span class="p">,</span>
+    <span class="n">create_dataset_view</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.internal_jobs</span> <span class="kn">import</span> <span class="n">InternalJob</span><span class="p">,</span> <span class="n">InternalJobQueryFilters</span><span class="p">,</span> <span class="n">InternalJobQueryIterator</span><span class="p">,</span> <span class="n">InternalJobStatusEnum</span>
 <span class="kn">from</span> <span class="nn">.managers</span> <span class="kn">import</span> <span class="n">ManagerQueryFilters</span><span class="p">,</span> <span class="n">ManagerQueryIterator</span><span class="p">,</span> <span class="n">ComputeManager</span>
@@ -546,7 +549,7 @@ document.write(`
     <span class="n">ServerStatsQueryIterator</span><span class="p">,</span>
     <span class="n">DeleteBeforeDateBody</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">make_list</span><span class="p">,</span> <span class="n">chunk_iterable</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">make_list</span><span class="p">,</span> <span class="n">chunk_iterable</span><span class="p">,</span> <span class="n">process_chunk_iterable</span>
 
 <span class="n">_T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;_T&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">BaseRecord</span><span class="p">)</span>
 
@@ -568,6 +571,7 @@ document.write(`
         <span class="o">*</span><span class="p">,</span>
         <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">cache_max_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">shared_memory_cache</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parameters</span>
@@ -589,11 +593,15 @@ document.write(`
 <span class="sd">            Directory to store an internal cache of records and other data</span>
 <span class="sd">        cache_max_size</span>
 <span class="sd">            Maximum size of the cache directory</span>
+<span class="sd">        shared_memory_cache</span>
+<span class="sd">            If True (and cache_dir is not specified), the memory-backed cache will be marked as shared,</span>
+<span class="sd">            meaning that multiple instances of the PortalClient can share the same cache, as well as making the</span>
+<span class="sd">            cache shared among threads. Generally, this is what you want, but</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">PortalClientBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">verify</span><span class="p">,</span> <span class="n">show_motd</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;PortalClient&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">PortalCache</span><span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">,</span> <span class="n">cache_max_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">PortalCache</span><span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">,</span> <span class="n">cache_max_size</span><span class="p">,</span> <span class="n">shared_memory_cache</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;A short representation of the current PortalClient.</span>
@@ -738,6 +746,14 @@ document.write(`
             <span class="n">ds_cache</span><span class="o">.</span><span class="n">read_only</span> <span class="o">=</span> <span class="kc">True</span>
 
         <span class="k">return</span> <span class="n">ds</span></div>
+
+
+<div class="viewcode-block" id="PortalClient.create_dataset_view">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.create_dataset_view">[docs]</a>
+    <span class="k">def</span> <span class="nf">create_dataset_view</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">dataset_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="n">create_dataset_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset_id</span><span class="p">,</span> <span class="n">file_path</span><span class="p">,</span> <span class="n">include</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="PortalClient.get_dataset_status_by_id">
@@ -1007,6 +1023,81 @@ document.write(`
     <span class="c1"># General record functions</span>
     <span class="c1">##############################################################</span>
 
+    <span class="k">def</span> <span class="nf">_fetch_records</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">record_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">_T</span><span class="p">]],</span>
+        <span class="n">record_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+        <span class="n">missing_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">_T</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fetches records of a particular type with the specified IDs from the remove server.</span>
+
+<span class="sd">        Records will be returned in the same order as the record ids. This function always returns a list.</span>
+
+<span class="sd">        This function only fetches the top-level records - it does not fetch the children of the records. It also</span>
+<span class="sd">        does not use caching at all.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        record_type</span>
+<span class="sd">            The type of record to fetch</span>
+<span class="sd">        record_ids</span>
+<span class="sd">            Single ID or sequence/list of records to obtain</span>
+<span class="sd">        missing_ok</span>
+<span class="sd">            If set to True, then missing records will be tolerated, and the returned</span>
+<span class="sd">            records will contain None for the corresponding IDs that were not found.</span>
+<span class="sd">        include</span>
+<span class="sd">            Additional fields to include in the returned record</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :</span>
+<span class="sd">            If a single ID was specified, returns just that record. Otherwise, returns</span>
+<span class="sd">            a list of records.  If missing_ok was specified, None will be substituted for a record</span>
+<span class="sd">            that was not found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">record_ids</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="n">include</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Always include the base stuff</span>
+            <span class="n">include</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">include</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;*&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">record_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">endpoint</span> <span class="o">=</span> <span class="s2">&quot;api/v1/records/bulkGet&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># A little hacky</span>
+            <span class="n">record_type_str</span> <span class="o">=</span> <span class="n">record_type</span><span class="o">.</span><span class="n">__fields__</span><span class="p">[</span><span class="s2">&quot;record_type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">default</span>
+            <span class="n">endpoint</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;api/v1/records/</span><span class="si">{</span><span class="n">record_type_str</span><span class="si">}</span><span class="s2">/bulkGet&quot;</span>
+
+        <span class="n">max_batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_records&quot;</span><span class="p">]</span>
+        <span class="n">initial_batch_size</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">max_batch_size</span> <span class="o">//</span> <span class="mi">10</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_download_chunk</span><span class="p">(</span><span class="n">id_chunk</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="n">CommonBulkGetBody</span><span class="p">(</span><span class="n">ids</span><span class="o">=</span><span class="n">id_chunk</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="n">include</span><span class="p">,</span> <span class="n">missing_ok</span><span class="o">=</span><span class="n">missing_ok</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]],</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">)</span>
+
+        <span class="n">all_records</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">record_dicts</span> <span class="ow">in</span> <span class="n">process_chunk_iterable</span><span class="p">(</span>
+            <span class="n">_download_chunk</span><span class="p">,</span>
+            <span class="n">record_ids</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">download_target_time</span><span class="p">,</span>
+            <span class="n">max_batch_size</span><span class="p">,</span>
+            <span class="n">initial_batch_size</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_download_threads</span><span class="p">,</span>
+            <span class="n">keep_order</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="k">if</span> <span class="n">record_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">all_records</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">records_from_dicts</span><span class="p">(</span><span class="n">record_dicts</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">all_records</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">record_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">r</span><span class="p">)</span> <span class="k">if</span> <span class="n">r</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">record_dicts</span><span class="p">])</span>
+
+        <span class="c1"># Just to really make sure the process_chunk_iterable code is correct</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">((</span><span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">x</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">rid</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">rid</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">all_records</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">all_records</span>
+
 <div class="viewcode-block" id="PortalClient.get_records">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_records">[docs]</a>
     <span class="k">def</span> <span class="nf">get_records</span><span class="p">(</span>
@@ -1038,51 +1129,35 @@ document.write(`
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        :</span>
-<span class="sd">            If a single ID was specified, returns just that record. Otherwise, returns</span>
-<span class="sd">            a list of records.  If missing_ok was specified, None will be substituted for a record</span>
+<span class="sd">            A list of records.  If missing_ok was specified, None will be substituted for a record</span>
 <span class="sd">            that was not found.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">is_single</span> <span class="o">=</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">record_ids</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">)</span>
-
-        <span class="n">record_ids</span> <span class="o">=</span> <span class="n">make_list</span><span class="p">(</span><span class="n">record_ids</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">record_ids</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">[]</span>
-
-        <span class="n">batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_records&quot;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span>
-        <span class="n">all_records</span> <span class="o">=</span> <span class="p">[]</span>
-
-        <span class="k">for</span> <span class="n">record_id_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">record_ids</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
-            <span class="n">body</span> <span class="o">=</span> <span class="n">CommonBulkGetBody</span><span class="p">(</span><span class="n">ids</span><span class="o">=</span><span class="n">record_id_batch</span><span class="p">,</span> <span class="n">missing_ok</span><span class="o">=</span><span class="n">missing_ok</span><span class="p">)</span>
-            <span class="n">record_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="s2">&quot;api/v1/records/bulkGet&quot;</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]],</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">)</span>
-            <span class="n">record_batch</span> <span class="o">=</span> <span class="n">records_from_dicts</span><span class="p">(</span><span class="n">record_data</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="n">include</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">record_batch</span><span class="p">:</span>
-                    <span class="n">r</span><span class="o">.</span><span class="n">_handle_includes</span><span class="p">(</span><span class="n">include</span><span class="p">)</span>
-
-            <span class="n">all_records</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">record_batch</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">is_single</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">all_records</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">all_records</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_records_by_type</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">,</span> <span class="n">missing_ok</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
 
 
     <span class="k">def</span> <span class="nf">_get_records_by_type</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">record_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">_T</span><span class="p">],</span>
+        <span class="n">record_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">_T</span><span class="p">]],</span>
         <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
         <span class="n">missing_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">_T</span><span class="p">]],</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">_T</span><span class="p">]]]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">_T</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">_T</span><span class="p">]]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Obtain records of a particular type with the specified IDs.</span>
+<span class="sd">        Obtain records of a particular type with the specified IDs from the server.</span>
 
 <span class="sd">        Records will be returned in the same order as the record ids.</span>
 
+<span class="sd">        This function will fetch the children of the records if enough information</span>
+<span class="sd">        is fetched of the parent record. This is handled by the various fetch_children_multi</span>
+<span class="sd">        class functions of the record types.</span>
+
+<span class="sd">        This function does not use the cache.</span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
+<span class="sd">        record_type</span>
+<span class="sd">            The type of record to fetch</span>
 <span class="sd">        record_ids</span>
 <span class="sd">            Single ID or sequence/list of records to obtain</span>
 <span class="sd">        missing_ok</span>
@@ -1102,32 +1177,21 @@ document.write(`
         <span class="n">is_single</span> <span class="o">=</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">record_ids</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">)</span>
 
         <span class="n">record_ids</span> <span class="o">=</span> <span class="n">make_list</span><span class="p">(</span><span class="n">record_ids</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">record_ids</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">[]</span>
+        <span class="n">all_records</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_records</span><span class="p">(</span><span class="n">record_type</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">,</span> <span class="n">missing_ok</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
 
-        <span class="c1"># A little hacky</span>
-        <span class="n">record_type_str</span> <span class="o">=</span> <span class="n">record_type</span><span class="o">.</span><span class="n">__fields__</span><span class="p">[</span><span class="s2">&quot;record_type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">default</span>
-
-        <span class="n">batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_records&quot;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span>
-        <span class="n">all_records</span> <span class="o">=</span> <span class="p">[]</span>
-
-        <span class="k">for</span> <span class="n">record_id_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">record_ids</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
-            <span class="n">body</span> <span class="o">=</span> <span class="n">CommonBulkGetBody</span><span class="p">(</span><span class="n">ids</span><span class="o">=</span><span class="n">record_id_batch</span><span class="p">,</span> <span class="n">missing_ok</span><span class="o">=</span><span class="n">missing_ok</span><span class="p">)</span>
-
-            <span class="n">record_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
-                <span class="s2">&quot;post&quot;</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s2">&quot;api/v1/records/</span><span class="si">{</span><span class="n">record_type_str</span><span class="si">}</span><span class="s2">/bulkGet&quot;</span><span class="p">,</span>
-                <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]],</span>
-                <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
-            <span class="p">)</span>
-
-            <span class="n">record_batch</span> <span class="o">=</span> <span class="p">[</span><span class="n">record_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">r</span><span class="p">)</span> <span class="k">if</span> <span class="n">r</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">record_data</span><span class="p">]</span>
-
-            <span class="k">if</span> <span class="n">include</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">record_batch</span><span class="p">:</span>
-                    <span class="n">r</span><span class="o">.</span><span class="n">_handle_includes</span><span class="p">(</span><span class="n">include</span><span class="p">)</span>
-
-            <span class="n">all_records</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">record_batch</span><span class="p">)</span>
+        <span class="c1"># We always force fetch here. Given that this record is not part of the cache, it shouldn&#39;t be using any</span>
+        <span class="c1"># cache anyway. But the semantics of this function is that is always fetches everything</span>
+        <span class="k">if</span> <span class="n">record_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Handle disparate record types</span>
+            <span class="n">record_groups</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">all_records</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">r</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">record_groups</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">record_type</span><span class="p">,</span> <span class="p">[])</span>
+                    <span class="n">record_groups</span><span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">record_type</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">record_groups</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">fetch_children_multi</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">include</span><span class="p">,</span> <span class="n">force_fetch</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">record_type</span><span class="o">.</span><span class="n">fetch_children_multi</span><span class="p">(</span><span class="n">all_records</span><span class="p">,</span> <span class="n">include</span><span class="p">,</span> <span class="n">force_fetch</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">is_single</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">all_records</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -1650,7 +1714,7 @@ document.write(`
         <span class="p">}</span>
 
         <span class="n">filter_data</span> <span class="o">=</span> <span class="n">SinglepointQueryFilters</span><span class="p">(</span><span class="o">**</span><span class="n">filter_dict</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">SinglepointRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="s2">&quot;singlepoint&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">SinglepointRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="n">SinglepointRecord</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
 
 
     <span class="c1">##############################################################</span>
@@ -1882,7 +1946,7 @@ document.write(`
         <span class="p">}</span>
 
         <span class="n">filter_data</span> <span class="o">=</span> <span class="n">OptimizationQueryFilters</span><span class="p">(</span><span class="o">**</span><span class="n">filter_dict</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">OptimizationRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="s2">&quot;optimization&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">OptimizationRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="n">OptimizationRecord</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
 
 
     <span class="c1">##############################################################</span>
@@ -2104,7 +2168,7 @@ document.write(`
         <span class="p">}</span>
 
         <span class="n">filter_data</span> <span class="o">=</span> <span class="n">TorsiondriveQueryFilters</span><span class="p">(</span><span class="o">**</span><span class="n">filter_dict</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">TorsiondriveRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="s2">&quot;torsiondrive&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">TorsiondriveRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="n">TorsiondriveRecord</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
 
 
     <span class="c1">##############################################################</span>
@@ -2326,7 +2390,7 @@ document.write(`
         <span class="p">}</span>
 
         <span class="n">filter_data</span> <span class="o">=</span> <span class="n">GridoptimizationQueryFilters</span><span class="p">(</span><span class="o">**</span><span class="n">filter_dict</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">GridoptimizationRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="s2">&quot;gridoptimization&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">GridoptimizationRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="n">GridoptimizationRecord</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
 
 
     <span class="c1">##############################################################</span>
@@ -2556,7 +2620,7 @@ document.write(`
         <span class="p">}</span>
 
         <span class="n">filter_data</span> <span class="o">=</span> <span class="n">ReactionQueryFilters</span><span class="p">(</span><span class="o">**</span><span class="n">filter_dict</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">ReactionRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="s2">&quot;reaction&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">ReactionRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="n">ReactionRecord</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
 
 
     <span class="c1">##############################################################</span>
@@ -2773,7 +2837,7 @@ document.write(`
         <span class="p">}</span>
 
         <span class="n">filter_data</span> <span class="o">=</span> <span class="n">ManybodyQueryFilters</span><span class="p">(</span><span class="o">**</span><span class="n">filter_dict</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">ManybodyRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="s2">&quot;manybody&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">ManybodyRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="n">ManybodyRecord</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
 
 
     <span class="c1">##############################################################</span>
@@ -2996,7 +3060,7 @@ document.write(`
         <span class="p">}</span>
 
         <span class="n">filter_data</span> <span class="o">=</span> <span class="n">NEBQueryFilters</span><span class="p">(</span><span class="o">**</span><span class="n">filter_dict</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">NEBRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="s2">&quot;neb&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">NEBRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="n">NEBRecord</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
 
 
     <span class="c1">##############################################################</span>

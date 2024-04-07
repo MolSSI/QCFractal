@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.record_models &#8212; QCArchive 0.53.post49+g89818749 documentation</title>
+    <title>qcportal.record_models &#8212; QCArchive 0.53.post86+gf0cd1833 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../_static/documentation_options.js?v=dbe57317"></script>
+    <script src="../../_static/documentation_options.js?v=e362d4a3"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -445,16 +445,17 @@ document.write(`
 <span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Callable</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">TypeVar</span>
 
 <span class="kn">from</span> <span class="nn">dateutil.parser</span> <span class="kn">import</span> <span class="n">parse</span> <span class="k">as</span> <span class="n">date_parser</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">pydantic.v1</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">constr</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">PrivateAttr</span><span class="p">,</span> <span class="n">Field</span>
+    <span class="kn">from</span> <span class="nn">pydantic.v1</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">constr</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">PrivateAttr</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">parse_obj_as</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">constr</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">PrivateAttr</span><span class="p">,</span> <span class="n">Field</span>
+    <span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">constr</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">PrivateAttr</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">parse_obj_as</span>
 <span class="kn">from</span> <span class="nn">qcelemental.models.results</span> <span class="kn">import</span> <span class="n">Provenance</span>
 
 <span class="kn">from</span> <span class="nn">qcportal.base_models</span> <span class="kn">import</span> <span class="p">(</span>
@@ -463,8 +464,10 @@ document.write(`
     <span class="n">QueryIteratorBase</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="kn">from</span> <span class="nn">qcportal.cache</span> <span class="kn">import</span> <span class="n">RecordCache</span>
+<span class="kn">from</span> <span class="nn">qcportal.cache</span> <span class="kn">import</span> <span class="n">RecordCache</span><span class="p">,</span> <span class="n">get_records_with_cache</span>
 <span class="kn">from</span> <span class="nn">qcportal.compression</span> <span class="kn">import</span> <span class="n">CompressionEnum</span><span class="p">,</span> <span class="n">decompress</span><span class="p">,</span> <span class="n">get_compressed_ext</span>
+
+<span class="n">_T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;_T&quot;</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="PriorityEnum">
@@ -563,7 +566,7 @@ document.write(`
 
     <span class="n">output_type</span><span class="p">:</span> <span class="n">OutputTypeEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The type of output this is (stdout, error, etc)&quot;</span><span class="p">)</span>
     <span class="n">compression_type</span><span class="p">:</span> <span class="n">CompressionEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">CompressionEnum</span><span class="o">.</span><span class="n">none</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Compression method (such as lzma)&quot;</span><span class="p">)</span>
-    <span class="n">data_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">data_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">)</span>
 
     <span class="n">_data_url</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">_client</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
@@ -604,7 +607,7 @@ document.write(`
     <span class="n">manager_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">modified_on</span><span class="p">:</span> <span class="n">datetime</span>
     <span class="n">provenance</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Provenance</span><span class="p">]</span>
-    <span class="n">outputs_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">OutputStore</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">outputs_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">OutputStore</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;outputs&quot;</span><span class="p">)</span>
 
     <span class="n">_client</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">_base_url</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
@@ -673,7 +676,7 @@ document.write(`
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Name of the file&quot;</span><span class="p">)</span>
     <span class="n">compression_type</span><span class="p">:</span> <span class="n">CompressionEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Compression method (such as lzma)&quot;</span><span class="p">)</span>
-    <span class="n">data_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">data_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">)</span>
 
     <span class="n">_data_url</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">_client</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
@@ -839,18 +842,17 @@ document.write(`
     <span class="n">owner_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
 
     <span class="c1">######################################################</span>
-    <span class="c1"># Fields not included when fetching the record</span>
+    <span class="c1"># Fields not always included when fetching the record</span>
     <span class="c1">######################################################</span>
-    <span class="n">compute_history_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">ComputeHistory</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">task_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RecordTask</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">service_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RecordService</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">comments_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">RecordComment</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">native_files_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">NativeFile</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">compute_history_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">ComputeHistory</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;compute_history&quot;</span><span class="p">)</span>
+    <span class="n">task_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RecordTask</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;task&quot;</span><span class="p">)</span>
+    <span class="n">service_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RecordService</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;service&quot;</span><span class="p">)</span>
+    <span class="n">comments_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">RecordComment</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;comments&quot;</span><span class="p">)</span>
+    <span class="n">native_files_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">NativeFile</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;native_files&quot;</span><span class="p">)</span>
 
     <span class="c1"># Private non-pydantic fields</span>
     <span class="n">_client</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">_base_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Client connected to the server that this record belongs to &quot;&quot;&quot;</span>
 
     <span class="c1"># A dictionary of all subclasses (calculation types) to actual class type</span>
     <span class="n">_all_subclasses</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Type</span><span class="p">[</span><span class="n">BaseRecord</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
@@ -858,7 +860,7 @@ document.write(`
     <span class="c1"># Local record cache we can use for child records</span>
     <span class="c1"># This record may also be part of the cache</span>
     <span class="n">_record_cache</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RecordCache</span><span class="p">]</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-    <span class="n">_record_cache_uid</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">_cache_dirty</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">BaseModel</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -881,8 +883,19 @@ document.write(`
         <span class="bp">cls</span><span class="o">.</span><span class="n">_all_subclasses</span><span class="p">[</span><span class="n">record_type</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span>
 
     <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_record_cache</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_record_cache_uid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_record_cache</span><span class="o">.</span><span class="n">read_only</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_record_cache</span><span class="o">.</span><span class="n">writeback_record</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_record_cache_uid</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="c1"># Sometimes this won&#39;t exist if there is an exception during construction</span>
+
+        <span class="c1"># TODO - we check sys.meta_path. Pydantic attempts an import of something, which is</span>
+        <span class="c1">#        not good if the interpreter is shutting down. This is a hack to avoid that.</span>
+        <span class="c1">#        Pydantic v2 may fix this</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_record_cache&quot;</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_record_cache</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_record_cache</span><span class="o">.</span><span class="n">read_only</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_dirty</span>
+            <span class="ow">and</span> <span class="n">sys</span><span class="o">.</span><span class="n">meta_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sync_to_cache</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># Don&#39;t really *have* to detach, but why not</span>
 
         <span class="n">s</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s2">&quot;__del__&quot;</span><span class="p">):</span>
@@ -900,6 +913,90 @@ document.write(`
         <span class="k">if</span> <span class="n">subcls</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot find subclass for record type </span><span class="si">{</span><span class="n">record_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">subcls</span></div>
+
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_fetch_children_multi</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">record_cache</span><span class="p">,</span> <span class="n">records</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">BaseRecord</span><span class="p">],</span> <span class="n">include</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">force_fetch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fetches all children of the given records recursively</span>
+
+<span class="sd">        This tries to work efficiently, fetching larger batches of children</span>
+<span class="sd">        that can span multiple records</span>
+
+<span class="sd">        Meant to be overridden by derived classes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="BaseRecord.fetch_children_multi">
+<a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.record_models.BaseRecord.fetch_children_multi">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">fetch_children_multi</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">records</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">BaseRecord</span><span class="p">]],</span> <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">force_fetch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fetches all children of the given records</span>
+
+<span class="sd">        This tries to work efficiently, fetching larger batches of children</span>
+<span class="sd">        that can span multiple records</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Remove any None records</span>
+        <span class="c1"># can happen if missing_ok=True in some function calls</span>
+        <span class="n">records</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span> <span class="k">if</span> <span class="n">r</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">records</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Get the first record (for the client and other info)</span>
+        <span class="n">template_record</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">records</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">template_record</span><span class="p">))</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Fetching children of records with different types is not supported.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">_client</span> <span class="ow">is</span> <span class="n">template_record</span><span class="o">.</span><span class="n">_client</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Fetching children of records with different clients is not supported.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">_record_cache</span> <span class="ow">is</span> <span class="n">template_record</span><span class="o">.</span><span class="n">_record_cache</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Fetching children of records with different record caches is not supported.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Call the derived class function</span>
+        <span class="k">if</span> <span class="n">include</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">include</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_fetch_children_multi</span><span class="p">(</span>
+            <span class="n">template_record</span><span class="o">.</span><span class="n">_client</span><span class="p">,</span> <span class="n">template_record</span><span class="o">.</span><span class="n">_record_cache</span><span class="p">,</span> <span class="n">records</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="n">include</span><span class="p">,</span> <span class="n">force_fetch</span><span class="o">=</span><span class="n">force_fetch</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BaseRecord.fetch_children">
+<a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.record_models.BaseRecord.fetch_children">[docs]</a>
+    <span class="k">def</span> <span class="nf">fetch_children</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">force_fetch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fetches all children of this record recursively</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fetch_children_multi</span><span class="p">([</span><span class="bp">self</span><span class="p">],</span> <span class="n">include</span><span class="p">,</span> <span class="n">force_fetch</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BaseRecord.sync_to_cache">
+<a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.record_models.BaseRecord.sync_to_cache">[docs]</a>
+    <span class="k">def</span> <span class="nf">sync_to_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">detach</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Syncs this record to the cache</span>
+
+<span class="sd">        If `detach` is True, then the record will be removed from the cache</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_record_cache</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_record_cache</span><span class="o">.</span><span class="n">read_only</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_record_cache</span><span class="o">.</span><span class="n">writeback_record</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cache_dirty</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">detach</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_record_cache</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -925,91 +1022,24 @@ document.write(`
                 <span class="n">nf</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="BaseRecord.fetch_all">
-<a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.record_models.BaseRecord.fetch_all">[docs]</a>
-    <span class="k">def</span> <span class="nf">fetch_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Fetches all possible data for this record from the server</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c1"># Only these statuses should have tasks</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="p">(</span><span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">waiting</span><span class="p">,</span> <span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">running</span><span class="p">,</span> <span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">error</span><span class="p">):</span>
-            <span class="c1"># is_service is checked in these functions</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_service</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_task</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">service_</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">task_</span> <span class="o">=</span> <span class="kc">None</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_comments</span><span class="p">()</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_compute_history</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_history_</span><span class="p">:</span>
-            <span class="n">ch</span><span class="o">.</span><span class="n">fetch_all</span><span class="p">()</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_native_files</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">nf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">native_files_</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-            <span class="n">nf</span><span class="o">.</span><span class="n">fetch_all</span><span class="p">()</span></div>
-
-
-    <span class="k">def</span> <span class="nf">_cache_child_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">record_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">_Record_T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Fetching child records and stores them in the cache</span>
-
-<span class="sd">        The cache will be checked for existing records</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_record_cache</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span>
-
-        <span class="n">existing_record_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_record_cache</span><span class="o">.</span><span class="n">get_existing_records</span><span class="p">(</span><span class="n">record_ids</span><span class="p">)</span>
-        <span class="n">records_tofetch</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">record_ids</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">existing_record_ids</span><span class="p">))</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">offline</span> <span class="ow">and</span> <span class="n">records_tofetch</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Need to fetch some records, but not connected to a client&quot;</span><span class="p">)</span>
-
-        <span class="n">recs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">_get_records_by_type</span><span class="p">(</span><span class="n">record_type</span><span class="p">,</span> <span class="n">records_tofetch</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_record_cache</span><span class="o">.</span><span class="n">update_records</span><span class="p">(</span><span class="n">recs</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">_get_child_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">record_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">_Record_T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">_Record_T</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">_get_child_records</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">child_record_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+        <span class="n">child_record_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">_Record_T</span><span class="p">],</span>
+        <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">_Record_T</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Helper function for obtaining child records either from the cache or from the server</span>
 
 <span class="sd">        The records are returned in the same order as the `record_ids` parameter.</span>
+
+<span class="sd">        If `include` is specified, additional fields will be fetched from the server. However, if the records are in the</span>
+<span class="sd">        cache already, they may be missing those fields.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_record_cache</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_assert_online</span><span class="p">()</span>
-            <span class="n">existing_records</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="n">records_tofetch</span> <span class="o">=</span> <span class="n">record_ids</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">existing_records</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_record_cache</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="n">record_ids</span><span class="p">,</span> <span class="n">record_type</span><span class="p">)</span>
-            <span class="n">records_tofetch</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">record_ids</span><span class="p">)</span> <span class="o">-</span> <span class="p">{</span><span class="n">x</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">existing_records</span><span class="p">}</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">offline</span> <span class="ow">and</span> <span class="n">records_tofetch</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Need to fetch some records, but not connected to a client&quot;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">records_tofetch</span><span class="p">:</span>
-            <span class="n">recs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">_get_records_by_type</span><span class="p">(</span><span class="n">record_type</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">records_tofetch</span><span class="p">))</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_record_cache</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">uids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_record_cache</span><span class="o">.</span><span class="n">update_records</span><span class="p">(</span><span class="n">recs</span><span class="p">)</span>
-
-                <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">uids</span><span class="p">,</span> <span class="n">recs</span><span class="p">):</span>
-                    <span class="n">r</span><span class="o">.</span><span class="n">_record_cache</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_record_cache</span>
-                    <span class="n">r</span><span class="o">.</span><span class="n">_record_cache_uid</span> <span class="o">=</span> <span class="n">u</span>
-
-            <span class="n">existing_records</span> <span class="o">+=</span> <span class="n">recs</span>
-
-        <span class="c1"># Return everything in the same order as the input</span>
-        <span class="n">all_recs</span> <span class="o">=</span> <span class="p">{</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">existing_records</span><span class="p">}</span>
-        <span class="n">ret</span> <span class="o">=</span> <span class="p">[</span><span class="n">all_recs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">rid</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">rid</span> <span class="ow">in</span> <span class="n">record_ids</span><span class="p">]</span>
-        <span class="k">if</span> <span class="kc">None</span> <span class="ow">in</span> <span class="n">ret</span><span class="p">:</span>
-            <span class="n">missing_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">record_ids</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">all_recs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Not all records found either in the cache or on the server. Missing records: </span><span class="si">{</span><span class="n">missing_ids</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">ret</span>
+        <span class="k">return</span> <span class="n">get_records_with_cache</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_record_cache</span><span class="p">,</span> <span class="n">child_record_type</span><span class="p">,</span> <span class="n">child_record_ids</span><span class="p">,</span> <span class="n">include</span><span class="p">,</span> <span class="n">force_fetch</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_assert_online</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Raises an exception if this record does not have an associated client&quot;&quot;&quot;</span>
@@ -1020,53 +1050,30 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">_assert_online</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">compute_history_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
-            <span class="s2">&quot;get&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span><span class="si">}</span><span class="s2">/compute_history&quot;</span><span class="p">,</span>
-            <span class="n">List</span><span class="p">[</span><span class="n">ComputeHistory</span><span class="p">],</span>
+            <span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span><span class="si">}</span><span class="s2">/compute_history&quot;</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">ComputeHistory</span><span class="p">]</span>
         <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_fetch_task</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_online</span><span class="p">()</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_service</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">task_</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">return</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">task_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
-            <span class="s2">&quot;get&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span><span class="si">}</span><span class="s2">/task&quot;</span><span class="p">,</span>
-            <span class="n">Optional</span><span class="p">[</span><span class="n">RecordTask</span><span class="p">],</span>
-        <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span><span class="si">}</span><span class="s2">/task&quot;</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RecordTask</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">_fetch_service</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_online</span><span class="p">()</span>
-
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_service</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">service_</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">return</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">service_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span><span class="si">}</span><span class="s2">/service&quot;</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RecordService</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">service_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span><span class="si">}</span><span class="s2">/service&quot;</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RecordService</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">_fetch_comments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_assert_online</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">comments_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
-            <span class="s2">&quot;get&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span><span class="si">}</span><span class="s2">/comments&quot;</span><span class="p">,</span>
-            <span class="n">List</span><span class="p">[</span><span class="n">RecordComment</span><span class="p">],</span>
-        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">comments_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span><span class="si">}</span><span class="s2">/comments&quot;</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">RecordComment</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">_fetch_native_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_online</span><span class="p">()</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">native_files_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
-            <span class="s2">&quot;get&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span><span class="si">}</span><span class="s2">/native_files&quot;</span><span class="p">,</span>
-            <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">NativeFile</span><span class="p">],</span>
-        <span class="p">)</span>
-
+        <span class="bp">self</span><span class="o">.</span><span class="n">native_files_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span><span class="si">}</span><span class="s2">/native_files&quot;</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">NativeFile</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_get_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_type</span><span class="p">:</span> <span class="n">OutputTypeEnum</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
@@ -1074,24 +1081,6 @@ document.write(`
         <span class="k">if</span> <span class="ow">not</span> <span class="n">history</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="n">history</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get_output</span><span class="p">(</span><span class="n">output_type</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">_handle_includes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">includes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Fetches information specified by some iterable of strings</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">includes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span>
-
-        <span class="k">if</span> <span class="s2">&quot;task&quot;</span> <span class="ow">in</span> <span class="n">includes</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_task</span><span class="p">()</span>
-        <span class="k">if</span> <span class="s2">&quot;service&quot;</span> <span class="ow">in</span> <span class="n">includes</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_task</span><span class="p">()</span>
-        <span class="k">if</span> <span class="s2">&quot;compute_history&quot;</span> <span class="ow">in</span> <span class="n">includes</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_compute_history</span><span class="p">()</span>
-        <span class="k">if</span> <span class="s2">&quot;comments&quot;</span> <span class="ow">in</span> <span class="n">includes</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_comments</span><span class="p">()</span>
-        <span class="k">if</span> <span class="s2">&quot;native_files&quot;</span> <span class="ow">in</span> <span class="n">includes</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_native_files</span><span class="p">()</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">offline</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -1236,7 +1225,7 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">client</span><span class="p">,</span>
         <span class="n">query_filters</span><span class="p">:</span> <span class="n">RecordQueryFilters</span><span class="p">,</span>
-        <span class="n">record_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">record_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">_Record_T</span><span class="p">],</span>
         <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1267,20 +1256,16 @@ document.write(`
                 <span class="n">body</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_filters</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Get the record type string. This is kind of ugly, but works.</span>
+            <span class="n">record_type_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_type</span><span class="o">.</span><span class="n">__fields__</span><span class="p">[</span><span class="s2">&quot;record_type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">default</span>
             <span class="n">record_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
                 <span class="s2">&quot;post&quot;</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s2">&quot;api/v1/records/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">record_type</span><span class="si">}</span><span class="s2">/query&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;api/v1/records/</span><span class="si">{</span><span class="n">record_type_str</span><span class="si">}</span><span class="s2">/query&quot;</span><span class="p">,</span>
                 <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
                 <span class="n">body</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_filters</span><span class="p">,</span>
             <span class="p">)</span>
 
-        <span class="n">records</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">_Record_T</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="n">record_ids</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">include</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span><span class="p">:</span>
-                <span class="n">r</span><span class="o">.</span><span class="n">_handle_includes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">include</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">records</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">_get_records_by_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">record_type</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">include</span><span class="p">)</span></div>
 
 
 

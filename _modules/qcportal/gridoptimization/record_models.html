@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.gridoptimization.record_models &#8212; QCArchive 0.53.post49+g89818749 documentation</title>
+    <title>qcportal.gridoptimization.record_models &#8212; QCArchive 0.53.post86+gf0cd1833 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../../_static/documentation_options.js?v=dbe57317"></script>
+    <script src="../../../_static/documentation_options.js?v=e362d4a3"></script>
     <script src="../../../_static/doctools.js?v=888ff710"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -442,7 +442,9 @@ document.write(`
                 <article class="bd-article">
                   
   <h1>Source code for qcportal.gridoptimization.record_models</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">json</span>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Any</span>
 
@@ -456,6 +458,7 @@ document.write(`
 <span class="kn">from</span> <span class="nn">qcportal.optimization.record_models</span> <span class="kn">import</span> <span class="n">OptimizationSpecification</span><span class="p">,</span> <span class="n">OptimizationRecord</span>
 <span class="kn">from</span> <span class="nn">qcportal.record_models</span> <span class="kn">import</span> <span class="n">BaseRecord</span><span class="p">,</span> <span class="n">RecordAddBodyBase</span><span class="p">,</span> <span class="n">RecordQueryFilters</span>
 <span class="kn">from</span> <span class="nn">qcportal.utils</span> <span class="kn">import</span> <span class="n">recursive_normalizer</span>
+<span class="kn">from</span> <span class="nn">qcportal.cache</span> <span class="kn">import</span> <span class="n">get_records_with_cache</span>
 
 
 <span class="k">def</span> <span class="nf">serialize_key</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -642,11 +645,11 @@ document.write(`
     <span class="n">starting_molecule_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
 
     <span class="c1">######################################################</span>
-    <span class="c1"># Fields not included when fetching the record</span>
+    <span class="c1"># Fields not always included when fetching the record</span>
     <span class="c1">######################################################</span>
-    <span class="n">initial_molecule_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Molecule</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">starting_molecule_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Molecule</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">optimizations_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">GridoptimizationOptimization</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">initial_molecule_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Molecule</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;initial_molecule&quot;</span><span class="p">)</span>
+    <span class="n">starting_molecule_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Molecule</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;starting_molecule&quot;</span><span class="p">)</span>
+    <span class="n">optimizations_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">GridoptimizationOptimization</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;optimizations&quot;</span><span class="p">)</span>
 
     <span class="c1">########################################</span>
     <span class="c1"># Caches</span>
@@ -663,18 +666,42 @@ document.write(`
                 <span class="n">opt</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="n">client</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="GridoptimizationRecord.fetch_all">
-<a class="viewcode-back" href="../../../user_guide/records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord.fetch_all">[docs]</a>
-    <span class="k">def</span> <span class="nf">fetch_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">BaseRecord</span><span class="o">.</span><span class="n">fetch_all</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_fetch_children_multi</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">client</span><span class="p">,</span>
+        <span class="n">record_cache</span><span class="p">,</span>
+        <span class="n">records</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">GridoptimizationRecord</span><span class="p">],</span>
+        <span class="n">include</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">force_fetch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="c1"># Should be checked by the calling function</span>
+        <span class="k">assert</span> <span class="n">records</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">GridoptimizationRecord</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">records</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_initial_molecule</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_starting_molecule</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_optimizations</span><span class="p">()</span>
+        <span class="c1"># Collect optimization id for all grid optimizations</span>
+        <span class="k">if</span> <span class="s2">&quot;optimizations&quot;</span> <span class="ow">in</span> <span class="n">include</span> <span class="ow">or</span> <span class="s2">&quot;**&quot;</span> <span class="ow">in</span> <span class="n">include</span><span class="p">:</span>
+            <span class="n">opt_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">optimizations_</span><span class="p">:</span>
+                    <span class="n">opt_ids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">optimization_id</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">optimizations_</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">opt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimizations_cache</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-            <span class="n">opt</span><span class="o">.</span><span class="n">fetch_all</span><span class="p">()</span></div>
+            <span class="n">opt_ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">opt_ids</span><span class="p">)</span>
+            <span class="n">opt_records</span> <span class="o">=</span> <span class="n">get_records_with_cache</span><span class="p">(</span>
+                <span class="n">client</span><span class="p">,</span> <span class="n">record_cache</span><span class="p">,</span> <span class="n">OptimizationRecord</span><span class="p">,</span> <span class="n">opt_ids</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="n">include</span><span class="p">,</span> <span class="n">force_fetch</span><span class="o">=</span><span class="n">force_fetch</span>
+            <span class="p">)</span>
+            <span class="n">opt_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">x</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">opt_records</span><span class="p">}</span>
 
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">optimizations_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">r</span><span class="o">.</span><span class="n">_optimizations_cache</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">r</span><span class="o">.</span><span class="n">_optimizations_cache</span> <span class="o">=</span> <span class="p">{}</span>
+                    <span class="k">for</span> <span class="n">go_opt</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">optimizations_</span><span class="p">:</span>
+                        <span class="n">key</span> <span class="o">=</span> <span class="n">deserialize_key</span><span class="p">(</span><span class="n">go_opt</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+                        <span class="n">r</span><span class="o">.</span><span class="n">_optimizations_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">opt_map</span><span class="p">[</span><span class="n">go_opt</span><span class="o">.</span><span class="n">optimization_id</span><span class="p">]</span>
+
+                <span class="n">r</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">_client</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_fetch_initial_molecule</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_assert_online</span><span class="p">()</span>
@@ -685,8 +712,7 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">starting_molecule_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get_molecules</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">starting_molecule_id</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">_fetch_optimizations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># Always fetch optimization metadata if we can</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">offline</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizations_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizations_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_assert_online</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">optimizations_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
                 <span class="s2">&quot;get&quot;</span><span class="p">,</span>
@@ -694,26 +720,7 @@ document.write(`
                 <span class="n">List</span><span class="p">[</span><span class="n">GridoptimizationOptimization</span><span class="p">],</span>
             <span class="p">)</span>
 
-        <span class="c1"># Fetch optimization records from the server or the cache</span>
-        <span class="n">opt_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">optimization_id</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizations_</span><span class="p">]</span>
-        <span class="n">opt_records</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_child_records</span><span class="p">(</span><span class="n">opt_ids</span><span class="p">,</span> <span class="n">OptimizationRecord</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_optimizations_cache</span> <span class="o">=</span> <span class="p">{</span><span class="n">deserialize_key</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">key</span><span class="p">):</span> <span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizations_</span><span class="p">,</span> <span class="n">opt_records</span><span class="p">)}</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">_handle_includes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">includes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]):</span>
-        <span class="k">if</span> <span class="n">includes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span>
-
-        <span class="n">BaseRecord</span><span class="o">.</span><span class="n">_handle_includes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">includes</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="s2">&quot;initial_molecule&quot;</span> <span class="ow">in</span> <span class="n">includes</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_initial_molecule</span><span class="p">()</span>
-        <span class="k">if</span> <span class="s2">&quot;starting_molecule&quot;</span> <span class="ow">in</span> <span class="n">includes</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_starting_molecule</span><span class="p">()</span>
-        <span class="k">if</span> <span class="s2">&quot;optimizations&quot;</span> <span class="ow">in</span> <span class="n">includes</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_optimizations</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fetch_children</span><span class="p">([</span><span class="s2">&quot;optimizations&quot;</span><span class="p">])</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">initial_molecule</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Molecule</span><span class="p">:</span>

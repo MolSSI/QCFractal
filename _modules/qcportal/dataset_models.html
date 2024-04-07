@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.dataset_models &#8212; QCArchive 0.53.post49+g89818749 documentation</title>
+    <title>qcportal.dataset_models &#8212; QCArchive 0.53.post86+gf0cd1833 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../_static/documentation_options.js?v=dbe57317"></script>
+    <script src="../../_static/documentation_options.js?v=e362d4a3"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -480,7 +480,7 @@ document.write(`
 <span class="kn">from</span> <span class="nn">qcportal.metadata_models</span> <span class="kn">import</span> <span class="n">InsertMetadata</span>
 <span class="kn">from</span> <span class="nn">qcportal.record_models</span> <span class="kn">import</span> <span class="n">PriorityEnum</span><span class="p">,</span> <span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="n">BaseRecord</span>
 <span class="kn">from</span> <span class="nn">qcportal.utils</span> <span class="kn">import</span> <span class="n">make_list</span><span class="p">,</span> <span class="n">chunk_iterable</span>
-<span class="kn">from</span> <span class="nn">qcportal.cache</span> <span class="kn">import</span> <span class="n">DatasetCache</span><span class="p">,</span> <span class="n">read_dataset_metadata</span>
+<span class="kn">from</span> <span class="nn">qcportal.cache</span> <span class="kn">import</span> <span class="n">DatasetCache</span><span class="p">,</span> <span class="n">read_dataset_metadata</span><span class="p">,</span> <span class="n">get_records_with_cache</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">qcportal.client</span> <span class="kn">import</span> <span class="n">PortalClient</span>
@@ -591,22 +591,22 @@ document.write(`
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="ow">is</span> <span class="n">client</span><span class="p">,</span> <span class="s2">&quot;Client not set in base dataset class?&quot;</span>
 
         <span class="k">if</span> <span class="n">cache_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Passed in cache data. That takes priority</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span> <span class="o">=</span> <span class="n">cache_data</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="p">:</span>
+            <span class="c1"># Ask the client cache for our cache</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">get_dataset_cache</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Memory_backed cache, not shared</span>
+            <span class="c1"># TODO - share? Use class id as a key? Would allow for threading</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span> <span class="o">=</span> <span class="n">DatasetCache</span><span class="p">(</span><span class="s2">&quot;file:/?mode=memory&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
 
-        <span class="k">elif</span> <span class="n">client</span> <span class="ow">and</span> <span class="n">client</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
-            <span class="n">cache_dir</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">cache_dir</span>
-            <span class="n">cache_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;dataset_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">.sqlite&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span> <span class="o">=</span> <span class="n">DatasetCache</span><span class="p">(</span><span class="n">cache_path</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
-
-            <span class="c1"># All fields that aren&#39;t private</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">read_only</span><span class="p">:</span>
+            <span class="c1"># Add metadata to cache file (in case the user wants to share it)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">update_metadata</span><span class="p">(</span><span class="s2">&quot;dataset_metadata&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
 
-            <span class="c1"># Add metadata to cache file (in case the user wants to share it)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="c1"># Only address, not username/password</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">update_metadata</span><span class="p">(</span><span class="s2">&quot;client_address&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span> <span class="o">=</span> <span class="n">DatasetCache</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+            <span class="c1"># Only address, not username/password</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">update_metadata</span><span class="p">(</span><span class="s2">&quot;client_address&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1356,15 +1356,18 @@ document.write(`
         <span class="n">specification_names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
         <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]],</span>
         <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">BaseRecord</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Fetches record information from the remote server, storing it internally</span>
+<span class="sd">        Fetches records from the remote server</span>
 
 <span class="sd">        This does not do any checking for existing records, but is used to actually</span>
 <span class="sd">        request the data from the server.</span>
 
 <span class="sd">        Note: This function does not do any batching w.r.t. server API limits. It is expected that is done</span>
-<span class="sd">        before this function is called.</span>
+<span class="sd">        before this function is called. This function also does not look up records in the cache, but does</span>
+<span class="sd">        attach the cache to the records.</span>
+
+<span class="sd">        Note: Records are not returned in any particular order</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1376,10 +1379,15 @@ document.write(`
 <span class="sd">            Fetch only records with these statuses</span>
 <span class="sd">        include</span>
 <span class="sd">            Additional fields/data to include when fetch the entry</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :</span>
+<span class="sd">            List of tuples (entry_name, spec_name, record)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">entry_names</span> <span class="ow">and</span> <span class="n">specification_names</span><span class="p">):</span>
-            <span class="k">return</span>
+            <span class="k">return</span> <span class="p">[]</span>
 
         <span class="c1"># First, we need the corresponding entries and specifications</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fetch_entries</span><span class="p">(</span><span class="n">entry_names</span><span class="p">)</span>
@@ -1395,12 +1403,17 @@ document.write(`
         <span class="p">)</span>
 
         <span class="n">record_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">record_info</span><span class="p">]</span>
-        <span class="n">records</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">_get_records_by_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_record_type</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="n">include</span><span class="p">)</span>
 
-        <span class="c1"># Update the locally-stored records</span>
+        <span class="c1"># This function always fetches, so force_fetch = True</span>
+        <span class="c1"># But records will be attached to thee cache</span>
+        <span class="n">records</span> <span class="o">=</span> <span class="n">get_records_with_cache</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_record_type</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">,</span> <span class="n">include</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Update the locally-stored metadata for these dataset records</span>
         <span class="c1"># zip(record_info, records) = ((entry_name, spec_name, record_id), record)</span>
         <span class="n">update_info</span> <span class="o">=</span> <span class="p">[(</span><span class="n">ename</span><span class="p">,</span> <span class="n">sname</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">ename</span><span class="p">,</span> <span class="n">sname</span><span class="p">,</span> <span class="n">_</span><span class="p">),</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">record_info</span><span class="p">,</span> <span class="n">records</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">update_dataset_records</span><span class="p">(</span><span class="n">update_info</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">update_info</span>
 
     <span class="k">def</span> <span class="nf">_internal_update_records</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -1408,12 +1421,9 @@ document.write(`
         <span class="n">specification_names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
         <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]],</span>
         <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">BaseRecord</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Update local record information if it has been modified on the server</span>
-
-<span class="sd">        Note: This function does not do any batching w.r.t. server API limits. It is expected that is done</span>
-<span class="sd">        before this function is called.</span>
+<span class="sd">        Update local record information if the record has been modified on the server</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1428,23 +1438,20 @@ document.write(`
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">entry_names</span> <span class="ow">and</span> <span class="n">specification_names</span><span class="p">):</span>
-            <span class="k">return</span>
-
-        <span class="c1"># Only update records if the record in the local cache as one of the following statuses</span>
-        <span class="n">updateable_statuses</span> <span class="o">=</span> <span class="p">(</span><span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">waiting</span><span class="p">,</span> <span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">running</span><span class="p">,</span> <span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">error</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">[]</span>
 
         <span class="c1"># Returns list of tuple (entry name, spec_name, id, status, modified_on) of records</span>
         <span class="c1"># we have our local cache</span>
-        <span class="n">updateable_record_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">get_dataset_record_info</span><span class="p">(</span>
-            <span class="n">entry_names</span><span class="p">,</span> <span class="n">specification_names</span><span class="p">,</span> <span class="n">updateable_statuses</span>
-        <span class="p">)</span>
+        <span class="n">updateable_record_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">get_dataset_record_info</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">specification_names</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
         <span class="c1"># print(f&quot;UPDATEABLE RECORDS: {len(updateable_record_info)}&quot;)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">updateable_record_info</span><span class="p">:</span>
-            <span class="k">return</span>
+            <span class="k">return</span> <span class="p">[]</span>
 
         <span class="n">batch_size</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_records&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span>
-        <span class="n">record_modified_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># record_id -&gt; modified time</span>
+        <span class="n">server_modified_time</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># record_id -&gt; modified time on server</span>
 
+        <span class="c1"># Find out which records have been updated on the server</span>
         <span class="k">for</span> <span class="n">record_info_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">updateable_record_info</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
             <span class="n">record_id_batch</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">record_info_batch</span><span class="p">]</span>
 
@@ -1461,12 +1468,12 @@ document.write(`
             <span class="k">for</span> <span class="n">sri</span> <span class="ow">in</span> <span class="n">server_record_info</span><span class="p">:</span>
                 <span class="c1"># Only store if the status on the server matches what the caller wants</span>
                 <span class="k">if</span> <span class="n">status</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">sri</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">status</span><span class="p">:</span>
-                    <span class="n">record_modified_map</span><span class="p">[</span><span class="n">sri</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">parse_obj_as</span><span class="p">(</span><span class="n">datetime</span><span class="p">,</span> <span class="n">sri</span><span class="p">[</span><span class="s2">&quot;modified_on&quot;</span><span class="p">])</span>
+                    <span class="n">server_modified_time</span><span class="p">[</span><span class="n">sri</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">parse_obj_as</span><span class="p">(</span><span class="n">datetime</span><span class="p">,</span> <span class="n">sri</span><span class="p">[</span><span class="s2">&quot;modified_on&quot;</span><span class="p">])</span>
 
         <span class="c1"># Which ones need to be fully updated</span>
         <span class="n">need_updating</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># key is specification, value is list of entry names</span>
         <span class="k">for</span> <span class="n">entry_name</span><span class="p">,</span> <span class="n">spec_name</span><span class="p">,</span> <span class="n">record_id</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">local_mtime</span> <span class="ow">in</span> <span class="n">updateable_record_info</span><span class="p">:</span>
-            <span class="n">server_mtime</span> <span class="o">=</span> <span class="n">record_modified_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">record_id</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">server_mtime</span> <span class="o">=</span> <span class="n">server_modified_time</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">record_id</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
             <span class="c1"># Perhaps the record doesn&#39;t exist on the server anymore or something</span>
             <span class="k">if</span> <span class="n">server_mtime</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1478,9 +1485,15 @@ document.write(`
 
         <span class="c1"># Update from the server one spec at a time</span>
         <span class="c1"># print(f&quot;Updated on server: {len(needs_updating)}&quot;)</span>
+        <span class="n">updated_records</span> <span class="o">=</span> <span class="p">[]</span>
+
         <span class="k">for</span> <span class="n">spec_name</span><span class="p">,</span> <span class="n">entries_to_update</span> <span class="ow">in</span> <span class="n">need_updating</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">for</span> <span class="n">entries_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">entries_to_update</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_internal_fetch_records</span><span class="p">(</span><span class="n">entries_batch</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
+                <span class="c1"># Updates dataset record metadata if needed</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_internal_fetch_records</span><span class="p">(</span><span class="n">entries_batch</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
+                <span class="n">updated_records</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">updated_records</span>
 
 <div class="viewcode-block" id="BaseDataset.fetch_records">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.fetch_records">[docs]</a>
@@ -1540,27 +1553,44 @@ document.write(`
         <span class="c1"># Determine the number of entries in each batch</span>
         <span class="c1"># Assume there are many more entries than specifications, and that</span>
         <span class="c1"># everything has been submitted</span>
-        <span class="c1"># Divide by 4 to go easy on the server</span>
-        <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_records&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_records&quot;</span><span class="p">])</span>
+        <span class="n">n_batches</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">entry_names</span><span class="p">)</span> <span class="o">/</span> <span class="n">batch_size</span><span class="p">)</span>
 
         <span class="c1"># Do all entries for one spec. This simplifies things, especially with handling</span>
         <span class="c1"># existing or update-able records</span>
         <span class="k">for</span> <span class="n">spec_name</span> <span class="ow">in</span> <span class="n">specification_names</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">entry_names_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">entry_names_batch</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">chunk_iterable</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">),</span> <span class="n">total</span><span class="o">=</span><span class="n">n_batches</span><span class="p">,</span> <span class="n">disable</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                <span class="n">records_batch</span> <span class="o">=</span> <span class="p">[]</span>
+
                 <span class="c1"># Handle existing records that need to be updated</span>
-                <span class="k">if</span> <span class="n">fetch_updated</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_refetch</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_internal_update_records</span><span class="p">(</span><span class="n">entry_names_batch</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">],</span> <span class="n">status</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
-
                 <span class="k">if</span> <span class="n">force_refetch</span><span class="p">:</span>
-                    <span class="n">batch_tofetch</span> <span class="o">=</span> <span class="n">entry_names_batch</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="c1"># Filter if they already exist in the local cache</span>
-                    <span class="n">cached_records</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">get_existing_dataset_records</span><span class="p">(</span><span class="n">entry_names_batch</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">])</span>
-                    <span class="n">cached_record_entries</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">cached_records</span><span class="p">]</span>
-                    <span class="n">batch_tofetch</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">entry_names_batch</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cached_record_entries</span><span class="p">]</span>
+                    <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_internal_fetch_records</span><span class="p">(</span><span class="n">entry_names_batch</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">],</span> <span class="n">status</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
+                    <span class="n">records_batch</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
 
-                <span class="k">if</span> <span class="n">batch_tofetch</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_internal_fetch_records</span><span class="p">(</span><span class="n">entry_names_batch</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">],</span> <span class="n">status</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">missing_entries</span> <span class="o">=</span> <span class="n">entry_names_batch</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+                    <span class="k">if</span> <span class="n">fetch_updated</span><span class="p">:</span>
+                        <span class="n">updated_records</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_internal_update_records</span><span class="p">(</span><span class="n">missing_entries</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">],</span> <span class="n">status</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
+                        <span class="n">records_batch</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">updated_records</span><span class="p">)</span>
+
+                        <span class="c1"># what wasn&#39;t updated</span>
+                        <span class="n">updated_entries</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">updated_records</span><span class="p">]</span>
+                        <span class="n">missing_entries</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">entry_names_batch</span> <span class="k">if</span> <span class="n">e</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">updated_entries</span><span class="p">]</span>
+
+                    <span class="c1"># Check if we have any cached records</span>
+                    <span class="n">cached_records</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">get_dataset_records</span><span class="p">(</span><span class="n">missing_entries</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">])</span>
+                    <span class="n">records_batch</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">cached_records</span><span class="p">)</span>
+
+                    <span class="c1"># what we need to fetch from the server</span>
+                    <span class="n">cached_entries</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">cached_records</span><span class="p">]</span>
+                    <span class="n">missing_entries</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">missing_entries</span> <span class="k">if</span> <span class="n">e</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cached_entries</span><span class="p">]</span>
+
+                    <span class="n">fetched_records</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_internal_fetch_records</span><span class="p">(</span><span class="n">missing_entries</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">],</span> <span class="n">status</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
+                    <span class="n">records_batch</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">fetched_records</span><span class="p">)</span>
+
+                <span class="c1"># Write the record batch to the cache at once. Also marks the records as clean (no need to writeback)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">update_records</span><span class="p">([</span><span class="n">r</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records_batch</span><span class="p">])</span></div>
 
 
 <div class="viewcode-block" id="BaseDataset.get_record">
@@ -1584,22 +1614,23 @@ document.write(`
             <span class="n">fetch_updated</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="n">force_refetch</span> <span class="o">=</span> <span class="kc">False</span>
 
+        <span class="n">record</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">force_refetch</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_internal_fetch_records</span><span class="p">([</span><span class="n">entry_name</span><span class="p">],</span> <span class="p">[</span><span class="n">specification_name</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
+            <span class="n">records</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_internal_fetch_records</span><span class="p">([</span><span class="n">entry_name</span><span class="p">],</span> <span class="p">[</span><span class="n">specification_name</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
+            <span class="n">record</span> <span class="o">=</span> <span class="n">records</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
         <span class="k">elif</span> <span class="n">fetch_updated</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_internal_update_records</span><span class="p">([</span><span class="n">entry_name</span><span class="p">],</span> <span class="p">[</span><span class="n">specification_name</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
+            <span class="n">records</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_internal_update_records</span><span class="p">([</span><span class="n">entry_name</span><span class="p">],</span> <span class="p">[</span><span class="n">specification_name</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">records</span><span class="p">:</span>
+                <span class="n">record</span> <span class="o">=</span> <span class="n">records</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
 
-        <span class="n">record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">get_dataset_record</span><span class="p">(</span><span class="n">entry_name</span><span class="p">,</span> <span class="n">specification_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">record</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Attempt to get from cache</span>
+            <span class="n">record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">get_dataset_record</span><span class="p">(</span><span class="n">entry_name</span><span class="p">,</span> <span class="n">specification_name</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">record</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_view</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">fetch_records</span><span class="p">(</span>
-                <span class="n">entry_name</span><span class="p">,</span>
-                <span class="n">specification_name</span><span class="p">,</span>
-                <span class="n">include</span><span class="o">=</span><span class="n">include</span><span class="p">,</span>
-                <span class="n">fetch_updated</span><span class="o">=</span><span class="n">fetch_updated</span><span class="p">,</span>
-                <span class="n">force_refetch</span><span class="o">=</span><span class="n">force_refetch</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">get_dataset_record</span><span class="p">(</span><span class="n">entry_name</span><span class="p">,</span> <span class="n">specification_name</span><span class="p">)</span>
+            <span class="c1"># not in cache</span>
+            <span class="n">records</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_internal_fetch_records</span><span class="p">([</span><span class="n">entry_name</span><span class="p">],</span> <span class="p">[</span><span class="n">specification_name</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
+            <span class="n">record</span> <span class="o">=</span> <span class="n">records</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="n">record</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">record</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="p">)</span>
@@ -1650,40 +1681,48 @@ document.write(`
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_view</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">spec_name</span> <span class="ow">in</span> <span class="n">specification_names</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">entry_names_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="mi">125</span><span class="p">):</span>
-                    <span class="n">record_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">get_dataset_records</span><span class="p">(</span><span class="n">entry_names_batch</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">])</span>
+                    <span class="n">record_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">get_dataset_records</span><span class="p">(</span><span class="n">entry_names_batch</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">],</span> <span class="n">status</span><span class="p">)</span>
 
                     <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">record_data</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="n">status</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">r</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="n">status</span><span class="p">:</span>
-                            <span class="k">yield</span> <span class="n">e</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">r</span>
+                        <span class="k">yield</span> <span class="n">e</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">r</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># Smaller fetch limit for iteration (than in fetch_records)</span>
-            <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_records&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mi">10</span><span class="p">)</span>
+            <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_records&quot;</span><span class="p">])</span>
 
             <span class="k">for</span> <span class="n">spec_name</span> <span class="ow">in</span> <span class="n">specification_names</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">entry_names_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
+                    <span class="n">records_batch</span> <span class="o">=</span> <span class="p">[]</span>
+
                     <span class="c1"># Handle existing records that need to be updated</span>
-                    <span class="k">if</span> <span class="n">fetch_updated</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_refetch</span><span class="p">:</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_internal_update_records</span><span class="p">(</span><span class="n">entry_names_batch</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">],</span> <span class="n">status</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
-
                     <span class="k">if</span> <span class="n">force_refetch</span><span class="p">:</span>
-                        <span class="n">batch_tofetch</span> <span class="o">=</span> <span class="n">entry_names_batch</span>
+                        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_internal_fetch_records</span><span class="p">(</span><span class="n">entry_names_batch</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">],</span> <span class="n">status</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
+                        <span class="n">records_batch</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="c1"># Filter if they already exist in the local cache</span>
-                        <span class="n">existing_records</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">get_existing_dataset_records</span><span class="p">(</span><span class="n">entry_names_batch</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">])</span>
-                        <span class="n">existing_entries</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">existing_records</span><span class="p">]</span>
-                        <span class="n">batch_tofetch</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">entry_names_batch</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">existing_entries</span><span class="p">]</span>
+                        <span class="n">missing_entries</span> <span class="o">=</span> <span class="n">entry_names_batch</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
-                    <span class="k">if</span> <span class="n">batch_tofetch</span><span class="p">:</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_internal_fetch_records</span><span class="p">(</span><span class="n">batch_tofetch</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">],</span> <span class="n">status</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">fetch_updated</span><span class="p">:</span>
+                            <span class="n">updated_records</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_internal_update_records</span><span class="p">(</span>
+                                <span class="n">missing_entries</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">],</span> <span class="n">status</span><span class="p">,</span> <span class="n">include</span>
+                            <span class="p">)</span>
+                            <span class="n">records_batch</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">updated_records</span><span class="p">)</span>
 
-                    <span class="c1"># Now lookup the just-fetched records and yield them</span>
-                    <span class="n">record_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">get_dataset_records</span><span class="p">(</span><span class="n">entry_names_batch</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">])</span>
+                            <span class="c1"># what wasn&#39;t updated</span>
+                            <span class="n">updated_entries</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">updated_records</span><span class="p">]</span>
+                            <span class="n">missing_entries</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">entry_names_batch</span> <span class="k">if</span> <span class="n">e</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">updated_entries</span><span class="p">]</span>
 
-                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">record_data</span><span class="p">:</span>
-                            <span class="n">r</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="p">)</span>
+                        <span class="c1"># Check if we have any cached records</span>
+                        <span class="n">cached_records</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">get_dataset_records</span><span class="p">(</span><span class="n">missing_entries</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">])</span>
+                        <span class="n">records_batch</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">cached_records</span><span class="p">)</span>
 
-                    <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">record_data</span><span class="p">:</span>
+                        <span class="c1"># what we need to fetch from the server</span>
+                        <span class="n">cached_entries</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">cached_records</span><span class="p">]</span>
+                        <span class="n">missing_entries</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">missing_entries</span> <span class="k">if</span> <span class="n">e</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cached_entries</span><span class="p">]</span>
+
+                        <span class="n">fetched_records</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_internal_fetch_records</span><span class="p">(</span><span class="n">missing_entries</span><span class="p">,</span> <span class="p">[</span><span class="n">spec_name</span><span class="p">],</span> <span class="n">status</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
+                        <span class="n">records_batch</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">fetched_records</span><span class="p">)</span>
+
+                    <span class="c1"># Let the writeback mechanism handle writing to the cache</span>
+                    <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records_batch</span><span class="p">:</span>
                         <span class="k">if</span> <span class="n">status</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">r</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="n">status</span><span class="p">:</span>
                             <span class="k">yield</span> <span class="n">e</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">r</span></div>
 
@@ -1714,6 +1753,10 @@ document.write(`
             <span class="kc">None</span><span class="p">,</span>
             <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
         <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">delete_records</span><span class="p">:</span>
+            <span class="n">record_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">get_dataset_records</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">specification_names</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">delete_records</span><span class="p">([</span><span class="n">r</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">record_info</span><span class="p">])</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">delete_dataset_records</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">specification_names</span><span class="p">)</span>
 
@@ -1753,8 +1796,6 @@ document.write(`
             <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">delete_dataset_records</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">specification_names</span><span class="p">)</span>
-
         <span class="k">if</span> <span class="n">refetch_records</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fetch_records</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">specification_names</span><span class="p">,</span> <span class="n">force_refetch</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -1788,8 +1829,6 @@ document.write(`
             <span class="kc">None</span><span class="p">,</span>
             <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
         <span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">delete_dataset_records</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">specification_names</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">refetch_records</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fetch_records</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">specification_names</span><span class="p">,</span> <span class="n">force_refetch</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1825,8 +1864,6 @@ document.write(`
             <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">delete_dataset_records</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">specification_names</span><span class="p">)</span>
-
         <span class="k">if</span> <span class="n">refetch_records</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fetch_records</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">specification_names</span><span class="p">,</span> <span class="n">force_refetch</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -1860,8 +1897,6 @@ document.write(`
             <span class="kc">None</span><span class="p">,</span>
             <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
         <span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">delete_dataset_records</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">specification_names</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">refetch_records</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fetch_records</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">specification_names</span><span class="p">,</span> <span class="n">force_refetch</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1897,8 +1932,6 @@ document.write(`
             <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">delete_dataset_records</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">specification_names</span><span class="p">)</span>
-
         <span class="k">if</span> <span class="n">refetch_records</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fetch_records</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">specification_names</span><span class="p">,</span> <span class="n">force_refetch</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -1932,8 +1965,6 @@ document.write(`
             <span class="kc">None</span><span class="p">,</span>
             <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
         <span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">delete_dataset_records</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">specification_names</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">refetch_records</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fetch_records</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">specification_names</span><span class="p">,</span> <span class="n">force_refetch</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -2348,14 +2379,48 @@ document.write(`
     <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">,</span> <span class="n">cache_data</span><span class="o">=</span><span class="n">cache_data</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">dataset_from_cache</span><span class="p">(</span><span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseDataset</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">load_dataset_view</span><span class="p">(</span><span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseDataset</span><span class="p">:</span>
     <span class="c1"># Reads this as a read-only &quot;view&quot;</span>
     <span class="n">ds_meta</span> <span class="o">=</span> <span class="n">read_dataset_metadata</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
     <span class="n">ds_type</span> <span class="o">=</span> <span class="n">BaseDataset</span><span class="o">.</span><span class="n">get_subclass</span><span class="p">(</span><span class="n">ds_meta</span><span class="p">[</span><span class="s2">&quot;dataset_type&quot;</span><span class="p">])</span>
-    <span class="n">ds_cache</span> <span class="o">=</span> <span class="n">DatasetCache</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">ds_type</span><span class="p">)</span>
+
+    <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+    <span class="n">cache_uri</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;file:</span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">?mode=ro&quot;</span>
+    <span class="n">ds_cache</span> <span class="o">=</span> <span class="n">DatasetCache</span><span class="p">(</span><span class="n">cache_uri</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">ds_type</span><span class="p">)</span>
 
     <span class="c1"># Views never have a client attached</span>
     <span class="k">return</span> <span class="n">dataset_from_dict</span><span class="p">(</span><span class="n">ds_meta</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cache_data</span><span class="o">=</span><span class="n">ds_cache</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">dataset_from_cache</span><span class="p">(</span><span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseDataset</span><span class="p">:</span>
+    <span class="c1"># Keep old name around</span>
+    <span class="k">return</span> <span class="n">load_dataset_view</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">create_dataset_view</span><span class="p">(</span>
+    <span class="n">client</span><span class="p">:</span> <span class="n">PortalClient</span><span class="p">,</span>
+    <span class="n">dataset_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Path </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2"> exists and is not a file&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">overwrite</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2"> exists and overwrite is False&quot;</span><span class="p">)</span>
+
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">file_path</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Manually get it, because we want to use a different cache file</span>
+    <span class="n">ds_dict</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="n">dataset_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span>
+    <span class="n">ds_cache</span> <span class="o">=</span> <span class="n">DatasetCache</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;file:</span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="n">BaseDataset</span><span class="o">.</span><span class="n">get_subclass</span><span class="p">(</span><span class="n">ds_dict</span><span class="p">[</span><span class="s2">&quot;dataset_type&quot;</span><span class="p">]))</span>
+
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">dataset_from_dict</span><span class="p">(</span><span class="n">ds_dict</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">ds_cache</span><span class="p">)</span>
+
+    <span class="n">ds</span><span class="o">.</span><span class="n">fetch_records</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="n">include</span><span class="p">,</span> <span class="n">force_refetch</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 
                 </article>

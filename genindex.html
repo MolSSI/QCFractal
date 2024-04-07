@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; QCArchive 0.53.post49+g89818749 documentation</title>
+    <title>Index &#8212; QCArchive 0.53.post86+gf0cd1833 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="_static/documentation_options.js?v=dbe57317"></script>
+    <script src="_static/documentation_options.js?v=e362d4a3"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -613,6 +613,8 @@ document.write(`
 </li>
       <li><a href="user_guide/records/manybody.html#qcportal.manybody.ManybodyRecord.clusters">clusters (ManybodyRecord property)</a>
 </li>
+      <li><a href="user_guide/records/manybody.html#qcportal.manybody.ManybodyRecord.clusters_meta_">clusters_meta_ (ManybodyRecord attribute)</a>
+</li>
       <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.comments">comments (BaseRecord property)</a>
 
       <ul>
@@ -660,6 +662,8 @@ document.write(`
 </li>
       </ul></li>
       <li><a href="user_guide/records/reaction.html#qcportal.reaction.ReactionRecord.components">components (ReactionRecord property)</a>
+</li>
+      <li><a href="user_guide/records/reaction.html#qcportal.reaction.ReactionRecord.components_meta_">components_meta_ (ReactionRecord attribute)</a>
 </li>
       <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.compute_history">compute_history (BaseRecord property)</a>
 
@@ -719,6 +723,8 @@ document.write(`
         <li><a href="user_guide/records/base.html#qcportal.record_models.RecordStatusEnum.count">(RecordStatusEnum method)</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.create_dataset_view">create_dataset_view() (PortalClient method)</a>
+</li>
       <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.created_on">created_on (BaseRecord attribute)</a>
 
       <ul>
@@ -979,22 +985,40 @@ document.write(`
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.fetch_all">fetch_all() (BaseRecord method)</a>
+      <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.fetch_children">fetch_children() (BaseRecord method)</a>
 
       <ul>
-        <li><a href="user_guide/records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord.fetch_all">(GridoptimizationRecord method)</a>
+        <li><a href="user_guide/records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord.fetch_children">(GridoptimizationRecord method)</a>
 </li>
-        <li><a href="user_guide/records/manybody.html#qcportal.manybody.ManybodyRecord.fetch_all">(ManybodyRecord method)</a>
+        <li><a href="user_guide/records/manybody.html#qcportal.manybody.ManybodyRecord.fetch_children">(ManybodyRecord method)</a>
 </li>
-        <li><a href="user_guide/records/neb.html#qcportal.neb.NEBRecord.fetch_all">(NEBRecord method)</a>
+        <li><a href="user_guide/records/neb.html#qcportal.neb.NEBRecord.fetch_children">(NEBRecord method)</a>
 </li>
-        <li><a href="user_guide/records/optimization.html#qcportal.optimization.OptimizationRecord.fetch_all">(OptimizationRecord method)</a>
+        <li><a href="user_guide/records/optimization.html#qcportal.optimization.OptimizationRecord.fetch_children">(OptimizationRecord method)</a>
 </li>
-        <li><a href="user_guide/records/reaction.html#qcportal.reaction.ReactionRecord.fetch_all">(ReactionRecord method)</a>
+        <li><a href="user_guide/records/reaction.html#qcportal.reaction.ReactionRecord.fetch_children">(ReactionRecord method)</a>
 </li>
-        <li><a href="user_guide/records/singlepoint.html#qcportal.singlepoint.SinglepointRecord.fetch_all">(SinglepointRecord method)</a>
+        <li><a href="user_guide/records/singlepoint.html#qcportal.singlepoint.SinglepointRecord.fetch_children">(SinglepointRecord method)</a>
 </li>
-        <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.fetch_all">(TorsiondriveRecord method)</a>
+        <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.fetch_children">(TorsiondriveRecord method)</a>
+</li>
+      </ul></li>
+      <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.fetch_children_multi">fetch_children_multi() (BaseRecord class method)</a>
+
+      <ul>
+        <li><a href="user_guide/records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord.fetch_children_multi">(GridoptimizationRecord class method)</a>
+</li>
+        <li><a href="user_guide/records/manybody.html#qcportal.manybody.ManybodyRecord.fetch_children_multi">(ManybodyRecord class method)</a>
+</li>
+        <li><a href="user_guide/records/neb.html#qcportal.neb.NEBRecord.fetch_children_multi">(NEBRecord class method)</a>
+</li>
+        <li><a href="user_guide/records/optimization.html#qcportal.optimization.OptimizationRecord.fetch_children_multi">(OptimizationRecord class method)</a>
+</li>
+        <li><a href="user_guide/records/reaction.html#qcportal.reaction.ReactionRecord.fetch_children_multi">(ReactionRecord class method)</a>
+</li>
+        <li><a href="user_guide/records/singlepoint.html#qcportal.singlepoint.SinglepointRecord.fetch_children_multi">(SinglepointRecord class method)</a>
+</li>
+        <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.fetch_children_multi">(TorsiondriveRecord class method)</a>
 </li>
       </ul></li>
       <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.fetch_contributed_values">fetch_contributed_values() (BaseDataset method)</a>
@@ -1007,6 +1031,8 @@ document.write(`
 </li>
       <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.fetch_specification_names">fetch_specification_names() (BaseDataset method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.fetch_specifications">fetch_specifications() (BaseDataset method)</a>
 </li>
       <li><a href="user_guide/records/neb.html#qcportal.neb.NEBRecord.final_chain">final_chain (NEBRecord property)</a>
@@ -1017,8 +1043,6 @@ document.write(`
         <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.final_energies">(TorsiondriveRecord property)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/records/optimization.html#qcportal.optimization.OptimizationRecord.final_molecule">final_molecule (OptimizationRecord property)</a>
 </li>
       <li><a href="user_guide/records/optimization.html#qcportal.optimization.OptimizationRecord.final_molecule_">final_molecule_ (OptimizationRecord attribute)</a>
@@ -1509,15 +1533,17 @@ document.write(`
         <li><a href="admin_guide/managers/index.html#qcfractalcompute.config.TorqueExecutorConfig.memory_per_worker">(TorqueExecutorConfig attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/metadata.html#qcportal.metadata_models.InsertMetadata.merge">merge() (InsertMetadata static method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.metadata">metadata (BaseDataset attribute)</a>
 </li>
       <li><a href="user_guide/records/singlepoint.html#qcportal.singlepoint.QCSpecification.method">method (QCSpecification attribute)</a>
 </li>
       <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.minimum_optimizations">minimum_optimizations (TorsiondriveRecord property)</a>
+</li>
+      <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.minimum_optimizations_">minimum_optimizations_ (TorsiondriveRecord attribute)</a>
 </li>
       <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.modified_on">modified_on (BaseRecord attribute)</a>
 
@@ -2219,12 +2245,12 @@ document.write(`
         <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.specification">(TorsiondriveRecord attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.specification_names">specification_names (BaseDataset property)</a>
 </li>
       <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.specifications">specifications (BaseDataset property)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJobStatusEnum.split">split() (InternalJobStatusEnum method)</a>
 
       <ul>
@@ -2343,6 +2369,24 @@ document.write(`
         <li><a href="user_guide/records/base.html#qcportal.record_models.RecordStatusEnum.swapcase">(RecordStatusEnum method)</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/records/base.html#qcportal.record_models.BaseRecord.sync_to_cache">sync_to_cache() (BaseRecord method)</a>
+
+      <ul>
+        <li><a href="user_guide/records/gridoptimization.html#qcportal.gridoptimization.GridoptimizationRecord.sync_to_cache">(GridoptimizationRecord method)</a>
+</li>
+        <li><a href="user_guide/records/manybody.html#qcportal.manybody.ManybodyRecord.sync_to_cache">(ManybodyRecord method)</a>
+</li>
+        <li><a href="user_guide/records/neb.html#qcportal.neb.NEBRecord.sync_to_cache">(NEBRecord method)</a>
+</li>
+        <li><a href="user_guide/records/optimization.html#qcportal.optimization.OptimizationRecord.sync_to_cache">(OptimizationRecord method)</a>
+</li>
+        <li><a href="user_guide/records/reaction.html#qcportal.reaction.ReactionRecord.sync_to_cache">(ReactionRecord method)</a>
+</li>
+        <li><a href="user_guide/records/singlepoint.html#qcportal.singlepoint.SinglepointRecord.sync_to_cache">(SinglepointRecord method)</a>
+</li>
+        <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.sync_to_cache">(TorsiondriveRecord method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -2432,8 +2476,6 @@ document.write(`
 </li>
       </ul></li>
       <li><a href="user_guide/records/neb.html#qcportal.neb.NEBRecord.ts_hessian">ts_hessian (NEBRecord property)</a>
-</li>
-      <li><a href="user_guide/records/neb.html#qcportal.neb.NEBRecord.ts_hessian_">ts_hessian_ (NEBRecord attribute)</a>
 </li>
       <li><a href="user_guide/records/neb.html#qcportal.neb.NEBRecord.ts_optimization">ts_optimization (NEBRecord property)</a>
 </li>
