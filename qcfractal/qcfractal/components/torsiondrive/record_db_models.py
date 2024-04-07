@@ -1,6 +1,22 @@
 from __future__ import annotations
 
-from sqlalchemy import select, Column, Integer, ForeignKey, String, UniqueConstraint, Index, CheckConstraint, event, DDL
+from typing import TYPE_CHECKING
+
+from sqlalchemy import func
+from sqlalchemy import (
+    select,
+    Integer,
+    ForeignKey,
+    String,
+    UniqueConstraint,
+    Index,
+    CheckConstraint,
+    event,
+    DDL,
+    Column,
+    TEXT,
+    DOUBLE_PRECISION,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.orm import relationship, column_property
@@ -12,6 +28,9 @@ from qcfractal.components.optimization.record_db_models import (
 )
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.db_socket import BaseORM
+
+if TYPE_CHECKING:
+    from typing import Dict, Any, Optional, Iterable
 
 
 class TorsiondriveOptimizationORM(BaseORM):
@@ -91,6 +110,36 @@ class TorsiondriveSpecificationORM(BaseORM):
         return f"{self.program}~{self.optimization_specification.short_description}"
 
 
+# CTE for a table with minimimum optimizations. Has columns torsiondrive_id, key, and (minimum) optimization_id
+# Chooses the optimization with the lowest energy, and if there are multiple, the one with the lowest id
+_minopt_cte = (
+    select(
+        TorsiondriveOptimizationORM.torsiondrive_id.label("torsiondrive_id"),
+        TorsiondriveOptimizationORM.key.label("key"),
+        TorsiondriveOptimizationORM.optimization_id.label("optimization_id"),
+    )
+    .join(OptimizationRecordORM, TorsiondriveOptimizationORM.optimization_id == OptimizationRecordORM.id)
+    .distinct(TorsiondriveOptimizationORM.torsiondrive_id, TorsiondriveOptimizationORM.key)
+    .order_by(
+        TorsiondriveOptimizationORM.torsiondrive_id,
+        TorsiondriveOptimizationORM.key,
+        OptimizationRecordORM.energies[-1].cast(TEXT).cast(DOUBLE_PRECISION).asc(),
+        OptimizationRecordORM.id.asc(),
+    )
+    .cte()
+)
+
+# CTE for a table with minimimum optimizations, but as JSON. Has columns torsiondrive_id, minimum_optimizations (as JSONB)
+_minopt_cte_agg = (
+    select(
+        _minopt_cte.c.torsiondrive_id.label("torsiondrive_id"),
+        func.jsonb_object_agg(_minopt_cte.c.key, _minopt_cte.c.optimization_id).label("minimum_optimizations"),
+    )
+    .group_by(_minopt_cte.c.torsiondrive_id)
+    .cte()
+)
+
+
 class TorsiondriveRecordORM(BaseRecordORM):
     """
     Table for storing torsiondrive calculations
@@ -113,11 +162,30 @@ class TorsiondriveRecordORM(BaseRecordORM):
         passive_deletes=True,
     )
 
+    minimum_optimizations = column_property(
+        select(_minopt_cte_agg.c.minimum_optimizations)
+        .where(id == _minopt_cte_agg.c.torsiondrive_id)
+        .scalar_subquery(),
+        deferred=True,
+    )
+
     __mapper_args__ = {
         "polymorphic_identity": "torsiondrive",
     }
 
     _qcportal_model_excludes = [*BaseRecordORM._qcportal_model_excludes, "specification_id"]
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        d = BaseRecordORM.model_dict(self, exclude)
+
+        # Return initial molecule or just the ids, depending on what we have
+        if "initial_molecules" in d:
+            init_mol = d.pop("initial_molecules")
+            d["initial_molecules_ids"] = [x["molecule_id"] for x in init_mol]
+            if "molecule" in init_mol[0]:
+                d["initial_molecules"] = [x["molecule"] for x in init_mol]
+
+        return d
 
     @property
     def short_description(self) -> str:

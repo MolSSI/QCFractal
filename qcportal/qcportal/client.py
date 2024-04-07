@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import math
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Union, Sequence, Iterable, TypeVar, Type
 
@@ -74,6 +75,8 @@ from .dataset_models import (
     DatasetDeleteParams,
     DatasetAddBody,
     dataset_from_dict,
+    load_dataset_view,
+    create_dataset_view,
 )
 from .internal_jobs import InternalJob, InternalJobQueryFilters, InternalJobQueryIterator, InternalJobStatusEnum
 from .managers import ManagerQueryFilters, ManagerQueryIterator, ComputeManager
@@ -102,7 +105,7 @@ from .serverinfo import (
     ServerStatsQueryIterator,
     DeleteBeforeDateBody,
 )
-from .utils import make_list, chunk_iterable
+from .utils import make_list, chunk_iterable, process_chunk_iterable
 
 _T = TypeVar("_T", bound=BaseRecord)
 
@@ -122,6 +125,7 @@ class PortalClient(PortalClientBase):
         *,
         cache_dir: Optional[str] = None,
         cache_max_size: int = 0,
+        shared_memory_cache: bool = True,
     ) -> None:
         """
         Parameters
@@ -143,11 +147,15 @@ class PortalClient(PortalClientBase):
             Directory to store an internal cache of records and other data
         cache_max_size
             Maximum size of the cache directory
+        shared_memory_cache
+            If True (and cache_dir is not specified), the memory-backed cache will be marked as shared,
+            meaning that multiple instances of the PortalClient can share the same cache, as well as making the
+            cache shared among threads. Generally, this is what you want, but
         """
 
         PortalClientBase.__init__(self, address, username, password, verify, show_motd)
         self._logger = logging.getLogger("PortalClient")
-        self.cache = PortalCache(address, cache_dir, cache_max_size)
+        self.cache = PortalCache(address, cache_dir, cache_max_size, shared_memory_cache)
 
     def __repr__(self) -> str:
         """A short representation of the current PortalClient.
@@ -263,6 +271,11 @@ class PortalClient(PortalClientBase):
             ds_cache.read_only = True
 
         return ds
+
+    def create_dataset_view(
+        self, dataset_id: int, file_path: str, include: Optional[Iterable[str]] = None, overwrite: bool = False
+    ):
+        return create_dataset_view(self, dataset_id, file_path, include, overwrite)
 
     def get_dataset_status_by_id(self, dataset_id: int) -> Dict[str, Dict[RecordStatusEnum, int]]:
         return self.make_request("get", f"api/v1/datasets/{dataset_id}/status", Dict[str, Dict[RecordStatusEnum, int]])
@@ -507,6 +520,81 @@ class PortalClient(PortalClientBase):
     # General record functions
     ##############################################################
 
+    def _fetch_records(
+        self,
+        record_type: Optional[Type[_T]],
+        record_ids: Sequence[int],
+        missing_ok: bool = False,
+        include: Optional[Iterable[str]] = None,
+    ) -> List[Optional[_T]]:
+        """
+        Fetches records of a particular type with the specified IDs from the remove server.
+
+        Records will be returned in the same order as the record ids. This function always returns a list.
+
+        This function only fetches the top-level records - it does not fetch the children of the records. It also
+        does not use caching at all.
+
+        Parameters
+        ----------
+        record_type
+            The type of record to fetch
+        record_ids
+            Single ID or sequence/list of records to obtain
+        missing_ok
+            If set to True, then missing records will be tolerated, and the returned
+            records will contain None for the corresponding IDs that were not found.
+        include
+            Additional fields to include in the returned record
+
+        Returns
+        -------
+        :
+            If a single ID was specified, returns just that record. Otherwise, returns
+            a list of records.  If missing_ok was specified, None will be substituted for a record
+            that was not found.
+        """
+
+        if not record_ids:
+            return []
+
+        if include is not None:
+            # Always include the base stuff
+            include = list(include) + ["*"]
+
+        if record_type is None:
+            endpoint = "api/v1/records/bulkGet"
+        else:
+            # A little hacky
+            record_type_str = record_type.__fields__["record_type"].default
+            endpoint = f"api/v1/records/{record_type_str}/bulkGet"
+
+        max_batch_size = self.api_limits["get_records"]
+        initial_batch_size = math.ceil(max_batch_size // 10)
+
+        def _download_chunk(id_chunk: List[int]):
+            body = CommonBulkGetBody(ids=id_chunk, include=include, missing_ok=missing_ok)
+            return self.make_request("post", endpoint, List[Optional[Dict[str, Any]]], body=body)
+
+        all_records = []
+        for record_dicts in process_chunk_iterable(
+            _download_chunk,
+            record_ids,
+            self.download_target_time,
+            max_batch_size,
+            initial_batch_size,
+            self.n_download_threads,
+            keep_order=True,
+        ):
+            if record_type is None:
+                all_records.extend(records_from_dicts(record_dicts, self))
+            else:
+                all_records.extend([record_type(self, **r) if r is not None else None for r in record_dicts])
+
+        # Just to really make sure the process_chunk_iterable code is correct
+        assert all((x is None or x.id == rid) for x, rid in zip(all_records, record_ids))
+        return all_records
+
     def get_records(
         self,
         record_ids: Union[int, Sequence[int]],
@@ -536,50 +624,34 @@ class PortalClient(PortalClientBase):
         Returns
         -------
         :
-            If a single ID was specified, returns just that record. Otherwise, returns
-            a list of records.  If missing_ok was specified, None will be substituted for a record
+            A list of records.  If missing_ok was specified, None will be substituted for a record
             that was not found.
         """
 
-        is_single = not isinstance(record_ids, Sequence)
-
-        record_ids = make_list(record_ids)
-        if not record_ids:
-            return []
-
-        batch_size = self.api_limits["get_records"] // 4
-        all_records = []
-
-        for record_id_batch in chunk_iterable(record_ids, batch_size):
-            body = CommonBulkGetBody(ids=record_id_batch, missing_ok=missing_ok)
-            record_data = self.make_request("post", "api/v1/records/bulkGet", List[Optional[Dict[str, Any]]], body=body)
-            record_batch = records_from_dicts(record_data, self)
-
-            if include:
-                for r in record_batch:
-                    r._handle_includes(include)
-
-            all_records.extend(record_batch)
-
-        if is_single:
-            return all_records[0]
-        else:
-            return all_records
+        return self._get_records_by_type(None, record_ids, missing_ok, include)
 
     def _get_records_by_type(
         self,
-        record_type: Type[_T],
+        record_type: Optional[Type[_T]],
         record_ids: Union[int, Sequence[int]],
         missing_ok: bool = False,
         include: Optional[Iterable[str]] = None,
-    ) -> Union[Optional[Optional[_T]], List[Optional[_T]]]:
+    ) -> Union[Optional[_T], List[Optional[_T]]]:
         """
-        Obtain records of a particular type with the specified IDs.
+        Obtain records of a particular type with the specified IDs from the server.
 
         Records will be returned in the same order as the record ids.
 
+        This function will fetch the children of the records if enough information
+        is fetched of the parent record. This is handled by the various fetch_children_multi
+        class functions of the record types.
+
+        This function does not use the cache.
+
         Parameters
         ----------
+        record_type
+            The type of record to fetch
         record_ids
             Single ID or sequence/list of records to obtain
         missing_ok
@@ -599,32 +671,21 @@ class PortalClient(PortalClientBase):
         is_single = not isinstance(record_ids, Sequence)
 
         record_ids = make_list(record_ids)
-        if not record_ids:
-            return []
+        all_records = self._fetch_records(record_type, record_ids, missing_ok, include)
 
-        # A little hacky
-        record_type_str = record_type.__fields__["record_type"].default
-
-        batch_size = self.api_limits["get_records"] // 4
-        all_records = []
-
-        for record_id_batch in chunk_iterable(record_ids, batch_size):
-            body = CommonBulkGetBody(ids=record_id_batch, missing_ok=missing_ok)
-
-            record_data = self.make_request(
-                "post",
-                f"api/v1/records/{record_type_str}/bulkGet",
-                List[Optional[Dict[str, Any]]],
-                body=body,
-            )
-
-            record_batch = [record_type(self, **r) if r is not None else None for r in record_data]
-
-            if include:
-                for r in record_batch:
-                    r._handle_includes(include)
-
-            all_records.extend(record_batch)
+        # We always force fetch here. Given that this record is not part of the cache, it shouldn't be using any
+        # cache anyway. But the semantics of this function is that is always fetches everything
+        if record_type is None:
+            # Handle disparate record types
+            record_groups = {}
+            for r in all_records:
+                if r is not None:
+                    record_groups.setdefault(r.record_type, [])
+                    record_groups[r.record_type].append(r)
+            for v in record_groups.values():
+                v[0].fetch_children_multi(v, include, force_fetch=True)
+        else:
+            record_type.fetch_children_multi(all_records, include, force_fetch=True)
 
         if is_single:
             return all_records[0]
@@ -1106,7 +1167,7 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = SinglepointQueryFilters(**filter_dict)
-        return RecordQueryIterator[SinglepointRecord](self, filter_data, "singlepoint", include)
+        return RecordQueryIterator[SinglepointRecord](self, filter_data, SinglepointRecord, include)
 
     ##############################################################
     # Optimization calculations
@@ -1329,7 +1390,7 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = OptimizationQueryFilters(**filter_dict)
-        return RecordQueryIterator[OptimizationRecord](self, filter_data, "optimization", include)
+        return RecordQueryIterator[OptimizationRecord](self, filter_data, OptimizationRecord, include)
 
     ##############################################################
     # Torsiondrive calculations
@@ -1542,7 +1603,7 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = TorsiondriveQueryFilters(**filter_dict)
-        return RecordQueryIterator[TorsiondriveRecord](self, filter_data, "torsiondrive", include)
+        return RecordQueryIterator[TorsiondriveRecord](self, filter_data, TorsiondriveRecord, include)
 
     ##############################################################
     # Grid optimization calculations
@@ -1755,7 +1816,7 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = GridoptimizationQueryFilters(**filter_dict)
-        return RecordQueryIterator[GridoptimizationRecord](self, filter_data, "gridoptimization", include)
+        return RecordQueryIterator[GridoptimizationRecord](self, filter_data, GridoptimizationRecord, include)
 
     ##############################################################
     # Reactions
@@ -1976,7 +2037,7 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = ReactionQueryFilters(**filter_dict)
-        return RecordQueryIterator[ReactionRecord](self, filter_data, "reaction", include)
+        return RecordQueryIterator[ReactionRecord](self, filter_data, ReactionRecord, include)
 
     ##############################################################
     # Manybody calculations
@@ -2184,7 +2245,7 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = ManybodyQueryFilters(**filter_dict)
-        return RecordQueryIterator[ManybodyRecord](self, filter_data, "manybody", include)
+        return RecordQueryIterator[ManybodyRecord](self, filter_data, ManybodyRecord, include)
 
     ##############################################################
     # NEB
@@ -2398,7 +2459,7 @@ class PortalClient(PortalClientBase):
         }
 
         filter_data = NEBQueryFilters(**filter_dict)
-        return RecordQueryIterator[NEBRecord](self, filter_data, "neb", include)
+        return RecordQueryIterator[NEBRecord](self, filter_data, NEBRecord, include)
 
     ##############################################################
     # Managers

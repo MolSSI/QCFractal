@@ -11,12 +11,12 @@ if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
 
 
-all_includes = ["components"]
+all_includes = ["components", "molecule", "comments", "initial_molecule", "final_molecule"]
 
 
-@pytest.mark.parametrize("includes", [None, all_includes])
+@pytest.mark.parametrize("includes", [None, ["**"], all_includes])
 @pytest.mark.parametrize("testfile", ["rxn_H2O_psi4_mp2_optsp", "rxn_H2O_psi4_mp2_opt", "rxn_H2O_psi4_b3lyp_sp"])
-def test_reactionrecord_model(snowflake: QCATestingSnowflake, includes: Optional[List[str]], testfile: str):
+def test_reaction_record_model(snowflake: QCATestingSnowflake, includes: Optional[List[str]], testfile: str):
     storage_socket = snowflake.get_storage_socket()
     snowflake_client = snowflake.client()
     activated_manager_name, _ = snowflake.activate_manager()
@@ -27,8 +27,25 @@ def test_reactionrecord_model(snowflake: QCATestingSnowflake, includes: Optional
     record = snowflake_client.get_reactions(rec_id, include=includes)
 
     if includes is not None:
-        record._client = None
+        assert record.components_meta_ is not None
+        assert record._components is not None
+        record.propagate_client(None)
         assert record.offline
+
+        # children have all data fetched
+        for c in record.components:
+            if c.singlepoint_id is not None:
+                assert c.singlepoint_record is not None
+                assert c.singlepoint_record.molecule_ is not None
+                assert c.singlepoint_record.comments_ is not None
+            if c.optimization_id is not None:
+                assert c.optimization_record is not None
+                assert c.optimization_record.initial_molecule_ is not None
+                assert c.optimization_record.final_molecule_ is not None
+                assert c.optimization_record.comments_ is not None
+    else:
+        assert record.components_meta_ is None
+        assert record._components is None
 
     assert record.id == rec_id
     assert record.status == RecordStatusEnum.complete

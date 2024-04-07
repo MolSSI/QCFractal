@@ -36,7 +36,7 @@ from qcportal.metadata_models import DeleteMetadata
 from qcportal.metadata_models import InsertMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, BaseRecord
 from qcportal.utils import make_list, chunk_iterable
-from qcportal.cache import DatasetCache, read_dataset_metadata
+from qcportal.cache import DatasetCache, read_dataset_metadata, get_records_with_cache
 
 if TYPE_CHECKING:
     from qcportal.client import PortalClient
@@ -145,22 +145,22 @@ class BaseDataset(BaseModel):
         assert self._client is client, "Client not set in base dataset class?"
 
         if cache_data is not None:
+            # Passed in cache data. That takes priority
             self._cache_data = cache_data
+        elif self._client:
+            # Ask the client cache for our cache
+            self._cache_data = client.cache.get_dataset_cache(self.id, type(self))
+        else:
+            # Memory_backed cache, not shared
+            # TODO - share? Use class id as a key? Would allow for threading
+            self._cache_data = DatasetCache("file:/?mode=memory", False, type(self))
 
-        elif client and client.cache.enabled:
-            cache_dir = client.cache.cache_dir
-            cache_path = os.path.join(cache_dir, f"dataset_{self.id}.sqlite")
-            self._cache_data = DatasetCache(cache_path, False, type(self))
-
-            # All fields that aren't private
+        if not self._cache_data.read_only:
+            # Add metadata to cache file (in case the user wants to share it)
             self._cache_data.update_metadata("dataset_metadata", self)
 
-            # Add metadata to cache file (in case the user wants to share it)
-            if self._client is not None:
-                # Only address, not username/password
-                self._cache_data.update_metadata("client_address", self._client.address)
-        else:
-            self._cache_data = DatasetCache(None, False, type(self))
+            # Only address, not username/password
+            self._cache_data.update_metadata("client_address", self._client.address)
 
     def __init_subclass__(cls):
         """
@@ -823,15 +823,18 @@ class BaseDataset(BaseModel):
         specification_names: Iterable[str],
         status: Optional[Iterable[RecordStatusEnum]],
         include: Optional[Iterable[str]],
-    ) -> None:
+    ) -> List[Tuple[str, str, BaseRecord]]:
         """
-        Fetches record information from the remote server, storing it internally
+        Fetches records from the remote server
 
         This does not do any checking for existing records, but is used to actually
         request the data from the server.
 
         Note: This function does not do any batching w.r.t. server API limits. It is expected that is done
-        before this function is called.
+        before this function is called. This function also does not look up records in the cache, but does
+        attach the cache to the records.
+
+        Note: Records are not returned in any particular order
 
         Parameters
         ----------
@@ -843,10 +846,15 @@ class BaseDataset(BaseModel):
             Fetch only records with these statuses
         include
             Additional fields/data to include when fetch the entry
+
+        Returns
+        -------
+        :
+            List of tuples (entry_name, spec_name, record)
         """
 
         if not (entry_names and specification_names):
-            return
+            return []
 
         # First, we need the corresponding entries and specifications
         self.fetch_entries(entry_names)
@@ -862,12 +870,17 @@ class BaseDataset(BaseModel):
         )
 
         record_ids = [x[2] for x in record_info]
-        records = self._client._get_records_by_type(self._record_type, record_ids, include=include)
 
-        # Update the locally-stored records
+        # This function always fetches, so force_fetch = True
+        # But records will be attached to thee cache
+        records = get_records_with_cache(self._client, self._cache_data, self._record_type, record_ids, include, True)
+
+        # Update the locally-stored metadata for these dataset records
         # zip(record_info, records) = ((entry_name, spec_name, record_id), record)
         update_info = [(ename, sname, r) for (ename, sname, _), r in zip(record_info, records)]
         self._cache_data.update_dataset_records(update_info)
+
+        return update_info
 
     def _internal_update_records(
         self,
@@ -875,12 +888,9 @@ class BaseDataset(BaseModel):
         specification_names: Iterable[str],
         status: Optional[Iterable[RecordStatusEnum]],
         include: Optional[Iterable[str]],
-    ):
+    ) -> List[Tuple[str, str, BaseRecord]]:
         """
-        Update local record information if it has been modified on the server
-
-        Note: This function does not do any batching w.r.t. server API limits. It is expected that is done
-        before this function is called.
+        Update local record information if the record has been modified on the server
 
         Parameters
         ----------
@@ -895,23 +905,20 @@ class BaseDataset(BaseModel):
         """
 
         if not (entry_names and specification_names):
-            return
-
-        # Only update records if the record in the local cache as one of the following statuses
-        updateable_statuses = (RecordStatusEnum.waiting, RecordStatusEnum.running, RecordStatusEnum.error)
+            return []
 
         # Returns list of tuple (entry name, spec_name, id, status, modified_on) of records
         # we have our local cache
-        updateable_record_info = self._cache_data.get_dataset_record_info(
-            entry_names, specification_names, updateable_statuses
-        )
+        updateable_record_info = self._cache_data.get_dataset_record_info(entry_names, specification_names, None)
+
         # print(f"UPDATEABLE RECORDS: {len(updateable_record_info)}")
         if not updateable_record_info:
-            return
+            return []
 
         batch_size = math.ceil(self._client.api_limits["get_records"] / 4)
-        record_modified_map: Dict[int, datetime] = {}  # record_id -> modified time
+        server_modified_time: Dict[int, datetime] = {}  # record_id -> modified time on server
 
+        # Find out which records have been updated on the server
         for record_info_batch in chunk_iterable(updateable_record_info, batch_size):
             record_id_batch = [x[2] for x in record_info_batch]
 
@@ -928,12 +935,12 @@ class BaseDataset(BaseModel):
             for sri in server_record_info:
                 # Only store if the status on the server matches what the caller wants
                 if status is None or sri["status"] in status:
-                    record_modified_map[sri["id"]] = pydantic.parse_obj_as(datetime, sri["modified_on"])
+                    server_modified_time[sri["id"]] = pydantic.parse_obj_as(datetime, sri["modified_on"])
 
         # Which ones need to be fully updated
         need_updating: Dict[str, List[str]] = {}  # key is specification, value is list of entry names
         for entry_name, spec_name, record_id, _, local_mtime in updateable_record_info:
-            server_mtime = record_modified_map.get(record_id, None)
+            server_mtime = server_modified_time.get(record_id, None)
 
             # Perhaps the record doesn't exist on the server anymore or something
             if server_mtime is None:
@@ -945,9 +952,15 @@ class BaseDataset(BaseModel):
 
         # Update from the server one spec at a time
         # print(f"Updated on server: {len(needs_updating)}")
+        updated_records = []
+
         for spec_name, entries_to_update in need_updating.items():
             for entries_batch in chunk_iterable(entries_to_update, batch_size):
-                self._internal_fetch_records(entries_batch, [spec_name], None, include)
+                # Updates dataset record metadata if needed
+                r = self._internal_fetch_records(entries_batch, [spec_name], None, include)
+                updated_records.extend(r)
+
+        return updated_records
 
     def fetch_records(
         self,
@@ -1005,27 +1018,44 @@ class BaseDataset(BaseModel):
         # Determine the number of entries in each batch
         # Assume there are many more entries than specifications, and that
         # everything has been submitted
-        # Divide by 4 to go easy on the server
-        batch_size: int = math.ceil(self._client.api_limits["get_records"] / 4)
+        batch_size: int = math.ceil(self._client.api_limits["get_records"])
+        n_batches = math.ceil(len(entry_names) / batch_size)
 
         # Do all entries for one spec. This simplifies things, especially with handling
         # existing or update-able records
         for spec_name in specification_names:
-            for entry_names_batch in chunk_iterable(entry_names, batch_size):
+            for entry_names_batch in tqdm(chunk_iterable(entry_names, batch_size), total=n_batches, disable=None):
+                records_batch = []
+
                 # Handle existing records that need to be updated
-                if fetch_updated and not force_refetch:
-                    self._internal_update_records(entry_names_batch, [spec_name], status, include)
-
                 if force_refetch:
-                    batch_tofetch = entry_names_batch
-                else:
-                    # Filter if they already exist in the local cache
-                    cached_records = self._cache_data.get_existing_dataset_records(entry_names_batch, [spec_name])
-                    cached_record_entries = [x[0] for x in cached_records]
-                    batch_tofetch = [x for x in entry_names_batch if x not in cached_record_entries]
+                    r = self._internal_fetch_records(entry_names_batch, [spec_name], status, include)
+                    records_batch.extend(r)
 
-                if batch_tofetch:
-                    self._internal_fetch_records(entry_names_batch, [spec_name], status, include)
+                else:
+                    missing_entries = entry_names_batch.copy()
+
+                    if fetch_updated:
+                        updated_records = self._internal_update_records(missing_entries, [spec_name], status, include)
+                        records_batch.extend(updated_records)
+
+                        # what wasn't updated
+                        updated_entries = [x for x, _, _ in updated_records]
+                        missing_entries = [e for e in entry_names_batch if e not in updated_entries]
+
+                    # Check if we have any cached records
+                    cached_records = self._cache_data.get_dataset_records(missing_entries, [spec_name])
+                    records_batch.extend(cached_records)
+
+                    # what we need to fetch from the server
+                    cached_entries = [x[0] for x in cached_records]
+                    missing_entries = [e for e in missing_entries if e not in cached_entries]
+
+                    fetched_records = self._internal_fetch_records(missing_entries, [spec_name], status, include)
+                    records_batch.extend(fetched_records)
+
+                # Write the record batch to the cache at once. Also marks the records as clean (no need to writeback)
+                self._cache_data.update_records([r for _, _, r in records_batch])
 
     def get_record(
         self,
@@ -1046,22 +1076,23 @@ class BaseDataset(BaseModel):
             fetch_updated = False
             force_refetch = False
 
+        record = None
         if force_refetch:
-            self._internal_fetch_records([entry_name], [specification_name], None, include)
+            records = self._internal_fetch_records([entry_name], [specification_name], None, include)
+            record = records[0][2]
         elif fetch_updated:
-            self._internal_update_records([entry_name], [specification_name], None, include)
+            records = self._internal_update_records([entry_name], [specification_name], None, include)
+            if records:
+                record = records[0][2]
 
-        record = self._cache_data.get_dataset_record(entry_name, specification_name)
+        if record is None:
+            # Attempt to get from cache
+            record = self._cache_data.get_dataset_record(entry_name, specification_name)
 
         if record is None and not self.is_view:
-            self.fetch_records(
-                entry_name,
-                specification_name,
-                include=include,
-                fetch_updated=fetch_updated,
-                force_refetch=force_refetch,
-            )
-            record = self._cache_data.get_dataset_record(entry_name, specification_name)
+            # not in cache
+            records = self._internal_fetch_records([entry_name], [specification_name], None, include)
+            record = records[0][2]
 
         if record is not None and self._client is not None:
             record.propagate_client(self._client)
@@ -1109,40 +1140,48 @@ class BaseDataset(BaseModel):
         if self.is_view:
             for spec_name in specification_names:
                 for entry_names_batch in chunk_iterable(entry_names, 125):
-                    record_data = self._cache_data.get_dataset_records(entry_names_batch, [spec_name])
+                    record_data = self._cache_data.get_dataset_records(entry_names_batch, [spec_name], status)
 
                     for e, s, r in record_data:
-                        if status is None or r.status in status:
-                            yield e, s, r
+                        yield e, s, r
         else:
-            # Smaller fetch limit for iteration (than in fetch_records)
-            batch_size: int = math.ceil(self._client.api_limits["get_records"] / 10)
+            batch_size: int = math.ceil(self._client.api_limits["get_records"])
 
             for spec_name in specification_names:
                 for entry_names_batch in chunk_iterable(entry_names, batch_size):
+                    records_batch = []
+
                     # Handle existing records that need to be updated
-                    if fetch_updated and not force_refetch:
-                        self._internal_update_records(entry_names_batch, [spec_name], status, include)
-
                     if force_refetch:
-                        batch_tofetch = entry_names_batch
+                        r = self._internal_fetch_records(entry_names_batch, [spec_name], status, include)
+                        records_batch.extend(r)
+
                     else:
-                        # Filter if they already exist in the local cache
-                        existing_records = self._cache_data.get_existing_dataset_records(entry_names_batch, [spec_name])
-                        existing_entries = [x[0] for x in existing_records]
-                        batch_tofetch = [x for x in entry_names_batch if x not in existing_entries]
+                        missing_entries = entry_names_batch.copy()
 
-                    if batch_tofetch:
-                        self._internal_fetch_records(batch_tofetch, [spec_name], status, include)
+                        if fetch_updated:
+                            updated_records = self._internal_update_records(
+                                missing_entries, [spec_name], status, include
+                            )
+                            records_batch.extend(updated_records)
 
-                    # Now lookup the just-fetched records and yield them
-                    record_data = self._cache_data.get_dataset_records(entry_names_batch, [spec_name])
+                            # what wasn't updated
+                            updated_entries = [x for x, _, _ in updated_records]
+                            missing_entries = [e for e in entry_names_batch if e not in updated_entries]
 
-                    if self._client is not None:
-                        for _, _, r in record_data:
-                            r.propagate_client(self._client)
+                        # Check if we have any cached records
+                        cached_records = self._cache_data.get_dataset_records(missing_entries, [spec_name])
+                        records_batch.extend(cached_records)
 
-                    for e, s, r in record_data:
+                        # what we need to fetch from the server
+                        cached_entries = [x[0] for x in cached_records]
+                        missing_entries = [e for e in missing_entries if e not in cached_entries]
+
+                        fetched_records = self._internal_fetch_records(missing_entries, [spec_name], status, include)
+                        records_batch.extend(fetched_records)
+
+                    # Let the writeback mechanism handle writing to the cache
+                    for e, s, r in records_batch:
                         if status is None or r.status in status:
                             yield e, s, r
 
@@ -1170,6 +1209,10 @@ class BaseDataset(BaseModel):
             None,
             body=body,
         )
+
+        if delete_records:
+            record_info = self._cache_data.get_dataset_records(entry_names, specification_names)
+            self._cache_data.delete_records([r.id for _, _, r in record_info])
 
         self._cache_data.delete_dataset_records(entry_names, specification_names)
 
@@ -1206,8 +1249,6 @@ class BaseDataset(BaseModel):
             body=body,
         )
 
-        self._cache_data.delete_dataset_records(entry_names, specification_names)
-
         if refetch_records:
             self.fetch_records(entry_names, specification_names, force_refetch=True)
 
@@ -1238,8 +1279,6 @@ class BaseDataset(BaseModel):
             None,
             body=body,
         )
-
-        self._cache_data.delete_dataset_records(entry_names, specification_names)
 
         if refetch_records:
             self.fetch_records(entry_names, specification_names, force_refetch=True)
@@ -1272,8 +1311,6 @@ class BaseDataset(BaseModel):
             body=body,
         )
 
-        self._cache_data.delete_dataset_records(entry_names, specification_names)
-
         if refetch_records:
             self.fetch_records(entry_names, specification_names, force_refetch=True)
 
@@ -1304,8 +1341,6 @@ class BaseDataset(BaseModel):
             None,
             body=body,
         )
-
-        self._cache_data.delete_dataset_records(entry_names, specification_names)
 
         if refetch_records:
             self.fetch_records(entry_names, specification_names, force_refetch=True)
@@ -1338,8 +1373,6 @@ class BaseDataset(BaseModel):
             body=body,
         )
 
-        self._cache_data.delete_dataset_records(entry_names, specification_names)
-
         if refetch_records:
             self.fetch_records(entry_names, specification_names, force_refetch=True)
 
@@ -1370,8 +1403,6 @@ class BaseDataset(BaseModel):
             None,
             body=body,
         )
-
-        self._cache_data.delete_dataset_records(entry_names, specification_names)
 
         if refetch_records:
             self.fetch_records(entry_names, specification_names, force_refetch=True)
@@ -1772,11 +1803,45 @@ def dataset_from_dict(data: Dict[str, Any], client: Any, cache_data: Optional[Da
     return cls(client=client, cache_data=cache_data, **data)
 
 
-def dataset_from_cache(file_path: str) -> BaseDataset:
+def load_dataset_view(file_path: str) -> BaseDataset:
     # Reads this as a read-only "view"
     ds_meta = read_dataset_metadata(file_path)
     ds_type = BaseDataset.get_subclass(ds_meta["dataset_type"])
-    ds_cache = DatasetCache(file_path, True, ds_type)
+
+    file_path = os.path.abspath(file_path)
+    cache_uri = f"file:{file_path}?mode=ro"
+    ds_cache = DatasetCache(cache_uri, True, ds_type)
 
     # Views never have a client attached
     return dataset_from_dict(ds_meta, None, cache_data=ds_cache)
+
+
+def dataset_from_cache(file_path: str) -> BaseDataset:
+    # Keep old name around
+    return load_dataset_view(file_path)
+
+
+def create_dataset_view(
+    client: PortalClient,
+    dataset_id: int,
+    file_path: str,
+    include: Optional[Iterable[str]] = None,
+    overwrite: bool = False,
+):
+    file_path = os.path.abspath(file_path)
+
+    if os.path.exists(file_path) and not os.path.isfile(file_path):
+        raise ValueError(f"Path {file_path} exists and is not a file")
+
+    if os.path.exists(file_path) and not overwrite:
+        raise ValueError(f"File {file_path} exists and overwrite is False")
+
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+    # Manually get it, because we want to use a different cache file
+    ds_dict = client.make_request("get", f"api/v1/datasets/{dataset_id}", Dict[str, Any])
+    ds_cache = DatasetCache(f"file:{file_path}", False, BaseDataset.get_subclass(ds_dict["dataset_type"]))
+
+    ds = dataset_from_dict(ds_dict, client, ds_cache)
+
+    ds.fetch_records(include=include, force_refetch=True)

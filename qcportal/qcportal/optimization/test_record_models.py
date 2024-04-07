@@ -12,11 +12,11 @@ if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
 
 
-all_includes = ["initial_molecule", "final_molecule", "trajectory"]
+all_includes = ["initial_molecule", "final_molecule", "trajectory", "molecule"]
 
 
-@pytest.mark.parametrize("includes", [None, all_includes])
-def test_optimizationrecord_model(snowflake: QCATestingSnowflake, includes: Optional[List[str]]):
+@pytest.mark.parametrize("includes", [None, ["**"], all_includes])
+def test_optimization_record_model(snowflake: QCATestingSnowflake, includes: Optional[List[str]]):
     storage_socket = snowflake.get_storage_socket()
     snowflake_client = snowflake.client()
     activated_manager_name, _ = snowflake.activate_manager()
@@ -27,8 +27,13 @@ def test_optimizationrecord_model(snowflake: QCATestingSnowflake, includes: Opti
     record = snowflake_client.get_optimizations(rec_id, include=includes)
 
     if includes is not None:
-        record._client = None
+        assert record.initial_molecule_ is not None
+        assert record.trajectory_ids_ is not None
+        record.propagate_client(None)
         assert record.offline
+    else:
+        assert record.initial_molecule_ is None
+        assert record.trajectory_ids_ is None
 
     assert record.id == rec_id
     assert record.status == RecordStatusEnum.complete
@@ -47,3 +52,8 @@ def test_optimizationrecord_model(snowflake: QCATestingSnowflake, includes: Opti
 
     traj_energy = [x.properties["return_energy"] for x in traj]
     assert traj_energy == record.energies
+
+    # Children have all their data fetched
+    if includes is not None:
+        assert all(x.molecule_ is not None for x in traj)
+    assert all(x.molecule is not None for x in traj)

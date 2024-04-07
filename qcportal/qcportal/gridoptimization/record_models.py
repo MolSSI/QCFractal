@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 from enum import Enum
 from typing import List, Union, Optional, Dict, Iterable, Tuple, Sequence, Any
@@ -12,6 +14,7 @@ from qcportal.molecules import Molecule
 from qcportal.optimization.record_models import OptimizationSpecification, OptimizationRecord
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
 from qcportal.utils import recursive_normalizer
+from qcportal.cache import get_records_with_cache
 
 
 def serialize_key(key: Union[str, Sequence[int]]) -> str:
@@ -190,11 +193,11 @@ class GridoptimizationRecord(BaseRecord):
     starting_molecule_id: Optional[int]
 
     ######################################################
-    # Fields not included when fetching the record
+    # Fields not always included when fetching the record
     ######################################################
-    initial_molecule_: Optional[Molecule] = None
-    starting_molecule_: Optional[Molecule] = None
-    optimizations_: Optional[List[GridoptimizationOptimization]] = None
+    initial_molecule_: Optional[Molecule] = Field(None, alias="initial_molecule")
+    starting_molecule_: Optional[Molecule] = Field(None, alias="starting_molecule")
+    optimizations_: Optional[List[GridoptimizationOptimization]] = Field(None, alias="optimizations")
 
     ########################################
     # Caches
@@ -208,15 +211,42 @@ class GridoptimizationRecord(BaseRecord):
             for opt in self._optimizations_cache.values():
                 opt.propagate_client(client)
 
-    def fetch_all(self):
-        BaseRecord.fetch_all(self)
+    @classmethod
+    def _fetch_children_multi(
+        cls,
+        client,
+        record_cache,
+        records: Iterable[GridoptimizationRecord],
+        include: Iterable[str],
+        force_fetch: bool = False,
+    ):
+        # Should be checked by the calling function
+        assert records
+        assert all(isinstance(x, GridoptimizationRecord) for x in records)
 
-        self._fetch_initial_molecule()
-        self._fetch_starting_molecule()
-        self._fetch_optimizations()
+        # Collect optimization id for all grid optimizations
+        if "optimizations" in include or "**" in include:
+            opt_ids = set()
+            for r in records:
+                if r.optimizations_:
+                    opt_ids.update(x.optimization_id for x in r.optimizations_)
 
-        for opt in self._optimizations_cache.values():
-            opt.fetch_all()
+            opt_ids = list(opt_ids)
+            opt_records = get_records_with_cache(
+                client, record_cache, OptimizationRecord, opt_ids, include=include, force_fetch=force_fetch
+            )
+            opt_map = {x.id: x for x in opt_records}
+
+            for r in records:
+                if r.optimizations_ is None:
+                    r._optimizations_cache = None
+                else:
+                    r._optimizations_cache = {}
+                    for go_opt in r.optimizations_:
+                        key = deserialize_key(go_opt.key)
+                        r._optimizations_cache[key] = opt_map[go_opt.optimization_id]
+
+                r.propagate_client(r._client)
 
     def _fetch_initial_molecule(self):
         self._assert_online()
@@ -227,8 +257,7 @@ class GridoptimizationRecord(BaseRecord):
         self.starting_molecule_ = self._client.get_molecules([self.starting_molecule_id])[0]
 
     def _fetch_optimizations(self):
-        # Always fetch optimization metadata if we can
-        if not self.offline or self.optimizations_ is None:
+        if self.optimizations_ is None:
             self._assert_online()
             self.optimizations_ = self._client.make_request(
                 "get",
@@ -236,26 +265,7 @@ class GridoptimizationRecord(BaseRecord):
                 List[GridoptimizationOptimization],
             )
 
-        # Fetch optimization records from the server or the cache
-        opt_ids = [x.optimization_id for x in self.optimizations_]
-        opt_records = self._get_child_records(opt_ids, OptimizationRecord)
-
-        self._optimizations_cache = {deserialize_key(x.key): y for x, y in zip(self.optimizations_, opt_records)}
-
-        self.propagate_client(self._client)
-
-    def _handle_includes(self, includes: Optional[Iterable[str]]):
-        if includes is None:
-            return
-
-        BaseRecord._handle_includes(self, includes)
-
-        if "initial_molecule" in includes:
-            self._fetch_initial_molecule()
-        if "starting_molecule" in includes:
-            self._fetch_starting_molecule()
-        if "optimizations" in includes:
-            self._fetch_optimizations()
+        self.fetch_children(["optimizations"])
 
     @property
     def initial_molecule(self) -> Molecule:

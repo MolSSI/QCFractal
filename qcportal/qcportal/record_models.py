@@ -1,16 +1,17 @@
 from __future__ import annotations
 
 import os
+import sys
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict, Any, List, Union, Iterable, Tuple, Type, Sequence, ClassVar, TypeVar, Callable
+from typing import Optional, Dict, Any, List, Union, Iterable, Tuple, Type, Sequence, ClassVar, TypeVar
 
 from dateutil.parser import parse as date_parser
 
 try:
-    from pydantic.v1 import BaseModel, Extra, constr, validator, PrivateAttr, Field
+    from pydantic.v1 import BaseModel, Extra, constr, validator, PrivateAttr, Field, parse_obj_as
 except ImportError:
-    from pydantic import BaseModel, Extra, constr, validator, PrivateAttr, Field
+    from pydantic import BaseModel, Extra, constr, validator, PrivateAttr, Field, parse_obj_as
 from qcelemental.models.results import Provenance
 
 from qcportal.base_models import (
@@ -19,8 +20,10 @@ from qcportal.base_models import (
     QueryIteratorBase,
 )
 
-from qcportal.cache import RecordCache
+from qcportal.cache import RecordCache, get_records_with_cache
 from qcportal.compression import CompressionEnum, decompress, get_compressed_ext
+
+_T = TypeVar("_T")
 
 
 class PriorityEnum(int, Enum):
@@ -110,7 +113,7 @@ class OutputStore(BaseModel):
 
     output_type: OutputTypeEnum = Field(..., description="The type of output this is (stdout, error, etc)")
     compression_type: CompressionEnum = Field(CompressionEnum.none, description="Compression method (such as lzma)")
-    data_: Optional[bytes] = None
+    data_: Optional[bytes] = Field(None, alias="data")
 
     _data_url: Optional[str] = PrivateAttr(None)
     _client: Any = PrivateAttr(None)
@@ -151,7 +154,7 @@ class ComputeHistory(BaseModel):
     manager_name: Optional[str]
     modified_on: datetime
     provenance: Optional[Provenance]
-    outputs_: Optional[Dict[str, OutputStore]] = None
+    outputs_: Optional[Dict[str, OutputStore]] = Field(None, alias="outputs")
 
     _client: Any = PrivateAttr(None)
     _base_url: Optional[str] = PrivateAttr(None)
@@ -220,7 +223,7 @@ class NativeFile(BaseModel):
 
     name: str = Field(..., description="Name of the file")
     compression_type: CompressionEnum = Field(..., description="Compression method (such as lzma)")
-    data_: Optional[bytes] = None
+    data_: Optional[bytes] = Field(None, alias="data")
 
     _data_url: Optional[str] = PrivateAttr(None)
     _client: Any = PrivateAttr(None)
@@ -378,18 +381,17 @@ class BaseRecord(BaseModel):
     owner_group: Optional[str]
 
     ######################################################
-    # Fields not included when fetching the record
+    # Fields not always included when fetching the record
     ######################################################
-    compute_history_: Optional[List[ComputeHistory]] = None
-    task_: Optional[RecordTask] = None
-    service_: Optional[RecordService] = None
-    comments_: Optional[List[RecordComment]] = None
-    native_files_: Optional[Dict[str, NativeFile]] = None
+    compute_history_: Optional[List[ComputeHistory]] = Field(None, alias="compute_history")
+    task_: Optional[RecordTask] = Field(None, alias="task")
+    service_: Optional[RecordService] = Field(None, alias="service")
+    comments_: Optional[List[RecordComment]] = Field(None, alias="comments")
+    native_files_: Optional[Dict[str, NativeFile]] = Field(None, alias="native_files")
 
     # Private non-pydantic fields
     _client: Any = PrivateAttr(None)
     _base_url: str = PrivateAttr(None)
-    """ Client connected to the server that this record belongs to """
 
     # A dictionary of all subclasses (calculation types) to actual class type
     _all_subclasses: ClassVar[Dict[str, Type[BaseRecord]]] = {}
@@ -397,7 +399,7 @@ class BaseRecord(BaseModel):
     # Local record cache we can use for child records
     # This record may also be part of the cache
     _record_cache: Optional[RecordCache] = PrivateAttr(None)
-    _record_cache_uid: Optional[int] = PrivateAttr(None)
+    _cache_dirty: bool = PrivateAttr(False)
 
     def __init__(self, client=None, **kwargs):
         BaseModel.__init__(self, **kwargs)
@@ -420,8 +422,19 @@ class BaseRecord(BaseModel):
         cls._all_subclasses[record_type] = cls
 
     def __del__(self):
-        if self._record_cache is not None and self._record_cache_uid is not None and not self._record_cache.read_only:
-            self._record_cache.writeback_record(self._record_cache_uid, self)
+        # Sometimes this won't exist if there is an exception during construction
+
+        # TODO - we check sys.meta_path. Pydantic attempts an import of something, which is
+        #        not good if the interpreter is shutting down. This is a hack to avoid that.
+        #        Pydantic v2 may fix this
+        if (
+            hasattr(self, "_record_cache")
+            and self._record_cache is not None
+            and not self._record_cache.read_only
+            and self._cache_dirty
+            and sys.meta_path is not None
+        ):
+            self.sync_to_cache(True)  # Don't really *have* to detach, but why not
 
         s = super()
         if hasattr(s, "__del__"):
@@ -437,6 +450,81 @@ class BaseRecord(BaseModel):
         if subcls is None:
             raise RuntimeError(f"Cannot find subclass for record type {record_type}")
         return subcls
+
+    @classmethod
+    def _fetch_children_multi(
+        cls, client, record_cache, records: Iterable[BaseRecord], include: Iterable[str], force_fetch: bool = False
+    ):
+        """
+        Fetches all children of the given records recursively
+
+        This tries to work efficiently, fetching larger batches of children
+        that can span multiple records
+
+        Meant to be overridden by derived classes
+        """
+        pass
+
+    @classmethod
+    def fetch_children_multi(
+        cls, records: Iterable[Optional[BaseRecord]], include: Optional[Iterable[str]] = None, force_fetch: bool = False
+    ):
+        """
+        Fetches all children of the given records
+
+        This tries to work efficiently, fetching larger batches of children
+        that can span multiple records
+        """
+
+        # Remove any None records
+        # can happen if missing_ok=True in some function calls
+        records = [r for r in records if r is not None]
+
+        if not records:
+            return
+
+        # Get the first record (for the client and other info)
+        template_record = next(iter(records))
+
+        if not all(isinstance(r, type(template_record)) for r in records):
+            raise RuntimeError("Fetching children of records with different types is not supported.")
+
+        if not all(r._client is template_record._client for r in records):
+            raise RuntimeError("Fetching children of records with different clients is not supported.")
+
+        if not all(r._record_cache is template_record._record_cache for r in records):
+            raise RuntimeError("Fetching children of records with different record caches is not supported.")
+
+        # Call the derived class function
+        if include is None:
+            include = []
+        cls._fetch_children_multi(
+            template_record._client, template_record._record_cache, records, include=include, force_fetch=force_fetch
+        )
+
+    def fetch_children(self, include: Optional[Iterable[str]] = None, force_fetch: bool = False):
+        """
+        Fetches all children of this record recursively
+        """
+        self.fetch_children_multi([self], include, force_fetch)
+
+    def sync_to_cache(self, detach: bool = False):
+        """
+        Syncs this record to the cache
+
+        If `detach` is True, then the record will be removed from the cache
+        """
+
+        if self._record_cache is None:
+            return
+        if self._record_cache.read_only:
+            return
+
+        self._record_cache.writeback_record(self)
+        self._cache_dirty = False
+
+        if detach:
+            self._record_cache = None
 
     def __str__(self) -> str:
         return f"<{self.__class__.__name__} id={self.id} status={self.status}>"
@@ -458,88 +546,24 @@ class BaseRecord(BaseModel):
             for nf in self.native_files_.values():
                 nf.propagate_client(self._client, self._base_url)
 
-    def fetch_all(self):
-        """
-        Fetches all possible data for this record from the server
-        """
-
-        # Only these statuses should have tasks
-        if self.status in (RecordStatusEnum.waiting, RecordStatusEnum.running, RecordStatusEnum.error):
-            # is_service is checked in these functions
-            self._fetch_service()
-            self._fetch_task()
-        else:
-            self.service_ = None
-            self.task_ = None
-
-        self._fetch_comments()
-
-        self._fetch_compute_history()
-        for ch in self.compute_history_:
-            ch.fetch_all()
-
-        self._fetch_native_files()
-        for nf in self.native_files_.values():
-            nf.fetch_all()
-
-    def _cache_child_records(self, record_ids: Iterable[int], record_type: Type[_Record_T]) -> None:
-        """
-        Fetching child records and stores them in the cache
-
-        The cache will be checked for existing records
-        """
-
-        if self._record_cache is None:
-            return
-
-        existing_record_ids = self._record_cache.get_existing_records(record_ids)
-        records_tofetch = list(set(record_ids) - set(existing_record_ids))
-
-        if self.offline and records_tofetch:
-            raise RuntimeError("Need to fetch some records, but not connected to a client")
-
-        recs = self._client._get_records_by_type(record_type, records_tofetch)
-        self._record_cache.update_records(recs)
-
-    def _get_child_records(self, record_ids: Sequence[int], record_type: Type[_Record_T]) -> List[_Record_T]:
+    def _get_child_records(
+        self,
+        child_record_ids: Sequence[int],
+        child_record_type: Type[_Record_T],
+        include: Optional[Iterable[str]] = None,
+    ) -> List[_Record_T]:
         """
         Helper function for obtaining child records either from the cache or from the server
 
         The records are returned in the same order as the `record_ids` parameter.
+
+        If `include` is specified, additional fields will be fetched from the server. However, if the records are in the
+        cache already, they may be missing those fields.
         """
 
-        if self._record_cache is None:
-            self._assert_online()
-            existing_records = []
-            records_tofetch = record_ids
-        else:
-            existing_records = self._record_cache.get_records(record_ids, record_type)
-            records_tofetch = set(record_ids) - {x.id for x in existing_records}
-
-        if self.offline and records_tofetch:
-            raise RuntimeError("Need to fetch some records, but not connected to a client")
-
-        if records_tofetch:
-            recs = self._client._get_records_by_type(record_type, list(records_tofetch))
-            if self._record_cache is not None:
-                uids = self._record_cache.update_records(recs)
-
-                for u, r in zip(uids, recs):
-                    r._record_cache = self._record_cache
-                    r._record_cache_uid = u
-
-            existing_records += recs
-
-        # Return everything in the same order as the input
-        all_recs = {r.id: r for r in existing_records}
-        ret = [all_recs.get(rid, None) for rid in record_ids]
-        if None in ret:
-            missing_ids = set(record_ids) - set(all_recs.keys())
-            raise RuntimeError(
-                f"Not all records found either in the cache or on the server. Missing records: {missing_ids}"
-            )
-
-        return ret
+        return get_records_with_cache(
+            self._client, self._record_cache, child_record_type, child_record_ids, include, force_fetch=False
+        )
 
     def _assert_online(self):
         """Raises an exception if this record does not have an associated client"""
@@ -550,53 +574,30 @@ class BaseRecord(BaseModel):
         self._assert_online()
 
         self.compute_history_ = self._client.make_request(
-            "get",
-            f"{self._base_url}/compute_history",
-            List[ComputeHistory],
+            "get", f"{self._base_url}/compute_history", List[ComputeHistory]
         )
 
         self.propagate_client(self._client)
 
     def _fetch_task(self):
-        self._assert_online()
-
         if self.is_service:
             self.task_ = None
-            return
-
-        self.task_ = self._client.make_request(
-            "get",
-            f"{self._base_url}/task",
-            Optional[RecordTask],
-        )
+        else:
+            self.task_ = self._client.make_request("get", f"{self._base_url}/task", Optional[RecordTask])
 
     def _fetch_service(self):
-        self._assert_online()
-
         if not self.is_service:
             self.service_ = None
-            return
-
-        self.service_ = self._client.make_request("get", f"{self._base_url}/service", Optional[RecordService])
+        else:
+            self.service_ = self._client.make_request("get", f"{self._base_url}/service", Optional[RecordService])
 
     def _fetch_comments(self):
         self._assert_online()
 
-        self.comments_ = self._client.make_request(
-            "get",
-            f"{self._base_url}/comments",
-            List[RecordComment],
-        )
+        self.comments_ = self._client.make_request("get", f"{self._base_url}/comments", List[RecordComment])
 
     def _fetch_native_files(self):
-        self._assert_online()
-
-        self.native_files_ = self._client.make_request(
-            "get",
-            f"{self._base_url}/native_files",
-            Dict[str, NativeFile],
-        )
-
+        self.native_files_ = self._client.make_request("get", f"{self._base_url}/native_files", Dict[str, NativeFile])
         self.propagate_client(self._client)
 
     def _get_output(self, output_type: OutputTypeEnum) -> Optional[Union[str, Dict[str, Any]]]:
@@ -604,24 +605,6 @@ class BaseRecord(BaseModel):
         if not history:
             return None
         return history[-1].get_output(output_type)
-
-    def _handle_includes(self, includes: Optional[Iterable[str]]):
-        """
-        Fetches information specified by some iterable of strings
-        """
-        if includes is None:
-            return
-
-        if "task" in includes:
-            self._fetch_task()
-        if "service" in includes:
-            self._fetch_task()
-        if "compute_history" in includes:
-            self._fetch_compute_history()
-        if "comments" in includes:
-            self._fetch_comments()
-        if "native_files" in includes:
-            self._fetch_native_files()
 
     @property
     def offline(self) -> bool:
@@ -760,7 +743,7 @@ class RecordQueryIterator(QueryIteratorBase[_Record_T]):
         self,
         client,
         query_filters: RecordQueryFilters,
-        record_type: Optional[str],
+        record_type: Type[_Record_T],
         include: Optional[Iterable[str]] = None,
     ):
         """
@@ -791,20 +774,16 @@ class RecordQueryIterator(QueryIteratorBase[_Record_T]):
                 body=self._query_filters,
             )
         else:
+            # Get the record type string. This is kind of ugly, but works.
+            record_type_str = self.record_type.__fields__["record_type"].default
             record_ids = self._client.make_request(
                 "post",
-                f"api/v1/records/{self.record_type}/query",
+                f"api/v1/records/{record_type_str}/query",
                 List[int],
                 body=self._query_filters,
             )
 
-        records: List[_Record_T] = self._client.get_records(record_ids)
-
-        if self.include:
-            for r in records:
-                r._handle_includes(self.include)
-
-        return records
+        return self._client._get_records_by_type(self.record_type, record_ids, include=self.include)
 
 
 def record_from_dict(data: Dict[str, Any], client: Any = None) -> BaseRecord:

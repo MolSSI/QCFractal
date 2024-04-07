@@ -7,7 +7,8 @@ from __future__ import annotations
 import datetime
 import os
 import sqlite3
-from typing import TYPE_CHECKING, Optional, TypeVar, Type, Any, List, Iterable, Tuple
+import threading
+from typing import TYPE_CHECKING, Optional, TypeVar, Type, Any, List, Iterable, Tuple, Sequence
 from urllib.parse import urlparse
 
 from .utils import chunk_iterable
@@ -24,6 +25,7 @@ from .serialization import serialize, deserialize
 
 if TYPE_CHECKING:
     from qcportal.record_models import RecordStatusEnum
+    from qcportal.client import PortalClient
 
 _DATASET_T = TypeVar("_DATASET_T")
 _RECORD_T = TypeVar("_RECORD_T")
@@ -44,56 +46,65 @@ def decompress_from_cache(data: sqlite3.Binary, value_type) -> Any:
 
 
 class RecordCache:
-    def __init__(self, file_path: Optional[str], read_only: bool):
-        if file_path is None and read_only:
-            raise RuntimeError("Cannot open a read-only memory-backed cache")
-        if read_only and not os.path.isfile(file_path):
-            raise RuntimeError("Cannot open existing read-only cache - file does not exist or is not a file")
-
-        if file_path is None:
-            file_path = ":memory:"
-
-        self.file_path = file_path
+    def __init__(self, cache_uri: str, read_only: bool):
+        self.cache_uri = cache_uri
         self.read_only = read_only
 
-        self._conn = sqlite3.connect(self.file_path)
-
-        # Some common settings
-        self._conn.execute("PRAGMA foreign_keys = ON")
+        # There is a chance that this is used from multiple threads
+        # So store the connection in thread-local storage
+        self._th_local = threading.local()
 
         if not read_only:
             self._create_tables()
             self._conn.commit()
 
+    @property
+    def _conn(self):
+        # Get the connection object that is used for this thread
+        if hasattr(self._th_local, "_conn"):
+            # print(threading.get_ident(), "EXISTING CONNECTION TO ", self.cache_uri)
+            return self._th_local._conn
+        else:
+            # This thread currently doesn't have a connection. so create one
+            # Note the uri=True flag, which is needed for the sqlite3 module to recognize full URIs
+            # print(threading.get_ident(), "NEW CONNECTION TO ", self.cache_uri)
+            self._th_local._conn = sqlite3.connect(self.cache_uri, uri=True)
+
+            # Some common settings
+            self._th_local._conn.execute("PRAGMA foreign_keys = ON")
+
+            return self._th_local._conn
+
     def __str__(self):
-        return f"<{self.__class__.__name__} path={self.file_path} {'ro' if self.read_only else 'rw'}>"
+        return f"<{self.__class__.__name__} path={self.cache_uri} {'ro' if self.read_only else 'rw'}>"
 
     def _assert_writable(self):
-        assert not self.read_only, "This dataset cache is read-only"
+        assert not self.read_only, "This cache is read-only"
 
     def _create_tables(self):
+        self._assert_writable()
+
         self._conn.execute(
             """
             CREATE TABLE IF NOT EXISTS records (
-                uid INTEGER PRIMARY KEY AUTOINCREMENT,
-                id INTEGER NOT NULL,
+                id INTEGER NOT NULL PRIMARY KEY,
                 status TEXT NOT NULL,
-                modified_on INTEGER NOT NULL,
-                record BLOB NOT NULL,
-                UNIQUE(id)
-            )
+                modified_on DECIMAL NOT NULL,
+                record BLOB NOT NULL
+            ) WITHOUT ROWID
             """
         )
 
         self._conn.execute("CREATE INDEX IF NOT EXISTS records_status ON records (status)")
 
     def update_metadata(self, key: str, value: Any) -> None:
+        self._assert_writable()
         stmt = "REPLACE INTO metadata (key, value) VALUES (?, ?)"
         self._conn.execute(stmt, (key, serialize(value, "msgpack")))
         self._conn.commit()
 
     def get_record(self, record_id: int, record_type: Type[_RECORD_T]) -> Optional[_RECORD_T]:
-        stmt = "SELECT uid, record FROM records WHERE id = ?"
+        stmt = "SELECT record FROM records WHERE id = ?"
 
         record_data = self._conn.execute(stmt, (record_id,)).fetchone()
         if record_data is None:
@@ -102,7 +113,6 @@ class RecordCache:
         record = decompress_from_cache(record_data[1], record_type)
 
         record._record_cache = self
-        record._record_cache_uid = record_data[0]
 
         return record
 
@@ -111,15 +121,14 @@ class RecordCache:
 
         for record_id_batch in chunk_iterable(record_ids, _query_chunk_size):
             id_params = ",".join("?" * len(record_id_batch))
-            stmt = f"SELECT uid, record FROM records WHERE id IN ({id_params})"
+            stmt = f"SELECT record FROM records WHERE id IN ({id_params})"
 
             rdata = self._conn.execute(stmt, record_id_batch).fetchall()
 
-            for uid, compressed_record in rdata:
-                record = decompress_from_cache(compressed_record, record_type)
+            for compressed_record in rdata:
+                record = decompress_from_cache(compressed_record[0], record_type)
 
                 record._record_cache = self
-                record._record_cache_uid = uid
 
                 all_records.append(record)
 
@@ -138,50 +147,69 @@ class RecordCache:
         return ret
 
     def update_records(self, records: Iterable[_RECORD_T]):
-        # TODO - update multiple at once (VALUES ((?, ?, ?, ?), (?, ?, ?, ?))
-        stmt = "REPLACE INTO records (id, status, modified_on, record) VALUES (?, ?, ?, ?) RETURNING uid"
+        self._assert_writable()
 
-        uids = []
-        for record in records:
-            r = self._conn.execute(
-                stmt, (record.id, record.status, record.modified_on.timestamp(), compress_for_cache(record))
-            )
-            uids.append(r.fetchone()[0])
+        for record_batch in chunk_iterable(records, 10):
+            n_batch = len(record_batch)
+
+            values_params = ",".join(["(?, ?, ?, ?)"] * n_batch)
+
+            all_params = []
+            for r in record_batch:
+                all_params.extend((r.id, r.status, r.modified_on.timestamp(), compress_for_cache(r)))
+
+            stmt = f"REPLACE INTO records (id, status, modified_on, record) VALUES {values_params}"
+
+            self._conn.execute(stmt, all_params)
 
         self._conn.commit()
-        assert None not in uids
-        return uids
+        for r in records:
+            r._record_cache = self
+            r._cache_dirty = False
 
-    def writeback_record(self, uid, record):
+    def writeback_record(self, record):
         self._assert_writable()
 
         compressed_record = compress_for_cache(record)
 
-        # Only update if ids and uid match, and if this record is larger
+        # Only update if timestamp is same or newer, and if this record is larger
         # than what is stored already
-        # The record (based on uid) may not exist anymore in the cache, but that is ok
-        stmt = """UPDATE records SET record = ?
-                  WHERE uid = ? AND id = ? AND length(record) < ?"""
+        stmt = f"""INSERT OR REPLACE INTO records (id, status, modified_on, record)
+                   SELECT ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM records WHERE id = ?
+                   AND (modified_on > ? OR (modified_on = ? and length(record) > ?)))"""
 
-        row_data = (compressed_record, uid, record.id, len(compressed_record))
+        ts = record.modified_on.timestamp()
+        row_data = (record.id, record.status, ts, compressed_record, record.id, ts, ts, len(compressed_record))
         self._conn.execute(stmt, row_data)
+        self._conn.commit()
+
+    def delete_record(self, record_id: int):
+        self._assert_writable()
+
+        stmt = "DELETE FROM records WHERE id=?"
+        self._conn.execute(stmt, (record_id,))
+        self._conn.commit()
+
+    def delete_records(self, record_ids: Iterable[int]):
+        self._assert_writable()
+
+        for record_id_batch in chunk_iterable(record_ids, _query_chunk_size):
+            record_id_params = ",".join("?" * len(record_id_batch))
+            stmt = f"DELETE FROM records WHERE id IN ({record_id_params})"
+            self._conn.execute(stmt, record_id_batch)
+
         self._conn.commit()
 
 
 class DatasetCache(RecordCache):
-    def __init__(self, file_path: Optional[str], read_only: bool, dataset_type: Type[_DATASET_T]):
+    def __init__(self, cache_uri: str, read_only: bool, dataset_type: Type[_DATASET_T]):
         self._entry_type = dataset_type._entry_type
         self._specification_type = dataset_type._specification_type
         self._record_type = dataset_type._record_type
 
-        RecordCache.__init__(self, file_path=file_path, read_only=read_only)
-
-    def _assert_writable(self):
-        assert not self.read_only, "This dataset cache is read-only"
+        RecordCache.__init__(self, cache_uri=cache_uri, read_only=read_only)
 
     def _create_tables(self):
-        self._assert_writable()
-
         RecordCache._create_tables(self)
 
         self._conn.execute(
@@ -219,8 +247,7 @@ class DatasetCache(RecordCache):
                 record_id INTEGER NOT NULL,
                 PRIMARY KEY (entry_name, specification_name),
                 FOREIGN KEY (entry_name) REFERENCES dataset_entries(name) ON DELETE CASCADE ON UPDATE CASCADE,
-                FOREIGN KEY (specification_name) REFERENCES dataset_specifications(name) ON DELETE CASCADE ON UPDATE CASCADE,
-                FOREIGN KEY (record_id) REFERENCES records (id)
+                FOREIGN KEY (specification_name) REFERENCES dataset_specifications(name) ON DELETE CASCADE ON UPDATE CASCADE
             )
         """
         )
@@ -265,11 +292,16 @@ class DatasetCache(RecordCache):
 
         assert all(isinstance(e, self._entry_type) for e in entries)
 
-        # TODO - update multiple at once (VALUES ((?, ?, ?, ?), (?, ?, ?, ?))
-        for entry in entries:
-            stmt = "REPLACE INTO dataset_entries (name, entry) VALUES (?, ?)"
-            row_data = (entry.name, compress_for_cache(entry))
-            self._conn.execute(stmt, row_data)
+        for entry_batch in chunk_iterable(entries, 50):
+            n_batch = len(entry_batch)
+            values_params = ",".join(["(?, ?)"] * n_batch)
+
+            all_params = []
+            for e in entry_batch:
+                all_params.extend((e.name, compress_for_cache(e)))
+
+            stmt = f"REPLACE INTO dataset_entries (name, entry) VALUES {values_params}"
+            self._conn.execute(stmt, all_params)
 
         self._conn.commit()
 
@@ -325,11 +357,16 @@ class DatasetCache(RecordCache):
 
         assert all(isinstance(s, self._specification_type) for s in specifications)
 
-        # TODO - update multiple at once (VALUES ((?, ?, ?, ?), (?, ?, ?, ?))
-        for specification in specifications:
-            stmt = "REPLACE INTO dataset_specifications (name, specification) VALUES (?, ?)"
-            row_data = (specification.name, compress_for_cache(specification))
-            self._conn.execute(stmt, row_data)
+        for specification_batch in chunk_iterable(specifications, 50):
+            n_batch = len(specification_batch)
+            values_params = ",".join(["(?, ?)"] * n_batch)
+
+            all_params = []
+            for s in specification_batch:
+                all_params.extend((s.name, compress_for_cache(s)))
+
+            stmt = f"REPLACE INTO dataset_specifications (name, specification) VALUES {values_params}"
+            self._conn.execute(stmt, all_params)
 
         self._conn.commit()
 
@@ -357,8 +394,8 @@ class DatasetCache(RecordCache):
         stmt = "SELECT 1 FROM dataset_records WHERE entry_name=? and specification_name=?"
         return self._conn.execute(stmt, (entry_name, specification_name)).fetchone() is not None
 
-    def get_dataset_record(self, entry_name: str, specification_name: str):
-        stmt = """SELECT r.uid, r.record FROM records r
+    def get_dataset_record(self, entry_name: str, specification_name: str) -> Optional[_RECORD_T]:
+        stmt = """SELECT r.record FROM records r
                   INNER JOIN dataset_records dr ON r.id = dr.record_id
                   WHERE dr.entry_name=? and dr.specification_name=?"""
 
@@ -366,66 +403,62 @@ class DatasetCache(RecordCache):
         if record_data is None:
             return None
 
-        record = decompress_from_cache(record_data[1], self._record_type)
-
+        record = decompress_from_cache(record_data[0], self._record_type)
         record._record_cache = self
-        record._record_cache_uid = record_data[0]
 
         return record
 
-    def get_dataset_records(self, entry_names: Iterable[str], specification_names: Iterable[str]):
+    def get_dataset_records(
+        self,
+        entry_names: Iterable[str],
+        specification_names: Iterable[str],
+        status: Optional[Iterable[RecordStatusEnum]] = None,
+    ) -> List[Tuple[str, str, _RECORD_T]]:
         specification_params = ",".join("?" * len(specification_names))
         all_records = []
 
         for entry_names_batch in chunk_iterable(entry_names, _query_chunk_size):
             entry_params = ",".join("?" * len(entry_names_batch))
 
-            stmt = f"""SELECT r.uid, dr.entry_name, dr.specification_name, r.record
+            stmt = f"""SELECT dr.entry_name, dr.specification_name, r.record
                        FROM dataset_records dr
                        INNER JOIN records r ON r.id = dr.record_id
                        WHERE dr.entry_name IN ({entry_params})
                        AND dr.specification_name IN ({specification_params})"""
 
             all_params = (*entry_names_batch, *specification_names)
+
+            if status:
+                status_params = ",".join("?" * len(status))
+                stmt = stmt + f"AND r.status IN ({status_params})"
+                all_params = (*all_params, *status)
+
             rdata = self._conn.execute(stmt, all_params).fetchall()
 
-            for uid, ename, sname, compressed_record in rdata:
+            for ename, sname, compressed_record in rdata:
                 record = decompress_from_cache(compressed_record, self._record_type)
-
                 record._record_cache = self
-                record._record_cache_uid = uid
 
                 all_records.append((ename, sname, record))
 
         return all_records
 
-    def update_dataset_records(self, record_info: Iterable[Tuple[str, str, Any]]):
+    def update_dataset_records(self, record_info: Iterable[Tuple[str, str, _RECORD_T]]):
         self._assert_writable()
 
         assert all(isinstance(r, self._record_type) for _, _, r in record_info)
 
-        # TODO - update multiple at once (VALUES ((?, ?, ?, ?), (?, ?, ?, ?))
-        for entry_name, specification_name, record in record_info:
-            stmt = """REPLACE INTO records (id, status, modified_on, record)
-                      VALUES (?, ?, ?, ?)"""
+        for info_batch in chunk_iterable(record_info, 10):
+            n_batch = len(info_batch)
+            values_params = ",".join(["(?, ?, ?)"] * n_batch)
 
-            row_data = (
-                record.id,
-                record.status,
-                record.modified_on.timestamp(),
-                compress_for_cache(record),
-            )
-            self._conn.execute(stmt, row_data)
+            all_params = []
+            for e, s, r in info_batch:
+                all_params.extend((e, s, r.id))
 
-            stmt = """REPLACE INTO dataset_records (entry_name, specification_name, record_id)
-                      VALUES (?, ?, ?)"""
-
-            row_data = (
-                entry_name,
-                specification_name,
-                record.id,
-            )
-            self._conn.execute(stmt, row_data)
+            stmt = f"""REPLACE INTO dataset_records (entry_name, specification_name, record_id)
+                      VALUES {values_params}"""
+            self._conn.execute(stmt, all_params)
 
         self._conn.commit()
 
@@ -520,30 +553,43 @@ class DatasetCache(RecordCache):
 
 
 class PortalCache:
-    def __init__(self, server_uri: str, cache_dir: Optional[str], max_size: int):
+    def __init__(self, server_uri: str, cache_dir: Optional[str], max_size: int, shared_memory: bool = True):
         parsed_url = urlparse(server_uri)
 
         # Should work as a reasonable fingerprint?
         self.server_fingerprint = f"{parsed_url.hostname}_{parsed_url.port}"
 
         if cache_dir:
-            self.enabled = True
-
+            # _shared_memory shouldn't be used, so we don't set it and wait for errors
+            self._is_disk = True
             self.cache_dir = os.path.join(os.path.abspath(cache_dir), self.server_fingerprint)
             os.makedirs(self.cache_dir, exist_ok=True)
-
         else:
-            self.enabled = False
+            self._is_disk = False
+            self._shared_memory = shared_memory
             self.cache_dir = None
 
-    def get_cache_path(self, cache_name: str) -> str:
-        if self.enabled:
-            return os.path.join(self.cache_dir, f"{cache_name}.sqlite")
+    def get_cache_uri(self, cache_name: str) -> str:
+        if self._is_disk:
+            file_path = os.path.join(self.cache_dir, f"{cache_name}.sqlite")
+            uri = f"file:{file_path}"
+        elif self._shared_memory:
+            # vfs=memdb seems to be a better way than mode=memory&cache=shared . Very little docs about it though
+            # The / after the : is apparently very important. Otherwise, the shared stuff doesn't work
+            uri = f"file:/qca_cache_{cache_name}?vfs=memdb"
         else:
-            return ":memory:"
+            uri = f"file:/qca_cache_{cache_name}?mode=memory"
+
+        return uri
+
+    def get_dataset_cache(self, dataset_id: int, dataset_type: Type[_DATASET_T]) -> DatasetCache:
+        uri = self.get_cache_uri(f"dataset_{dataset_id}")
+
+        # If you are asking this for a dataset cache, it should be writable
+        return DatasetCache(uri, False, dataset_type)
 
     def vacuum(self, cache_name: Optional[str] = None):
-        if self.enabled:
+        if self._is_disk:
             # TODO
             return
 
@@ -555,9 +601,14 @@ def read_dataset_metadata(file_path: str):
     This is needed sometimes to construct the DatasetCache object with a type
     """
 
+    file_path = os.path.abspath(file_path)
+
     if not os.path.isfile(file_path):
         raise RuntimeError(f'Cannot open cache file "{file_path}" - does not exist or is not a file')
-    conn = sqlite3.connect(file_path)
+
+    uri = f"file:{file_path}?mode=ro"
+    conn = sqlite3.connect(uri, uri=True)
+
     r = conn.execute("SELECT value FROM metadata WHERE key = 'dataset_metadata'")
     if r is None:
         raise RuntimeError(f"Cannot find appropriate metadata in cache file {file_path}")
@@ -565,3 +616,91 @@ def read_dataset_metadata(file_path: str):
     d = deserialize(r.fetchone()[0], "msgpack")
     conn.close()
     return d
+
+
+def get_records_with_cache(
+    client: Optional[PortalClient],
+    record_cache: Optional[RecordCache],
+    record_type: Type[_RECORD_T],
+    record_ids: Sequence[int],
+    include: Optional[Iterable[str]] = None,
+    force_fetch: bool = False,
+) -> List[_RECORD_T]:
+    """
+    Helper function for obtaining child records either from the cache or from the server
+
+    The records are returned in the same order as the `record_ids` parameter.
+
+    If records are missing from the cache, and client is None, and exception is raised.
+
+    Newly-fetched records will not be immediately written to the cache. Instead, they will be attached to this cache
+    and will be written back to the cache when the record object is destructed.
+
+    If `include` is specified, additional fields will be fetched from the server. However, if the records are in the
+    cache already, they may be missing those fields. In that case, the additional information may be fetched
+    from the server. If a client is not provided, an exception will be raised.
+
+    This function will fetch the children of the records if enough information
+    is fetched of the parent record. This is handled by the various fetch_children_multi
+    class functions of the record types.
+
+
+    Parameters
+    ----------
+    client
+        The client to use for fetching records from the server.
+        If `None`, the function will only use the cache
+    record_cache
+        The cache to use for fetching records from the cache.
+        If `None`, the function will only use the client
+    record_type
+        The type of record to fetch
+    record_ids
+        Single ID or sequence/list of records to obtain
+    include
+        Additional fields to include in the returned record (if fetching from the client)
+    force_fetch
+        If `True`, the function will fetch all records from the server,
+        regardless of whether they are in the cache
+
+    Returns
+    -------
+    :
+        List of records in the same order as the input `record_ids`.
+    """
+
+    if record_cache is None or force_fetch:
+        existing_records = []
+        records_tofetch = set(record_ids)
+    else:
+        existing_records = record_cache.get_records(record_ids, record_type)
+        records_tofetch = set(record_ids) - {x.id for x in existing_records}
+
+    if records_tofetch:
+        if client is None:
+            raise RuntimeError("Need to fetch some records, but not connected to a client")
+
+        recs = client._fetch_records(record_type, list(records_tofetch), include=include)
+
+        # Set up for the writeback
+        for r in recs:
+            # Don't write to the cache yet. Let the writeback mechanism handle it
+            r._record_cache = record_cache
+            r._cache_dirty = True
+
+        existing_records += recs
+
+    # Fetch all children as well
+    record_type.fetch_children_multi(existing_records, include=include, force_fetch=force_fetch)
+
+    # Return everything in the same order as the input
+    all_recs = {r.id: r for r in existing_records}
+    ret = [all_recs.get(rid, None) for rid in record_ids]
+
+    if any(x is None for x in ret):
+        missing_ids = set(record_ids) - set(all_recs.keys())
+        raise RuntimeError(
+            f"Not all records found either in the cache or on the server. Missing records: {missing_ids}"
+        )
+
+    return ret

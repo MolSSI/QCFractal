@@ -15,12 +15,11 @@ try:
 except ImportError:
     from pydantic import BaseModel, Extra
 from sqlalchemy import select, func
-from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by, DOUBLE_PRECISION, TEXT
-from sqlalchemy.orm import lazyload, joinedload, defer, undefer
+from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by
+from sqlalchemy.orm import lazyload, selectinload, joinedload, defer, undefer
 
 from qcfractal.components.optimization.record_db_models import (
     OptimizationSpecificationORM,
-    OptimizationRecordORM,
 )
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
@@ -392,29 +391,50 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                 r = session.execute(stmt).scalar_one()
                 return InsertMetadata(existing_idx=[0]), r
 
+    def get(
+        self,
+        record_ids: Sequence[int],
+        include: Optional[Sequence[str]] = None,
+        exclude: Optional[Sequence[str]] = None,
+        missing_ok: bool = False,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[Optional[Dict[str, Any]]]:
+        options = []
+        if include:
+            # Initial molecules will get both the ids and the actual molecule
+            if "**" in include or "initial_molecules" in include:
+                options.append(
+                    selectinload(TorsiondriveRecordORM.initial_molecules).joinedload(
+                        TorsiondriveInitialMoleculeORM.molecule
+                    )
+                )
+            elif "initial_molecules_ids" in include:
+                options.append(selectinload(TorsiondriveRecordORM.initial_molecules))
+
+            if "**" in include or "optimizations" in include:
+                options.append(selectinload(TorsiondriveRecordORM.optimizations))
+
+            if "**" in include or "minimum_optimizations" in include:
+                options.append(undefer(TorsiondriveRecordORM.minimum_optimizations))
+
+        with self.root_socket.optional_session(session, True) as session:
+            return self.root_socket.records.get_base(
+                orm_type=self.record_orm,
+                record_ids=record_ids,
+                include=include,
+                exclude=exclude,
+                missing_ok=missing_ok,
+                additional_options=options,
+                session=session,
+            )
+
     def query(
         self,
         query_data: TorsiondriveQueryFilters,
         *,
         session: Optional[Session] = None,
     ) -> List[int]:
-        """
-        Query torsiondrive records
-
-        Parameters
-        ----------
-        query_data
-            Fields/filters to query for
-        session
-            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed (but not committed) before returning from this function.
-
-        Returns
-        -------
-        :
-            A list of record ids that were found in the database.
-        """
-
         and_query = []
         need_spspec_join = False
         need_optspec_join = False
@@ -785,35 +805,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             optimization in the torsiondrive (representing the angles)
         """
 
-        # Kind of complicated, but this is relatively cross platform
-        # (with postgres, could do a DISTINCT ON)
-
-        # CTE with columns torsiondrive_id, key, min_energy
-        energy_cte = (
-            select(
-                TorsiondriveOptimizationORM.torsiondrive_id.label("torsiondrive_id"),
-                TorsiondriveOptimizationORM.key.label("key"),
-                func.min(OptimizationRecordORM.energies[-1].cast(TEXT).cast(DOUBLE_PRECISION)).label("min_energy"),
-            )
-            .join(OptimizationRecordORM)
-            .group_by("torsiondrive_id", "key")
-        ).cte()
-
-        # Select rows with matching minimum energies
-        # We order by the optimization id desc to handle the case where multiple records with same final energy
-        # Then, the dictionary comprehension at the end last of that energy (lowest id)
-        stmt = (
-            select(TorsiondriveOptimizationORM.key, TorsiondriveOptimizationORM.optimization_id)
-            .join(energy_cte, energy_cte.c.torsiondrive_id == TorsiondriveOptimizationORM.torsiondrive_id)
-            .join(TorsiondriveOptimizationORM.optimization_record)
-            .where(TorsiondriveOptimizationORM.torsiondrive_id == record_id)
-            .where(TorsiondriveOptimizationORM.key == energy_cte.c.key)
-            .where(OptimizationRecordORM.energies[-1].cast(TEXT).cast(DOUBLE_PRECISION) == energy_cte.c.min_energy)
-            .order_by(OptimizationRecordORM.id.desc())
-        )
+        stmt = select(TorsiondriveRecordORM.minimum_optimizations).where(TorsiondriveRecordORM.id == record_id)
 
         with self.root_socket.optional_session(session, True) as session:
-            r = session.execute(stmt).all()  # List of (key, id)
-
-            # If multiple records with the same energy are returned, then this will choose the last
-            return {x: y for x, y in r}
+            r = session.execute(stmt).scalar_one_or_none()  # List of (key, id)
+            return {} if r is None else r

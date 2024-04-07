@@ -14,7 +14,7 @@ except ImportError:
     from pydantic import BaseModel, Extra, parse_obj_as
 from sqlalchemy import select, func
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import lazyload, joinedload, undefer, defer
+from sqlalchemy.orm import lazyload, joinedload, selectinload, undefer, defer
 
 from qcfractal import __version__ as qcfractal_version
 from qcfractal.components.optimization.record_db_models import OptimizationSpecificationORM
@@ -475,29 +475,42 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                 r = session.execute(stmt).scalar_one()
                 return InsertMetadata(existing_idx=[0]), r
 
+    def get(
+        self,
+        record_ids: Sequence[int],
+        include: Optional[Sequence[str]] = None,
+        exclude: Optional[Sequence[str]] = None,
+        missing_ok: bool = False,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[Optional[Dict[str, Any]]]:
+        options = []
+
+        if include:
+            if "**" in include or "initial_molecule" in include:
+                options.append(joinedload(GridoptimizationRecordORM.initial_molecule))
+            if "**" in include or "starting_molecule" in include:
+                options.append(joinedload(GridoptimizationRecordORM.starting_molecule))
+            if "**" in include or "optimizations" in include:
+                options.append(selectinload(GridoptimizationRecordORM.optimizations))
+
+        with self.root_socket.optional_session(session, True) as session:
+            return self.root_socket.records.get_base(
+                orm_type=self.record_orm,
+                record_ids=record_ids,
+                include=include,
+                exclude=exclude,
+                missing_ok=missing_ok,
+                additional_options=options,
+                session=session,
+            )
+
     def query(
         self,
         query_data: GridoptimizationQueryFilters,
         *,
         session: Optional[Session] = None,
     ) -> List[int]:
-        """
-        Query gridoptimization records
-
-        Parameters
-        ----------
-        query_data
-            Fields/filters to query for
-        session
-            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed (but not committed) before returning from this function.
-
-        Returns
-        -------
-        :
-            A list of record ids that were found in the database.
-        """
-
         and_query = []
         need_spspec_join = False
         need_optspec_join = False

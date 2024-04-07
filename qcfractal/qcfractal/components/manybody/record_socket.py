@@ -8,7 +8,7 @@ from typing import List, Dict, Tuple, Optional, Sequence, Any, Union, Set, TYPE_
 import tabulate
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import defer, undefer, lazyload, joinedload
+from sqlalchemy.orm import defer, undefer, lazyload, joinedload, selectinload
 
 from qcfractal import __version__ as qcfractal_version
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
@@ -445,29 +445,39 @@ class ManybodyRecordSocket(BaseRecordSocket):
                 r = session.execute(stmt).scalar_one()
                 return InsertMetadata(existing_idx=[0]), r
 
+    def get(
+        self,
+        record_ids: Sequence[int],
+        include: Optional[Sequence[str]] = None,
+        exclude: Optional[Sequence[str]] = None,
+        missing_ok: bool = False,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[Optional[Dict[str, Any]]]:
+        options = []
+        if include:
+            if "**" in include or "initial_molecule" in include:
+                options.append(joinedload(ManybodyRecordORM.initial_molecule))
+            if "**" in include or "clusters" in include:
+                options.append(selectinload(ManybodyRecordORM.clusters))
+
+        with self.root_socket.optional_session(session, True) as session:
+            return self.root_socket.records.get_base(
+                orm_type=self.record_orm,
+                record_ids=record_ids,
+                include=include,
+                exclude=exclude,
+                missing_ok=missing_ok,
+                additional_options=options,
+                session=session,
+            )
+
     def query(
         self,
         query_data: ManybodyQueryFilters,
         *,
         session: Optional[Session] = None,
     ) -> List[int]:
-        """
-        Query manybody records
-
-        Parameters
-        ----------
-        query_data
-            Fields/filters to query for
-        session
-            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed (but not committed) before returning from this function.
-
-        Returns
-        -------
-        :
-            A list of record ids that were found in the database.
-        """
-
         and_query = []
         need_spec_join = False
         need_qcspec_join = False
@@ -670,7 +680,13 @@ class ManybodyRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> List[Dict[str, Any]]:
-        options = [lazyload("*"), defer("*"), joinedload(ManybodyRecordORM.clusters).options(undefer("*"))]
+        options = [
+            lazyload("*"),
+            defer("*"),
+            joinedload(ManybodyRecordORM.clusters).options(
+                undefer("*"), joinedload(ManybodyClusterORM.molecule).options(undefer("*"))
+            ),
+        ]
 
         with self.root_socket.optional_session(session) as session:
             rec = session.get(ManybodyRecordORM, record_id, options=options)

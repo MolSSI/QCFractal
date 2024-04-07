@@ -16,7 +16,7 @@ except ImportError:
 
 from sqlalchemy import select, func
 from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by, DOUBLE_PRECISION, TEXT
-from sqlalchemy.orm import lazyload, joinedload, defer, undefer
+from sqlalchemy.orm import lazyload, joinedload, selectinload, defer, undefer
 
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
@@ -527,29 +527,42 @@ class NEBRecordSocket(BaseRecordSocket):
                 r = session.execute(stmt).scalar_one()
                 return InsertMetadata(inserted_idx=[0]), r
 
+    def get(
+        self,
+        record_ids: Sequence[int],
+        include: Optional[Sequence[str]] = None,
+        exclude: Optional[Sequence[str]] = None,
+        missing_ok: bool = False,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[Optional[Dict[str, Any]]]:
+        options = []
+
+        if include:
+            if "**" in include or "initial_chain" in include:
+                options.append(selectinload(NEBRecordORM.initial_chain).joinedload(NEBInitialchainORM.molecule))
+            if "**" in include or "singlepoints" in include:
+                options.append(selectinload(NEBRecordORM.singlepoints))
+            if "**" in include or "optimizations" in include:
+                options.append(selectinload(NEBRecordORM.optimizations))
+
+        with self.root_socket.optional_session(session, True) as session:
+            return self.root_socket.records.get_base(
+                orm_type=self.record_orm,
+                record_ids=record_ids,
+                include=include,
+                exclude=exclude,
+                missing_ok=missing_ok,
+                additional_options=options,
+                session=session,
+            )
+
     def query(
         self,
         query_data: NEBQueryFilters,
         *,
         session: Optional[Session] = None,
     ) -> List[int]:
-        """
-        Query neb records
-
-        Parameters
-        ----------
-        query_data
-            Fields/filters to query for
-        session
-            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed (but not committed) before returning from this function.
-
-        Returns
-        -------
-        :
-            A list of record ids that were found in the database.
-        """
-
         and_query = []
         need_spspec_join = False
         need_initchain_join = False
@@ -873,17 +886,7 @@ class NEBRecordSocket(BaseRecordSocket):
             if rec is None:
                 raise MissingDataError(f"Cannot find record {record_id}")
 
-            ret = {}
-
-            for opt in rec.optimizations:
-                if opt.ts:
-                    ret["transition"] = opt.model_dict()
-                elif opt.position == 0:
-                    ret["initial"] = opt.model_dict()
-                else:
-                    ret["final"] = opt.model_dict()
-
-            return ret
+            return rec.model_dict()["optimizations"]
 
     def get_neb_result(
         self,

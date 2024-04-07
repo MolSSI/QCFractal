@@ -115,9 +115,6 @@ def run_test_data(
     with storage_socket.session_scope() as session:
         record = session.get(SinglepointRecordORM, record_id)
         assert record.status == end_status
-        print(time_0)
-        print(record.created_on)
-        print(time_1)
         assert time_0 < record.created_on < time_1
         assert time_1 < record.modified_on < time_2
         assert time_1 < record.compute_history[0].modified_on < time_2
