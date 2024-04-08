@@ -1,6 +1,23 @@
 Release Notes
 =============
 
+0.54 / 2024-04-09
+-----------------
+
+Two big features of this release is client-side caching (including views) and the ability to download more of records.
+As part of this, fetching lots of records from a server will automatically scale to keep a relatively constant
+request time, rather than use a fixed batch size.
+
+Client-side caching is relatively functional, but this was a major change, so feel free to report issues as always.
+
+In addition, there is some of the usual cleanup.
+
+- (:pr:`802`) Implement client-side caching using SQLite
+- (:pr:`808`) Better handling of missing tags/programs from managers
+- (:pr:`809`) Improve fetching speed by allowing for including more of records
+- (:pr:`811`) Improve task queue performance by storing time in the task queue table directly
+
+
 0.53 / 2024-01-09
 -----------------
 
