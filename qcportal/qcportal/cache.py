@@ -676,6 +676,9 @@ def get_records_with_cache(
         existing_records = record_cache.get_records(record_ids, record_type)
         records_tofetch = set(record_ids) - {x.id for x in existing_records}
 
+        for r in existing_records:
+            r.propagate_client(client)
+
     if records_tofetch:
         if client is None:
             raise RuntimeError("Need to fetch some records, but not connected to a client")
