@@ -8,6 +8,7 @@ import datetime
 import os
 import sqlite3
 import threading
+import uuid
 from typing import TYPE_CHECKING, Optional, TypeVar, Type, Any, List, Iterable, Tuple, Sequence
 from urllib.parse import urlparse
 
@@ -553,7 +554,9 @@ class DatasetCache(RecordCache):
 
 
 class PortalCache:
-    def __init__(self, server_uri: str, cache_dir: Optional[str], max_size: int, shared_memory: bool = True):
+    def __init__(
+        self, server_uri: str, cache_dir: Optional[str], max_size: int, shared_memory_key: Optional[str] = None
+    ):
         parsed_url = urlparse(server_uri)
 
         # Should work as a reasonable fingerprint?
@@ -566,19 +569,23 @@ class PortalCache:
             os.makedirs(self.cache_dir, exist_ok=True)
         else:
             self._is_disk = False
-            self._shared_memory = shared_memory
+
+            # If no shared memory key specified, make a unique one
+            if shared_memory_key is None:
+                shared_memory_key = f"{server_uri}_{os.getpid()}_{uuid.uuid4()}"
+
+            self._shared_memory_key = shared_memory_key
             self.cache_dir = None
 
     def get_cache_uri(self, cache_name: str) -> str:
         if self._is_disk:
             file_path = os.path.join(self.cache_dir, f"{cache_name}.sqlite")
             uri = f"file:{file_path}"
-        elif self._shared_memory:
+        else:
+            # We always want some shared cache due to the use of threads.
             # vfs=memdb seems to be a better way than mode=memory&cache=shared . Very little docs about it though
             # The / after the : is apparently very important. Otherwise, the shared stuff doesn't work
-            uri = f"file:/qca_cache_{cache_name}?vfs=memdb"
-        else:
-            uri = f"file:/qca_cache_{cache_name}?mode=memory"
+            uri = f"file:/{self._shared_memory_key}_{cache_name}?vfs=memdb"
 
         return uri
 

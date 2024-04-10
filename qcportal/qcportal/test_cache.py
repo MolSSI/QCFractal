@@ -131,9 +131,7 @@ def test_dataset_cache_update(snowflake_client: PortalClient):
 
 
 def test_dataset_cache_multithread(snowflake: QCATestingSnowflake):
-    # Use shared memory cache
-    # This is the default for a regular client, but a testing snowflake uses :memory:
-    snowflake_client: PortalClient = snowflake.client(shared_memory_cache=True)
+    snowflake_client: PortalClient = snowflake.client()
 
     ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
 
