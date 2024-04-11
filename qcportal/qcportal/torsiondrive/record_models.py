@@ -174,9 +174,6 @@ class TorsiondriveRecord(BaseRecord):
             if r.minimum_optimizations_ and do_minopt:
                 opt_ids.update(r.minimum_optimizations_.values())
 
-        if not opt_ids:
-            return
-
         opt_ids = list(opt_ids)
         opt_records = get_records_with_cache(
             client, record_cache, OptimizationRecord, opt_ids, include=include, force_fetch=force_fetch

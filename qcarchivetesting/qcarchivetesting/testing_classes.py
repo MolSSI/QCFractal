@@ -248,7 +248,7 @@ class QCATestingSnowflake(FractalSnowflake):
         """
         self._stop_job_runner()
 
-    def client(self, username=None, password=None, cache_dir=None, shared_memory_cache=False) -> PortalClient:
+    def client(self, username=None, password=None, cache_dir=None) -> PortalClient:
         """
         Obtain a client connected to this snowflake
 
@@ -260,11 +260,6 @@ class QCATestingSnowflake(FractalSnowflake):
             The password to use
         cache_dir
             Directory to store cache files in
-        shared_memory_cache
-            Whether to use a shared memory cache
-
-        Note: We generally don't want a shared memory cache for tests, so the default is False here
-        rather than True as in the main codebase
 
         Returns
         -------
@@ -272,8 +267,7 @@ class QCATestingSnowflake(FractalSnowflake):
             A PortalClient that is connected to this snowflake
         """
 
-        client = PortalClient(self.get_uri(), username=username, password=password, cache_dir=cache_dir,
-                              shared_memory_cache=shared_memory_cache)
+        client = PortalClient(self.get_uri(), username=username, password=password, cache_dir=cache_dir)
         client.encoding = self.encoding
         return client
 

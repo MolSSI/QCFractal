@@ -525,10 +525,10 @@ class BaseDataset(BaseModel):
     @property
     def specification_names(self) -> List[str]:
         if not self._specification_names:
-            self._specification_names = self._cache_data.get_specification_names()
-
-        if not self._specification_names and not self.is_view:
-            self.fetch_specification_names()
+            if self.is_view:
+                self._specification_names = self._cache_data.get_specification_names()
+            else:
+                self.fetch_specification_names()
 
         return self._specification_names
 
@@ -769,10 +769,10 @@ class BaseDataset(BaseModel):
     @property
     def entry_names(self) -> List[str]:
         if not self._entry_names:
-            self._entry_names = self._cache_data.get_entry_names()
-
-        if not self._entry_names and not self.is_view:
-            self.fetch_entry_names()
+            if self.is_view:
+                self._entry_names = self._cache_data.get_entry_names()
+            else:
+                self.fetch_entry_names()
 
         return self._entry_names
 

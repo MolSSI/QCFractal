@@ -270,6 +270,7 @@ def run_dataset_model_rename_spec(snowflake_client, ds, test_entries, test_specs
 
     assert set(spec_names) == {"spec_2", "spec_1_new"}
     assert set(ds.specifications.keys()) == {"spec_2", "spec_1_new"}
+    assert set(ds.specification_names) == {"spec_2", "spec_1_new"}
     assert set(ds._specification_names) == {"spec_2", "spec_1_new"}
     assert set(ds._cache_data.get_specification_names()) == {"spec_2", "spec_1_new"}
     assert ds._cache_data.get_specification("spec_1_new").name == "spec_1_new"
