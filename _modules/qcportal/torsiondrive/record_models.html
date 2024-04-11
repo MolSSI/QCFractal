@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.torsiondrive.record_models &#8212; QCArchive 0.54.post2+g832c9de4 documentation</title>
+    <title>qcportal.torsiondrive.record_models &#8212; QCArchive 0.54.post7+gd81c496f documentation</title>
   
   
   
@@ -39,7 +39,7 @@
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../../_static/documentation_options.js?v=06ee08f6"></script>
+    <script src="../../../_static/documentation_options.js?v=8ba1889c"></script>
     <script src="../../../_static/doctools.js?v=888ff710"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -625,9 +625,6 @@ document.write(`
                 <span class="n">opt_ids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">optimization_id</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">optimizations_</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">minimum_optimizations_</span> <span class="ow">and</span> <span class="n">do_minopt</span><span class="p">:</span>
                 <span class="n">opt_ids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">minimum_optimizations_</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">opt_ids</span><span class="p">:</span>
-            <span class="k">return</span>
 
         <span class="n">opt_ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">opt_ids</span><span class="p">)</span>
         <span class="n">opt_records</span> <span class="o">=</span> <span class="n">get_records_with_cache</span><span class="p">(</span>
