@@ -26,10 +26,10 @@ def test_base_record_model_common(snowflake: QCATestingSnowflake, includes: Opti
     snowflake_client = snowflake.client()
     activated_manager_name, _ = snowflake.activate_manager()
 
-    input_spec, _, result = load_sp_test_data("sp_psi4_benzene_energy_1")
+    input_spec, _, result = load_sp_test_data("sp_psi4_h2_b3lyp_nativefiles")
 
     time_0 = now_at_utc()
-    rec_id = run_sp_test_data(storage_socket, activated_manager_name, "sp_psi4_benzene_energy_1")
+    rec_id = run_sp_test_data(storage_socket, activated_manager_name, "sp_psi4_h2_b3lyp_nativefiles")
     time_1 = now_at_utc()
 
     snowflake_client.add_comment(rec_id, "This is a comment")
