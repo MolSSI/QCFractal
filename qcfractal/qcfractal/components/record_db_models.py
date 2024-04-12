@@ -134,7 +134,7 @@ class NativeFileORM(BaseORM):
 
     __table_args__ = (UniqueConstraint("record_id", "name", name="ux_native_file_record_id_name"),)
 
-    _qcportal_model_excludes = ["id", "history_id", "compression_level"]
+    _qcportal_model_excludes = ["id", "record_id", "compression_level"]
 
     def get_file(self) -> Any:
         return decompress(self.data, self.compression_type)
