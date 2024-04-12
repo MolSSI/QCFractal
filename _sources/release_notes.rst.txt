@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+0.54.1 / 2024-04-12
+-------------------
+
+This is a minor fix-up release that fixes a few issues from the v0.54 release.
+
+- (:pr:`815`) Adds tag to the task queue sort index
+- (:pr:`816`) Fixes a few issues related to caching
+
+
 0.54 / 2024-04-09
 -----------------
 
