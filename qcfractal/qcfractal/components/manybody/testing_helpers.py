@@ -11,9 +11,9 @@ from qcelemental.models import Molecule, FailedOperation, ComputeError, AtomicRe
 from qcarchivetesting.helpers import read_record_data
 from qcfractal.components.manybody.record_db_models import ManybodyRecordORM
 from qcfractal.testing_helpers import run_service
-from qcportal.manybody import ManybodySpecification, ManybodyKeywords
+from qcportal.manybody import ManybodySpecification
+from qcportal.singlepoint import QCSpecification, SinglepointProtocols
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, RecordTask
-from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -22,37 +22,54 @@ if TYPE_CHECKING:
 test_specs = [
     ManybodySpecification(
         program="manybody",
-        keywords=ManybodyKeywords(max_nbody=None, bsse_correction="none"),
-        singlepoint_specification=QCSpecification(
-            program="prog1",
-            driver="energy",
-            method="b3lyp",
-            basis="6-31G*",
-            keywords={"k": "value"},
-            protocols=SinglepointProtocols(wavefunction="all"),
-        ),
+        bsse_correction=["nocp"],
+        levels={
+            1: QCSpecification(
+                program="Prog1",
+                driver="energy",
+                method="b3lyp",
+                basis="6-31G*",
+                keywords={"k": "value"},
+                protocols=SinglepointProtocols(wavefunction="all"),
+            ),
+        },
+        keywords={"return_total_data": True},
     ),
     ManybodySpecification(
-        keywords=ManybodyKeywords(max_nbody=1, bsse_correction="none"),
         program="manybody",
-        singlepoint_specification=QCSpecification(
-            program="Prog2",
-            driver="energy",
-            method="Hf",
-            basis="def2-tzVP",
-            keywords={"k": "value"},
-        ),
+        bsse_correction=["cp"],
+        levels={
+            1: QCSpecification(
+                program="Prog2",
+                driver="energy",
+                method="Hf",
+                basis="def2-tzVP",
+                keywords={"k": "value"},
+                protocols=SinglepointProtocols(wavefunction="all"),
+            ),
+        },
+        keywords={"return_total_data": True},
     ),
     ManybodySpecification(
-        keywords=ManybodyKeywords(max_nbody=1, bsse_correction="none"),
         program="manybody",
-        singlepoint_specification=QCSpecification(
-            program="Prog3",
-            driver="properties",
-            method="Hf",
-            basis="sto-3g",
-            keywords={"k": "v"},
-        ),
+        bsse_correction=["cp", "vmfc"],
+        levels={
+            1: QCSpecification(
+                program="Prog3",
+                driver="energy",
+                method="mp2",
+                basis="sto-3g",
+                keywords={"k": "v"},
+            ),
+            "supersystem": QCSpecification(
+                program="Prog3",
+                driver="energy",
+                method="Hf",
+                basis="sto-3g",
+                keywords={"k": "v"},
+            ),
+        },
+        keywords={"return_total_data": False},
     ),
 ]
 

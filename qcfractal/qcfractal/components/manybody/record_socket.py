@@ -1,14 +1,15 @@
 from __future__ import annotations
 
+import contextlib
 import importlib
-import itertools
+import io
 import logging
-import math
-from typing import List, Dict, Tuple, Optional, Sequence, Any, Union, Set, TYPE_CHECKING
+import textwrap
+from typing import List, Dict, Tuple, Optional, Sequence, Any, Union, TYPE_CHECKING
 
 import tabulate
-from sqlalchemy import select
-from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy import select, func
+from sqlalchemy.dialects.postgresql import array_agg, aggregate_order_by
 from sqlalchemy.orm import defer, undefer, lazyload, joinedload, selectinload
 
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
@@ -16,16 +17,20 @@ from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
 from qcfractal.db_socket.helpers import insert_general
 from qcportal.exceptions import MissingDataError
 from qcportal.manybody import (
-    BSSECorrectionEnum,
-    ManybodyKeywords,
     ManybodySpecification,
     ManybodyQueryFilters,
 )
 from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
-from qcportal.utils import hash_dict
-from .record_db_models import ManybodyClusterORM, ManybodyRecordORM, ManybodySpecificationORM
+from qcportal.utils import chunk_iterable, hash_dict
+from .record_db_models import (
+    ManybodyClusterORM,
+    ManybodyRecordORM,
+    ManybodySpecificationORM,
+    ManybodySpecificationLevelsORM,
+)
+import qcmanybody
 from ..record_socket import BaseRecordSocket
 
 _qcm_spec = importlib.util.find_spec("qcmanybody")
@@ -41,152 +46,50 @@ if TYPE_CHECKING:
 
 # Meaningless, but unique to manybody
 manybody_insert_lock_id = 14500
+manybody_insert_spec_lock_id = 14501
 
 
-def nCr(n: int, r: int) -> int:
-    """
-    Compute the binomial coefficient n! / (k! * (n-k)!)
-    """
+def _get_qcmanybody_core(
+    mb_orm: ManybodyRecordORM,
+) -> Tuple[qcmanybody.ManyBodyCore, Dict[str, ManybodySpecificationLevelsORM]]:
+    init_mol: Molecule = mb_orm.initial_molecule.to_model(Molecule)
 
-    # TODO: available in python 3.8 as math.comb
-    return math.factorial(n) // (math.factorial(r) * math.factorial(n - r))
+    qcm_levels = {}
+    level_spec_map = {}
+    sp_id_map = {}
 
+    for nb, lvl in sorted(mb_orm.specification.levels.items()):
+        if nb == -1:
+            nb = "supersystem"
 
-def analyze_results(mb_orm: ManybodyRecordORM):
-    keywords = ManybodyKeywords(**mb_orm.specification.keywords)
-
-    # Total number of fragments present on the molecule
-    total_frag = len(mb_orm.initial_molecule.fragments)
-
-    # Group clusters by nbody
-    # For CP, this only includes the calculations done in the full basis
-    clusters = {}
-    for c in mb_orm.clusters:
-        if keywords.bsse_correction == BSSECorrectionEnum.none:
-            nbody = len(c.fragments)
-            clusters.setdefault(nbody, [])
-            clusters[nbody].append(c)
-        elif keywords.bsse_correction == BSSECorrectionEnum.cp and len(c.basis) > 1:
-            nbody = len(c.fragments)
-            clusters.setdefault(nbody, [])
-            clusters[nbody].append(c)
-
-    # Total energy for each nbody cluster. This is the energy calculated
-    # by the singlepoint multiplied by its degeneracy
-    cluster_energy: Dict[int, float] = {}
-
-    for nbody, v in clusters.items():
-        cluster_energy[nbody] = sum(c.degeneracy * c.singlepoint_record.properties["return_energy"] for c in v)
-
-    # Calculate CP correction
-    bsse = 0.0
-    if keywords.bsse_correction == BSSECorrectionEnum.cp:
-        monomer_clusters = [c for c in mb_orm.clusters if len(c.fragments) == 1 and len(c.basis) == 1]
-        monomer_energy = sum(c.degeneracy * c.singlepoint_record.properties["return_energy"] for c in monomer_clusters)
-        bsse = cluster_energy[1] - monomer_energy
-
-    # Total energies
-    total_energy_through = {}
-
-    for n in cluster_energy.keys():
-        # If entire molecule was calculated, then add that
-        if n == total_frag:
-            total_energy_through[n] = cluster_energy[n]
-        elif n == 1:
-            total_energy_through[n] = cluster_energy[n]
+        sp_spec = lvl.singlepoint_specification
+        if sp_spec.id in sp_id_map:
+            sp_name = sp_id_map[sp_spec.id]
         else:
-            total_energy_through[n] = 0.0
-            for nbody in range(1, n + 1):
-                sign = (-1) ** (n - nbody)
-                take_nk = nCr(total_frag - nbody - 1, n - nbody)
-                total_energy_through[n] += take_nk * sign * cluster_energy[nbody]
+            test_name = f"{sp_spec.program}/{sp_spec.method}/{sp_spec.basis}"
+            sp_name = test_name
 
-    # Apply CP correction
-    if keywords.bsse_correction == BSSECorrectionEnum.cp:
-        total_energy_through = {k: v - bsse for k, v in total_energy_through.items()}
+            # duplicates
+            i = 0
+            while sp_name in qcm_levels:
+                i += 1
+                sp_name = f"{test_name}_{i}"
 
-    # Contributions to interaction energy
-    energy_contrib = {}
-    energy_contrib[1] = 0.0
-    for n in total_energy_through:
-        if n != 1:
-            energy_contrib[n] = total_energy_through[n] - total_energy_through[n - 1]
+            sp_id_map[sp_spec.id] = sp_name
 
-    # Interaction energy
-    interaction_energy = {}
-    for n in total_energy_through:
-        interaction_energy[n] = total_energy_through[n] - total_energy_through[1]
+        qcm_levels[nb] = sp_name
+        level_spec_map[sp_name] = lvl
 
-    results = {
-        "cluster_energy": cluster_energy,
-        "total_energy_through": total_energy_through,
-        "interaction_energy": interaction_energy,
-        "energy_contrib": energy_contrib,
-    }
+    qcm = qcmanybody.ManyBodyCore(
+        molecule=init_mol,
+        levels=qcm_levels,
+        bsse_type=[qcmanybody.BsseEnum[x] for x in mb_orm.specification.bsse_correction],
+        return_total_data=mb_orm.specification.keywords.get("return_total_data", False),
+        supersystem_ie_only=mb_orm.specification.keywords.get("supersystem_ie_only", False),
+        embedding_charges=None,
+    )
 
-    mb_orm.results = results
-
-
-def build_mbe_clusters(mol: Molecule, keywords: ManybodyKeywords) -> List[Tuple[Set[int], Set[int], Molecule]]:
-    """
-    Fragments a larger molecule into clusters
-
-    Parameters
-    ----------
-    mol
-        Molecule to fragment
-    keywords
-        Keywords that control the fragmenting
-
-    Returns
-    -------
-    :
-        A list of tuples with three elements -
-        (1) Set of fragment indices (2) Set of basis indices (3) Fragment molecule
-    """
-
-    # List: (fragments, basis, Molecule)
-    # fragments and basis are sequences
-    ret: List[Tuple[Set[int], Set[int], Molecule]] = []
-
-    if len(mol.fragments) < 2:
-        raise RuntimeError("manybody service: Molecule must have at least two fragments")
-
-    max_nbody = keywords.max_nbody
-
-    if max_nbody is None:
-        max_nbody = len(mol.fragments)
-    else:
-        max_nbody = min(max_nbody, len(mol.fragments))
-
-    # Build some info
-    allfrag = set(range(max_nbody))
-
-    # Loop over the nbody (the number of bodies to include. 1 = monomers, 2 = dimers)
-    for nbody in range(1, max_nbody):
-        for frag_idx in itertools.combinations(allfrag, nbody):
-            frag_idx = set(frag_idx)
-            if keywords.bsse_correction == BSSECorrectionEnum.none:
-                frag_mol = mol.get_fragment(frag_idx, orient=True, group_fragments=True)
-                ret.append((frag_idx, frag_idx, frag_mol))
-            elif keywords.bsse_correction == BSSECorrectionEnum.cp:
-                ghost = list(set(allfrag) - set(frag_idx))
-                frag_mol = mol.get_fragment(frag_idx, ghost, orient=True, group_fragments=True)
-                ret.append((frag_idx, allfrag, frag_mol))
-            else:
-                raise RuntimeError(f"Unknown BSSE correction method: {keywords.bsse_correction}")
-
-    # Include full molecule as well
-    if max_nbody >= len(mol.fragments):
-        ret.append((allfrag, allfrag, mol))
-
-    # Always include monomer in monomer basis for CP
-    if keywords.bsse_correction == BSSECorrectionEnum.cp:
-        for frag_idx in allfrag:
-            frag_mol = mol.get_fragment([frag_idx], orient=True, group_fragments=True)
-            ret.append(({frag_idx}, {frag_idx}, frag_mol))
-
-    return ret
+    return qcm, level_spec_map
 
 
 class ManybodyRecordSocket(BaseRecordSocket):
@@ -216,70 +119,72 @@ class ManybodyRecordSocket(BaseRecordSocket):
         mb_orm: ManybodyRecordORM = service_orm.record
 
         output = "\n\nCreated manybody calculation\n"
+        output += "qcmanybody version: " + qcmanybody.__version__ + "\n\n"
 
-        output += "-" * 80 + "\nManybody Keywords:\n\n"
-        spec: ManybodySpecification = mb_orm.specification.to_model(ManybodySpecification)
-        table_rows = sorted(spec.keywords.dict().items())
-        output += tabulate.tabulate(table_rows, headers=["keyword", "value"])
-        output += "\n\n" + "-" * 80 + "\nQC Specification:\n\n"
-        table_rows = sorted(spec.singlepoint_specification.dict().items())
-        output += tabulate.tabulate(table_rows, headers=["keyword", "value"])
+        output += "-" * 80 + "\nSpecification:\n\n"
+
+        table_rows = []
+
+        for k, v in mb_orm.specification.keywords.items():
+            table_rows.append((k, v))
+
+        table_rows.append(("bsse_correction", str(mb_orm.specification.bsse_correction)))
+        output += tabulate.tabulate(table_rows, tablefmt="plain")
         output += "\n\n"
 
         init_mol: Molecule = mb_orm.initial_molecule.to_model(Molecule)
-
         output += f"Initial molecule: formula={init_mol.get_molecular_formula()} id={mb_orm.initial_molecule_id}\n"
         output += f"Initial molecule has {len(init_mol.fragments)} fragments\n"
 
-        # Fragment the initial molecule into clusters
-        keywords = ManybodyKeywords(**mb_orm.specification.keywords)
-        mol_clusters = build_mbe_clusters(init_mol, keywords)
+        # Create a computer instance to get what calculations we need
+        qcm, spec_map = _get_qcmanybody_core(mb_orm)
 
-        output += f"Molecule is split into into {len(mol_clusters)} separate clusters:\n\n"
+        output += "\n\n" + "-" * 80 + "\nModel Chemistries/Specifications:\n\n"
+        for name, lvl_spec in spec_map.items():
+            output += f"{name}:\n"
+            output += textwrap.indent(
+                tabulate.tabulate(lvl_spec.singlepoint_specification.model_dict().items(), tablefmt="plain"), "    "
+            )
+            output += "\n"
 
-        # Group by nbody and count for output
-        mol_clusters_nbody = {}
-        for mc in mol_clusters:
-            nbody = len(mc[0])
-            mol_clusters_nbody.setdefault(nbody, 0)
-            mol_clusters_nbody[nbody] += 1
-
-        table_rows = [(k, v) for k, v in sorted(mol_clusters_nbody.items())]
-        output += tabulate.tabulate(table_rows, headers=["n-body", "count"])
+        output += "\n\n" + "-" * 80 + "\nLevels:\n\n"
+        for level, mc_name in qcm.levels.items():
+            output += f" {level:>13}: {mc_name}\n"
         output += "\n\n"
 
-        # Add the manybody molecules/clusters to the db
-        nbody_mols = [x[2] for x in mol_clusters]
-        meta, mol_ids = self.root_socket.molecules.add(nbody_mols)
-
-        if not meta.success:
-            raise RuntimeError("Unable to add molecules to the database: " + meta.error_string)
-
-        # We do unique ids only
-        # Some manybody calculations will have identical molecules
-        # Think of single-atom dimers or something. There will only be one monomer
-        done_ids = set()
-
+        output += "\n\n" + "-" * 80 + "\nComputation count:\n\n"
         table_rows = []
-        for (frag_idx, basis_idx, frag_mol), mol_id in zip(mol_clusters, mol_ids):
-            if mol_id in done_ids:
-                continue
+        for mc, compute_dict in qcm.compute_map.items():
+            for nb, frags in compute_dict["all"].items():
+                table_rows.append((f"{mc} {nb}-mer", len(frags)))
+        output += tabulate.tabulate(table_rows, headers=["n-body", "count"])
 
-            done_ids.add(mol_id)
-            degen = mol_ids.count(mol_id)
-            frag_idx = sorted(frag_idx)
-            basis_idx = sorted(basis_idx)
+        # Add what we need to compute to the database
+        table_rows = []
 
-            new_mb_orm = ManybodyClusterORM(fragments=frag_idx, basis=basis_idx, molecule_id=mol_id, degeneracy=degen)
+        for mol_batch in chunk_iterable(qcm.iterate_molecules(), 400):
+            to_add = [x[2] for x in mol_batch]
+            meta, mol_ids = self.root_socket.molecules.add(to_add, session=session)
+            if not meta.success:
+                raise RuntimeError("Unable to add molecules to the database: " + meta.error_string)
 
-            mb_orm.clusters.append(new_mb_orm)
+            for (mc_level, label, molecule), mol_id in zip(mol_batch, mol_ids):
+                # Decode the label given by qcmanybody
+                _, frag, bas = qcmanybody.delabeler(label)
 
-            table_rows.append((degen, frag_mol.get_molecular_formula(), mol_id, frag_idx, basis_idx))
+                mb_cluster_orm = ManybodyClusterORM(
+                    mc_level=mc_level,
+                    fragments=frag,
+                    basis=bas,
+                    molecule_id=mol_id,
+                )
+                table_rows.append((mc_level, frag, bas, mol_id, molecule.get_molecular_formula(), molecule.get_hash()))
+                mb_orm.clusters.append(mb_cluster_orm)
 
-        # Sort rows by nbody (# of fragments), the degeneracy descending, then molecule id
-        table_rows = sorted(table_rows, key=lambda x: (len(x[3]), -x[0], x[2]))
-        output += tabulate.tabulate(table_rows, headers=["degeneracy", "molecule", "molecule id", "fragments", "basis"])
-        output += "\n\n"
+        output += "\n\nMolecules to compute\n\n"
+        output += tabulate.tabulate(
+            table_rows, headers=["model chemistry", "fragments", "basis", "molecule_id", "formula", "hash"]
+        )
 
         self.root_socket.records.append_output(session, mb_orm, OutputTypeEnum.stdout, output)
 
@@ -297,20 +202,27 @@ class ManybodyRecordSocket(BaseRecordSocket):
             "routine": "qcmanybody",
         }
 
-        # Grab all the clusters for the computation and them map them to molecule ID
-        clusters = mb_orm.clusters
-        clusters_by_mol = {c.molecule_id: c for c in clusters}
-
         service_orm.dependencies = []
 
-        # What molecules/clusters we still have to do
-        mols_to_compute = [c.molecule_id for c in clusters if c.singlepoint_id is None]
+        submitted = []
 
-        if mols_to_compute:
-            sp_spec_id = mb_orm.specification.singlepoint_specification_id
+        qcm, spec_map = _get_qcmanybody_core(mb_orm)
+        done_sp_ids = set(c.singlepoint_id for c in mb_orm.clusters if c.singlepoint_id is not None)
+
+        # what we need to submit, mapped by single spec id
+
+        clusters_to_submit = {}
+        for c in mb_orm.clusters:
+            if c.singlepoint_id is not None:
+                continue
+            clusters_to_submit.setdefault(c.mc_level, [])
+            clusters_to_submit[c.mc_level].append(c)
+
+        for mc_level, clusters in clusters_to_submit.items():
+            mol_ids = [c.molecule_id for c in clusters]
             meta, sp_ids = self.root_socket.records.singlepoint.add_internal(
-                mols_to_compute,
-                sp_spec_id,
+                mol_ids,
+                spec_map[mc_level].singlepoint_specification_id,
                 service_orm.tag,
                 service_orm.priority,
                 mb_orm.owner_user_id,
@@ -319,75 +231,62 @@ class ManybodyRecordSocket(BaseRecordSocket):
                 session=session,
             )
 
-            output = f"\nSubmitted {len(sp_ids)} singlepoint calculations "
-            output += f"({meta.n_inserted} new, {meta.n_existing} existing):\n\n"
+            for cluster, sp_id in zip(clusters, sp_ids):
+                cluster.singlepoint_id = sp_id
+                submitted.append((cluster, sp_id))
 
-            for mol_id, sp_id in zip(mols_to_compute, sp_ids):
-                svc_dep = ServiceDependencyORM(record_id=sp_id, extras={})
+                # Add as a dependency to the service, but only if it's not done yet
+                if sp_id not in done_sp_ids:
+                    svc_dep = ServiceDependencyORM(record_id=sp_id, extras={})
+                    service_orm.dependencies.append(svc_dep)
+                    done_sp_ids.add(sp_id)
 
-                cluster_orm = clusters_by_mol[mol_id]
+        if len(submitted) != 0:
+            output = f"\nSubmitted {len(submitted)} singlepoint calculations "
+            self.root_socket.records.append_output(session, mb_orm, OutputTypeEnum.stdout, output)
+            return False
 
-                # Assign the singlepoint id to the cluster
-                assert cluster_orm.singlepoint_id is None
-                cluster_orm.singlepoint_id = sp_id
+        output = "\n\n" + "*" * 80 + "\n"
+        output += "All manybody singlepoint computations are complete!\n\n"
 
-                service_orm.dependencies.append(svc_dep)
+        output += "=" * 20 + "\nSinglepoint results\n" + "=" * 20 + "\n\n"
 
-            table_rows = sorted(zip(mols_to_compute, sp_ids))
-            output += tabulate.tabulate(table_rows, headers=["molecule id", "singlepoint id"])
+        # Make a nice output table
+        table_rows = []
+        for cluster in mb_orm.clusters:
+            mol_id = cluster.molecule_id
 
-        else:
-            output = "\n\n" + "*" * 80 + "\n"
-            output += "All manybody singlepoint computations are complete!\n\n"
+            energy = cluster.singlepoint_record.properties["return_energy"]
+            table_row = [cluster.mc_level, cluster.fragments, cluster.basis, energy, mol_id, cluster.singlepoint_id]
+            table_rows.append(table_row)
 
-            output += "Singlepoint results:\n"
+        output += tabulate.tabulate(
+            table_rows,
+            headers=["model chemistry", "fragments", "basis", "energy (hartree)", "molecule id", "singlepoint id"],
+            floatfmt=".10f",
+        )
 
-            # Map molecule_id -> singlepoint record
-            result_map = {c.molecule_id: c.singlepoint_record for c in clusters}
+        # Analyze the actual results
+        component_results = {}
+        for cluster in mb_orm.clusters:
+            mc_level = cluster.mc_level
+            label = qcmanybody.labeler(mc_level, cluster.fragments, cluster.basis)
+            energy = cluster.singlepoint_record.properties["return_energy"]
 
-            # Make a nice output table
-            table_rows = []
-            for component in mb_orm.clusters:
-                mol_id = component.molecule_id
-                mol_form = component.molecule.identifiers["molecular_formula"]
+            component_results.setdefault(label, {})
+            component_results[label]["energy"] = energy
 
-                energy = component.singlepoint_record.properties["return_energy"]
-                table_row = [mol_id, component.singlepoint_id, mol_form, energy]
-                table_rows.append(table_row)
+        qcmb_stdout = io.StringIO()
 
-                result_map[mol_id] = component.singlepoint_record
+        with contextlib.redirect_stdout(qcmb_stdout):
+            mb_orm.results = qcm.analyze(component_results)
 
-            output += tabulate.tabulate(
-                table_rows, headers=["molecule id", "singlepoint id", "molecule", "energy (hartree)"], floatfmt=".10f"
-            )
-
-            # Create the results of the manybody calculation
-            analyze_results(mb_orm)
-
-            # Make a results table
-            r = mb_orm.results
-            nb_keys = sorted(r["total_energy_through"].keys())
-            table_rows = [
-                (
-                    nbody,
-                    r["total_energy_through"][nbody],
-                    r["interaction_energy"][nbody],
-                    r["energy_contrib"][nbody],
-                )
-                for nbody in nb_keys
-            ]
-
-            output += "\n\n\n\n" + "=" * 80 + "\n"
-            output += "Final energy results (in hartrees)\n" + "=" * 80 + "\n\n"
-            output += tabulate.tabulate(
-                table_rows,
-                headers=["\nnbody", "Total Energy  \nthrough n-body", "\nInteraction Energy", "\nContrib to IE"],
-                floatfmt="6.10f",
-            )
-
+        output += "\n\n" + "=" * 40 + "\nManybody expansion results\n" + "=" * 40 + "\n"
+        output += qcmb_stdout.getvalue()
         self.root_socket.records.append_output(session, mb_orm, OutputTypeEnum.stdout, output)
 
-        return len(mols_to_compute) == 0
+        # We are done!
+        return True
 
     def add_specification(
         self, mb_spec: ManybodySpecification, *, session: Optional[Session] = None
@@ -412,47 +311,97 @@ class ManybodyRecordSocket(BaseRecordSocket):
             Metadata about the insertion, and the id of the specification.
         """
 
-        kw_dict = mb_spec.keywords.dict()
-        kw_hash = hash_dict(kw_dict)
+        mb_kw_dict = mb_spec.keywords.dict()
+        kw_hash = hash_dict(mb_kw_dict)
+
+        # Map 'supersystem' to -1
+        # The reverse (mapping -1 to 'supersystem') happens in the specification orm model_dict function
+        levels = mb_spec.levels.copy()
+        if "supersystem" in levels:
+            levels[-1] = levels.pop("supersystem")
 
         with self.root_socket.optional_session(session) as session:
-            meta, sp_spec_id = self.root_socket.records.singlepoint.add_specification(
-                qc_spec=mb_spec.singlepoint_specification, session=session
+            # add all singlepoint specifications
+
+            # Level to singlepoint spec id
+            level_spec_id_map: Dict[int, int] = {}
+            for k, v in levels.items():
+                meta, sp_spec_id = self.root_socket.records.singlepoint.add_specification(qc_spec=v, session=session)
+
+                if not meta.success:
+                    return (
+                        InsertMetadata(
+                            error_description="Unable to add singlepoint specification: " + meta.error_string,
+                        ),
+                        None,
+                    )
+
+                level_spec_id_map[k] = sp_spec_id
+
+            # Now the full manybody specification. Lock due to query + insert
+            session.execute(select(func.pg_advisory_xact_lock(manybody_insert_spec_lock_id))).scalar()
+
+            # Create a cte with the specification + levels
+            mb_spec_cte = (
+                select(
+                    ManybodySpecificationORM.id,
+                    ManybodySpecificationORM.program,
+                    ManybodySpecificationORM.bsse_correction,
+                    ManybodySpecificationORM.keywords_hash,
+                    array_agg(
+                        aggregate_order_by(
+                            ManybodySpecificationLevelsORM.singlepoint_specification_id,
+                            ManybodySpecificationLevelsORM.singlepoint_specification_id.asc(),
+                        )
+                    ).label("singlepoint_ids"),
+                    array_agg(
+                        aggregate_order_by(
+                            ManybodySpecificationLevelsORM.level,
+                            ManybodySpecificationLevelsORM.level.asc(),
+                        )
+                    ).label("levels"),
+                )
+                .join(
+                    ManybodySpecificationLevelsORM,
+                    ManybodySpecificationLevelsORM.manybody_specification_id == ManybodySpecificationORM.id,
+                )
+                .group_by(ManybodySpecificationORM.id)
+                .cte()
             )
 
-            if not meta.success:
-                return (
-                    InsertMetadata(
-                        error_description="Unable to add singlepoint specification: " + meta.error_string,
-                    ),
-                    None,
+            stmt = select(mb_spec_cte.c.id)
+            stmt = stmt.where(mb_spec_cte.c.program == mb_spec.program)
+            stmt = stmt.where(mb_spec_cte.c.bsse_correction == mb_spec.bsse_correction)
+            stmt = stmt.where(mb_spec_cte.c.keywords_hash == kw_hash)
+            stmt = stmt.where(mb_spec_cte.c.levels == sorted(level_spec_id_map.keys()))
+            stmt = stmt.where(mb_spec_cte.c.singlepoint_ids == sorted(level_spec_id_map.values()))
+
+            existing_id = session.execute(stmt).scalar_one_or_none()
+
+            if existing_id is not None:
+                return InsertMetadata(existing_idx=[0]), existing_id
+
+            # Does not exist. Insert new
+            sp_spec_orms = {}
+            for level, sp_spec_id in level_spec_id_map.items():
+                sp_spec_orms[level] = ManybodySpecificationLevelsORM(
+                    level=level, singlepoint_specification_id=sp_spec_id
                 )
 
-            stmt = (
-                insert(ManybodySpecificationORM)
-                .values(
-                    program=mb_spec.program,
-                    singlepoint_specification_id=sp_spec_id,
-                    keywords=kw_dict,
-                    keywords_hash=kw_hash,
-                )
-                .on_conflict_do_nothing()
-                .returning(ManybodySpecificationORM.id)
+            if "supersystem" in sp_spec_orms:
+                sp_spec_orms[-1] = sp_spec_orms.pop("supersystem")
+
+            new_orm = ManybodySpecificationORM(
+                program=mb_spec.program,
+                bsse_correction=mb_spec.bsse_correction,
+                keywords=mb_kw_dict,
+                keywords_hash=kw_hash,
+                levels=sp_spec_orms,
             )
 
-            r = session.execute(stmt).scalar_one_or_none()
-            if r is not None:
-                return InsertMetadata(inserted_idx=[0]), r
-            else:
-                # Specification was already existing
-                stmt = select(ManybodySpecificationORM.id).filter_by(
-                    program=mb_spec.program,
-                    singlepoint_specification_id=sp_spec_id,
-                    keywords_hash=kw_hash,
-                )
-
-                r = session.execute(stmt).scalar_one()
-                return InsertMetadata(existing_idx=[0]), r
+            session.add(new_orm)
+            session.flush()
+            return InsertMetadata(inserted_idx=[0]), new_orm.id
 
     def get(
         self,
@@ -512,7 +461,9 @@ class ManybodyRecordSocket(BaseRecordSocket):
             stmt = stmt.join(ManybodyRecordORM.specification)
 
         if need_qcspec_join:
-            stmt = stmt.join(ManybodySpecificationORM.singlepoint_specification)
+            stmt = stmt.join(ManybodySpecificationORM.levels).join(
+                ManybodySpecificationLevelsORM.singlepoint_specification
+            )
 
         stmt = stmt.where(*and_query)
 

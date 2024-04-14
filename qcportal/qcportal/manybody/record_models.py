@@ -9,8 +9,8 @@ except ImportError:
     from pydantic import BaseModel, Extra, validator, constr, PrivateAttr, Field
 from typing_extensions import Literal
 
-from qcportal.molecules import Molecule
 from qcportal.cache import get_records_with_cache
+from qcportal.molecules import Molecule
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
 from qcportal.singlepoint.record_models import (
     QCSpecification,
@@ -19,22 +19,16 @@ from qcportal.singlepoint.record_models import (
 
 
 class BSSECorrectionEnum(str, Enum):
-    none = "none"
+    nocp = "nocp"
     cp = "cp"
+    vmfc = "vmfc"
 
 
 class ManybodyKeywords(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    max_nbody: Optional[int] = None
-    bsse_correction: BSSECorrectionEnum
-
-    @validator("max_nbody")
-    def check_max_nbody(cls, v):
-        if v is not None and v <= 0:
-            raise ValueError("max_nbody must be None or > 0")
-        return v
+    return_total_data: bool = False
 
 
 class ManybodySpecification(BaseModel):
@@ -42,8 +36,9 @@ class ManybodySpecification(BaseModel):
         extra = Extra.forbid
 
     program: constr(to_lower=True) = "manybody"
-    singlepoint_specification: QCSpecification
-    keywords: ManybodyKeywords
+    levels: Dict[Union[int, Literal["supersystem"]], QCSpecification]
+    bsse_correction: List[BSSECorrectionEnum]
+    keywords: ManybodyKeywords = Field(ManybodyKeywords())
 
 
 class ManybodyAddBody(RecordAddBodyBase):
@@ -64,11 +59,10 @@ class ManybodyClusterMeta(BaseModel):
         extra = Extra.forbid
 
     molecule_id: int
+    mc_level: str
     fragments: List[int]
     basis: List[int]
-    degeneracy: int
     singlepoint_id: Optional[int]
-
     molecule: Optional[Molecule] = None
 
 

@@ -19,7 +19,7 @@ class ManybodyDatasetEntryORM(BaseORM):
     comment = Column(String)
 
     initial_molecule_id = Column(Integer, ForeignKey(MoleculeORM.id), nullable=False)
-    additional_keywords = Column(JSONB, nullable=False)
+    additional_singlepoint_keywords = Column(JSONB, nullable=False)
     attributes = Column(JSONB, nullable=False)
 
     initial_molecule = relationship(MoleculeORM, lazy="joined")
