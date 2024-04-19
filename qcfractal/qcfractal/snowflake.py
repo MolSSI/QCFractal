@@ -524,6 +524,18 @@ class FractalSnowflake:
         c._timeout = 2
         return c
 
+    def dump_database(self, filepath: str) -> None:
+        """
+        Dumps the database to a file
+
+        Parameters
+        ----------
+        filepath
+            Path to the output file to create
+        """
+
+        self._pg_harness.backup_database(filepath)
+
     def __enter__(self):
         return self
 
