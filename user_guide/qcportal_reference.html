@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>QCPortal API Reference &#8212; QCArchive 0.54.1.post2+g04497aef documentation</title>
+    <title>QCPortal API Reference &#8212; QCArchive 0.54.1.post4+ge1ba960c documentation</title>
   
   
   
@@ -40,8 +40,8 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../_static/documentation_options.js?v=addaaec5"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/documentation_options.js?v=1a4f0ef7"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
@@ -536,7 +536,7 @@ other clients. Not used if cache_dir is set.</p></li>
 <dd><p>Sets the Message-of-the-Day (MOTD) on the server</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>new_motd</strong> (<em>str</em>) – </p>
+<dd class="field-odd"><p><strong>new_motd</strong> (<em>str</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>str</p>
@@ -575,8 +575,8 @@ other clients. Not used if cache_dir is set.</p></li>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dataset_type</strong> (<em>str</em>) – </p></li>
-<li><p><strong>dataset_name</strong> (<em>str</em>) – </p></li>
+<li><p><strong>dataset_type</strong> (<em>str</em>)</p></li>
+<li><p><strong>dataset_name</strong> (<em>str</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -588,8 +588,8 @@ other clients. Not used if cache_dir is set.</p></li>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>record_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>]</em>) – </p></li>
-<li><p><strong>dataset_type</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>record_id</strong> (<em>int</em><em> | </em><em>Iterable</em><em>[</em><em>int</em><em>]</em>)</p></li>
+<li><p><strong>dataset_type</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -600,7 +600,7 @@ other clients. Not used if cache_dir is set.</p></li>
 <span class="sig-name descname"><span class="pre">get_dataset_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/client.html#PortalClient.get_dataset_by_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.client.PortalClient.get_dataset_by_id" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>dataset_id</strong> (<em>int</em>) – </p>
+<dd class="field-odd"><p><strong>dataset_id</strong> (<em>int</em>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -610,7 +610,7 @@ other clients. Not used if cache_dir is set.</p></li>
 <span class="sig-name descname"><span class="pre">dataset_from_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/client.html#PortalClient.dataset_from_cache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.client.PortalClient.dataset_from_cache" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>file_path</strong> (<em>str</em>) – </p>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>str</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset" title="qcportal.dataset_models.BaseDataset"><em>BaseDataset</em></a></p>
@@ -624,10 +624,10 @@ other clients. Not used if cache_dir is set.</p></li>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dataset_id</strong> (<em>int</em>) – </p></li>
-<li><p><strong>file_path</strong> (<em>str</em>) – </p></li>
-<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
-<li><p><strong>overwrite</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>dataset_id</strong> (<em>int</em>)</p></li>
+<li><p><strong>file_path</strong> (<em>str</em>)</p></li>
+<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>overwrite</strong> (<em>bool</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -638,7 +638,7 @@ other clients. Not used if cache_dir is set.</p></li>
 <span class="sig-name descname"><span class="pre">get_dataset_status_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/client.html#PortalClient.get_dataset_status_by_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.client.PortalClient.get_dataset_status_by_id" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>dataset_id</strong> (<em>int</em>) – </p>
+<dd class="field-odd"><p><strong>dataset_id</strong> (<em>int</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>Dict</em>[str, <em>Dict</em>[<a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a>, int]]</p>
@@ -652,19 +652,19 @@ other clients. Not used if cache_dir is set.</p></li>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dataset_type</strong> (<em>str</em>) – </p></li>
-<li><p><strong>name</strong> (<em>str</em>) – </p></li>
-<li><p><strong>description</strong> (<em>str</em><em> | </em><em>None</em>) – </p></li>
-<li><p><strong>tagline</strong> (<em>str</em><em> | </em><em>None</em>) – </p></li>
-<li><p><strong>tags</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
-<li><p><strong>group</strong> (<em>str</em><em> | </em><em>None</em>) – </p></li>
-<li><p><strong>provenance</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>) – </p></li>
-<li><p><strong>visibility</strong> (<em>bool</em>) – </p></li>
-<li><p><strong>default_tag</strong> (<em>str</em>) – </p></li>
-<li><p><strong>default_priority</strong> (<a class="reference internal" href="records/base.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a>) – </p></li>
-<li><p><strong>metadata</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>) – </p></li>
-<li><p><strong>owner_group</strong> (<em>str</em><em> | </em><em>None</em>) – </p></li>
-<li><p><strong>existing_ok</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>dataset_type</strong> (<em>str</em>)</p></li>
+<li><p><strong>name</strong> (<em>str</em>)</p></li>
+<li><p><strong>description</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>tagline</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>tags</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>group</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>provenance</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>visibility</strong> (<em>bool</em>)</p></li>
+<li><p><strong>default_tag</strong> (<em>str</em>)</p></li>
+<li><p><strong>default_priority</strong> (<a class="reference internal" href="records/base.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a>)</p></li>
+<li><p><strong>metadata</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>owner_group</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>existing_ok</strong> (<em>bool</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -679,8 +679,8 @@ other clients. Not used if cache_dir is set.</p></li>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dataset_id</strong> (<em>int</em>) – </p></li>
-<li><p><strong>delete_records</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>dataset_id</strong> (<em>int</em>)</p></li>
+<li><p><strong>delete_records</strong> (<em>bool</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -869,7 +869,7 @@ that are common among all records.</p>
 <dd><p>Resets running or errored records to be waiting again</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – </p>
+<dd class="field-odd"><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="metadata.html#qcportal.metadata_models.UpdateMetadata" title="qcportal.metadata_models.UpdateMetadata"><em>UpdateMetadata</em></a></p>
@@ -884,7 +884,7 @@ that are common among all records.</p>
 <p>A cancelled record will not be picked up by a manager.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – </p>
+<dd class="field-odd"><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="metadata.html#qcportal.metadata_models.UpdateMetadata" title="qcportal.metadata_models.UpdateMetadata"><em>UpdateMetadata</em></a></p>
@@ -900,7 +900,7 @@ that are common among all records.</p>
 is not correct.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – </p>
+<dd class="field-odd"><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="metadata.html#qcportal.metadata_models.UpdateMetadata" title="qcportal.metadata_models.UpdateMetadata"><em>UpdateMetadata</em></a></p>
@@ -934,7 +934,7 @@ happen later. Soft delete can be undone with undelete</p>
 <dd><p>Undo the invalidation of records</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – </p>
+<dd class="field-odd"><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="metadata.html#qcportal.metadata_models.UpdateMetadata" title="qcportal.metadata_models.UpdateMetadata"><em>UpdateMetadata</em></a></p>
@@ -948,7 +948,7 @@ happen later. Soft delete can be undone with undelete</p>
 <dd><p>Undo the cancellation of records</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – </p>
+<dd class="field-odd"><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="metadata.html#qcportal.metadata_models.UpdateMetadata" title="qcportal.metadata_models.UpdateMetadata"><em>UpdateMetadata</em></a></p>
@@ -962,7 +962,7 @@ happen later. Soft delete can be undone with undelete</p>
 <dd><p>Undo the (soft) deletion of records</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – </p>
+<dd class="field-odd"><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="metadata.html#qcportal.metadata_models.UpdateMetadata" title="qcportal.metadata_models.UpdateMetadata"><em>UpdateMetadata</em></a></p>
@@ -977,9 +977,9 @@ happen later. Soft delete can be undone with undelete</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – </p></li>
-<li><p><strong>new_tag</strong> (<em>str</em><em> | </em><em>None</em>) – </p></li>
-<li><p><strong>new_priority</strong> (<a class="reference internal" href="records/base.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a><em> | </em><em>None</em>) – </p></li>
+<li><p><strong>record_ids</strong> (<em>int</em><em> | </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>)</p></li>
+<li><p><strong>new_tag</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>new_priority</strong> (<a class="reference internal" href="records/base.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1878,7 +1878,7 @@ as they are not deleted)</p>
 <dd><p>Gets information about an internal job on the server</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>job_id</strong> (<em>int</em>) – </p>
+<dd class="field-odd"><p><strong>job_id</strong> (<em>int</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="../admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJob" title="qcportal.internal_jobs.models.InternalJob"><em>InternalJob</em></a></p>
@@ -1922,7 +1922,7 @@ as they are not deleted)</p>
 <dd><p>Cancels (to the best of our ability) an internal job</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>job_id</strong> (<em>int</em>) – </p>
+<dd class="field-odd"><p><strong>job_id</strong> (<em>int</em>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1932,7 +1932,7 @@ as they are not deleted)</p>
 <span class="sig-name descname"><span class="pre">delete_internal_job</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/client.html#PortalClient.delete_internal_job"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.client.PortalClient.delete_internal_job" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>job_id</strong> (<em>int</em>) – </p>
+<dd class="field-odd"><p><strong>job_id</strong> (<em>int</em>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1974,7 +1974,7 @@ log entries and do it yourself.</p>
 <dd><p>Get information about a role on the server</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>rolename</strong> (<em>str</em>) – </p>
+<dd class="field-odd"><p><strong>rolename</strong> (<em>str</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>RoleInfo</em></p>
@@ -1989,7 +1989,7 @@ log entries and do it yourself.</p>
 <p>If not successful, an exception is raised.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>role_info</strong> (<em>RoleInfo</em>) – </p>
+<dd class="field-odd"><p><strong>role_info</strong> (<em>RoleInfo</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
@@ -2007,7 +2007,7 @@ log entries and do it yourself.</p>
 <dd class="field-odd"><p>A copy of the role as it now appears on the server</p>
 </dd>
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>role_info</strong> (<em>RoleInfo</em>) – </p>
+<dd class="field-even"><p><strong>role_info</strong> (<em>RoleInfo</em>)</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><em>RoleInfo</em></p>
@@ -2048,7 +2048,7 @@ log entries and do it yourself.</p>
 <dd><p>Get information about a group on the server</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>groupname_or_id</strong> (<em>int</em><em> | </em><em>str</em>) – </p>
+<dd class="field-odd"><p><strong>groupname_or_id</strong> (<em>int</em><em> | </em><em>str</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>GroupInfo</em></p>
@@ -2063,7 +2063,7 @@ log entries and do it yourself.</p>
 <p>If not successful, an exception is raised.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>group_info</strong> (<em>GroupInfo</em>) – </p>
+<dd class="field-odd"><p><strong>group_info</strong> (<em>GroupInfo</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
@@ -2078,7 +2078,7 @@ log entries and do it yourself.</p>
 <p>Deleted groups will be removed from all users groups list</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>groupname_or_id</strong> (<em>int</em><em> | </em><em>str</em>) – </p>
+<dd class="field-odd"><p><strong>groupname_or_id</strong> (<em>int</em><em> | </em><em>str</em>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2181,7 +2181,7 @@ and username are checked for consistency.</p>
 <dd><p>Delete a user from the server</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>username_or_id</strong> (<em>int</em><em> | </em><em>str</em>) – </p>
+<dd class="field-odd"><p><strong>username_or_id</strong> (<em>int</em><em> | </em><em>str</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
@@ -2216,14 +2216,14 @@ are searched for “qcportal_config.yaml”</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>method</strong> (<em>str</em>) – </p></li>
-<li><p><strong>endpoint</strong> (<em>str</em>) – </p></li>
-<li><p><strong>response_model</strong> (<em>Type</em><em>[</em><em>_V</em><em>] </em><em>| </em><em>None</em>) – </p></li>
-<li><p><strong>body_model</strong> (<em>Type</em><em>[</em><em>_T</em><em>] </em><em>| </em><em>None</em>) – </p></li>
-<li><p><strong>url_params_model</strong> (<em>Type</em><em>[</em><em>_U</em><em>] </em><em>| </em><em>None</em>) – </p></li>
-<li><p><strong>body</strong> (<em>_T</em><em> | </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>) – </p></li>
-<li><p><strong>url_params</strong> (<em>_U</em><em> | </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>) – </p></li>
-<li><p><strong>allow_retries</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>method</strong> (<em>str</em>)</p></li>
+<li><p><strong>endpoint</strong> (<em>str</em>)</p></li>
+<li><p><strong>response_model</strong> (<em>Type</em><em>[</em><em>_V</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>body_model</strong> (<em>Type</em><em>[</em><em>_T</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>url_params_model</strong> (<em>Type</em><em>[</em><em>_U</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>body</strong> (<em>_T</em><em> | </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>url_params</strong> (<em>_U</em><em> | </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>allow_retries</strong> (<em>bool</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -2473,7 +2473,7 @@ of a molecule query.</p>
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.2.6.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.3.7.<br>
         </p>
         
 

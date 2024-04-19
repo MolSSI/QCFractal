@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Interpreting metadata &#8212; QCArchive 0.54.1.post2+g04497aef documentation</title>
+    <title>Interpreting metadata &#8212; QCArchive 0.54.1.post4+ge1ba960c documentation</title>
   
   
   
@@ -40,8 +40,8 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../_static/documentation_options.js?v=addaaec5"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/documentation_options.js?v=1a4f0ef7"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
@@ -521,10 +521,10 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>error_description</strong> (<em>str</em><em> | </em><em>None</em>) – </p></li>
-<li><p><strong>errors</strong> (<em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>inserted_idx</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – </p></li>
-<li><p><strong>existing_idx</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – </p></li>
+<li><p><strong>error_description</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>errors</strong> (<em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>)</p></li>
+<li><p><strong>inserted_idx</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>)</p></li>
+<li><p><strong>existing_idx</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -604,7 +604,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">merge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/metadata_models.html#InsertMetadata.merge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.merge" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>metadata</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="#qcportal.metadata_models.InsertMetadata" title="qcportal.metadata_models.InsertMetadata"><em>InsertMetadata</em></a><em>]</em>) – </p>
+<dd class="field-odd"><p><strong>metadata</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="#qcportal.metadata_models.InsertMetadata" title="qcportal.metadata_models.InsertMetadata"><em>InsertMetadata</em></a><em>]</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#qcportal.metadata_models.InsertMetadata" title="qcportal.metadata_models.InsertMetadata"><em>InsertMetadata</em></a></p>
@@ -622,10 +622,10 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>error_description</strong> (<em>str</em><em> | </em><em>None</em>) – </p></li>
-<li><p><strong>errors</strong> (<em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>deleted_idx</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – </p></li>
-<li><p><strong>n_children_deleted</strong> (<em>int</em>) – </p></li>
+<li><p><strong>error_description</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>errors</strong> (<em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>)</p></li>
+<li><p><strong>deleted_idx</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>)</p></li>
+<li><p><strong>n_children_deleted</strong> (<em>int</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -705,10 +705,10 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>error_description</strong> (<em>str</em><em> | </em><em>None</em>) – </p></li>
-<li><p><strong>errors</strong> (<em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>updated_idx</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – </p></li>
-<li><p><strong>n_children_updated</strong> (<em>int</em>) – </p></li>
+<li><p><strong>error_description</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>errors</strong> (<em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>)</p></li>
+<li><p><strong>updated_idx</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>)</p></li>
+<li><p><strong>n_children_updated</strong> (<em>int</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -788,9 +788,9 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>error_description</strong> (<em>str</em><em> | </em><em>None</em>) – </p></li>
-<li><p><strong>rejected_info</strong> (<em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>accepted_ids</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – </p></li>
+<li><p><strong>error_description</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>rejected_info</strong> (<em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>)</p></li>
+<li><p><strong>accepted_ids</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -1026,7 +1026,7 @@ of the metadata. Likewise, the nitrogen molecule already existed (because <code 
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.2.6.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.3.7.<br>
         </p>
         
 

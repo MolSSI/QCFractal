@@ -1,0 +1,46 @@
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.11.9/x64/lib/python3.11/site-packages/jupyter_cache/executors/utils.py", line 58, in single_nb_execution
+    executenb(
+  File "/opt/hostedtoolcache/Python/3.11.9/x64/lib/python3.11/site-packages/nbclient/client.py", line 1314, in execute
+    return NotebookClient(nb=nb, resources=resources, km=km, **kwargs).execute()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.9/x64/lib/python3.11/site-packages/jupyter_core/utils/__init__.py", line 165, in wrapped
+    return loop.run_until_complete(inner)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.9/x64/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.9/x64/lib/python3.11/site-packages/nbclient/client.py", line 709, in async_execute
+    await self.async_execute_cell(
+  File "/opt/hostedtoolcache/Python/3.11.9/x64/lib/python3.11/site-packages/nbclient/client.py", line 1062, in async_execute_cell
+    await self._check_raise_for_error(cell, cell_index, exec_reply)
+  File "/opt/hostedtoolcache/Python/3.11.9/x64/lib/python3.11/site-packages/nbclient/client.py", line 918, in _check_raise_for_error
+    raise CellExecutionError.from_cell_and_msg(cell, exec_reply_content)
+nbclient.exceptions.CellExecutionError: An error occurred while executing the following cell:
+------------------
+records = client.query_records(created_after="2023/01/10", created_before="2023/01/14")
+
+# Print the first record.
+print(next(records))
+------------------
+
+
+[0;31m---------------------------------------------------------------------------[0m
+[0;31mStopIteration[0m                             Traceback (most recent call last)
+Cell [0;32mIn[6], line 4[0m
+[1;32m      1[0m records [38;5;241m=[39m client[38;5;241m.[39mquery_records(created_after[38;5;241m=[39m[38;5;124m"[39m[38;5;124m2023/01/10[39m[38;5;124m"[39m, created_before[38;5;241m=[39m[38;5;124m"[39m[38;5;124m2023/01/14[39m[38;5;124m"[39m)
+[1;32m      3[0m [38;5;66;03m# Print the first record.[39;00m
+[0;32m----> 4[0m [38;5;28mprint[39m([38;5;28;43mnext[39;49m[43m([49m[43mrecords[49m[43m)[49m)
+
+File [0;32m~/work/QCFractal/QCFractal/qcportal/qcportal/base_models.py:155[0m, in [0;36mQueryIteratorBase.__next__[0;34m(self)[0m
+[1;32m    151[0m [38;5;28;01mdef[39;00m [38;5;21m__next__[39m([38;5;28mself[39m) [38;5;241m-[39m[38;5;241m>[39m T:
+[1;32m    152[0m     [38;5;66;03m# This can happen if there is none returned on the first iteration[39;00m
+[1;32m    153[0m     [38;5;66;03m# Check here so we don't fetch twice[39;00m
+[1;32m    154[0m     [38;5;28;01mif[39;00m [38;5;28mlen[39m([38;5;28mself[39m[38;5;241m.[39m_current_batch) [38;5;241m==[39m [38;5;241m0[39m:
+[0;32m--> 155[0m         [38;5;28;01mraise[39;00m [38;5;167;01mStopIteration[39;00m
+[1;32m    157[0m     [38;5;28;01mif[39;00m [38;5;28mself[39m[38;5;241m.[39m_current_pos [38;5;241m>[39m[38;5;241m=[39m [38;5;28mlen[39m([38;5;28mself[39m[38;5;241m.[39m_current_batch):
+[1;32m    158[0m         [38;5;66;03m# At the end of the current batch. Fetch the next[39;00m
+[1;32m    159[0m         [38;5;28mself[39m[38;5;241m.[39m_fetch_batch()
+
+[0;31mStopIteration[0m: 
+

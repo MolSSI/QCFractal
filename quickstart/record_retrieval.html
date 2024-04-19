@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>How do I retrieve computation results by ID? &#8212; QCArchive 0.54.1.post2+g04497aef documentation</title>
+    <title>How do I retrieve computation results by ID? &#8212; QCArchive 0.54.1.post4+ge1ba960c documentation</title>
   
   
   
@@ -40,8 +40,8 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../_static/documentation_options.js?v=addaaec5"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/documentation_options.js?v=1a4f0ef7"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
@@ -493,7 +493,7 @@ need to log in to submit or modify computations.</p>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>WARNING: This client version is newer than the server version. This may work if the versions are close, but expect exceptions and errors if attempting things the server does not support. client version: 0.54.1.post2+g04497aef, server version: 0.54
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>WARNING: This client version is newer than the server version. This may work if the versions are close, but expect exceptions and errors if attempting things the server does not support. client version: 0.54.1.post4+ge1ba960c, server version: 0.54.1
 </pre></div>
 </div>
 </div>
@@ -538,7 +538,7 @@ need to log in to submit or modify computations.</p>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Molecule(name=&#39;He&#39;, formula=&#39;He&#39;, hash=&#39;b3855c6&#39;)
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Molecule(name=&#39;H2O&#39;, formula=&#39;H2O&#39;, hash=&#39;635ff91&#39;)
 </pre></div>
 </div>
 </div>
@@ -560,7 +560,7 @@ as well as information about the method as basis.</p>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>program=&#39;psi4&#39; driver=&lt;SinglepointDriver.energy: &#39;energy&#39;&gt; method=&#39;hf&#39; basis=&#39;sto-3g&#39; keywords={&#39;maxiter&#39;: 100} protocols=AtomicResultProtocols(wavefunction=&lt;WavefunctionProtocolEnum.none: &#39;none&#39;&gt;, stdout=True, error_correction=ErrorCorrectionProtocol(default_policy=True, policies=None), native_files=&lt;NativeFilesProtocolEnum.none: &#39;none&#39;&gt;)
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>program=&#39;psi4&#39; driver=&lt;SinglepointDriver.energy: &#39;energy&#39;&gt; method=&#39;hf&#39; basis=&#39;sto-3g&#39; keywords={} protocols=AtomicResultProtocols(wavefunction=&lt;WavefunctionProtocolEnum.all: &#39;all&#39;&gt;, stdout=True, error_correction=ErrorCorrectionProtocol(default_policy=True, policies=None), native_files=&lt;NativeFilesProtocolEnum.none: &#39;none&#39;&gt;)
 </pre></div>
 </div>
 </div>
@@ -596,11 +596,11 @@ However, more than one record at a time can be retrieved by passing a list of co
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;SinglepointRecord id=1 status=RecordStatusEnum.complete&gt; Molecule(name=&#39;He&#39;, formula=&#39;He&#39;, hash=&#39;b3855c6&#39;)
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;SinglepointRecord id=1 status=RecordStatusEnum.complete&gt; Molecule(name=&#39;H2O&#39;, formula=&#39;H2O&#39;, hash=&#39;635ff91&#39;)
+&lt;SinglepointRecord id=2 status=RecordStatusEnum.complete&gt; Molecule(name=&#39;H2&#39;, formula=&#39;H2&#39;, hash=&#39;fc6d38a&#39;)
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;SinglepointRecord id=2 status=RecordStatusEnum.complete&gt; Molecule(name=&#39;B&#39;, formula=&#39;B&#39;, hash=&#39;52710ba&#39;)
-&lt;SinglepointRecord id=3 status=RecordStatusEnum.complete&gt; Molecule(name=&#39;H&#39;, formula=&#39;H&#39;, hash=&#39;512c204&#39;)
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;SinglepointRecord id=3 status=RecordStatusEnum.complete&gt; Molecule(name=&#39;H2&#39;, formula=&#39;H2&#39;, hash=&#39;df0385c&#39;)
 </pre></div>
 </div>
 </div>
@@ -621,7 +621,7 @@ For example, to retrieve single point computations only, you can use the method 
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[SinglepointRecord(id=1, record_type=&#39;singlepoint&#39;, is_service=False, properties={&#39;pe energy&#39;: 0.0, &#39;scf dipole&#39;: [0.0, 0.0, 0.0], &#39;calcinfo_nmo&#39;: 1, &#39;return_energy&#39;: -2.807913354492941, &#39;return_result&#39;: -2.807913354492941, &#39;calcinfo_natom&#39;: 1, &#39;calcinfo_nbeta&#39;: 1, &#39;current dipole&#39;: [0.0, 0.0, 0.0], &#39;current energy&#39;: -2.807913354492941, &#39;return_hessian&#39;: None, &#39;scf iterations&#39;: 2.0, &#39;scf_iterations&#39;: 2, &#39;calcinfo_nalpha&#39;: 1, &#39;calcinfo_nbasis&#39;: 1, &#39;hf total energy&#39;: -2.807913354492941, &#39;return_gradient&#39;: None, &#39;scf total energy&#39;: -2.807913354492941, &#39;scf_total_energy&#39;: -2.807913354492941, &#39;scf_dipole_moment&#39;: [0.0, 0.0, 0.0], &#39;scf_total_hessian&#39;: None, &#39;scf_total_gradient&#39;: None, &#39;one-electron energy&#39;: -3.863496900275047, &#39;two-electron energy&#39;: 1.0555835457821061, &#39;scf iteration energy&#39;: -2.807913354492941, &#39;pcm polarization energy&#39;: 0.0, &#39;scf_one_electron_energy&#39;: -3.863496900275047, &#39;scf_two_electron_energy&#39;: 1.0555835457821061, &#39;current reference energy&#39;: -2.807913354492941, &#39;nuclear repulsion energy&#39;: 0.0, &#39;nuclear_repulsion_energy&#39;: 0.0}, extras={}, status=&lt;RecordStatusEnum.complete: &#39;complete&#39;&gt;, manager_name=&#39;ARC_Tinkercliffs-tinkercliffs1-cd6a1bac-aaae-4e52-917c-4f9a384de051&#39;, created_on=datetime.datetime(2023, 1, 13, 20, 29, 58, 880899, tzinfo=datetime.timezone.utc), modified_on=datetime.datetime(2023, 7, 25, 20, 51, 59, 216633, tzinfo=datetime.timezone.utc), owner_user=&#39;ben&#39;, owner_group=None, compute_history_=None, task_=None, service_=None, comments_=None, native_files_=None, specification=QCSpecification(program=&#39;psi4&#39;, driver=&lt;SinglepointDriver.energy: &#39;energy&#39;&gt;, method=&#39;hf&#39;, basis=&#39;sto-3g&#39;, keywords={&#39;maxiter&#39;: 100}, protocols=AtomicResultProtocols(wavefunction=&lt;WavefunctionProtocolEnum.none: &#39;none&#39;&gt;, stdout=True, error_correction=ErrorCorrectionProtocol(default_policy=True, policies=None), native_files=&lt;NativeFilesProtocolEnum.none: &#39;none&#39;&gt;)), molecule_id=2, molecule_=None, wavefunction_=None), SinglepointRecord(id=2, record_type=&#39;singlepoint&#39;, is_service=False, properties={&#39;pe energy&#39;: 0.0, &#39;scf dipole&#39;: [0.0, 0.0, 0.0], &#39;calcinfo_nmo&#39;: 5, &#39;return_energy&#39;: -24.14911660463428, &#39;return_result&#39;: -24.14911660463428, &#39;calcinfo_natom&#39;: 1, &#39;calcinfo_nbeta&#39;: 2, &#39;current dipole&#39;: [0.0, 0.0, 0.0], &#39;current energy&#39;: -24.14911660463428, &#39;return_hessian&#39;: None, &#39;scf iterations&#39;: 2.0, &#39;scf_iterations&#39;: 2, &#39;calcinfo_nalpha&#39;: 3, &#39;calcinfo_nbasis&#39;: 5, &#39;hf total energy&#39;: -24.14911660463428, &#39;return_gradient&#39;: None, &#39;scf total energy&#39;: -24.14911660463428, &#39;scf_total_energy&#39;: -24.14911660463428, &#39;scf_dipole_moment&#39;: [0.0, 0.0, 0.0], &#39;scf_total_hessian&#39;: None, &#39;scf_total_gradient&#39;: None, &#39;one-electron energy&#39;: -32.84342235880991, &#39;two-electron energy&#39;: 8.69430575417563, &#39;scf iteration energy&#39;: -24.14911660463428, &#39;pcm polarization energy&#39;: 0.0, &#39;scf_one_electron_energy&#39;: -32.84342235880991, &#39;scf_two_electron_energy&#39;: 8.69430575417563, &#39;current reference energy&#39;: -24.14911660463428, &#39;nuclear repulsion energy&#39;: 0.0, &#39;nuclear_repulsion_energy&#39;: 0.0}, extras={}, status=&lt;RecordStatusEnum.complete: &#39;complete&#39;&gt;, manager_name=&#39;ARC_Tinkercliffs-tinkercliffs1-cd6a1bac-aaae-4e52-917c-4f9a384de051&#39;, created_on=datetime.datetime(2023, 1, 13, 20, 29, 58, 880910, tzinfo=datetime.timezone.utc), modified_on=datetime.datetime(2023, 7, 25, 20, 51, 59, 216668, tzinfo=datetime.timezone.utc), owner_user=&#39;ben&#39;, owner_group=None, compute_history_=None, task_=None, service_=None, comments_=None, native_files_=None, specification=QCSpecification(program=&#39;psi4&#39;, driver=&lt;SinglepointDriver.energy: &#39;energy&#39;&gt;, method=&#39;hf&#39;, basis=&#39;sto-3g&#39;, keywords={&#39;maxiter&#39;: 100}, protocols=AtomicResultProtocols(wavefunction=&lt;WavefunctionProtocolEnum.none: &#39;none&#39;&gt;, stdout=True, error_correction=ErrorCorrectionProtocol(default_policy=True, policies=None), native_files=&lt;NativeFilesProtocolEnum.none: &#39;none&#39;&gt;)), molecule_id=5, molecule_=None, wavefunction_=None)]
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[SinglepointRecord(id=1, record_type=&#39;singlepoint&#39;, is_service=False, properties={&#39;pe energy&#39;: 0.0, &#39;scf dipole&#39;: [0.5734967483313045, 0.5734967483328919, 0.0], &#39;calcinfo_nmo&#39;: 7, &#39;return_energy&#39;: -74.82586558254185, &#39;return_result&#39;: -74.82586558254185, &#39;calcinfo_natom&#39;: 3, &#39;calcinfo_nbeta&#39;: 5, &#39;current dipole&#39;: [0.5734967483313045, 0.5734967483328919, 0.0], &#39;current energy&#39;: -74.82586558254185, &#39;return_hessian&#39;: None, &#39;scf_iterations&#39;: 6, &#39;calcinfo_nalpha&#39;: 5, &#39;calcinfo_nbasis&#39;: 7, &#39;hf total energy&#39;: -74.82586558254185, &#39;hf virial ratio&#39;: 1.9955381251235869, &#39;return_gradient&#39;: None, &#39;scf_total_energy&#39;: -74.82586558254185, &#39;hf kinetic energy&#39;: 75.16122556657778, &#39;scf_dipole_moment&#39;: [0.5734967483313045, 0.5734967483328919, 0.0], &#39;scf_total_hessian&#39;: None, &#39;scf total energies&#39;: [-74.6903997149966, -74.78693027430118, -74.82523768326209, -74.82583813767224, -74.8258655152088, -74.82586557953533, -74.82586558254185], &#39;scf_total_gradient&#39;: None, &#39;dd solvation energy&#39;: 0.0, &#39;hf potential energy&#39;: -149.98709114911964, &#39;one-electron energy&#39;: -125.41099580779677, &#39;two-electron energy&#39;: 39.44705903779722, &#39;scf iteration energy&#39;: -74.82586558254185, &#39;pcm polarization energy&#39;: 0.0, &#39;scf_one_electron_energy&#39;: -125.41099580779677, &#39;scf_two_electron_energy&#39;: 39.44705903779722, &#39;current reference energy&#39;: -74.82586558254185, &#39;nuclear_repulsion_energy&#39;: 11.138071187457697}, extras={}, status=&lt;RecordStatusEnum.complete: &#39;complete&#39;&gt;, manager_name=&#39;snowflake_compute-pyra-df04e41a-5973-4a4d-83f0-1b4b41b9fbe0&#39;, created_on=datetime.datetime(2024, 4, 19, 15, 14, 23, 17093, tzinfo=datetime.timezone.utc), modified_on=datetime.datetime(2024, 4, 19, 15, 14, 28, 311533, tzinfo=datetime.timezone.utc), owner_user=&#39;ben&#39;, owner_group=None, compute_history_=None, task_=None, service_=None, comments_=None, native_files_=None, specification=QCSpecification(program=&#39;psi4&#39;, driver=&lt;SinglepointDriver.energy: &#39;energy&#39;&gt;, method=&#39;hf&#39;, basis=&#39;sto-3g&#39;, keywords={}, protocols=AtomicResultProtocols(wavefunction=&lt;WavefunctionProtocolEnum.all: &#39;all&#39;&gt;, stdout=True, error_correction=ErrorCorrectionProtocol(default_policy=True, policies=None), native_files=&lt;NativeFilesProtocolEnum.none: &#39;none&#39;&gt;)), molecule_id=1, molecule_=None, wavefunction_=None), SinglepointRecord(id=2, record_type=&#39;singlepoint&#39;, is_service=False, properties={&#39;pe energy&#39;: 0.0, &#39;scf dipole&#39;: [0.0, 0.0, 1.1102230246251565e-15], &#39;calcinfo_nmo&#39;: 2, &#39;return_energy&#39;: -1.0660263371078118, &#39;return_result&#39;: -1.0660263371078118, &#39;calcinfo_natom&#39;: 2, &#39;calcinfo_nbeta&#39;: 1, &#39;current dipole&#39;: [0.0, 0.0, 1.1102230246251565e-15], &#39;current energy&#39;: -1.0660263371078118, &#39;return_hessian&#39;: None, &#39;scf_iterations&#39;: 2, &#39;calcinfo_nalpha&#39;: 1, &#39;calcinfo_nbasis&#39;: 2, &#39;hf total energy&#39;: -1.0660263371078118, &#39;hf virial ratio&#39;: 1.8375905900045388, &#39;return_gradient&#39;: None, &#39;scf_total_energy&#39;: -1.0660263371078118, &#39;hf kinetic energy&#39;: 1.2727296006298676, &#39;scf_dipole_moment&#39;: [0.0, 0.0, 1.1102230246251565e-15], &#39;scf_total_hessian&#39;: None, &#39;scf total energies&#39;: [-0.7475463060037706, -1.0660263371078118, -1.0660263371078118], &#39;scf_total_gradient&#39;: None, &#39;dd solvation energy&#39;: 0.0, &#39;hf potential energy&#39;: -2.3387559377376794, &#39;one-electron energy&#39;: -2.780438541177019, &#39;two-electron energy&#39;: 0.714412204069207, &#39;scf iteration energy&#39;: -1.0660263371078118, &#39;pcm polarization energy&#39;: 0.0, &#39;scf_one_electron_energy&#39;: -2.780438541177019, &#39;scf_two_electron_energy&#39;: 0.714412204069207, &#39;current reference energy&#39;: -1.0660263371078118, &#39;nuclear_repulsion_energy&#39;: 1.0}, extras={}, status=&lt;RecordStatusEnum.complete: &#39;complete&#39;&gt;, manager_name=&#39;snowflake_compute-pyra-df04e41a-5973-4a4d-83f0-1b4b41b9fbe0&#39;, created_on=datetime.datetime(2024, 4, 19, 15, 14, 23, 17097, tzinfo=datetime.timezone.utc), modified_on=datetime.datetime(2024, 4, 19, 15, 14, 28, 323997, tzinfo=datetime.timezone.utc), owner_user=&#39;ben&#39;, owner_group=None, compute_history_=None, task_=None, service_=None, comments_=None, native_files_=None, specification=QCSpecification(program=&#39;psi4&#39;, driver=&lt;SinglepointDriver.energy: &#39;energy&#39;&gt;, method=&#39;hf&#39;, basis=&#39;sto-3g&#39;, keywords={}, protocols=AtomicResultProtocols(wavefunction=&lt;WavefunctionProtocolEnum.all: &#39;all&#39;&gt;, stdout=True, error_correction=ErrorCorrectionProtocol(default_policy=True, policies=None), native_files=&lt;NativeFilesProtocolEnum.none: &#39;none&#39;&gt;)), molecule_id=2, molecule_=None, wavefunction_=None)]
 </pre></div>
 </div>
 </div>
@@ -744,7 +744,7 @@ For example, to retrieve single point computations only, you can use the method 
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.2.6.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.3.7.<br>
         </p>
         
 

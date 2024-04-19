@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Reaction calculations &#8212; QCArchive 0.54.1.post2+g04497aef documentation</title>
+    <title>Reaction calculations &#8212; QCArchive 0.54.1.post4+ge1ba960c documentation</title>
   
   
   
@@ -40,8 +40,8 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../_static/documentation_options.js?v=addaaec5"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/documentation_options.js?v=1a4f0ef7"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
@@ -504,25 +504,25 @@ document.write(`
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>id</strong> (<em>int</em>) – </p></li>
-<li><p><strong>record_type</strong> (<em>Literal</em><em>[</em><em>'reaction'</em><em>]</em>) – </p></li>
-<li><p><strong>is_service</strong> (<em>bool</em>) – </p></li>
-<li><p><strong>properties</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>) – </p></li>
-<li><p><strong>extras</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>) – </p></li>
-<li><p><strong>status</strong> (<a class="reference internal" href="base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a>) – </p></li>
-<li><p><strong>manager_name</strong> (<em>str</em><em> | </em><em>None</em>) – </p></li>
-<li><p><strong>created_on</strong> (<em>datetime</em>) – </p></li>
-<li><p><strong>modified_on</strong> (<em>datetime</em>) – </p></li>
-<li><p><strong>owner_user</strong> (<em>str</em><em> | </em><em>None</em>) – </p></li>
-<li><p><strong>owner_group</strong> (<em>str</em><em> | </em><em>None</em>) – </p></li>
-<li><p><strong>compute_history</strong> (<em>List</em><em>[</em><em>ComputeHistory</em><em>] </em><em>| </em><em>None</em>) – </p></li>
-<li><p><strong>task</strong> (<a class="reference internal" href="../../overview/tasks_services.html#qcportal.record_models.RecordTask" title="qcportal.record_models.RecordTask"><em>RecordTask</em></a><em> | </em><em>None</em>) – </p></li>
-<li><p><strong>service</strong> (<a class="reference internal" href="../../overview/tasks_services.html#qcportal.record_models.RecordService" title="qcportal.record_models.RecordService"><em>RecordService</em></a><em> | </em><em>None</em>) – </p></li>
-<li><p><strong>comments</strong> (<em>List</em><em>[</em><em>RecordComment</em><em>] </em><em>| </em><em>None</em>) – </p></li>
-<li><p><strong>native_files</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>NativeFile</em><em>] </em><em>| </em><em>None</em>) – </p></li>
-<li><p><strong>specification</strong> (<a class="reference internal" href="#qcportal.reaction.ReactionSpecification" title="qcportal.reaction.record_models.ReactionSpecification"><em>ReactionSpecification</em></a>) – </p></li>
-<li><p><strong>total_energy</strong> (<em>float</em><em> | </em><em>None</em>) – </p></li>
-<li><p><strong>components</strong> (<em>List</em><em>[</em><em>ReactionComponentMeta</em><em>] </em><em>| </em><em>None</em>) – </p></li>
+<li><p><strong>id</strong> (<em>int</em>)</p></li>
+<li><p><strong>record_type</strong> (<em>Literal</em><em>[</em><em>'reaction'</em><em>]</em>)</p></li>
+<li><p><strong>is_service</strong> (<em>bool</em>)</p></li>
+<li><p><strong>properties</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>extras</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>status</strong> (<a class="reference internal" href="base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a>)</p></li>
+<li><p><strong>manager_name</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>created_on</strong> (<em>datetime</em>)</p></li>
+<li><p><strong>modified_on</strong> (<em>datetime</em>)</p></li>
+<li><p><strong>owner_user</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>owner_group</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>compute_history</strong> (<em>List</em><em>[</em><em>ComputeHistory</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>task</strong> (<a class="reference internal" href="../../overview/tasks_services.html#qcportal.record_models.RecordTask" title="qcportal.record_models.RecordTask"><em>RecordTask</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>service</strong> (<a class="reference internal" href="../../overview/tasks_services.html#qcportal.record_models.RecordService" title="qcportal.record_models.RecordService"><em>RecordService</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>comments</strong> (<em>List</em><em>[</em><em>RecordComment</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>native_files</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>NativeFile</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>specification</strong> (<a class="reference internal" href="#qcportal.reaction.ReactionSpecification" title="qcportal.reaction.record_models.ReactionSpecification"><em>ReactionSpecification</em></a>)</p></li>
+<li><p><strong>total_energy</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>components</strong> (<em>List</em><em>[</em><em>ReactionComponentMeta</em><em>] </em><em>| </em><em>None</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -607,8 +607,8 @@ document.write(`
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
-<li><p><strong>force_fetch</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>force_fetch</strong> (<em>bool</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -623,9 +623,9 @@ that can span multiple records</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>records</strong> (<em>Iterable</em><em>[</em><a class="reference internal" href="base.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><em>BaseRecord</em></a><em> | </em><em>None</em><em>]</em>) – </p></li>
-<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – </p></li>
-<li><p><strong>force_fetch</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>records</strong> (<em>Iterable</em><em>[</em><a class="reference internal" href="base.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><em>BaseRecord</em></a><em> | </em><em>None</em><em>]</em>)</p></li>
+<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>force_fetch</strong> (<em>bool</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -637,7 +637,7 @@ that can span multiple records</p>
 <dd><p>Obtain a subclass of this class given its record_type</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>record_type</strong> (<em>str</em>) – </p>
+<dd class="field-odd"><p><strong>record_type</strong> (<em>str</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>Type</em>[<a class="reference internal" href="base.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><em>BaseRecord</em></a>]</p>
@@ -692,7 +692,7 @@ that can span multiple records</p>
 <p>If <cite>detach</cite> is True, then the record will be removed from the cache</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>detach</strong> (<em>bool</em>) – </p>
+<dd class="field-odd"><p><strong>detach</strong> (<em>bool</em>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -788,10 +788,10 @@ that can span multiple records</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>program</strong> (<em>ConstrainedStrValue</em>) – </p></li>
-<li><p><strong>singlepoint_specification</strong> (<a class="reference internal" href="singlepoint.html#qcportal.singlepoint.QCSpecification" title="qcportal.singlepoint.record_models.QCSpecification"><em>QCSpecification</em></a><em> | </em><em>None</em>) – </p></li>
-<li><p><strong>optimization_specification</strong> (<a class="reference internal" href="optimization.html#qcportal.optimization.OptimizationSpecification" title="qcportal.optimization.record_models.OptimizationSpecification"><em>OptimizationSpecification</em></a><em> | </em><em>None</em>) – </p></li>
-<li><p><strong>keywords</strong> (<em>ReactionKeywords</em>) – </p></li>
+<li><p><strong>program</strong> (<em>ConstrainedStrValue</em>)</p></li>
+<li><p><strong>singlepoint_specification</strong> (<a class="reference internal" href="singlepoint.html#qcportal.singlepoint.QCSpecification" title="qcportal.singlepoint.record_models.QCSpecification"><em>QCSpecification</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>optimization_specification</strong> (<a class="reference internal" href="optimization.html#qcportal.optimization.OptimizationSpecification" title="qcportal.optimization.record_models.OptimizationSpecification"><em>OptimizationSpecification</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>keywords</strong> (<em>ReactionKeywords</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -1035,7 +1035,7 @@ that can span multiple records</p>
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.2.6.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.3.7.<br>
         </p>
         
 
