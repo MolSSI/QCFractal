@@ -5,10 +5,8 @@ The MolSSI QCArchive Project
 QCArchive is a specialized platform designed to support computational chemists in the management and execution of large-scale quantum chemistry calculations. 
 Capable of handling data ranging from thousands to millions of computations, 
 it offers an organized database for storing, sharing, retrieving, and analyzing results. 
-QCArchive addresses the challenges of unique requirements from different QM codes and the intricacies of coordinating distributed computational resources. 
-
-QCArchive's comprehensive architecture, from the central server software (QCFractal) to its client interface (QCPortal) and computational workers (QCFractalCompute), 
-ensures a streamlined experience with quantum computations.
+QCArchive's architecture includes a central server (QCFractal), client interface (QCPortal) and computational workers (QCFractalCompute), 
+ensuring a streamlined experience with quantum chemistry computations.
 
 .. grid:: 1 1 1 1
 
