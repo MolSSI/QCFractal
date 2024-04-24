@@ -1,4 +1,9 @@
-@import "../basic.css";
+
+
+body, h1, h2, h3, h4, h5, h6 {
+    font-family: 'Roboto', sans-serif;
+}
+
 
 html[data-theme="light"] {
     --pst-color-primary: #0080C7;
@@ -17,11 +22,15 @@ html[data-theme="dark"] {
 	--pst-color-on-background: #222222;
 	--pst-color-surface: #222222;
 	--pst-color-secondary: #513D92;
-	--pst-color-secondary-highlight: #stats5f48a9;
+	--pst-color-secondary-highlight: #5f48a9;
 }
 
 html[data-theme="light"] a:hover {
 	color: #1A1A1A;
+}
+
+html[data-theme="dark"] a:hover {
+	color: var(--pst-color-primary);
 }
 
 html[data-theme="dark"] h1, html[data-theme="dark"] h2, html[data-theme="dark"] h3, html[data-theme="dark"] h4, html[data-theme="dark"] h5, html[data-theme="dark"] h6 {
@@ -63,9 +72,6 @@ html[data-theme="dark"] dt:target {
     background-color: #000000;
 }
 
-html[data-theme="light"] a:visited {
-	color: var(--pst-color-primary);
-}
 
 html .toctree-wrapper li[class^=toctree-l] {
 	list-style: circle;
@@ -85,3 +91,9 @@ img:not(.logo__image, .footer_logo) {
 	width: 100%;
   }
 
+/* Get rid of side bar , based on https://github.com/executablebooks/sphinx-book-theme/issues/732#issuecomment-1752572223 */
+.bd-sidebar-primary div#rtd-footer-container {
+bottom:-1rem;
+margin:-1rem;
+position:fixed;
+}
