@@ -92,7 +92,7 @@ html_theme_options = {
       "molssi_dark": "molssi_main_logo_inverted_white.png",
     },
     "show_toc_level": 2,
-    "header_links_before_dropdown": 8,
+    "header_links_before_dropdown": 6,
     "external_links": [
       {"name": "MolSSI", "url": "https://molssi.org"}
   ],
@@ -104,6 +104,9 @@ html_theme_options = {
 
 html_css_files = ['css/custom.css']
 
+html_context = {
+    'extrahead': '<link href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap" rel="stylesheet">'
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
