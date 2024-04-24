@@ -88,7 +88,7 @@ See :class:`~qcportal.record_models.PriorityEnum`.
 Record Deduplication
 --------------------
 
-New computations that match existing records will not be added; instead, the IDs of the existing
+By default, new computations that match existing records will not be added; instead, the IDs of the existing
 records are returned.
 
 What counts as a duplicate calculation varies depending on the type of calculation, but in general
@@ -106,7 +106,40 @@ Some things that are **not** considered when finding duplicate calculations:
 * tags
 * priority
 
+This default behavior can be overridden using the ``find_existing`` argument to the ``add_`` functions.
+
+.. tab-set::
+
+  .. tab-item:: QCPortal
+
+    .. code-block:: py3
+
+      >>> # Add a singlepoint computation
+      >>> mol = Molecule(symbols=['H', 'H'], geometry=[0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
+      >>> meta, ids = client.add_singlepoints(mol, 'psi4', 'energy', 'hf', 'sto-3g')
+      >>> print(meta)
+      InsertMetadata(error_description=None, errors=[], inserted_idx=[0], existing_idx=[])
+
+      >>> print(ids)
+      [110]
+
+      >>> # Add the same computation again
+      >>> meta, ids = client.add_singlepoints(mol, 'psi4', 'energy', 'hf', 'sto-3g')
+      >>> print(meta)
+      InsertMetadata(error_description=None, errors=[], inserted_idx=[], existing_idx=[0])
+
+      >>> print(ids)
+      [110]
+
+      >>> # Add the same computation again, but force it to be added
+      >>> meta, ids = client.add_singlepoints(mol, 'psi4', 'energy', 'hf', 'sto-3g', find_existing=False)
+      >>> print(meta)
+      InsertMetadata(error_description=None, errors=[], inserted_idx=[0], existing_idx=[])
+
+      >>> print(ids)
+      [111]
+
 .. note::
 
-  Automatic de-duplication will likely be relaxed in the future, and users will have more
-  fine-grained control of when to de-duplicate.
+    Turning off deduplication also works with services. In this case, the service itself, as well as **all
+    records created by the service**, will always be created.
