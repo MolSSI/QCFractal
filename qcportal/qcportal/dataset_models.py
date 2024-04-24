@@ -1045,6 +1045,9 @@ class BaseDataset(BaseModel):
 
                     # Check if we have any cached records
                     cached_records = self._cache_data.get_dataset_records(missing_entries, [spec_name])
+                    for _, _, cr in cached_records:
+                        cr.propagate_client(self._client)
+
                     records_batch.extend(cached_records)
 
                     # what we need to fetch from the server
@@ -1171,6 +1174,9 @@ class BaseDataset(BaseModel):
 
                         # Check if we have any cached records
                         cached_records = self._cache_data.get_dataset_records(missing_entries, [spec_name])
+                        for _, _, cr in cached_records:
+                            cr.propagate_client(self._client)
+
                         records_batch.extend(cached_records)
 
                         # what we need to fetch from the server
