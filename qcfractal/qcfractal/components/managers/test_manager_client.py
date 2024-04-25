@@ -77,13 +77,18 @@ def test_manager_mclient_activate_normalize(snowflake: QCATestingSnowflake):
 
     mclient1.activate(
         manager_version="v2.0",
-        programs={"qcengine": ["unknown"], "program1": ["v3.0"], "PROgRam2": ["v4.0"]},
+        programs={"qcengine": ["unknown"], "program1": ["v3.0"], "PROgRam2": ["v4.0"], "PROGRAM4": ["v5.0-AB"]},
         tags=["tag1", "taG3", "tAg2", "TAG3", "TAG1"],
     )
 
     manager = client.get_managers(mname1.fullname)
     assert manager.tags == ["tag1", "tag3", "tag2"]
-    assert manager.programs == {"qcengine": ["unknown"], "program1": ["v3.0"], "program2": ["v4.0"]}
+    assert manager.programs == {
+        "qcengine": ["unknown"],
+        "program1": ["v3.0"],
+        "program2": ["v4.0"],
+        "program4": ["v5.0-ab"],
+    }
 
 
 def test_manager_mclient_activate_notags(snowflake: QCATestingSnowflake):
