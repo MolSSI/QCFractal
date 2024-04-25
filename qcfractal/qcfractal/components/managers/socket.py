@@ -96,7 +96,9 @@ class ManagerSocket:
 
         # Strip out empty tags and programs
         tags = [x.lower() for x in tags if len(x) > 0]
-        programs = {k.lower(): v for k, v in programs.items() if len(k) > 0}
+
+        # Some version strings can contain uppercase characters
+        programs = {k.lower(): [v.lower() for v in vlst] for k, vlst in programs.items() if len(k) > 0}
 
         if len(tags) == 0:
             raise ComputeManagerError("Manager does not have any tags assigned. Use '*' to match all tags")
