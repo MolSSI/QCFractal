@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 from typing_extensions import Literal
 
@@ -13,4 +13,4 @@ class ServiceSubtaskRecord(BaseRecord):
     required_programs: Dict[str, Any]
     function: str
     function_kwargs: Dict[str, Any]
-    results: Optional[Dict[str, Any]]
+    results: Any
