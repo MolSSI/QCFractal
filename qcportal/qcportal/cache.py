@@ -20,7 +20,6 @@ try:
 except ImportError:
     import pydantic
     from pydantic import BaseModel, Extra, validator, PrivateAttr, Field
-import zstandard
 
 from .serialization import serialize, deserialize
 
@@ -35,12 +34,16 @@ _query_chunk_size = 125
 
 
 def compress_for_cache(data: Any) -> sqlite3.Binary:
+    import zstandard
+
     serialized_data = serialize(data, "msgpack")
     compressed_data = zstandard.compress(serialized_data, level=1)
     return sqlite3.Binary(compressed_data)
 
 
 def decompress_from_cache(data: sqlite3.Binary, value_type) -> Any:
+    import zstandard
+
     decompressed_data = zstandard.decompress(bytes(data))
     deserialized_data = deserialize(decompressed_data, "msgpack")
     return pydantic.parse_obj_as(value_type, deserialized_data)

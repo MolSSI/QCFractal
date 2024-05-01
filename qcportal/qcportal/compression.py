@@ -5,7 +5,6 @@ from enum import Enum
 from typing import Optional, Tuple, Any
 
 import msgpack
-import zstandard
 
 
 class CompressionEnum(str, Enum):
@@ -60,6 +59,8 @@ def compress(
     # ZStandard compression
     # By default, use level = 6 for larger data (>15MB or so)
     elif compression_type == CompressionEnum.zstd:
+        import zstandard
+
         if compression_level is None:
             if len(data) > 15 * 1048576:
                 compression_level = 6
