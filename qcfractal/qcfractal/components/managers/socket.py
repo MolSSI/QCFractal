@@ -11,7 +11,7 @@ from qcfractal.db_socket.helpers import get_query_proj_options, get_count, get_g
 from qcportal.exceptions import MissingDataError, ComputeManagerError
 from qcportal.managers import ManagerStatusEnum, ManagerName, ManagerQueryFilters
 from qcportal.utils import now_at_utc
-from .db_models import ComputeManagerLogORM, ComputeManagerORM
+from .db_models import ComputeManagerORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -59,26 +59,6 @@ class ManagerSocket:
                 after_function_kwargs={"delay": self._manager_heartbeat_frequency},
                 session=session,
             )
-
-    @staticmethod
-    def save_snapshot(orm: ComputeManagerORM):
-        """
-        Saves the statistics of a manager to its log entries
-        """
-
-        log_orm = ComputeManagerLogORM(
-            claimed=orm.claimed,
-            successes=orm.successes,
-            failures=orm.failures,
-            rejected=orm.rejected,
-            active_tasks=orm.active_tasks,
-            active_cores=orm.active_cores,
-            active_memory=orm.active_memory,
-            total_cpu_hours=orm.total_cpu_hours,
-            timestamp=orm.modified_on,
-        )
-
-        orm.log.append(log_orm)
 
     def activate(
         self,
@@ -141,13 +121,12 @@ class ManagerSocket:
         session: Optional[Session] = None,
     ):
         """
-        Updates the resources available/in use by a manager, and saves it to its log entries
+        Updates the resources available/in use by a manager
         """
 
         with self.root_socket.optional_session(session) as session:
             stmt = (
                 select(ComputeManagerORM)
-                .options(selectinload(ComputeManagerORM.log))
                 .where(ComputeManagerORM.name == name)
                 .with_for_update(skip_locked=False)
             )
@@ -163,8 +142,6 @@ class ManagerSocket:
             manager.active_memory = active_memory
             manager.total_cpu_hours = total_cpu_hours
             manager.modified_on = now_at_utc()
-
-            self.save_snapshot(manager)
 
     def deactivate(
         self,
@@ -348,19 +325,3 @@ class ManagerSocket:
 
         if dead_managers:
             self._logger.info(f"Deactivated {len(dead_managers)} managers due to missing heartbeats")
-
-    ####################################################
-    # Some stuff to be retrieved for managers
-    ####################################################
-
-    def get_log(self, name: str, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
-        stmt = select(ComputeManagerORM)
-        stmt = stmt.options(defer("*"), lazyload("*"))
-        stmt = stmt.options(joinedload(ComputeManagerORM.log).options(undefer("*")))
-        stmt = stmt.where(ComputeManagerORM.name == name)
-
-        with self.root_socket.optional_session(session) as session:
-            rec = session.execute(stmt).unique().scalar_one_or_none()
-            if rec is None:
-                raise MissingDataError(f"Cannot find manager {name}")
-            return [x.model_dict() for x in rec.log]

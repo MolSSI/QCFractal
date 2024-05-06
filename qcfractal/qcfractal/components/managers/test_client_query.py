@@ -57,7 +57,6 @@ def test_manager_client_query(queryable_managers_client: PortalClient):
     query_res = queryable_managers_client.query_managers(manager_id=[managers[0].id, managers[1].id])
     query_res_l = list(query_res)
     assert len(query_res_l) == 2
-    assert all(x.log is not None for x in query_res_l)
 
 
 def test_manager_client_query_empty_iter(queryable_managers_client: PortalClient):

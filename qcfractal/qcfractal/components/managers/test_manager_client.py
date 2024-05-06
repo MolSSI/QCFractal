@@ -235,7 +235,6 @@ def test_manager_mclient_heartbeat(snowflake: QCATestingSnowflake):
 
     client = snowflake.client()
     manager = client.get_managers(name1)
-    assert len(manager.log) == 0
 
     # Now do a heartbeat
     mclient1.heartbeat(total_cpu_hours=5.678, active_tasks=3, active_cores=10, active_memory=3.45)
@@ -243,7 +242,6 @@ def test_manager_mclient_heartbeat(snowflake: QCATestingSnowflake):
     time_2 = now_at_utc()
 
     manager = client.get_managers(name1)
-    assert len(manager.log) == 1
 
     # Was the data stored in the manager
     assert manager.total_cpu_hours == 5.678
@@ -252,14 +250,6 @@ def test_manager_mclient_heartbeat(snowflake: QCATestingSnowflake):
     assert manager.active_memory == 3.45
     assert manager.modified_on > time_1
     assert manager.modified_on < time_2
-
-    # and the log
-    log = manager.log[0]
-    assert log.total_cpu_hours == 5.678
-    assert log.active_tasks == 3
-    assert log.active_cores == 10
-    assert log.active_memory == 3.45
-    assert log.timestamp == manager.modified_on
 
     # Now do another heartbeat
     mclient1.heartbeat(
@@ -272,7 +262,6 @@ def test_manager_mclient_heartbeat(snowflake: QCATestingSnowflake):
     time_3 = now_at_utc()
 
     manager = client.get_managers(name1)
-    assert len(manager.log) == 2
 
     # Was the data stored in the manager
     assert manager.total_cpu_hours == 2 * 5.678
@@ -281,14 +270,6 @@ def test_manager_mclient_heartbeat(snowflake: QCATestingSnowflake):
     assert manager.active_memory == 2 * 3.45
     assert manager.modified_on > time_2
     assert manager.modified_on < time_3
-
-    # and the log
-    log = manager.log[0]
-    assert log.total_cpu_hours == 2 * 5.678
-    assert log.active_tasks == 2 * 3
-    assert log.active_cores == 2 * 10
-    assert log.active_memory == 2 * 3.45
-    assert log.timestamp == manager.modified_on
 
 
 def test_manager_mclient_heartbeat_deactivated(snowflake: QCATestingSnowflake):
