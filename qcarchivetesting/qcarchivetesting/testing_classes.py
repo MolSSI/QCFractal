@@ -130,7 +130,6 @@ class QCATestingSnowflake(FractalSnowflake):
             "get_dataset_entries": 5,
             "get_molecules": 11,
             "get_managers": 10,
-            "get_server_stats": 10,
             "get_error_logs": 10,
             "get_access_logs": 10,
         }
@@ -144,7 +143,6 @@ class QCATestingSnowflake(FractalSnowflake):
         qcf_config["loglevel"] = "DEBUG"
         qcf_config["heartbeat_frequency"] = 3
         qcf_config["heartbeat_max_missed"] = 2
-        qcf_config["statistics_frequency"] = 3
 
         qcf_config["database"] = {"pool_size": 0}
         qcf_config["log_access"] = log_access
