@@ -147,15 +147,11 @@ class PortalClient(PortalClientBase):
             Directory to store an internal cache of records and other data
         cache_max_size
             Maximum size of the cache directory
-        memory_cache_key
-            If set, all clients with the same memory_cache_key will share an in-memory cache. If not specified,
-            a unique one will be generated, meaning this client will not share a memory-based cache with any
-            other clients. Not used if cache_dir is set.
         """
 
         PortalClientBase.__init__(self, address, username, password, verify, show_motd)
         self._logger = logging.getLogger("PortalClient")
-        self.cache = PortalCache(address, cache_dir, cache_max_size, memory_cache_key)
+        self.cache = PortalCache(address, cache_dir, cache_max_size)
 
     def __repr__(self) -> str:
         """A short representation of the current PortalClient.
