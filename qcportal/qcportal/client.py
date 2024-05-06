@@ -101,8 +101,6 @@ from .serverinfo import (
     AccessLogQueryIterator,
     ErrorLogQueryFilters,
     ErrorLogQueryIterator,
-    ServerStatsQueryFilters,
-    ServerStatsQueryIterator,
     DeleteBeforeDateBody,
 )
 from .utils import make_list, chunk_iterable, process_chunk_iterable
@@ -2560,59 +2558,6 @@ class PortalClient(PortalClientBase):
 
         filter_data = ManagerQueryFilters(**filter_dict)
         return ManagerQueryIterator(self, filter_data)
-
-    ##############################################################
-    # Server statistics and logs
-    ##############################################################
-
-    def query_server_stats(
-        self,
-        *,
-        before: Optional[Union[datetime, str]] = None,
-        after: Optional[Union[datetime, str]] = None,
-        limit: Optional[int] = None,
-    ) -> ServerStatsQueryIterator:
-        """
-        Query server statistics
-
-        These statistics are captured at certain times, and are available for querying (as long
-        as they are not deleted)
-
-        Parameters
-        ----------
-        before
-            Return statistics captured before the specified date/time
-        after
-            Return statistics captured after the specified date/time
-        limit
-            The maximum number of statistics entries to return. Note that the server limit is always obeyed.
-
-        Returns
-        -------
-        :
-            An iterator that can be used to retrieve the results of the query
-        """
-
-        filter_data = ServerStatsQueryFilters(before=before, after=after, limit=limit)
-        return ServerStatsQueryIterator(self, filter_data)
-
-    def delete_server_stats(self, before: datetime) -> int:
-        """
-        Delete server statistics from the server
-
-        Parameters
-        ----------
-        before
-            Delete statistics captured before the given date/time
-
-        Returns
-        -------
-        :
-            The number of statistics entries deleted from the server
-        """
-
-        body = DeleteBeforeDateBody(before=before)
-        return self.make_request("post", "api/v1/server_stats/bulkDelete", int, body=body)
 
     def query_access_log(
         self,

@@ -110,40 +110,6 @@ class InternalErrorLogORM(BaseORM):
         return d
 
 
-class ServerStatsLogORM(BaseORM):
-    """
-    Table for storing server statistics
-
-    Server statistics (storage size, row count, etc) are periodically captured and
-    stored in this table
-    """
-
-    __tablename__ = "server_stats_log"
-
-    id = Column(Integer, primary_key=True)
-    timestamp = Column(TIMESTAMP(timezone=True), nullable=False, default=now_at_utc)
-
-    # Raw counts
-    collection_count = Column(Integer)
-    molecule_count = Column(BigInteger)
-    record_count = Column(BigInteger)
-    outputstore_count = Column(BigInteger)
-    access_count = Column(BigInteger)
-    error_count = Column(BigInteger)
-
-    # Task & service queue status
-    task_queue_status = Column(JSON)
-    service_queue_status = Column(JSON)
-
-    # Database
-    db_total_size = Column(BigInteger)
-    db_table_size = Column(BigInteger)
-    db_index_size = Column(BigInteger)
-    db_table_information = Column(JSON)
-
-    __table_args__ = (Index("ix_server_stats_log_timestamp", "timestamp", postgresql_using="brin"),)
-
-
 class MessageOfTheDayORM(BaseORM):
     """
     Table for storing the Message-of-the-Day
