@@ -73,7 +73,6 @@ default_roles: Dict[str, Any] = {
                 "Resource": [
                     "/api/v1/roles",
                     "/api/v1/managers",
-                    "/api/v1/server_stats",
                     "/api/v1/server_errors",
                     "/api/v1/access_logs",
                     "/api/v1/tasks",
