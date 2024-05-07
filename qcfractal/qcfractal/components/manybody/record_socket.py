@@ -279,7 +279,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
         qcmb_stdout = io.StringIO()
 
         with contextlib.redirect_stdout(qcmb_stdout):
-            mb_orm.results = qcm.analyze(component_results)
+            mb_orm.properties = qcm.analyze(component_results)
 
         output += "\n\n" + "=" * 40 + "\nManybody expansion results\n" + "=" * 40 + "\n"
         output += qcmb_stdout.getvalue()

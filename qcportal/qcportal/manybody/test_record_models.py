@@ -51,8 +51,8 @@ def test_manybody_record_model(snowflake: QCATestingSnowflake, includes: Optiona
 
     assert molecule == record.initial_molecule
 
-    assert isinstance(record.results, dict)
-    assert len(record.results) > 0
+    assert isinstance(record.properties, dict)
+    assert len(record.properties) > 0
 
     cl = record.clusters
     assert isinstance(cl, list)

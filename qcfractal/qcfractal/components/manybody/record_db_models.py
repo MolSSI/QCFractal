@@ -132,7 +132,6 @@ class ManybodyRecordORM(BaseRecordORM):
 
     initial_molecule_id = Column(Integer, ForeignKey(MoleculeORM.id), nullable=False)
     specification_id = Column(Integer, ForeignKey(ManybodySpecificationORM.id), nullable=False)
-    results = Column(JSONB)
 
     specification = relationship(ManybodySpecificationORM, lazy="selectin")
     initial_molecule = relationship(MoleculeORM)

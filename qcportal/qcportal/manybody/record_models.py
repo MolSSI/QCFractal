@@ -73,7 +73,6 @@ class ManybodyCluster(ManybodyClusterMeta):
 class ManybodyRecord(BaseRecord):
     record_type: Literal["manybody"] = "manybody"
     specification: ManybodySpecification
-    results: Optional[Dict[str, Any]]
 
     initial_molecule_id: int
 
