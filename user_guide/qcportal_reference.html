@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>QCPortal API Reference &#8212; QCArchive 0.54.1.post17+ge16b51f3 documentation</title>
+    <title>QCPortal API Reference &#8212; QCArchive 0.54.1.post22+g56b9189f documentation</title>
   
   
   
@@ -40,7 +40,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../_static/documentation_options.js?v=36aa24a6"></script>
+    <script src="../_static/documentation_options.js?v=9db49e6c"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -1764,46 +1764,6 @@ that was not found.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="qcportal.client.PortalClient.query_server_stats">
-<span class="sig-name descname"><span class="pre">query_server_stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">before</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">after</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/client.html#PortalClient.query_server_stats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.client.PortalClient.query_server_stats" title="Link to this definition">#</a></dt>
-<dd><p>Query server statistics</p>
-<p>These statistics are captured at certain times, and are available for querying (as long
-as they are not deleted)</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>before</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Return statistics captured before the specified date/time</p></li>
-<li><p><strong>after</strong> (<em>datetime</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Return statistics captured after the specified date/time</p></li>
-<li><p><strong>limit</strong> (<em>int</em><em> | </em><em>None</em>) – The maximum number of statistics entries to return. Note that the server limit is always obeyed.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>An iterator that can be used to retrieve the results of the query</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>ServerStatsQueryIterator</em></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="qcportal.client.PortalClient.delete_server_stats">
-<span class="sig-name descname"><span class="pre">delete_server_stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">before</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/client.html#PortalClient.delete_server_stats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.client.PortalClient.delete_server_stats" title="Link to this definition">#</a></dt>
-<dd><p>Delete server statistics from the server</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>before</strong> (<em>datetime</em>) – Delete statistics captured before the given date/time</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The number of statistics entries deleted from the server</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="qcportal.client.PortalClient.query_access_log">
 <span class="sig-name descname"><span class="pre">query_access_log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">before</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">after</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/client.html#PortalClient.query_access_log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.client.PortalClient.query_access_log" title="Link to this definition">#</a></dt>
 <dd><p>Query the server access log</p>
@@ -2389,8 +2349,6 @@ of a molecule query.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.query_nebs"><code class="docutils literal notranslate"><span class="pre">PortalClient.query_nebs()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.get_managers"><code class="docutils literal notranslate"><span class="pre">PortalClient.get_managers()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.query_managers"><code class="docutils literal notranslate"><span class="pre">PortalClient.query_managers()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.query_server_stats"><code class="docutils literal notranslate"><span class="pre">PortalClient.query_server_stats()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.delete_server_stats"><code class="docutils literal notranslate"><span class="pre">PortalClient.delete_server_stats()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.query_access_log"><code class="docutils literal notranslate"><span class="pre">PortalClient.query_access_log()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.delete_access_log"><code class="docutils literal notranslate"><span class="pre">PortalClient.delete_access_log()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.query_error_log"><code class="docutils literal notranslate"><span class="pre">PortalClient.query_error_log()</span></code></a></li>

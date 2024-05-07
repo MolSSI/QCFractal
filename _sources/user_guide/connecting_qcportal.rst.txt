@@ -100,7 +100,6 @@ the server administrator wishes to include.
           'get_managers': 1000,
           'manager_tasks_claim': 200,
           'manager_tasks_return': 10,
-          'get_server_stats': 25,
           'get_access_logs': 1000,
           'get_error_logs': 100,
           'get_internal_jobs': 1000},

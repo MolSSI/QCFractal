@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.client &#8212; QCArchive 0.54.1.post17+ge16b51f3 documentation</title>
+    <title>qcportal.client &#8212; QCArchive 0.54.1.post22+g56b9189f documentation</title>
   
   
   
@@ -39,7 +39,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../_static/documentation_options.js?v=36aa24a6"></script>
+    <script src="../../_static/documentation_options.js?v=9db49e6c"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -561,8 +561,6 @@ document.write(`
     <span class="n">AccessLogQueryIterator</span><span class="p">,</span>
     <span class="n">ErrorLogQueryFilters</span><span class="p">,</span>
     <span class="n">ErrorLogQueryIterator</span><span class="p">,</span>
-    <span class="n">ServerStatsQueryFilters</span><span class="p">,</span>
-    <span class="n">ServerStatsQueryIterator</span><span class="p">,</span>
     <span class="n">DeleteBeforeDateBody</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">make_list</span><span class="p">,</span> <span class="n">chunk_iterable</span><span class="p">,</span> <span class="n">process_chunk_iterable</span>
@@ -3179,65 +3177,6 @@ document.write(`
 
         <span class="n">filter_data</span> <span class="o">=</span> <span class="n">ManagerQueryFilters</span><span class="p">(</span><span class="o">**</span><span class="n">filter_dict</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ManagerQueryIterator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">)</span></div>
-
-
-    <span class="c1">##############################################################</span>
-    <span class="c1"># Server statistics and logs</span>
-    <span class="c1">##############################################################</span>
-
-<div class="viewcode-block" id="PortalClient.query_server_stats">
-<a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.query_server_stats">[docs]</a>
-    <span class="k">def</span> <span class="nf">query_server_stats</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="o">*</span><span class="p">,</span>
-        <span class="n">before</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">datetime</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">after</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">datetime</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">limit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ServerStatsQueryIterator</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Query server statistics</span>
-
-<span class="sd">        These statistics are captured at certain times, and are available for querying (as long</span>
-<span class="sd">        as they are not deleted)</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        before</span>
-<span class="sd">            Return statistics captured before the specified date/time</span>
-<span class="sd">        after</span>
-<span class="sd">            Return statistics captured after the specified date/time</span>
-<span class="sd">        limit</span>
-<span class="sd">            The maximum number of statistics entries to return. Note that the server limit is always obeyed.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        :</span>
-<span class="sd">            An iterator that can be used to retrieve the results of the query</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">filter_data</span> <span class="o">=</span> <span class="n">ServerStatsQueryFilters</span><span class="p">(</span><span class="n">before</span><span class="o">=</span><span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="o">=</span><span class="n">after</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">ServerStatsQueryIterator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="PortalClient.delete_server_stats">
-<a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.delete_server_stats">[docs]</a>
-    <span class="k">def</span> <span class="nf">delete_server_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">before</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Delete server statistics from the server</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        before</span>
-<span class="sd">            Delete statistics captured before the given date/time</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        :</span>
-<span class="sd">            The number of statistics entries deleted from the server</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">body</span> <span class="o">=</span> <span class="n">DeleteBeforeDateBody</span><span class="p">(</span><span class="n">before</span><span class="o">=</span><span class="n">before</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="s2">&quot;api/v1/server_stats/bulkDelete&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="PortalClient.query_access_log">
