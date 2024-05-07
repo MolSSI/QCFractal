@@ -369,6 +369,7 @@ class FractalConfig(ConfigBase):
 
     # Access logging
     log_access: bool = Field(False, description="Store API access in the database")
+    access_log_keep: int = Field(0, description="Number of days of access logs to keep. 0 means keep all")
 
     # maxmind_account_id: Optional[int] = Field(None, description="Account ID for MaxMind GeoIP2 service")
     maxmind_license_key: Optional[str] = Field(
@@ -416,8 +417,8 @@ class FractalConfig(ConfigBase):
             values.pop("statistics_frequency")
             logger.warning("The 'statistics_frequency' setting is no longer and is now ignored")
 
-        if "get_server_stats" in values['api_limits']:
-            values['api_limits'].pop("get_server_stats")
+        if "get_server_stats" in values["api_limits"]:
+            values["api_limits"].pop("get_server_stats")
             logger.warning("The 'get_server_stats' setting in 'api_limits' is no longer and is now ignored")
 
         return values
