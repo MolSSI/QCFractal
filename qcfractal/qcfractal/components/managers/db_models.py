@@ -19,34 +19,6 @@ from qcportal.managers import ManagerStatusEnum
 from qcportal.utils import now_at_utc
 
 
-class ComputeManagerLogORM(BaseORM):
-    """
-    Table for storing manager logs
-
-    This contains information about a manager at a particular point in time. This table
-    is periodically appended to, with updated information about a manager.
-    """
-
-    __tablename__ = "compute_manager_log"
-
-    id = Column(Integer, primary_key=True)
-    manager_id = Column(Integer, ForeignKey("compute_manager.id", ondelete="cascade"), nullable=False)
-
-    timestamp = Column(TIMESTAMP(timezone=True), default=now_at_utc, nullable=False)
-
-    claimed = Column(Integer, nullable=False)
-    successes = Column(Integer, nullable=False)
-    failures = Column(Integer, nullable=False)
-    rejected = Column(Integer, nullable=False)
-
-    active_tasks = Column(Integer, nullable=False, default=0)
-    active_cores = Column(Integer, nullable=False, default=0)
-    active_memory = Column(Float, nullable=False, default=0.0)
-    total_cpu_hours = Column(Float, nullable=False, default=0.0)
-
-    __table_args__ = (Index("ix_compute_manager_log_manager_id", "manager_id"),)
-
-
 class ComputeManagerORM(BaseORM):
     """
     Table for storing information about active and inactive compute managers
@@ -80,13 +52,6 @@ class ComputeManagerORM(BaseORM):
 
     manager_version = Column(String, nullable=False)
     programs = Column(JSON, nullable=False)
-
-    log = relationship(
-        ComputeManagerLogORM,
-        order_by=ComputeManagerLogORM.timestamp.desc(),
-        cascade="all, delete-orphan",
-        passive_deletes=True,
-    )
 
     __table_args__ = (
         Index("ix_compute_manager_status", "status"),

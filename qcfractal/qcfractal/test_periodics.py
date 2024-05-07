@@ -9,35 +9,11 @@ from qcfractal.components.gridoptimization.testing_helpers import submit_test_da
 from qcfractal.components.torsiondrive.testing_helpers import submit_test_data as submit_td_test_data
 from qcportal.managers import ManagerName, ManagerStatusEnum
 from qcportal.record_models import RecordStatusEnum
-from qcportal.serverinfo import ServerStatsQueryFilters
-from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
 
 pytestmark = pytest.mark.slow
-
-
-def test_periodics_server_stats(snowflake: QCATestingSnowflake):
-    storage_socket = snowflake.get_storage_socket()
-
-    stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
-    assert len(stats) == 0
-
-    sleep_time = snowflake._qcf_config.statistics_frequency
-
-    snowflake.start_job_runner()
-    time.sleep(sleep_time * 0.8)
-
-    for i in range(5):
-        time_0 = now_at_utc()
-        time.sleep(sleep_time)
-        time_1 = now_at_utc()
-
-        filters = ServerStatsQueryFilters(before=time_1, after=time_0)
-        stats = storage_socket.serverinfo.query_server_stats(filters)
-        assert len(stats) == 1
-        assert time_0 < stats[0]["timestamp"] < time_1
 
 
 def test_periodics_manager_heartbeats(snowflake: QCATestingSnowflake):

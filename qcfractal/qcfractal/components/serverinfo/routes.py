@@ -7,7 +7,6 @@ from qcfractal.flask_app.api_v1.helpers import wrap_route
 from qcportal.serverinfo import (
     AccessLogSummaryFilters,
     AccessLogQueryFilters,
-    ServerStatsQueryFilters,
     ErrorLogQueryFilters,
     DeleteBeforeDateBody,
 )
@@ -66,20 +65,6 @@ def delete_access_log_v1(body_data: DeleteBeforeDateBody):
 @wrap_route("READ")
 def query_access_summary_v1(url_params: AccessLogSummaryFilters):
     return storage_socket.serverinfo.query_access_summary(url_params)
-
-
-@api_v1.route("/server_stats/query", methods=["POST"])
-@wrap_route("READ")
-def query_server_stats_v1(body_data: ServerStatsQueryFilters):
-    max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_server_stats
-    body_data.limit = calculate_limit(max_limit, body_data.limit)
-    return storage_socket.serverinfo.query_server_stats(body_data)
-
-
-@api_v1.route("/server_stats/bulkDelete", methods=["POST"])
-@wrap_route("DELETE")
-def delete_server_stats_v1(body_data: DeleteBeforeDateBody):
-    return storage_socket.serverinfo.delete_server_stats(before=body_data.before)
 
 
 @api_v1.route("/server_errors/query", methods=["POST"])

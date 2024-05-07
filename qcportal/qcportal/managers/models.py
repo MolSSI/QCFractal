@@ -55,26 +55,6 @@ class ManagerName(BaseModel):
         return self.fullname
 
 
-class ComputeManagerLogEntry(BaseModel):
-    class Config:
-        extra = Extra.forbid
-
-    id: int
-    manager_id: int
-
-    claimed: int
-    successes: int
-    failures: int
-    rejected: int
-
-    total_cpu_hours: float
-    active_tasks: int
-    active_cores: int
-    active_memory: float
-
-    timestamp: datetime
-
-
 class ComputeManager(BaseModel):
     class Config:
         extra = Extra.forbid
@@ -103,30 +83,12 @@ class ComputeManager(BaseModel):
     manager_version: str
     programs: Dict[str, List[str]]
 
-    log_: Optional[List[ComputeManagerLogEntry]] = None
-
     _client: Any = PrivateAttr(None)
     _base_url: Optional[str] = PrivateAttr(None)
 
     def propagate_client(self, client):
         self._client = client
         self._base_url = f"api/v1/managers/{self.name}"
-
-    def _fetch_log(self):
-        if self._client is None:
-            raise RuntimeError("This manager object is not connected to a client")
-
-        self.log_ = self._client.make_request(
-            "get",
-            f"{self._base_url}/log",
-            List[ComputeManagerLogEntry],
-        )
-
-    @property
-    def log(self):
-        if self.log_ is None:
-            self._fetch_log()
-        return self.log_
 
 
 class ManagerActivationBody(RestModelBase):

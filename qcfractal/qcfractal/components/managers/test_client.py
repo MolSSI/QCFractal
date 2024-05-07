@@ -52,7 +52,6 @@ def test_manager_client_get(snowflake: QCATestingSnowflake):
     assert manager[1].modified_on > time_0
     assert manager[1].created_on < time_1
     assert manager[1].modified_on < time_1
-    assert manager[1].log is not None
 
     assert manager[0].name == name2
     assert manager[0].tags == ["tag1"]
@@ -61,7 +60,6 @@ def test_manager_client_get(snowflake: QCATestingSnowflake):
     assert manager[0].modified_on > time_1
     assert manager[0].created_on < time_2
     assert manager[0].modified_on < time_2
-    assert manager[0].log is not None
 
     assert manager[2].id == manager[1].id
     assert manager[3].id == manager[0].id

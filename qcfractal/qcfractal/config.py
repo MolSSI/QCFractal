@@ -277,7 +277,6 @@ class APILimitConfig(ConfigBase):
     manager_tasks_claim: int = Field(200, description="Number of tasks a single manager can pull down")
     manager_tasks_return: int = Field(10, description="Number of tasks a single manager can return at once")
 
-    get_server_stats: int = Field(25, description="Number of server statistics records to return")
     get_access_logs: int = Field(1000, description="Number of access log records to return")
     get_error_logs: int = Field(100, description="Number of error log records to return")
     get_internal_jobs: int = Field(1000, description="Number of internal jobs to return")
@@ -358,9 +357,6 @@ class FractalConfig(ConfigBase):
     )
 
     # Periodics
-    statistics_frequency: int = Field(
-        3600, description="The frequency at which to update servre statistics (in seconds)"
-    )
     service_frequency: int = Field(60, description="The frequency at which to update services (in seconds)")
     max_active_services: int = Field(20, description="The maximum number of concurrent active services")
     heartbeat_frequency: int = Field(
@@ -406,6 +402,8 @@ class FractalConfig(ConfigBase):
 
     @root_validator(pre=True)
     def _root_validator(cls, values):
+        logger = logging.getLogger("config_validation")
+
         values.setdefault("database", dict())
         if "base_folder" not in values["database"]:
             values["database"]["base_folder"] = values.get("base_folder")
@@ -413,6 +411,15 @@ class FractalConfig(ConfigBase):
         values.setdefault("api_limits", dict())
         values.setdefault("api", dict())
         values.setdefault("auto_reset", dict())
+
+        if "statistics_frequency" in values:
+            values.pop("statistics_frequency")
+            logger.warning("The 'statistics_frequency' setting is no longer and is now ignored")
+
+        if "get_server_stats" in values['api_limits']:
+            values['api_limits'].pop("get_server_stats")
+            logger.warning("The 'get_server_stats' setting in 'api_limits' is no longer and is now ignored")
+
         return values
 
     @validator("geoip2_dir")
@@ -558,7 +565,6 @@ def write_initial_configuration(file_path: str, full_config: bool = True):
             "logfile": True,
             "loglevel": True,
             "service_frequency": True,
-            "statistics_frequency": True,
             "max_active_services": True,
             "heartbeat_frequency": True,
             "database": {"own", "host", "port", "database_name", "base_folder"},
