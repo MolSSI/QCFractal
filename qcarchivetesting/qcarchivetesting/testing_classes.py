@@ -146,6 +146,7 @@ class QCATestingSnowflake(FractalSnowflake):
 
         qcf_config["database"] = {"pool_size": 0}
         qcf_config["log_access"] = log_access
+        qcf_config["access_log_keep"] = 1
 
         if ip_tests_enabled:
             qcf_config["geoip2_dir"] = geoip_path

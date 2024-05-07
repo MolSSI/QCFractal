@@ -58,6 +58,8 @@ class ServerInfoSocket:
 
         # Set up access logging
         self._access_log_enabled = root_socket.qcf_config.log_access
+        self._delete_access_log_frequency = 60 * 60 * 24  # one day
+        self._access_log_keep = root_socket.qcf_config.access_log_keep
         self._geoip2_enabled = geoip2_found and self._access_log_enabled
 
         # MOTD contents
@@ -77,6 +79,31 @@ class ServerInfoSocket:
 
         # Updating the access log with geolocation info. Don't do it right at startup
         self.add_internal_job_geolocate_accesses(self._geolocate_accesses_frequency)
+
+        # Deleting old access logs. Wait a bit after startup
+        self.add_internal_job_delete_accesses(2.0)
+
+    def add_internal_job_delete_accesses(self, delay: float, *, session: Optional[Session] = None):
+        """
+        Adds an internal job to delete old access log entries
+        """
+
+        # Only add this if we are going to delete some
+        if self._access_log_keep <= 0 or not self._access_log_enabled:
+            return
+
+        with self.root_socket.optional_session(session) as session:
+            self.root_socket.internal_jobs.add(
+                "delete_access_log",
+                now_at_utc() + timedelta(seconds=delay),
+                "serverinfo.delete_old_access_logs",
+                {},
+                user_id=None,
+                unique_name=True,
+                after_function="serverinfo.add_internal_job_delete_accesses",
+                after_function_kwargs={"delay": self._delete_access_log_frequency},  # wait one day
+                session=session,
+            )
 
     def add_internal_job_update_geoip2(self, delay: float, *, session: Optional[Session] = None):
         """
@@ -274,6 +301,19 @@ class ServerInfoSocket:
         last_geolocated_date.date_value = to_process[-1].timestamp
 
         session.commit()
+
+    def delete_old_access_logs(self, session: Session, job_progress: JobProgress) -> None:
+        """
+        Deletes old access logs (as defined by the configuration)
+        """
+
+        # we check when adding the job, but double check here
+        if self._access_log_keep <= 0 or not self._access_log_enabled:
+            return
+
+        before = now_at_utc() - timedelta(days=self._access_log_keep)
+        num_deleted = self.delete_access_logs(before, session=session)
+        self._logger.info(f"Deleted {num_deleted} access logs before {before}")
 
     def _load_motd(self, *, session: Optional[Session] = None):
         stmt = select(MessageOfTheDayORM).order_by(MessageOfTheDayORM.id)
