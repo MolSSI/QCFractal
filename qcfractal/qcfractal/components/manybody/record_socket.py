@@ -276,13 +276,14 @@ class ManybodyRecordSocket(BaseRecordSocket):
             component_results.setdefault(label, {})
             component_results[label]["energy"] = energy
 
+        # Swallow any output
         qcmb_stdout = io.StringIO()
 
         with contextlib.redirect_stdout(qcmb_stdout):
             mb_orm.properties = qcm.analyze(component_results)
 
         output += "\n\n" + "=" * 40 + "\nManybody expansion results\n" + "=" * 40 + "\n"
-        output += qcmb_stdout.getvalue()
+        output += mb_orm.properties.pop("stdout")
         self.root_socket.records.append_output(session, mb_orm, OutputTypeEnum.stdout, output)
 
         # We are done!
