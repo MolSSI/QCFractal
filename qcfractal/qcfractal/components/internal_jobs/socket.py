@@ -42,6 +42,36 @@ class InternalJobSocket:
         # Hardcoded for now
         self._update_frequency = 5
 
+        # Old internal job cleanup
+        self._delete_internal_job_frequency = 60 * 60 * 24 # one day
+        self._internal_job_keep = root_socket.qcf_config.internal_job_keep
+
+        # Wait a bit after startup
+        self.add_internal_job_delete_old_internal_jobs(2.0)
+
+    def add_internal_job_delete_old_internal_jobs(self, delay: float, *, session: Optional[Session] = None):
+        """
+        Adds an internal job to delete old, finished internal jobs
+        """
+
+        # Only add this if we are going to delete some
+        if self._internal_job_keep <= 0:
+            return
+
+        with self.root_socket.optional_session(session) as session:
+            self.add(
+                "delete_old_internal_jobs",
+                now_at_utc() + timedelta(seconds=delay),
+                "internal_jobs.delete_old_internal_jobs",
+                {},
+                user_id=None,
+                unique_name=True,
+                after_function="internal_jobs.add_internal_job_delete_old_internal_jobs",
+                after_function_kwargs={"delay": self._delete_internal_job_frequency},  # wait one day
+                session=session,
+                )
+
+
     def add(
         self,
         name: str,
@@ -259,6 +289,24 @@ class InternalJobSocket:
         stmt = delete(InternalJobORM).where(InternalJobORM.id == job_id)
         with self.root_socket.optional_session(session) as session:
             session.execute(stmt)
+
+    def delete_old_internal_jobs(self, session: Session, job_progress: JobProgress) -> None:
+        """
+        Deletes old internal jobs (as defined by the configuration)
+        """
+
+        # we check when adding the job, but double check here
+        if self._internal_job_keep <= 0:
+            return
+
+        before = now_at_utc() - timedelta(days=self._internal_job_keep)
+
+        stmt = delete(InternalJobORM)
+        stmt = stmt.where(InternalJobORM.status.in_((InternalJobStatusEnum.complete, InternalJobStatusEnum.error, InternalJobStatusEnum.cancelled)))
+        stmt = stmt.where(InternalJobORM.ended_date < before)
+        r = session.execute(stmt)
+        num_deleted = r.rowcount
+        self._logger.info(f"Deleted {num_deleted} internal jobs before {before}")
 
     def cancel(self, job_id: int, *, session: Optional[Session] = None):
         """
