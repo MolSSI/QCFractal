@@ -94,7 +94,7 @@ class ServerInfoSocket:
 
         with self.root_socket.optional_session(session) as session:
             self.root_socket.internal_jobs.add(
-                "delete_access_log",
+                "delete_old_access_log",
                 now_at_utc() + timedelta(seconds=delay),
                 "serverinfo.delete_old_access_logs",
                 {},
