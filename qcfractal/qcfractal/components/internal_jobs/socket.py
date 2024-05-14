@@ -43,7 +43,7 @@ class InternalJobSocket:
         self._update_frequency = 5
 
         # Old internal job cleanup
-        self._delete_internal_job_frequency = 60 * 60 * 24 # one day
+        self._delete_internal_job_frequency = 60 * 60 * 24  # one day
         self._internal_job_keep = root_socket.qcf_config.internal_job_keep
 
         # Wait a bit after startup
@@ -69,8 +69,7 @@ class InternalJobSocket:
                 after_function="internal_jobs.add_internal_job_delete_old_internal_jobs",
                 after_function_kwargs={"delay": self._delete_internal_job_frequency},  # wait one day
                 session=session,
-                )
-
+            )
 
     def add(
         self,
@@ -302,7 +301,11 @@ class InternalJobSocket:
         before = now_at_utc() - timedelta(days=self._internal_job_keep)
 
         stmt = delete(InternalJobORM)
-        stmt = stmt.where(InternalJobORM.status.in_((InternalJobStatusEnum.complete, InternalJobStatusEnum.error, InternalJobStatusEnum.cancelled)))
+        stmt = stmt.where(
+            InternalJobORM.status.in_(
+                (InternalJobStatusEnum.complete, InternalJobStatusEnum.error, InternalJobStatusEnum.cancelled)
+            )
+        )
         stmt = stmt.where(InternalJobORM.ended_date < before)
         r = session.execute(stmt)
         num_deleted = r.rowcount

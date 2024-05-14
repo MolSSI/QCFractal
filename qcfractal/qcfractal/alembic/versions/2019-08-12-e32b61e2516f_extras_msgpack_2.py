@@ -5,15 +5,12 @@ Revises: da7c6f141bcb
 Create Date: 2019-08-12 10:13:09.694643
 
 """
-from alembic import op
-import sqlalchemy as sa
 
 import os
 import sys
 
 sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
 from migration_helpers import msgpack_migrations
-from qcelemental.util import msgpackext_dumps, msgpackext_loads
 
 # revision identifiers, used by Alembic.
 revision = "e32b61e2516f"

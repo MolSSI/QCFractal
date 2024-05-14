@@ -125,11 +125,7 @@ class ManagerSocket:
         """
 
         with self.root_socket.optional_session(session) as session:
-            stmt = (
-                select(ComputeManagerORM)
-                .where(ComputeManagerORM.name == name)
-                .with_for_update(skip_locked=False)
-            )
+            stmt = select(ComputeManagerORM).where(ComputeManagerORM.name == name).with_for_update(skip_locked=False)
             manager: Optional[ComputeManagerORM] = session.execute(stmt).scalar_one_or_none()
 
             if manager is None:

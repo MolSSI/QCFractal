@@ -1,6 +1,7 @@
 """
 Pytest fixtures for QCArchive
 """
+
 from __future__ import annotations
 
 import secrets

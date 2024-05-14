@@ -87,7 +87,7 @@ class NEBSpecificationORM(BaseORM):
         ),
         Index("ix_neb_specification_program", "program"),
         Index("ix_neb_specification_singlepoint_specification_id", "singlepoint_specification_id"),
-        Index("ix_neb_specification_optimization_specification_id", "optimization_specification_id")
+        Index("ix_neb_specification_optimization_specification_id", "optimization_specification_id"),
         # Enforce lowercase on some fields
     )
 

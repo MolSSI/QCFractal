@@ -5,10 +5,10 @@ Revises: 5686f64a46c8
 Create Date: 2020-10-29 15:12:53.172977
 
 """
-from alembic import op
-import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import JSONB
 
+import sqlalchemy as sa
+from alembic import op
+from sqlalchemy.dialects.postgresql import JSONB
 
 # revision identifiers, used by Alembic.
 revision = "5be555fe9dc0"

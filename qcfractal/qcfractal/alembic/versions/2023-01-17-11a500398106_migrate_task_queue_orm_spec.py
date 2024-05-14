@@ -5,6 +5,7 @@ Revises: c0fba229aaa8
 Create Date: 2023-01-17 20:24:28.657641
 
 """
+
 import numpy as np
 import sqlalchemy as sa
 from alembic import op

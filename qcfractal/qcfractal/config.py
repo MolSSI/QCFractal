@@ -390,7 +390,9 @@ class FractalConfig(ConfigBase):
     internal_job_processes: int = Field(
         1, description="Number of processes for processing internal jobs and async requests"
     )
-    internal_job_keep: int = Field(0, description="Number of days of finished internal job logs to keep. 0 means keep all")
+    internal_job_keep: int = Field(
+        0, description="Number of days of finished internal job logs to keep. 0 means keep all"
+    )
 
     # Homepage settings
     homepage_redirect_url: Optional[str] = Field(None, description="Redirect to this URL when going to the root path")
