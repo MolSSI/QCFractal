@@ -5,13 +5,16 @@ Revises: 98aea37d208d
 Create Date: 2021-07-13 09:53:23.243644
 
 """
-import numpy
+
 import json
-from alembic import op
+
+import numpy
 import sqlalchemy as sa
-from sqlalchemy.sql import table, column
+from alembic import op
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm.session import Session
+from sqlalchemy.sql import table, column
+
 from qcfractal.db_socket.column_types import MsgpackExt, PlainMsgpackExt
 
 # revision identifiers, used by Alembic.

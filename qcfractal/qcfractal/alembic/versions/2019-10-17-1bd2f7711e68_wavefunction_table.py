@@ -5,10 +5,11 @@ Revises: a2f76bb7be65
 Create Date: 2019-10-17 14:03:07.364322
 
 """
-from alembic import op
-import sqlalchemy as sa
-import qcfractal
 
+import sqlalchemy as sa
+from alembic import op
+
+import qcfractal
 
 # revision identifiers, used by Alembic.
 import qcfractal.db_socket.column_types

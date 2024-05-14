@@ -5,6 +5,7 @@ Revises: f65aad4015cb
 Create Date: 2023-06-27 14:48:06.554515
 
 """
+
 from alembic import op
 
 # revision identifiers, used by Alembic.

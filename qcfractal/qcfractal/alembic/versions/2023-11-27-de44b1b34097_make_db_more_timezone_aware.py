@@ -5,6 +5,7 @@ Revises: 13cb230def11
 Create Date: 2023-11-27 12:14:40.915673
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql

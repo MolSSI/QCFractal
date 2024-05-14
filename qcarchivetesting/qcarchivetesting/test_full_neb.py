@@ -3,10 +3,10 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING
 
+from qcarchivetesting import load_molecule_data
 from qcportal.neb import NEBKeywords
 from qcportal.optimization import OptimizationSpecification
 from qcportal.record_models import RecordStatusEnum
-from qcarchivetesting import load_molecule_data
 from qcportal.singlepoint import QCSpecification
 
 if TYPE_CHECKING:

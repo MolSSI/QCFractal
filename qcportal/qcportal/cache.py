@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import datetime
 import os
-import uuid
 from typing import TYPE_CHECKING, Optional, TypeVar, Type, Any, List, Iterable, Tuple, Sequence
 from urllib.parse import urlparse
 

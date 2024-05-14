@@ -39,7 +39,7 @@ from qcportal.reaction import (
     ReactionKeywords,
     ReactionQueryFilters,
 )
-from qcportal.services.models import (
+from qcportal.services.models import (  # noqa
     ServiceSubtaskRecord,
 )
 from qcportal.singlepoint import (
@@ -75,7 +75,7 @@ from .dataset_models import (
     DatasetDeleteParams,
     DatasetAddBody,
     dataset_from_dict,
-    load_dataset_view,
+    load_dataset_view,  # noqa
     create_dataset_view,
 )
 from .internal_jobs import InternalJob, InternalJobQueryFilters, InternalJobQueryIterator, InternalJobStatusEnum

@@ -1,4 +1,4 @@
-from typing import Dict, Any, Union, Optional, Iterable, Tuple
+from typing import Dict, Any, Union, Optional, Iterable
 
 try:
     from pydantic.v1 import BaseModel, Extra

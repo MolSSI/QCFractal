@@ -1,13 +1,10 @@
 import logging
+
 import sqlalchemy as sa
 import tqdm
-import numpy as np
 from alembic import op
+from qcelemental.util import msgpackext_loads
 from sqlalchemy.dialects.postgresql import BYTEA
-from sqlalchemy.sql.expression import func
-
-from qcelemental.util import msgpackext_dumps, msgpackext_loads
-from qcelemental.testing import compare_recursive
 
 logger = logging.getLogger("alembic")
 

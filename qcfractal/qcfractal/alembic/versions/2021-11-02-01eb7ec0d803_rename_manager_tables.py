@@ -5,11 +5,12 @@ Revises: cabe9df168a5
 Create Date: 2021-11-02 09:26:51.278977
 
 """
-from alembic import op
+
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.sql import table, column
 from sqlalchemy.orm.session import Session
+from sqlalchemy.sql import table, column
 
 # revision identifiers, used by Alembic.
 revision = "01eb7ec0d803"

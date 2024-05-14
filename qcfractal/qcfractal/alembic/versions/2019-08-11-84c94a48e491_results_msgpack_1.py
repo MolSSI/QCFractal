@@ -5,16 +5,16 @@ Revises: d56ac42b9a43
 Create Date: 2019-08-11 17:21:40.264688
 
 """
-from alembic import op
-import sqlalchemy as sa
-import numpy as np
 
 import os
 import sys
 
+import numpy as np
+import sqlalchemy as sa
+
 sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
 from migration_helpers import msgpack_migrations
-from qcelemental.util import msgpackext_dumps, msgpackext_loads
+from qcelemental.util import msgpackext_dumps
 
 # revision identifiers, used by Alembic.
 revision = "84c94a48e491"
