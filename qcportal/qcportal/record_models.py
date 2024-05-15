@@ -612,7 +612,7 @@ class BaseRecord(BaseModel):
 
     @property
     def children_status(self) -> Dict[RecordStatusEnum, int]:
-        """Returns a dicionary of the status of all children of this record"""
+        """Returns a dictionary of the status of all children of this record"""
         self._assert_online()
 
         return self._client.make_request(
@@ -620,6 +620,19 @@ class BaseRecord(BaseModel):
             f"{self._base_url}/children_status",
             Dict[RecordStatusEnum, int],
         )
+
+    @property
+    def children_errors(self) -> List[BaseRecord]:
+        """Returns errored child records"""
+        self._assert_online()
+
+        error_ids = self._client.make_request(
+            "get",
+            f"{self._base_url}/children_errors",
+            List[int],
+        )
+
+        return self._client._get_records_by_type(None, error_ids)
 
     @property
     def compute_history(self) -> List[ComputeHistory]:

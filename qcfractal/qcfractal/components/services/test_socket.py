@@ -8,6 +8,7 @@ from qcfractal.components.gridoptimization.testing_helpers import (
     submit_test_data as submit_go_test_data,
 )
 from qcfractal.components.record_db_models import BaseRecordORM
+from qcfractal.components.torsiondrive.record_db_models import TorsiondriveRecordORM
 from qcfractal.components.torsiondrive.testing_helpers import (
     submit_test_data as submit_td_test_data,
     generate_task_key as generate_td_task_key,
@@ -40,7 +41,7 @@ def test_service_socket_error(storage_socket: SQLAlchemySocket, session: Session
 
     assert finished is True
 
-    rec = session.get(BaseRecordORM, id_1)
+    rec = session.get(TorsiondriveRecordORM, id_1)
 
     assert rec.status == RecordStatusEnum.error
 
@@ -54,6 +55,15 @@ def test_service_socket_error(storage_socket: SQLAlchemySocket, session: Session
 
     err = rec.compute_history[-1].outputs["error"].get_output()
     assert "did not complete successfully" in err["error_message"]
+
+    err_ids = [x.optimization_id for x in rec.optimizations if x.optimization_record.status == RecordStatusEnum.error]
+    assert len(err_ids) == 1
+    child_error_ids = storage_socket.records.torsiondrive.get_children_errors(id_1, session=session)
+    assert len(child_error_ids) == 1
+
+    assert child_error_ids[0] == err_ids[0]
+    child_rec = session.get(BaseRecordORM, child_error_ids[0])
+    assert child_rec.status == RecordStatusEnum.error
 
 
 def test_service_socket_iterate_order(storage_socket: SQLAlchemySocket, session: Session):
