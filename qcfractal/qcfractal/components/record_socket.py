@@ -483,6 +483,23 @@ class BaseRecordSocket:
             res = session.execute(stmt).all()
             return {x: y for x, y in res}
 
+    def get_children_errors(self, record_id: int, *, session: Optional[Session] = None) -> List[int]:
+        # Get the SQL 'select' statements from the handlers
+        select_stmts = self.get_children_select()
+
+        if not select_stmts:
+            return []
+
+        select_cte = union(*select_stmts).cte()
+
+        stmt = select(select_cte.c.child_id).distinct(select_cte.c.child_id)
+        stmt = stmt.join(BaseRecordORM, BaseRecordORM.id == select_cte.c.child_id)
+        stmt = stmt.where(select_cte.c.parent_id == record_id)
+        stmt = stmt.where(BaseRecordORM.status == RecordStatusEnum.error)
+
+        with self.root_socket.optional_session(session, True) as session:
+            return session.execute(stmt).scalars().all()
+
 
 class RecordSocket:
     """
