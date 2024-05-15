@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Base Record &#8212; QCArchive 0.54.1.post29+g3e58b4cd documentation</title>
+    <title>Base Record &#8212; QCArchive 0.54.1.post31+g3e6e5c59 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../_static/documentation_options.js?v=42b8b70b"></script>
+    <script src="../../_static/documentation_options.js?v=01301132"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -714,7 +714,13 @@ that can span multiple records</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.record_models.BaseRecord.children_status">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">children_status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><span class="pre">RecordStatusEnum</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.children_status" title="Link to this definition">#</a></dt>
-<dd><p>Returns a dicionary of the status of all children of this record</p>
+<dd><p>Returns a dictionary of the status of all children of this record</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.record_models.BaseRecord.children_errors">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">children_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><span class="pre">BaseRecord</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.children_errors" title="Link to this definition">#</a></dt>
+<dd><p>Returns errored child records</p>
 </dd></dl>
 
 <dl class="py property">
@@ -2246,6 +2252,7 @@ of a record query, and works with all kinds of records.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.BaseRecord.propagate_client"><code class="docutils literal notranslate"><span class="pre">BaseRecord.propagate_client()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.BaseRecord.offline"><code class="docutils literal notranslate"><span class="pre">BaseRecord.offline</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.BaseRecord.children_status"><code class="docutils literal notranslate"><span class="pre">BaseRecord.children_status</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.BaseRecord.children_errors"><code class="docutils literal notranslate"><span class="pre">BaseRecord.children_errors</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.BaseRecord.compute_history"><code class="docutils literal notranslate"><span class="pre">BaseRecord.compute_history</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.BaseRecord.task"><code class="docutils literal notranslate"><span class="pre">BaseRecord.task</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.BaseRecord.service"><code class="docutils literal notranslate"><span class="pre">BaseRecord.service</span></code></a></li>
