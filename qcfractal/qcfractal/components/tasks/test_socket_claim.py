@@ -4,6 +4,7 @@ Tests the tasks socket (claiming & returning data)
 
 from __future__ import annotations
 
+from qcarchivetesting.testing_classes import QCATestingSnowflake
 from typing import TYPE_CHECKING
 
 import pytest
@@ -298,6 +299,54 @@ def test_task_socket_claim_tag_wildcard(storage_socket: SQLAlchemySocket, sessio
     assert tasks[0]["id"] == recs[1].task.id
     assert tasks[1]["id"] == recs[2].task.id
     assert tasks[2]["id"] == recs[4].task.id
+
+
+def test_task_socket_claim_tag_wildcard_strict(postgres_server, pytestconfig):
+
+    pg_harness = postgres_server.get_new_harness("claim_tag_wildcard_strict")
+    encoding = pytestconfig.getoption("--client-encoding")
+    with QCATestingSnowflake(pg_harness, encoding=encoding, extra_config={"strict_queue_tags": True}) as snowflake:
+        storage_socket = snowflake.get_storage_socket()
+
+        mname1 = ManagerName(cluster="test_cluster", hostname="a_host1", uuid="1234-5678-1234-5678")
+        mprog1 = {"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"]}
+        storage_socket.managers.activate(
+            name_data=mname1,
+            manager_version="v2.0",
+            username="bill",
+            programs=mprog1,
+            tags=["TAG3", "*"],
+        )
+
+        meta, id_1 = storage_socket.records.singlepoint.add(
+            [molecule_1], input_spec_1, "tag1", PriorityEnum.normal, None, None, True
+        )
+        meta, id_2 = storage_socket.records.singlepoint.add(
+            [molecule_2], input_spec_2, "tag2", PriorityEnum.normal, None, None, True
+        )
+        meta, id_3 = storage_socket.records.singlepoint.add(
+            [molecule_3], input_spec_3, "*", PriorityEnum.normal, None, None, True
+        )
+        meta, id_4 = storage_socket.records.optimization.add(
+            [molecule_4], input_spec_4, "taG3", PriorityEnum.normal, None, None, True
+        )
+        meta, id_5 = storage_socket.records.singlepoint.add(
+            [molecule_5], input_spec_5, "tag1", PriorityEnum.normal, None, None, True
+        )
+
+        all_id = id_1 + id_2 + id_3 + id_4 + id_5
+
+        client = snowflake.client()
+        recs = client.get_records(all_id, include=["task"])
+
+        # tag3 should be first, then only the * task (in order)
+        tasks = storage_socket.tasks.claim_tasks(mname1.fullname, mprog1, ["tag3", "*"], 2)
+        assert len(tasks) == 2
+        assert tasks[0]["id"] == recs[3].task.id
+        assert tasks[1]["id"] == recs[2].task.id
+
+        tasks = storage_socket.tasks.claim_tasks(mname1.fullname, mprog1, ["tag3", "*"], 3)
+        assert len(tasks) == 0
 
 
 def test_task_socket_claim_program(storage_socket: SQLAlchemySocket, session: Session):

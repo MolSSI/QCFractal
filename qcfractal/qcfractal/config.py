@@ -338,6 +338,12 @@ class FractalConfig(ConfigBase):
         True,
         description="Allows unauthenticated read access to this instance. This does not extend to sensitive tables (such as user information)",
     )
+    strict_queue_tags: bool = Field(
+        False,
+        description="If True, disables wildcard behavior for queue tags. This disables managers from claiming all "
+        "tags if they specify a wildcard ('*') tag. Managers will still be able to claim tasks with an "
+        "explicit '*' tag if they specifiy the '*' queue tag in their config",
+    )
 
     # Logging and profiling
     logfile: Optional[str] = Field(
