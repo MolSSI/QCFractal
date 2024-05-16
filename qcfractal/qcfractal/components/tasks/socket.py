@@ -249,6 +249,10 @@ class TaskSocket:
         # to claim absolutely everything. So double check here
         limit = calculate_limit(self._tasks_claim_limit, limit)
 
+        # Force given tags and programs to be lower case
+        tags = [tag.lower() for tag in tags]
+        programs = {key.lower(): [x.lower() for x in value] for key, value in programs.items()}
+
         with self.root_socket.optional_session(session) as session:
             stmt = select(ComputeManagerORM).where(ComputeManagerORM.name == manager_name)
             stmt = stmt.with_for_update(skip_locked=False)

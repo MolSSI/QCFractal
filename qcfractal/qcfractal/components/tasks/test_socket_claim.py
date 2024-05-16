@@ -243,7 +243,8 @@ def test_task_socket_claim_tag(storage_socket: SQLAlchemySocket, session: Sessio
         recs.append(rec)
 
     # tag3 should be first, then tag1
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, mprog1, ["tag3", "tag1"], 2)
+    # Change capitalization to test case insensitivity
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, mprog1, ["Tag3", "Tag1"], 2)
     assert len(tasks) == 2
     assert tasks[0]["id"] == recs[3].task.id
     assert tasks[1]["id"] == recs[0].task.id
@@ -301,7 +302,9 @@ def test_task_socket_claim_tag_wildcard(storage_socket: SQLAlchemySocket, sessio
 
 def test_task_socket_claim_program(storage_socket: SQLAlchemySocket, session: Session):
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host1", uuid="1234-5678-1234-5678")
-    mprog1 = {"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["v3.0"]}
+
+    # Managers should not send programs with uppercase characters, but be forgiving
+    mprog1 = {"QCengine": ["unknown"], "psi4": ["unknown"], "Geometric": ["V3.0"]}
     storage_socket.managers.activate(
         name_data=mname1,
         manager_version="v2.0",
