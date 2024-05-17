@@ -465,9 +465,6 @@ class InternalJobSocket:
             stop this loop
         """
 
-        # Clean up engine connections after a fork
-        self.root_socket.post_fork_cleanup()
-
         # give this loop a unique uuid
         runner_uuid = str(uuid.uuid4())
 
