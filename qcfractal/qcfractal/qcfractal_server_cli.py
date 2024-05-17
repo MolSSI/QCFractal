@@ -119,19 +119,19 @@ def parse_args() -> argparse.Namespace:
 
     # Common help strings
     config_file_help = "Path to a QCFractal configuration file"
-    verbose_help = "Output more details about the startup of qcfractal-server commands"
+    verbose_help = "Output more details about the startup of qcfractal-server commands. Use twice for debug output"
 
     parser = argparse.ArgumentParser(description="A CLI for managing & running a QCFractal server.")
 
     parser.add_argument("--version", action="version", version=f"{__version__}")
-    parser.add_argument("--verbose", action="store_true", help=verbose_help)
+    parser.add_argument("-v", "--verbose", action="count", default=0, help=verbose_help)
 
     parser.add_argument("--config", help=config_file_help)
 
     # Common arguments. These are added to the subcommands
     # They are similar to the global options above, but with SUPPRESS as the default
     base_parser = argparse.ArgumentParser(add_help=False)
-    base_parser.add_argument("--verbose", action="store_true", default=argparse.SUPPRESS, help=verbose_help)
+    base_parser.add_argument("-v", "--verbose", action="count", default=argparse.SUPPRESS, help=verbose_help)
     base_parser.add_argument("--config", default=argparse.SUPPRESS, help=config_file_help)
 
     # Now start the real subcommands
@@ -876,16 +876,18 @@ def main():
     # Parse all the command line arguments
     args = parse_args()
 
-    # Set up a a log handler. This is used before the logfile is set up
+    # Set up a log handler. This is used before the logfile is set up
     log_handler = logging.StreamHandler(sys.stdout)
 
     # If the user wants verbose output (particularly about startup of all the commands), then set logging level
     # to be DEBUG
     # Use a stripped down format, since we are just logging to stdout
-    if args.verbose:
-        logging.basicConfig(level="DEBUG", handlers=[log_handler], format="%(levelname)s: %(name)s: %(message)s")
-    else:
-        logging.basicConfig(level="INFO", handlers=[log_handler], format="%(levelname)s: %(message)s")
+    if args.verbose == 0:
+        logging.basicConfig(level=logging.WARNING, handlers=[log_handler], format="%(levelname)s: %(message)s")
+    elif args.verbose == 1:
+        logging.basicConfig(level=logging.INFO, handlers=[log_handler], format="%(levelname)s: %(name)s: %(message)s")
+    elif args.verbose >= 2:
+        logging.basicConfig(level=logging.DEBUG, handlers=[log_handler], format="%(levelname)s: %(name)s: %(message)s")
 
     logger = logging.getLogger(__name__)
 

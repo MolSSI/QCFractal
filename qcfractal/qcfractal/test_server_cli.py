@@ -57,7 +57,7 @@ def cli_runner_core(postgres_server, tmp_config, request):
             stdin: Optional[str] = None,
             timeout: Optional[int] = None,
         ):
-            full_cmd = ["qcfractal-server", "--config", self.config_path] + cmd_args
+            full_cmd = ["qcfractal-server", "-v", "--config", self.config_path] + cmd_args
             try:
                 ret = subprocess.run(full_cmd, capture_output=True, text=True, input=stdin, timeout=timeout)
             except subprocess.TimeoutExpired as err:
@@ -333,7 +333,7 @@ def test_cli_upgrade_config(tmp_path_factory):
     old_config_path = os.path.join(tmp_subdir, os.path.basename(old_config_file))
 
     output = subprocess.check_output(
-        ["qcfractal-server", "upgrade-config", "--config", old_config_path], universal_newlines=True
+        ["qcfractal-server", "upgrade-config", "-v", "--config", old_config_path], universal_newlines=True
     )
 
     assert "Your configuration file has been upgraded" in output
