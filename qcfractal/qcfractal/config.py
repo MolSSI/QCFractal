@@ -424,11 +424,11 @@ class FractalConfig(ConfigBase):
 
         if "statistics_frequency" in values:
             values.pop("statistics_frequency")
-            logger.warning("The 'statistics_frequency' setting is no longer and is now ignored")
+            logger.warning("The 'statistics_frequency' setting is no longer used and is now ignored")
 
         if "get_server_stats" in values["api_limits"]:
             values["api_limits"].pop("get_server_stats")
-            logger.warning("The 'get_server_stats' setting in 'api_limits' is no longer and is now ignored")
+            logger.warning("The 'get_server_stats' setting in 'api_limits' is no longer used and is now ignored")
 
         return values
 
