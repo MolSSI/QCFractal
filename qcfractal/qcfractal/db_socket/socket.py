@@ -124,7 +124,7 @@ class SQLAlchemySocket:
 
     def post_fork_cleanup(self):
         """
-        Do some cleanup after forking inside gunicorn
+        Do some cleanup after forking
 
         We use synchronous workers, which are spawned via fork(). Howver,
         this would cause multiple processes to share the same db connections.

@@ -7,6 +7,8 @@ dead managers, and updating statistics.
 
 from __future__ import annotations
 
+import logging
+import logging.handlers
 import multiprocessing
 import threading
 from typing import TYPE_CHECKING, Optional
@@ -28,6 +30,7 @@ class FractalJobRunner:
         self,
         qcf_config: FractalConfig,
         finished_queue: Optional[multiprocessing.Queue] = None,
+        logging_queue: Optional[multiprocessing.Queue] = None,
     ):
         """
         Parameters
@@ -39,6 +42,7 @@ class FractalJobRunner:
         self.storage_socket = SQLAlchemySocket(qcf_config)
         self.storage_socket.set_finished_watch(finished_queue)
         self._end_event = threading.Event()
+        self.logging_queue = logging_queue
 
     def start(self) -> None:
         """
@@ -46,6 +50,13 @@ class FractalJobRunner:
 
         This function will block until interrupted
         """
+
+        if self.logging_queue:
+            # Replace the root handler with one that just sends data to the logging queue
+            log_handler = logging.handlers.QueueHandler(self.logging_queue)
+            root_logger = logging.getLogger()
+            root_logger.handlers.clear()
+            root_logger.addHandler(log_handler)
 
         self.storage_socket.internal_jobs.run_loop(self._end_event)
 

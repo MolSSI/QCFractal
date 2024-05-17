@@ -13,6 +13,7 @@ import shutil
 import signal
 import sys
 import textwrap
+import threading
 import time
 import traceback
 from typing import TYPE_CHECKING
@@ -24,7 +25,7 @@ from qcfractal import __version__
 from qcportal.auth import RoleInfo, UserInfo
 from .config import read_configuration, write_initial_configuration, FractalConfig, WebAPIConfig
 from .db_socket.socket import SQLAlchemySocket
-from .flask_app.gunicorn_app import FractalGunicornApp
+from .flask_app.waitress_app import FractalWaitressApp
 from .job_runner import FractalJobRunner
 from .postgres_harness import PostgresHarness
 
@@ -101,8 +102,7 @@ def start_database(config: FractalConfig) -> Tuple[PostgresHarness, SQLAlchemySo
 
     # Start up a socket. The main thing is to see if it can connect, and also
     # to check if the database needs to be upgraded
-    # We then no longer need the socket (gunicorn and job runner will use their own
-    # in their subprocesses)
+    # We then no longer need the socket (everything else uses their own)
     return pg_harness, SQLAlchemySocket(config)
 
 
@@ -165,7 +165,6 @@ def parse_args() -> argparse.Namespace:
     # Allow some config settings to be altered via the command line
     start.add_argument("--port", **WebAPIConfig.help_info("port"))
     start.add_argument("--host", **WebAPIConfig.help_info("host"))
-    start.add_argument("--num-workers", **WebAPIConfig.help_info("num_workers"))
     start.add_argument("--logfile", **FractalConfig.help_info("logfile"))
     start.add_argument("--loglevel", **FractalConfig.help_info("loglevel"))
     start.add_argument("--enable-security", **FractalConfig.help_info("enable_security"))
@@ -414,12 +413,29 @@ def server_start(config):
     # Ensure that the database is alive, optionally starting it
     start_database(config)
 
-    # Start up the gunicorn and job runner
-    gunicorn_app = FractalGunicornApp(config)
-    gunicorn_proc = multiprocessing.Process(target=gunicorn_app.run)
-    gunicorn_proc.start()
+    # Set up a queue for logging. All child process will send logs
+    # to this queue, and a separate thread will handle them
+    logging_queue = multiprocessing.Queue()
 
-    job_runners = [FractalJobRunner(config) for _ in range(config.internal_job_processes)]
+    def _log_thread(queue):
+        while True:
+            record = queue.get()
+
+            if record is None:
+                # None is used as a sentinel to stop the thread
+                break
+
+            logging.getLogger(record.name).handle(record)
+
+    log_thread = threading.Thread(target=_log_thread, args=(logging_queue,))
+    log_thread.start()
+
+    # Start up the api and job runner
+    api_app = FractalWaitressApp(config, logging_queue=logging_queue)
+    api_proc = multiprocessing.Process(target=api_app.run)
+    api_proc.start()
+
+    job_runners = [FractalJobRunner(config, logging_queue=logging_queue) for _ in range(config.internal_job_processes)]
     job_runner_procs = [multiprocessing.Process(target=jr.start) for jr in job_runners]
     for p in job_runner_procs:
         p.start()
@@ -436,8 +452,8 @@ def server_start(config):
     try:
         while True:
             time.sleep(15)
-            if not gunicorn_proc.is_alive():
-                raise RuntimeError("Gunicorn process died! Check the logs")
+            if not api_proc.is_alive():
+                raise RuntimeError("API process died! Check the logs")
             if not all([p.is_alive() for p in job_runner_procs]):
                 raise RuntimeError("A Job runner died! Check the logs")
 
@@ -466,13 +482,17 @@ def server_start(config):
         logger.critical(f"Exception while running QCFractal server:\n{tb}")
         exitcode = 1
 
-    # Gunicorn has its own sigal handling
-    gunicorn_proc.terminate()
-    gunicorn_proc.join()
+    api_proc.terminate()
+    api_proc.join()
 
     for p in job_runner_procs:
         p.terminate()
         p.join()
+
+    # Stop the logging thread
+    logger.debug("Stopping logging thread")
+    logging_queue.put(None)
+    log_thread.join()
 
     sys.exit(exitcode)
 
@@ -507,7 +527,7 @@ def server_start_job_runner(config):
 
 
 def server_start_api(config):
-    from qcfractal.flask_app.gunicorn_app import FractalGunicornApp
+    from qcfractal.flask_app.waitress_app import FractalWaitressApp
 
     logger = logging.getLogger(__name__)
     logger.info("*** Starting a QCFractal API server ***")
@@ -521,8 +541,8 @@ def server_start_api(config):
     # even if we don't own the db (which we shouldn't)
     start_database(config)
 
-    # Now just run the gunicorn process
-    api = FractalGunicornApp(config)
+    # Now just run the api process
+    api = FractalWaitressApp(config)
     api.run()
 
 
@@ -886,8 +906,6 @@ def main():
             cmd_config["api"]["port"] = args.port
         if args.host is not None:
             cmd_config["api"]["host"] = args.host
-        if args.num_workers is not None:
-            cmd_config["api"]["num_workers"] = args.num_workers
         if args.logfile is not None:
             cmd_config["logfile"] = args.logfile
         if args.loglevel is not None:
