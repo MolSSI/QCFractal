@@ -431,21 +431,24 @@ class InternalJobSocket:
 
                 # waits until a notification is received, up to 5 seconds
                 # https://docs.python.org/3/library/select.html#select.select
-                if io_select.select([conn], [], [], to_wait) != ([], [], []):
-                    # We got a notification
-                    logger.debug("received notification from check_internal_jobs")
-                    conn.poll()
+                try:
+                    if io_select.select([conn], [], [], to_wait) != ([], [], []):
+                        # We got a notification
+                        logger.debug("received notification from check_internal_jobs")
+                        conn.poll()
 
-                    # We don't actually care about the individual notifications
-                    conn.notifies.clear()
+                        # We don't actually care about the individual notifications
+                        conn.notifies.clear()
 
-                    # Go back to the outer loop
-                    break
-                else:
-                    # select timed out. Check for event (we should shut down)
-                    if end_event.is_set():
+                        # Go back to the outer loop
                         break
-                    total_waited += to_wait
+                    else:
+                        # select timed out. Check for event (we should shut down)
+                        if end_event.is_set():
+                            break
+                        total_waited += to_wait
+                except KeyboardInterrupt:
+                    break
 
             if end_event.is_set():
                 break
