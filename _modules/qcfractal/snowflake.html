@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcfractal.snowflake &#8212; QCArchive 0.54.1.post34+ga87767a0 documentation</title>
+    <title>qcfractal.snowflake &#8212; QCArchive 0.54.1.post40+g6fa19fcd documentation</title>
   
   
   
@@ -39,7 +39,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../_static/documentation_options.js?v=43e39f35"></script>
+    <script src="../../_static/documentation_options.js?v=e72750d4"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -477,7 +477,7 @@ document.write(`
 <span class="kn">from</span> <span class="nn">qcportal</span> <span class="kn">import</span> <span class="n">PortalClient</span>
 <span class="kn">from</span> <span class="nn">qcportal.record_models</span> <span class="kn">import</span> <span class="n">RecordStatusEnum</span>
 <span class="kn">from</span> <span class="nn">.config</span> <span class="kn">import</span> <span class="n">FractalConfig</span><span class="p">,</span> <span class="n">DatabaseConfig</span><span class="p">,</span> <span class="n">update_nested_dict</span>
-<span class="kn">from</span> <span class="nn">.flask_app.gunicorn_app</span> <span class="kn">import</span> <span class="n">FractalGunicornApp</span>
+<span class="kn">from</span> <span class="nn">.flask_app.waitress_app</span> <span class="kn">import</span> <span class="n">FractalWaitressApp</span>
 <span class="kn">from</span> <span class="nn">.job_runner</span> <span class="kn">import</span> <span class="n">FractalJobRunner</span>
 <span class="kn">from</span> <span class="nn">.port_util</span> <span class="kn">import</span> <span class="n">find_open_port</span>
 <span class="kn">from</span> <span class="nn">.postgres_harness</span> <span class="kn">import</span> <span class="n">create_snowflake_postgres</span>
@@ -496,7 +496,6 @@ document.write(`
     <span class="n">qcf_config</span><span class="p">:</span> <span class="n">FractalConfig</span><span class="p">,</span>
     <span class="n">logging_queue</span><span class="p">:</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span><span class="p">,</span>
     <span class="n">finished_queue</span><span class="p">:</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span><span class="p">,</span>
-    <span class="n">started_event</span><span class="p">:</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Event</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">signal</span>
 
@@ -514,12 +513,18 @@ document.write(`
     <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">,</span> <span class="n">signal_handler</span><span class="p">)</span>
     <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">,</span> <span class="n">signal_handler</span><span class="p">)</span>
 
-    <span class="n">api</span> <span class="o">=</span> <span class="n">FractalGunicornApp</span><span class="p">(</span><span class="n">qcf_config</span><span class="p">,</span> <span class="n">finished_queue</span><span class="p">,</span> <span class="n">started_event</span><span class="p">)</span>
+    <span class="n">api</span> <span class="o">=</span> <span class="n">FractalWaitressApp</span><span class="p">(</span><span class="n">qcf_config</span><span class="p">,</span> <span class="n">finished_queue</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">early_stop</span><span class="p">:</span>
         <span class="n">logging_queue</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         <span class="n">logging_queue</span><span class="o">.</span><span class="n">join_thread</span><span class="p">()</span>
         <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">signal_handler</span><span class="p">(</span><span class="n">signum</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">KeyboardInterrupt</span>
+
+    <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">,</span> <span class="n">signal_handler</span><span class="p">)</span>
+    <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">,</span> <span class="n">signal_handler</span><span class="p">)</span>
 
     <span class="k">try</span><span class="p">:</span>
         <span class="n">api</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
@@ -705,7 +710,6 @@ document.write(`
         <span class="c1">######################################</span>
 
         <span class="c1"># For Flask</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_api_started</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_finished_queue</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mp_context</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_all_completed</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span> <span class="o">=</span> <span class="kc">None</span>
@@ -765,7 +769,7 @@ document.write(`
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mp_context</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
                 <span class="n">target</span><span class="o">=</span><span class="n">_api_process</span><span class="p">,</span>
-                <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logging_queue</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finished_queue</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_started</span><span class="p">),</span>
+                <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logging_queue</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finished_queue</span><span class="p">),</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
@@ -777,7 +781,6 @@ document.write(`
             <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_api_started</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_finalizer</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_start_compute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -848,9 +851,6 @@ document.write(`
 
 <span class="sd">        If it does not come up after some time, an exception will be raised</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">running</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_started</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="mf">10.0</span><span class="p">)</span>
-        <span class="k">assert</span> <span class="n">running</span>
 
         <span class="c1"># Seems there still may be a small time after the event is triggered and before</span>
         <span class="c1"># it can handle requests</span>
