@@ -17,7 +17,7 @@ dependencies:
   - pydantic
   - zstandard
   - apsw
-  - qcelemental
+  - qcelemental<0.70a0
   - tabulate
   - tqdm
   - pandas
@@ -44,7 +44,7 @@ dependencies:
   - torsiondrive
 
   # Worker codes below
-  - qcengine
+  - qcengine<0.70a0
   - psi4>=1.7
   - rdkit
 
