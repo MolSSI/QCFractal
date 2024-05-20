@@ -72,7 +72,6 @@ class TaskSocket:
 
         with self.root_socket.optional_session(session) as session:
             stmt = select(ComputeManagerORM).where(ComputeManagerORM.name == manager_name)
-            stmt = stmt.with_for_update(skip_locked=False)
             manager: Optional[ComputeManagerORM] = session.execute(stmt).scalar_one_or_none()
 
             if manager is None:
@@ -82,8 +81,6 @@ class TaskSocket:
             if manager.status != ManagerStatusEnum.active:
                 self._logger.warning(f"Manager {manager_name} is not active. Ignoring...")
                 raise ComputeManagerError(f"Manager {manager_name} is not active")
-
-            all_notifications: List[Tuple[int, RecordStatusEnum]] = []
 
             # For automatic resetting
             to_be_reset: List[int] = []
@@ -114,10 +111,6 @@ class TaskSocket:
 
                 record_orm: BaseRecordORM = task_orm.record
                 record_id = record_orm.id
-
-                # Start a nested transaction, so that we can rollback if there is an issue with
-                # an individual result without releasing the lock on the manager
-                nested_session = session.begin_nested()
 
                 notify_status = None
 
@@ -172,10 +165,7 @@ class TaskSocket:
                 except Exception:
                     # We have no idea what was added or is pending for removal
                     # So rollback the transaction to the most recent commit
-                    nested_session.rollback()
-
-                    # Need a new nested transaction - previous one is dead
-                    nested_session = session.begin_nested()
+                    session.rollback()
 
                     msg = "Internal FractalServer Error:\n" + traceback.format_exc()
                     error = {"error_type": "internal_fractal_error", "error_message": msg}
@@ -188,28 +178,22 @@ class TaskSocket:
                     tasks_rejected.append((task_id, "Internal server error"))
 
                 finally:
-                    # releases the SAVEPOINT, does not actually commit to the db
-                    # (see SAVEPOINTS in postgres docs)
-                    nested_session.commit()
-
+                    # Send notifications that tasks were completed
+                    # Notifications are sent after the transaction is committed
                     if notify_status is not None:
-                        all_notifications.append((record_id, notify_status))
+                        self.root_socket.notify_finished_watch(record_id, notify_status)
+
+                    session.commit()
 
             # Update the stats for the manager
             manager.successes += len(tasks_success)
             manager.failures += len(tasks_failures)
             manager.rejected += len(tasks_rejected)
 
-            session.flush()
-
             # Automatically reset ones that should be reset
             if self.root_socket.qcf_config.auto_reset.enabled and to_be_reset:
                 self._logger.info(f"Auto resetting {len(to_be_reset)} records")
                 self.root_socket.records.reset(to_be_reset, session=session)
-
-        # Send notifications that tasks were completed
-        for record_id, notify_status in all_notifications:
-            self.root_socket.notify_finished_watch(record_id, notify_status)
 
         self._logger.info(
             "Processed {} returned tasks ({} successful, {} failed, {} rejected).".format(
