@@ -17,7 +17,7 @@ import requests
 from qcportal import PortalClient
 from qcportal.record_models import RecordStatusEnum
 from .config import FractalConfig, DatabaseConfig, update_nested_dict
-from .flask_app.gunicorn_app import FractalGunicornApp
+from .flask_app.waitress_app import FractalWaitressApp
 from .job_runner import FractalJobRunner
 from .port_util import find_open_port
 from .postgres_harness import create_snowflake_postgres
@@ -36,7 +36,6 @@ def _api_process(
     qcf_config: FractalConfig,
     logging_queue: multiprocessing.Queue,
     finished_queue: multiprocessing.Queue,
-    started_event: multiprocessing.Event,
 ) -> None:
     import signal
 
@@ -54,12 +53,18 @@ def _api_process(
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
-    api = FractalGunicornApp(qcf_config, finished_queue, started_event)
+    api = FractalWaitressApp(qcf_config, finished_queue)
 
     if early_stop:
         logging_queue.close()
         logging_queue.join_thread()
         return
+
+    def signal_handler(signum, frame):
+        raise KeyboardInterrupt
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
 
     try:
         api.run()
@@ -243,7 +248,6 @@ class FractalSnowflake:
         ######################################
 
         # For Flask
-        self._api_started = multiprocessing.Event()
         self._finished_queue = self._mp_context.Queue()
         self._all_completed: Set[int] = set()
         self._api_proc = None
@@ -303,7 +307,7 @@ class FractalSnowflake:
         if self._api_proc is None:
             self._api_proc = self._mp_context.Process(
                 target=_api_process,
-                args=(self._qcf_config, self._logging_queue, self._finished_queue, self._api_started),
+                args=(self._qcf_config, self._logging_queue, self._finished_queue),
             )
             self._api_proc.start()
 
@@ -315,7 +319,6 @@ class FractalSnowflake:
             self._api_proc.terminate()
             self._api_proc.join()
             self._api_proc = None
-            self._api_started.clear()
             self._update_finalizer()
 
     def _start_compute(self):
@@ -384,9 +387,6 @@ class FractalSnowflake:
 
         If it does not come up after some time, an exception will be raised
         """
-
-        running = self._api_started.wait(10.0)
-        assert running
 
         # Seems there still may be a small time after the event is triggered and before
         # it can handle requests
