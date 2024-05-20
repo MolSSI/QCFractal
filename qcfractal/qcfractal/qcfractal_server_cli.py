@@ -547,6 +547,12 @@ def server_start_api(config):
 
 
 def server_upgrade_db(config):
+
+    # Always set logging level to INFO, otherwise things are a bit quiet
+    root_logger = logging.getLogger()
+    if root_logger.level > logging.INFO:
+        root_logger.setLevel(logging.INFO)
+
     logger = logging.getLogger(__name__)
 
     # Don't use start_database - we don't want to create the socket (which
