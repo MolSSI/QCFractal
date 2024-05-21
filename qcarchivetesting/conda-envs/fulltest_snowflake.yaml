@@ -1,7 +1,6 @@
 name: qcarchive-snowflake
 channels:
   - conda-forge
-  - conda-forge/label/libint_dev
   - defaults
 
 dependencies:
@@ -45,7 +44,7 @@ dependencies:
 
   # Worker codes below
   - qcengine<0.70a0
-  - psi4>=1.7
+  - psi4>=1.9.1
   - rdkit
 
   # Testing packages
