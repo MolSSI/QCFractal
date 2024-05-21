@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -39,11 +39,9 @@ jobs:
       # QCFractal Server
       #################################################
       - name: Configure conda for the QCFractal server
-        uses: conda-incubator/setup-miniconda@v2
+        uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: ${{ matrix.python-version }}
-          miniforge-variant: Mambaforge
-          miniforge-version: latest
           activate-environment: qcarchive-server
           environment-file: qcarchive/qcarchivetesting/conda-envs/fulltest_server.yaml
           auto-activate-base: false
@@ -72,11 +70,9 @@ jobs:
       # QCFractalCompute worker
       #################################################
       - name: Configure conda for QCFractalCompute worker
-        uses: conda-incubator/setup-miniconda@v2
+        uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: ${{ matrix.python-version }}
-          miniforge-variant: Mambaforge
-          miniforge-version: latest
           activate-environment: qcarchive-worker
           environment-file: qcarchive/qcarchivetesting/conda-envs/fulltest_worker.yaml
           auto-activate-base: false
@@ -104,11 +100,9 @@ jobs:
       # QCPortal client
       #################################################
       - name: Configure conda for the QCPortal client
-        uses: conda-incubator/setup-miniconda@v2
+        uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: ${{ matrix.python-version }}
-          miniforge-variant: Mambaforge
-          miniforge-version: latest
           activate-environment: qcarchive-qcportal
           environment-file: qcarchive/qcarchivetesting/conda-envs/fulltest_qcportal.yaml
           auto-activate-base: false

@@ -24,7 +24,7 @@ jobs:
         
     steps:
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -34,11 +34,9 @@ jobs:
           fetch-depth: 0
 
       - name: Configure conda for the snowflake
-        uses: conda-incubator/setup-miniconda@v2
+        uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: ${{ matrix.python-version }}
-          miniforge-variant: Mambaforge
-          miniforge-version: latest
           activate-environment: qcarchive-snowflake
           environment-file: qcarchivetesting/conda-envs/fulltest_snowflake.yaml
           auto-activate-base: false
