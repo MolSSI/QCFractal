@@ -1,10 +1,6 @@
-<!-- Thank you for your contribution! -->
-
 ## Description
+<!-- Thank you for your contribution! -->
 <!-- Provide a brief description of the PR's purpose here. -->
-
-## Changelog description
-<!-- Provide a brief single sentence for the changelog. -->
 
 ## Status
 - [ ] Code base linted
