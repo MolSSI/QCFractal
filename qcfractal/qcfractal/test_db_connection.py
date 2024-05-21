@@ -21,8 +21,15 @@ from qcfractal.postgres_harness import PostgresHarness
             "testing_db_maint_1",
             {"connect_timeout": 10},
         ),
-        ("192.168.1.234", 6543, "test_user_1", None, "testing_db_2", "testing_db_maint_2", {"connect_timeout": 10}),
-        ("db.example.com", 9988, None, None, "testing_db_3", "testing_db_maint_3", {"connect_timeout": 10}),
+        (
+            "192.168.1.234",
+            6543,
+            "test_user_1",
+            "test_pass_2",
+            "testing_db_2",
+            "testing_db_maint_2",
+            {"connect_timeout": 10},
+        ),
         (
             "/var/run/postgresql",
             9876,
@@ -142,7 +149,7 @@ def test_db_connection_hosts(tmp_path_factory):
     pg_harness = PostgresHarness(db_config)
 
     # Change trust method so we can actually check passwords
-    pg_harness.initialize_postgres(auth_method="scram-sha-256")
+    pg_harness.initialize_postgres()
     pg_harness.create_database(create_tables=True)
     assert pg_harness.can_connect()
 
@@ -178,7 +185,7 @@ def test_db_connection_full_uri(tmp_path_factory):
     pg_harness = PostgresHarness(db_config)
 
     # Change trust method so we can actually check passwords
-    pg_harness.initialize_postgres(auth_method="scram-sha-256")
+    pg_harness.initialize_postgres()
     pg_harness.create_database(create_tables=True)
     assert pg_harness.can_connect()
 

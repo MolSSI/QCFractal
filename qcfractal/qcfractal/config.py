@@ -137,8 +137,8 @@ class DatabaseConfig(ConfigBase):
         description="The port the database is running on. If own = True, a database will be started, binding to this port",
     )
     database_name: str = Field("qcfractal_default", description="The database name to connect to.")
-    username: Optional[str] = Field(None, description="The database username to connect with")
-    password: Optional[str] = Field(None, description="The database password to connect with")
+    username: str = Field(..., description="The database username to connect with")
+    password: str = Field(..., description="The database password to connect with")
     query: Dict[str, str] = Field({}, description="Extra connection query parameters at the end of the URL string")
 
     own: bool = Field(
@@ -561,8 +561,13 @@ def write_initial_configuration(file_path: str, full_config: bool = True):
     secret_key = secrets.token_urlsafe(32)
     jwt_secret_key = secrets.token_urlsafe(32)
 
+    db_config = {
+        "username": "qcfractal",
+        "password": secrets.token_urlsafe(32),
+    }
+
     default_config = FractalConfig(
-        base_folder=base_folder, api={"secret_key": secret_key, "jwt_secret_key": jwt_secret_key}
+        base_folder=base_folder, api={"secret_key": secret_key, "jwt_secret_key": jwt_secret_key}, database=db_config
     )
 
     default_config.database.port = find_open_port(5432)
@@ -580,7 +585,7 @@ def write_initial_configuration(file_path: str, full_config: bool = True):
             "service_frequency": True,
             "max_active_services": True,
             "heartbeat_frequency": True,
-            "database": {"own", "host", "port", "database_name", "base_folder"},
+            "database": {"own", "host", "port", "database_name", "base_folder", "username", "password"},
             "api": {"secret_key", "jwt_secret_key", "host", "port"},
         }
 

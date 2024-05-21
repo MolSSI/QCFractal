@@ -5,9 +5,9 @@ database:
   host: localhost
   logfile: qcfractal_postgres.log
   own: true
-  password: null
+  password: qcfractal1234
   port: 5444
-  username: null
+  username: qcfractal
 fractal:
   allow_read: true
   compress_response: true
