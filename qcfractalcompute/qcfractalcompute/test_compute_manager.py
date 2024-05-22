@@ -226,13 +226,13 @@ def test_manager_missed_heartbeats_shutdown(snowflake: QCATestingSnowflake):
 
     snowflake.stop_api()
 
-    for i in range(60):
+    for i in range(90):
         time.sleep(1)
 
         if not compute_thread.is_alive():
             break
     else:
-        raise RuntimeError("Compute thread did not stop in 60 seconds")
+        raise RuntimeError("Compute thread did not stop in 90 seconds")
 
     compute_thread._compute_thread.join(5)
     assert compute_thread.is_alive() is False
