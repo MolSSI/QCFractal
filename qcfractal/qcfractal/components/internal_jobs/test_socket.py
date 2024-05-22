@@ -127,7 +127,7 @@ def test_internal_jobs_socket_recover(storage_socket: SQLAlchemySocket, session:
     end_event = threading.Event()
     th = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
     th.start()
-    time.sleep(15)
+    time.sleep(30)
 
     try:
         session.expire(job_1)
