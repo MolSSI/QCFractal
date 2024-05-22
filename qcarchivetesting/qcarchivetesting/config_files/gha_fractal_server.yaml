@@ -5,6 +5,8 @@ database:
   host: localhost
   logfile: qcfractal_postgres.log
   own: true
+  username: qcfractal
+  password: qcfractal1234
   port: 9876
 enable_security: false
 api:

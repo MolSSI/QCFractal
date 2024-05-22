@@ -4,6 +4,7 @@ import logging
 import os
 import pathlib
 import re
+import secrets
 import shutil
 import subprocess
 import time
@@ -123,7 +124,9 @@ class PostgresHarness:
             )
         return tool_path
 
-    def _run_subprocess(self, command: List[str], env: Optional[Dict[str, Any]] = None) -> Tuple[int, str, str]:
+    def _run_subprocess(
+        self, command: List[str], env: Optional[Dict[str, Any]] = None, shell: bool = False
+    ) -> Tuple[int, str, str]:
         """
         Runs a command using subprocess, and output stdout into the logger
 
@@ -143,8 +146,19 @@ class PostgresHarness:
         if env is not None:
             full_env.update(env)
 
-        proc = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=full_env)
         self._logger.debug("Running subprocess: " + str(command))
+        if shell:
+            proc = subprocess.run(
+                " ".join(command),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                env=full_env,
+                shell=True,
+                executable="/bin/bash",
+            )
+        else:
+            proc = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=full_env)
+
         stdout = proc.stdout.decode()
         stderr = proc.stderr.decode()
         if len(stdout) > 0:
@@ -454,27 +468,19 @@ class PostgresHarness:
         psql_conf_file = os.path.join(self.config.data_directory, "postgresql.conf")
         return os.path.exists(psql_conf_file)
 
-    def initialize_postgres(self, auth_method: str = "trust") -> None:
+    def initialize_postgres(self) -> None:
         """Initializes a postgresql instance and starts it
 
         The data directory and port from the configuration is used for the postgres instance
 
         This does not create the QCFractal database or its tables
-
-
-        Parameters
-        ----------
-        auth_method
-            [ADVANCED] The authentication method to use for host and local connections.
-            The default is "trust" which is insecure but is easy for local installations.
         """
 
         # Can only initialize if we are expected to manage it
         assert self.config.own
 
-        # auth method must be 'trust' if user/password not given
-        if auth_method != "trust" and (self.config.username is None or self.config.password is None):
-            raise RuntimeError("Cannot use auth_method other than 'trust' if username or password are not given")
+        if not self.config.username or not self.config.password:
+            raise RuntimeError("Username or password are not given")
 
         self._logger.info("Initializing the Postgresql database")
 
@@ -489,22 +495,15 @@ class PostgresHarness:
 
         initdb_path = self._get_tool("initdb")
 
-        cmd = [initdb_path, "-D", self.config.data_directory, "--auth", auth_method]
+        cmd = [initdb_path, "-D", self.config.data_directory, "--auth", "scram-sha-256"]
         if self.config.username is not None:
             cmd += ["--username", self.config.username]
 
         # Initdb requires passwords come from a file
-        if self.config.password is not None:
-            pw_file_path = os.path.join(self.config.base_folder, ".initdb_pwfile")
-            with open(pw_file_path, "w") as pw_tmp:
-                pw_tmp.write(self.config.password)
-            cmd += ["--pwfile", pw_file_path]
+        env = {"PG_SUPER_PASSWORD": self.config.password}
+        cmd += ['--pwfile=<(printf "%s\n" ${PG_SUPER_PASSWORD})']
 
-        try:
-            retcode, stdout, stderr = self._run_subprocess(cmd)
-        finally:
-            if self.config.password is not None:
-                os.remove(pw_file_path)
+        retcode, stdout, stderr = self._run_subprocess(cmd, env=env, shell=True)
 
         if retcode != 0 or "Success." not in stdout:
             err_msg = f"Error initializing a PostgreSQL instance:\noutput:\n{stdout}\nstderr:\n{stderr}"
@@ -617,6 +616,8 @@ def create_snowflake_postgres(data_dir: str) -> PostgresHarness:
         "base_folder": data_dir,
         "own": True,
         "host": sock_dir,
+        "username": "qcfractal_snowflake",
+        "password": secrets.token_urlsafe(32),
     }
 
     config = DatabaseConfig(**db_config)

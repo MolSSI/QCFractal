@@ -6,6 +6,8 @@ database:
   own: true
   port: 9987
   database_name: qcfractal_default
+  username: qcfractal
+  password: qcfractal1234
   logfile: qcfractal_postgres.log
 api:
   secret_key: THISISASECRETKEY 
