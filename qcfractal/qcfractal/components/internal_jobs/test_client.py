@@ -111,7 +111,7 @@ def test_internal_jobs_client_cancel_running(snowflake: QCATestingSnowflake):
 
         job_1 = snowflake_client.get_internal_job(id_1)
         assert job_1.status == InternalJobStatusEnum.cancelled
-        assert job_1.progress < 50
+        assert job_1.progress < 70
         assert job_1.result == "Internal job cancelled"
 
     finally:

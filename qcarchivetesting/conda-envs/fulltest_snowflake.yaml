@@ -1,7 +1,6 @@
 name: qcarchive-snowflake
 channels:
   - conda-forge
-  - conda-forge/label/libint_dev
   - defaults
 
 dependencies:
@@ -17,7 +16,7 @@ dependencies:
   - pydantic
   - zstandard
   - apsw
-  - qcelemental
+  - qcelemental<0.70a0
   - tabulate
   - tqdm
   - pandas
@@ -44,8 +43,8 @@ dependencies:
   - torsiondrive
 
   # Worker codes below
-  - qcengine
-  - psi4>=1.7
+  - qcengine<0.70a0
+  - psi4>=1.9.1
   - rdkit
 
   # Testing packages

@@ -1,6 +1,35 @@
 Release Notes
 =============
 
+0.55 / 2024-05-23
+-------------------
+
+Some moderate improvements - mainly, the use of ASPW for SQLite, and the removal of the never-used manager log and
+serverinfo log tables. Also adds maintenance jobs for removing old access log and completed internal jobs.
+
+This release also adds the ability to more-strictly handle queue tags (to prevent managers with `*` as a tag from pulling
+everything).
+
+In addition, lots of smaller bug fixes and improvements.
+
+Notable PRs:
+
+- (:pr:`819`) Fix native_files fields return from server & ORM
+- (:pr:`821`) Enable dumping a database from a snowflake 
+- (:pr:`822`) Fix missing client on cached dataset records
+- (:pr:`825`) Fix database constraint violation when program version contains uppercase characters 
+- (:pr:`826`) Fix type of results in ServiceSubtaskRecord
+- (:pr:`829`) Replace sqlite3 (python stdlib module) with APSW
+- (:pr:`830`) Remove server stats & compute manager logs
+- (:pr:`831`) Add internal job to delete old access log entries
+- (:pr:`832`) Add internal job to delete old, finished internal jobs
+- (:pr:`834`) Add property to get errored child records
+- (:pr:`835`) Better handling of queue tags (strict queue tags and case insensitivity)
+- (:pr:`836`) Replace gunicorn with waitress and fix logging issues
+- (:pr:`837`) Commit to database after every returned task is processed (to help prevent deadlocks)
+- (:pr:`838`) Better handling of passwords with `init-db`
+
+
 0.54.1 / 2024-04-12
 -------------------
 
