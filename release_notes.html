@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Release Notes &#8212; QCArchive 0.54.1.post46+g3ead276c documentation</title>
+    <title>Release Notes &#8212; QCArchive 0.54.1.post57+geea42a78 documentation</title>
   
   
   
@@ -32,7 +32,7 @@
     <link rel="stylesheet" type="text/css" href="_static/autodoc_pydantic.css" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
-    <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=87e54e7c" />
     <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=6f1775e9" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -40,12 +40,12 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="_static/documentation_options.js?v=11a0d358"></script>
+    <script src="_static/documentation_options.js?v=a313a570"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="_static/copybutton.js?v=f281be69"></script>
-    <script src="_static/design-tabs.js?v=36754332"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'release_notes';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -471,15 +471,40 @@ document.write(`
   <section id="release-notes">
 <h1>Release Notes<a class="headerlink" href="#release-notes" title="Link to this heading">#</a></h1>
 <section id="id1">
-<h2>0.54.1 / 2024-04-12<a class="headerlink" href="#id1" title="Link to this heading">#</a></h2>
+<h2>0.55 / 2024-05-23<a class="headerlink" href="#id1" title="Link to this heading">#</a></h2>
+<p>Some moderate improvements - mainly, the use of ASPW for SQLite, and the removal of the never-used manager log and
+serverinfo log tables. Also adds maintenance jobs for removing old access log and completed internal jobs.</p>
+<p>This release also adds the ability to more-strictly handle queue tags (to prevent managers with <cite>*</cite> as a tag from pulling
+everything).</p>
+<p>In addition, lots of smaller bug fixes and improvements.</p>
+<p>Notable PRs:</p>
+<ul class="simple">
+<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/819">PR 819</a>) Fix native_files fields return from server &amp; ORM</p></li>
+<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/821">PR 821</a>) Enable dumping a database from a snowflake</p></li>
+<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/822">PR 822</a>) Fix missing client on cached dataset records</p></li>
+<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/825">PR 825</a>) Fix database constraint violation when program version contains uppercase characters</p></li>
+<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/826">PR 826</a>) Fix type of results in ServiceSubtaskRecord</p></li>
+<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/829">PR 829</a>) Replace sqlite3 (python stdlib module) with APSW</p></li>
+<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/830">PR 830</a>) Remove server stats &amp; compute manager logs</p></li>
+<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/831">PR 831</a>) Add internal job to delete old access log entries</p></li>
+<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/832">PR 832</a>) Add internal job to delete old, finished internal jobs</p></li>
+<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/834">PR 834</a>) Add property to get errored child records</p></li>
+<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/835">PR 835</a>) Better handling of queue tags (strict queue tags and case insensitivity)</p></li>
+<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/836">PR 836</a>) Replace gunicorn with waitress and fix logging issues</p></li>
+<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/837">PR 837</a>) Commit to database after every returned task is processed (to help prevent deadlocks)</p></li>
+<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/838">PR 838</a>) Better handling of passwords with <cite>init-db</cite></p></li>
+</ul>
+</section>
+<section id="id2">
+<h2>0.54.1 / 2024-04-12<a class="headerlink" href="#id2" title="Link to this heading">#</a></h2>
 <p>This is a minor fix-up release that fixes a few issues from the v0.54 release.</p>
 <ul class="simple">
 <li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/815">PR 815</a>) Adds tag to the task queue sort index</p></li>
 <li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/816">PR 816</a>) Fixes a few issues related to caching</p></li>
 </ul>
 </section>
-<section id="id2">
-<h2>0.54 / 2024-04-09<a class="headerlink" href="#id2" title="Link to this heading">#</a></h2>
+<section id="id3">
+<h2>0.54 / 2024-04-09<a class="headerlink" href="#id3" title="Link to this heading">#</a></h2>
 <p>Two big features of this release is client-side caching (including views) and the ability to download more of records.
 As part of this, fetching lots of records from a server will automatically scale to keep a relatively constant
 request time, rather than use a fixed batch size.</p>
@@ -492,8 +517,8 @@ request time, rather than use a fixed batch size.</p>
 <li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/811">PR 811</a>) Improve task queue performance by storing time in the task queue table directly</p></li>
 </ul>
 </section>
-<section id="id3">
-<h2>0.53 / 2024-01-09<a class="headerlink" href="#id3" title="Link to this heading">#</a></h2>
+<section id="id4">
+<h2>0.53 / 2024-01-09<a class="headerlink" href="#id4" title="Link to this heading">#</a></h2>
 <p>The only real thing to report is fixing of molecules returned from the server. Other than that,
 a little bit of cleanup in preparation for implementing new features in the future
 No breaking changes. Upgrading qcportal is recommended, but is not required.</p>
@@ -502,8 +527,8 @@ No breaking changes. Upgrading qcportal is recommended, but is not required.</p>
 <li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/798">PR 798</a>) Mark molecules coming from the server as already validated, and remove <cite>fix_com</cite> and <cite>fix_orientation</cite> from the database.</p></li>
 </ul>
 </section>
-<section id="id4">
-<h2>0.52 / 2023-11-29<a class="headerlink" href="#id4" title="Link to this heading">#</a></h2>
+<section id="id5">
+<h2>0.52 / 2023-11-29<a class="headerlink" href="#id5" title="Link to this heading">#</a></h2>
 <p>Some improvements and bugfixes, but no breaking changes. Upgrading qcportal is recommended
 due to fixes related to JWTs, but is not required. The same is true with compute managers.</p>
 <p>Notable pull requests and features:</p>
@@ -516,8 +541,8 @@ due to fixes related to JWTs, but is not required. The same is true with compute
 <li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/794">PR 794</a>) Remove use of now-deprecated <cite>utctime</cite> function and improve handling of timezones</p></li>
 </ul>
 </section>
-<section id="id5">
-<h2>0.51 / 2023-10-19<a class="headerlink" href="#id5" title="Link to this heading">#</a></h2>
+<section id="id6">
+<h2>0.51 / 2023-10-19<a class="headerlink" href="#id6" title="Link to this heading">#</a></h2>
 <p>Many new improvements, but very little in the way of breaking changes. Upgrading qcportal is recommended
 due to efficiency gains, but is not required.</p>
 <p>Notable pull requests and features:</p>
@@ -543,8 +568,8 @@ due to efficiency gains, but is not required.</p>
 <li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/775">PR 775</a>) Add automatic batching in ds.add_entries() and ds.submit()</p></li>
 </ul>
 </section>
-<section id="id6">
-<h2>0.50 / 2023-09-12<a class="headerlink" href="#id6" title="Link to this heading">#</a></h2>
+<section id="id7">
+<h2>0.50 / 2023-09-12<a class="headerlink" href="#id7" title="Link to this heading">#</a></h2>
 <p>Major refactoring of everything. Too many changes to enumerate, but see <a class="reference external" href="https://molssi.github.io/QCFractal">docs</a> for details.</p>
 </section>
 </section>
@@ -595,12 +620,13 @@ due to efficiency gains, but is not required.</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">0.54.1 / 2024-04-12</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">0.54 / 2024-04-09</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">0.53 / 2024-01-09</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">0.52 / 2023-11-29</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">0.51 / 2023-10-19</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">0.50 / 2023-09-12</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">0.55 / 2024-05-23</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">0.54.1 / 2024-04-12</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">0.54 / 2024-04-09</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">0.53 / 2024-01-09</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">0.52 / 2023-11-29</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">0.51 / 2023-10-19</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">0.50 / 2023-09-12</a></li>
 </ul>
   </nav></div>
 

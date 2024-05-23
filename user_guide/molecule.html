@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Molecules &#8212; QCArchive 0.54.1.post46+g3ead276c documentation</title>
+    <title>Molecules &#8212; QCArchive 0.54.1.post57+geea42a78 documentation</title>
   
   
   
@@ -32,7 +32,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=87e54e7c" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=6f1775e9" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -40,12 +40,12 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../_static/documentation_options.js?v=11a0d358"></script>
+    <script src="../_static/documentation_options.js?v=a313a570"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
-    <script src="../_static/design-tabs.js?v=36754332"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/molecule';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -507,7 +507,7 @@ from <code class="docutils literal notranslate"><span class="pre">qcportal.molec
 you typically specify the symbols and geometry (coordinates) in bohr:</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-0">
+<label class="sd-tab-label" for="sd-tab-item-0">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">qcportal.molecules</span> <span class="kn">import</span> <span class="n">Molecule</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">water</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]])</span>
@@ -521,7 +521,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 above:</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-1">
+<label class="sd-tab-label" for="sd-tab-item-1">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">qcportal.molecules</span> <span class="kn">import</span> <span class="n">Molecule</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">water</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
@@ -535,7 +535,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 with more):</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-2" name="sd-tab-set-2" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-2">
+<label class="sd-tab-label" for="sd-tab-item-2">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mol_xyz</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="gp">... </span><span class="s2">  3</span>
@@ -571,7 +571,7 @@ to the database as needed. However, in some cases, this may be useful.</p>
 some metadata about the insertion, and the molecule IDs.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-3" name="sd-tab-set-3" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-3">
+<label class="sd-tab-label" for="sd-tab-item-3">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">water</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">water2</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
@@ -595,7 +595,7 @@ full molecule objects.</p>
 method is used to get molecules by ID, and returns molecules in the same order as the given ids.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-4" name="sd-tab-set-4" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-4">
+<label class="sd-tab-label" for="sd-tab-item-4">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mols</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_molecules</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">mols</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">mols</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">mols</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
@@ -607,7 +607,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <p>You can also specify a single ID and get a single molecule back</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-5" name="sd-tab-set-5" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-5">
+<label class="sd-tab-label" for="sd-tab-item-5">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_molecules</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
@@ -622,7 +622,7 @@ iterate over the results. The iterator automatically handles returning batches o
 server.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-6" name="sd-tab-set-6" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-6">
+<label class="sd-tab-label" for="sd-tab-item-6">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">query_it</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_molecules</span><span class="p">(</span><span class="n">molecular_formula</span><span class="o">=</span><span class="s1">&#39;N2&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">mol</span> <span class="ow">in</span> <span class="n">query_it</span><span class="p">:</span>
@@ -644,7 +644,7 @@ and the order may be different even with repeated calls with the same arguments<
 <p>Molecules can be deleted from the server with <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.delete_molecules" title="qcportal.client.PortalClient.delete_molecules"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_molecules()</span></code></a></p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-7" name="sd-tab-set-7" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-7">
+<label class="sd-tab-label" for="sd-tab-item-7">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">delete_molecules</span><span class="p">([</span><span class="mi">585</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
@@ -659,7 +659,7 @@ unless <code class="docutils literal notranslate"><span class="pre">overwrite_id
 that are not specified in the call to <code class="docutils literal notranslate"><span class="pre">modify_molecules</span></code> will be removed).</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-8" name="sd-tab-set-8" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-8">
+<label class="sd-tab-label" for="sd-tab-item-8">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">n2</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="s1">&#39;N&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">],</span>
 <span class="gp">... </span>              <span class="n">name</span><span class="o">=</span><span class="s1">&#39;nitrogen&#39;</span><span class="p">,</span> <span class="n">comment</span><span class="o">=</span><span class="s1">&#39;initial geometry of nitrogen&#39;</span><span class="p">,</span> <span class="n">identifiers</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;smiles&#39;</span><span class="p">:</span> <span class="s1">&#39;N#N&#39;</span><span class="p">})</span>

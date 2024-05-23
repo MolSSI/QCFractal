@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>QCFractal Installation and Setup &#8212; QCArchive 0.54.1.post46+g3ead276c documentation</title>
+    <title>QCFractal Installation and Setup &#8212; QCArchive 0.54.1.post57+geea42a78 documentation</title>
   
   
   
@@ -32,7 +32,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=87e54e7c" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=6f1775e9" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -40,12 +40,12 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../_static/documentation_options.js?v=11a0d358"></script>
+    <script src="../_static/documentation_options.js?v=a313a570"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
-    <script src="../_static/design-tabs.js?v=36754332"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'admin_guide/setup';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -500,7 +500,7 @@ or <a class="reference external" href="https://github.com/mamba-org/mamba">mamba
 <a class="reference external" href="https://anaconda.org/QCArchive">QCArchive organization</a> on Anaconda.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-0">
+<label class="sd-tab-label" for="sd-tab-item-0">
 SHELL</label><div class="sd-tab-content docutils">
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>qcf_server<span class="w"> </span>qcfractal<span class="w"> </span>postgresql<span class="w"> </span>-c<span class="w"> </span>conda-forge
 mamba<span class="w"> </span>activate<span class="w"> </span>qcf_server
@@ -515,7 +515,7 @@ mamba<span class="w"> </span>activate<span class="w"> </span>qcf_server
 So we are going to create a directory, and then initialize a configuration file there.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-1">
+<label class="sd-tab-label" for="sd-tab-item-1">
 SHELL</label><div class="sd-tab-content docutils">
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mkdir<span class="w"> </span>qcf_server
 qcfractal-server<span class="w"> </span>--config<span class="o">=</span>qcf_server/qcf_config.yaml<span class="w"> </span>init-config
@@ -542,7 +542,7 @@ needed - see <a class="reference internal" href="configuration.html#server-confi
 as well as the actual postgres database and tables for QCFractal.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-2" name="sd-tab-set-2" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-2">
+<label class="sd-tab-label" for="sd-tab-item-2">
 SHELL</label><div class="sd-tab-content docutils">
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>qcfractal-server<span class="w"> </span>--config<span class="o">=</span>qcf_server/qcf_config.yaml<span class="w"> </span>init-db
 </pre></div>
@@ -553,7 +553,7 @@ SHELL</label><div class="sd-tab-content docutils">
 your expectations.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-3" name="sd-tab-set-3" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-3">
+<label class="sd-tab-label" for="sd-tab-item-3">
 SHELL</label><div class="sd-tab-content docutils">
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>qcfractal-server<span class="w"> </span>--config<span class="o">=</span>qcf_server/qcf_config.yaml<span class="w"> </span>info
 </pre></div>
@@ -564,7 +564,7 @@ SHELL</label><div class="sd-tab-content docutils">
 You can place it in the background with <strong>screen</strong> or any other utilities if needed.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-4" name="sd-tab-set-4" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-4">
+<label class="sd-tab-label" for="sd-tab-item-4">
 SHELL</label><div class="sd-tab-content docutils">
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>qcfractal-server<span class="w"> </span>--config<span class="o">=</span>qcf_server/qcf_config.yaml<span class="w"> </span>start
 </pre></div>

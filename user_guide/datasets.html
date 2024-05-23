@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Using datasets &#8212; QCArchive 0.54.1.post46+g3ead276c documentation</title>
+    <title>Using datasets &#8212; QCArchive 0.54.1.post57+geea42a78 documentation</title>
   
   
   
@@ -32,7 +32,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=87e54e7c" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=6f1775e9" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -40,12 +40,12 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../_static/documentation_options.js?v=11a0d358"></script>
+    <script src="../_static/documentation_options.js?v=a313a570"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
-    <script src="../_static/design-tabs.js?v=36754332"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/datasets';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -559,7 +559,7 @@ so two datasets can have the same name as long as they are of different types. T
 and its name with <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.get_dataset" title="qcportal.client.PortalClient.get_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_dataset()</span></code></a></p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-0">
+<label class="sd-tab-label" for="sd-tab-item-0">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_dataset_by_id</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">dataset_type</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
@@ -579,7 +579,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 function of the <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">PortalClient</span></code></a>. This function returns the dataset:</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-1">
+<label class="sd-tab-label" for="sd-tab-item-1">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;optimization&quot;</span><span class="p">,</span> <span class="s2">&quot;Optimization of important molecules&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
@@ -608,7 +608,7 @@ with <a class="reference internal" href="records/base.html#qcportal.dataset_mode
 <a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.set_metadata" title="qcportal.dataset_models.BaseDataset.set_metadata"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_metadata()</span></code></a>, and so on.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-2" name="sd-tab-set-2" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-2">
+<label class="sd-tab-label" for="sd-tab-item-2">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
 <span class="go">Optimization of diatomic molecules at different levels of theory</span>
@@ -629,7 +629,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 This is indexed by specification</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-3" name="sd-tab-set-3" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-3">
+<label class="sd-tab-label" for="sd-tab-item-3">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">status</span><span class="p">()</span>
 <span class="go">{&#39;pbe0/sto-3g&#39;: {&lt;RecordStatusEnum.complete: &#39;complete&#39;&gt;: 4,</span>
@@ -647,7 +647,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.print_status" title="qcportal.dataset_models.BaseDataset.print_status"><code class="xref py py-meth docutils literal notranslate"><span class="pre">print_status()</span></code></a> prints a table of the statuses.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-4" name="sd-tab-set-4" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-4">
+<label class="sd-tab-label" for="sd-tab-item-4">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">print_status_</span><span class="p">()</span>
 <span class="go">    specification    complete    error    invalid</span>
@@ -677,7 +677,7 @@ local caching.</p>
 <code class="docutils literal notranslate"><span class="pre">.specifications</span></code> returns a dictionary, with the key being the name of the specification.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-5" name="sd-tab-set-5" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-5">
+<label class="sd-tab-label" for="sd-tab-item-5">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">specification_names</span><span class="p">)</span>
 <span class="go">[&#39;hf/sto-3g&#39;, &#39;hf/def2-tzvp&#39;]</span>
@@ -697,7 +697,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 are accessible all at once</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-6" name="sd-tab-set-6" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-6">
+<label class="sd-tab-label" for="sd-tab-item-6">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">entry_names</span><span class="p">)</span>
 <span class="go">[&#39;H2&#39;, &#39;N2&#39;, &#39;O2&#39;, &#39;F2&#39;, &#39;Hg2&#39;]</span>
@@ -708,7 +708,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <p>You can obtain a full entry from its name with <a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.get_entry" title="qcportal.dataset_models.BaseDataset.get_entry"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_entry()</span></code></a>:</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-7" name="sd-tab-set-7" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-7">
+<label class="sd-tab-label" for="sd-tab-item-7">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">get_entry</span><span class="p">)</span>
 <span class="go">OptimizationDatasetEntry(name=&#39;H2&#39;, initial_molecule=Molecule(name=&#39;H2&#39;, formula=&#39;H2&#39;, hash=&#39;7746e69&#39;),</span>
@@ -721,7 +721,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.iterate_entries" title="qcportal.dataset_models.BaseDataset.iterate_entries"><code class="xref py py-meth docutils literal notranslate"><span class="pre">iterate_entries()</span></code></a>:</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-8" name="sd-tab-set-8" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-8">
+<label class="sd-tab-label" for="sd-tab-item-8">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">iterate_entries</span><span class="p">():</span>
 <span class="gp">... </span>   <span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">initial_molecule</span><span class="p">)</span>
@@ -738,7 +738,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 entry names.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-9" name="sd-tab-set-9" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-9">
+<label class="sd-tab-label" for="sd-tab-item-9">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">iterate_entries</span><span class="p">(</span><span class="n">entry_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;H2&#39;</span><span class="p">,</span> <span class="s1">&#39;O2&#39;</span><span class="p">]):</span>
 <span class="gp">... </span>   <span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">initial_molecule</span><span class="p">)</span>
@@ -755,7 +755,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 with <a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.get_record" title="qcportal.dataset_models.BaseDataset.get_record"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_record()</span></code></a></p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-10" name="sd-tab-set-10" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-10">
+<label class="sd-tab-label" for="sd-tab-item-10">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rec</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">get_record</span><span class="p">(</span><span class="s1">&#39;H2&#39;</span><span class="p">,</span> <span class="s1">&#39;hf/sto-3g&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">rec</span><span class="p">)</span>
@@ -772,7 +772,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 values - the entry name, specification name, and then the full record.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-11" name="sd-tab-set-11" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-11">
+<label class="sd-tab-label" for="sd-tab-item-11">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">e_name</span><span class="p">,</span> <span class="n">s_name</span><span class="p">,</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">iterate_records</span><span class="p">():</span>
 <span class="gp">... </span>  <span class="nb">print</span><span class="p">(</span><span class="n">e_name</span><span class="p">,</span> <span class="n">s_name</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
@@ -792,7 +792,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 by entry name, specification name, and status</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-12" name="sd-tab-set-12" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-12">
+<label class="sd-tab-label" for="sd-tab-item-12">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">e_name</span><span class="p">,</span> <span class="n">s_name</span><span class="p">,</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">iterate_records</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">):</span>
 <span class="gp">... </span>  <span class="nb">print</span><span class="p">(</span><span class="n">e_name</span><span class="p">,</span> <span class="n">s_name</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
@@ -819,7 +819,7 @@ are for an <a class="reference internal" href="records/optimization.html#optimiz
 an unoptimized ‘initial’ molecule. Adding entries returns <a class="reference internal" href="metadata.html"><span class="doc">metadata</span></a>.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-13" name="sd-tab-set-13" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-13">
+<label class="sd-tab-label" for="sd-tab-item-13">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">qcportal.molecules</span> <span class="kn">import</span> <span class="n">Molecule</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">qcportal.optimization</span> <span class="kn">import</span> <span class="n">OptimizationDatasetEntry</span>
@@ -844,7 +844,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <p>Now our dataset has three entries</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-14" name="sd-tab-set-14" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-14">
+<label class="sd-tab-label" for="sd-tab-item-14">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">entry_names</span><span class="p">)</span>
 <span class="go">[&#39;carbon monoxide&#39;, &#39;difluorine&#39;, &#39;dibromine&#39;]</span>
@@ -856,7 +856,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <a class="reference internal" href="records/optimization.html#qcportal.optimization.OptimizationSpecification" title="qcportal.optimization.OptimizationSpecification"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationSpecification</span></code></a>.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-15" name="sd-tab-set-15" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-15">
+<label class="sd-tab-label" for="sd-tab-item-15">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">qcportal.singlepoint</span> <span class="kn">import</span> <span class="n">SinglepointSpecification</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">qcportal.optimization</span> <span class="kn">import</span> <span class="n">OptimizationSpecification</span>
@@ -889,7 +889,7 @@ default tag and priority of the dataset. However, you may also submit only certa
 or change the tag and priority.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-16" name="sd-tab-set-16" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-16">
+<label class="sd-tab-label" for="sd-tab-item-16">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">submit</span><span class="p">()</span> <span class="c1"># Create everything</span>
 
@@ -910,7 +910,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 take a dictionary of old name to new name</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-17" name="sd-tab-set-17" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-17">
+<label class="sd-tab-label" for="sd-tab-item-17">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">rename_entries</span><span class="p">({</span><span class="s1">&#39;difluorine&#39;</span><span class="p">:</span> <span class="s1">&#39;F2 molecule&#39;</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ent</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">get_entry</span><span class="p">(</span><span class="s1">&#39;F2 molecule&#39;</span><span class="p">)</span>
@@ -926,7 +926,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 Note that deleting entries and specifications by default do not delete the records</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-18" name="sd-tab-set-18" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-18">
+<label class="sd-tab-label" for="sd-tab-item-18">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Keeps any records, but removes from dataset</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">delete_entries</span><span class="p">([</span><span class="s1">&#39;carbon monoxide&#39;</span><span class="p">])</span>
@@ -954,7 +954,7 @@ However, datasets have convenient methods for management, which use entry and sp
 <a class="reference internal" href="records/base.html#qcportal.dataset_models.BaseDataset.remove_records" title="qcportal.dataset_models.BaseDataset.remove_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">remove_records()</span></code></a>.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-19" name="sd-tab-set-19" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-19">
+<label class="sd-tab-label" for="sd-tab-item-19">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Reset carbon monoxide records</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">reset_records</span><span class="p">(</span><span class="n">entry_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;carbon monoxide&#39;</span><span class="p">])</span>

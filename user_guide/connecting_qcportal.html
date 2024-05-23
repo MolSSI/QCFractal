@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Connecting to a server &#8212; QCArchive 0.54.1.post46+g3ead276c documentation</title>
+    <title>Connecting to a server &#8212; QCArchive 0.54.1.post57+geea42a78 documentation</title>
   
   
   
@@ -32,7 +32,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=87e54e7c" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=6f1775e9" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -40,12 +40,12 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../_static/documentation_options.js?v=11a0d358"></script>
+    <script src="../_static/documentation_options.js?v=a313a570"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
-    <script src="../_static/design-tabs.js?v=36754332"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/connecting_qcportal';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -503,7 +503,7 @@ This class handles connecting to the server and exposing all the functionality o
 <p>The first parameter is the address or URI of the server you with to connect to (including <code class="docutils literal notranslate"><span class="pre">http</span></code>/<code class="docutils literal notranslate"><span class="pre">https</span></code>).</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-0">
+<label class="sd-tab-label" for="sd-tab-item-0">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">qcportal</span> <span class="kn">import</span> <span class="n">PortalClient</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="p">(</span><span class="s2">&quot;https://ml.qcarchive.molssi.org&quot;</span><span class="p">)</span>
@@ -517,7 +517,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 public demonstration server</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-1">
+<label class="sd-tab-label" for="sd-tab-item-1">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">qcportal</span> <span class="kn">import</span> <span class="n">PortalClient</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="p">(</span><span class="s2">&quot;https://qcademo.molssi.org&quot;</span><span class="p">)</span>
@@ -531,7 +531,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 these can also be specified in the constructor.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-2" name="sd-tab-set-2" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-2">
+<label class="sd-tab-label" for="sd-tab-item-2">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">qcportal</span> <span class="kn">import</span> <span class="n">PortalClient</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="p">(</span><span class="s2">&quot;https://my.qcarchive.server&quot;</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="s1">&#39;grad_student_123&#39;</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s1">&#39;abc123XYZ&#39;</span><span class="p">)</span>
@@ -550,7 +550,7 @@ have the client read the credentials from a file (see <a class="reference intern
 and then the <code class="docutils literal notranslate"><span class="pre">~/.qca</span></code> directory are search for <code class="docutils literal notranslate"><span class="pre">qcportal_config.yaml</span></code>.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-3" name="sd-tab-set-3" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-3">
+<label class="sd-tab-label" for="sd-tab-item-3">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># A file containing a single server, file stored in working directory or ~/.qca</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">qcportal</span> <span class="kn">import</span> <span class="n">PortalClient</span>
@@ -574,7 +574,7 @@ name and version, as well as limits on API calls. This also contains any Message
 the server administrator wishes to include.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-4" name="sd-tab-set-4" type="radio">
-</input><label class="sd-tab-label" for="sd-tab-item-4">
+<label class="sd-tab-label" for="sd-tab-item-4">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">qcportal</span> <span class="kn">import</span> <span class="n">PortalClient</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="p">(</span><span class="s1">&#39;https://qcademo.molssi.org&#39;</span><span class="p">)</span>
