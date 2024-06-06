@@ -18,29 +18,70 @@ Traceback (most recent call last):
     raise CellExecutionError.from_cell_and_msg(cell, exec_reply_content)
 nbclient.exceptions.CellExecutionError: An error occurred while executing the following cell:
 ------------------
-records = client.query_records(created_after="2023/01/10", created_before="2023/01/14")
+import qcportal as ptl
 
-# Print the first record.
-print(next(records))
+client = ptl.PortalClient("https://qcademo.molssi.org")
+print(client)
 ------------------
 
 
 [0;31m---------------------------------------------------------------------------[0m
-[0;31mStopIteration[0m                             Traceback (most recent call last)
-Cell [0;32mIn[6], line 4[0m
-[1;32m      1[0m records [38;5;241m=[39m client[38;5;241m.[39mquery_records(created_after[38;5;241m=[39m[38;5;124m"[39m[38;5;124m2023/01/10[39m[38;5;124m"[39m, created_before[38;5;241m=[39m[38;5;124m"[39m[38;5;124m2023/01/14[39m[38;5;124m"[39m)
-[1;32m      3[0m [38;5;66;03m# Print the first record.[39;00m
-[0;32m----> 4[0m [38;5;28mprint[39m([38;5;28;43mnext[39;49m[43m([49m[43mrecords[49m[43m)[49m)
+[0;31mPortalRequestError[0m                        Traceback (most recent call last)
+Cell [0;32mIn[1], line 3[0m
+[1;32m      1[0m [38;5;28;01mimport[39;00m [38;5;21;01mqcportal[39;00m [38;5;28;01mas[39;00m [38;5;21;01mptl[39;00m
+[0;32m----> 3[0m client [38;5;241m=[39m [43mptl[49m[38;5;241;43m.[39;49m[43mPortalClient[49m[43m([49m[38;5;124;43m"[39;49m[38;5;124;43mhttps://qcademo.molssi.org[39;49m[38;5;124;43m"[39;49m[43m)[49m
+[1;32m      4[0m [38;5;28mprint[39m(client)
 
-File [0;32m~/work/QCFractal/QCFractal/qcportal/qcportal/base_models.py:155[0m, in [0;36mQueryIteratorBase.__next__[0;34m(self)[0m
-[1;32m    151[0m [38;5;28;01mdef[39;00m [38;5;21m__next__[39m([38;5;28mself[39m) [38;5;241m-[39m[38;5;241m>[39m T:
-[1;32m    152[0m     [38;5;66;03m# This can happen if there is none returned on the first iteration[39;00m
-[1;32m    153[0m     [38;5;66;03m# Check here so we don't fetch twice[39;00m
-[1;32m    154[0m     [38;5;28;01mif[39;00m [38;5;28mlen[39m([38;5;28mself[39m[38;5;241m.[39m_current_batch) [38;5;241m==[39m [38;5;241m0[39m:
-[0;32m--> 155[0m         [38;5;28;01mraise[39;00m [38;5;167;01mStopIteration[39;00m
-[1;32m    157[0m     [38;5;28;01mif[39;00m [38;5;28mself[39m[38;5;241m.[39m_current_pos [38;5;241m>[39m[38;5;241m=[39m [38;5;28mlen[39m([38;5;28mself[39m[38;5;241m.[39m_current_batch):
-[1;32m    158[0m         [38;5;66;03m# At the end of the current batch. Fetch the next[39;00m
-[1;32m    159[0m         [38;5;28mself[39m[38;5;241m.[39m_fetch_batch()
+File [0;32m~/work/QCFractal/QCFractal/qcportal/qcportal/client.py:150[0m, in [0;36mPortalClient.__init__[0;34m(self, address, username, password, verify, show_motd, cache_dir, cache_max_size, memory_cache_key)[0m
+[1;32m    116[0m [38;5;28;01mdef[39;00m [38;5;21m__init__[39m(
+[1;32m    117[0m     [38;5;28mself[39m,
+[1;32m    118[0m     address: [38;5;28mstr[39m,
+[0;32m   (...)[0m
+[1;32m    126[0m     memory_cache_key: Optional[[38;5;28mstr[39m] [38;5;241m=[39m [38;5;28;01mNone[39;00m,
+[1;32m    127[0m ) [38;5;241m-[39m[38;5;241m>[39m [38;5;28;01mNone[39;00m:
+[1;32m    128[0m [38;5;250m    [39m[38;5;124;03m"""[39;00m
+[1;32m    129[0m [38;5;124;03m    Parameters[39;00m
+[1;32m    130[0m [38;5;124;03m    ----------[39;00m
+[0;32m   (...)[0m
+[1;32m    147[0m [38;5;124;03m        Maximum size of the cache directory[39;00m
+[1;32m    148[0m [38;5;124;03m    """[39;00m
+[0;32m--> 150[0m     [43mPortalClientBase[49m[38;5;241;43m.[39;49m[38;5;21;43m__init__[39;49m[43m([49m[38;5;28;43mself[39;49m[43m,[49m[43m [49m[43maddress[49m[43m,[49m[43m [49m[43musername[49m[43m,[49m[43m [49m[43mpassword[49m[43m,[49m[43m [49m[43mverify[49m[43m,[49m[43m [49m[43mshow_motd[49m[43m)[49m
+[1;32m    151[0m     [38;5;28mself[39m[38;5;241m.[39m_logger [38;5;241m=[39m logging[38;5;241m.[39mgetLogger([38;5;124m"[39m[38;5;124mPortalClient[39m[38;5;124m"[39m)
+[1;32m    152[0m     [38;5;28mself[39m[38;5;241m.[39mcache [38;5;241m=[39m PortalCache(address, cache_dir, cache_max_size)
 
-[0;31mStopIteration[0m: 
+File [0;32m~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:156[0m, in [0;36mPortalClientBase.__init__[0;34m(self, address, username, password, verify, show_motd)[0m
+[1;32m    153[0m     [38;5;28mself[39m[38;5;241m.[39m_jwt_refresh_exp [38;5;241m=[39m [38;5;28;01mNone[39;00m
+[1;32m    155[0m [38;5;66;03m# Try to connect and pull the server info[39;00m
+[0;32m--> 156[0m [38;5;28mself[39m[38;5;241m.[39mserver_info [38;5;241m=[39m [38;5;28;43mself[39;49m[38;5;241;43m.[39;49m[43mget_server_information[49m[43m([49m[43m)[49m
+[1;32m    157[0m [38;5;28mself[39m[38;5;241m.[39mserver_name [38;5;241m=[39m [38;5;28mself[39m[38;5;241m.[39mserver_info[[38;5;124m"[39m[38;5;124mname[39m[38;5;124m"[39m]
+[1;32m    158[0m [38;5;28mself[39m[38;5;241m.[39mapi_limits [38;5;241m=[39m [38;5;28mself[39m[38;5;241m.[39mserver_info[[38;5;124m"[39m[38;5;124mapi_limits[39m[38;5;124m"[39m]
+
+File [0;32m~/work/QCFractal/QCFractal/qcportal/qcportal/client.py:190[0m, in [0;36mPortalClient.get_server_information[0;34m(self)[0m
+[1;32m    181[0m [38;5;250m[39m[38;5;124;03m"""Request general information about the server[39;00m
+[1;32m    182[0m 
+[1;32m    183[0m [38;5;124;03mReturns[39;00m
+[0;32m   (...)[0m
+[1;32m    186[0m [38;5;124;03m    Server information.[39;00m
+[1;32m    187[0m [38;5;124;03m"""[39;00m
+[1;32m    189[0m [38;5;66;03m# Request the info, and store here for later use[39;00m
+[0;32m--> 190[0m [38;5;28;01mreturn[39;00m [38;5;28;43mself[39;49m[38;5;241;43m.[39;49m[43mmake_request[49m[43m([49m[38;5;124;43m"[39;49m[38;5;124;43mget[39;49m[38;5;124;43m"[39;49m[43m,[49m[43m [49m[38;5;124;43m"[39;49m[38;5;124;43mapi/v1/information[39;49m[38;5;124;43m"[39;49m[43m,[49m[43m [49m[43mDict[49m[43m[[49m[38;5;28;43mstr[39;49m[43m,[49m[43m [49m[43mAny[49m[43m][49m[43m)[49m
+
+File [0;32m~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:416[0m, in [0;36mPortalClientBase.make_request[0;34m(self, method, endpoint, response_model, body_model, url_params_model, body, url_params, allow_retries)[0m
+[1;32m    413[0m [38;5;28;01mif[39;00m [38;5;28misinstance[39m(parsed_url_params, pydantic[38;5;241m.[39mBaseModel):
+[1;32m    414[0m     parsed_url_params [38;5;241m=[39m parsed_url_params[38;5;241m.[39mdict()
+[0;32m--> 416[0m r [38;5;241m=[39m [38;5;28;43mself[39;49m[38;5;241;43m.[39;49m[43m_request[49m[43m([49m
+[1;32m    417[0m [43m    [49m[43mmethod[49m[43m,[49m[43m [49m[43mendpoint[49m[43m,[49m[43m [49m[43mbody[49m[38;5;241;43m=[39;49m[43mserialized_body[49m[43m,[49m[43m [49m[43murl_params[49m[38;5;241;43m=[39;49m[43mparsed_url_params[49m[43m,[49m[43m [49m[43mallow_retries[49m[38;5;241;43m=[39;49m[43mallow_retries[49m
+[1;32m    418[0m [43m[49m[43m)[49m
+[1;32m    419[0m d [38;5;241m=[39m deserialize(r[38;5;241m.[39mcontent, r[38;5;241m.[39mheaders[[38;5;124m"[39m[38;5;124mContent-Type[39m[38;5;124m"[39m])
+[1;32m    421[0m [38;5;28;01mif[39;00m response_model [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m:
+
+File [0;32m~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:381[0m, in [0;36mPortalClientBase._request[0;34m(self, method, endpoint, body, url_params, internal_retry, allow_retries)[0m
+[1;32m    376[0m     [38;5;28;01mexcept[39;00m:
+[1;32m    377[0m         [38;5;66;03m# If this error comes from, ie, the web server or something else, then[39;00m
+[1;32m    378[0m         [38;5;66;03m# we have to use 'reason'[39;00m
+[1;32m    379[0m         details [38;5;241m=[39m {[38;5;124m"[39m[38;5;124mmsg[39m[38;5;124m"[39m: r[38;5;241m.[39mreason}
+[0;32m--> 381[0m     [38;5;28;01mraise[39;00m PortalRequestError([38;5;124mf[39m[38;5;124m"[39m[38;5;124mRequest failed: [39m[38;5;132;01m{[39;00mdetails[[38;5;124m'[39m[38;5;124mmsg[39m[38;5;124m'[39m][38;5;132;01m}[39;00m[38;5;124m"[39m, r[38;5;241m.[39mstatus_code, details)
+[1;32m    383[0m [38;5;28;01mreturn[39;00m r
+
+[0;31mPortalRequestError[0m: Request failed: Not Found (HTTP status 404)
 

@@ -8,25 +8,25 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>QCArchive in 15 minutes &#8212; QCArchive 0.54.1.post57+geea42a78 documentation</title>
+    <title>QCArchive in 15 minutes &#8212; QCArchive 0.55.post2+gb66b1b0f documentation</title>
   
   
   
   <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
-    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=3ee479438cf8b5e0d341" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=3ee479438cf8b5e0d341" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=3ee479438cf8b5e0d341" rel="stylesheet" />
 
   
-  <link href="../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=3ee479438cf8b5e0d341" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
@@ -36,11 +36,11 @@
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=6f1775e9" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
-  <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=3ee479438cf8b5e0d341" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../_static/documentation_options.js?v=a313a570"></script>
+    <script src="../_static/documentation_options.js?v=5d2988e4"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -60,27 +60,23 @@
 
   
   
-  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
   
   <div id="pst-scroll-pixel-helper"></div>
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
-    <i class="fa-solid fa-arrow-up"></i>
-    Back to top
-  </button>
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
   <input type="checkbox"
           class="sidebar-toggle"
-          name="__primary"
-          id="__primary"/>
-  <label class="overlay overlay-primary" for="__primary"></label>
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
   
   <input type="checkbox"
           class="sidebar-toggle"
-          name="__secondary"
-          id="__secondary"/>
-  <label class="overlay overlay-secondary" for="__secondary"></label>
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
   
   <div class="search-button__wrapper">
     <div class="search-button__overlay"></div>
@@ -102,12 +98,17 @@
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
 </form></div>
   </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
   
-    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
 <div class="bd-header__inner bd-page-width">
-  <label class="sidebar-toggle primary-toggle" for="__primary">
+  <button class="sidebar-toggle primary-toggle" aria-label="Site navigation">
     <span class="fa-solid fa-bars"></span>
-  </label>
+  </button>
   
   
   <div class="col-lg-3 navbar-header-items__start">
@@ -145,66 +146,66 @@
 <nav class="navbar-nav">
   <ul class="bd-navbar-elements navbar-nav">
     
-                    <li class="nav-item current active">
-                      <a class="nav-link nav-internal" href="index.html">
-                        Quickstart
-                      </a>
-                    </li>
-                
+<li class="nav-item pst-header-nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Quickstart
+  </a>
+</li>
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../overview/index.html">
-                        Overview
-                      </a>
-                    </li>
-                
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../user_guide/index.html">
-                        User Guide
-                      </a>
-                    </li>
-                
+<li class="nav-item pst-header-nav-item">
+  <a class="nav-link nav-internal" href="../overview/index.html">
+    Overview
+  </a>
+</li>
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../release_notes.html">
-                        Release Notes
-                      </a>
-                    </li>
-                
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../admin_guide/index.html">
-                        Admin Guide
-                      </a>
-                    </li>
-                
+<li class="nav-item pst-header-nav-item">
+  <a class="nav-link nav-internal" href="../user_guide/index.html">
+    User Guide
+  </a>
+</li>
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../web_api/index.html">
-                        Web API
-                      </a>
-                    </li>
-                
-            <li class="nav-item dropdown">
+
+<li class="nav-item pst-header-nav-item">
+  <a class="nav-link nav-internal" href="../release_notes.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item pst-header-nav-item">
+  <a class="nav-link nav-internal" href="../admin_guide/index.html">
+    Admin Guide
+  </a>
+</li>
+
+
+<li class="nav-item pst-header-nav-item">
+  <a class="nav-link nav-internal" href="../web_api/index.html">
+    Web API
+  </a>
+</li>
+
+            <li class="nav-item dropdown pst-header-nav-item">
                 <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="pst-nav-more-links">
                     More
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
-                    <li class="nav-item">
-                      <a class="nav-link dropdown-item nav-internal" href="../developer_guide/index.html">
-                        Developer Guide
-                      </a>
-                    </li>
-                
+<li class="nav-item ">
+  <a class="nav-link dropdown-item nav-internal" href="../developer_guide/index.html">
+    Developer Guide
+  </a>
+</li>
 
-                <li class="nav-item">
-                  <a class="nav-link dropdown-item nav-external" href="https://molssi.org">
-                    MolSSI
-                  </a>
-                </li>
-                
+
+<li class="nav-item ">
+  <a class="nav-link dropdown-item nav-external" href="https://molssi.org">
+    MolSSI
+  </a>
+</li>
+
                 </ul>
             </li>
             
@@ -279,9 +280,9 @@ document.write(`
   
 
   
-    <label class="sidebar-toggle secondary-toggle" for="__secondary" tabindex="0">
+    <button class="sidebar-toggle secondary-toggle" aria-label="On this page">
       <span class="fa-solid fa-outdent"></span>
-    </label>
+    </button>
   
 </div>
 
@@ -302,75 +303,70 @@ document.write(`
     
       <div class="sidebar-header-items__center">
         
-          <div class="navbar-item">
+          
+          
+            <div class="navbar-item">
 <nav class="navbar-nav">
   <ul class="bd-navbar-elements navbar-nav">
     
-                    <li class="nav-item current active">
-                      <a class="nav-link nav-internal" href="index.html">
-                        Quickstart
-                      </a>
-                    </li>
-                
+<li class="nav-item pst-header-nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Quickstart
+  </a>
+</li>
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../overview/index.html">
-                        Overview
-                      </a>
-                    </li>
-                
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../user_guide/index.html">
-                        User Guide
-                      </a>
-                    </li>
-                
+<li class="nav-item pst-header-nav-item">
+  <a class="nav-link nav-internal" href="../overview/index.html">
+    Overview
+  </a>
+</li>
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../release_notes.html">
-                        Release Notes
-                      </a>
-                    </li>
-                
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../admin_guide/index.html">
-                        Admin Guide
-                      </a>
-                    </li>
-                
+<li class="nav-item pst-header-nav-item">
+  <a class="nav-link nav-internal" href="../user_guide/index.html">
+    User Guide
+  </a>
+</li>
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../web_api/index.html">
-                        Web API
-                      </a>
-                    </li>
-                
-            <li class="nav-item dropdown">
-                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="pst-nav-more-links-2">
-                    More
-                </button>
-                <ul id="pst-nav-more-links-2" class="dropdown-menu">
-                    
-                    <li class="nav-item">
-                      <a class="nav-link dropdown-item nav-internal" href="../developer_guide/index.html">
-                        Developer Guide
-                      </a>
-                    </li>
-                
 
-                <li class="nav-item">
-                  <a class="nav-link dropdown-item nav-external" href="https://molssi.org">
-                    MolSSI
-                  </a>
-                </li>
-                
-                </ul>
-            </li>
-            
+<li class="nav-item pst-header-nav-item">
+  <a class="nav-link nav-internal" href="../release_notes.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item pst-header-nav-item">
+  <a class="nav-link nav-internal" href="../admin_guide/index.html">
+    Admin Guide
+  </a>
+</li>
+
+
+<li class="nav-item pst-header-nav-item">
+  <a class="nav-link nav-internal" href="../web_api/index.html">
+    Web API
+  </a>
+</li>
+
+
+<li class="nav-item pst-header-nav-item">
+  <a class="nav-link nav-internal" href="../developer_guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item pst-header-nav-item">
+  <a class="nav-link nav-external" href="https://molssi.org">
+    MolSSI
+  </a>
+</li>
+
   </ul>
 </nav></div>
+          
         
       </div>
     
@@ -437,13 +433,13 @@ document.write(`
 
       </div>
       
-      <main id="main-content" class="bd-main">
+      <main id="main-content" class="bd-main" role="main">
         
         
           <div class="bd-content">
             <div class="bd-article-container">
               
-              <div class="bd-header-article">
+              <div class="bd-header-article d-print-none">
 <div class="header-article-items header-article__inner">
   
     <div class="header-article-items__start">
@@ -452,7 +448,7 @@ document.write(`
 
 
 
-<nav aria-label="Breadcrumb">
+<nav aria-label="Breadcrumb" class="d-print-none">
   <ul class="bd-breadcrumbs">
     
     <li class="breadcrumb-item breadcrumb-home">
@@ -510,10 +506,65 @@ To work with the QCArchive demo server, enter <code class="docutils literal notr
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>WARNING: This client version is newer than the server version. This may work if the versions are close, but expect exceptions and errors if attempting things the server does not support. client version: 0.54.1.post57+geea42a78, server version: 0.54.1
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>PortalClient(server_name=&#39;MolSSI QCFractal Demo Server&#39;, address=&#39;https://qcademo.molssi.org/&#39;, username=&#39;None&#39;)
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">PortalRequestError</span><span class="g g-Whitespace">                        </span>Traceback (most recent call last)
+<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">line</span> <span class="mi">3</span>
+<span class="g g-Whitespace">      </span><span class="mi">1</span> <span class="kn">import</span> <span class="nn">qcportal</span> <span class="k">as</span> <span class="nn">ptl</span>
+<span class="ne">----&gt; </span><span class="mi">3</span> <span class="n">client</span> <span class="o">=</span> <span class="n">ptl</span><span class="o">.</span><span class="n">PortalClient</span><span class="p">(</span><span class="s2">&quot;https://qcademo.molssi.org&quot;</span><span class="p">)</span>
+<span class="g g-Whitespace">      </span><span class="mi">4</span> <span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="p">)</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client.py:150,</span> in <span class="ni">PortalClient.__init__</span><span class="nt">(self, address, username, password, verify, show_motd, cache_dir, cache_max_size, memory_cache_key)</span>
+<span class="g g-Whitespace">    </span><span class="mi">116</span> <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">117</span>     <span class="bp">self</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">118</span>     <span class="n">address</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+   <span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">126</span>     <span class="n">memory_cache_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">127</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">128</span><span class="w">     </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="g g-Whitespace">    </span><span class="mi">129</span><span class="sd">     Parameters</span>
+<span class="g g-Whitespace">    </span><span class="mi">130</span><span class="sd">     ----------</span>
+<span class="sd">   (...)</span>
+<span class="g g-Whitespace">    </span><span class="mi">147</span><span class="sd">         Maximum size of the cache directory</span>
+<span class="g g-Whitespace">    </span><span class="mi">148</span><span class="sd">     &quot;&quot;&quot;</span>
+<span class="ne">--&gt; </span><span class="mi">150</span>     <span class="n">PortalClientBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">verify</span><span class="p">,</span> <span class="n">show_motd</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">151</span>     <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;PortalClient&quot;</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">152</span>     <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">PortalCache</span><span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">,</span> <span class="n">cache_max_size</span><span class="p">)</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:156,</span> in <span class="ni">PortalClientBase.__init__</span><span class="nt">(self, address, username, password, verify, show_motd)</span>
+<span class="g g-Whitespace">    </span><span class="mi">153</span>     <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_refresh_exp</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="g g-Whitespace">    </span><span class="mi">155</span> <span class="c1"># Try to connect and pull the server info</span>
+<span class="ne">--&gt; </span><span class="mi">156</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_server_information</span><span class="p">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">157</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_info</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+<span class="g g-Whitespace">    </span><span class="mi">158</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_limits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_info</span><span class="p">[</span><span class="s2">&quot;api_limits&quot;</span><span class="p">]</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client.py:190,</span> in <span class="ni">PortalClient.get_server_information</span><span class="nt">(self)</span>
+<span class="g g-Whitespace">    </span><span class="mi">181</span><span class="w"> </span><span class="sd">&quot;&quot;&quot;Request general information about the server</span>
+<span class="g g-Whitespace">    </span><span class="mi">182</span><span class="sd"> </span>
+<span class="g g-Whitespace">    </span><span class="mi">183</span><span class="sd"> Returns</span>
+<span class="sd">   (...)</span>
+<span class="g g-Whitespace">    </span><span class="mi">186</span><span class="sd">     Server information.</span>
+<span class="g g-Whitespace">    </span><span class="mi">187</span><span class="sd"> &quot;&quot;&quot;</span>
+<span class="g g-Whitespace">    </span><span class="mi">189</span> <span class="c1"># Request the info, and store here for later use</span>
+<span class="ne">--&gt; </span><span class="mi">190</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="s2">&quot;api/v1/information&quot;</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:416,</span> in <span class="ni">PortalClientBase.make_request</span><span class="nt">(self, method, endpoint, response_model, body_model, url_params_model, body, url_params, allow_retries)</span>
+<span class="g g-Whitespace">    </span><span class="mi">413</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parsed_url_params</span><span class="p">,</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="g g-Whitespace">    </span><span class="mi">414</span>     <span class="n">parsed_url_params</span> <span class="o">=</span> <span class="n">parsed_url_params</span><span class="o">.</span><span class="n">dict</span><span class="p">()</span>
+<span class="ne">--&gt; </span><span class="mi">416</span> <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">417</span>     <span class="n">method</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">serialized_body</span><span class="p">,</span> <span class="n">url_params</span><span class="o">=</span><span class="n">parsed_url_params</span><span class="p">,</span> <span class="n">allow_retries</span><span class="o">=</span><span class="n">allow_retries</span>
+<span class="g g-Whitespace">    </span><span class="mi">418</span> <span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">419</span> <span class="n">d</span> <span class="o">=</span> <span class="n">deserialize</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">])</span>
+<span class="g g-Whitespace">    </span><span class="mi">421</span> <span class="k">if</span> <span class="n">response_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:381,</span> in <span class="ni">PortalClientBase._request</span><span class="nt">(self, method, endpoint, body, url_params, internal_retry, allow_retries)</span>
+<span class="g g-Whitespace">    </span><span class="mi">376</span>     <span class="k">except</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">377</span>         <span class="c1"># If this error comes from, ie, the web server or something else, then</span>
+<span class="g g-Whitespace">    </span><span class="mi">378</span>         <span class="c1"># we have to use &#39;reason&#39;</span>
+<span class="g g-Whitespace">    </span><span class="mi">379</span>         <span class="n">details</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;msg&quot;</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">reason</span><span class="p">}</span>
+<span class="ne">--&gt; </span><span class="mi">381</span>     <span class="k">raise</span> <span class="n">PortalRequestError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Request failed: </span><span class="si">{</span><span class="n">details</span><span class="p">[</span><span class="s1">&#39;msg&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">details</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">383</span> <span class="k">return</span> <span class="n">r</span>
+
+<span class="ne">PortalRequestError</span>: Request failed: Not Found (HTTP status 404)
 </pre></div>
 </div>
 </div>
@@ -535,11 +586,6 @@ We see that this computation was a single point computation.</p>
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;SinglepointRecord id=1 status=RecordStatusEnum.complete&gt;
-</pre></div>
-</div>
-</div>
 </div>
 <p>Typically, properties from a calculation can be viewed using the <code class="docutils literal notranslate"><span class="pre">.properties</span></code> attribute for a result.
 The calculated properties are in a dictionary.
@@ -547,11 +593,6 @@ In the cell below, we print the SCF total energy from our calcuation.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">first_record</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="s2">&quot;scf_total_energy&quot;</span><span class="p">])</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>-74.82586558254185
 </pre></div>
 </div>
 </div>
@@ -563,11 +604,6 @@ In the cell below, we print the SCF total energy from our calcuation.</p>
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Molecule: H2O, Energy: -74.82586558254185
-</pre></div>
-</div>
-</div>
 </div>
 <p>If you pass in several IDs, you will receive a list of results that can be iterated through.</p>
 <div class="cell docutils container">
@@ -576,13 +612,6 @@ In the cell below, we print the SCF total energy from our calcuation.</p>
 
 <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">multiple_records</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Molecule: </span><span class="si">{</span><span class="n">record</span><span class="o">.</span><span class="n">molecule</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">, Energy: </span><span class="si">{</span><span class="n">record</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="s1">&#39;scf_total_energy&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Molecule: H2O, Energy: -74.82586558254185
-Molecule: H2, Energy: -1.0660263371078118
-Molecule: H2, Energy: -1.1117197122934774
 </pre></div>
 </div>
 </div>
@@ -602,28 +631,6 @@ For more detailed information, see <a class="reference internal" href="record_qu
 
 <span class="c1"># Print the first record.</span>
 <span class="nb">print</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">records</span><span class="p">))</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">StopIteration</span><span class="g g-Whitespace">                             </span>Traceback (most recent call last)
-<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">line</span> <span class="mi">4</span>
-<span class="g g-Whitespace">      </span><span class="mi">1</span> <span class="n">records</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_records</span><span class="p">(</span><span class="n">created_after</span><span class="o">=</span><span class="s2">&quot;2023/01/10&quot;</span><span class="p">,</span> <span class="n">created_before</span><span class="o">=</span><span class="s2">&quot;2023/01/14&quot;</span><span class="p">)</span>
-<span class="g g-Whitespace">      </span><span class="mi">3</span> <span class="c1"># Print the first record.</span>
-<span class="ne">----&gt; </span><span class="mi">4</span> <span class="nb">print</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">records</span><span class="p">))</span>
-
-<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/base_models.py:155,</span> in <span class="ni">QueryIteratorBase.__next__</span><span class="nt">(self)</span>
-<span class="g g-Whitespace">    </span><span class="mi">151</span> <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="g g-Whitespace">    </span><span class="mi">152</span>     <span class="c1"># This can happen if there is none returned on the first iteration</span>
-<span class="g g-Whitespace">    </span><span class="mi">153</span>     <span class="c1"># Check here so we don&#39;t fetch twice</span>
-<span class="g g-Whitespace">    </span><span class="mi">154</span>     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_batch</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-<span class="ne">--&gt; </span><span class="mi">155</span>         <span class="k">raise</span> <span class="ne">StopIteration</span>
-<span class="g g-Whitespace">    </span><span class="mi">157</span>     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_pos</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_batch</span><span class="p">):</span>
-<span class="g g-Whitespace">    </span><span class="mi">158</span>         <span class="c1"># At the end of the current batch. Fetch the next</span>
-<span class="g g-Whitespace">    </span><span class="mi">159</span>         <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_batch</span><span class="p">()</span>
-
-<span class="ne">StopIteration</span>: 
 </pre></div>
 </div>
 </div>
@@ -821,7 +828,7 @@ For more information on dataset construction, see the Dataset Quickstart.</p>
               
               
               
-                <footer class="prev-next-footer">
+                <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
     <a class="left-prev"
@@ -897,8 +904,8 @@ For more information on dataset construction, see the Dataset Quickstart.</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+  <script src="../_static/scripts/bootstrap.js?digest=3ee479438cf8b5e0d341"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -939,7 +946,7 @@ For more information on dataset construction, see the Dataset Quickstart.</p>
         
 
         <p class="theme-version">
-        Built with a customized <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.2.
+        Built with a customized <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.3.
         </p>
 
     </div>
