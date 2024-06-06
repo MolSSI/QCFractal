@@ -654,11 +654,12 @@ def get_records_with_cache(
 
         recs = client._fetch_records(record_type, list(records_tofetch), include=include)
 
-        # Set up for the writeback
+        # Set up for the writeback on change, but write the record as-is for now
+        if record_cache is not None:
+            record_cache.update_records(recs)
         for r in recs:
-            # Don't write to the cache yet. Let the writeback mechanism handle it
             r._record_cache = record_cache
-            r._cache_dirty = True
+            r._cache_dirty = False
 
         existing_records += recs
 
