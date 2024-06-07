@@ -31,7 +31,6 @@ def test_neb_full_1(fulltest_client: PortalClient):
         optimize_endpoints=False,
         align=True,
         epsilon=1e-6,
-        hessian_reset=True,
     )
 
     sp_spec = QCSpecification(
@@ -107,7 +106,6 @@ def test_neb_full_2(fulltest_client: PortalClient):
         optimize_endpoints=True,
         align=False,
         epsilon=1e-6,
-        hessian_reset=True,
     )
 
     sp_spec = QCSpecification(

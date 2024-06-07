@@ -39,7 +39,6 @@ test_specs = [
             average_force=0.025,
             optimize_ts=True,
             epsilon=1e-5,
-            hessian_reset=True,
             spring_type=0,
         ),
         singlepoint_specification=QCSpecification(
@@ -60,7 +59,6 @@ test_specs = [
             average_force=0.025,
             optimize_ts=True,
             epsilon=1e-5,
-            hessian_reset=True,
             spring_type=1,
         ),
         singlepoint_specification=QCSpecification(
@@ -81,7 +79,6 @@ test_specs = [
             average_force=0.025,
             optimize_ts=True,
             epsilon=1e-5,
-            hessian_reset=True,
             spring_type=0,
         ),
         singlepoint_specification=QCSpecification(

@@ -68,11 +68,6 @@ class NEBKeywords(BaseModel):
 
     epsilon: float = Field(1e-5, description="Small eigenvalue threshold for resetting Hessian.")
 
-    hessian_reset: bool = Field(
-        True,
-        description="Reset Hessian when eigenvalues are below the epsilon.",
-    )
-
     @root_validator
     def normalize(cls, values):
         return recursive_normalizer(values)

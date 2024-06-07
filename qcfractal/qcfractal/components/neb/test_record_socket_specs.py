@@ -352,8 +352,7 @@ def test_neb_socket_add_specification_diff_3(storage_socket: SQLAlchemySocket):
             images=21,
             spring_constant=1.5,
             optimize_endpoints=True,
-            hessian_reset=False,
-            spring_type=0,
+            optimize_ts=True,
         ),
         singlepoint_specification=common_sp_spec,
     )
@@ -364,6 +363,7 @@ def test_neb_socket_add_specification_diff_3(storage_socket: SQLAlchemySocket):
             images=21,
             spring_constant=1.5,
             optimize_endpoints=True,
+            optimize_ts=False,
         ),
         singlepoint_specification=common_sp_spec,
     )
