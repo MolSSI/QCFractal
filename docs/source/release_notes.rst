@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+0.56 / 2024-07-09
+-------------------
+
+Two small bugfixes. One is related to how the cache works, the other is a slight modification of the NEB specification. 
+
+The fix to the caching behavior should help with a lot of unexpected behavior related to caching. See :issue:`844`.
+
+- (:pr:`841`) Remove hessian_reset keyword from NEB (:contrib:`hjnpark`)
+- (:pr:`843`) Write records to cache immediately after fetching
+
+
 0.55 / 2024-05-23
 -------------------
 
