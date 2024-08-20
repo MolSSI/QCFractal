@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Tasks and Services &#8212; QCArchive 0.55.post8+g970231b7 documentation</title>
+    <title>Tasks and Services &#8212; QCArchive 0.56.post3+g32651155 documentation</title>
   
   
   
@@ -32,7 +32,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=87e54e7c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=6f1775e9" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -40,7 +40,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=6c3ea2f3"></script>
+    <script src="../_static/documentation_options.js?v=016b2145"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -500,7 +500,8 @@ necessary for computation. This data is what is actually sent to the compute man
 need to access this object, but it can be useful for developers and for debugging purposes.</p>
 <p>This <a class="reference internal" href="#qcportal.record_models.RecordTask" title="qcportal.record_models.RecordTask"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordTask</span></code></a> also contains the routing tag and priority.
 After successful completion, the associated task is removed from the database.</p>
-<img alt="../_images/tasks_diagram.svg" class="align-center" src="../_images/tasks_diagram.svg" /></section>
+<img alt="../_images/tasks_diagram.svg" class="align-center" src="../_images/tasks_diagram.svg" />
+</section>
 <section id="services">
 <span id="id2"></span><h2>Services<a class="headerlink" href="#services" title="Link to this heading">#</a></h2>
 <p>Services are more complex than tasks, and have an iterative portion that runs on the QCFractal server.
@@ -514,14 +515,16 @@ on the server. Dependencies (new records) created by the services inherit both t
 all the information about the service. Like tasks, it is not commonly needed by users, except for debugging.</p>
 <p>Unlike task-based records, service-based records often update their output on the server while running, which can
 be viewed with the <a class="reference internal" href="../user_guide/records/base.html#qcportal.record_models.BaseRecord.stdout" title="qcportal.record_models.BaseRecord.stdout"><code class="xref py py-attr docutils literal notranslate"><span class="pre">stdout</span></code></a> property.</p>
-<img alt="../_images/services_diagram.svg" class="align-center" src="../_images/services_diagram.svg" /></section>
+<img alt="../_images/services_diagram.svg" class="align-center" src="../_images/services_diagram.svg" />
+</section>
 <section id="routing-tags">
 <span id="id3"></span><h2>Routing tags<a class="headerlink" href="#routing-tags" title="Link to this heading">#</a></h2>
 <p>Routing tags are user-specified strings that assist in routing tasks to particular managers.
 Every task is given a single tag when the record is submitted, and managers
 are configured with multiple tags.</p>
 <p>Managers are configured to claim tasks whose tag matches one given in their configuration.</p>
-<img alt="../_images/routing_tags.svg" class="align-center" src="../_images/routing_tags.svg" /><p>Tags are matched with the following considerations:</p>
+<img alt="../_images/routing_tags.svg" class="align-center" src="../_images/routing_tags.svg" />
+<p>Tags are matched with the following considerations:</p>
 <ul class="simple">
 <li><p>Tasks are first come, first serve. If a manager is able to claim a task, it will do so, even if
 another manager exists that is a better match.</p></li>
@@ -809,7 +812,7 @@ server first.</p>
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.3.7.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.4.7.<br>
         </p>
         
 

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Release Notes &#8212; QCArchive 0.55.post8+g970231b7 documentation</title>
+    <title>Release Notes &#8212; QCArchive 0.56.post3+g32651155 documentation</title>
   
   
   
@@ -32,7 +32,7 @@
     <link rel="stylesheet" type="text/css" href="_static/autodoc_pydantic.css" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
-    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=87e54e7c" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=6f1775e9" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -40,7 +40,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=6c3ea2f3"></script>
+    <script src="_static/documentation_options.js?v=016b2145"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -471,10 +471,10 @@ document.write(`
 <section id="id1">
 <h2>0.56 / 2024-07-09<a class="headerlink" href="#id1" title="Link to this heading">#</a></h2>
 <p>Two small bugfixes. One is related to how the cache works, the other is a slight modification of the NEB specification.</p>
-<p>The fix to the caching behavior should help with a lot of unexpected behavior related to caching. See <a class="reference external" href="https://github.com/MolSSI/QCFractal/issues/844">Issue 844</a>.</p>
+<p>The fix to the caching behavior should help with a lot of unexpected behavior related to caching. See <a class="extlink-issue reference external" href="https://github.com/MolSSI/QCFractal/issues/844">Issue 844</a>.</p>
 <ul class="simple">
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/841">PR 841</a>) Remove hessian_reset keyword from NEB (<a class="reference external" href="https://github.com/hjnpark">&#64;hjnpark</a>)</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/843">PR 843</a>) Write records to cache immediately after fetching</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/841">PR 841</a>) Remove hessian_reset keyword from NEB (<a class="extlink-contrib reference external" href="https://github.com/hjnpark">&#64;hjnpark</a>)</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/843">PR 843</a>) Write records to cache immediately after fetching</p></li>
 </ul>
 </section>
 <section id="id2">
@@ -486,28 +486,28 @@ everything).</p>
 <p>In addition, lots of smaller bug fixes and improvements.</p>
 <p>Notable PRs:</p>
 <ul class="simple">
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/819">PR 819</a>) Fix native_files fields return from server &amp; ORM</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/821">PR 821</a>) Enable dumping a database from a snowflake</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/822">PR 822</a>) Fix missing client on cached dataset records</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/825">PR 825</a>) Fix database constraint violation when program version contains uppercase characters</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/826">PR 826</a>) Fix type of results in ServiceSubtaskRecord</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/829">PR 829</a>) Replace sqlite3 (python stdlib module) with APSW</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/830">PR 830</a>) Remove server stats &amp; compute manager logs</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/831">PR 831</a>) Add internal job to delete old access log entries</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/832">PR 832</a>) Add internal job to delete old, finished internal jobs</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/834">PR 834</a>) Add property to get errored child records</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/835">PR 835</a>) Better handling of queue tags (strict queue tags and case insensitivity)</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/836">PR 836</a>) Replace gunicorn with waitress and fix logging issues</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/837">PR 837</a>) Commit to database after every returned task is processed (to help prevent deadlocks)</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/838">PR 838</a>) Better handling of passwords with <cite>init-db</cite></p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/819">PR 819</a>) Fix native_files fields return from server &amp; ORM</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/821">PR 821</a>) Enable dumping a database from a snowflake</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/822">PR 822</a>) Fix missing client on cached dataset records</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/825">PR 825</a>) Fix database constraint violation when program version contains uppercase characters</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/826">PR 826</a>) Fix type of results in ServiceSubtaskRecord</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/829">PR 829</a>) Replace sqlite3 (python stdlib module) with APSW</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/830">PR 830</a>) Remove server stats &amp; compute manager logs</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/831">PR 831</a>) Add internal job to delete old access log entries</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/832">PR 832</a>) Add internal job to delete old, finished internal jobs</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/834">PR 834</a>) Add property to get errored child records</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/835">PR 835</a>) Better handling of queue tags (strict queue tags and case insensitivity)</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/836">PR 836</a>) Replace gunicorn with waitress and fix logging issues</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/837">PR 837</a>) Commit to database after every returned task is processed (to help prevent deadlocks)</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/838">PR 838</a>) Better handling of passwords with <cite>init-db</cite></p></li>
 </ul>
 </section>
 <section id="id3">
 <h2>0.54.1 / 2024-04-12<a class="headerlink" href="#id3" title="Link to this heading">#</a></h2>
 <p>This is a minor fix-up release that fixes a few issues from the v0.54 release.</p>
 <ul class="simple">
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/815">PR 815</a>) Adds tag to the task queue sort index</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/816">PR 816</a>) Fixes a few issues related to caching</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/815">PR 815</a>) Adds tag to the task queue sort index</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/816">PR 816</a>) Fixes a few issues related to caching</p></li>
 </ul>
 </section>
 <section id="id4">
@@ -518,10 +518,10 @@ request time, rather than use a fixed batch size.</p>
 <p>Client-side caching is relatively functional, but this was a major change, so feel free to report issues as always.</p>
 <p>In addition, there is some of the usual cleanup.</p>
 <ul class="simple">
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/802">PR 802</a>) Implement client-side caching using SQLite</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/808">PR 808</a>) Better handling of missing tags/programs from managers</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/809">PR 809</a>) Improve fetching speed by allowing for including more of records</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/811">PR 811</a>) Improve task queue performance by storing time in the task queue table directly</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/802">PR 802</a>) Implement client-side caching using SQLite</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/808">PR 808</a>) Better handling of missing tags/programs from managers</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/809">PR 809</a>) Improve fetching speed by allowing for including more of records</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/811">PR 811</a>) Improve task queue performance by storing time in the task queue table directly</p></li>
 </ul>
 </section>
 <section id="id5">
@@ -531,7 +531,7 @@ a little bit of cleanup in preparation for implementing new features in the futu
 No breaking changes. Upgrading qcportal is recommended, but is not required.</p>
 <p>Notable pull requests and features:</p>
 <ul class="simple">
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/798">PR 798</a>) Mark molecules coming from the server as already validated, and remove <cite>fix_com</cite> and <cite>fix_orientation</cite> from the database.</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/798">PR 798</a>) Mark molecules coming from the server as already validated, and remove <cite>fix_com</cite> and <cite>fix_orientation</cite> from the database.</p></li>
 </ul>
 </section>
 <section id="id6">
@@ -540,12 +540,12 @@ No breaking changes. Upgrading qcportal is recommended, but is not required.</p>
 due to fixes related to JWTs, but is not required. The same is true with compute managers.</p>
 <p>Notable pull requests and features:</p>
 <ul class="simple">
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/781">PR 781</a>) Fixes issues related to shutdown of snowflakes, particularly with Python 3.12</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/783">PR 783</a>, <a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/793">PR 793</a>) Fixes JWT refresh issues that cause errors in clients</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/785">PR 785</a>) Some cleanups related to Python 3.12 (including removing use of removing <cite>pkg_resources</cite> module)</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/787">PR 787</a>) Pydantic v1/v2 dual compatibility (L. Naden <a class="reference external" href="https://github.com/lnaden">&#64;lnaden</a>, M. Thompson <a class="reference external" href="https://github.com/mattwthompson">&#64;mattwthompson</a>, L. Burns <a class="reference external" href="https://github.com/loriab">&#64;loriab</a>)</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/792">PR 792</a>) Add ability to get status overview of child records (such as optimizations of a torsiondrive)</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/794">PR 794</a>) Remove use of now-deprecated <cite>utctime</cite> function and improve handling of timezones</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/781">PR 781</a>) Fixes issues related to shutdown of snowflakes, particularly with Python 3.12</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/783">PR 783</a>, <a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/793">PR 793</a>) Fixes JWT refresh issues that cause errors in clients</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/785">PR 785</a>) Some cleanups related to Python 3.12 (including removing use of removing <cite>pkg_resources</cite> module)</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/787">PR 787</a>) Pydantic v1/v2 dual compatibility (L. Naden <a class="extlink-contrib reference external" href="https://github.com/lnaden">&#64;lnaden</a>, M. Thompson <a class="extlink-contrib reference external" href="https://github.com/mattwthompson">&#64;mattwthompson</a>, L. Burns <a class="extlink-contrib reference external" href="https://github.com/loriab">&#64;loriab</a>)</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/792">PR 792</a>) Add ability to get status overview of child records (such as optimizations of a torsiondrive)</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/794">PR 794</a>) Remove use of now-deprecated <cite>utctime</cite> function and improve handling of timezones</p></li>
 </ul>
 </section>
 <section id="id7">
@@ -554,25 +554,25 @@ due to fixes related to JWTs, but is not required. The same is true with compute
 due to efficiency gains, but is not required.</p>
 <p>Notable pull requests and features:</p>
 <ul class="simple">
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/745">PR 745</a>) Compute manager documentation (D. Dotson <a class="reference external" href="https://github.com/dotsdl">&#64;dotsdl</a>)</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/750">PR 750</a>) Use a <a class="reference external" href="https://www.postgresql.org/docs/current/ddl-generated-columns.html">computed/generated column</a> for lower-case dataset names (lname)</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/751">PR 751</a>) Some cleanups, including removing dependence of <code class="docutils literal notranslate"><span class="pre">geometric_nextchain.py</span></code> on QCPortal</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/752">PR 752</a>) Tests requiring geoip test data are now automatically skipped if not available</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/753">PR 753</a>) Improve/Fix JWT handling</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/757">PR 757</a>) Gracefully handle missing User-Agent</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/758">PR 758</a>) Requests now will be automatically retried in case of connection or networking issues</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/759">PR 759</a>) Implement functionality for checking why a record is in the waiting state</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/760">PR 760</a>) Add existing_ok=True for add_dataset</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/761">PR 761</a>) Handle duplicates and renames in qcvars</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/762">PR 762</a>) Add display of number of records in a dataset, and ability to get number of records in a dataset</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/763">PR 763</a>) reset_records() only resets errored records now</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/764">PR 764</a>) Add ability to get a list of properties computed in a dataset</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/765">PR 765</a>) Improve compile_values and related functions (J. Nash <a class="reference external" href="https://github.com/janash">&#64;janash</a>)</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/768">PR 768</a>) Enable use of environment variables when specifying paths in the compute manager config</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/769">PR 769</a>) Improve the efficiency of adding large numbers of entries to a dataset</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/773">PR 773</a>) Improve manager logging of task and record information</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/774">PR 774</a>) Removed forced version checks between client and server</p></li>
-<li><p>(<a class="reference external" href="https://github.com/MolSSI/QCFractal/pull/775">PR 775</a>) Add automatic batching in ds.add_entries() and ds.submit()</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/745">PR 745</a>) Compute manager documentation (D. Dotson <a class="extlink-contrib reference external" href="https://github.com/dotsdl">&#64;dotsdl</a>)</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/750">PR 750</a>) Use a <a class="reference external" href="https://www.postgresql.org/docs/current/ddl-generated-columns.html">computed/generated column</a> for lower-case dataset names (lname)</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/751">PR 751</a>) Some cleanups, including removing dependence of <code class="docutils literal notranslate"><span class="pre">geometric_nextchain.py</span></code> on QCPortal</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/752">PR 752</a>) Tests requiring geoip test data are now automatically skipped if not available</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/753">PR 753</a>) Improve/Fix JWT handling</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/757">PR 757</a>) Gracefully handle missing User-Agent</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/758">PR 758</a>) Requests now will be automatically retried in case of connection or networking issues</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/759">PR 759</a>) Implement functionality for checking why a record is in the waiting state</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/760">PR 760</a>) Add existing_ok=True for add_dataset</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/761">PR 761</a>) Handle duplicates and renames in qcvars</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/762">PR 762</a>) Add display of number of records in a dataset, and ability to get number of records in a dataset</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/763">PR 763</a>) reset_records() only resets errored records now</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/764">PR 764</a>) Add ability to get a list of properties computed in a dataset</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/765">PR 765</a>) Improve compile_values and related functions (J. Nash <a class="extlink-contrib reference external" href="https://github.com/janash">&#64;janash</a>)</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/768">PR 768</a>) Enable use of environment variables when specifying paths in the compute manager config</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/769">PR 769</a>) Improve the efficiency of adding large numbers of entries to a dataset</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/773">PR 773</a>) Improve manager logging of task and record information</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/774">PR 774</a>) Removed forced version checks between client and server</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/775">PR 775</a>) Add automatic batching in ds.add_entries() and ds.submit()</p></li>
 </ul>
 </section>
 <section id="id8">
@@ -697,7 +697,7 @@ due to efficiency gains, but is not required.</p>
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.3.7.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.4.7.<br>
         </p>
         
 
