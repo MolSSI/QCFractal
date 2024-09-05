@@ -14,7 +14,7 @@ dependencies:
   - pyyaml
   - pydantic
   - zstandard
-  - apsw
+  - apsw>=3.42
   - qcelemental<0.70a0
   - tabulate
   - tqdm
