@@ -28,6 +28,7 @@ dependencies = [
     "sqlalchemy >=2.0",
     "alembic",
     "psycopg2",
+    "qcportal",
 ]
 
 
