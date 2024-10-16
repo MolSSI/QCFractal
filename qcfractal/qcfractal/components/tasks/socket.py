@@ -190,6 +190,9 @@ class TaskSocket:
             manager.failures += len(tasks_failures)
             manager.rejected += len(tasks_rejected)
 
+            # Mark that we have heard from the manager
+            manager.modified_on = now_at_utc()
+
             # Automatically reset ones that should be reset
             if self.root_socket.qcf_config.auto_reset.enabled and to_be_reset:
                 self._logger.info(f"Auto resetting {len(to_be_reset)} records")
@@ -340,6 +343,9 @@ class TaskSocket:
                 session.flush()
 
             manager.claimed += len(found)
+
+            # Mark that we have heard from the manager
+            manager.modified_on = now_at_utc()
 
             self._logger.info(f"Manager {manager_name} has claimed {len(found)} new tasks")
 
