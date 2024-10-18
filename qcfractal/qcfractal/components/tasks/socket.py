@@ -12,7 +12,7 @@ except ImportError:
 from qcelemental.models import FailedOperation
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import array
-from sqlalchemy.orm import joinedload, Load
+from sqlalchemy.orm import joinedload, Load, contains_eager
 
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.record_db_models import BaseRecordORM
@@ -287,14 +287,7 @@ class TaskSocket:
                 # TODO - we only test for the presence of the available_programs in the requirements. Eventually
                 #        we want to then verify the versions
 
-                stmt = select(TaskQueueORM, BaseRecordORM).join(TaskQueueORM.record)
-
-                # Only load a few columns we need of the record itself
-                stmt = stmt.options(
-                    Load(BaseRecordORM).load_only(
-                        BaseRecordORM.status, BaseRecordORM.manager_name, BaseRecordORM.modified_on
-                    )
-                )
+                stmt = select(TaskQueueORM, BaseRecordORM).join(TaskQueueORM.record).options(contains_eager(TaskQueueORM.record))
 
                 stmt = stmt.filter(TaskQueueORM.available == True)
                 stmt = stmt.filter(search_programs.contains(TaskQueueORM.required_programs))
