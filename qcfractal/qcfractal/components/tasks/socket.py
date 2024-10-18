@@ -335,6 +335,7 @@ class TaskSocket:
                 gt_time = 0.0
                 co_time = 0.0
 
+                task_updates = []
                 for task_orm, _ in new_items:
                     t5 = time.time()
                     task_dict = task_orm.model_dict(exclude=["record"])
@@ -356,8 +357,13 @@ class TaskSocket:
                         co_time += t6 - t5
 
                         # Add this to the orm for any future managers claiming this task
-                        task_orm.function = task_spec["function"]
-                        task_orm.function_kwargs_compressed = kwargs_compressed
+                        task_updates.append(
+                            {
+                                "id": task_orm.id,
+                                "function": task_spec["function"],
+                                "function_kwargs_compressed": kwargs_compressed,
+                            }
+                        )
 
                         # But just use what we created when returning to this manager
                         task_dict["function"] = task_spec["function"]
@@ -370,6 +376,11 @@ class TaskSocket:
                 self._logger.debug(
                     f"model_dict time: {md_time}, generate_task_specification time: {gt_time}, compress time: {co_time}"
                 )
+
+                # Update the task records with the function and kwargs
+                if task_updates:
+                    session.execute(update(TaskQueueORM), task_updates)
+
                 session.flush()
 
             manager.claimed += len(found)
