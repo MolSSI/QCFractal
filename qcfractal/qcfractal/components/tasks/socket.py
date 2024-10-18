@@ -287,7 +287,8 @@ class TaskSocket:
                 # TODO - we only test for the presence of the available_programs in the requirements. Eventually
                 #        we want to then verify the versions
 
-                stmt = select(TaskQueueORM, BaseRecordORM).join(TaskQueueORM.record).options(contains_eager(TaskQueueORM.record))
+                #stmt = select(TaskQueueORM, BaseRecordORM).join(TaskQueueORM.record).options(contains_eager(TaskQueueORM.record))
+                stmt = select(TaskQueueORM, BaseRecordORM).join(TaskQueueORM.record)
 
                 stmt = stmt.filter(TaskQueueORM.available == True)
                 stmt = stmt.filter(search_programs.contains(TaskQueueORM.required_programs))
