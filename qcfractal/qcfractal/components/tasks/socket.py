@@ -10,7 +10,7 @@ try:
 except ImportError:
     import pydantic
 from qcelemental.models import FailedOperation
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import array
 from sqlalchemy.orm import joinedload, Load, contains_eager
 
@@ -287,8 +287,11 @@ class TaskSocket:
                 # TODO - we only test for the presence of the available_programs in the requirements. Eventually
                 #        we want to then verify the versions
 
-                #stmt = select(TaskQueueORM, BaseRecordORM).join(TaskQueueORM.record).options(contains_eager(TaskQueueORM.record))
-                stmt = select(TaskQueueORM, BaseRecordORM).join(TaskQueueORM.record)
+                stmt = (
+                    select(TaskQueueORM, BaseRecordORM)
+                    .join(TaskQueueORM.record)
+                    .options(contains_eager(TaskQueueORM.record))
+                )
 
                 stmt = stmt.filter(TaskQueueORM.available == True)
                 stmt = stmt.filter(search_programs.contains(TaskQueueORM.required_programs))
@@ -311,11 +314,17 @@ class TaskSocket:
                 self._logger.debug(f"Time to execute claim query for {len(new_items)} tasks with tag {tag}: {t2-t1}")
 
                 # Update all the task records to reflect this manager claiming them
-                for task_orm, record_orm in new_items:
-                    task_orm.available = False
-                    record_orm.status = RecordStatusEnum.running
-                    record_orm.manager_name = manager_name
-                    record_orm.modified_on = now_at_utc()
+                task_ids = [x[0].id for x in new_items]
+                record_ids = [x[1].id for x in new_items]
+                stmt = update(TaskQueueORM).where(TaskQueueORM.id.in_(task_ids)).values(available=False)
+                session.execute(stmt)
+
+                stmt = (
+                    update(BaseRecordORM)
+                    .where(BaseRecordORM.id.in_(record_ids))
+                    .values(status=RecordStatusEnum.running, manager_name=manager_name, modified_on=now_at_utc())
+                )
+                session.execute(stmt)
 
                 # Store in dict form for returning, but no need to store the info from the base record
                 # Also, retrieve the actual function kwargs. Eventually we may want the managers
