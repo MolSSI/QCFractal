@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import time
 import traceback
 from typing import TYPE_CHECKING
 
@@ -241,6 +242,7 @@ class TaskSocket:
         tags = [tag.lower() for tag in tags]
         programs = {key.lower(): [x.lower() for x in value] for key, value in programs.items()}
 
+        t0 = time.time()
         with self.root_socket.optional_session(session) as session:
             stmt = select(ComputeManagerORM).where(ComputeManagerORM.name == manager_name)
             stmt = stmt.with_for_update(skip_locked=False)
@@ -309,7 +311,10 @@ class TaskSocket:
                 # Skip locked rows - They may be in the process of being claimed by someone else
                 stmt = stmt.limit(new_limit).with_for_update(of=[BaseRecordORM, TaskQueueORM], skip_locked=True)
 
-                new_items = session.execute(stmt).all()
+                t1 = time.time()
+                new_items = list(session.execute(stmt).all())
+                t2 = time.time()
+                self._logger.debug(f"Time to execute claim query for {len(new_items)} tasks with tag {tag}: {t2-t1}")
 
                 # Update all the task records to reflect this manager claiming them
                 for task_orm, record_orm in new_items:
@@ -321,15 +326,31 @@ class TaskSocket:
                 # Store in dict form for returning, but no need to store the info from the base record
                 # Also, retrieve the actual function kwargs. Eventually we may want the managers
                 # to retrieve the kwargs themselves
+                t1 = time.time()
+
+                md_time = 0.0
+                gt_time = 0.0
+                co_time = 0.0
+
                 for task_orm, _ in new_items:
+                    t5 = time.time()
                     task_dict = task_orm.model_dict(exclude=["record"])
+                    t6 = time.time()
+                    md_time += t6 - t5
 
                     if task_orm.function is None:
                         # Generate the task on the fly
-                        task_spec = self.root_socket.records.generate_task_specification(task_orm)
 
+                        t5 = time.time()
+                        task_spec = self.root_socket.records.generate_task_specification(task_orm)
+                        t6 = time.time()
+                        gt_time += t6 - t5
+
+                        t5 = time.time()
                         kwargs = task_spec["function_kwargs"]
                         kwargs_compressed, _, _ = compress(kwargs, CompressionEnum.zstd)
+                        t6 = time.time()
+                        co_time += t6 - t5
 
                         # Add this to the orm for any future managers claiming this task
                         task_orm.function = task_spec["function"]
@@ -341,6 +362,11 @@ class TaskSocket:
 
                     found.append(task_dict)
 
+                t2 = time.time()
+                self._logger.debug(f"Time to create {len(new_items)} tasks dicts: {t2-t1}")
+                self._logger.debug(
+                    f"model_dict time: {md_time}, generate_task_specification time: {gt_time}, compress time: {co_time}"
+                )
                 session.flush()
 
             manager.claimed += len(found)
@@ -349,5 +375,7 @@ class TaskSocket:
             manager.modified_on = now_at_utc()
 
             self._logger.info(f"Manager {manager_name} has claimed {len(found)} new tasks")
+            t9 = time.time()
+            self._logger.debug(f"Total time to claim {len(found)} tasks: {t9 - t0}")
 
         return found
