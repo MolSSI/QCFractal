@@ -110,7 +110,10 @@ class BaseRecordSocket:
         Create an entry in the task queue, and attach it to the given record ORM
         """
 
-        record_orm.task = TaskQueueORM(tag=tag, priority=priority, required_programs=record_orm.required_programs)
+        available = record_orm.status == RecordStatusEnum.waiting
+        record_orm.task = TaskQueueORM(
+            tag=tag, priority=priority, required_programs=record_orm.required_programs, available=available
+        )
 
     @staticmethod
     def create_service(record_orm: BaseRecordORM, tag: str, priority: PriorityEnum, find_existing: bool) -> None:
@@ -1363,6 +1366,7 @@ class RecordSocket:
                 r.status = RecordStatusEnum.waiting
                 r.modified_on = now_at_utc()
                 r.manager_name = None
+                r.task.available = True
 
             return [r.id for r in record_orms]
 
@@ -1447,6 +1451,9 @@ class RecordSocket:
                         r_orm.status = RecordStatusEnum.waiting
                         r_orm.manager_name = None
 
+                        if not r_orm.is_service:
+                            r_orm.task.available = True
+
                     else:
                         if r_orm.info_backup:
                             raise RuntimeError(f"resetting record with status {r_orm.status} with backup info present")
@@ -1456,6 +1463,13 @@ class RecordSocket:
                             )
 
                     r_orm.modified_on = now_at_utc()
+
+                    # Sanity check
+                    if not r_orm.is_service:
+                        if r_orm.status == RecordStatusEnum.waiting:
+                            assert r_orm.task.available == True
+                        else:
+                            assert r_orm.task is None or r_orm.task.available == False
 
                 updated_ids.extend([r.id for r in record_data])
 

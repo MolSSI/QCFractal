@@ -294,7 +294,7 @@ class TaskSocket:
                     )
                 )
 
-                stmt = stmt.filter(BaseRecordORM.status == RecordStatusEnum.waiting)
+                stmt = stmt.filter(TaskQueueORM.available == True)
                 stmt = stmt.filter(search_programs.contains(TaskQueueORM.required_programs))
 
                 # Order by priority, then date (earliest first)
@@ -312,7 +312,8 @@ class TaskSocket:
                 new_items = session.execute(stmt).all()
 
                 # Update all the task records to reflect this manager claiming them
-                for _, record_orm in new_items:
+                for task_orm, record_orm in new_items:
+                    task_orm.available = False
                     record_orm.status = RecordStatusEnum.running
                     record_orm.manager_name = manager_name
                     record_orm.modified_on = now_at_utc()
