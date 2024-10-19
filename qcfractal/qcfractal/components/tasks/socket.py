@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import traceback
+from collections import defaultdict
 from typing import TYPE_CHECKING
 
 try:
@@ -9,9 +10,9 @@ try:
 except ImportError:
     import pydantic
 from qcelemental.models import FailedOperation
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import array
-from sqlalchemy.orm import joinedload, Load
+from sqlalchemy.orm import joinedload, load_only, lazyload
 
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.record_db_models import BaseRecordORM
@@ -266,7 +267,9 @@ class TaskSocket:
                 self._logger.warning(f"Manager {manager_name} did not send any valid queue tags to claim")
                 raise ComputeManagerError(f"Manager {manager_name} did not send any valid queue tags to claim")
 
-            found: List[Dict[str, Any]] = []
+            found: Dict[int, Dict[str, Any]] = {}
+            return_order: List[int] = []  # Order of task ids
+
             for tag in search_tags:
                 new_limit = limit - len(found)
 
@@ -285,17 +288,17 @@ class TaskSocket:
                 # TODO - we only test for the presence of the available_programs in the requirements. Eventually
                 #        we want to then verify the versions
 
-                stmt = select(TaskQueueORM, BaseRecordORM).join(TaskQueueORM.record)
-
-                # Only load a few columns we need of the record itself
-                stmt = stmt.options(
-                    Load(BaseRecordORM).load_only(
-                        BaseRecordORM.status, BaseRecordORM.manager_name, BaseRecordORM.modified_on
-                    )
+                # This is a very tricky query. We only want to load two columns of BaseRecord, but we need to join.
+                # Sqlalchemy likes to load more columns if there is a relationship. So we join outside of the
+                # relationship (ie, NOT TaskQueueORM.record) and then load the columns we want.
+                stmt = select(TaskQueueORM, BaseRecordORM).join(
+                    BaseRecordORM, BaseRecordORM.id == TaskQueueORM.record_id
                 )
 
                 stmt = stmt.filter(BaseRecordORM.status == RecordStatusEnum.waiting)
                 stmt = stmt.filter(search_programs.contains(TaskQueueORM.required_programs))
+                stmt = stmt.options(load_only(BaseRecordORM.id, BaseRecordORM.record_type))
+                stmt = stmt.options(lazyload(BaseRecordORM.owner_user), lazyload(BaseRecordORM.owner_group))
 
                 # Order by priority, then date (earliest first)
                 # The sort_date usually comes from the created_on of the record, or the created_on of the record's parent service
@@ -312,33 +315,61 @@ class TaskSocket:
                 new_items = session.execute(stmt).all()
 
                 # Update all the task records to reflect this manager claiming them
-                for _, record_orm in new_items:
-                    record_orm.status = RecordStatusEnum.running
-                    record_orm.manager_name = manager_name
-                    record_orm.modified_on = now_at_utc()
+                task_ids = [x[0].id for x in new_items]
+                record_ids = [x[1].id for x in new_items]
+
+                return_order.extend(task_ids)  # Keep the order as returned from the db
+                stmt = update(TaskQueueORM).where(TaskQueueORM.id.in_(task_ids)).values(available=False)
+                session.execute(stmt)
+
+                stmt = (
+                    update(BaseRecordORM)
+                    .where(BaseRecordORM.id.in_(record_ids))
+                    .values(status=RecordStatusEnum.running, manager_name=manager_name, modified_on=now_at_utc())
+                )
+                session.execute(stmt)
 
                 # Store in dict form for returning, but no need to store the info from the base record
                 # Also, retrieve the actual function kwargs. Eventually we may want the managers
                 # to retrieve the kwargs themselves
-                for task_orm, _ in new_items:
-                    task_dict = task_orm.model_dict(exclude=["record"])
+                tasks_to_generate = defaultdict(list)
+                task_updates = []
 
+                # Find what tasks need their function and kwargs generated
+                # Otherwise, just add them to the returned list
+                for task_orm, record_orm in new_items:
                     if task_orm.function is None:
-                        # Generate the task on the fly
+                        tasks_to_generate[record_orm.record_type].append(task_orm)
+                    else:
+                        found[task_orm.id] = task_orm.model_dict(exclude=["record"])
+
+                # Create the task data on the fly if it doesn't exist
+                for record_type, tasks_orm in tasks_to_generate.items():
+                    # Generate the task on the fly
+                    for task_orm in tasks_orm:
+                        task_dict = task_orm.model_dict(exclude=["record"])
                         task_spec = self.root_socket.records.generate_task_specification(task_orm)
 
                         kwargs = task_spec["function_kwargs"]
                         kwargs_compressed, _, _ = compress(kwargs, CompressionEnum.zstd)
 
                         # Add this to the orm for any future managers claiming this task
-                        task_orm.function = task_spec["function"]
-                        task_orm.function_kwargs_compressed = kwargs_compressed
+                        task_updates.append(
+                            {
+                                "id": task_orm.id,
+                                "function": task_spec["function"],
+                                "function_kwargs_compressed": kwargs_compressed,
+                            }
+                        )
 
                         # But just use what we created when returning to this manager
                         task_dict["function"] = task_spec["function"]
                         task_dict["function_kwargs_compressed"] = kwargs_compressed
+                        found[task_orm.id] = task_dict
 
-                    found.append(task_dict)
+                # Update the task records with the function and kwargs
+                if task_updates:
+                    session.execute(update(TaskQueueORM), task_updates)
 
                 session.flush()
 
@@ -349,4 +380,4 @@ class TaskSocket:
 
             self._logger.info(f"Manager {manager_name} has claimed {len(found)} new tasks")
 
-        return found
+        return [found[i] for i in return_order]
