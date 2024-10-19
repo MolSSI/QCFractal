@@ -4,10 +4,8 @@ import logging
 from typing import TYPE_CHECKING
 
 from qcelemental.models import (
-    OptimizationInput as QCEl_OptimizationInput,
     OptimizationResult as QCEl_OptimizationResult,
 )
-from qcelemental.models.procedures import QCInputSpecification as QCEl_QCInputSpecification
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import lazyload, joinedload, selectinload, defer, undefer
@@ -22,6 +20,7 @@ from qcportal.optimization import (
     OptimizationQueryFilters,
 )
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.serialization import convert_numpy_recursive
 from qcportal.singlepoint import (
     SinglepointDriver,
 )
@@ -63,19 +62,23 @@ class OptimizationRecordSocket(BaseRecordSocket):
         initial_molecule = record_orm.initial_molecule.model_dict()
 
         model = {"method": specification.qc_specification.method}
+
+        # Empty basis string should be None in the model
         if specification.qc_specification.basis:
             model["basis"] = specification.qc_specification.basis
+        else:
+            model["basis"] = None
 
         # Add the singlepoint program to the optimization keywords
         opt_keywords = specification.keywords.copy()
         opt_keywords["program"] = specification.qc_specification.program
 
-        qcschema_input = QCEl_OptimizationInput(
+        # driver = "gradient" is what the current schema uses
+        qcschema_input = dict(
+            schema_name="qcschema_optimization_input",
             id=record_orm.id,
-            input_specification=QCEl_QCInputSpecification(
-                model=model, keywords=specification.qc_specification.keywords
-            ),
-            initial_molecule=initial_molecule,
+            input_specification=dict(model=model, driver="gradient", keywords=specification.qc_specification.keywords),
+            initial_molecule=convert_numpy_recursive(initial_molecule),  # TODO - remove after all data is converted
             keywords=opt_keywords,
             protocols=specification.protocols,
         )
@@ -85,7 +88,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
         return {
             "function": "qcengine.compute_procedure",
             "function_kwargs": {
-                "input_data": qcschema_input.dict(encoding="json"),
+                "input_data": qcschema_input,
                 "procedure": specification.program,
             },
         }

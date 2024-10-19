@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from qcelemental.models import AtomicInput as QCEl_AtomicInput, AtomicResult as QCEl_AtomicResult
+from qcelemental.models import AtomicResult as QCEl_AtomicResult
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import lazyload, joinedload, defer, undefer, defaultload
@@ -14,6 +14,7 @@ from qcportal.exceptions import MissingDataError
 from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.serialization import convert_numpy_recursive
 from qcportal.singlepoint import (
     QCSpecification,
     WavefunctionProperties,
@@ -53,14 +54,19 @@ class SinglepointRecordSocket(BaseRecordSocket):
         molecule = record_orm.molecule.model_dict()
 
         model = {"method": specification.method}
+
+        # Empty basis string should be None in the model
         if specification.basis:
             model["basis"] = specification.basis
+        else:
+            model["basis"] = None
 
-        qcschema_input = QCEl_AtomicInput(
+        qcschema_input = dict(
+            schema_name="qcschema_input",
             id=record_orm.id,
             driver=specification.driver,
             model=model,
-            molecule=molecule,
+            molecule=convert_numpy_recursive(molecule),  # TODO - remove after all data is converted
             keywords=specification.keywords,
             protocols=specification.protocols,
         )
@@ -68,7 +74,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
         return {
             "function": "qcengine.compute",
             "function_kwargs": {
-                "input_data": qcschema_input.dict(encoding="json"),
+                "input_data": qcschema_input,
                 "program": specification.program,
             },
         }
