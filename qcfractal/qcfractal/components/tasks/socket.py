@@ -295,7 +295,7 @@ class TaskSocket:
                     BaseRecordORM, BaseRecordORM.id == TaskQueueORM.record_id
                 )
 
-                stmt = stmt.filter(BaseRecordORM.status == RecordStatusEnum.waiting)
+                stmt = stmt.filter(TaskQueueORM.available == True)
                 stmt = stmt.filter(search_programs.contains(TaskQueueORM.required_programs))
                 stmt = stmt.options(load_only(BaseRecordORM.id, BaseRecordORM.record_type))
                 stmt = stmt.options(lazyload(BaseRecordORM.owner_user), lazyload(BaseRecordORM.owner_group))
