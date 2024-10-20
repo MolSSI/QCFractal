@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from qcelemental.models import AtomicResult as QCEl_AtomicResult
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import lazyload, joinedload, defer, undefer, defaultload
+from sqlalchemy.orm import lazyload, joinedload, defer, undefer, defaultload, load_only, selectinload
 
 from qcfractal.db_socket.helpers import insert_general
 from qcportal.compression import CompressionEnum, compress
@@ -49,35 +49,52 @@ class SinglepointRecordSocket(BaseRecordSocket):
     def get_children_select() -> List[Any]:
         return []
 
-    def generate_task_specification(self, record_orm: SinglepointRecordORM) -> Dict[str, Any]:
-        specification = record_orm.specification
-        molecule = record_orm.molecule.model_dict()
-
-        model = {"method": specification.method}
-
-        # Empty basis string should be None in the model
-        if specification.basis:
-            model["basis"] = specification.basis
-        else:
-            model["basis"] = None
-
-        qcschema_input = dict(
-            schema_name="qcschema_input",
-            id=record_orm.id,
-            driver=specification.driver,
-            model=model,
-            molecule=convert_numpy_recursive(molecule),  # TODO - remove after all data is converted
-            keywords=specification.keywords,
-            protocols=specification.protocols,
+    def generate_task_specifications(self, session: Session, record_ids: Sequence[int]) -> List[Dict[str, Any]]:
+        stmt = select(SinglepointRecordORM).filter(SinglepointRecordORM.id.in_(record_ids))
+        stmt = stmt.options(load_only(SinglepointRecordORM.id))
+        stmt = stmt.options(
+            lazyload("*"), joinedload(SinglepointRecordORM.molecule), selectinload(SinglepointRecordORM.specification)
         )
 
-        return {
-            "function": "qcengine.compute",
-            "function_kwargs": {
-                "input_data": qcschema_input,
-                "program": specification.program,
-            },
-        }
+        record_orms = session.execute(stmt).scalars().all()
+
+        task_specs = {}
+
+        for record_orm in record_orms:
+            specification = record_orm.specification
+            molecule = record_orm.molecule.model_dict()
+
+            model = {"method": specification.method}
+
+            # Empty basis string should be None in the model
+            if specification.basis:
+                model["basis"] = specification.basis
+            else:
+                model["basis"] = None
+
+            qcschema_input = dict(
+                schema_name="qcschema_input",
+                id=record_orm.id,
+                driver=specification.driver,
+                model=model,
+                molecule=convert_numpy_recursive(molecule),  # TODO - remove after all data is converted
+                keywords=specification.keywords,
+                protocols=specification.protocols,
+            )
+
+            task_specs[record_orm.id] = {
+                "function": "qcengine.compute",
+                "function_kwargs": {
+                    "input_data": qcschema_input,
+                    "program": specification.program,
+                },
+            }
+
+        if set(record_ids) != set(task_specs.keys()):
+            raise RuntimeError("Did not generate all task specs for all singlepoint records?")
+
+        # Return in the input order
+        return [task_specs[rid] for rid in record_ids]
 
     def wavefunction_to_orm(
         self, session: Session, wavefunction: Optional[WavefunctionProperties]

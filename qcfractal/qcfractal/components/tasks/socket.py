@@ -345,10 +345,13 @@ class TaskSocket:
 
                 # Create the task data on the fly if it doesn't exist
                 for record_type, tasks_orm in tasks_to_generate.items():
-                    # Generate the task on the fly
-                    for task_orm in tasks_orm:
+                    record_socket = self.root_socket.records.get_socket(record_type)
+
+                    record_ids = [task_orm.record_id for task_orm in tasks_orm]
+                    task_specs = record_socket.generate_task_specifications(session, record_ids)
+
+                    for task_orm, task_spec in zip(tasks_orm, task_specs):
                         task_dict = task_orm.model_dict(exclude=["record"])
-                        task_spec = self.root_socket.records.generate_task_specification(task_orm)
 
                         kwargs = task_spec["function_kwargs"]
                         kwargs_compressed, _, _ = compress(kwargs, CompressionEnum.zstd)

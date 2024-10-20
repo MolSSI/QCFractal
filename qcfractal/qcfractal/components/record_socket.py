@@ -187,7 +187,7 @@ class BaseRecordSocket:
 
         raise NotImplementedError(f"query function not implemented for {type(self)}! This is a developer error")
 
-    def generate_task_specification(self, record_orm: BaseRecordORM) -> Dict[str, Any]:
+    def generate_task_specifications(self, session: Session, record_ids: Sequence[int]) -> List[Dict[str, Any]]:
         """
         Generate the actual QCSchema input and related fields for a task
         """
@@ -904,14 +904,6 @@ class RecordSocket:
             wp = BaseRecordORM
 
         return self.get_base(wp, record_ids, include, exclude, missing_ok, session=session)
-
-    def generate_task_specification(self, task_orm: TaskQueueORM) -> Dict[str, Any]:
-        """
-        Generate the actual QCSchema input and related fields for a task
-        """
-
-        record_type = task_orm.record.record_type
-        return self._handler_map[record_type].generate_task_specification(task_orm.record)
 
     def create_compute_history_entry(
         self,

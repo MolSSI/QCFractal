@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import select, or_
 from sqlalchemy.dialects.postgresql import array_agg
-from sqlalchemy.orm import contains_eager, aliased, defer, selectinload, joinedload
+from sqlalchemy.orm import contains_eager, aliased, defer, selectinload, joinedload, load_only, lazyload
 
 from qcfractal.components.record_db_models import BaseRecordORM, RecordComputeHistoryORM
 from qcfractal.db_socket.helpers import (
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from qcfractal.components.internal_jobs.status import JobProgress
-    from typing import List, Dict, Tuple, Optional, Any, Union
+    from typing import List, Dict, Tuple, Optional, Any, Union, Sequence
 
 
 class ServiceSocket:
@@ -388,11 +388,32 @@ class ServiceSubtaskRecordSocket(BaseRecordSocket):
     def get_children_select() -> List[Any]:
         return []
 
-    def generate_task_specification(self, record_orm: ServiceSubtaskRecordORM) -> Dict[str, Any]:
+    def generate_task_specifications(self, session: Session, record_ids: Sequence[int]) -> List[Dict[str, Any]]:
+
         # Normally, this function is a little more complicated (ie, for others the spec is
         # generated from data in the record). However, this record type is a pretty
         # transparent passthrough. The function and kwargs stored in the record, so just return them
-        return {"function": record_orm.function, "function_kwargs": record_orm.function_kwargs}
+
+        stmt = select(ServiceSubtaskRecordORM).filter(ServiceSubtaskRecordORM.id.in_(record_ids))
+        stmt = stmt.options(
+            load_only(
+                ServiceSubtaskRecordORM.id, ServiceSubtaskRecordORM.function, ServiceSubtaskRecordORM.function_kwargs
+            )
+        )
+        stmt = stmt.options(lazyload("*"))
+
+        record_orms = session.execute(stmt).scalars().all()
+
+        task_specs = {
+            record_orm.id: {"function": record_orm.function, "function_kwargs": record_orm.function_kwargs}
+            for record_orm in record_orms
+        }
+
+        if set(record_ids) != set(task_specs.keys()):
+            raise RuntimeError("Did not generate all task specs for all service subtask records?")
+
+        # Return in the input order
+        return [task_specs[rid] for rid in record_ids]
 
     def update_completed_task(
         self, session: Session, record_orm: ServiceSubtaskRecordORM, result: GenericTaskResult, manager_name: str
