@@ -51,7 +51,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
 
     def generate_task_specifications(self, session: Session, record_ids: Sequence[int]) -> List[Dict[str, Any]]:
         stmt = select(SinglepointRecordORM).filter(SinglepointRecordORM.id.in_(record_ids))
-        stmt = stmt.options(load_only(SinglepointRecordORM.id))
+        stmt = stmt.options(load_only(SinglepointRecordORM.id, SinglepointRecordORM.extras))
         stmt = stmt.options(
             lazyload("*"), joinedload(SinglepointRecordORM.molecule), selectinload(SinglepointRecordORM.specification)
         )
@@ -74,12 +74,14 @@ class SinglepointRecordSocket(BaseRecordSocket):
 
             qcschema_input = dict(
                 schema_name="qcschema_input",
-                id=record_orm.id,
+                schema_version=1,
+                id=str(record_orm.id),  # str for compatibility
                 driver=specification.driver,
                 model=model,
-                molecule=convert_numpy_recursive(molecule),  # TODO - remove after all data is converted
+                molecule=convert_numpy_recursive(molecule, flatten=True),  # TODO - remove after all data is converted
                 keywords=specification.keywords,
                 protocols=specification.protocols,
+                extras=record_orm.extras if record_orm.extras else {},
             )
 
             task_specs[record_orm.id] = {

@@ -60,7 +60,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
     def generate_task_specifications(self, session: Session, record_ids: Sequence[int]) -> List[Dict[str, Any]]:
 
         stmt = select(OptimizationRecordORM).filter(OptimizationRecordORM.id.in_(record_ids))
-        stmt = stmt.options(load_only(OptimizationRecordORM.id))
+        stmt = stmt.options(load_only(OptimizationRecordORM.id, OptimizationRecordORM.extras))
         stmt = stmt.options(
             lazyload("*"),
             joinedload(OptimizationRecordORM.initial_molecule),
@@ -90,13 +90,21 @@ class OptimizationRecordSocket(BaseRecordSocket):
             # driver = "gradient" is what the current schema uses
             qcschema_input = dict(
                 schema_name="qcschema_optimization_input",
-                id=record_orm.id,
+                schema_version=1,
+                id=str(record_orm.id),  # str for compatibility
                 input_specification=dict(
-                    model=model, driver="gradient", keywords=specification.qc_specification.keywords
+                    schema_name="qcschema_input",
+                    schema_version=1,
+                    model=model,
+                    driver="gradient",
+                    keywords=specification.qc_specification.keywords,
                 ),
-                initial_molecule=convert_numpy_recursive(initial_molecule),  # TODO - remove after all data is converted
+                initial_molecule=convert_numpy_recursive(
+                    initial_molecule, flatten=True
+                ),  # TODO - remove after all data is converted
                 keywords=opt_keywords,
                 protocols=specification.protocols,
+                extras=record_orm.extras if record_orm.extras else {},
             )
 
             # Note that the 'program' that runs an optimization is
