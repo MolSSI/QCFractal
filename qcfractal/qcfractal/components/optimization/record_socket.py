@@ -4,13 +4,11 @@ import logging
 from typing import TYPE_CHECKING
 
 from qcelemental.models import (
-    OptimizationInput as QCEl_OptimizationInput,
     OptimizationResult as QCEl_OptimizationResult,
 )
-from qcelemental.models.procedures import QCInputSpecification as QCEl_QCInputSpecification
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import lazyload, joinedload, selectinload, defer, undefer
+from sqlalchemy.orm import lazyload, joinedload, selectinload, defer, undefer, load_only
 
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
 from qcfractal.db_socket.helpers import insert_general
@@ -22,6 +20,7 @@ from qcportal.optimization import (
     OptimizationQueryFilters,
 )
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.serialization import convert_numpy_recursive
 from qcportal.singlepoint import (
     SinglepointDriver,
 )
@@ -58,37 +57,71 @@ class OptimizationRecordSocket(BaseRecordSocket):
         )
         return [stmt]
 
-    def generate_task_specification(self, record_orm: OptimizationRecordORM) -> Dict[str, Any]:
-        specification = record_orm.specification
-        initial_molecule = record_orm.initial_molecule.model_dict()
+    def generate_task_specifications(self, session: Session, record_ids: Sequence[int]) -> List[Dict[str, Any]]:
 
-        model = {"method": specification.qc_specification.method}
-        if specification.qc_specification.basis:
-            model["basis"] = specification.qc_specification.basis
-
-        # Add the singlepoint program to the optimization keywords
-        opt_keywords = specification.keywords.copy()
-        opt_keywords["program"] = specification.qc_specification.program
-
-        qcschema_input = QCEl_OptimizationInput(
-            id=record_orm.id,
-            input_specification=QCEl_QCInputSpecification(
-                model=model, keywords=specification.qc_specification.keywords
-            ),
-            initial_molecule=initial_molecule,
-            keywords=opt_keywords,
-            protocols=specification.protocols,
+        stmt = select(OptimizationRecordORM).filter(OptimizationRecordORM.id.in_(record_ids))
+        stmt = stmt.options(load_only(OptimizationRecordORM.id, OptimizationRecordORM.extras))
+        stmt = stmt.options(
+            lazyload("*"),
+            joinedload(OptimizationRecordORM.initial_molecule),
+            selectinload(OptimizationRecordORM.specification),
         )
 
-        # Note that the 'program' that runs an optimization is
-        # called a 'procedure' in QCEngine
-        return {
-            "function": "qcengine.compute_procedure",
-            "function_kwargs": {
-                "input_data": qcschema_input.dict(encoding="json"),
-                "procedure": specification.program,
-            },
-        }
+        record_orms = session.execute(stmt).scalars().all()
+
+        task_specs = {}
+
+        for record_orm in record_orms:
+            specification = record_orm.specification
+            initial_molecule = record_orm.initial_molecule.model_dict()
+
+            model = {"method": specification.qc_specification.method}
+
+            # Empty basis string should be None in the model
+            if specification.qc_specification.basis:
+                model["basis"] = specification.qc_specification.basis
+            else:
+                model["basis"] = None
+
+            # Add the singlepoint program to the optimization keywords
+            opt_keywords = specification.keywords.copy()
+            opt_keywords["program"] = specification.qc_specification.program
+
+            # driver = "gradient" is what the current schema uses
+            qcschema_input = dict(
+                schema_name="qcschema_optimization_input",
+                schema_version=1,
+                id=str(record_orm.id),  # str for compatibility
+                input_specification=dict(
+                    schema_name="qcschema_input",
+                    schema_version=1,
+                    model=model,
+                    driver="gradient",
+                    keywords=specification.qc_specification.keywords,
+                ),
+                initial_molecule=convert_numpy_recursive(
+                    initial_molecule, flatten=True
+                ),  # TODO - remove after all data is converted
+                keywords=opt_keywords,
+                protocols=specification.protocols,
+                extras=record_orm.extras if record_orm.extras else {},
+            )
+
+            # Note that the 'program' that runs an optimization is
+            # called a 'procedure' in QCEngine
+            task_specs[record_orm.id] = {
+                "function": "qcengine.compute_procedure",
+                "function_kwargs": {
+                    "input_data": qcschema_input,
+                    "procedure": specification.program,
+                },
+            }
+
+        if set(record_ids) != set(task_specs.keys()):
+            raise RuntimeError("Did not generate all task specs for all optimizaiton records?")
+
+        # Return in the input order
+        return [task_specs[rid] for rid in record_ids]
 
     def update_completed_task(
         self, session: Session, record_orm: OptimizationRecordORM, result: QCEl_OptimizationResult, manager_name: str
