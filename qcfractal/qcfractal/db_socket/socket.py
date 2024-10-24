@@ -12,7 +12,7 @@ from contextlib import contextmanager
 from functools import lru_cache
 from typing import TYPE_CHECKING
 
-from sqlalchemy import create_engine, exc, event, inspect, select, union, MetaData
+from sqlalchemy import create_engine, exc, event, inspect, select, union, MetaData, Engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 
@@ -85,7 +85,7 @@ class SQLAlchemySocket:
                 )
 
         # Check to see if the db is up-to-date
-        self.check_db_revision()
+        self._check_db_revision(self.engine)
 
         self.Session = sessionmaker(bind=self.engine, future=True)
 
@@ -231,9 +231,10 @@ class SQLAlchemySocket:
         alembic_cfg = SQLAlchemySocket.get_alembic_config(db_config)
         command.upgrade(alembic_cfg, revision)
 
-    def check_db_revision(self):
+    @staticmethod
+    def _check_db_revision(engine: Engine):
         """
-        Checks to make sure the database is up-to-date
+        Checks to make sure the database is up-to-date, given an engine
 
         Will raise an exception if it is not up-to-date
         """
@@ -245,7 +246,7 @@ class SQLAlchemySocket:
         script = ScriptDirectory(script_dir)
         heads = script.get_heads()
 
-        conn = self.engine.connect()
+        conn = engine.connect()
         context = MigrationContext.configure(connection=conn)
         current_rev = context.get_current_revision()
 
@@ -259,6 +260,17 @@ class SQLAlchemySocket:
                 )
         finally:
             conn.close()
+
+    @staticmethod
+    def check_db_revision(db_config: DatabaseConfig):
+        """
+        Checks to make sure the database is up-to-date, given a configuration
+
+        Will raise an exception if it is not up-to-date
+        """
+
+        engine = create_engine(db_config.sqlalchemy_url, echo=False, poolclass=NullPool, future=True)
+        SQLAlchemySocket._check_db_revision(engine)
 
     @contextmanager
     def session_scope(self, read_only: bool = False):
