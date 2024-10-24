@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>How do I search for specific types of computations? &#8212; QCArchive 0.56.post9+g05570783 documentation</title>
+    <title>How do I search for specific types of computations? &#8212; QCArchive 0.56.post12+g1e9bab84 documentation</title>
   
   
   
@@ -16,17 +16,19 @@
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
+  <!-- 
+    this give us a css class that will be invisible only if js is disabled 
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-
-  
-  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+  <link href="../_static/styles/theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
@@ -35,12 +37,13 @@
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=6f1775e9" />
   
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=26a4bc78f4c0ddb94549"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
-  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
-    <script src="../_static/documentation_options.js?v=712c0689"></script>
+    <script src="../_static/documentation_options.js?v=ed1b27cc"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,6 +56,7 @@
     <link rel="prev" title="How do I retrieve computation results by ID?" href="record_retrieval.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.56.post12+g1e9bab84" />
   </head>
   
   
@@ -68,19 +72,8 @@
     <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
-  <input type="checkbox"
-          class="sidebar-toggle"
-          id="pst-primary-sidebar-checkbox"/>
-  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
-  
-  <input type="checkbox"
-          class="sidebar-toggle"
-          id="pst-secondary-sidebar-checkbox"/>
-  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
-  
-  <div class="search-button__wrapper">
-    <div class="search-button__overlay"></div>
-    <div class="search-button__search-container">
+  <dialog id="pst-search-dialog">
+    
 <form class="bd-search d-flex align-items-center"
       action="../search.html"
       method="get">
@@ -88,7 +81,6 @@
   <input type="search"
          class="form-control"
          name="q"
-         id="search-input"
          placeholder="Search the docs ..."
          aria-label="Search the docs ..."
          autocomplete="off"
@@ -96,8 +88,8 @@
          autocapitalize="off"
          spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form></div>
-  </div>
+</form>
+  </dialog>
 
   <div class="pst-async-banner-revealer d-none">
   <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
@@ -131,7 +123,7 @@
     
     
     <img src="../_static/qcarchive_logo.svg" class="logo__image only-light" alt=""/>
-    <script>document.write(`<img src="../_static/qcarchive_logo_inverted.svg" class="logo__image only-dark" alt=""/>`);</script>
+    <img src="../_static/qcarchive_logo_inverted.svg" class="logo__image only-dark pst-js-only" alt=""/>
   
   
     <p class="title logo__title">QCArchive</p>
@@ -222,29 +214,21 @@
         <div class="navbar-item navbar-persistent--container">
           
 
- <script>
- document.write(`
-   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span class="search-button__default-text">Search</span>
-    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-   </button>
- `);
- </script>
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
         </div>
       
       
         <div class="navbar-item">
 
-<script>
-document.write(`
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
-  </button>
-`);
-</script></div>
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
       
         <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
@@ -269,15 +253,11 @@ document.write(`
   
     <div class="navbar-persistent--mobile">
 
- <script>
- document.write(`
-   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span class="search-button__default-text">Search</span>
-    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-   </button>
- `);
- </script>
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
     </div>
   
 
@@ -296,7 +276,8 @@ document.write(`
       
       
       
-      <div class="bd-sidebar-primary bd-sidebar">
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
   
@@ -378,15 +359,11 @@ document.write(`
         
           <div class="navbar-item">
 
-<script>
-document.write(`
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
-  </button>
-`);
-</script></div>
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
         
           <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
@@ -448,8 +425,6 @@ document.write(`
       
         <div class="header-article-item">
 
-
-
 <nav aria-label="Breadcrumb" class="d-print-none">
   <ul class="bd-breadcrumbs">
     
@@ -461,7 +436,7 @@ document.write(`
     
     <li class="breadcrumb-item"><a href="index.html" class="nav-link">QCArchive Quickstart</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page">How do I...</li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">How do I search for specific types of computations?</span></li>
   </ul>
 </nav>
 </div>
@@ -503,7 +478,64 @@ need to log in to submit or modify computations.</p>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>WARNING: This client version is newer than the server version. This may work if the versions are close, but expect exceptions and errors if attempting things the server does not support. client version: 0.56.post9+g05570783, server version: 0.56
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">PortalRequestError</span><span class="g g-Whitespace">                        </span>Traceback (most recent call last)
+<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">line</span> <span class="mi">2</span>
+<span class="g g-Whitespace">      </span><span class="mi">1</span> <span class="c1"># Guest access</span>
+<span class="ne">----&gt; </span><span class="mi">2</span> <span class="n">client</span> <span class="o">=</span> <span class="n">ptl</span><span class="o">.</span><span class="n">PortalClient</span><span class="p">(</span><span class="s2">&quot;https://qcademo.molssi.org&quot;</span><span class="p">)</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client.py:150,</span> in <span class="ni">PortalClient.__init__</span><span class="nt">(self, address, username, password, verify, show_motd, cache_dir, cache_max_size, memory_cache_key)</span>
+<span class="g g-Whitespace">    </span><span class="mi">116</span> <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">117</span>     <span class="bp">self</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">118</span>     <span class="n">address</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+   <span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">126</span>     <span class="n">memory_cache_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">127</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">128</span><span class="w">     </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="g g-Whitespace">    </span><span class="mi">129</span><span class="sd">     Parameters</span>
+<span class="g g-Whitespace">    </span><span class="mi">130</span><span class="sd">     ----------</span>
+<span class="sd">   (...)</span>
+<span class="g g-Whitespace">    </span><span class="mi">147</span><span class="sd">         Maximum size of the cache directory</span>
+<span class="g g-Whitespace">    </span><span class="mi">148</span><span class="sd">     &quot;&quot;&quot;</span>
+<span class="ne">--&gt; </span><span class="mi">150</span>     <span class="n">PortalClientBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">verify</span><span class="p">,</span> <span class="n">show_motd</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">151</span>     <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;PortalClient&quot;</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">152</span>     <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">PortalCache</span><span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">,</span> <span class="n">cache_max_size</span><span class="p">)</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:156,</span> in <span class="ni">PortalClientBase.__init__</span><span class="nt">(self, address, username, password, verify, show_motd)</span>
+<span class="g g-Whitespace">    </span><span class="mi">153</span>     <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_refresh_exp</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="g g-Whitespace">    </span><span class="mi">155</span> <span class="c1"># Try to connect and pull the server info</span>
+<span class="ne">--&gt; </span><span class="mi">156</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_server_information</span><span class="p">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">157</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_info</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+<span class="g g-Whitespace">    </span><span class="mi">158</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_limits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_info</span><span class="p">[</span><span class="s2">&quot;api_limits&quot;</span><span class="p">]</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client.py:190,</span> in <span class="ni">PortalClient.get_server_information</span><span class="nt">(self)</span>
+<span class="g g-Whitespace">    </span><span class="mi">181</span><span class="w"> </span><span class="sd">&quot;&quot;&quot;Request general information about the server</span>
+<span class="g g-Whitespace">    </span><span class="mi">182</span><span class="sd"> </span>
+<span class="g g-Whitespace">    </span><span class="mi">183</span><span class="sd"> Returns</span>
+<span class="sd">   (...)</span>
+<span class="g g-Whitespace">    </span><span class="mi">186</span><span class="sd">     Server information.</span>
+<span class="g g-Whitespace">    </span><span class="mi">187</span><span class="sd"> &quot;&quot;&quot;</span>
+<span class="g g-Whitespace">    </span><span class="mi">189</span> <span class="c1"># Request the info, and store here for later use</span>
+<span class="ne">--&gt; </span><span class="mi">190</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="s2">&quot;api/v1/information&quot;</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:416,</span> in <span class="ni">PortalClientBase.make_request</span><span class="nt">(self, method, endpoint, response_model, body_model, url_params_model, body, url_params, allow_retries)</span>
+<span class="g g-Whitespace">    </span><span class="mi">413</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parsed_url_params</span><span class="p">,</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="g g-Whitespace">    </span><span class="mi">414</span>     <span class="n">parsed_url_params</span> <span class="o">=</span> <span class="n">parsed_url_params</span><span class="o">.</span><span class="n">dict</span><span class="p">()</span>
+<span class="ne">--&gt; </span><span class="mi">416</span> <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">417</span>     <span class="n">method</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">serialized_body</span><span class="p">,</span> <span class="n">url_params</span><span class="o">=</span><span class="n">parsed_url_params</span><span class="p">,</span> <span class="n">allow_retries</span><span class="o">=</span><span class="n">allow_retries</span>
+<span class="g g-Whitespace">    </span><span class="mi">418</span> <span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">419</span> <span class="n">d</span> <span class="o">=</span> <span class="n">deserialize</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">])</span>
+<span class="g g-Whitespace">    </span><span class="mi">421</span> <span class="k">if</span> <span class="n">response_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:381,</span> in <span class="ni">PortalClientBase._request</span><span class="nt">(self, method, endpoint, body, url_params, internal_retry, allow_retries)</span>
+<span class="g g-Whitespace">    </span><span class="mi">376</span>     <span class="k">except</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">377</span>         <span class="c1"># If this error comes from, ie, the web server or something else, then</span>
+<span class="g g-Whitespace">    </span><span class="mi">378</span>         <span class="c1"># we have to use &#39;reason&#39;</span>
+<span class="g g-Whitespace">    </span><span class="mi">379</span>         <span class="n">details</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;msg&quot;</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">reason</span><span class="p">}</span>
+<span class="ne">--&gt; </span><span class="mi">381</span>     <span class="k">raise</span> <span class="n">PortalRequestError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Request failed: </span><span class="si">{</span><span class="n">details</span><span class="p">[</span><span class="s1">&#39;msg&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">details</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">383</span> <span class="k">return</span> <span class="n">r</span>
+
+<span class="ne">PortalRequestError</span>: Request failed: Not Found (HTTP status 404)
 </pre></div>
 </div>
 </div>
@@ -528,57 +560,6 @@ Please note that since query_records searches all record types, you can only que
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Help on method query_records in module qcportal.client:
-
-query_records(*, record_id: &#39;Optional[Union[int, Iterable[int]]]&#39; = None, record_type: &#39;Optional[Union[str, Iterable[str]]]&#39; = None, manager_name: &#39;Optional[Union[str, Iterable[str]]]&#39; = None, status: &#39;Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]]&#39; = None, dataset_id: &#39;Optional[Union[int, Iterable[int]]]&#39; = None, parent_id: &#39;Optional[Union[int, Iterable[int]]]&#39; = None, child_id: &#39;Optional[Union[int, Iterable[int]]]&#39; = None, created_before: &#39;Optional[Union[datetime, str]]&#39; = None, created_after: &#39;Optional[Union[datetime, str]]&#39; = None, modified_before: &#39;Optional[Union[datetime, str]]&#39; = None, modified_after: &#39;Optional[Union[datetime, str]]&#39; = None, owner_user: &#39;Optional[Union[int, str, Iterable[Union[int, str]]]]&#39; = None, owner_group: &#39;Optional[Union[int, str, Iterable[Union[int, str]]]]&#39; = None, limit: &#39;int&#39; = None, include: &#39;Optional[Iterable[str]]&#39; = None) -&gt; &#39;RecordQueryIterator[BaseRecord]&#39; method of qcportal.client.PortalClient instance
-    Query records of all types based on common fields
-    
-    This is a general query of all record types, so it can only filter by fields
-    that are common among all records.
-    
-    Do not rely on the returned records being in any particular order.
-    
-    Parameters
-    ----------
-    record_id
-        Query records whose ID is in the given list
-    record_type
-        Query records whose type is in the given list
-    manager_name
-        Query records that were completed (or are currently runnning) on a manager is in the given list
-    status
-        Query records whose status is in the given list
-    dataset_id
-        Query records that are part of a dataset is in the given list
-    parent_id
-        Query records that have a parent is in the given list
-    child_id
-        Query records that have a child is in the given list
-    created_before
-        Query records that were created before the given date/time
-    created_after
-        Query records that were created after the given date/time
-    modified_before
-        Query records that were modified before the given date/time
-    modified_after
-        Query records that were modified after the given date/time
-    owner_user
-        Query records owned by a user in the given list (usernames or IDs)
-    owner_group
-        Query records owned by a group in the given list (group names or IDS)
-    limit
-        The maximum number of records to return. Note that the server limit is always obeyed.
-    include
-        Additional fields to include in the returned record
-    
-    Returns
-    -------
-    :
-        An iterator that can be used to retrieve the results of the query
-</pre></div>
-</div>
-</div>
 </div>
 <p>For example, to query for computations created between January 10, 2023 and January 14, 2023, we could do the following.</p>
 <div class="cell docutils container">
@@ -597,11 +578,6 @@ An iterator can be made into a list by casting or used in a <code class="docutil
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Found 0 results.
-</pre></div>
-</div>
-</div>
 </div>
 <p>After the results are retrieved, you can work with the records as shown in the “How do I work with computation records?” tutorial.</p>
 </section>
@@ -613,62 +589,6 @@ Documentation for the <code class="docutils literal notranslate"><span class="pr
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">help</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">query_singlepoints</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Help on method query_singlepoints in module qcportal.client:
-
-query_singlepoints(*, record_id: &#39;Optional[Union[int, Iterable[int]]]&#39; = None, manager_name: &#39;Optional[Union[str, Iterable[str]]]&#39; = None, status: &#39;Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]]&#39; = None, dataset_id: &#39;Optional[Union[int, Iterable[int]]]&#39; = None, parent_id: &#39;Optional[Union[int, Iterable[int]]]&#39; = None, created_before: &#39;Optional[Union[datetime, str]]&#39; = None, created_after: &#39;Optional[Union[datetime, str]]&#39; = None, modified_before: &#39;Optional[Union[datetime, str]]&#39; = None, modified_after: &#39;Optional[Union[datetime, str]]&#39; = None, program: &#39;Optional[Union[str, Iterable[str]]]&#39; = None, driver: &#39;Optional[Union[SinglepointDriver, Iterable[SinglepointDriver]]]&#39; = None, method: &#39;Optional[Union[str, Iterable[str]]]&#39; = None, basis: &#39;Optional[Union[str, Iterable[Optional[str]]]]&#39; = None, keywords: &#39;Optional[Union[Dict[str, Any], Iterable[Dict[str, Any]]]]&#39; = None, molecule_id: &#39;Optional[Union[int, Iterable[int]]]&#39; = None, owner_user: &#39;Optional[Union[int, str, Iterable[Union[int, str]]]]&#39; = None, owner_group: &#39;Optional[Union[int, str, Iterable[Union[int, str]]]]&#39; = None, limit: &#39;Optional[int]&#39; = None, include: &#39;Optional[Iterable[str]]&#39; = None) -&gt; &#39;RecordQueryIterator[SinglepointRecord]&#39; method of qcportal.client.PortalClient instance
-    Queries singlepoint records on the server
-    
-    Do not rely on the returned records being in any particular order.
-    
-    Parameters
-    ----------
-    record_id
-        Query records whose ID is in the given list
-    manager_name
-        Query records that were completed (or are currently runnning) on a manager is in the given list
-    status
-        Query records whose status is in the given list
-    dataset_id
-        Query records that are part of a dataset is in the given list
-    parent_id
-        Query records that have a parent is in the given list
-    created_before
-        Query records that were created before the given date/time
-    created_after
-        Query records that were created after the given date/time
-    modified_before
-        Query records that were modified before the given date/time
-    modified_after
-        Query records that were modified after the given date/time
-    program
-        Query records whose program is in the given list
-    driver
-        Query records whose driver is in the given list
-    method
-        Query records whose method is in the given list
-    basis
-        Query records whose basis is in the given list
-    keywords
-        Query records with these keywords (exact match)
-    molecule_id
-        Query records whose molecule (id) is in the given list
-    owner_user
-        Query records owned by a user in the given list
-    owner_group
-        Query records owned by a group in the given list
-    limit
-        The maximum number of records to return. Note that the server limit is always obeyed.
-    include
-        Additional fields to include in the returned record
-    
-    Returns
-    -------
-    :
-        An iterator that can be used to retrieve the results of the query
 </pre></div>
 </div>
 </div>
@@ -688,17 +608,6 @@ For the sake of demonstration in this notebook, we are limiting the number of re
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">molecule</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>78 Molecule(name=&#39;B&#39;, formula=&#39;B&#39;, hash=&#39;52710ba&#39;)
-77 Molecule(name=&#39;O&#39;, formula=&#39;O&#39;, hash=&#39;61591a7&#39;)
-76 Molecule(name=&#39;He&#39;, formula=&#39;He&#39;, hash=&#39;b3855c6&#39;)
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>75 Molecule(name=&#39;F&#39;, formula=&#39;F&#39;, hash=&#39;3fdfbc3&#39;)
-74 Molecule(name=&#39;C&#39;, formula=&#39;C&#39;, hash=&#39;9590329&#39;)
 </pre></div>
 </div>
 </div>
@@ -741,7 +650,8 @@ For the sake of demonstration in this notebook, we are limiting the number of re
             
             
               
-                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
   <div class="sidebar-secondary-item">
@@ -780,8 +690,8 @@ For the sake of demonstration in this notebook, we are limiting the number of re
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -822,7 +732,7 @@ For the sake of demonstration in this notebook, we are limiting the number of re
         
 
         <p class="theme-version">
-        Built with a customized <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.4.
+        Built with a customized <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.0.
         </p>
 
     </div>
