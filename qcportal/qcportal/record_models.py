@@ -369,7 +369,7 @@ class BaseRecord(BaseModel):
     is_service: bool
 
     properties: Optional[Dict[str, Any]]
-    extras: Optional[Dict[str, Any]]
+    extras: Dict[str, Any] = Field({})
 
     status: RecordStatusEnum
     manager_name: Optional[str]
@@ -409,6 +409,13 @@ class BaseRecord(BaseModel):
         self.propagate_client(client)
 
         assert self._client is client, "Client not set in base record class?"
+
+    @validator("extras", pre=True)
+    def _validate_extras(cls, v):
+        # For backwards compatibility. Older servers may have 'None' as the extras
+        if v is None:
+            return {}
+        return v
 
     def __init_subclass__(cls):
         """
