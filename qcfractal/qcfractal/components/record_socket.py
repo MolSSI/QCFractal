@@ -1060,6 +1060,7 @@ class RecordSocket:
         # (these may pull stuff out of extras)
         history_orm = self.create_compute_history_entry(session, result)
         history_orm.record_id = record_id
+        history_orm.manager_name = manager_name
         session.add(history_orm)
 
         # Update record-specific fields
@@ -1071,9 +1072,6 @@ class RecordSocket:
         record_updates['properties'] = properties
 
         # Now do everything common to all records
-        # Get the outputs & status, storing in the history orm
-        history_orm.manager_name = manager_name
-
         if "_qcfractal_compressed_native_files" in result.extras and len(result.extras["_qcfractal_compressed_native_files"]) > 0:
             native_files_orm = self.native_files_to_orm(session, result)
             for v in native_files_orm.values():
