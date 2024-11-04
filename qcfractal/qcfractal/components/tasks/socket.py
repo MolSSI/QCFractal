@@ -5,8 +5,6 @@ import traceback
 import time
 from typing import TYPE_CHECKING
 
-from fontTools.ttLib.tables.T_S_I__0 import table_T_S_I__0
-
 try:
     import pydantic.v1 as pydantic
 except ImportError:
