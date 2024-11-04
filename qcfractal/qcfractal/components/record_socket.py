@@ -4,7 +4,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from qcelemental.models import FailedOperation
-from sqlalchemy import select, delete, union, or_, func
+from sqlalchemy import select, delete, update, union, or_, func
 from sqlalchemy.orm import (
     joinedload,
     selectinload,
@@ -194,7 +194,7 @@ class BaseRecordSocket:
         )
 
     def update_completed_task(
-        self, session: Session, record_orm: BaseRecordORM, result: AllResultTypes, manager_name: str
+        self, session: Session, record_id: int, result: AllResultTypes, manager_name: str
     ) -> None:
         """
         Update a record ORM based on the result of a successfully-completed computation
@@ -1032,7 +1032,7 @@ class RecordSocket:
         session.flush()
 
     def update_completed_task(
-        self, session: Session, record_orm: BaseRecordORM, result: AllResultTypes, manager_name: str
+        self, session: Session, record_id: int, record_type: str, result: AllResultTypes, manager_name: str
     ):
         """
         Update a record ORM based on the results of a successfully-completed computation
@@ -1041,8 +1041,8 @@ class RecordSocket:
         ----------
         session
             An existing SQLAlchemy session
-        record_orm
-            ORM to update and mark as completed
+        record_id
+            ID of the record to update and mark as completed
         result
             The result of the computation. This should be a successful result
         manager_name
@@ -1052,50 +1052,51 @@ class RecordSocket:
         if isinstance(result, FailedOperation) or not result.success:
             raise RuntimeError("Developer error - this function only handles successful results")
 
-        if record_orm.is_service:
-            raise RuntimeError("Cannot update completed task with a service")
+        record_updates = {}
 
-        # For slow migration
-        # This is for handling edge cases w.r.t. restarts
-        record_orm.new_properties = None
-        record_orm.new_extras = None
-
-        handler = self._handler_map[record_orm.record_type]
+        handler = self._handler_map[record_type]
 
         # Do these before calling the record-specific handler
         # (these may pull stuff out of extras)
         history_orm = self.create_compute_history_entry(session, result)
+        history_orm.record_id = record_id
+        session.add(history_orm)
 
         # Update record-specific fields
-        handler.update_completed_task(session, record_orm, result, manager_name)
+        handler.update_completed_task(session, record_id, result, manager_name)
 
         # Now extras and properties
         extras, properties = build_extras_properties(result)
-        record_orm.extras = extras
-        record_orm.properties = properties
+        record_updates['extras'] = extras
+        record_updates['properties'] = properties
 
         # Now do everything common to all records
         # Get the outputs & status, storing in the history orm
         history_orm.manager_name = manager_name
-        record_orm.compute_history.append(history_orm)
 
         if "_qcfractal_compressed_native_files" in result.extras and len(result.extras["_qcfractal_compressed_native_files"]) > 0:
             native_files_orm = self.native_files_to_orm(session, result)
-            record_orm.native_files = native_files_orm
+            for v in native_files_orm.values():
+                v.record_id = record_id
+                session.add(v)
         else:
-            stmt = delete(NativeFileORM).where(NativeFileORM.record_id == record_orm.id)
+            stmt = delete(NativeFileORM).where(NativeFileORM.record_id == record_id)
             session.execute(stmt)
 
-        record_orm.status = history_orm.status
-        record_orm.manager_name = manager_name
-        record_orm.modified_on = history_orm.modified_on
+        record_updates['status'] = RecordStatusEnum.complete
+        record_updates['manager_name'] = manager_name
+        record_updates['modified_on'] = history_orm.modified_on
 
         # Delete the task from the task queue since it is completed
-        stmt = delete(TaskQueueORM).where(TaskQueueORM.record_id == record_orm.id)
+        stmt = delete(TaskQueueORM).where(TaskQueueORM.record_id == record_id)
+        session.execute(stmt)
+
+        # Actually update the record
+        stmt = update(BaseRecordORM).where(BaseRecordORM.id == record_id).values(record_updates)
         session.execute(stmt)
 
     def update_failed_task(
-        self, session: Session, record_orm: BaseRecordORM, failed_result: FailedOperation, manager_name: str
+        self, session: Session, record_id: int, failed_result: FailedOperation, manager_name: str
     ):
         """
         Update a record ORM whose computation has failed, and mark it as errored
@@ -1109,8 +1110,13 @@ class RecordSocket:
         manager_name
             The manager that produced the result
         """
+
         if not isinstance(failed_result, FailedOperation):
             raise RuntimeError("Developer error - this function only handles FailedOperation results")
+
+        # TODO
+        stmt = select(BaseRecordORM).where(BaseRecordORM.id == record_id)
+        record_orm = session.execute(stmt).scalar_one_or_none()
 
         # Handle outputs, which are a bit different in FailedOperation
         # Error is special in a FailedOperation

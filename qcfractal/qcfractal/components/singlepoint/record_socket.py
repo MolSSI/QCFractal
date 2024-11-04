@@ -88,12 +88,14 @@ class SinglepointRecordSocket(BaseRecordSocket):
         return wfn_orm
 
     def update_completed_task(
-        self, session: Session, record_orm: SinglepointRecordORM, result: QCEl_AtomicResult, manager_name: str
+        self, session: Session, record_id: int, result: QCEl_AtomicResult, manager_name: str
     ) -> None:
         if result.wavefunction:
-            record_orm.wavefunction = self.wavefunction_to_orm(session, result.wavefunction)
+            wavefunction_orm = self.wavefunction_to_orm(session, result.wavefunction)
+            wavefunction_orm.record_id = record_id
+            session.add(wavefunction_orm)
         else:
-            stmt = delete(WavefunctionORM).where(WavefunctionORM.record_id == record_orm.id)
+            stmt = delete(WavefunctionORM).where(WavefunctionORM.record_id == record_id)
             session.execute(stmt)
 
     def insert_complete_record(
