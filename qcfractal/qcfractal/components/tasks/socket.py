@@ -5,6 +5,8 @@ import traceback
 import time
 from typing import TYPE_CHECKING
 
+from fontTools.ttLib.tables.T_S_I__0 import table_T_S_I__0
+
 try:
     import pydantic.v1 as pydantic
 except ImportError:
@@ -72,8 +74,11 @@ class TaskSocket:
         tasks_rejected: List[Tuple[int, str]] = []
 
         with self.root_socket.optional_session(session) as session:
+            t0 = time.time()
             stmt = select(ComputeManagerORM).where(ComputeManagerORM.name == manager_name)
             manager: Optional[ComputeManagerORM] = session.execute(stmt).scalar_one_or_none()
+            t1 = time.time()
+            self._logger.debug(f"Query for manager took {(t1 - t0)*1000}ms")
 
             if manager is None:
                 self._logger.warning(f"Manager {manager_name} does not exist, but is trying to return tasks. Ignoring.")
@@ -92,7 +97,7 @@ class TaskSocket:
                 t1 = time.time()
                 result = pydantic.parse_obj_as(AllResultTypes, result_dict)
                 t2 = time.time()
-                self._logger.debug(f"Task id={task_id}: Decompression took {t1 - t0}s, parsing took {t2 - t1}s")
+                self._logger.debug(f"Task id={task_id}: Decompression took {(t1 - t0)*1000}ms, parsing took {(t2 - t1)*1000}ms")
 
                 # We load one at a time. This works well with 'with_for_update'
                 # which will do row locking. This lock is released on commit or rollback
@@ -109,7 +114,7 @@ class TaskSocket:
                 t0 = time.time()
                 task_orm: Optional[TaskQueueORM] = session.execute(stmt).scalar_one_or_none()
                 t1 = time.time()
-                self._logger.debug(f"Task id={task_id}: Query took {t1 - t0}s")
+                self._logger.debug(f"Task id={task_id}: Query took {(t1 - t0)*1000}ms")
 
                 # Does the task exist?
                 if task_orm is None:
@@ -122,6 +127,7 @@ class TaskSocket:
 
                 notify_status = None
 
+                t_total_0 = time.time()
                 try:
                     #################################################################
                     # Perform some checks for consistency
@@ -145,7 +151,7 @@ class TaskSocket:
                         t0 = time.time()
                         self.root_socket.records.update_failed_task(session, record_orm, result, manager_name)
                         t1 = time.time()
-                        self._logger.debug(f"Task id={task_id}: FailedOperation update took {t1 - t0}s")
+                        self._logger.debug(f"Task id={task_id}: FailedOperation update took {(t1 - t0)*1000}s")
 
                         notify_status = RecordStatusEnum.error
                         tasks_failures.append(task_id)
@@ -164,7 +170,7 @@ class TaskSocket:
                         t0 = time.time()
                         self.root_socket.records.update_failed_task(session, record_orm, failed_op, manager_name)
                         t1 = time.time()
-                        self._logger.debug(f"Task id={task_id}: Unexpected FailedOperation update took {t1 - t0}s")
+                        self._logger.debug(f"Task id={task_id}: Unexpected FailedOperation update took {(t1 - t0)*1000}ms")
                         notify_status = RecordStatusEnum.error
 
                         self._logger.error(msg)
@@ -175,7 +181,7 @@ class TaskSocket:
                         t0 = time.time()
                         self.root_socket.records.update_completed_task(session, record_orm, result, manager_name)
                         t1 = time.time()
-                        self._logger.debug(f"Task id={task_id}: Successful update took {t1 - t0}s")
+                        self._logger.debug(f"Task id={task_id}: Successful update took {(t1 - t0)*1000}ms")
 
                         notify_status = RecordStatusEnum.complete
                         tasks_success.append(task_id)
@@ -204,7 +210,10 @@ class TaskSocket:
                     t0 = time.time()
                     session.commit()
                     t1 = time.time()
-                    self._logger.debug(f"Task id={task_id}: Commit took {t1 - t0}s")
+                    self._logger.debug(f"Task id={task_id}: Commit took {(t1 - t0)*1000}ms")
+
+                t_total_1 = time.time()
+                self._logger.debug(f"Task id={task_id}: Total time {(t_total_1 - t_total_0)*1000}ms")
 
             # Update the stats for the manager
             manager.successes += len(tasks_success)
