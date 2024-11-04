@@ -4,7 +4,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from qcelemental.models import AtomicInput as QCEl_AtomicInput, AtomicResult as QCEl_AtomicResult
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import lazyload, joinedload, defer, undefer, defaultload
 
@@ -80,9 +80,6 @@ class SinglepointRecordSocket(BaseRecordSocket):
         Convert a QCElemental wavefunction into a wavefunction ORM
         """
 
-        if wavefunction is None:
-            return None
-
         wfn_dict = wavefunction.dict(encoding="json")
         cdata, ctype, clevel = compress(wfn_dict, CompressionEnum.zstd)
 
@@ -93,8 +90,11 @@ class SinglepointRecordSocket(BaseRecordSocket):
     def update_completed_task(
         self, session: Session, record_orm: SinglepointRecordORM, result: QCEl_AtomicResult, manager_name: str
     ) -> None:
-        # Update the fields themselves
-        record_orm.wavefunction = self.wavefunction_to_orm(session, result.wavefunction)
+        if result.wavefunction:
+            record_orm.wavefunction = self.wavefunction_to_orm(session, result.wavefunction)
+        else:
+            stmt = delete(WavefunctionORM).where(WavefunctionORM.record_id == record_orm.id)
+            session.execute(stmt)
 
     def insert_complete_record(
         self,

@@ -4,7 +4,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from qcelemental.models import FailedOperation
-from sqlalchemy import select, union, or_, func
+from sqlalchemy import select, delete, union, or_, func
 from sqlalchemy.orm import (
     joinedload,
     selectinload,
@@ -1065,7 +1065,6 @@ class RecordSocket:
         # Do these before calling the record-specific handler
         # (these may pull stuff out of extras)
         history_orm = self.create_compute_history_entry(session, result)
-        native_files_orm = self.native_files_to_orm(session, result)
 
         # Update record-specific fields
         handler.update_completed_task(session, record_orm, result, manager_name)
@@ -1079,14 +1078,21 @@ class RecordSocket:
         # Get the outputs & status, storing in the history orm
         history_orm.manager_name = manager_name
         record_orm.compute_history.append(history_orm)
-        record_orm.native_files = native_files_orm
+
+        if "_qcfractal_compressed_native_files" in result.extras and len(result.extras["_qcfractal_compressed_native_files"]) > 0:
+            native_files_orm = self.native_files_to_orm(session, result)
+            record_orm.native_files = native_files_orm
+        else:
+            stmt = delete(NativeFileORM).where(NativeFileORM.record_id == record_orm.id)
+            session.execute(stmt)
 
         record_orm.status = history_orm.status
         record_orm.manager_name = manager_name
         record_orm.modified_on = history_orm.modified_on
 
         # Delete the task from the task queue since it is completed
-        session.delete(record_orm.task)
+        stmt = delete(TaskQueueORM).where(TaskQueueORM.record_id == record_orm.id)
+        session.execute(stmt)
 
     def update_failed_task(
         self, session: Session, record_orm: BaseRecordORM, failed_result: FailedOperation, manager_name: str
