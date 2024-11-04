@@ -90,6 +90,7 @@ class TaskSocket:
             to_be_reset: List[int] = []
 
             for task_id, result_compressed in results_compressed.items():
+                t_total_0 = time.time()
                 t0 = time.time()
                 result_dict = decompress(result_compressed, CompressionEnum.zstd)
                 t1 = time.time()
@@ -125,7 +126,6 @@ class TaskSocket:
 
                 notify_status = None
 
-                t_total_0 = time.time()
                 try:
                     #################################################################
                     # Perform some checks for consistency
