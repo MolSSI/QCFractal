@@ -910,7 +910,6 @@ class RecordSocket:
 
     def create_compute_history_entry(
         self,
-        session: Session,
         result: AllResultTypes,
     ) -> RecordComputeHistoryORM:
         """
@@ -942,20 +941,20 @@ class RecordSocket:
             # This generally shouldn't happen, but if they aren't compressed, check for uncompressed
             if result.stdout is not None:
                 logger.warning(f"Found uncompressed stdout for record id {result.id}")
-                stdout_orm = self.create_output_orm(session, OutputTypeEnum.stdout, result.stdout)
+                stdout_orm = self.create_output_orm(OutputTypeEnum.stdout, result.stdout)
                 history_orm.outputs["stdout"] = stdout_orm
             if result.stderr is not None:
                 logger.warning(f"Found uncompressed stderr for record id {result.id}")
-                stderr_orm = self.create_output_orm(session, OutputTypeEnum.stderr, result.stderr)
+                stderr_orm = self.create_output_orm(OutputTypeEnum.stderr, result.stderr)
                 history_orm.outputs["stderr"] = stderr_orm
             if result.error is not None:
                 logger.warning(f"Found uncompressed error for record id {result.id}")
-                error_orm = self.create_output_orm(session, OutputTypeEnum.error, result.error.dict())
+                error_orm = self.create_output_orm(OutputTypeEnum.error, result.error.dict())
                 history_orm.outputs["error"] = error_orm
 
         return history_orm
 
-    def native_files_to_orm(self, session: Session, result: AllResultTypes) -> Dict[str, NativeFileORM]:
+    def create_native_files_orms(self, result: AllResultTypes) -> Dict[str, NativeFileORM]:
         """
         Convert the native files stored in a QCElemental result to an ORM
         """
@@ -975,7 +974,7 @@ class RecordSocket:
 
         return native_files
 
-    def create_output_orm(self, session: Session, output_type: OutputTypeEnum, output: Any) -> OutputStoreORM:
+    def create_output_orm(self, output_type: OutputTypeEnum, output: Any) -> OutputStoreORM:
         compressed_out, compression_type, compression_level = compress(output, CompressionEnum.zstd)
         out_orm = OutputStoreORM(
             output_type=output_type,
@@ -1025,7 +1024,7 @@ class RecordSocket:
             out_orm.compression_type = new_ctype
             out_orm.compression_level = new_clevel
         else:
-            compute_history.outputs[output_type] = self.create_output_orm(session, output_type, to_append)
+            compute_history.outputs[output_type] = self.create_output_orm(output_type, to_append)
 
         session.flush()
 
@@ -1062,8 +1061,8 @@ class RecordSocket:
 
         # Do these before calling the record-specific handler
         # (these may pull stuff out of extras)
-        history_orm = self.create_compute_history_entry(session, result)
-        native_files_orm = self.native_files_to_orm(session, result)
+        history_orm = self.create_compute_history_entry(result)
+        native_files_orm = self.create_native_files_orms(result)
 
         # Update record-specific fields
         handler.update_completed_task(session, record_orm, result, manager_name)
@@ -1110,7 +1109,7 @@ class RecordSocket:
         if error is None:
             error = _default_error
 
-        error_out_orm = self.create_output_orm(session, OutputTypeEnum.error, error.dict())
+        error_out_orm = self.create_output_orm(OutputTypeEnum.error, error.dict())
         all_outputs = {OutputTypeEnum.error: error_out_orm}
 
         # Get the rest of the outputs
@@ -1121,10 +1120,10 @@ class RecordSocket:
             stderr = failed_result.input_data.get("stderr", None)
 
             if stdout is not None:
-                stdout_orm = self.create_output_orm(session, OutputTypeEnum.stdout, stdout)
+                stdout_orm = self.create_output_orm(OutputTypeEnum.stdout, stdout)
                 all_outputs[OutputTypeEnum.stdout] = stdout_orm
             if stderr is not None:
-                stderr_orm = self.create_output_orm(session, OutputTypeEnum.stderr, stderr)
+                stderr_orm = self.create_output_orm(OutputTypeEnum.stderr, stderr)
                 all_outputs[OutputTypeEnum.stderr] = stderr_orm
 
         # Build the history orm
@@ -1207,7 +1206,7 @@ class RecordSocket:
         """
         record_orm.status = RecordStatusEnum.error
 
-        error_orm = self.create_output_orm(session, OutputTypeEnum.error, error_info)
+        error_orm = self.create_output_orm(OutputTypeEnum.error, error_info)
         record_orm.compute_history[-1].status = RecordStatusEnum.error
 
         self.upsert_output(session, record_orm, error_orm)
@@ -1232,8 +1231,8 @@ class RecordSocket:
             # Get the outputs & status, storing in the history orm.
             # Do this before calling the individual record handlers since it modifies extras
             # (looking for compressed outputs and compressed native files)
-            history_orm = self.create_compute_history_entry(session, result)
-            native_files_orm = self.native_files_to_orm(session, result)
+            history_orm = self.create_compute_history_entry(result)
+            native_files_orm = self.create_native_files_orms(result)
 
             # Now the record-specific stuff
             handler = self._handler_map_by_schema[result.schema_name]

@@ -298,7 +298,7 @@ class ServiceSocket:
                     hist.modified_on = now
 
                     stdout_str = f"Starting service: {service_orm.record.record_type} at {now}"
-                    stdout = self.root_socket.records.create_output_orm(session, OutputTypeEnum.stdout, stdout_str)
+                    stdout = self.root_socket.records.create_output_orm(OutputTypeEnum.stdout, stdout_str)
                     hist.outputs[OutputTypeEnum.stdout] = stdout
 
                     service_orm.record.compute_history.append(hist)
