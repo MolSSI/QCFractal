@@ -98,28 +98,22 @@ class SinglepointRecordSocket(BaseRecordSocket):
         # Return in the input order
         return [task_specs[rid] for rid in record_ids]
 
-    def wavefunction_to_orm(
-        self, session: Session, wavefunction: Optional[WavefunctionProperties]
-    ) -> Optional[WavefunctionORM]:
+    def create_wavefunction_orm(self, wavefunction: WavefunctionProperties) -> WavefunctionORM:
         """
         Convert a QCElemental wavefunction into a wavefunction ORM
         """
 
-        if wavefunction is None:
-            return None
-
         wfn_dict = wavefunction.dict(encoding="json")
         cdata, ctype, clevel = compress(wfn_dict, CompressionEnum.zstd)
 
-        wfn_orm = WavefunctionORM(compression_type=ctype, compression_level=clevel, data=cdata)
-
-        return wfn_orm
+        return WavefunctionORM(compression_type=ctype, compression_level=clevel, data=cdata)
 
     def update_completed_task(
         self, session: Session, record_orm: SinglepointRecordORM, result: QCEl_AtomicResult, manager_name: str
     ) -> None:
         # Update the fields themselves
-        record_orm.wavefunction = self.wavefunction_to_orm(session, result.wavefunction)
+        if result.wavefunction:
+            record_orm.wavefunction = self.create_wavefunction_orm(result.wavefunction)
 
     def insert_complete_record(
         self,
@@ -150,7 +144,9 @@ class SinglepointRecordSocket(BaseRecordSocket):
         record_orm.specification_id = spec_id
         record_orm.molecule_id = mol_ids[0]
         record_orm.status = RecordStatusEnum.complete
-        record_orm.wavefunction = self.wavefunction_to_orm(session, result.wavefunction)
+
+        if result.wavefunction:
+            record_orm.wavefunction = self.create_wavefunction_orm(result.wavefunction)
 
         session.add(record_orm)
         session.flush()
