@@ -89,6 +89,17 @@ class TaskSocket:
             # For automatic resetting
             to_be_reset: List[int] = []
 
+            task_ids = list(results_compressed.keys())
+            stmt = select(TaskQueueORM.id, BaseRecordORM.id, BaseRecordORM.record_type, BaseRecordORM.status, BaseRecordORM.manager_name)
+            stmt = stmt.filter(BaseRecordORM.id == TaskQueueORM.record_id)
+            stmt = stmt.filter(TaskQueueORM.id.in_(task_ids))
+            stmt = stmt.with_for_update(of=(BaseRecordORM, TaskQueueORM), skip_locked=False)
+            t0 = time.time()
+            record_info = session.execute(stmt).all()
+            record_info = {t[0]: t for t in record_info}
+            t1 = time.time()
+            self._logger.debug(f"Query for record info took {(t1 - t0)*1000}ms")
+
             for task_id, result_compressed in results_compressed.items():
                 t_total_0 = time.time()
                 t0 = time.time()
@@ -98,31 +109,12 @@ class TaskSocket:
                 t2 = time.time()
                 self._logger.debug(f"Task id={task_id}: Decompression took {(t1 - t0)*1000}ms, parsing took {(t2 - t1)*1000}ms")
 
-                # We load one at a time. This works well with 'with_for_update'
-                # which will do row locking. This lock is released on commit or rollback
-                # We are also deferring loading of the specific record tables. These will be lazy loaded
-                # when they are needed in the update functions of the various record subsockets.
-                # (I tried to use with_polymorphic, but it's kind of fussy and doesn't work well with innerjoin
-                #  which is needed because with_for_update doesn't work with nullable left outer joins. This should
-                #  be ok, even if the second select call doesn't use with_for_update, because any loading of
-                #  a derived-class orm will need to access base_record, which I believe will be locked)
-                stmt = select(BaseRecordORM.id, BaseRecordORM.record_type, BaseRecordORM.status, BaseRecordORM.manager_name)
-                stmt = stmt.filter(BaseRecordORM.id == TaskQueueORM.record_id)
-                stmt = stmt.filter(TaskQueueORM.id == task_id)
-                stmt = stmt.with_for_update(of=(BaseRecordORM,TaskQueueORM), skip_locked=False)
-
-                t0 = time.time()
-                record_info = session.execute(stmt).one_or_none()
-                t1 = time.time()
-                self._logger.debug(f"Task id={task_id}: Query took {(t1 - t0)*1000}ms")
-
-                # Does the task exist?
-                if record_info is None:
+                if task_id not in record_info:
                     self._logger.warning(f"Task id {task_id} does not exist in the task queue")
                     tasks_rejected.append((task_id, "Task does not exist in the task queue"))
                     continue
 
-                record_id, record_type, record_status, record_manager_name = record_info
+                _, record_id, record_type, record_status, record_manager_name = record_info[task_id]
 
                 notify_status = None
 
@@ -208,13 +200,13 @@ class TaskSocket:
                     if notify_status is not None:
                         self.root_socket.notify_finished_watch(record_id, notify_status)
 
-                    t0 = time.time()
-                    session.commit()
-                    t1 = time.time()
-                    self._logger.debug(f"Task id={task_id}: Commit took {(t1 - t0)*1000}ms")
-
                 t_total_1 = time.time()
                 self._logger.debug(f"Task id={task_id}: Total time {(t_total_1 - t_total_0)*1000}ms")
+
+            t0 = time.time()
+            session.commit()
+            t1 = time.time()
+            self._logger.debug(f"Task id={task_id}: Commit took {(t1 - t0) * 1000}ms")
 
             # Update the stats for the manager
             manager.successes += len(tasks_success)
