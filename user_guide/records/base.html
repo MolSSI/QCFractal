@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Base Record &#8212; QCArchive 0.56.post16+g655fa698 documentation</title>
+    <title>Base Record &#8212; QCArchive 0.56.post19+g99e7b825 documentation</title>
   
   
   
@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
-    <script src="../../_static/documentation_options.js?v=582a4648"></script>
+    <script src="../../_static/documentation_options.js?v=ff092208"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Computation Types" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.56.post16+g655fa698" />
+  <meta name="docsearch:version" content="0.56.post19+g99e7b825" />
   </head>
   
   
@@ -1419,12 +1419,12 @@ If a record does not exist for this entry and specification, None is returned</p
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>value_call</strong> (<em>Callable</em>) – Function to call on each record to extract the desired value. Must return a scalar value or
 a sequence of values if ‘unpack’ is set to True.</p></li>
-<li><p><strong>value_names</strong> (<em>Sequence</em><em>[</em><em>str</em><em>] </em><em>| </em><em>str</em>) – Column name(s) for the extracted value(s). If a string is provided and multiple values are
+<li><p><strong>value_names</strong> (<em>Union</em><em>[</em><em>Sequence</em><em>[</em><em>str</em><em>]</em><em>, </em><em>str</em><em>]</em>) – Column name(s) for the extracted value(s). If a string is provided and multiple values are
 returned by ‘value_call’, columns are named by appending an index to this string. If a list
 of strings is provided, it must match the length of the sequence returned by ‘value_call’.
 Default is “value”.</p></li>
-<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Entry names to filter records. If not provided, considers all entries.</p></li>
-<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Specification names to filter records. If not provided, considers all specifications.</p></li>
+<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Entry names to filter records. If not provided, considers all entries.</p></li>
+<li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Specification names to filter records. If not provided, considers all specifications.</p></li>
 <li><p><strong>unpack</strong> (<em>bool</em>) – If True, unpack the sequence of values returned by ‘value_call’ into separate columns.
 Default is False.</p></li>
 </ul>
@@ -1435,7 +1435,7 @@ index as a specification, and a second level index as the appropriate value name
 Values are extracted from records using ‘value_call’.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>pd.DataFrame</p>
+<dd class="field-odd"><p>pandas.DataFrame</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>ValueError</strong> – If the length of ‘value_names’ does not match the number of values returned by ‘value_call’ when
@@ -1470,7 +1470,7 @@ NaN values are dropped.</p>
 <section id="returns">
 <h2>Returns:<a class="headerlink" href="#returns" title="Link to this heading">#</a></h2>
 <dl class="simple">
-<dt>pd.DataFrame</dt><dd><p>A DataFrame populated with the specified properties for each record.</p>
+<dt>pandas.DataFrame</dt><dd><p>A DataFrame populated with the specified properties for each record.</p>
 </dd>
 </dl>
 </section>
@@ -1479,7 +1479,7 @@ NaN values are dropped.</p>
 <dd class="field-odd"><p><strong>properties_list</strong> (<em>Sequence</em><em>[</em><em>str</em><em>]</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>DataFrame</em></p>
+<dd class="field-even"><p>DataFrame</p>
 </dd>
 </dl>
 </dd></dl>
