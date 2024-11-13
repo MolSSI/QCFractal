@@ -1421,7 +1421,7 @@ class BaseDataset(BaseModel):
         entry_names: Optional[Union[str, Iterable[str]]] = None,
         specification_names: Optional[Union[str, Iterable[str]]] = None,
         unpack: bool = False,
-) -> "DataFrame":
+    ) -> "DataFrame":
         """
         Compile values from records into a pandas DataFrame.
 
@@ -1468,7 +1468,6 @@ class BaseDataset(BaseModel):
         same number of values for each record if unpack is True.
         """
         import pandas as pd
-
 
         def _data_generator(unpack=False):
             for entry_name, spec_name, record in self.iterate_records(
