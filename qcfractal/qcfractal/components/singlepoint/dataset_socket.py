@@ -4,8 +4,11 @@ import copy
 import logging
 from typing import TYPE_CHECKING
 
+from sqlalchemy import text
+
 from qcfractal.components.dataset_socket import BaseDatasetSocket
 from qcfractal.components.singlepoint.record_db_models import SinglepointRecordORM
+from qcportal.metadata_models import InsertMetadata
 from qcportal.record_models import PriorityEnum
 from qcportal.singlepoint import SinglepointDatasetNewEntry, QCSpecification
 from .dataset_db_models import (
@@ -17,7 +20,6 @@ from .dataset_db_models import (
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
-    from qcportal.metadata_models import InsertMetadata
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from typing import Optional, Sequence, Iterable, Tuple
 
@@ -133,3 +135,38 @@ class SinglepointDatasetSocket(BaseDatasetSocket):
                         record_id=sp_ids[0],
                     )
                     session.add(rec)
+
+    def add_entries_from_optimization_ds(
+        self,
+        dataset_id: int,
+        optimization_dataset_id: int,
+        specification_name: Optional[str],
+        *,
+        session: Optional[Session] = None,
+    ) -> InsertMetadata:
+
+        with self.root_socket.optional_session(session) as session:
+            stmt = """
+                INSERT INTO singlepoint_dataset_entry (dataset_id, name, comment, molecule_id, attributes, additional_keywords)
+                SELECT :dataset_id, ode.name, ode.comment, opr.final_molecule_id, ode.attributes, '{}'::jsonb
+                FROM optimization_dataset_entry ode
+                INNER JOIN optimization_dataset_record odr ON ode.dataset_id = odr.dataset_id AND ode.name = odr.entry_name
+                INNER JOIN optimization_record opr ON odr.record_id = opr.id
+                INNER JOIN base_record br ON opr.id = br.id
+                WHERE ode.dataset_id = :optimization_dataset_id
+                AND odr.specification_name = :specification_name
+                AND br.status = 'complete'
+                AND opr.final_molecule_id IS NOT NULL
+                ON CONFLICT (dataset_id, name) DO NOTHING
+            """
+
+            session.execute(
+                text(stmt),
+                {
+                    "dataset_id": dataset_id,
+                    "optimization_dataset_id": optimization_dataset_id,
+                    "specification_name": specification_name,
+                },
+            )
+
+        return InsertMetadata()
