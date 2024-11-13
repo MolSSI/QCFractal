@@ -1,13 +1,13 @@
 from typing import Dict, Any, Union, Optional, Iterable
 
 try:
-    from pydantic.v1 import BaseModel, Extra
+    from pydantic.v1 import BaseModel, Extra, root_validator
 except ImportError:
-    from pydantic import BaseModel, Extra
+    from pydantic import BaseModel, Extra, root_validator
 from typing_extensions import Literal
 
 from qcportal.dataset_models import BaseDataset
-from qcportal.metadata_models import InsertMetadata
+from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.molecules import Molecule
 from qcportal.singlepoint.record_models import (
     SinglepointRecord,
@@ -48,6 +48,26 @@ class SinglepointDatasetRecordItem(BaseModel):
     specification_name: str
     record_id: int
     record: Optional[SinglepointRecord]
+
+
+class SinglepointDatasetEntriesFrom(BaseModel):
+
+    dataset_id: Optional[int] = None
+    dataset_type: Optional[str] = None
+    dataset_name: Optional[str] = None
+    specification_name: Optional[str] = None
+
+    @root_validator
+    def validate_input(cls, values):
+        # Dataset id must be specified, or dataset type and name
+        if values.get("dataset_id") is None:
+            if values.get("dataset_type") is None or values.get("dataset_name") is None:
+                raise ValueError("Either dataset_id or dataset_type and dataset_name must be specified.")
+
+        if values.get("dataset_type") == "optimization" and values.get("specification_name") is None:
+            raise ValueError("specification_name must be given for obtaining entries from an optimization dataset")
+
+        return values
 
 
 class SinglepointDataset(BaseDataset):
@@ -92,3 +112,25 @@ class SinglepointDataset(BaseDataset):
             comment=comment,
         )
         return self.add_entries(ent)
+
+    def add_entries_from(
+        self,
+        *,
+        dataset_type: Optional[str] = None,
+        dataset_name: Optional[str] = None,
+        dataset_id: Optional[str] = None,
+        specification_name: Optional[str] = None,
+    ) -> InsertCountsMetadata:
+        body = SinglepointDatasetEntriesFrom(
+            dataset_type=dataset_type,
+            dataset_name=dataset_name,
+            dataset_id=dataset_id,
+            specification_name=specification_name,
+        )
+
+        return self._client.make_request(
+            "post",
+            f"api/v1/datasets/{self.dataset_type}/{self.id}/entries/addFrom",
+            InsertCountsMetadata,
+            body=body,
+        )
