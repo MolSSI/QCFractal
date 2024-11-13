@@ -97,7 +97,9 @@ class TaskSocket:
                 t1 = time.time()
                 result = pydantic.parse_obj_as(AllResultTypes, result_dict)
                 t2 = time.time()
-                self._logger.debug(f"Task id={task_id}: Decompression took {(t1 - t0)*1000}ms, parsing took {(t2 - t1)*1000}ms")
+                self._logger.debug(
+                    f"Task id={task_id}: Decompression took {(t1 - t0)*1000}ms, parsing took {(t2 - t1)*1000}ms"
+                )
 
                 # We load one at a time. This works well with 'with_for_update'
                 # which will do row locking. This lock is released on commit or rollback
@@ -107,23 +109,27 @@ class TaskSocket:
                 #  which is needed because with_for_update doesn't work with nullable left outer joins. This should
                 #  be ok, even if the second select call doesn't use with_for_update, because any loading of
                 #  a derived-class orm will need to access base_record, which I believe will be locked)
-                stmt = select(TaskQueueORM).filter(TaskQueueORM.id == task_id)
+                stmt = select(
+                    TaskQueueORM.id,
+                    BaseRecordORM.id,
+                    BaseRecordORM.record_type,
+                    BaseRecordORM.status,
+                    BaseRecordORM.manager_name,
+                )
                 stmt = stmt.options(joinedload(TaskQueueORM.record, innerjoin=True))
                 stmt = stmt.with_for_update(skip_locked=False)
 
                 t0 = time.time()
-                task_orm: Optional[TaskQueueORM] = session.execute(stmt).scalar_one_or_none()
+                record_info = session.execute(stmt).scalar_one_or_none()
                 t1 = time.time()
-                self._logger.debug(f"Task id={task_id}: Query took {(t1 - t0)*1000}ms")
+                self._logger.debug(f"Query for record info took {(t1 - t0) * 1000}ms")
 
-                # Does the task exist?
-                if task_orm is None:
+                if task_id not in record_info:
                     self._logger.warning(f"Task id {task_id} does not exist in the task queue")
                     tasks_rejected.append((task_id, "Task does not exist in the task queue"))
                     continue
 
-                record_orm: BaseRecordORM = task_orm.record
-                record_id = record_orm.id
+                _, record_id, record_type, record_status, record_manager_name = record_info[task_id]
 
                 notify_status = None
 
@@ -133,22 +139,22 @@ class TaskSocket:
                     #################################################################
                     # Is the task in the running state
                     # If so, do not attempt to modify the task queue. Just move on
-                    if record_orm.status != RecordStatusEnum.running:
+                    if record_status != RecordStatusEnum.running:
                         self._logger.warning(f"Record {record_id} (task {task_id}) is not in a running state")
                         tasks_rejected.append((task_id, "Task is not in a running state"))
 
                     # Was the manager that sent the data the one that was assigned?
                     # If so, do not attempt to modify the task queue. Just move on
-                    elif record_orm.manager_name != manager_name:
+                    elif record_manager_name != manager_name:
                         self._logger.warning(
-                            f"Record {record_id} (task {task_id}) claimed by {record_orm.manager_name}, not {manager_name}"
+                            f"Record {record_id} (task {task_id}) claimed by {record_manager_name}, not {manager_name}"
                         )
                         tasks_rejected.append((task_id, "Task is claimed by another manager"))
 
                     # Failed task returning FailedOperation
                     elif result.success is False and isinstance(result, FailedOperation):
                         t0 = time.time()
-                        self.root_socket.records.update_failed_task(session, record_orm, result, manager_name)
+                        self.root_socket.records.update_failed_task(session, record_id, result, manager_name)
                         t1 = time.time()
                         self._logger.debug(f"Task id={task_id}: FailedOperation update took {(t1 - t0)*1000}s")
 
@@ -157,6 +163,9 @@ class TaskSocket:
 
                         # Should we automatically reset?
                         if self.root_socket.qcf_config.auto_reset.enabled:
+                            # TODO - Move to update_failed_task?
+                            stmt = select(BaseRecordORM).where(BaseRecordORM.id == record_id)
+                            record_orm = session.execute(stmt).scalar_one()
                             if should_reset(record_orm, self.root_socket.qcf_config.auto_reset):
                                 to_be_reset.append(record_id)
 
@@ -167,9 +176,11 @@ class TaskSocket:
                         failed_op = FailedOperation(error=error, success=False)
 
                         t0 = time.time()
-                        self.root_socket.records.update_failed_task(session, record_orm, failed_op, manager_name)
+                        self.root_socket.records.update_failed_task(session, record_id, failed_op, manager_name)
                         t1 = time.time()
-                        self._logger.debug(f"Task id={task_id}: Unexpected FailedOperation update took {(t1 - t0)*1000}ms")
+                        self._logger.debug(
+                            f"Task id={task_id}: Unexpected FailedOperation update took {(t1 - t0)*1000}ms"
+                        )
                         notify_status = RecordStatusEnum.error
 
                         self._logger.error(msg)
@@ -178,7 +189,9 @@ class TaskSocket:
                     # Manager returned a full, successful result
                     else:
                         t0 = time.time()
-                        self.root_socket.records.update_completed_task(session, record_orm, result, manager_name)
+                        self.root_socket.records.update_completed_task(
+                            session, record_id, record_type, result, manager_name
+                        )
                         t1 = time.time()
                         self._logger.debug(f"Task id={task_id}: Successful update took {(t1 - t0)*1000}ms")
 
@@ -194,7 +207,7 @@ class TaskSocket:
                     error = {"error_type": "internal_fractal_error", "error_message": msg}
                     failed_op = FailedOperation(error=error, success=False)
 
-                    self.root_socket.records.update_failed_task(session, record_orm, failed_op, manager_name)
+                    self.root_socket.records.update_failed_task(session, record_id, failed_op, manager_name)
                     notify_status = RecordStatusEnum.error
 
                     self._logger.error(msg)
@@ -206,13 +219,13 @@ class TaskSocket:
                     if notify_status is not None:
                         self.root_socket.notify_finished_watch(record_id, notify_status)
 
-                    t0 = time.time()
-                    session.commit()
-                    t1 = time.time()
-                    self._logger.debug(f"Task id={task_id}: Commit took {(t1 - t0)*1000}ms")
-
                 t_total_1 = time.time()
                 self._logger.debug(f"Task id={task_id}: Total time {(t_total_1 - t_total_0)*1000}ms")
+
+            t0 = time.time()
+            session.commit()
+            t1 = time.time()
+            self._logger.debug(f"Commit took {(t1 - t0) * 1000}ms")
 
             # Update the stats for the manager
             manager.successes += len(tasks_success)
