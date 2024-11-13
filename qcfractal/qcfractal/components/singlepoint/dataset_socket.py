@@ -4,8 +4,12 @@ import copy
 import logging
 from typing import TYPE_CHECKING
 
+from sqlalchemy import text
+
 from qcfractal.components.dataset_socket import BaseDatasetSocket
 from qcfractal.components.singlepoint.record_db_models import SinglepointRecordORM
+from qcportal.exceptions import InvalidArgumentsError, MissingDataError
+from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.record_models import PriorityEnum
 from qcportal.singlepoint import SinglepointDatasetNewEntry, QCSpecification
 from .dataset_db_models import (
@@ -17,7 +21,6 @@ from .dataset_db_models import (
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
-    from qcportal.metadata_models import InsertMetadata
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from typing import Optional, Sequence, Iterable, Tuple
 
@@ -133,3 +136,135 @@ class SinglepointDatasetSocket(BaseDatasetSocket):
                         record_id=sp_ids[0],
                     )
                     session.add(rec)
+
+    def add_entries_from_ds(
+        self,
+        dataset_id: int,
+        from_dataset_id: Optional[int],
+        from_dataset_type: Optional[str],
+        from_dataset_name: Optional[str],
+        from_specification_name: Optional[str],
+        *,
+        session: Optional[Session] = None,
+    ) -> InsertCountsMetadata:
+        """
+        Adds entries from another dataset into this Singlepoint dataset
+
+        Either the from_dataset_id or both the from_dataset_type and from_dataset_name
+        must be provided.
+
+        If copying from an optimization dataset, then
+        the from_specification_name must be provided.
+
+        Parameters
+        ----------
+        dataset_id
+            ID of the dataset to add entries to
+        from_dataset_id
+            ID of the dataset to add entries from
+        from_dataset_type
+            Type of the dataset to add entries from
+        from_dataset_name
+            Name of the dataset to add entries from
+        from_specification_name
+            Specification of the source dataset to use for molecules
+
+        Returns
+        -------
+        :
+            Metadata about the added entries
+        """
+
+        if dataset_id is None and (from_dataset_type is None or from_dataset_name is None):
+            raise InvalidArgumentsError("dataset_id or both from_dataset_id and from_dataset_name must be provided")
+
+        with self.root_socket.optional_session(session) as session:
+            # Make sure dataset exists
+            stmt = "SELECT (id) FROM base_dataset WHERE id = :dataset_id"
+            r = session.execute(text(stmt), {"dataset_id": dataset_id}).scalar_one_or_none()
+            if r is None:
+                raise MissingDataError(f"Cannot find dataset with id={dataset_id}")
+
+            # No matter what was passed in, we need the dataset type and id to copy from
+            if from_dataset_id is not None:
+                stmt = "SELECT (dataset_type) FROM base_dataset WHERE id = :from_dataset_id"
+                ds_type = session.execute(text(stmt), {"from_dataset_id": from_dataset_id}).scalar_one_or_none()
+
+                if ds_type is None:
+                    raise MissingDataError(f"Cannot find dataset with id={from_dataset_id}")
+
+                if from_dataset_type is not None and from_dataset_type.lower() != ds_type.lower():
+                    raise InvalidArgumentsError(
+                        f"Dataset id and type specified, but the type of the dataset id={from_dataset_id} is {ds_type}, not {from_dataset_type}"
+                    )
+                from_dataset_type = ds_type
+            else:
+                assert from_dataset_type is not None and from_dataset_name is not None
+                stmt = "SELECT (id) FROM base_dataset WHERE dataset_type = :from_dataset_type and lname = :from_dataset_name"
+                from_dataset_id = session.execute(
+                    text(stmt), {"from_dataset_type": from_dataset_type, "from_dataset_name": from_dataset_name.lower()}
+                ).scalar_one_or_none()
+
+                if from_dataset_id is None:
+                    raise MissingDataError(
+                        f"Cannot find dataset with type={from_dataset_type} and name={from_dataset_name}"
+                    )
+
+            if from_dataset_type == "singlepoint":
+                stmt = """
+                    INSERT INTO singlepoint_dataset_entry (dataset_id, name, comment, molecule_id, attributes, additional_keywords)
+                    SELECT :dataset_id, sde.name, sde.comment, sde.molecule_id, sde.attributes, sde.additional_keywords
+                    FROM singlepoint_dataset_entry sde
+                    WHERE sde.dataset_id = :from_dataset_id
+                    ON CONFLICT (dataset_id, name) DO NOTHING
+                    RETURNING 1
+                """
+
+                r = session.execute(
+                    text(stmt),
+                    {
+                        "dataset_id": dataset_id,
+                        "from_dataset_id": from_dataset_id,
+                    },
+                )
+
+                meta = InsertCountsMetadata(n_inserted=r.rowcount, n_existing=0)
+
+            elif from_dataset_type == "optimization":
+
+                if from_specification_name is None:
+                    raise InvalidArgumentsError(
+                        "from_specification_name must be provided when adding entries from an optimization dataset"
+                    )
+
+                stmt = """
+                    INSERT INTO singlepoint_dataset_entry (dataset_id, name, comment, molecule_id, attributes, additional_keywords)
+                    SELECT :dataset_id, ode.name, ode.comment, opr.final_molecule_id, ode.attributes, '{}'::jsonb
+                    FROM optimization_dataset_entry ode
+                    INNER JOIN optimization_dataset_record odr ON ode.dataset_id = odr.dataset_id AND ode.name = odr.entry_name
+                    INNER JOIN optimization_record opr ON odr.record_id = opr.id
+                    INNER JOIN base_record br ON opr.id = br.id
+                    WHERE ode.dataset_id = :optimization_dataset_id
+                    AND odr.specification_name = :specification_name
+                    AND br.status = 'complete'
+                    AND opr.final_molecule_id IS NOT NULL
+                    ON CONFLICT (dataset_id, name) DO NOTHING
+                    RETURNING 1
+                """
+
+                r = session.execute(
+                    text(stmt),
+                    {
+                        "dataset_id": dataset_id,
+                        "optimization_dataset_id": from_dataset_id,
+                        "specification_name": from_specification_name,
+                    },
+                )
+
+                meta = InsertCountsMetadata(n_inserted=r.rowcount, n_existing=0)
+            else:
+                raise InvalidArgumentsError(
+                    f"Unable to handle adding singlepoint dataset entries from dataset of type {from_dataset_type}"
+                )
+
+        return meta
