@@ -208,6 +208,7 @@ class FractalComputeConfig(BaseModel):
     )
 
     parsl_run_dir: str = "parsl_run_dir"
+    parsl_usage_tracking: int = 0
 
     server: FractalServerSettings = Field(...)
     environments: PackageEnvironmentSettings = PackageEnvironmentSettings()
