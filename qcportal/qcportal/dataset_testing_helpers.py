@@ -148,12 +148,10 @@ def run_dataset_model_modify_entries(snowflake_client, ds, test_entries, test_sp
     assert len(ent_rec_map) == 3
 
     entry_name_1 = test_entries[0].name
-    entry_name_2 = test_entries[1].name
-    entry_name_3 = test_entries[2].name
 
     ds.modify_entries({entry_name_1: {"test_attr_1": "val", "test_attr_2": 5}})
 
-    assert set(ds._cache_data.get_entry().attributes == {entry_name_1: {"test_attr_1": "val", "test_attr_2": 5}})
+    assert set(ds._cache_data.get_entry().attributes == {"test_attr_1": "val", "test_attr_2": 5})
 
 
 def run_dataset_model_delete_entry(snowflake_client, ds, test_entries, test_specs):

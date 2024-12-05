@@ -802,7 +802,7 @@ class BaseDataset(BaseModel):
         )
 
         # Sync local cache with updated server.
-        self.fetch_entries(attribute_map.keys(), force_refetch=True)
+        self.fetch_entries(list(attribute_map.keys()), force_refetch=True)
 
     def delete_entries(self, names: Union[str, Iterable[str]], delete_records: bool = False) -> DeleteMetadata:
         self.assert_is_not_view()
