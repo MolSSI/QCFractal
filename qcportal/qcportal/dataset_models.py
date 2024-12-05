@@ -800,7 +800,7 @@ class BaseDataset(BaseModel):
         self._client.make_request(
             "patch", f"api/v1/datasets/{self.dataset_type}/{self.id}/entries/modify", None, body=name_map
         )
-        
+
         # Sync local cache with updated server.
         self.fetch_entries(entry_names, force_refetch=True)
 

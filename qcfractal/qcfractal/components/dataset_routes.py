@@ -266,11 +266,13 @@ def rename_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: Dic
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.rename_entries(dataset_id, body_data)
 
+
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/entries/modify", methods=["PATCH"])
 @wrap_route("WRITE")
 def modify_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: Dict[str, Dict[str, Any]]):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.modify_entries(dataset_id, body_data)
+
 
 #########################
 # Records

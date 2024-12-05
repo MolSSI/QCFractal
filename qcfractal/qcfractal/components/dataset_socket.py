@@ -983,7 +983,9 @@ class BaseDatasetSocket:
             for entry in entries:
                 entry.name = entry_name_map[entry.name]
 
-    def modify_entries(self, dataset_id: int, entry_name_map: Dict[str, Dict[str, Any]], *, session: Optional[Session] = None):
+    def modify_entries(
+        self, dataset_id: int, entry_name_map: Dict[str, Dict[str, Any]], *, session: Optional[Session] = None
+    ):
         """
         Modify the attributes of the entries in a dataset
 
