@@ -798,7 +798,7 @@ class BaseDataset(BaseModel):
         self.assert_online()
 
         self._client.make_request(
-            "patch", f"api/v1/datasets/{self.dataset_type}/{self.id}/entries/modify", None, body=name_map
+            "patch", f"api/v1/datasets/{self.dataset_type}/{self.id}/entries/modify", None, body=attribute_map
         )
 
         # Sync local cache with updated server.
