@@ -793,7 +793,7 @@ class BaseDataset(BaseModel):
         for old_name, new_name in name_map.items():
             self._cache_data.rename_entry(old_name, new_name)
 
-    def modify_entries(self, name_map: Dict[str, Dict[str, Any]]):
+    def modify_entries(self, attribute_map: Dict[str, Dict[str, Any]]):
         self.assert_is_not_view()
         self.assert_online()
 
@@ -802,7 +802,7 @@ class BaseDataset(BaseModel):
         )
 
         # Sync local cache with updated server.
-        self.fetch_entries(entry_names, force_refetch=True)
+        self.fetch_entries(attribute_map.keys(), force_refetch=True)
 
     def delete_entries(self, names: Union[str, Iterable[str]], delete_records: bool = False) -> DeleteMetadata:
         self.assert_is_not_view()

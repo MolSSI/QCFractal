@@ -984,18 +984,18 @@ class BaseDatasetSocket:
                 entry.name = entry_name_map[entry.name]
 
     def modify_entries(
-        self, dataset_id: int, entry_name_map: Dict[str, Dict[str, Any]], *, session: Optional[Session] = None
+        self, dataset_id: int, attribute_map: Dict[str, Dict[str, Any]], *, session: Optional[Session] = None
     ):
         """
         Modify the attributes of the entries in a dataset
 
-        The entry_name_map maps the name of the entry to the new attribute data.
+        The attribute_map maps the name of the entry to the new attribute data.
 
         Parameters
         ----------
         dataset_id
             ID of a dataset
-        entry_name_map
+        attribute_map
             Mapping of entry names to attributes.
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
@@ -1003,14 +1003,14 @@ class BaseDatasetSocket:
         """
         stmt = select(self.entry_orm)
         stmt = stmt.where(self.entry_orm.dataset_id == dataset_id)
-        stmt = stmt.where(self.entry_orm.name.in_(entry_name_map.keys()))
+        stmt = stmt.where(self.entry_orm.name.in_(attribute_map.keys()))
         stmt = stmt.options(load_only(self.entry_orm.name))
 
         with self.root_socket.optional_session(session) as session:
             entries = session.execute(stmt).scalars().all()
 
             for entry in entries:
-                entry.attributes = entry_name_map[entry.name]
+                entry.attributes = attribute_map[entry.name]
 
     def fetch_records(
         self,
