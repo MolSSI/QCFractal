@@ -69,6 +69,11 @@ def test_singlepoint_dataset_model_rename_entry(snowflake_client: PortalClient):
     ds_helpers.run_dataset_model_rename_entry(snowflake_client, ds, test_entries, test_specs)
 
 
+def test_singlepoint_dataset_model_modify_entries(snowflake_client: PortalClient):
+    ds = snowflake_client.add_dataset("singlepoint", "Test dataset")
+    ds_helpers.run_dataset_model_modify_entries(snowflake_client, ds, test_entries, test_specs)
+
+
 def test_singlepoint_dataset_model_delete_entry(snowflake_client: PortalClient):
     ds = snowflake_client.add_dataset("singlepoint", "Test dataset")
     ds_helpers.run_dataset_model_delete_entry(snowflake_client, ds, test_entries, test_specs)
