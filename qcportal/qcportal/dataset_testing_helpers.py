@@ -151,7 +151,7 @@ def run_dataset_model_modify_entries(snowflake_client, ds, test_entries, test_sp
 
     ds.modify_entries({entry_name_1: {"test_attr_1": "val", "test_attr_2": 5}})
 
-    assert set(ds._cache_data.get_entry(entry_name_1).attributes == {"test_attr_1": "val", "test_attr_2": 5})
+    assert ds._cache_data.get_entry(entry_name_1).attributes == {"test_attr_1": "val", "test_attr_2": 5}
 
 
 def run_dataset_model_delete_entry(snowflake_client, ds, test_entries, test_specs):
