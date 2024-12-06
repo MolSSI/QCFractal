@@ -792,6 +792,17 @@ class BaseDataset(BaseModel):
         for old_name, new_name in name_map.items():
             self._cache_data.rename_entry(old_name, new_name)
 
+    def modify_entries(self, attribute_map: Dict[str, Dict[str, Any]]):
+        self.assert_is_not_view()
+        self.assert_online()
+
+        self._client.make_request(
+            "patch", f"api/v1/datasets/{self.dataset_type}/{self.id}/entries/modify", None, body=attribute_map
+        )
+
+        # Sync local cache with updated server.
+        self.fetch_entries(list(attribute_map.keys()), force_refetch=True)
+
     def delete_entries(self, names: Union[str, Iterable[str]], delete_records: bool = False) -> DeleteMetadata:
         self.assert_is_not_view()
         self.assert_online()

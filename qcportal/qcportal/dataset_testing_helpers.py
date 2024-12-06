@@ -138,6 +138,22 @@ def run_dataset_model_rename_entry(snowflake_client, ds, test_entries, test_spec
     assert ds._cache_data.get_dataset_record(entry_name_3, "spec_1").id == ent_rec_map[entry_name_3].id
 
 
+def run_dataset_model_modify_entries(snowflake_client, ds, test_entries, test_specs):
+    ds.add_specification("spec_1", test_specs[0])
+    ds.add_entries(test_entries)
+    ds.submit()
+    ds.fetch_entries()
+
+    ent_rec_map = {entry_name: record for entry_name, _, record in ds.iterate_records()}
+    assert len(ent_rec_map) == 3
+
+    entry_name_1 = test_entries[0].name
+
+    ds.modify_entries({entry_name_1: {"test_attr_1": "val", "test_attr_2": 5}})
+
+    assert ds._cache_data.get_entry(entry_name_1).attributes == {"test_attr_1": "val", "test_attr_2": 5}
+
+
 def run_dataset_model_delete_entry(snowflake_client, ds, test_entries, test_specs):
     ds.add_specification("spec_1", test_specs[0])
     ds.add_entries(test_entries)
