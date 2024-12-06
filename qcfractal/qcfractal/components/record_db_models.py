@@ -197,7 +197,7 @@ class BaseRecordORM(BaseORM):
     id = Column(Integer, primary_key=True)
 
     # Extra fields
-    extras = Column(JSONB)
+    extras = Column(JSONB, nullable=False, default=dict)
 
     # Compute status
     # (Denormalized from compute history table for faster lookup during manager claiming/returning)

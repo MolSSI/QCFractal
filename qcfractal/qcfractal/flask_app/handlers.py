@@ -10,6 +10,7 @@ from flask_jwt_extended import (
     set_access_cookies,
     get_jwt_request_location,
 )
+from jwt.exceptions import InvalidSubjectError
 from werkzeug.exceptions import InternalServerError, HTTPException
 
 from qcfractal.flask_app import storage_socket
@@ -172,3 +173,10 @@ def handle_auth_error(error):
 def handle_compute_manager_error(error: ComputeManagerError):
     # Handle compute manager errors
     return jsonify(msg=str(error)), 400
+
+
+@home_v1.app_errorhandler(InvalidSubjectError)
+def handle_old_tokens(error):
+    # Handle old tokens that have integers as the subject
+    # Just say they have been expired, and you need to login again
+    return jsonify(msg="Token has expired"), 401

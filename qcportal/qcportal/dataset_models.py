@@ -19,8 +19,6 @@ from typing import (
     Mapping,
 )
 
-import pandas as pd
-
 try:
     import pydantic.v1 as pydantic
     from pydantic.v1 import BaseModel, Extra, validator, PrivateAttr, Field
@@ -40,6 +38,7 @@ from qcportal.cache import DatasetCache, read_dataset_metadata, get_records_with
 
 if TYPE_CHECKING:
     from qcportal.client import PortalClient
+    from pandas import DataFrame
 
 
 class Citation(BaseModel):
@@ -1422,7 +1421,7 @@ class BaseDataset(BaseModel):
         entry_names: Optional[Union[str, Iterable[str]]] = None,
         specification_names: Optional[Union[str, Iterable[str]]] = None,
         unpack: bool = False,
-    ) -> pd.DataFrame:
+) -> "DataFrame":
         """
         Compile values from records into a pandas DataFrame.
 
@@ -1450,7 +1449,7 @@ class BaseDataset(BaseModel):
 
         Returns
         --------
-        pd.DataFrame
+        pandas.DataFrame
             A multi-index DataFrame where each row corresponds to an entry. Each column corresponds has a top level
             index as a specification, and a second level index as the appropriate value name.
             Values are extracted from records using 'value_call'.
@@ -1468,6 +1467,8 @@ class BaseDataset(BaseModel):
         to be distributed across columns in the resulting DataFrame. 'value_call' should always return the
         same number of values for each record if unpack is True.
         """
+        import pandas as pd
+
 
         def _data_generator(unpack=False):
             for entry_name, spec_name, record in self.iterate_records(
@@ -1511,7 +1512,7 @@ class BaseDataset(BaseModel):
         # Make specification top level index.
         return return_val.swaplevel(axis=1)
 
-    def get_properties_df(self, properties_list: Sequence[str]) -> pd.DataFrame:
+    def get_properties_df(self, properties_list: Sequence[str]) -> "DataFrame":
         """
         Retrieve a DataFrame populated with the specified properties from dataset records.
 
@@ -1528,7 +1529,7 @@ class BaseDataset(BaseModel):
 
         Returns:
         --------
-        pd.DataFrame
+        pandas.DataFrame
             A DataFrame populated with the specified properties for each record.
         """
 

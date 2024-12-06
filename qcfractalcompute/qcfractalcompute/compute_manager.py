@@ -270,7 +270,10 @@ class ComputeManager:
         # Set up Parsl executors and DataFlowKernel
         ###########################################
         self.parsl_config = ParslConfig(
-            executors=[], initialize_logging=False, run_dir=self.manager_config.parsl_run_dir
+            executors=[],
+            initialize_logging=False,
+            run_dir=self.manager_config.parsl_run_dir,
+            usage_tracking=self.manager_config.parsl_usage_tracking,
         )
         self.dflow_kernel = DataFlowKernel(self.parsl_config)
 

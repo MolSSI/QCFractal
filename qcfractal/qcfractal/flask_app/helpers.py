@@ -11,6 +11,7 @@ from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
 )
+from jwt.exceptions import InvalidSubjectError
 from werkzeug.exceptions import BadRequest, Forbidden
 
 from qcfractal.flask_app import storage_socket
@@ -78,6 +79,10 @@ def assert_role_permissions(requested_action: str):
         role = claims.get("role", None)
         groups = claims.get("groups", None)
 
+        # user_id is stored in the JWT as a string
+        if user_id is not None:
+            user_id = int(user_id)
+
         subject = {"user_id": user_id, "username": username}
 
         # Pull the first part of the URL (ie, /api/v1/molecule/a/b/c -> /api/v1/molecule)
@@ -105,7 +110,7 @@ def access_token_from_user(user_info: UserInfo, role_info: RoleInfo):
     Creates a JWT access token from user/role information
     """
     return create_access_token(
-        identity=user_info.id,
+        identity=str(user_info.id),
         additional_claims={
             "username": user_info.username,
             "role": user_info.role,
@@ -161,7 +166,7 @@ def login_and_get_jwt(get_refresh_token: bool) -> Tuple[str, Optional[str]]:
     access_token = access_token_from_user(user_info, role_info)
 
     if get_refresh_token:
-        refresh_token = create_refresh_token(identity=user_info.id)
+        refresh_token = create_refresh_token(identity=str(user_info.id))
     else:
         refresh_token = None
 

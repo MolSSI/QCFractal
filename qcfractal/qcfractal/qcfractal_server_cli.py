@@ -30,7 +30,6 @@ from .job_runner import FractalJobRunner
 from .postgres_harness import PostgresHarness
 
 if TYPE_CHECKING:
-    from typing import Tuple
     from logging import Logger
 
 
@@ -73,7 +72,7 @@ def dump_config(qcf_config: FractalConfig, indent: int = 0) -> str:
     return s
 
 
-def start_database(config: FractalConfig) -> Tuple[PostgresHarness, SQLAlchemySocket]:
+def start_database(config: FractalConfig, check_revision: bool) -> PostgresHarness:
     """
     Obtain a storage socket to a running postgres server
 
@@ -100,10 +99,11 @@ def start_database(config: FractalConfig) -> Tuple[PostgresHarness, SQLAlchemySo
     if not pg_harness.can_connect():
         raise RuntimeError(f"Database at {config.database.safe_uri} does not exist?")
 
-    # Start up a socket. The main thing is to see if it can connect, and also
-    # to check if the database needs to be upgraded
-    # We then no longer need the socket (everything else uses their own)
-    return pg_harness, SQLAlchemySocket(config)
+    # Check that the database is up to date
+    if check_revision:
+        SQLAlchemySocket.check_db_revision(config.database)
+
+    return pg_harness
 
 
 def parse_args() -> argparse.Namespace:
@@ -411,7 +411,7 @@ def server_start(config):
     logger = logging.getLogger(__name__)
 
     # Ensure that the database is alive, optionally starting it
-    start_database(config)
+    start_database(config, check_revision=True)
 
     # Set up a queue for logging. All child process will send logs
     # to this queue, and a separate thread will handle them
@@ -510,7 +510,7 @@ def server_start_job_runner(config):
 
     # Ensure that the database is alive. This also handles checking stuff,
     # even if we don't own the db (which we shouldn't)
-    start_database(config)
+    start_database(config, check_revision=True)
 
     # Now just run the job runner directly
     job_runner = FractalJobRunner(config)
@@ -539,7 +539,7 @@ def server_start_api(config):
 
     # Ensure that the database is alive. This also handles checking stuff,
     # even if we don't own the db (which we shouldn't)
-    start_database(config)
+    start_database(config, check_revision=True)
 
     # Now just run the api process
     api = FractalWaitressApp(config)
@@ -635,7 +635,10 @@ def server_upgrade_config(config_path):
 
 def server_user(args: argparse.Namespace, config: FractalConfig):
     user_command = args.user_command
-    pg_harness, storage = start_database(config)
+
+    # Don't check revision here - it will be done in the SQLAlchemySocket constructor
+    start_database(config, check_revision=False)
+    storage = SQLAlchemySocket(config)
 
     def print_user_info(u: UserInfo):
         enabled = "True" if u.enabled else "False"
@@ -742,7 +745,10 @@ def server_user(args: argparse.Namespace, config: FractalConfig):
 
 def server_role(args: argparse.Namespace, config: FractalConfig):
     role_command = args.role_command
-    pg_harness, storage = start_database(config)
+
+    # Don't check revision here - it will be done in the SQLAlchemySocket constructor
+    start_database(config, check_revision=False)
+    storage = SQLAlchemySocket(config)
 
     def print_role_info(r: RoleInfo):
         print("-" * 80)
@@ -772,7 +778,7 @@ def server_role(args: argparse.Namespace, config: FractalConfig):
 
 
 def server_backup(args: argparse.Namespace, config: FractalConfig):
-    pg_harness, _ = start_database(config)
+    pg_harness = start_database(config, check_revision=True)
 
     db_size = pg_harness.database_size()
     pretty_size = pretty_bytes(db_size)
