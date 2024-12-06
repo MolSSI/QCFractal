@@ -11,6 +11,7 @@ from qcportal.singlepoint import (
     SinglepointDatasetNewEntry,
     SinglepointAddBody,
     SinglepointQueryFilters,
+    SinglepointDatasetEntriesFrom,
 )
 from qcportal.utils import calculate_limit
 
@@ -76,4 +77,14 @@ def add_singlepoint_dataset_entries_v1(dataset_id: int, body_data: List[Singlepo
     return storage_socket.datasets.singlepoint.add_entries(
         dataset_id,
         new_entries=body_data,
+    )
+
+
+@api_v1.route("/datasets/singlepoint/<int:dataset_id>/entries/addFrom", methods=["POST"])
+@wrap_route("WRITE")
+def add_singlepoint_dataset_entries_from_v1(dataset_id: int, body_data: SinglepointDatasetEntriesFrom):
+    return storage_socket.datasets.singlepoint.add_entries_from_optimization_ds(
+        dataset_id,
+        body_data.dataset_id,
+        body_data.specification_name,
     )

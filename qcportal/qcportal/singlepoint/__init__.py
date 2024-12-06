@@ -3,6 +3,7 @@ from .dataset_models import (
     SinglepointDatasetNewEntry,
     SinglepointDatasetSpecification,
     SinglepointDatasetEntry,
+    SinglepointDatasetEntriesFrom,
 )
 
 from .record_models import (
