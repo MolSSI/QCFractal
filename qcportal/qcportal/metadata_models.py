@@ -125,6 +125,42 @@ class InsertMetadata:
 
 
 @dataclass
+class InsertCountsMetadata:
+    """
+    Metadata returned by insertion / adding functions, only including counts
+    """
+
+    # Integers in errors, inserted, existing are indices in the input/output list
+    n_inserted: int
+    n_existing: int
+    error_description: Optional[str] = None
+    errors: List[str] = dataclasses.field(default_factory=list)
+
+    @property
+    def n_errors(self):
+        return len(self.errors)
+
+    @property
+    def success(self):
+        return self.error_description is None and len(self.errors) == 0
+
+    @property
+    def error_string(self):
+        s = ""
+        if self.error_description:
+            s += self.error_description + "\n"
+        s += "\n".join(f"    Index {x}: {y}" for x, y in self.errors)
+        return s
+
+    def dict(self) -> Dict[str, Any]:
+        """
+        Returns the information from this dataclass as a dictionary
+        """
+
+        return dataclasses.asdict(self)
+
+
+@dataclass
 class DeleteMetadata:
     """
     Metadata returned by delete functions
