@@ -148,10 +148,61 @@ def run_dataset_model_modify_entries(snowflake_client, ds, test_entries, test_sp
     assert len(ent_rec_map) == 3
 
     entry_name_1 = test_entries[0].name
+    entry_name_2 = test_entries[1].name
+    entry_name_3 = test_entries[2].name
 
-    ds.modify_entries({entry_name_1: {"test_attr_1": "val", "test_attr_2": 5}})
+    # Test Overwrite=False
+    # Test modifying one entry attribute with no comments
+    ds.modify_entries(attribute_map={entry_name_2: {"test_attr_1": "val", "test_attr_2": 5}})
+    assert ds.get_entry(entry_name_2).attributes == {
+        "internal": "internal_id",
+        "test_attr_1": "val",
+        "test_attr_2": 5,
+    }
 
-    assert ds._cache_data.get_entry(entry_name_1).attributes == {"test_attr_1": "val", "test_attr_2": 5}
+    ds.modify_entries(attribute_map={entry_name_2: {"test_attr_1": "new_val", "test_attr_2": 10}})
+    assert ds.get_entry(entry_name_2).attributes == {
+        "internal": "internal_id",
+        "test_attr_1": "new_val",
+        "test_attr_2": 10,
+    }
+
+    # Test modifying both
+    ds.modify_entries(
+        attribute_map={entry_name_2: {"test_attr_1": "new_value", "test_attr_2": 19}},
+        comment_map={entry_name_2: "This is a new comment for the entry."},
+    )
+    assert ds.get_entry(entry_name_2).attributes == {
+        "internal": "internal_id",
+        "test_attr_1": "new_value",
+        "test_attr_2": 19,
+    }
+    assert ds.get_entry(entry_name_2).comment == "This is a new comment for the entry."
+
+    # Test Overwrite=True
+    # Test modifying one entry attribute with no comments
+    ds.modify_entries(attribute_map={entry_name_2: {"test_attr_1": "val", "test_attr_2": 5}}, overwrite_entries=True)
+    assert ds.get_entry(entry_name_2).attributes == {"test_attr_1": "val", "test_attr_2": 5}
+
+    # Test modifying one comment with no attributes
+    ds.modify_entries(comment_map={entry_name_2: "This is a new comment tested without modifying attributes."})
+    assert ds.get_entry(entry_name_2).attributes == {"test_attr_1": "val", "test_attr_2": 5}
+    assert ds.get_entry(entry_name_2).comment == "This is a new comment tested without modifying attributes."
+
+    # Test modifying both
+    ds.modify_entries(
+        attribute_map={entry_name_2: {"test_attr_1": "value"}},
+        comment_map={entry_name_2: "This is a new comment while overwriting the attributes."},
+        overwrite_entries=True,
+    )
+    assert ds.get_entry(entry_name_2).attributes == {"test_attr_1": "value"}
+    assert ds.get_entry(entry_name_2).comment == "This is a new comment while overwriting the attributes."
+
+    # Now with a fresh dataset
+    ds = snowflake_client.get_dataset_by_id(ds.id)
+    ds.fetch_entries()
+    assert ds.get_entry(entry_name_2).attributes == {"test_attr_1": "value"}
+    assert ds.get_entry(entry_name_2).comment == "This is a new comment while overwriting the attributes."
 
 
 def run_dataset_model_delete_entry(snowflake_client, ds, test_entries, test_specs):
