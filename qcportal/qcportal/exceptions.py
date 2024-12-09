@@ -69,3 +69,7 @@ class InvalidUpdateError(UserReportableError):
 
 class ComputeManagerError(UserReportableError):
     pass
+
+
+class InvalidArgumentsError(UserReportableError):
+    pass
