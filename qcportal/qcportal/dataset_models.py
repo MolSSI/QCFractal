@@ -792,6 +792,26 @@ class BaseDataset(BaseModel):
         for old_name, new_name in name_map.items():
             self._cache_data.rename_entry(old_name, new_name)
 
+    def modify_entries(
+        self,
+        attribute_map: Optional[Dict[str, Dict[str, Any]]] = None,
+        comment_map: Optional[Dict[str, str]] = None,
+        overwrite_entries: bool = False,
+    ):
+        self.assert_is_not_view()
+        self.assert_online()
+
+        body = DatasetModifyEntryBody(
+            attribute_map=attribute_map, comment_map=comment_map, overwrite_entries=overwrite_entries
+        )
+
+        self._client.make_request(
+            "patch", f"api/v1/datasets/{self.dataset_type}/{self.id}/entries/modify", None, body=body
+        )
+
+        # Sync local cache with updated server.
+        self.fetch_entries(list(attribute_map.keys()), force_refetch=True)
+
     def delete_entries(self, names: Union[str, Iterable[str]], delete_records: bool = False) -> DeleteMetadata:
         self.assert_is_not_view()
         self.assert_online()
@@ -1793,6 +1813,12 @@ class DatasetDeleteEntryBody(RestModelBase):
 class DatasetDeleteSpecificationBody(RestModelBase):
     names: List[str]
     delete_records: bool = False
+
+
+class DatasetModifyEntryBody(RestModelBase):
+    attribute_map: Optional[Dict[str, Dict[str, Any]]] = None
+    comment_map: Optional[Dict[str, str]] = None
+    overwrite_entries: bool = False
 
 
 def dataset_from_dict(data: Dict[str, Any], client: Any, cache_data: Optional[DatasetCache] = None) -> BaseDataset:

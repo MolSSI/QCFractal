@@ -126,6 +126,11 @@ def test_gridoptimization_dataset_model_rename_entry(snowflake_client: PortalCli
     ds_helpers.run_dataset_model_rename_entry(snowflake_client, ds, test_entries, test_specs)
 
 
+def test_gridoptimization_dataset_model_modify_entries(snowflake_client: PortalClient):
+    ds = snowflake_client.add_dataset("gridoptimization", "Test dataset")
+    ds_helpers.run_dataset_model_modify_entries(snowflake_client, ds, test_entries, test_specs)
+
+
 def test_gridoptimization_dataset_model_delete_entry(snowflake_client: PortalClient):
     ds = snowflake_client.add_dataset("gridoptimization", "Test dataset")
     ds_helpers.run_dataset_model_delete_entry(snowflake_client, ds, test_entries, test_specs)
