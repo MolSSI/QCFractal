@@ -812,8 +812,8 @@ class BaseDataset(BaseModel):
 
         # Sync local cache with updated server.
         self.fetch_entries(
-            (list(attribute_map.keys()) if (attribute_map is not None) else list())
-            | (list(comment_map.keys()) if (comment_map is not None) else list()),
+            list((attribute_map.keys() if (attribute_map is not None) else set())
+            | (comment_map.keys() if (comment_map is not None) else set())),
             force_refetch=True,
         )
 
