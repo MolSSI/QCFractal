@@ -1016,7 +1016,13 @@ class BaseDatasetSocket:
         """
         stmt = select(self.entry_orm)
         stmt = stmt.where(self.entry_orm.dataset_id == dataset_id)
-        stmt = stmt.where(self.entry_orm.name.in_(attribute_map.keys() | comment_map.keys()))
+
+        stmt = stmt.where(
+            self.entry_orm.name.in_(
+                (attribute_map.keys() if (attribute_map is not None) else set())
+                | (comment_map.keys() if (comment_map is not None) else set())
+            )
+        )
         stmt = stmt.options(load_only(self.entry_orm.name, self.entry_orm.attributes, self.entry_orm.comment))
         stmt = stmt.with_for_update(skip_locked=False)
 
