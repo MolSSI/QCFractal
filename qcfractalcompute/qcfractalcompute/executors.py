@@ -4,7 +4,6 @@ import math
 import sys
 from typing import TYPE_CHECKING
 
-from parsl.channels import LocalChannel
 from parsl.executors import ThreadPoolExecutor, HighThroughputExecutor
 from parsl.providers import SlurmProvider, TorqueProvider, LSFProvider
 
@@ -34,9 +33,6 @@ def build_executor(executor_label: str, executor_config: ExecutorConfig) -> Pars
     # to think of stuff in terms of concurrent tasks rather than workers.
     ##############################################################################
 
-    # Always use local channel
-    lchannel = LocalChannel()
-
     if executor_config.type == "local":
         assert isinstance(executor_config, LocalExecutorConfig)
 
@@ -63,7 +59,7 @@ def build_executor(executor_label: str, executor_config: ExecutorConfig) -> Pars
         #    max_workers=executor_config.max_workers,
         #    address="127.0.0.1",
         #    provider=LocalProvider(
-        #        channel=lchannel, init_blocks=1, max_blocks=1, worker_init=";".join(executor_config.worker_init)
+        #        init_blocks=1, max_blocks=1, worker_init=";".join(executor_config.worker_init)
         #    ),
         # )
 
@@ -85,7 +81,6 @@ def build_executor(executor_label: str, executor_config: ExecutorConfig) -> Pars
             mem_per_worker=executor_config.memory_per_worker,
             address=executor_config.bind_address,
             provider=SlurmProvider(
-                channel=lchannel,
                 init_blocks=1,
                 min_blocks=0,
                 max_blocks=executor_config.max_nodes,
@@ -118,7 +113,6 @@ def build_executor(executor_label: str, executor_config: ExecutorConfig) -> Pars
             mem_per_worker=executor_config.memory_per_worker,
             address=executor_config.bind_address,
             provider=TorqueProvider(
-                channel=lchannel,
                 init_blocks=1,
                 min_blocks=0,
                 max_blocks=executor_config.max_nodes,
@@ -154,7 +148,6 @@ def build_executor(executor_label: str, executor_config: ExecutorConfig) -> Pars
             mem_per_worker=executor_config.memory_per_worker,
             address=executor_config.bind_address,
             provider=LSFProvider(
-                channel=lchannel,
                 init_blocks=1,
                 min_blocks=0,
                 max_blocks=executor_config.max_nodes,
