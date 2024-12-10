@@ -811,11 +811,13 @@ class BaseDataset(BaseModel):
         )
 
         # Sync local cache with updated server.
-        self.fetch_entries(
-            list((attribute_map.keys() if (attribute_map is not None) else set())
-            | (comment_map.keys() if (comment_map is not None) else set())),
-            force_refetch=True,
-        )
+        entries_to_sync = set()
+        if attribute_map is not None:
+            entries_to_sync = entries_to_sync | attribute_map.keys()
+        if comment_map is not None:
+            entries_to_sync = entries_to_sync | comment_map.keys()
+
+        self.fetch_entries(entries_to_sync, force_refetch=True)
 
     def delete_entries(self, names: Union[str, Iterable[str]], delete_records: bool = False) -> DeleteMetadata:
         self.assert_is_not_view()
