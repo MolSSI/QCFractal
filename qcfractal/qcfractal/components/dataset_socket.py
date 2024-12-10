@@ -1026,19 +1026,22 @@ class BaseDatasetSocket:
         stmt = stmt.options(load_only(self.entry_orm.name, self.entry_orm.attributes, self.entry_orm.comment))
         stmt = stmt.with_for_update(skip_locked=False)
 
+        attribute_keys = attribute_map.keys() if (attribute_map is not None) else list()
+        comment_keys = comment_map.keys() if (comment_map is not None) else list()
+
         with self.root_socket.optional_session(session) as session:
             entries = session.execute(stmt).scalars().all()
 
             for entry in entries:
                 # entry.attributes = attribute_map[entry.name]
                 if overwrite_entries:
-                    if entry.name in attribute_map:
+                    if entry.name in attribute_keys:
                         entry.attributes = attribute_map[entry.name]
                 else:
-                    if entry.name in attribute_map:
+                    if entry.name in attribute_keys:
                         entry.attributes.update(attribute_map[entry.name])
 
-                if entry.name in comment_map:
+                if entry.name in comment_keys:
                     entry.comment = comment_map[entry.name]
 
     def fetch_records(
