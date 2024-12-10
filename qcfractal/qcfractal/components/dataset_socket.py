@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import select, delete, func, union, text, and_
 from sqlalchemy.orm import load_only, lazyload, joinedload, with_polymorphic
+from sqlalchemy.orm.attributes import flag_modified
 
 from qcfractal.components.dataset_db_models import BaseDatasetORM, ContributedValuesORM
 from qcfractal.components.record_db_models import BaseRecordORM
@@ -1024,6 +1025,7 @@ class BaseDatasetSocket:
             )
         )
         stmt = stmt.options(load_only(self.entry_orm.name, self.entry_orm.attributes, self.entry_orm.comment))
+        stmt = stmt.options(lazyload("*"))
         stmt = stmt.with_for_update(skip_locked=False)
 
         attribute_keys = attribute_map.keys() if (attribute_map is not None) else list()
@@ -1033,13 +1035,13 @@ class BaseDatasetSocket:
             entries = session.execute(stmt).scalars().all()
 
             for entry in entries:
-                # entry.attributes = attribute_map[entry.name]
                 if overwrite_entries:
                     if entry.name in attribute_keys:
                         entry.attributes = attribute_map[entry.name]
                 else:
                     if entry.name in attribute_keys:
                         entry.attributes.update(attribute_map[entry.name])
+                        flag_modified(entry, "attributes")
 
                 if entry.name in comment_keys:
                     entry.comment = comment_map[entry.name]
