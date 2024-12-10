@@ -110,7 +110,10 @@ class BaseRecordSocket:
         Create an entry in the task queue, and attach it to the given record ORM
         """
 
-        record_orm.task = TaskQueueORM(tag=tag, priority=priority, required_programs=record_orm.required_programs)
+        available = record_orm.status == RecordStatusEnum.waiting
+        record_orm.task = TaskQueueORM(
+            tag=tag, priority=priority, required_programs=record_orm.required_programs, available=available
+        )
 
     @staticmethod
     def create_service(record_orm: BaseRecordORM, tag: str, priority: PriorityEnum, find_existing: bool) -> None:
@@ -184,7 +187,7 @@ class BaseRecordSocket:
 
         raise NotImplementedError(f"query function not implemented for {type(self)}! This is a developer error")
 
-    def generate_task_specification(self, record_orm: BaseRecordORM) -> Dict[str, Any]:
+    def generate_task_specifications(self, session: Session, record_ids: Sequence[int]) -> List[Dict[str, Any]]:
         """
         Generate the actual QCSchema input and related fields for a task
         """
@@ -902,14 +905,6 @@ class RecordSocket:
 
         return self.get_base(wp, record_ids, include, exclude, missing_ok, session=session)
 
-    def generate_task_specification(self, task_orm: TaskQueueORM) -> Dict[str, Any]:
-        """
-        Generate the actual QCSchema input and related fields for a task
-        """
-
-        record_type = task_orm.record.record_type
-        return self._handler_map[record_type].generate_task_specification(task_orm.record)
-
     def create_compute_history_entry(
         self,
         session: Session,
@@ -1363,6 +1358,7 @@ class RecordSocket:
                 r.status = RecordStatusEnum.waiting
                 r.modified_on = now_at_utc()
                 r.manager_name = None
+                r.task.available = True
 
             return [r.id for r in record_orms]
 
@@ -1447,6 +1443,9 @@ class RecordSocket:
                         r_orm.status = RecordStatusEnum.waiting
                         r_orm.manager_name = None
 
+                        if not r_orm.is_service:
+                            r_orm.task.available = True
+
                     else:
                         if r_orm.info_backup:
                             raise RuntimeError(f"resetting record with status {r_orm.status} with backup info present")
@@ -1456,6 +1455,13 @@ class RecordSocket:
                             )
 
                     r_orm.modified_on = now_at_utc()
+
+                    # Sanity check
+                    if not r_orm.is_service:
+                        if r_orm.status == RecordStatusEnum.waiting:
+                            assert r_orm.task.available == True
+                        else:
+                            assert r_orm.task is None or r_orm.task.available == False
 
                 updated_ids.extend([r.id for r in record_data])
 
