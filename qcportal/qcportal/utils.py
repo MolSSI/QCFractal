@@ -10,7 +10,7 @@ import math
 import time
 from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from hashlib import sha256
-from typing import Optional, Union, Sequence, List, TypeVar, Any, Dict, Generator, Iterable, Callable
+from typing import Optional, Union, Sequence, List, TypeVar, Any, Dict, Generator, Iterable, Callable, Set
 
 import numpy as np
 
@@ -19,16 +19,26 @@ from qcportal.serialization import _JSONEncoder
 _T = TypeVar("_T")
 
 
-def make_list(obj: Optional[Union[_T, Sequence[_T]]]) -> Optional[List[_T]]:
+def make_list(obj: Optional[Union[_T, Sequence[_T], Set[_T]]]) -> Optional[List[_T]]:
     """
-    Returns a list containing obj if obj is not a list or sequence type object
+    Returns a list containing obj if obj is not a list or other iterable type object
+
+    This will also work with sets
     """
 
+    # NOTE - you might be tempted to change this to work with Iterable rather than Sequence. However,
+    # pydantic models and dicts and stuff are sequences, too, which we usually just want to return
+    # within a list
+
+    if isinstance(obj, list):
+        return obj
     if obj is None:
         return None
     # Be careful. strings are sequences
     if isinstance(obj, str):
         return [obj]
+    if isinstance(obj, set):
+        return list(obj)
     if not isinstance(obj, Sequence):
         return [obj]
     return list(obj)
