@@ -4,7 +4,7 @@ try:
     from pydantic.v1 import BaseModel, Extra
 except ImportError:
     from pydantic import BaseModel, Extra
-from typing_extensions import Literal
+from typing_extensions import Literal, List
 
 from qcportal.dataset_models import BaseDataset
 from qcportal.manybody.record_models import ManybodyRecord, ManybodySpecification
@@ -25,6 +25,10 @@ class ManybodyDatasetNewEntry(BaseModel):
 
 class ManybodyDatasetEntry(ManybodyDatasetNewEntry):
     initial_molecule: Molecule
+
+    @property
+    def _representative_molecules(self) -> List[Molecule]:
+        return [self.initial_molecule]
 
 
 class ManybodyDatasetSpecification(BaseModel):

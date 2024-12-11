@@ -4,7 +4,7 @@ try:
     from pydantic.v1 import BaseModel, Extra, root_validator
 except ImportError:
     from pydantic import BaseModel, Extra, root_validator
-from typing_extensions import Literal
+from typing_extensions import Literal, List
 
 from qcportal.dataset_models import BaseDataset
 from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
@@ -29,6 +29,10 @@ class SinglepointDatasetNewEntry(BaseModel):
 
 class SinglepointDatasetEntry(SinglepointDatasetNewEntry):
     molecule: Molecule
+
+    @property
+    def _representative_molecules(self) -> List[Molecule]:
+        return [self.molecule]
 
 
 class SinglepointDatasetSpecification(BaseModel):
