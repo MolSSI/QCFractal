@@ -7,6 +7,7 @@ from sqlalchemy import (
     LargeBinary,
     CheckConstraint,
     UniqueConstraint,
+    Boolean,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, TEXT, TIMESTAMP
 from sqlalchemy.orm import relationship
@@ -35,6 +36,7 @@ class TaskQueueORM(BaseORM):
     sort_date = Column(TIMESTAMP(timezone=True), default=now_at_utc(), nullable=False)
     tag = Column(String, nullable=False)
     priority = Column(Integer, nullable=False)
+    available = Column(Boolean, nullable=False)
 
     record_id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="cascade"), nullable=False)
     record = relationship(BaseRecordORM, back_populates="task", uselist=False)
@@ -56,4 +58,5 @@ class TaskQueueORM(BaseORM):
     )
 
     # Remove sort_date from the model. For backwards compatibility (and because it's only used for sorting)
-    _qcportal_model_excludes = ["sort_date"]
+    # Also remove the "available" column - is somewhat redundant with the record status
+    _qcportal_model_excludes = ["sort_date", "available"]

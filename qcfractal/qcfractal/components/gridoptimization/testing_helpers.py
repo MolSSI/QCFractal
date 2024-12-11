@@ -88,7 +88,7 @@ test_specs = [
 def generate_task_key(task: RecordTask):
     # task is an optimization
     inp_data = task.function_kwargs["input_data"]
-    assert inp_data["schema_name"] in "qcschema_optimization_input"
+    assert inp_data["schema_name"] == "qcschema_optimization_input"
 
     mol_hash = inp_data["initial_molecule"]["identifiers"]["molecule_hash"]
     constraints = inp_data["keywords"].get("constraints", None)

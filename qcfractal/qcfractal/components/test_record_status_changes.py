@@ -52,6 +52,10 @@ def test_record_socket_reset_assigned_manager(storage_socket: SQLAlchemySocket, 
     tasks_1 = storage_socket.tasks.claim_tasks(mname1.fullname, manager_programs, ["tag1"])
     tasks_2 = storage_socket.tasks.claim_tasks(mname2.fullname, manager_programs, ["tag2"])
 
+    rec = [session.get(BaseRecordORM, i) for i in all_id]
+    assert all(r.status == RecordStatusEnum.running for r in rec)
+    assert all(r.task.available is False for r in rec)
+
     assert len(tasks_1) == 4
     assert len(tasks_2) == 2
 
@@ -60,6 +64,7 @@ def test_record_socket_reset_assigned_manager(storage_socket: SQLAlchemySocket, 
     time_1 = now_at_utc()
     assert set(ids) == {id_1, id_3, id_5, id_6}
 
+    session.expire_all()
     rec = [session.get(BaseRecordORM, i) for i in all_id]
     assert rec[0].status == RecordStatusEnum.waiting
     assert rec[1].status == RecordStatusEnum.running
@@ -81,6 +86,13 @@ def test_record_socket_reset_assigned_manager(storage_socket: SQLAlchemySocket, 
     assert rec[3].modified_on < time_0
     assert time_0 < rec[4].modified_on < time_1
     assert time_0 < rec[5].modified_on < time_1
+
+    assert rec[0].task.available is True
+    assert rec[1].task.available is False
+    assert rec[2].task.available is True
+    assert rec[3].task.available is False
+    assert rec[4].task.available is True
+    assert rec[5].task.available is True
 
 
 def test_record_socket_reset_assigned_manager_none(storage_socket: SQLAlchemySocket):
@@ -279,6 +291,10 @@ def test_record_client_invalidate(snowflake: QCATestingSnowflake):
         assert rec[4].task is None
         assert rec[5].task is None
         assert rec[6].task is None
+
+        assert rec[0].task.available is True
+        assert rec[2].task.available is False
+        assert rec[3].task.available is False
 
         assert rec[0].manager_name is None
         assert rec[1].manager_name is not None  # Manager left on
@@ -514,6 +530,8 @@ def test_record_client_revert_chain(snowflake: QCATestingSnowflake):
         assert rec[5].task is not None
         assert rec[6].task is None
 
+        assert rec[5].task.available is True
+
         assert len(rec[0].info_backup) == 1
         assert len(rec[1].info_backup) == 1
         assert len(rec[2].info_backup) == 1
@@ -551,6 +569,12 @@ def test_record_client_revert_chain(snowflake: QCATestingSnowflake):
         assert rec[5].task is not None
         assert rec[6].task is None
 
+        assert rec[0].task.available is True
+        assert rec[2].task.available is True
+        assert rec[3].task.available is False
+        assert rec[4].task.available is True
+        assert rec[5].task.available is True
+
         meta = snowflake_client.uninvalidate_records(all_id)
         assert meta.n_updated == 2
 
@@ -579,6 +603,12 @@ def test_record_client_revert_chain(snowflake: QCATestingSnowflake):
         assert rec[4].task is not None
         assert rec[5].task is not None
         assert rec[6].task is None
+
+        assert rec[0].task.available is True
+        assert rec[2].task.available is True
+        assert rec[3].task.available is False
+        assert rec[4].task.available is True
+        assert rec[5].task.available is True
 
 
 def test_record_socket_undelete_none(storage_socket: SQLAlchemySocket):
