@@ -34,6 +34,10 @@ class ReactionDatasetEntry(ReactionDatasetNewEntry):
 
     stoichiometries: List[ReactionDatasetEntryStoichiometry]
 
+    @property
+    def _representative_molecules(self) -> List[Molecule]:
+        return [x.molecule for x in stoichiometry]
+
 
 class ReactionDatasetSpecification(BaseModel):
     class Config:

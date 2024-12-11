@@ -30,6 +30,11 @@ class NEBDatasetNewEntry(BaseModel):
 class NEBDatasetEntry(NEBDatasetNewEntry):
     initial_chain: List[Molecule]
 
+    @property
+    def _representative_molecules(self) -> List[Molecule]:
+        # Only need one - the others are similar
+        return [self.initial_chain[0]]
+
 
 # NEB dataset specification
 class NEBDatasetSpecification(BaseModel):

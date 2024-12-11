@@ -27,6 +27,11 @@ class TorsiondriveDatasetNewEntry(BaseModel):
 class TorsiondriveDatasetEntry(TorsiondriveDatasetNewEntry):
     initial_molecules: List[Molecule]
 
+    @property
+    def _representative_molecules(self) -> List[Molecule]:
+        # Only need one, since all the others are similar
+        return [self.initial_molecules[0]]
+
 
 # Torsiondrive dataset specifications are just optimization specifications
 # The torsiondrive keywords are stored in the entries ^^
