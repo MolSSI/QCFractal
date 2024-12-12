@@ -1,6 +1,30 @@
 Release Notes
 =============
 
+0.57 / 2024-12-12
+-----------------
+
+A couple new features, some nice improvements, and of course some bug fixes!
+This update should be backwards compatible - new clients can access old servers, and old clients can
+access new servers. Same for compute managers.
+
+**Note:** this release drops support for Python 3.8, which is now EOL.
+
+Notable PRs:
+
+- (:pr:`848`) Pin APSW (an SQLite wrapper) to a recent version
+- (:pr:`851`) Mark managers as modified when they claim or return something (to prevent busy managers from being inactivated)
+- (:pr:`852`) Improve performance of task claiming by managers
+- (:pr:`853`) Reduce number of SQLAlchemySocket instances created on startup
+- (:pr:`854`) Extras fields of records should not be None/NULL
+- (:pr:`855`) Improve script startup time by lazy-loading pandas
+- (:pr:`856`) Drop support for python 3.8
+- (:pr:`857`) Add option for opt-in usage tracking for Parsl
+- (:pr:`858`) Pin pyjwt & enable invalid subject handling
+- (:pr:`861`) Ability to add entries to a singlepoint dataset from other datasets
+- (:pr:`863`) Remove channels from Parsl config
+
+
 0.56 / 2024-07-09
 -------------------
 
