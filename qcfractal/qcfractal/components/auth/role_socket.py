@@ -59,6 +59,7 @@ default_roles: Dict[str, Any] = {
     "compute": {
         "Statement": [
             {"Effect": "Allow", "Action": ["READ"], "Resource": "/api/v1/information"},
+            {"Effect": "Allow", "Action": ["READ"], "Resource": "/compute/v1/information"},
             {"Effect": "Allow", "Action": ["READ", "WRITE"], "Resource": "/api/v1/users"},
             {"Effect": "Allow", "Action": "*", "Resource": ["/compute/v1/managers", "/compute/v1/tasks"]},
         ]

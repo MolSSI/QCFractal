@@ -89,6 +89,7 @@ def create_flask_app(
     # Must be done before registering the blueprint
     importlib.import_module("qcfractal.flask_app.api_v1.routes")
     importlib.import_module("qcfractal.flask_app.auth_v1.routes")
+    importlib.import_module("qcfractal.flask_app.compute_v1.routes")
     importlib.import_module("qcfractal.flask_app.dashboard_v1.routes")
     importlib.import_module("qcfractal.components.register_all")
 
