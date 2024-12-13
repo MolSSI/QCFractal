@@ -1081,7 +1081,8 @@ class BaseDataset(BaseModel):
         record = None
         if force_refetch:
             records = self._internal_fetch_records([entry_name], [specification_name], None, include)
-            record = records[0][2]
+            if records:
+                record = records[0][2]
         elif fetch_updated:
             records = self._internal_update_records([entry_name], [specification_name], None, include)
             if records:
@@ -1094,7 +1095,8 @@ class BaseDataset(BaseModel):
         if record is None and not self.is_view:
             # not in cache
             records = self._internal_fetch_records([entry_name], [specification_name], None, include)
-            record = records[0][2]
+            if records:
+                record = records[0][2]
 
         if record is not None and self._client is not None:
             record.propagate_client(self._client)
