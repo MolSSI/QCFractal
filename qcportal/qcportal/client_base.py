@@ -73,6 +73,8 @@ class PortalClientBase:
         password: Optional[str] = None,
         verify: bool = True,
         show_motd: bool = True,
+        *,
+        information_endpoint: str = "api/v1/information",
     ) -> None:
         """Initializes a PortalClient instance from an address and verification information.
 
@@ -96,6 +98,9 @@ class PortalClientBase:
 
         # For developer use and debugging
         self.debug_requests = False
+
+        # Where we get the server information from
+        self._information_endpoint = information_endpoint.strip("/")
 
         if not address.startswith("http://") and not address.startswith("https://"):
             address = "https://" + address
@@ -451,4 +456,4 @@ class PortalClientBase:
         """
 
         # Request the info, and store here for later use
-        return self.make_request("get", "api/v1/information", Dict[str, Any])
+        return self.make_request("get", self._information_endpoint, Dict[str, Any])

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Tuple, Optional
 from urllib.parse import urlparse
+from qcfractal import __version__ as qcfractal_version
 
 from flask import request, g, current_app
 from flask_jwt_extended import (
@@ -172,3 +173,23 @@ def login_and_get_jwt(get_refresh_token: bool) -> Tuple[str, Optional[str]]:
 
     current_app.logger.info(f"Successful login for user {username}")
     return access_token, refresh_token
+
+
+def get_public_server_information():
+    qcf_cfg = current_app.config["QCFRACTAL_CONFIG"]
+
+    # TODO - remove version limits after a while. They are there to support older clients
+    public_info = {
+        "name": qcf_cfg.name,
+        "manager_heartbeat_frequency": qcf_cfg.heartbeat_frequency,
+        "manager_heartbeat_max_missed": qcf_cfg.heartbeat_max_missed,
+        "version": qcfractal_version,
+        "api_limits": qcf_cfg.api_limits.dict(),
+        "client_version_lower_limit": "0.50",
+        "client_version_upper_limit": "1.00",
+        "manager_version_lower_limit": "0.50",
+        "manager_version_upper_limit": "1.00",
+        "motd": storage_socket.serverinfo.get_motd(),
+    }
+
+    return public_info
