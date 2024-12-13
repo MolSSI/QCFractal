@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 import logging
 import logging.handlers
 import multiprocessing
@@ -22,11 +23,11 @@ from .job_runner import FractalJobRunner
 from .port_util import find_open_port
 from .postgres_harness import create_snowflake_postgres
 
-try:
-    from qcfractalcompute.compute_manager import ComputeManager
-    from qcfractalcompute.config import FractalComputeConfig, FractalServerSettings, LocalExecutorConfig
-except ImportError:
+if importlib.util.find_spec("qcfractalcompute") is None:
     raise RuntimeError("qcfractalcompute is not installed. Snowflake is useless without it")
+
+from qcfractalcompute.compute_manager import ComputeManager
+from qcfractalcompute.config import FractalComputeConfig, FractalServerSettings, LocalExecutorConfig
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Sequence, Optional, Set
