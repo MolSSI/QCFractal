@@ -597,11 +597,13 @@ class PostgresHarness:
         return self.sql_command(f"SELECT pg_database_size('{self.config.database_name}');")[0][0]
 
 
-def create_snowflake_postgres(data_dir: str) -> PostgresHarness:
+def create_snowflake_postgres(host: str, data_dir: str) -> PostgresHarness:
     """Create and Initialize a postgres instance in a particular directory
 
     Parameters
     ----------
+    host
+        The host name or IP address to bind to
     data_dir
         Path to the directory to store the database data
     """
@@ -609,7 +611,7 @@ def create_snowflake_postgres(data_dir: str) -> PostgresHarness:
     data_dir = data_dir
     sock_dir = os.path.join(data_dir, "sock")
 
-    port = find_open_port()
+    port = find_open_port(host)
     db_config = {
         "port": port,
         "data_directory": data_dir,

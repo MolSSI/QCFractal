@@ -296,7 +296,7 @@ class WebAPIConfig(ConfigBase):
         description="If the master process does not hear from a worker for the given amount of time (in seconds),"
         "kill it. This effectively limits the time a worker has to respond to a request",
     )
-    host: str = Field("127.0.0.1", description="The IP address or hostname to bind to")
+    host: str = Field("localhost", description="The IP address or hostname to bind to")
     port: int = Field(7777, description="The port on which to run the REST interface.")
 
     secret_key: str = Field(..., description="Secret key for flask api. See documentation")
@@ -570,8 +570,8 @@ def write_initial_configuration(file_path: str, full_config: bool = True):
         base_folder=base_folder, api={"secret_key": secret_key, "jwt_secret_key": jwt_secret_key}, database=db_config
     )
 
-    default_config.database.port = find_open_port(5432)
-    default_config.api.port = find_open_port(7777)
+    default_config.database.port = find_open_port(starting_port=5432)
+    default_config.api.port = find_open_port(starting_port=7777)
 
     include = None
     if not full_config:

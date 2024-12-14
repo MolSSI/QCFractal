@@ -70,7 +70,7 @@ class QCATestingPostgresServer:
 
     def __init__(self, db_path: str):
         self.logger = logging.getLogger(__name__)
-        self.harness = create_snowflake_postgres(db_path)
+        self.harness = create_snowflake_postgres("localhost", db_path)
         self.logger.debug(f"Using database located at {db_path} with uri {self.harness.config.safe_uri}")
 
         # Postgres process is up, but the database is not created
