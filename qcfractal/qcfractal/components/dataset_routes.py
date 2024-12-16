@@ -37,17 +37,23 @@ def get_general_dataset_v1(dataset_id: int, url_params: ProjURLParameters):
     with storage_socket.session_scope(True) as session:
         ds_type = storage_socket.datasets.lookup_type(dataset_id, session=session)
         ds_socket = storage_socket.datasets.get_socket(ds_type)
-        return ds_socket.get(dataset_id, url_params.include, url_params.exclude, session=session)
+        return ds_socket.get(
+            dataset_id, url_params.include, url_params.exclude, session=session
+        )
 
 
 @api_v1.route("/datasets/query", methods=["POST"])
 @wrap_route("READ")
 def query_general_dataset_v1(body_data: DatasetQueryModel):
     with storage_socket.session_scope(True) as session:
-        dataset_id = storage_socket.datasets.lookup_id(body_data.dataset_type, body_data.dataset_name, session=session)
+        dataset_id = storage_socket.datasets.lookup_id(
+            body_data.dataset_type, body_data.dataset_name, session=session
+        )
         ds_type = storage_socket.datasets.lookup_type(dataset_id, session=session)
         ds_socket = storage_socket.datasets.get_socket(ds_type)
-        return ds_socket.get(dataset_id, body_data.include, body_data.exclude, session=session)
+        return ds_socket.get(
+            dataset_id, body_data.include, body_data.exclude, session=session
+        )
 
 
 @api_v1.route("/datasets/queryrecords", methods=["POST"])
@@ -123,28 +129,37 @@ def get_dataset_v1(dataset_type: str, dataset_id: int, url_params: ProjURLParame
     )
 
 
-@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/status", methods=["GET"])
+@api_v1.route(
+    "/datasets/<string:dataset_type>/<int:dataset_id>/status", methods=["GET"]
+)
 @wrap_route("READ")
 def get_dataset_status_v1(dataset_type: str, dataset_id: int):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.status(dataset_id)
 
 
-@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/detailed_status", methods=["GET"])
+@api_v1.route(
+    "/datasets/<string:dataset_type>/<int:dataset_id>/detailed_status", methods=["GET"]
+)
 @wrap_route("READ")
 def get_dataset_detailed_status_v1(dataset_type: str, dataset_id: int):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.detailed_status(dataset_id)
 
 
-@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/record_count", methods=["GET"])
+@api_v1.route(
+    "/datasets/<string:dataset_type>/<int:dataset_id>/record_count", methods=["GET"]
+)
 @wrap_route("READ")
 def get_dataset_record_count_v1(dataset_type: str, dataset_id: int):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.get_record_count(dataset_id)
 
 
-@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/computed_properties", methods=["GET"])
+@api_v1.route(
+    "/datasets/<string:dataset_type>/<int:dataset_id>/computed_properties",
+    methods=["GET"],
+)
 @wrap_route("READ")
 def get_dataset_computed_properties_v1(dataset_type: str, dataset_id: int):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
@@ -156,7 +171,9 @@ def get_dataset_computed_properties_v1(dataset_type: str, dataset_id: int):
 #########################
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>", methods=["PATCH"])
 @wrap_route("WRITE")
-def modify_dataset_metadata_v1(dataset_type: str, dataset_id: int, body_data: DatasetModifyMetadata):
+def modify_dataset_metadata_v1(
+    dataset_type: str, dataset_id: int, body_data: DatasetModifyMetadata
+):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.update_metadata(dataset_id, new_metadata=body_data)
 
@@ -164,7 +181,9 @@ def modify_dataset_metadata_v1(dataset_type: str, dataset_id: int, body_data: Da
 #########################
 # Computation submission
 #########################
-@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/submit", methods=["POST"])
+@api_v1.route(
+    "/datasets/<string:dataset_type>/<int:dataset_id>/submit", methods=["POST"]
+)
 @wrap_route("WRITE")
 def submit_dataset_v1(dataset_type: str, dataset_id: int, body_data: DatasetSubmitBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
@@ -183,28 +202,40 @@ def submit_dataset_v1(dataset_type: str, dataset_id: int, body_data: DatasetSubm
 ###################
 # Specifications
 ###################
-@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/specification_names", methods=["GET"])
+@api_v1.route(
+    "/datasets/<string:dataset_type>/<int:dataset_id>/specification_names",
+    methods=["GET"],
+)
 @wrap_route("READ")
 def fetch_dataset_specification_names_v1(dataset_type: str, dataset_id: int):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.fetch_specification_names(dataset_id)
 
 
-@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/specifications", methods=["GET"])
+@api_v1.route(
+    "/datasets/<string:dataset_type>/<int:dataset_id>/specifications", methods=["GET"]
+)
 @wrap_route("READ")
 def fetch_all_dataset_specifications_v1(dataset_type: str, dataset_id: int):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.fetch_specifications(dataset_id)
 
 
-@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/specifications/bulkFetch", methods=["POST"])
+@api_v1.route(
+    "/datasets/<string:dataset_type>/<int:dataset_id>/specifications/bulkFetch",
+    methods=["POST"],
+)
 @wrap_route("READ")
-def fetch_dataset_specifications_v1(dataset_type: str, dataset_id: int, body_data: DatasetFetchSpecificationBody):
+def fetch_dataset_specifications_v1(
+    dataset_type: str, dataset_id: int, body_data: DatasetFetchSpecificationBody
+):
     # use the entry limit I guess?
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_dataset_entries
 
     if len(body_data.names) > limit:
-        raise LimitExceededError(f"Cannot get {len(body_data.names)} dataset specifications - limit is {limit}")
+        raise LimitExceededError(
+            f"Cannot get {len(body_data.names)} dataset specifications - limit is {limit}"
+        )
 
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.fetch_specifications(
@@ -214,16 +245,27 @@ def fetch_dataset_specifications_v1(dataset_type: str, dataset_id: int, body_dat
     )
 
 
-@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/specifications/bulkDelete", methods=["POST"])
+@api_v1.route(
+    "/datasets/<string:dataset_type>/<int:dataset_id>/specifications/bulkDelete",
+    methods=["POST"],
+)
 @wrap_route("DELETE")
-def delete_dataset_specifications_v1(dataset_type: str, dataset_id: int, body_data: DatasetDeleteStrBody):
+def delete_dataset_specifications_v1(
+    dataset_type: str, dataset_id: int, body_data: DatasetDeleteStrBody
+):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
-    return ds_socket.delete_specifications(dataset_id, body_data.names, body_data.delete_records)
+    return ds_socket.delete_specifications(
+        dataset_id, body_data.names, body_data.delete_records
+    )
 
 
-@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/specifications", methods=["PATCH"])
+@api_v1.route(
+    "/datasets/<string:dataset_type>/<int:dataset_id>/specifications", methods=["PATCH"]
+)
 @wrap_route("WRITE")
-def rename_dataset_specifications_v1(dataset_type: str, dataset_id: int, body_data: Dict[str, str]):
+def rename_dataset_specifications_v1(
+    dataset_type: str, dataset_id: int, body_data: Dict[str, str]
+):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.rename_specifications(dataset_id, body_data)
 
@@ -231,27 +273,43 @@ def rename_dataset_specifications_v1(dataset_type: str, dataset_id: int, body_da
 ###################
 # Entries
 ###################
-@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/entry_names", methods=["GET"])
+@api_v1.route(
+    "/datasets/<string:dataset_type>/<int:dataset_id>/entry_names", methods=["GET"]
+)
 @wrap_route("READ")
 def fetch_dataset_entry_names_v1(dataset_type: str, dataset_id: int):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.fetch_entry_names(dataset_id)
 
 
-@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/entries/bulkDelete", methods=["POST"])
+@api_v1.route(
+    "/datasets/<string:dataset_type>/<int:dataset_id>/entries/bulkDelete",
+    methods=["POST"],
+)
 @wrap_route("DELETE")
-def delete_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: DatasetDeleteStrBody):
+def delete_dataset_entries_v1(
+    dataset_type: str, dataset_id: int, body_data: DatasetDeleteStrBody
+):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
-    return ds_socket.delete_entries(dataset_id, body_data.names, body_data.delete_records)
+    return ds_socket.delete_entries(
+        dataset_id, body_data.names, body_data.delete_records
+    )
 
 
-@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/entries/bulkFetch", methods=["POST"])
+@api_v1.route(
+    "/datasets/<string:dataset_type>/<int:dataset_id>/entries/bulkFetch",
+    methods=["POST"],
+)
 @wrap_route("READ")
-def fetch_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: DatasetFetchEntryBody):
+def fetch_dataset_entries_v1(
+    dataset_type: str, dataset_id: int, body_data: DatasetFetchEntryBody
+):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_dataset_entries
 
     if len(body_data.names) > limit:
-        raise LimitExceededError(f"Cannot get {len(body_data.names)} dataset entries - limit is {limit}")
+        raise LimitExceededError(
+            f"Cannot get {len(body_data.names)} dataset entries - limit is {limit}"
+        )
 
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.fetch_entries(
@@ -261,33 +319,51 @@ def fetch_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: Data
     )
 
 
-@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/entries", methods=["PATCH"])
+@api_v1.route(
+    "/datasets/<string:dataset_type>/<int:dataset_id>/entries", methods=["PATCH"]
+)
 @wrap_route("WRITE")
-def rename_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: Dict[str, str]):
+def rename_dataset_entries_v1(
+    dataset_type: str, dataset_id: int, body_data: Dict[str, str]
+):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.rename_entries(dataset_id, body_data)
 
 
-@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/entries/modify", methods=["PATCH"])
+@api_v1.route(
+    "/datasets/<string:dataset_type>/<int:dataset_id>/entries/modify", methods=["PATCH"]
+)
 @wrap_route("WRITE")
-def modify_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: DatasetModifyEntryBody):
+def modify_dataset_entries_v1(
+    dataset_type: str, dataset_id: int, body_data: DatasetModifyEntryBody
+):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.modify_entries(
-        dataset_id, body_data.attribute_map, body_data.comment_map, body_data.overwrite_entries
+        dataset_id,
+        body_data.attribute_map,
+        body_data.comment_map,
+        body_data.overwrite_attributes,
     )
 
 
 #########################
 # Records
 #########################
-@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/records/bulkFetch", methods=["POST"])
+@api_v1.route(
+    "/datasets/<string:dataset_type>/<int:dataset_id>/records/bulkFetch",
+    methods=["POST"],
+)
 @wrap_route("READ")
-def fetch_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetFetchRecordsBody):
+def fetch_dataset_records_v1(
+    dataset_type: str, dataset_id: int, body_data: DatasetFetchRecordsBody
+):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records
 
     n_requested = len(body_data.entry_names) * len(body_data.specification_names)
     if n_requested > limit:
-        raise LimitExceededError(f"Cannot get {n_requested} dataset records - limit is {limit}")
+        raise LimitExceededError(
+            f"Cannot get {n_requested} dataset records - limit is {limit}"
+        )
 
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
 
@@ -299,9 +375,14 @@ def fetch_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: Data
     )
 
 
-@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/records/bulkDelete", methods=["POST"])
+@api_v1.route(
+    "/datasets/<string:dataset_type>/<int:dataset_id>/records/bulkDelete",
+    methods=["POST"],
+)
 @wrap_route("DELETE")
-def remove_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetRemoveRecordsBody):
+def remove_dataset_records_v1(
+    dataset_type: str, dataset_id: int, body_data: DatasetRemoveRecordsBody
+):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.remove_records(
         dataset_id,
@@ -314,9 +395,13 @@ def remove_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: Dat
 #########################
 # Record modification
 #########################
-@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/records", methods=["PATCH"])
+@api_v1.route(
+    "/datasets/<string:dataset_type>/<int:dataset_id>/records", methods=["PATCH"]
+)
 @wrap_route("WRITE")
-def modify_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetRecordModifyBody):
+def modify_dataset_records_v1(
+    dataset_type: str, dataset_id: int, body_data: DatasetRecordModifyBody
+):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.modify_records(
         dataset_id,
@@ -330,9 +415,13 @@ def modify_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: Dat
     )
 
 
-@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/records/revert", methods=["POST"])
+@api_v1.route(
+    "/datasets/<string:dataset_type>/<int:dataset_id>/records/revert", methods=["POST"]
+)
 @wrap_route("WRITE")
-def revert_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetRecordRevertBody):
+def revert_dataset_records_v1(
+    dataset_type: str, dataset_id: int, body_data: DatasetRecordRevertBody
+):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.revert_records(
         dataset_id,
