@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from typing import TYPE_CHECKING
 
 from qcelemental.models import FailedOperation
@@ -1047,22 +1048,34 @@ class RecordSocket:
 
         # Do these before calling the record-specific handler
         # (these may pull stuff out of extras)
+        t0 = time.time()
         history_orm = self.create_compute_history_entry(result)
         history_orm.record_id = record_id
         history_orm.manager_name = manager_name
         session.add(history_orm)
+        t1 = time.time()
+        self._logger.debug(f"Time to construct & add history: {1000*(t1 - t0):.4f}ms")
 
+        t0 = time.time()
         native_files_orms = self.create_native_files_orms(result)
         for v in native_files_orms.values():
             v.record_id = record_id
             session.add(v)
+        t1 = time.time()
+        self._logger.debug(f"Time to construct & add native files: {1000*(t1 - t0):.4f}ms")
 
         # Now update fields specific to each record
+        t0 = time.time()
         record_socket = self._handler_map[record_type]
         record_socket.update_completed_task(session, record_id, result, manager_name)
+        t1 = time.time()
+        self._logger.debug(f"Time to call record update_completed_task: {1000*(t1 - t0):.4f}ms")
 
         # Now extras and properties
+        t0 = time.time()
         extras, properties = build_extras_properties(result)
+        t1 = time.time()
+        self._logger.debug(f"Time to build_extras_properties: {1000*(t1 - t0):.4f}ms")
 
         # What updates we have for this record
         record_updates = {
@@ -1074,12 +1087,18 @@ class RecordSocket:
         }
 
         # Actually update the record
+        t0 = time.time()
         stmt = update(BaseRecordORM).where(BaseRecordORM.id == record_id).values(record_updates)
         session.execute(stmt)
+        t1 = time.time()
+        self._logger.debug(f"Time to execute update record: {1000*(t1 - t0):.4f}ms")
 
         # Delete the task from the task queue since it is completed
+        t0 = time.time()
         stmt = delete(TaskQueueORM).where(TaskQueueORM.record_id == record_id)
         session.execute(stmt)
+        t1 = time.time()
+        self._logger.debug(f"Time to execute task delete: {1000*(t1 - t0):.4f}ms")
 
     def update_failed_task(self, session: Session, record_id: int, failed_result: FailedOperation, manager_name: str):
         """
