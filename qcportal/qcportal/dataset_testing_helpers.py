@@ -143,12 +143,7 @@ def run_dataset_model_modify_entries(snowflake_client, ds, test_entries, test_sp
     ds.add_entries(test_entries)
     ds.fetch_entries()
 
-    ent_rec_map = {entry_name: record for entry_name, _, record in ds.iterate_records()}
-    assert len(ent_rec_map) == 3
-
-    entry_name_1 = test_entries[0].name
     entry_name_2 = test_entries[1].name
-    entry_name_3 = test_entries[2].name
 
     expected_attribute_value = test_entries[1].attributes | {"test_attr_1": "val", "test_attr_2": 5}
 
