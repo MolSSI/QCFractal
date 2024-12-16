@@ -98,20 +98,24 @@ class TaskSocket:
                 #  which is needed because with_for_update doesn't work with nullable left outer joins. This should
                 #  be ok, even if the second select call doesn't use with_for_update, because any loading of
                 #  a derived-class orm will need to access base_record, which I believe will be locked)
-                stmt = select(TaskQueueORM).filter(TaskQueueORM.id == task_id)
-                stmt = stmt.options(joinedload(TaskQueueORM.record, innerjoin=True))
+                stmt = select(
+                    BaseRecordORM.id,
+                    BaseRecordORM.record_type,
+                    BaseRecordORM.status,
+                    BaseRecordORM.manager_name,
+                )
+                stmt = stmt.join(TaskQueueORM, TaskQueueORM.record_id == BaseRecordORM.id)
+                stmt = stmt.where(TaskQueueORM.id == task_id)
                 stmt = stmt.with_for_update(skip_locked=False)
 
-                task_orm: Optional[TaskQueueORM] = session.execute(stmt).scalar_one_or_none()
+                record_info = session.execute(stmt).one_or_none()
 
-                # Does the task exist?
-                if task_orm is None:
+                if not record_info:
                     self._logger.warning(f"Task id {task_id} does not exist in the task queue")
                     tasks_rejected.append((task_id, "Task does not exist in the task queue"))
                     continue
 
-                record_orm: BaseRecordORM = task_orm.record
-                record_id = record_orm.id
+                record_id, record_type, record_status, record_manager_name = record_info
 
                 notify_status = None
 
@@ -121,26 +125,30 @@ class TaskSocket:
                     #################################################################
                     # Is the task in the running state
                     # If so, do not attempt to modify the task queue. Just move on
-                    if record_orm.status != RecordStatusEnum.running:
+                    if record_status != RecordStatusEnum.running:
                         self._logger.warning(f"Record {record_id} (task {task_id}) is not in a running state")
                         tasks_rejected.append((task_id, "Task is not in a running state"))
 
                     # Was the manager that sent the data the one that was assigned?
                     # If so, do not attempt to modify the task queue. Just move on
-                    elif record_orm.manager_name != manager_name:
+                    elif record_manager_name != manager_name:
                         self._logger.warning(
-                            f"Record {record_id} (task {task_id}) claimed by {record_orm.manager_name}, not {manager_name}"
+                            f"Record {record_id} (task {task_id}) claimed by {record_manager_name}, not {manager_name}"
                         )
                         tasks_rejected.append((task_id, "Task is claimed by another manager"))
 
                     # Failed task returning FailedOperation
                     elif result.success is False and isinstance(result, FailedOperation):
-                        self.root_socket.records.update_failed_task(session, record_orm, result, manager_name)
+                        self.root_socket.records.update_failed_task(session, record_id, result, manager_name)
+
                         notify_status = RecordStatusEnum.error
                         tasks_failures.append(task_id)
 
                         # Should we automatically reset?
                         if self.root_socket.qcf_config.auto_reset.enabled:
+                            # TODO - Move to update_failed_task?
+                            stmt = select(BaseRecordORM).where(BaseRecordORM.id == record_id)
+                            record_orm = session.execute(stmt).scalar_one()
                             if should_reset(record_orm, self.root_socket.qcf_config.auto_reset):
                                 to_be_reset.append(record_id)
 
@@ -150,7 +158,7 @@ class TaskSocket:
                         error = {"error_type": "internal_fractal_error", "error_message": msg}
                         failed_op = FailedOperation(error=error, success=False)
 
-                        self.root_socket.records.update_failed_task(session, record_orm, failed_op, manager_name)
+                        self.root_socket.records.update_failed_task(session, record_id, failed_op, manager_name)
                         notify_status = RecordStatusEnum.error
 
                         self._logger.error(msg)
@@ -158,7 +166,7 @@ class TaskSocket:
 
                     # Manager returned a full, successful result
                     else:
-                        self.root_socket.records.update_completed_task(session, record_orm, result, manager_name)
+                        self.root_socket.records.update_completed_task(session, record_id, record_type, result, manager_name)
 
                         notify_status = RecordStatusEnum.complete
                         tasks_success.append(task_id)
@@ -172,7 +180,7 @@ class TaskSocket:
                     error = {"error_type": "internal_fractal_error", "error_message": msg}
                     failed_op = FailedOperation(error=error, success=False)
 
-                    self.root_socket.records.update_failed_task(session, record_orm, failed_op, manager_name)
+                    self.root_socket.records.update_failed_task(session, record_id, failed_op, manager_name)
                     notify_status = RecordStatusEnum.error
 
                     self._logger.error(msg)
@@ -184,7 +192,7 @@ class TaskSocket:
                     if notify_status is not None:
                         self.root_socket.notify_finished_watch(record_id, notify_status)
 
-                    session.commit()
+            session.commit()
 
             # Update the stats for the manager
             manager.successes += len(tasks_success)

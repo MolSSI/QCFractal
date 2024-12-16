@@ -124,8 +124,11 @@ class OptimizationRecordSocket(BaseRecordSocket):
         return [task_specs[rid] for rid in record_ids]
 
     def update_completed_task(
-        self, session: Session, record_orm: OptimizationRecordORM, result: QCEl_OptimizationResult, manager_name: str
+        self, session: Session, record_id: int, result: QCEl_OptimizationResult, manager_name: str
     ) -> None:
+
+        record_orm = session.get(OptimizationRecordORM, record_id)
+
         # Add the final molecule
         meta, final_mol_id = self.root_socket.molecules.add([result.final_molecule], session=session)
         if not meta.success:
