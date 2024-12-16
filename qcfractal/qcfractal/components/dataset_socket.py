@@ -56,17 +56,11 @@ class BaseDatasetSocket:
         # Use the identity from the ORM object. This keeps everything consistent
         self.dataset_type = self.dataset_orm.__mapper_args__["polymorphic_identity"]
 
-    def _add_specification(
-        self, session, specification
-    ) -> Tuple[InsertMetadata, Optional[int]]:
-        raise NotImplementedError(
-            "_add_specification must be overridden by the derived class"
-        )
+    def _add_specification(self, session, specification) -> Tuple[InsertMetadata, Optional[int]]:
+        raise NotImplementedError("_add_specification must be overridden by the derived class")
 
     def _create_entries(self, session, dataset_id, new_entries) -> Sequence[BaseORM]:
-        raise NotImplementedError(
-            "_create_entries must be overridden by the derived class"
-        )
+        raise NotImplementedError("_create_entries must be overridden by the derived class")
 
     def get_records_select(self):
         """
@@ -93,10 +87,9 @@ class BaseDatasetSocket:
 
         # Use the common stuff here, but this function can be overridden
 
-        stmt = select(
-            self.record_item_orm.dataset_id.label("dataset_id"),
-            func.count().label("record_count"),
-        ).group_by(self.record_item_orm.dataset_id)
+        stmt = select(self.record_item_orm.dataset_id.label("dataset_id"), func.count().label("record_count")).group_by(
+            self.record_item_orm.dataset_id
+        )
 
         return [stmt]
 
@@ -152,9 +145,7 @@ class BaseDatasetSocket:
         """
 
         with self.root_socket.optional_session(session, True) as session:
-            default_tag, default_priority, default_group_id = self.get_submit_defaults(
-                dataset_id, session=session
-            )
+            default_tag, default_priority, default_group_id = self.get_submit_defaults(dataset_id, session=session)
 
             if tag is None:
                 tag = default_tag
@@ -167,9 +158,7 @@ class BaseDatasetSocket:
             if owner_group is None:
                 owner_group = default_group_id
 
-            user_id, group_id = self.root_socket.users.get_owner_ids(
-                owner_user, owner_group, session=session
-            )
+            user_id, group_id = self.root_socket.users.get_owner_ids(owner_user, owner_group, session=session)
 
         return tag, priority, user_id, group_id
 
@@ -188,19 +177,13 @@ class BaseDatasetSocket:
             is used, it will be flushed (but not committed) before returning from this function.
         """
 
-        stmt = select(
-            BaseDatasetORM.default_tag,
-            BaseDatasetORM.default_priority,
-            BaseDatasetORM.owner_group_id,
-        )
+        stmt = select(BaseDatasetORM.default_tag, BaseDatasetORM.default_priority, BaseDatasetORM.owner_group_id)
         stmt = stmt.where(BaseDatasetORM.id == dataset_id)
 
         with self.root_socket.optional_session(session, True) as session:
             r = session.execute(stmt).one_or_none()
             if r is None:
-                raise MissingDataError(
-                    f"Cannot get default submission info - dataset id {dataset_id} does not exist"
-                )
+                raise MissingDataError(f"Cannot get default submission info - dataset id {dataset_id} does not exist")
             return tuple(r)
 
     def get(
@@ -238,18 +221,10 @@ class BaseDatasetSocket:
 
         with self.root_socket.optional_session(session) as session:
             return get_general(
-                session,
-                self.dataset_orm,
-                self.dataset_orm.id,
-                (dataset_id,),
-                include,
-                exclude,
-                missing_ok,
+                session, self.dataset_orm, self.dataset_orm.id, (dataset_id,), include, exclude, missing_ok
             )[0]
 
-    def status(
-        self, dataset_id: int, *, session: Optional[Session] = None
-    ) -> Dict[str, Dict[RecordStatusEnum, int]]:
+    def status(self, dataset_id: int, *, session: Optional[Session] = None) -> Dict[str, Dict[RecordStatusEnum, int]]:
         """
         Compute the status of a dataset
 
@@ -267,18 +242,10 @@ class BaseDatasetSocket:
             Dictionary with specifications as the keys, and record status/counts as values.
         """
 
-        stmt = select(
-            self.record_item_orm.specification_name,
-            BaseRecordORM.status,
-            func.count(BaseRecordORM.id),
-        )
-        stmt = stmt.join(
-            self.record_item_orm, BaseRecordORM.id == self.record_item_orm.record_id
-        )
+        stmt = select(self.record_item_orm.specification_name, BaseRecordORM.status, func.count(BaseRecordORM.id))
+        stmt = stmt.join(self.record_item_orm, BaseRecordORM.id == self.record_item_orm.record_id)
         stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
-        stmt = stmt.group_by(
-            self.record_item_orm.specification_name, BaseRecordORM.status
-        )
+        stmt = stmt.group_by(self.record_item_orm.specification_name, BaseRecordORM.status)
 
         with self.root_socket.optional_session(session, True) as session:
             stats = session.execute(stmt).all()
@@ -311,23 +278,15 @@ class BaseDatasetSocket:
             List of tuple (entry name, specification name, status)
         """
 
-        stmt = select(
-            self.record_item_orm.entry_name,
-            self.record_item_orm.specification_name,
-            BaseRecordORM.status,
-        )
-        stmt = stmt.join(
-            self.record_item_orm, BaseRecordORM.id == self.record_item_orm.record_id
-        )
+        stmt = select(self.record_item_orm.entry_name, self.record_item_orm.specification_name, BaseRecordORM.status)
+        stmt = stmt.join(self.record_item_orm, BaseRecordORM.id == self.record_item_orm.record_id)
         stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
 
         with self.root_socket.optional_session(session, True) as session:
             stats = session.execute(stmt).all()
             return [tuple(x) for x in stats]
 
-    def get_record_count(
-        self, dataset_id: int, *, session: Optional[Session] = None
-    ) -> int:
+    def get_record_count(self, dataset_id: int, *, session: Optional[Session] = None) -> int:
         """
         Retrieve the number of records stored by the dataset
 
@@ -352,15 +311,11 @@ class BaseDatasetSocket:
             count = session.execute(stmt).scalar_one_or_none()
 
             if count is None:
-                raise MissingDataError(
-                    f"Could not find dataset with type={self.dataset_type} and id={dataset_id}"
-                )
+                raise MissingDataError(f"Could not find dataset with type={self.dataset_type} and id={dataset_id}")
 
             return count
 
-    def get_computed_properties(
-        self, dataset_id: int, *, session: Optional[Session] = None
-    ) -> Dict[str, List[str]]:
+    def get_computed_properties(self, dataset_id: int, *, session: Optional[Session] = None) -> Dict[str, List[str]]:
         """
         Retrieve the typical properties computed by each specification
 
@@ -446,12 +401,8 @@ class BaseDatasetSocket:
         )
 
         with self.root_socket.optional_session(session) as session:
-            user_id, group_id = self.root_socket.users.get_owner_ids(
-                owner_user, owner_group
-            )
-            self.root_socket.users.assert_group_member(
-                user_id, group_id, session=session
-            )
+            user_id, group_id = self.root_socket.users.get_owner_ids(owner_user, owner_group)
+            self.root_socket.users.assert_group_member(user_id, group_id, session=session)
 
             stmt = select(self.dataset_orm.id)
             stmt = stmt.where(self.dataset_orm.lname == name.lower())
@@ -474,11 +425,7 @@ class BaseDatasetSocket:
             return ds_orm.id
 
     def update_metadata(
-        self,
-        dataset_id: int,
-        new_metadata: DatasetModifyMetadata,
-        *,
-        session: Optional[Session] = None,
+        self, dataset_id: int, new_metadata: DatasetModifyMetadata, *, session: Optional[Session] = None
     ):
         """
         Updates the metadata of the dataset
@@ -502,20 +449,14 @@ class BaseDatasetSocket:
             ds = session.execute(stmt).scalar_one_or_none()
 
             if ds is None:
-                raise MissingDataError(
-                    f"Could not find dataset with type={self.dataset_type} and id={dataset_id}"
-                )
+                raise MissingDataError(f"Could not find dataset with type={self.dataset_type} and id={dataset_id}")
 
             if ds.name != new_metadata.name:
                 # If only change in case, no need to check if it already exists
                 if ds.name.lower() != new_metadata.name.lower():
                     stmt2 = select(self.dataset_orm.id)
-                    stmt2 = stmt2.where(
-                        self.dataset_orm.dataset_type == self.dataset_type
-                    )
-                    stmt2 = stmt2.where(
-                        self.dataset_orm.lname == new_metadata.name.lower()
-                    )
+                    stmt2 = stmt2.where(self.dataset_orm.dataset_type == self.dataset_type)
+                    stmt2 = stmt2.where(self.dataset_orm.lname == new_metadata.name.lower())
                     existing = session.execute(stmt2).scalar_one_or_none()
 
                     if existing:
@@ -583,18 +524,12 @@ class BaseDatasetSocket:
                 meta, spec_id = self._add_specification(session, ds_spec.specification)
 
                 if not meta.success:
-                    err_str = (
-                        f"Unable to add {self.dataset_type} specification: "
-                        + meta.error_string
-                    )
+                    err_str = f"Unable to add {self.dataset_type} specification: " + meta.error_string
                     errors.append((idx, err_str))
                     continue
 
                 ds_spec_orm = self.specification_orm(
-                    dataset_id=dataset_id,
-                    name=ds_spec.name,
-                    description=ds_spec.description,
-                    specification_id=spec_id,
+                    dataset_id=dataset_id, name=ds_spec.name, description=ds_spec.description, specification_id=spec_id
                 )
 
                 session.add(ds_spec_orm)
@@ -675,9 +610,7 @@ class BaseDatasetSocket:
             stmt = stmt.where(self.specification_orm.name.in_(specification_names))
 
         if include or exclude:
-            query_opts = get_query_proj_options(
-                self.specification_orm, include, exclude
-            )
+            query_opts = get_query_proj_options(self.specification_orm, include, exclude)
             stmt = stmt.options(*query_opts)
 
         with self.root_socket.optional_session(session, True) as session:
@@ -688,9 +621,7 @@ class BaseDatasetSocket:
             missing_specifications = set(specification_names) - found_specifications
             if missing_specifications:
                 s = "\n".join(missing_specifications)
-                raise MissingDataError(
-                    f"Missing {len(missing_specifications)} specifications: {s}"
-                )
+                raise MissingDataError(f"Missing {len(missing_specifications)} specifications: {s}")
 
         return {x.name: x.model_dict() for x in specifications}
 
@@ -731,9 +662,7 @@ class BaseDatasetSocket:
                 # Store all record ids for later deletion
                 stmt = select(self.record_item_orm.record_id)
                 stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
-                stmt = stmt.where(
-                    self.record_item_orm.specification_name.in_(specification_names)
-                )
+                stmt = stmt.where(self.record_item_orm.specification_name.in_(specification_names))
                 record_ids = session.execute(stmt).scalars().all()
 
             # Deleting the specification will cascade to the dataset->record association table
@@ -751,28 +680,16 @@ class BaseDatasetSocket:
                 )
                 n_children_deleted = rec_meta.n_deleted
 
-            deleted_idx = [
-                idx
-                for idx, name in enumerate(specification_names)
-                if name in deleted_entries
-            ]
+            deleted_idx = [idx for idx, name in enumerate(specification_names) if name in deleted_entries]
             errors = [
                 (idx, "specification does not exist")
                 for idx, name in enumerate(specification_names)
                 if name not in deleted_entries
             ]
-            return DeleteMetadata(
-                deleted_idx=deleted_idx,
-                errors=errors,
-                n_children_deleted=n_children_deleted,
-            )
+            return DeleteMetadata(deleted_idx=deleted_idx, errors=errors, n_children_deleted=n_children_deleted)
 
     def rename_specifications(
-        self,
-        dataset_id: int,
-        specification_name_map: Dict[str, str],
-        *,
-        session: Optional[Session] = None,
+        self, dataset_id: int, specification_name_map: Dict[str, str], *, session: Optional[Session] = None
     ):
         """
         Renames specifications
@@ -792,25 +709,19 @@ class BaseDatasetSocket:
             is used, it will be flushed (but not committed) before returning from this function.
         """
 
-        specification_name_map = {
-            k: v for k, v in specification_name_map.items() if k != v
-        }
+        specification_name_map = {k: v for k, v in specification_name_map.items() if k != v}
         if not specification_name_map:
             return
 
         stmt = select(self.specification_orm)
         stmt = stmt.where(self.specification_orm.dataset_id == dataset_id)
-        stmt = stmt.where(
-            self.specification_orm.name.in_(specification_name_map.keys())
-        )
+        stmt = stmt.where(self.specification_orm.name.in_(specification_name_map.keys()))
         stmt = stmt.options(load_only(self.specification_orm.name))
 
         # See if any of the new names already exist
         exist_stmt = select(self.specification_orm.name)
         exist_stmt = exist_stmt.where(self.specification_orm.dataset_id == dataset_id)
-        exist_stmt = exist_stmt.where(
-            self.specification_orm.name.in_(specification_name_map.values())
-        )
+        exist_stmt = exist_stmt.where(self.specification_orm.name.in_(specification_name_map.values()))
 
         with self.root_socket.optional_session(session) as session:
             existing = session.execute(exist_stmt).scalars().all()
@@ -825,11 +736,7 @@ class BaseDatasetSocket:
                 spec.name = specification_name_map[spec.name]
 
     def add_entries(
-        self,
-        dataset_id: int,
-        new_entries: Sequence[Any],
-        *,
-        session: Optional[Session] = None,
+        self, dataset_id: int, new_entries: Sequence[Any], *, session: Optional[Session] = None
     ) -> InsertMetadata:
         """
         Adds entries to a dataset in the database
@@ -1026,27 +933,13 @@ class BaseDatasetSocket:
                 )
                 n_children_deleted = rec_meta.n_deleted
 
-            deleted_idx = [
-                idx for idx, name in enumerate(entry_names) if name in deleted_entries
-            ]
+            deleted_idx = [idx for idx, name in enumerate(entry_names) if name in deleted_entries]
             errors = [
-                (idx, "entry does not exist")
-                for idx, name in enumerate(entry_names)
-                if name not in deleted_entries
+                (idx, "entry does not exist") for idx, name in enumerate(entry_names) if name not in deleted_entries
             ]
-            return DeleteMetadata(
-                deleted_idx=deleted_idx,
-                errors=errors,
-                n_children_deleted=n_children_deleted,
-            )
+            return DeleteMetadata(deleted_idx=deleted_idx, errors=errors, n_children_deleted=n_children_deleted)
 
-    def rename_entries(
-        self,
-        dataset_id: int,
-        entry_name_map: Dict[str, str],
-        *,
-        session: Optional[Session] = None,
-    ):
+    def rename_entries(self, dataset_id: int, entry_name_map: Dict[str, str], *, session: Optional[Session] = None):
         """
         Renames entries for a dataset
 
@@ -1083,9 +976,7 @@ class BaseDatasetSocket:
         with self.root_socket.optional_session(session) as session:
             existing = session.execute(exist_stmt).scalars().all()
             if existing:
-                raise AlreadyExistsError(
-                    f"Cannot rename entry to {existing[0]} - entry with that name already exists"
-                )
+                raise AlreadyExistsError(f"Cannot rename entry to {existing[0]} - entry with that name already exists")
 
             # Now do the renaming
             entries = session.execute(stmt).scalars().all()
@@ -1098,15 +989,15 @@ class BaseDatasetSocket:
         dataset_id: int,
         attribute_map: Optional[Dict[str, Dict[str, Any]]] = None,
         comment_map: Optional[Dict[str, str]] = None,
-        overwrite_attributes: bool = False,
+        overwrite_entries: bool = False,
         *,
         session: Optional[Session] = None,
     ):
         """
         Modify the attributes of the entries in a dataset.
 
-        If overwrite_attributes is True, replaces existing attribute entry with the value in attribute_map.
-        If overwrite_attributes is False, updates existing fields within attributes and adds non-existing fields.
+        If overwrite_entries is True, replaces existing attribute entry with the value in attribute_map.
+        If overwrite_entries is False, updates existing fields within attributes and adds non-existing fields.
         The attribute_map maps the name of the entry to the new attribute data.
         The comment_map maps the name of an entry to the comment.
 
@@ -1118,7 +1009,7 @@ class BaseDatasetSocket:
             Mapping of entry names to attributes.
         comment_map
             Mapping of entry names to comments
-        overwrite_attributes
+        overwrite_entries
             Boolean to indicate if existing entries should be overwritten.
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
@@ -1133,11 +1024,7 @@ class BaseDatasetSocket:
                 | (comment_map.keys() if (comment_map is not None) else set())
             )
         )
-        stmt = stmt.options(
-            load_only(
-                self.entry_orm.name, self.entry_orm.attributes, self.entry_orm.comment
-            )
-        )
+        stmt = stmt.options(load_only(self.entry_orm.name, self.entry_orm.attributes, self.entry_orm.comment))
         stmt = stmt.options(lazyload("*"))
         stmt = stmt.with_for_update(skip_locked=False)
 
@@ -1148,7 +1035,7 @@ class BaseDatasetSocket:
             entries = session.execute(stmt).scalars().all()
 
             for entry in entries:
-                if overwrite_attributes:
+                if overwrite_entries:
                     if entry.name in attribute_keys:
                         entry.attributes = attribute_map[entry.name]
                 else:
@@ -1199,18 +1086,14 @@ class BaseDatasetSocket:
         if entry_names is not None:
             stmt = stmt.where(self.record_item_orm.entry_name.in_(entry_names))
         if specification_names is not None:
-            stmt = stmt.where(
-                self.record_item_orm.specification_name.in_(specification_names)
-            )
+            stmt = stmt.where(self.record_item_orm.specification_name.in_(specification_names))
         if status:
             stmt = stmt.join(self.record_item_orm.record)
             stmt = stmt.where(self.record_orm.status.in_(status))
 
         with self.root_socket.optional_session(session, True) as session:
             record_items = session.execute(stmt).scalars().all()
-            return [
-                (x.entry_name, x.specification_name, x.record_id) for x in record_items
-            ]
+            return [(x.entry_name, x.specification_name, x.record_id) for x in record_items]
 
     def remove_records(
         self,
@@ -1247,23 +1130,17 @@ class BaseDatasetSocket:
                 stmt = select(self.record_item_orm.record_id)
                 stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
                 stmt = stmt.where(self.record_item_orm.entry_name.in_(entry_names))
-                stmt = stmt.where(
-                    self.record_item_orm.specification_name.in_(specification_names)
-                )
+                stmt = stmt.where(self.record_item_orm.specification_name.in_(specification_names))
                 record_ids = session.execute(stmt).scalars().all()
 
             stmt = delete(self.record_item_orm)
             stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
             stmt = stmt.where(self.record_item_orm.entry_name.in_(entry_names))
-            stmt = stmt.where(
-                self.record_item_orm.specification_name.in_(specification_names)
-            )
+            stmt = stmt.where(self.record_item_orm.specification_name.in_(specification_names))
             session.execute(stmt)
 
             if delete_records:
-                self.root_socket.records.delete(
-                    record_ids, soft_delete=False, delete_children=True, session=session
-                )
+                self.root_socket.records.delete(record_ids, soft_delete=False, delete_children=True, session=session)
 
     def delete_dataset(
         self,
@@ -1298,9 +1175,7 @@ class BaseDatasetSocket:
             session.execute(stmt)
 
             if delete_records:
-                self.root_socket.records.delete(
-                    record_ids, soft_delete=False, delete_children=True, session=session
-                )
+                self.root_socket.records.delete(record_ids, soft_delete=False, delete_children=True, session=session)
 
     def submit(
         self,
@@ -1367,9 +1242,7 @@ class BaseDatasetSocket:
                 found_specs = {x.name for x in ds_specs}
                 missing_specs = set(specification_names) - found_specs
                 if missing_specs:
-                    raise MissingDataError(
-                        f"Could not find all specifications. Missing: {missing_specs}"
-                    )
+                    raise MissingDataError(f"Could not find all specifications. Missing: {missing_specs}")
 
             ################################
             # Get entry details
@@ -1387,9 +1260,7 @@ class BaseDatasetSocket:
                 found_entries = {x.name for x in entries}
                 missing_entries = set(entry_names) - found_entries
                 if missing_entries:
-                    raise MissingDataError(
-                        f"Could not find all entries. Missing: {missing_entries}"
-                    )
+                    raise MissingDataError(f"Could not find all entries. Missing: {missing_entries}")
 
             # Find which records/record_items already exist
             stmt = select(self.record_item_orm)
@@ -1398,14 +1269,10 @@ class BaseDatasetSocket:
             if entry_names is not None:
                 stmt = stmt.where(self.record_item_orm.entry_name.in_(entry_names))
             if specification_names is not None:
-                stmt = stmt.where(
-                    self.record_item_orm.specification_name.in_(specification_names)
-                )
+                stmt = stmt.where(self.record_item_orm.specification_name.in_(specification_names))
 
             existing_record_orm = session.execute(stmt).scalars().all()
-            existing_records = [
-                (x.entry_name, x.specification_name) for x in existing_record_orm
-            ]
+            existing_records = [(x.entry_name, x.specification_name) for x in existing_record_orm]
 
             return self._submit(
                 session,
@@ -1463,13 +1330,9 @@ class BaseDatasetSocket:
         if entry_names is not None:
             stmt = stmt.where(self.record_item_orm.entry_name.in_(entry_names))
         if specification_names is not None:
-            stmt = stmt.where(
-                self.record_item_orm.specification_name.in_(specification_names)
-            )
+            stmt = stmt.where(self.record_item_orm.specification_name.in_(specification_names))
         if status is not None:
-            stmt = stmt.join(
-                BaseRecordORM, BaseRecordORM.id == self.record_item_orm.record_id
-            )
+            stmt = stmt.join(BaseRecordORM, BaseRecordORM.id == self.record_item_orm.record_id)
             stmt = stmt.where(BaseRecordORM.status.in_(status))
 
         # Locks the record items, not the actual record
@@ -1535,13 +1398,7 @@ class BaseDatasetSocket:
             )
 
             return self.root_socket.records.modify_generic(
-                record_ids,
-                username,
-                status=status,
-                priority=priority,
-                tag=tag,
-                comment=comment,
-                session=session,
+                record_ids, username, status=status, priority=priority, tag=tag, comment=comment, session=session
             )
 
     def revert_records(
@@ -1575,9 +1432,7 @@ class BaseDatasetSocket:
         """
 
         with self.root_socket.optional_session(session) as session:
-            record_ids = self._lookup_record_ids(
-                session, dataset_id, entry_names, specification_names, for_update=True
-            )
+            record_ids = self._lookup_record_ids(session, dataset_id, entry_names, specification_names, for_update=True)
 
             return self.root_socket.records.revert_generic(record_ids, revert_status)
 
@@ -1591,18 +1446,10 @@ class DatasetSocket:
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
 
-        from qcfractal.components.singlepoint.dataset_socket import (
-            SinglepointDatasetSocket,
-        )
-        from qcfractal.components.optimization.dataset_socket import (
-            OptimizationDatasetSocket,
-        )
-        from qcfractal.components.torsiondrive.dataset_socket import (
-            TorsiondriveDatasetSocket,
-        )
-        from qcfractal.components.gridoptimization.dataset_socket import (
-            GridoptimizationDatasetSocket,
-        )
+        from qcfractal.components.singlepoint.dataset_socket import SinglepointDatasetSocket
+        from qcfractal.components.optimization.dataset_socket import OptimizationDatasetSocket
+        from qcfractal.components.torsiondrive.dataset_socket import TorsiondriveDatasetSocket
+        from qcfractal.components.gridoptimization.dataset_socket import GridoptimizationDatasetSocket
         from qcfractal.components.manybody.dataset_socket import ManybodyDatasetSocket
         from qcfractal.components.reaction.dataset_socket import ReactionDatasetSocket
         from qcfractal.components.neb.dataset_socket import NEBDatasetSocket
@@ -1693,9 +1540,7 @@ class DatasetSocket:
             wp = BaseRecordORM
 
         with self.root_socket.optional_session(session, True) as session:
-            return get_general(
-                session, wp, wp.id, [dataset_id], include, exclude, missing_ok
-            )[0]
+            return get_general(session, wp, wp.id, [dataset_id], include, exclude, missing_ok)[0]
 
     def lookup_type(self, dataset_id: int, *, session: Optional[Session] = None) -> str:
         """
@@ -1714,12 +1559,7 @@ class DatasetSocket:
             return ds_type
 
     def lookup_id(
-        self,
-        dataset_type: str,
-        dataset_name: str,
-        missing_ok: bool = False,
-        *,
-        session: Optional[Session] = None,
+        self, dataset_type: str, dataset_name: str, missing_ok: bool = False, *, session: Optional[Session] = None
     ) -> Optional[int]:
         """
         Look up a dataset ID given its dataset type and name
@@ -1733,9 +1573,7 @@ class DatasetSocket:
             ds_id = session.execute(stmt).scalar_one_or_none()
 
             if missing_ok is False and ds_id is None:
-                raise MissingDataError(
-                    f"Could not find {dataset_type} dataset with name '{dataset_name}'"
-                )
+                raise MissingDataError(f"Could not find {dataset_type} dataset with name '{dataset_name}'")
             return ds_id
 
     def list(self, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
@@ -1751,22 +1589,12 @@ class DatasetSocket:
                 func.coalesce(self._record_count_cte.c.record_count, 0),
             )
             stmt = stmt.join(
-                self._record_count_cte,
-                self._record_count_cte.c.dataset_id == BaseDatasetORM.id,
-                isouter=True,
+                self._record_count_cte, self._record_count_cte.c.dataset_id == BaseDatasetORM.id, isouter=True
             )
             stmt = stmt.order_by(BaseDatasetORM.id.asc())
             r = session.execute(stmt).all()
 
-            return [
-                {
-                    "id": x[0],
-                    "dataset_type": x[1],
-                    "dataset_name": x[2],
-                    "record_count": x[3],
-                }
-                for x in r
-            ]
+            return [{"id": x[0], "dataset_type": x[1], "dataset_name": x[2], "record_count": x[3]} for x in r]
 
     def query_dataset_records(
         self,
@@ -1790,9 +1618,7 @@ class DatasetSocket:
             self._record_cte.c.entry_name,
             self._record_cte.c.specification_name,
         )
-        stmt = stmt.join(
-            self._record_cte, BaseDatasetORM.id == self._record_cte.c.dataset_id
-        )
+        stmt = stmt.join(self._record_cte, BaseDatasetORM.id == self._record_cte.c.dataset_id)
         stmt = stmt.where(self._record_cte.c.record_id.in_(record_id))
 
         if dataset_type is not None:
@@ -1812,9 +1638,7 @@ class DatasetSocket:
                 for x in ret
             ]
 
-    def get_contributed_values(
-        self, dataset_id: int, *, session: Optional[Session] = None
-    ) -> List[Dict[str, Any]]:
+    def get_contributed_values(self, dataset_id: int, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
         """
         Get the contributed values for a dataset
         """

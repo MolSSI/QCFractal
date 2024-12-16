@@ -7,9 +7,7 @@ from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.utils import now_at_utc
 
 
-def run_dataset_model_add_get_entry(
-    snowflake_client, ds, test_entries, entry_extra_compare
-):
+def run_dataset_model_add_get_entry(snowflake_client, ds, test_entries, entry_extra_compare):
     ent_map = {x.name: x for x in test_entries}
 
     meta = ds.add_entries(test_entries)
@@ -53,9 +51,7 @@ def run_dataset_model_add_get_entry(
         entry_extra_compare(test_ent, ent)
 
 
-def run_dataset_model_add_entry_duplicate(
-    snowflake_client, ds, test_entries, entry_extra_compare
-):
+def run_dataset_model_add_entry_duplicate(snowflake_client, ds, test_entries, entry_extra_compare):
     ent1 = test_entries[0]
 
     # Same name, different molecule
@@ -102,25 +98,11 @@ def run_dataset_model_rename_entry(snowflake_client, ds, test_entries, test_spec
     entry_name_2 = test_entries[1].name
     entry_name_3 = test_entries[2].name
 
-    ds.rename_entries(
-        {entry_name_1: entry_name_1 + "new", entry_name_2: entry_name_2 + "new"}
-    )
+    ds.rename_entries({entry_name_1: entry_name_1 + "new", entry_name_2: entry_name_2 + "new"})
 
-    assert set(ds.entry_names) == {
-        entry_name_1 + "new",
-        entry_name_2 + "new",
-        entry_name_3,
-    }
-    assert set(ds._entry_names) == {
-        entry_name_1 + "new",
-        entry_name_2 + "new",
-        entry_name_3,
-    }
-    assert set(ds._cache_data.get_entry_names()) == {
-        entry_name_1 + "new",
-        entry_name_2 + "new",
-        entry_name_3,
-    }
+    assert set(ds.entry_names) == {entry_name_1 + "new", entry_name_2 + "new", entry_name_3}
+    assert set(ds._entry_names) == {entry_name_1 + "new", entry_name_2 + "new", entry_name_3}
+    assert set(ds._cache_data.get_entry_names()) == {entry_name_1 + "new", entry_name_2 + "new", entry_name_3}
 
     with pytest.raises(PortalRequestError, match=r"Missing 1 entries"):
         ds.get_record(entry_name_1, "spec_1")
@@ -134,26 +116,13 @@ def run_dataset_model_rename_entry(snowflake_client, ds, test_entries, test_spec
     assert ds._cache_data.get_dataset_record(entry_name_1, "spec_1") is None
     assert ds._cache_data.get_dataset_record(entry_name_2, "spec_1") is None
 
-    assert (
-        ds._cache_data.get_dataset_record(entry_name_1 + "new", "spec_1").id
-        == ent_rec_map[entry_name_1].id
-    )
-    assert (
-        ds._cache_data.get_dataset_record(entry_name_2 + "new", "spec_1").id
-        == ent_rec_map[entry_name_2].id
-    )
-    assert (
-        ds._cache_data.get_dataset_record(entry_name_3, "spec_1").id
-        == ent_rec_map[entry_name_3].id
-    )
+    assert ds._cache_data.get_dataset_record(entry_name_1 + "new", "spec_1").id == ent_rec_map[entry_name_1].id
+    assert ds._cache_data.get_dataset_record(entry_name_2 + "new", "spec_1").id == ent_rec_map[entry_name_2].id
+    assert ds._cache_data.get_dataset_record(entry_name_3, "spec_1").id == ent_rec_map[entry_name_3].id
 
     # Now with a fresh dataset
     ds = snowflake_client.get_dataset_by_id(ds.id)
-    assert set(ds.entry_names) == {
-        entry_name_1 + "new",
-        entry_name_2 + "new",
-        entry_name_3,
-    }
+    assert set(ds.entry_names) == {entry_name_1 + "new", entry_name_2 + "new", entry_name_3}
     ents = list(ds.iterate_entries())
     ent_names = [x.name for x in ents]
     assert set(ent_names) == {entry_name_1 + "new", entry_name_2 + "new", entry_name_3}
@@ -164,23 +133,15 @@ def run_dataset_model_rename_entry(snowflake_client, ds, test_entries, test_spec
     assert ds._cache_data.get_dataset_record(entry_name_1, "spec_1") is None
     assert ds._cache_data.get_dataset_record(entry_name_2, "spec_1") is None
 
-    assert (
-        ds._cache_data.get_dataset_record(entry_name_1 + "new", "spec_1").id
-        == ent_rec_map[entry_name_1].id
-    )
-    assert (
-        ds._cache_data.get_dataset_record(entry_name_2 + "new", "spec_1").id
-        == ent_rec_map[entry_name_2].id
-    )
-    assert (
-        ds._cache_data.get_dataset_record(entry_name_3, "spec_1").id
-        == ent_rec_map[entry_name_3].id
-    )
+    assert ds._cache_data.get_dataset_record(entry_name_1 + "new", "spec_1").id == ent_rec_map[entry_name_1].id
+    assert ds._cache_data.get_dataset_record(entry_name_2 + "new", "spec_1").id == ent_rec_map[entry_name_2].id
+    assert ds._cache_data.get_dataset_record(entry_name_3, "spec_1").id == ent_rec_map[entry_name_3].id
 
 
 def run_dataset_model_modify_entries(snowflake_client, ds, test_entries, test_specs):
     ds.add_specification("spec_1", test_specs[0])
     ds.add_entries(test_entries)
+    ds.submit()
     ds.fetch_entries()
 
     ent_rec_map = {entry_name: record for entry_name, _, record in ds.iterate_records()}
@@ -190,22 +151,15 @@ def run_dataset_model_modify_entries(snowflake_client, ds, test_entries, test_sp
     entry_name_2 = test_entries[1].name
     entry_name_3 = test_entries[2].name
 
-    expected_attribute_value = test_entries[1].attributes | {
-        "test_attr_1": "val",
-        "test_attr_2": 5,
-    }
+    expected_attribute_value = test_entries[1].attributes | {"test_attr_1": "val", "test_attr_2": 5}
 
     # Test Overwrite=False
     # Test modifying one entry attribute with no comments
-    ds.modify_entries(
-        attribute_map={entry_name_2: {"test_attr_1": "val", "test_attr_2": 5}}
-    )
+    ds.modify_entries(attribute_map={entry_name_2: {"test_attr_1": "val", "test_attr_2": 5}})
     assert ds.get_entry(entry_name_2).attributes == expected_attribute_value
 
     expected_attribute_value.update({"test_attr_1": "new_val", "test_attr_2": 10})
-    ds.modify_entries(
-        attribute_map={entry_name_2: {"test_attr_1": "new_val", "test_attr_2": 10}}
-    )
+    ds.modify_entries(attribute_map={entry_name_2: {"test_attr_1": "new_val", "test_attr_2": 10}})
     assert ds.get_entry(entry_name_2).attributes == expected_attribute_value
 
     # Test modifying both
@@ -220,47 +174,29 @@ def run_dataset_model_modify_entries(snowflake_client, ds, test_entries, test_sp
     # Test Overwrite=True
     # Test modifying one entry attribute with no comments
     expected_attribute_value = {"test_attr_1": "val", "test_attr_2": 5}
-    ds.modify_entries(
-        attribute_map={entry_name_2: {"test_attr_1": "val", "test_attr_2": 5}},
-        overwrite_attributes=True,
-    )
+    ds.modify_entries(attribute_map={entry_name_2: {"test_attr_1": "val", "test_attr_2": 5}}, overwrite_entries=True)
     assert ds.get_entry(entry_name_2).attributes == expected_attribute_value
 
     # Test modifying one comment with no attributes
-    ds.modify_entries(
-        comment_map={
-            entry_name_2: "This is a new comment tested without modifying attributes."
-        }
-    )
+    ds.modify_entries(comment_map={entry_name_2: "This is a new comment tested without modifying attributes."})
     assert ds.get_entry(entry_name_2).attributes == expected_attribute_value
-    assert (
-        ds.get_entry(entry_name_2).comment
-        == "This is a new comment tested without modifying attributes."
-    )
+    assert ds.get_entry(entry_name_2).comment == "This is a new comment tested without modifying attributes."
 
     # Test modifying both
     expected_attribute_value = {"test_attr_1": "value"}
     ds.modify_entries(
         attribute_map={entry_name_2: {"test_attr_1": "value"}},
-        comment_map={
-            entry_name_2: "This is a new comment while overwriting the attributes."
-        },
-        overwrite_attributes=True,
+        comment_map={entry_name_2: "This is a new comment while overwriting the attributes."},
+        overwrite_entries=True,
     )
     assert ds.get_entry(entry_name_2).attributes == expected_attribute_value
-    assert (
-        ds.get_entry(entry_name_2).comment
-        == "This is a new comment while overwriting the attributes."
-    )
+    assert ds.get_entry(entry_name_2).comment == "This is a new comment while overwriting the attributes."
 
     # Now with a fresh dataset
     ds = snowflake_client.get_dataset_by_id(ds.id)
     ds.fetch_entries()
     assert ds.get_entry(entry_name_2).attributes == expected_attribute_value
-    assert (
-        ds.get_entry(entry_name_2).comment
-        == "This is a new comment while overwriting the attributes."
-    )
+    assert ds.get_entry(entry_name_2).comment == "This is a new comment while overwriting the attributes."
 
 
 def run_dataset_model_delete_entry(snowflake_client, ds, test_entries, test_specs):
@@ -285,18 +221,13 @@ def run_dataset_model_delete_entry(snowflake_client, ds, test_entries, test_spec
     assert meta.success
     assert meta.n_deleted == 1
     assert meta.n_children_deleted == 0
-    snowflake_client.get_records(
-        ent_rec_map[entry_name_1].id
-    )  # exception if it doesn't exist
+    snowflake_client.get_records(ent_rec_map[entry_name_1].id)  # exception if it doesn't exist
 
     meta = ds.delete_entries(entry_name_2, True)  # delete record, too
     assert meta.success
     assert meta.n_deleted == 1
     assert meta.n_children_deleted == 1
-    assert (
-        snowflake_client.get_records(ent_rec_map[entry_name_2].id, missing_ok=True)
-        is None
-    )
+    assert snowflake_client.get_records(ent_rec_map[entry_name_2].id, missing_ok=True) is None
 
     # Were removed from the model
     assert ds._cache_data.get_entry_names() == [entry_name_3]
@@ -391,10 +322,7 @@ def run_dataset_model_rename_spec(snowflake_client, ds, test_entries, test_specs
     assert ds._cache_data.get_dataset_record(entry_name, "spec_1") is None
 
     assert ds.get_record(entry_name, "spec_1_new").id == spec_rec_map["spec_1"].id
-    assert (
-        ds._cache_data.get_dataset_record(entry_name, "spec_1_new").id
-        == spec_rec_map["spec_1"].id
-    )
+    assert ds._cache_data.get_dataset_record(entry_name, "spec_1_new").id == spec_rec_map["spec_1"].id
 
     # Now with a fresh dataset
     ds = snowflake_client.get_dataset_by_id(ds.id)
@@ -414,10 +342,7 @@ def run_dataset_model_rename_spec(snowflake_client, ds, test_entries, test_specs
     assert ds._cache_data.get_dataset_record(entry_name, "spec_1") is None
 
     assert ds.get_record(entry_name, "spec_1_new").id == spec_rec_map["spec_1"].id
-    assert (
-        ds._cache_data.get_dataset_record(entry_name, "spec_1_new").id
-        == spec_rec_map["spec_1"].id
-    )
+    assert ds._cache_data.get_dataset_record(entry_name, "spec_1_new").id == spec_rec_map["spec_1"].id
 
 
 def run_dataset_model_delete_spec(snowflake_client, ds, test_entries, test_specs):
@@ -440,17 +365,13 @@ def run_dataset_model_delete_spec(snowflake_client, ds, test_entries, test_specs
     assert meta.success
     assert meta.n_deleted == 1
     assert meta.n_children_deleted == 0
-    snowflake_client.get_records(
-        spec_rec_map["spec_1"].id
-    )  # exception if it doesn't exist
+    snowflake_client.get_records(spec_rec_map["spec_1"].id)  # exception if it doesn't exist
 
     meta = ds.delete_specification("spec_2", True)  # delete record, too
     assert meta.success
     assert meta.n_deleted == 1
     assert meta.n_children_deleted == 1
-    assert (
-        snowflake_client.get_records(spec_rec_map["spec_2"].id, missing_ok=True) is None
-    )
+    assert snowflake_client.get_records(spec_rec_map["spec_2"].id, missing_ok=True) is None
 
     # Were removed from the model
     assert ds._cache_data.get_specification_names() == []
@@ -593,9 +514,7 @@ def run_dataset_model_iterate_updated(snowflake_client, ds, test_entries, test_s
 
     # Should be automatically updated when we iterate
     all_records = list(ds.iterate_records())
-    cancelled = [
-        (e, s, r) for e, s, r in all_records if r.status == RecordStatusEnum.cancelled
-    ]
+    cancelled = [(e, s, r) for e, s, r in all_records if r.status == RecordStatusEnum.cancelled]
     assert len(cancelled) == 1
     assert cancelled[0][0] == entry_name
     assert cancelled[0][1] == "spec_1"
@@ -612,16 +531,12 @@ def run_dataset_model_iterate_updated(snowflake_client, ds, test_entries, test_s
     for _, _, r in all_records:
         r.sync_to_cache(True)
     all_records = list(ds.iterate_records(fetch_updated=False))
-    cancelled = [
-        (e, s, r) for e, s, r in all_records if r.status == RecordStatusEnum.cancelled
-    ]
+    cancelled = [(e, s, r) for e, s, r in all_records if r.status == RecordStatusEnum.cancelled]
     assert len(cancelled) == 1  # did not fetch the newly-cancelled one
 
     # Now force update
     all_records = list(ds.iterate_records(fetch_updated=False, force_refetch=True))
-    cancelled = [
-        (e, s, r) for e, s, r in all_records if r.status == RecordStatusEnum.cancelled
-    ]
+    cancelled = [(e, s, r) for e, s, r in all_records if r.status == RecordStatusEnum.cancelled]
     assert len(cancelled) == 2  # fetched them all
 
 
@@ -665,11 +580,7 @@ def run_dataset_model_modify_records(ds, test_entries, test_spec):
     assert rec2.status == RecordStatusEnum.waiting
 
     ds.modify_records(
-        entry_name,
-        spec_name,
-        new_tag="new_tag",
-        new_priority=PriorityEnum.low,
-        new_comment="a new comment",
+        entry_name, spec_name, new_tag="new_tag", new_priority=PriorityEnum.low, new_comment="a new comment"
     )
     rec = ds.get_record(entry_name, spec_name)
     assert rec.status == RecordStatusEnum.waiting
