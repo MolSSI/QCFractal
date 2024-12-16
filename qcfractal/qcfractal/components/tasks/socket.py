@@ -90,7 +90,58 @@ class TaskSocket:
             # For automatic resetting
             to_be_reset: List[int] = []
 
+            # We load basic record & task info for all returned tasks with row-level locking.
+            # This lock is released on commit or rollback.
+            all_task_ids = list(results_compressed.keys())
+            stmt = select(
+                TaskQueueORM.id,
+                BaseRecordORM.id,
+                BaseRecordORM.record_type,
+                BaseRecordORM.status,
+                BaseRecordORM.manager_name,
+            )
+            stmt = stmt.join(TaskQueueORM, TaskQueueORM.record_id == BaseRecordORM.id)
+            stmt = stmt.where(TaskQueueORM.id.in_(all_task_ids))
+            stmt = stmt.with_for_update(skip_locked=False)
+
+            t0 = time.time()
+            all_record_info = session.execute(stmt).all()
+            all_record_info = {x[0]: x[1:] for x in all_record_info}
+            t1 = time.time()
+            self._logger.debug(f"Query for all record info took {(t1 - t0) * 1000}ms")
+
             for task_id, result_compressed in results_compressed.items():
+
+                record_info = all_record_info.get(task_id, None)
+
+                #################################################################
+                # Perform some checks for consistency
+                # These are simple rejections and don't modify anything
+                # record-related in the database
+                #################################################################
+                if record_info is None:
+                    self._logger.warning(f"Task id {task_id} does not exist in the task queue")
+                    tasks_rejected.append((task_id, "Task does not exist in the task queue"))
+                    continue
+
+                record_id, record_type, record_status, record_manager_name = record_info
+
+                # Is the task in the running state
+                # If so, do not attempt to modify the task queue. Just move on
+                if record_status != RecordStatusEnum.running:
+                    self._logger.warning(f"Record {record_id} (task {task_id}) is not in a running state")
+                    tasks_rejected.append((task_id, "Task is not in a running state"))
+                    continue
+
+                # Was the manager that sent the data the one that was assigned?
+                # If so, do not attempt to modify the task queue. Just move on
+                if record_manager_name != manager_name:
+                    self._logger.warning(
+                        f"Record {record_id} (task {task_id}) claimed by {record_manager_name}, not {manager_name}"
+                    )
+                    tasks_rejected.append((task_id, "Task is claimed by another manager"))
+                    continue
+
                 t_total_0 = time.time()
                 t0 = time.time()
                 result_dict = decompress(result_compressed, CompressionEnum.zstd)
@@ -99,58 +150,17 @@ class TaskSocket:
                 t2 = time.time()
                 self._logger.debug(f"Task id={task_id}: Decompression took {(t1 - t0)*1000}ms, parsing took {(t2 - t1)*1000}ms")
 
-                # We load one at a time. This works well with 'with_for_update'
-                # which will do row locking. This lock is released on commit or rollback
-                # We are also deferring loading of the specific record tables. These will be lazy loaded
-                # when they are needed in the update functions of the various record subsockets.
-                # (I tried to use with_polymorphic, but it's kind of fussy and doesn't work well with innerjoin
-                #  which is needed because with_for_update doesn't work with nullable left outer joins. This should
-                #  be ok, even if the second select call doesn't use with_for_update, because any loading of
-                #  a derived-class orm will need to access base_record, which I believe will be locked)
-                stmt = select(
-                    BaseRecordORM.id,
-                    BaseRecordORM.record_type,
-                    BaseRecordORM.status,
-                    BaseRecordORM.manager_name,
-                )
-                stmt = stmt.join(TaskQueueORM, TaskQueueORM.record_id == BaseRecordORM.id)
-                stmt = stmt.where(TaskQueueORM.id == task_id)
-                stmt = stmt.with_for_update(skip_locked=False)
-
-                t0 = time.time()
-                record_info = session.execute(stmt).one_or_none()
-                t1 = time.time()
-                self._logger.debug(f"Query for record info took {(t1 - t0) * 1000}ms")
-
-                if not record_info:
-                    self._logger.warning(f"Task id {task_id} does not exist in the task queue")
-                    tasks_rejected.append((task_id, "Task does not exist in the task queue"))
-                    continue
-
-                record_id, record_type, record_status, record_manager_name = record_info
-
                 notify_status = None
-
                 try:
-                    #################################################################
-                    # Perform some checks for consistency
-                    #################################################################
-                    # Is the task in the running state
-                    # If so, do not attempt to modify the task queue. Just move on
-                    if record_status != RecordStatusEnum.running:
-                        self._logger.warning(f"Record {record_id} (task {task_id}) is not in a running state")
-                        tasks_rejected.append((task_id, "Task is not in a running state"))
-
-                    # Was the manager that sent the data the one that was assigned?
-                    # If so, do not attempt to modify the task queue. Just move on
-                    elif record_manager_name != manager_name:
-                        self._logger.warning(
-                            f"Record {record_id} (task {task_id}) claimed by {record_manager_name}, not {manager_name}"
-                        )
-                        tasks_rejected.append((task_id, "Task is claimed by another manager"))
+                    ##################################################################
+                    # The rest of these are done in a try/except block because
+                    # they are much more complicated and can result in exceptions
+                    # which should be handled
+                    ##################################################################
+                    savepoint = session.begin_nested()
 
                     # Failed task returning FailedOperation
-                    elif result.success is False and isinstance(result, FailedOperation):
+                    if result.success is False and isinstance(result, FailedOperation):
                         t0 = time.time()
                         self.root_socket.records.update_failed_task(session, record_id, result, manager_name)
                         t1 = time.time()
@@ -192,10 +202,13 @@ class TaskSocket:
                         notify_status = RecordStatusEnum.complete
                         tasks_success.append(task_id)
 
+                    savepoint.commit() # Release the savepoint (doesn't actually fully commit)
+
                 except Exception:
                     # We have no idea what was added or is pending for removal
                     # So rollback the transaction to the most recent commit
-                    session.rollback()
+                    savepoint.rollback()
+                    savepoint = session.begin_nested()
 
                     msg = "Internal FractalServer Error:\n" + traceback.format_exc()
                     error = {"error_type": "internal_fractal_error", "error_message": msg}
@@ -206,6 +219,8 @@ class TaskSocket:
 
                     self._logger.error(msg)
                     tasks_rejected.append((task_id, "Internal server error"))
+
+                    savepoint.commit()
 
                 finally:
                     # Send notifications that tasks were completed
