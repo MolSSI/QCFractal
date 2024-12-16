@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import logging
+import time
 from typing import TYPE_CHECKING
 
 from qcelemental.models import (
     OptimizationResult as QCEl_OptimizationResult,
 )
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import lazyload, joinedload, selectinload, defer, undefer, load_only
 
@@ -127,23 +128,40 @@ class OptimizationRecordSocket(BaseRecordSocket):
         self, session: Session, record_id: int, result: QCEl_OptimizationResult, manager_name: str
     ) -> None:
 
-        record_orm = session.get(OptimizationRecordORM, record_id)
-
         # Add the final molecule
+        t0 = time.time()
         meta, final_mol_id = self.root_socket.molecules.add([result.final_molecule], session=session)
         if not meta.success:
             raise RuntimeError("Unable to add final molecule: " + meta.error_string)
+        t1 = time.time()
+        self._logger.debug(f"Time to add molecules: {1000*(t1 - t0):.4f}ms")
 
         # Insert the trajectory
+        t0 = time.time()
         traj_ids = self.root_socket.records.insert_complete_record(session, result.trajectory)
-        record_orm.trajectory = []
+        t1 = time.time()
+        self._logger.debug(f"Time to insert trajectory records: {1000*(t1 - t0):.4f}ms")
+
+        t0 = time.time()
         for position, traj_id in enumerate(traj_ids):
             assoc_orm = OptimizationTrajectoryORM(singlepoint_id=traj_id)
-            record_orm.trajectory.append(assoc_orm)
+            assoc_orm.optimization_id = record_id
+            assoc_orm.position = position
+            session.add(assoc_orm)
+        t1 = time.time()
+        self._logger.debug(f"Time to add traj ids: {1000*(t1 - t0):.4f}ms")
 
         # Update the fields themselves
-        record_orm.final_molecule_id = final_mol_id[0]
-        record_orm.energies = result.energies
+        record_updates = {
+            "final_molecule_id": final_mol_id[0],
+            "energies": result.energies,
+        }
+
+        t0 = time.time()
+        stmt = update(OptimizationRecordORM).where(OptimizationRecordORM.id == record_id).values(record_updates)
+        session.execute(stmt)
+        t1 = time.time()
+        self._logger.debug(f"Time to execute update opt record: {1000*(t1 - t0):.4f}ms")
 
     def add_specification(
         self, opt_spec: OptimizationSpecification, *, session: Optional[Session] = None
