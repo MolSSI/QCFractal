@@ -109,11 +109,13 @@ class SinglepointRecordSocket(BaseRecordSocket):
         return WavefunctionORM(compression_type=ctype, compression_level=clevel, data=cdata)
 
     def update_completed_task(
-        self, session: Session, record_orm: SinglepointRecordORM, result: QCEl_AtomicResult, manager_name: str
+        self, session: Session, record_id: int, result: QCEl_AtomicResult, manager_name: str
     ) -> None:
         # Update the fields themselves
         if result.wavefunction:
-            record_orm.wavefunction = self.create_wavefunction_orm(result.wavefunction)
+            wavefunction_orm = self.create_wavefunction_orm(result.wavefunction)
+            wavefunction_orm.record_id = record_id
+            session.add(wavefunction_orm)
 
     def insert_complete_record(
         self,
