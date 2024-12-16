@@ -797,13 +797,13 @@ class BaseDataset(BaseModel):
         self,
         attribute_map: Optional[Dict[str, Dict[str, Any]]] = None,
         comment_map: Optional[Dict[str, str]] = None,
-        overwrite_entries: bool = False,
+        overwrite_attributes: bool = False,
     ):
         self.assert_is_not_view()
         self.assert_online()
 
         body = DatasetModifyEntryBody(
-            attribute_map=attribute_map, comment_map=comment_map, overwrite_entries=overwrite_entries
+            attribute_map=attribute_map, comment_map=comment_map, overwrite_attributes=overwrite_attributes
         )
 
         self._client.make_request(
@@ -1823,7 +1823,7 @@ class DatasetDeleteSpecificationBody(RestModelBase):
 class DatasetModifyEntryBody(RestModelBase):
     attribute_map: Optional[Dict[str, Dict[str, Any]]] = None
     comment_map: Optional[Dict[str, str]] = None
-    overwrite_entries: bool = False
+    overwrite_attributes: bool = False
 
 
 def dataset_from_dict(data: Dict[str, Any], client: Any, cache_data: Optional[DatasetCache] = None) -> BaseDataset:

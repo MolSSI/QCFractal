@@ -141,7 +141,6 @@ def run_dataset_model_rename_entry(snowflake_client, ds, test_entries, test_spec
 def run_dataset_model_modify_entries(snowflake_client, ds, test_entries, test_specs):
     ds.add_specification("spec_1", test_specs[0])
     ds.add_entries(test_entries)
-    ds.submit()
     ds.fetch_entries()
 
     ent_rec_map = {entry_name: record for entry_name, _, record in ds.iterate_records()}
@@ -174,7 +173,7 @@ def run_dataset_model_modify_entries(snowflake_client, ds, test_entries, test_sp
     # Test Overwrite=True
     # Test modifying one entry attribute with no comments
     expected_attribute_value = {"test_attr_1": "val", "test_attr_2": 5}
-    ds.modify_entries(attribute_map={entry_name_2: {"test_attr_1": "val", "test_attr_2": 5}}, overwrite_entries=True)
+    ds.modify_entries(attribute_map={entry_name_2: {"test_attr_1": "val", "test_attr_2": 5}}, overwrite_attributes=True)
     assert ds.get_entry(entry_name_2).attributes == expected_attribute_value
 
     # Test modifying one comment with no attributes
@@ -187,7 +186,7 @@ def run_dataset_model_modify_entries(snowflake_client, ds, test_entries, test_sp
     ds.modify_entries(
         attribute_map={entry_name_2: {"test_attr_1": "value"}},
         comment_map={entry_name_2: "This is a new comment while overwriting the attributes."},
-        overwrite_entries=True,
+        overwrite_attributes=True,
     )
     assert ds.get_entry(entry_name_2).attributes == expected_attribute_value
     assert ds.get_entry(entry_name_2).comment == "This is a new comment while overwriting the attributes."

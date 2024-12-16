@@ -273,7 +273,7 @@ def rename_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: Dic
 def modify_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: DatasetModifyEntryBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.modify_entries(
-        dataset_id, body_data.attribute_map, body_data.comment_map, body_data.overwrite_entries
+        dataset_id, body_data.attribute_map, body_data.comment_map, body_data.overwrite_attributes
     )
 
 

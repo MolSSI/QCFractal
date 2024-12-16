@@ -989,15 +989,15 @@ class BaseDatasetSocket:
         dataset_id: int,
         attribute_map: Optional[Dict[str, Dict[str, Any]]] = None,
         comment_map: Optional[Dict[str, str]] = None,
-        overwrite_entries: bool = False,
+        overwrite_attributes: bool = False,
         *,
         session: Optional[Session] = None,
     ):
         """
         Modify the attributes of the entries in a dataset.
 
-        If overwrite_entries is True, replaces existing attribute entry with the value in attribute_map.
-        If overwrite_entries is False, updates existing fields within attributes and adds non-existing fields.
+        If overwrite_attributes is True, replaces existing attribute entry with the value in attribute_map.
+        If overwrite_attributes is False, updates existing fields within attributes and adds non-existing fields.
         The attribute_map maps the name of the entry to the new attribute data.
         The comment_map maps the name of an entry to the comment.
 
@@ -1009,7 +1009,7 @@ class BaseDatasetSocket:
             Mapping of entry names to attributes.
         comment_map
             Mapping of entry names to comments
-        overwrite_entries
+        overwrite_attributes
             Boolean to indicate if existing entries should be overwritten.
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
@@ -1035,7 +1035,7 @@ class BaseDatasetSocket:
             entries = session.execute(stmt).scalars().all()
 
             for entry in entries:
-                if overwrite_entries:
+                if overwrite_attributes:
                     if entry.name in attribute_keys:
                         entry.attributes = attribute_map[entry.name]
                 else:
