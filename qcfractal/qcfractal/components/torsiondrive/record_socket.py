@@ -10,12 +10,14 @@ from typing import TYPE_CHECKING
 
 import sqlalchemy.orm.attributes
 
+from ...db_socket.helpers import insert_general
+
 try:
     from pydantic.v1 import BaseModel, Extra
 except ImportError:
     from pydantic import BaseModel, Extra
 from sqlalchemy import select, func
-from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by
+from sqlalchemy.dialects.postgresql import array_agg, aggregate_order_by
 from sqlalchemy.orm import lazyload, selectinload, joinedload, defer, undefer
 
 from qcfractal.components.optimization.record_db_models import (
@@ -81,6 +83,7 @@ class TorsiondriveServiceState(BaseModel):
 
 # Meaningless, but unique to torsiondrives
 torsiondrive_insert_lock_id = 14200
+torsiondrive_spec_insert_lock_id = 14201
 
 
 class TorsiondriveRecordSocket(BaseRecordSocket):
@@ -326,6 +329,78 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                 service_orm.dependencies.append(svc_dep)
                 td_orm.optimizations.append(opt_history)
 
+    def add_specifications(
+        self, td_specs: Sequence[TorsiondriveSpecification], *, session: Optional[Session] = None
+    ) -> Tuple[InsertMetadata, List[int]]:
+        """
+        Adds specifications for torsiondrive services to the database, returning their IDs.
+
+        If an identical specification exists, then no insertion takes place and the id of the existing
+        specification is returned.
+
+        Specification IDs are returned in the same order as the input specifications
+
+        Parameters
+        ----------
+        td_specs
+            Sequence of specifications to add to the database
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the insertion, and the IDs of the specifications.
+        """
+
+        to_add = []
+
+        for td_spec in td_specs:
+            td_kw_dict = td_spec.keywords.dict()
+
+            td_spec_dict = {"program": td_spec.program, "keywords": td_kw_dict, "protocols": {}}
+            td_spec_hash = hash_dict(td_spec_dict)
+
+            td_spec_orm = TorsiondriveSpecificationORM(
+                program=td_spec.program,
+                keywords=td_kw_dict,
+                protocols=td_spec_dict["protocols"],
+                specification_hash=td_spec_hash,
+            )
+
+            to_add.append(td_spec_orm)
+
+        with self.root_socket.optional_session(session, False) as session:
+
+            opt_specs = [x.optimization_specification for x in td_specs]
+            meta, opt_spec_ids = self.root_socket.records.optimization.add_specifications(opt_specs, session=session)
+
+            if not meta.success:
+                return (
+                    InsertMetadata(
+                        error_description="Unable to add optimization specifications: " + meta.error_string,
+                    ),
+                    [],
+                )
+
+            assert len(opt_spec_ids) == len(td_specs)
+            for td_spec_orm, opt_spec_id in zip(to_add, opt_spec_ids):
+                td_spec_orm.optimization_specification_id = opt_spec_id
+
+            meta, ids = insert_general(
+                session,
+                to_add,
+                (
+                    TorsiondriveSpecificationORM.specification_hash,
+                    TorsiondriveSpecificationORM.optimization_specification_id,
+                ),
+                (TorsiondriveSpecificationORM.id,),
+                torsiondrive_spec_insert_lock_id,
+            )
+
+            return meta, [x[0] for x in ids]
+
     def add_specification(
         self, td_spec: TorsiondriveSpecification, *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, Optional[int]]:
@@ -349,47 +424,12 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             Metadata about the insertion, and the id of the specification.
         """
 
-        td_kw_dict = td_spec.keywords.dict()
-        kw_hash = hash_dict(td_kw_dict)
+        meta, ids = self.add_specifications([td_spec], session=session)
 
-        with self.root_socket.optional_session(session, False) as session:
-            # Add the optimization specification
-            meta, opt_spec_id = self.root_socket.records.optimization.add_specification(
-                td_spec.optimization_specification, session=session
-            )
-            if not meta.success:
-                return (
-                    InsertMetadata(
-                        error_description="Unable to add optimization specification: " + meta.error_string,
-                    ),
-                    None,
-                )
+        if not ids:
+            return meta, None
 
-            stmt = (
-                insert(TorsiondriveSpecificationORM)
-                .values(
-                    program=td_spec.program,
-                    keywords=td_kw_dict,
-                    keywords_hash=kw_hash,
-                    optimization_specification_id=opt_spec_id,
-                )
-                .on_conflict_do_nothing()
-                .returning(TorsiondriveSpecificationORM.id)
-            )
-
-            r = session.execute(stmt).scalar_one_or_none()
-            if r is not None:
-                return InsertMetadata(inserted_idx=[0]), r
-            else:
-                # Specification was already existing
-                stmt = select(TorsiondriveSpecificationORM.id).filter_by(
-                    program=td_spec.program,
-                    keywords_hash=kw_hash,
-                    optimization_specification_id=opt_spec_id,
-                )
-
-                r = session.execute(stmt).scalar_one()
-                return InsertMetadata(existing_idx=[0]), r
+        return meta, ids[0]
 
     def get(
         self,

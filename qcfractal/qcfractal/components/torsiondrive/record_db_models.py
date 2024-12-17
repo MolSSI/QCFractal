@@ -79,6 +79,7 @@ class TorsiondriveSpecificationORM(BaseORM):
     __tablename__ = "torsiondrive_specification"
 
     id = Column(Integer, primary_key=True)
+    specification_hash = Column(String, nullable=False)
 
     program = Column(String(100), nullable=False)
 
@@ -86,14 +87,11 @@ class TorsiondriveSpecificationORM(BaseORM):
     optimization_specification = relationship(OptimizationSpecificationORM, lazy="joined")
 
     keywords = Column(JSONB, nullable=False)
-    keywords_hash = Column(String, nullable=False)
+    protocols = Column(JSONB, nullable=False)
 
     __table_args__ = (
         UniqueConstraint(
-            "program",
-            "optimization_specification_id",
-            "keywords_hash",
-            name="ux_torsiondrive_specification_keys",
+            "specification_hash", "optimization_specification_id", name="ux_torsiondrive_specification_keys"
         ),
         Index("ix_torsiondrive_specification_program", "program"),
         Index("ix_torsiondrive_specification_optimization_specification_id", "optimization_specification_id"),
@@ -103,7 +101,13 @@ class TorsiondriveSpecificationORM(BaseORM):
         CheckConstraint("program = LOWER(program)", name="ck_torsiondrive_specification_program_lower"),
     )
 
-    _qcportal_model_excludes = ["id", "keywords_hash", "optimization_specification_id"]
+    # TODO - protocols will be in the model eventually
+    _qcportal_model_excludes = [
+        "id",
+        "specification_hash",
+        "optimization_specification_id",
+        "protocols",
+    ]
 
     @property
     def short_description(self) -> str:
