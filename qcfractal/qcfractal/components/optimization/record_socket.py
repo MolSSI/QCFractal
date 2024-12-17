@@ -7,7 +7,6 @@ from qcelemental.models import (
     OptimizationResult as QCEl_OptimizationResult,
 )
 from sqlalchemy import select
-from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import lazyload, joinedload, selectinload, defer, undefer, load_only
 
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
@@ -35,6 +34,7 @@ if TYPE_CHECKING:
 
 # Meaningless, but unique to optimizations
 optimization_insert_lock_id = 14100
+optimization_spec_insert_lock_id = 14101
 
 
 class OptimizationRecordSocket(BaseRecordSocket):
@@ -142,9 +142,82 @@ class OptimizationRecordSocket(BaseRecordSocket):
         record_orm.final_molecule_id = final_mol_id[0]
         record_orm.energies = result.energies
 
+    def add_specifications(
+        self, opt_specs: Sequence[OptimizationSpecification], *, session: Optional[Session] = None
+    ) -> Tuple[InsertMetadata, List[int]]:
+        """
+        Adds specification for optimization calculations to the database, returning their IDs.
+
+        If an identical specification exists, then no insertion takes place and the id of the existing
+        specification is returned.
+
+        Specification IDs are returned in the same order as the input specifications
+
+        Parameters
+        ----------
+        opt_specs
+            Sequence of specification to add to the database
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the insertion, and the IDs of the specifications.
+        """
+
+        to_add = []
+
+        for opt_spec in opt_specs:
+            protocols_dict = opt_spec.protocols.dict(exclude_defaults=True)
+
+            # Don't include lower specifications in the hash
+            opt_spec_dict = opt_spec.dict(exclude={"protocols", "qc_specification"})
+            opt_spec_dict["protocols"] = protocols_dict
+            opt_spec_hash = hash_dict(opt_spec_dict)
+
+            # Leave qc spec id for later
+            opt_spec_orm = OptimizationSpecificationORM(
+                program=opt_spec.program,
+                keywords=opt_spec.keywords,
+                protocols=protocols_dict,
+                specification_hash=opt_spec_hash,
+            )
+
+            to_add.append(opt_spec_orm)
+
+        with self.root_socket.optional_session(session, False) as session:
+            qc_specs = [x.qc_specification for x in opt_specs]
+            for qc_spec in qc_specs:
+                # Make double sure the driver is deferred
+                qc_spec.driver = SinglepointDriver.deferred
+
+            meta, qc_spec_ids = self.root_socket.records.singlepoint.add_specifications(qc_specs, session=session)
+
+            if not meta.success:
+                return (
+                    InsertMetadata(error_description="Unable to add single point specifications: " + meta.error_string),
+                    [],
+                )
+
+            assert len(qc_spec_ids) == len(opt_specs)
+            for opt_spec_orm, qc_spec_id in zip(to_add, qc_spec_ids):
+                opt_spec_orm.qc_specification_id = qc_spec_id
+
+            meta, ids = insert_general(
+                session,
+                to_add,
+                (OptimizationSpecificationORM.specification_hash, OptimizationSpecificationORM.qc_specification_id),
+                (OptimizationSpecificationORM.id,),
+                optimization_spec_insert_lock_id,
+            )
+
+            return meta, [x[0] for x in ids]
+
     def add_specification(
         self, opt_spec: OptimizationSpecification, *, session: Optional[Session] = None
-    ) -> Tuple[InsertMetadata, int]:
+    ) -> Tuple[InsertMetadata, Optional[int]]:
         """
         Adds a specification for an optimization calculation to the database, returning its id.
 
@@ -165,51 +238,12 @@ class OptimizationRecordSocket(BaseRecordSocket):
             Metadata about the insertion, and the id of the specification.
         """
 
-        protocols_dict = opt_spec.protocols.dict(exclude_defaults=True)
-        kw_hash = hash_dict(opt_spec.keywords)
+        meta, ids = self.add_specifications([opt_spec], session=session)
 
-        with self.root_socket.optional_session(session, False) as session:
-            # Add the singlepoint specification
-            # Make double sure the driver is deferred
-            opt_spec.qc_specification.driver = SinglepointDriver.deferred
-            meta, qc_spec_id = self.root_socket.records.singlepoint.add_specification(
-                opt_spec.qc_specification, session=session
-            )
-            if not meta.success:
-                return (
-                    InsertMetadata(
-                        error_description="Unable to add single point specification: " + meta.error_string,
-                    ),
-                    None,
-                )
+        if not ids:
+            return meta, None
 
-            stmt = (
-                insert(OptimizationSpecificationORM)
-                .values(
-                    program=opt_spec.program,
-                    keywords=opt_spec.keywords,
-                    keywords_hash=kw_hash,
-                    qc_specification_id=qc_spec_id,
-                    protocols=protocols_dict,
-                )
-                .on_conflict_do_nothing()
-                .returning(OptimizationSpecificationORM.id)
-            )
-
-            r = session.execute(stmt).scalar_one_or_none()
-            if r is not None:
-                return InsertMetadata(inserted_idx=[0]), r
-            else:
-                # Specification was already existing
-                stmt = select(OptimizationSpecificationORM.id).filter_by(
-                    program=opt_spec.program,
-                    keywords_hash=kw_hash,
-                    qc_specification_id=qc_spec_id,
-                    protocols=protocols_dict,
-                )
-
-                r = session.execute(stmt).scalar_one()
-                return InsertMetadata(existing_idx=[0]), r
+        return meta, ids[0]
 
     def get(
         self,
