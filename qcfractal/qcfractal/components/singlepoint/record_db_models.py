@@ -60,20 +60,17 @@ class QCSpecificationORM(BaseORM):
     __tablename__ = "qc_specification"
 
     id = Column(Integer, primary_key=True)
+    specification_hash = Column(String, nullable=False)
 
     program = Column(String(100), nullable=False)
     driver = Column(Enum(SinglepointDriver), nullable=False)
     method = Column(String(100), nullable=False)
     basis = Column(String(100), nullable=False)
     keywords = Column(JSONB, nullable=False)
-    keywords_hash = Column(String, nullable=False)
-
     protocols = Column(JSONB, nullable=False)
 
     __table_args__ = (
-        UniqueConstraint(
-            "program", "driver", "method", "basis", "keywords_hash", "protocols", name="ux_qc_specification_keys"
-        ),
+        UniqueConstraint("specification_hash", name="ux_qc_specification_specification_hash"),
         Index("ix_qc_specification_program", "program"),
         Index("ix_qc_specification_driver", "driver"),
         Index("ix_qc_specification_method", "method"),
@@ -86,7 +83,7 @@ class QCSpecificationORM(BaseORM):
         CheckConstraint("basis = LOWER(basis)", name="ck_qc_specification_basis_lower"),
     )
 
-    _qcportal_model_excludes = ["id", "keywords_hash"]
+    _qcportal_model_excludes = ["id", "specification_hash"]
 
     @property
     def required_programs(self) -> Dict[str, Optional[str]]:
