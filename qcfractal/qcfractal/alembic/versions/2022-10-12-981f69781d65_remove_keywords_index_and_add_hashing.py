@@ -6,13 +6,8 @@ Create Date: 2022-10-12 15:34:38.809659
 
 """
 
-import json
-from hashlib import sha256
-
 import sqlalchemy as sa
 from alembic import op
-
-from qcportal.serialization import _JSONEncoder
 
 # revision identifiers, used by Alembic.
 revision = "981f69781d65"
@@ -21,9 +16,7 @@ branch_labels = None
 depends_on = None
 
 
-def hash_dict(d):
-    j = json.dumps(d, ensure_ascii=True, sort_keys=True, cls=_JSONEncoder).encode("utf-8")
-    return sha256(j).hexdigest()
+from migration_helpers.hashing import hash_dict_1
 
 
 def create_hashes(table):
@@ -32,7 +25,7 @@ def create_hashes(table):
     all_kw = res.fetchall()
 
     for spec_id, kw in all_kw:
-        h = hash_dict(kw)
+        h = hash_dict_1(kw)
         op.execute(sa.text(f"""UPDATE {table} SET keywords_hash = '{h}' WHERE id = {spec_id};"""))
 
 
