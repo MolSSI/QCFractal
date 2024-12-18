@@ -77,6 +77,7 @@ class ReactionSpecificationORM(BaseORM):
         ),
     )
 
+    # TODO - protocols will eventually be in the model
     _qcportal_model_excludes = [
         "id",
         "specification_hash",

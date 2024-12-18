@@ -38,7 +38,7 @@ def upgrade():
         }
         h = hash_dict_1(d)
         op.execute(sa.text(f"""UPDATE reaction_specification SET specification_hash = '{h}' WHERE id = {spec_id};"""))
-    op.execute(sa.text("UPDATE torsiondrive_specification SET protocols = '{}'::JSONB"))
+    op.execute(sa.text("UPDATE reaction_specification SET protocols = '{}'::JSONB"))
 
     op.alter_column("reaction_specification", "protocols", nullable=False)
     op.alter_column("reaction_specification", "specification_hash", nullable=False)
