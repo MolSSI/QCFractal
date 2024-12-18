@@ -302,7 +302,7 @@ class ReactionRecordSocket(BaseRecordSocket):
         Parameters
         ----------
         rxn_specs
-            Sequence of specification to add to the database
+            Sequence of specifications to add to the database
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -310,7 +310,7 @@ class ReactionRecordSocket(BaseRecordSocket):
         Returns
         -------
         :
-            Metadata about the insertion, and the id of the specification.
+            Metadata about the insertion, and the IDs of the specifications.
         """
 
         to_add = []
@@ -388,21 +388,20 @@ class ReactionRecordSocket(BaseRecordSocket):
                 qc_spec_id = qc_specs_map.get(idx, None)
                 opt_spec_id = opt_specs_map.get(idx, None)
 
+                rxn_spec_orm.singlepoint_specification_id = qc_spec_id
+                rxn_spec_orm.optimization_specification_id = opt_spec_id
+
                 # Query first, due to behavior of NULL in postgres
                 stmt = select(ReactionSpecificationORM.id).filter_by(specification_hash=rxn_spec_orm.specification_hash)
 
                 if qc_spec_id is not None:
-                    rxn_spec_orm.singlepoint_specification_id = qc_spec_id
                     stmt = stmt.filter(ReactionSpecificationORM.singlepoint_specification_id == qc_spec_id)
                 else:
-                    rxn_spec_orm.singlepoint_specification_id = None
                     stmt = stmt.filter(ReactionSpecificationORM.singlepoint_specification_id.is_(None))
 
                 if opt_spec_id is not None:
-                    rxn_spec_orm.optimization_specification_id = opt_spec_id
                     stmt = stmt.filter(ReactionSpecificationORM.optimization_specification_id == opt_spec_id)
                 else:
-                    rxn_spec_orm.optimization_specification_id = None
                     stmt = stmt.filter(ReactionSpecificationORM.optimization_specification_id.is_(None))
 
                 r = session.execute(stmt).scalar_one_or_none()
@@ -415,7 +414,7 @@ class ReactionRecordSocket(BaseRecordSocket):
                     rxn_spec_ids.append(rxn_spec_orm.id)
                     inserted_idx.append(idx)
 
-        return InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx), rxn_spec_ids
+            return InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx), rxn_spec_ids
 
     def add_specification(
         self, rxn_spec: ReactionSpecification, *, session: Optional[Session] = None
