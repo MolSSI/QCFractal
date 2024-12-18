@@ -169,6 +169,8 @@ class FractalSnowflake:
         compute_workers: int = 2,
         database_config: Optional[DatabaseConfig] = None,
         extra_config: Optional[Dict[str, Any]] = None,
+        *,
+        host: str = "localhost",
     ):
         """A temporary, self-contained server
 
@@ -208,15 +210,14 @@ class FractalSnowflake:
         if database_config is None:
             # db and socket are subdirs of the base temporary directory
             db_dir = os.path.join(self._tmpdir.name, "db")
-            self._pg_harness = create_snowflake_postgres(db_dir)
+            self._pg_harness = create_snowflake_postgres(host, db_dir)
             self._pg_harness.create_database(True)
             db_config = self._pg_harness.config
         else:
             db_config = database_config
 
-        api_host = "127.0.0.1"
-        api_port = find_open_port()
-        self._fractal_uri = f"http://{api_host}:{api_port}"
+        api_port = find_open_port(host)
+        self._fractal_uri = f"http://{host}:{api_port}"
 
         # Create a configuration for QCFractal
         # Assign the log level for subprocesses. Use the same level as what is assigned for this object
@@ -232,7 +233,7 @@ class FractalSnowflake:
         qcf_cfg["heartbeat_frequency"] = 5
         qcf_cfg["heartbeat_max_missed"] = 3
         qcf_cfg["api"] = {
-            "host": api_host,
+            "host": host,
             "port": api_port,
             "secret_key": secrets.token_urlsafe(32),
             "jwt_secret_key": secrets.token_urlsafe(32),
