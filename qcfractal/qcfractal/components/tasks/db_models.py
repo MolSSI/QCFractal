@@ -48,7 +48,9 @@ class TaskQueueORM(BaseORM):
     __table_args__ = (
         Index("ix_task_queue_tag", "tag"),
         Index("ix_task_queue_required_programs", "required_programs", postgresql_using="gin"),
-        Index("ix_task_queue_sort", priority.desc(), sort_date.asc(), id.asc(), tag),
+        Index(
+            "ix_task_queue_sort", priority.desc(), sort_date.asc(), id.asc(), tag, postgresql_where=(available == True)
+        ),
         UniqueConstraint("record_id", name="ux_task_queue_record_id"),
         # WARNING - these are not autodetected by alembic
         CheckConstraint(
