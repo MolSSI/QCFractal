@@ -79,7 +79,7 @@ class NEBSpecification(BaseModel):
 
     program: constr(to_lower=True) = "geometric"
     singlepoint_specification: QCSpecification
-    optimization_specification: Optional[OptimizationSpecification]
+    optimization_specification: Optional[OptimizationSpecification] = None
     keywords: NEBKeywords
 
 
