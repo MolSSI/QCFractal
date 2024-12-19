@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Any
 
 from flask import current_app, g
 
@@ -20,6 +20,7 @@ from qcportal.dataset_models import (
     DatasetModifyMetadata,
     DatasetQueryRecords,
     DatasetDeleteParams,
+    DatasetModifyEntryBody,
 )
 from qcportal.exceptions import LimitExceededError
 
@@ -265,6 +266,15 @@ def fetch_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: Data
 def rename_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: Dict[str, str]):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.rename_entries(dataset_id, body_data)
+
+
+@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/entries/modify", methods=["PATCH"])
+@wrap_route("WRITE")
+def modify_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: DatasetModifyEntryBody):
+    ds_socket = storage_socket.datasets.get_socket(dataset_type)
+    return ds_socket.modify_entries(
+        dataset_id, body_data.attribute_map, body_data.comment_map, body_data.overwrite_attributes
+    )
 
 
 #########################

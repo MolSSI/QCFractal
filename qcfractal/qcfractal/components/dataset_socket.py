@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import select, delete, func, union, text, and_
 from sqlalchemy.orm import load_only, lazyload, joinedload, with_polymorphic
+from sqlalchemy.orm.attributes import flag_modified
 
 from qcfractal.components.dataset_db_models import BaseDatasetORM, ContributedValuesORM
 from qcfractal.components.record_db_models import BaseRecordORM
@@ -982,6 +983,68 @@ class BaseDatasetSocket:
 
             for entry in entries:
                 entry.name = entry_name_map[entry.name]
+
+    def modify_entries(
+        self,
+        dataset_id: int,
+        attribute_map: Optional[Dict[str, Dict[str, Any]]] = None,
+        comment_map: Optional[Dict[str, str]] = None,
+        overwrite_attributes: bool = False,
+        *,
+        session: Optional[Session] = None,
+    ):
+        """
+        Modify the attributes of the entries in a dataset.
+
+        If overwrite_attributes is True, replaces existing attribute entry with the value in attribute_map.
+        If overwrite_attributes is False, updates existing fields within attributes and adds non-existing fields.
+        The attribute_map maps the name of the entry to the new attribute data.
+        The comment_map maps the name of an entry to the comment.
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        attribute_map
+            Mapping of entry names to attributes.
+        comment_map
+            Mapping of entry names to comments
+        overwrite_attributes
+            Boolean to indicate if existing entries should be overwritten.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+        """
+        stmt = select(self.entry_orm)
+        stmt = stmt.where(self.entry_orm.dataset_id == dataset_id)
+
+        stmt = stmt.where(
+            self.entry_orm.name.in_(
+                (attribute_map.keys() if (attribute_map is not None) else set())
+                | (comment_map.keys() if (comment_map is not None) else set())
+            )
+        )
+        stmt = stmt.options(load_only(self.entry_orm.name, self.entry_orm.attributes, self.entry_orm.comment))
+        stmt = stmt.options(lazyload("*"))
+        stmt = stmt.with_for_update(skip_locked=False)
+
+        attribute_keys = attribute_map.keys() if (attribute_map is not None) else list()
+        comment_keys = comment_map.keys() if (comment_map is not None) else list()
+
+        with self.root_socket.optional_session(session) as session:
+            entries = session.execute(stmt).scalars().all()
+
+            for entry in entries:
+                if overwrite_attributes:
+                    if entry.name in attribute_keys:
+                        entry.attributes = attribute_map[entry.name]
+                else:
+                    if entry.name in attribute_keys:
+                        entry.attributes.update(attribute_map[entry.name])
+                        flag_modified(entry, "attributes")
+
+                if entry.name in comment_keys:
+                    entry.comment = comment_map[entry.name]
 
     def fetch_records(
         self,
