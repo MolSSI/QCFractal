@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.dataset_models &#8212; QCArchive 0.57.post11+g700e30d9 documentation</title>
+    <title>qcportal.dataset_models &#8212; QCArchive 0.57.post12+g4bd800c9 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=79246d84"></script>
+    <script src="../../_static/documentation_options.js?v=e9ede1c7"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.57.post11+g700e30d9" />
+  <meta name="docsearch:version" content="0.57.post12+g4bd800c9" />
   </head>
   
   
@@ -1318,6 +1318,35 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">rename_entry</span><span class="p">(</span><span class="n">old_name</span><span class="p">,</span> <span class="n">new_name</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="BaseDataset.modify_entries">
+<a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.modify_entries">[docs]</a>
+    <span class="k">def</span> <span class="nf">modify_entries</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">attribute_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">comment_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">overwrite_attributes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
+
+        <span class="n">body</span> <span class="o">=</span> <span class="n">DatasetModifyEntryBody</span><span class="p">(</span>
+            <span class="n">attribute_map</span><span class="o">=</span><span class="n">attribute_map</span><span class="p">,</span> <span class="n">comment_map</span><span class="o">=</span><span class="n">comment_map</span><span class="p">,</span> <span class="n">overwrite_attributes</span><span class="o">=</span><span class="n">overwrite_attributes</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+            <span class="s2">&quot;patch&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/entries/modify&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Sync local cache with updated server.</span>
+        <span class="n">entries_to_sync</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">attribute_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">entries_to_sync</span> <span class="o">=</span> <span class="n">entries_to_sync</span> <span class="o">|</span> <span class="n">attribute_map</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">comment_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">entries_to_sync</span> <span class="o">=</span> <span class="n">entries_to_sync</span> <span class="o">|</span> <span class="n">comment_map</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">fetch_entries</span><span class="p">(</span><span class="n">entries_to_sync</span><span class="p">,</span> <span class="n">force_refetch</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="BaseDataset.delete_entries">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.delete_entries">[docs]</a>
     <span class="k">def</span> <span class="nf">delete_entries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">delete_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DeleteMetadata</span><span class="p">:</span>
@@ -2366,6 +2395,12 @@
 <span class="k">class</span> <span class="nc">DatasetDeleteSpecificationBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
     <span class="n">names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">delete_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<span class="k">class</span> <span class="nc">DatasetModifyEntryBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+    <span class="n">attribute_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">comment_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">overwrite_attributes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 
 
 <span class="k">def</span> <span class="nf">dataset_from_dict</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">client</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">cache_data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DatasetCache</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseDataset</span><span class="p">:</span>
