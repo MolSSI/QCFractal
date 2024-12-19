@@ -5,7 +5,7 @@ from typing import List, Dict, Tuple, Optional, Iterable, Sequence, Any, Union, 
 
 import tabulate
 from sqlalchemy import select, func
-from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by
+from sqlalchemy.dialects.postgresql import array_agg, aggregate_order_by
 from sqlalchemy.orm import defer, undefer, joinedload, lazyload, selectinload
 
 from qcfractal import __version__ as qcfractal_version
@@ -288,6 +288,134 @@ class ReactionRecordSocket(BaseRecordSocket):
 
         return not (opt_mols_to_compute or sp_mols_to_compute)
 
+    def add_specifications(
+        self, rxn_specs: Sequence[ReactionSpecification], *, session: Optional[Session] = None
+    ) -> Tuple[InsertMetadata, List[int]]:
+        """
+        Adds specifications for reaction services to the database, returning their IDs.
+
+        If an identical specification exists, then no insertion takes place and the id of the existing
+        specification is returned.
+
+        Specification IDs are returned in the same order as the input specifications
+
+        Parameters
+        ----------
+        rxn_specs
+            Sequence of specifications to add to the database
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the insertion, and the IDs of the specifications.
+        """
+
+        to_add = []
+
+        for rxn_spec in rxn_specs:
+            kw_dict = rxn_spec.keywords.dict()
+
+            rxn_spec_dict = {"program": rxn_spec.program, "keywords": kw_dict, "protocols": {}}
+            rxn_spec_hash = hash_dict(rxn_spec_dict)
+
+            rxn_spec_orm = ReactionSpecificationORM(
+                program=rxn_spec.program,
+                keywords=kw_dict,
+                protocols=rxn_spec_dict["protocols"],
+                specification_hash=rxn_spec_hash,
+            )
+
+            to_add.append(rxn_spec_orm)
+
+        with self.root_socket.optional_session(session) as session:
+
+            qc_specs_lst = [
+                (idx, x.singlepoint_specification)
+                for idx, x in enumerate(rxn_specs)
+                if x.singlepoint_specification is not None
+            ]
+            opt_specs_lst = [
+                (idx, x.optimization_specification)
+                for idx, x in enumerate(rxn_specs)
+                if x.optimization_specification is not None
+            ]
+
+            qc_specs_map = {}
+            opt_specs_map = {}
+
+            if qc_specs_lst:
+                qc_specs = [x[1] for x in qc_specs_lst]
+                meta, qc_spec_ids = self.root_socket.records.singlepoint.add_specifications(qc_specs, session=session)
+
+                if not meta.success:
+                    return (
+                        InsertMetadata(
+                            error_description="Unable to add singlepoint specifications: " + meta.error_string,
+                        ),
+                        [],
+                    )
+
+                qc_specs_map = {idx: qc_spec_id for (idx, _), qc_spec_id in zip(qc_specs_lst, qc_spec_ids)}
+
+            if opt_specs_lst:
+                opt_specs = [x[1] for x in opt_specs_lst]
+                meta, opt_spec_ids = self.root_socket.records.optimization.add_specifications(
+                    opt_specs, session=session
+                )
+
+                if not meta.success:
+                    return (
+                        InsertMetadata(
+                            error_description="Unable to add optimization specifications: " + meta.error_string,
+                        ),
+                        [],
+                    )
+
+                opt_specs_map = {idx: opt_spec_id for (idx, _), opt_spec_id in zip(opt_specs_lst, opt_spec_ids)}
+
+            # Unfortunately, we have to go one at a time due to the possibility of NULL fields
+            # Lock for the rest of the transaction (since we have to query then add)
+            session.execute(select(func.pg_advisory_xact_lock(reaction_spec_insert_lock_id))).scalar()
+
+            inserted_idx = []
+            existing_idx = []
+            rxn_spec_ids = []
+
+            for idx, rxn_spec_orm in enumerate(to_add):
+                qc_spec_id = qc_specs_map.get(idx, None)
+                opt_spec_id = opt_specs_map.get(idx, None)
+
+                rxn_spec_orm.singlepoint_specification_id = qc_spec_id
+                rxn_spec_orm.optimization_specification_id = opt_spec_id
+
+                # Query first, due to behavior of NULL in postgres
+                stmt = select(ReactionSpecificationORM.id).filter_by(specification_hash=rxn_spec_orm.specification_hash)
+
+                if qc_spec_id is not None:
+                    stmt = stmt.filter(ReactionSpecificationORM.singlepoint_specification_id == qc_spec_id)
+                else:
+                    stmt = stmt.filter(ReactionSpecificationORM.singlepoint_specification_id.is_(None))
+
+                if opt_spec_id is not None:
+                    stmt = stmt.filter(ReactionSpecificationORM.optimization_specification_id == opt_spec_id)
+                else:
+                    stmt = stmt.filter(ReactionSpecificationORM.optimization_specification_id.is_(None))
+
+                r = session.execute(stmt).scalar_one_or_none()
+                if r is not None:
+                    rxn_spec_ids.append(r)
+                    existing_idx.append(idx)
+                else:
+                    session.add(rxn_spec_orm)
+                    session.flush()
+                    rxn_spec_ids.append(rxn_spec_orm.id)
+                    inserted_idx.append(idx)
+
+            return InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx), rxn_spec_ids
+
     def add_specification(
         self, rxn_spec: ReactionSpecification, *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, Optional[int]]:
@@ -311,76 +439,12 @@ class ReactionRecordSocket(BaseRecordSocket):
             Metadata about the insertion, and the id of the specification.
         """
 
-        kw_dict = rxn_spec.keywords.dict()
-        kw_hash = hash_dict(kw_dict)
+        meta, ids = self.add_specifications([rxn_spec], session=session)
 
-        with self.root_socket.optional_session(session) as session:
-            qc_spec_id = None
-            opt_spec_id = None
+        if not ids:
+            return meta, None
 
-            if rxn_spec.singlepoint_specification is not None:
-                meta, qc_spec_id = self.root_socket.records.singlepoint.add_specification(
-                    qc_spec=rxn_spec.singlepoint_specification, session=session
-                )
-
-                if not meta.success:
-                    return (
-                        InsertMetadata(
-                            error_description="Unable to add singlepoint specification: " + meta.error_string,
-                        ),
-                        None,
-                    )
-
-            if rxn_spec.optimization_specification is not None:
-                meta, opt_spec_id = self.root_socket.records.optimization.add_specification(
-                    opt_spec=rxn_spec.optimization_specification, session=session
-                )
-
-                if not meta.success:
-                    return (
-                        InsertMetadata(
-                            error_description="Unable to add optimization specification: " + meta.error_string,
-                        ),
-                        None,
-                    )
-
-            # Lock for the rest of the transaction (since we have to query then add)
-            session.execute(select(func.pg_advisory_xact_lock(reaction_spec_insert_lock_id))).scalar()
-
-            # Query first, due to behavior of NULL in postgres
-            stmt = select(ReactionSpecificationORM.id).filter_by(
-                program=rxn_spec.program,
-                keywords_hash=kw_hash,
-            )
-
-            if qc_spec_id is not None:
-                stmt = stmt.filter(ReactionSpecificationORM.singlepoint_specification_id == qc_spec_id)
-            else:
-                stmt = stmt.filter(ReactionSpecificationORM.singlepoint_specification_id.is_(None))
-
-            if opt_spec_id is not None:
-                stmt = stmt.filter(ReactionSpecificationORM.optimization_specification_id == opt_spec_id)
-            else:
-                stmt = stmt.filter(ReactionSpecificationORM.optimization_specification_id.is_(None))
-
-            r = session.execute(stmt).scalar_one_or_none()
-            if r is not None:
-                return InsertMetadata(existing_idx=[0]), r
-            else:
-                stmt = (
-                    insert(ReactionSpecificationORM)
-                    .values(
-                        program=rxn_spec.program,
-                        singlepoint_specification_id=qc_spec_id,
-                        optimization_specification_id=opt_spec_id,
-                        keywords=kw_dict,
-                        keywords_hash=kw_hash,
-                    )
-                    .returning(ReactionSpecificationORM.id)
-                )
-
-            r = session.execute(stmt).scalar_one()
-            return InsertMetadata(inserted_idx=[0]), r
+        return meta, ids[0]
 
     def get(
         self,

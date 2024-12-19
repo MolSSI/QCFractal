@@ -4,8 +4,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from qcelemental.models import AtomicResult as QCEl_AtomicResult
-from sqlalchemy import select
-from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy import select, or_
 from sqlalchemy.orm import lazyload, joinedload, defer, undefer, defaultload, load_only, selectinload
 
 from qcfractal.db_socket.helpers import insert_general
@@ -31,6 +30,7 @@ if TYPE_CHECKING:
 
 # Meaningless, but unique to singlepoints
 singlepoint_insert_lock_id = 14000
+singlepoint_spec_insert_lock_id = 14001
 
 
 class SinglepointRecordSocket(BaseRecordSocket):
@@ -156,11 +156,78 @@ class SinglepointRecordSocket(BaseRecordSocket):
         session.flush()
         return record_orm
 
+    def add_specifications(
+        self, qc_specs: Sequence[QCSpecification], *, session: Optional[Session] = None
+    ) -> Tuple[InsertMetadata, List[int]]:
+        """
+        Adds specifications for singlepoint calculations to the database, returning their IDs.
+
+        If an identical specification exists, then no insertion takes place and the id of the existing
+        specification is returned.
+
+        Specification IDs are returned in the same order as the input specifications
+
+        Parameters
+        ----------
+        qc_specs
+            Sequence of specifications to add to the database
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the insertion, and the IDs of the specifications.
+        """
+
+        to_add = []
+
+        for qc_spec in qc_specs:
+            protocols_dict = qc_spec.protocols.dict(exclude_defaults=True)
+
+            # TODO - if error_correction is manually specified as the default, then it will be an empty dict
+            if "error_correction" in protocols_dict:
+                erc = protocols_dict["error_correction"]
+                pol = erc.get("policies", dict())
+                if len(pol) == 0:
+                    erc.pop("policies", None)
+                if len(erc) == 0:
+                    protocols_dict.pop("error_correction")
+
+            qc_spec_dict = qc_spec.dict(exclude={"basis", "protocols"})
+            qc_spec_dict["basis"] = "" if qc_spec.basis is None else qc_spec.basis
+            qc_spec_dict["protocols"] = protocols_dict
+            qc_spec_hash = hash_dict(qc_spec_dict)
+
+            qc_spec_orm = QCSpecificationORM(
+                specification_hash=qc_spec_hash,
+                program=qc_spec_dict["program"],
+                driver=qc_spec_dict["driver"],
+                method=qc_spec_dict["method"],
+                basis=qc_spec_dict["basis"],
+                keywords=qc_spec_dict["keywords"],
+                protocols=qc_spec_dict["protocols"],
+            )
+
+            to_add.append(qc_spec_orm)
+
+        with self.root_socket.optional_session(session, False) as session:
+            meta, ids = insert_general(
+                session,
+                to_add,
+                (QCSpecificationORM.specification_hash,),
+                (QCSpecificationORM.id,),
+                singlepoint_spec_insert_lock_id,
+            )
+
+            return meta, [x[0] for x in ids]
+
     def add_specification(
         self, qc_spec: QCSpecification, *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, Optional[int]]:
         """
-        Adds a specification for a singlepoint calculation to the database, returning its id.
+        Adds a single specification for a singlepoint calculation to the database, returning its id.
 
         If an identical specification exists, then no insertion takes place and the id of the existing
         specification is returned.
@@ -179,52 +246,12 @@ class SinglepointRecordSocket(BaseRecordSocket):
             Metadata about the insertion, and the id of the specification.
         """
 
-        protocols_dict = qc_spec.protocols.dict(exclude_defaults=True)
+        meta, ids = self.add_specifications([qc_spec], session=session)
 
-        # TODO - if error_correction is manually specified as the default, then it will be an empty dict
-        if "error_correction" in protocols_dict:
-            erc = protocols_dict["error_correction"]
-            pol = erc.get("policies", dict())
-            if len(pol) == 0:
-                erc.pop("policies", None)
-            if len(erc) == 0:
-                protocols_dict.pop("error_correction")
+        if not ids:
+            return meta, None
 
-        basis = "" if qc_spec.basis is None else qc_spec.basis
-        kw_hash = hash_dict(qc_spec.keywords)
-
-        with self.root_socket.optional_session(session, False) as session:
-            stmt = (
-                insert(QCSpecificationORM)
-                .values(
-                    program=qc_spec.program,
-                    driver=qc_spec.driver,
-                    method=qc_spec.method,
-                    basis=basis,
-                    keywords=qc_spec.keywords,
-                    keywords_hash=kw_hash,
-                    protocols=protocols_dict,
-                )
-                .on_conflict_do_nothing()
-                .returning(QCSpecificationORM.id)
-            )
-
-            r = session.execute(stmt).scalar_one_or_none()
-            if r is not None:
-                return InsertMetadata(inserted_idx=[0]), r
-            else:
-                # Specification was already existing
-                stmt = select(QCSpecificationORM.id).filter_by(
-                    program=qc_spec.program,
-                    driver=qc_spec.driver,
-                    method=qc_spec.method,
-                    basis=basis,
-                    keywords_hash=kw_hash,
-                    protocols=protocols_dict,
-                )
-
-                r = session.execute(stmt).scalar_one()
-                return InsertMetadata(existing_idx=[0]), r
+        return meta, ids[0]
 
     def get(
         self,
@@ -277,8 +304,10 @@ class SinglepointRecordSocket(BaseRecordSocket):
         if query_data.molecule_id is not None:
             and_query.append(SinglepointRecordORM.molecule_id.in_(query_data.molecule_id))
         if query_data.keywords is not None:
-            keywords_hash = [hash_dict(d) for d in query_data.keywords]
-            and_query.append(QCSpecificationORM.keywords_hash.in_(keywords_hash))
+            or_query = []
+            for d in query_data.keywords:
+                or_query.append(QCSpecificationORM.keywords.comparator.contains(d))
+            and_query.append(or_(*or_query))
             need_join = True
 
         stmt = select(SinglepointRecordORM.id)
