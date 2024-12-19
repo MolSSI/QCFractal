@@ -1,88 +1,7 @@
-from qcfractal.db_socket import SQLAlchemySocket
+from qcfractal.components.testing_fixtures import spec_test_runner
 from qcportal.neb import NEBSpecification, NEBKeywords
-from qcportal.singlepoint import (
-    QCSpecification,
-    SinglepointDriver,
-    SinglepointProtocols,
-)
-from qcportal.optimization import OptimizationSpecification
-
-
-def test_neb_socket_basic_specification(storage_socket: SQLAlchemySocket):
-    spec1 = NEBSpecification(
-        program="geometric",
-        keywords=NEBKeywords(
-            images=31,
-            spring_constant=1.0,
-            spring_type=2,
-        ),
-        singlepoint_specification=QCSpecification(
-            program="psi4",
-            method="b3lyp",
-            basis="6-31g",
-            keywords={"k1": "values1"},
-            driver="gradient",
-            protocols=SinglepointProtocols(wavefunction="all"),
-        ),
-    )
-
-    spec2 = NEBSpecification(
-        program="geometric",
-        keywords=NEBKeywords(
-            images=11,
-            spring_constant=1.0,
-            spring_type=0,
-        ),
-        singlepoint_specification=QCSpecification(
-            program="qchem",
-            method="CCSD(T)",
-            basis="6-31g",
-            keywords={"k1": "values2"},
-            driver=SinglepointDriver.gradient,
-            protocols=SinglepointProtocols(wavefunction="all"),
-        ),
-    )
-
-    spec3 = NEBSpecification(
-        keywords=NEBKeywords(
-            images=31,
-            spring_constant=1.0,
-            spring_type=1,
-        ),
-        singlepoint_specification=QCSpecification(
-            program="psi4",
-            method="CCSD(T)",
-            basis="def2-tzvp",
-            keywords={"k1": "values1"},
-            driver=SinglepointDriver.hessian,
-            protocols=SinglepointProtocols(wavefunction="all"),
-        ),
-        optimization_specification=OptimizationSpecification(
-            program="geometric",
-            qc_specification=QCSpecification(
-                program="mopac",
-                method="pm7",
-                basis="",
-                keywords={"k1": "values1"},
-                driver=SinglepointDriver.deferred,
-            ),
-            protocols={},
-        ),
-    )
-
-    meta1, id1 = storage_socket.records.neb.add_specification(spec1)
-    meta2, id2 = storage_socket.records.neb.add_specification(spec2)
-    meta3, id3 = storage_socket.records.neb.add_specification(spec3)
-    assert meta1.success
-    assert meta2.success
-    assert meta3.success
-    assert meta1.inserted_idx == [0]
-    assert meta2.inserted_idx == [0]
-    assert meta3.inserted_idx == [0]
-    assert meta1.existing_idx == []
-    assert meta2.existing_idx == []
-    assert meta3.existing_idx == []
-
+from qcportal.optimization import OptimizationSpecification, OptimizationProtocols
+from qcportal.singlepoint import QCSpecification, SinglepointDriver, SinglepointProtocols
 
 common_sp_spec = QCSpecification(
     program="psi4",
@@ -93,74 +12,42 @@ common_sp_spec = QCSpecification(
     protocols=SinglepointProtocols(wavefunction="all"),
 )
 
+common_opt_spec = OptimizationSpecification(
+    program="optprog2",
+    keywords={"k": "value"},
+    protocols=OptimizationProtocols(trajectory="none"),
+    qc_specification=common_sp_spec.copy(),
+)
 
-def test_neb_socket_add_specification_same_0(storage_socket: SQLAlchemySocket):
+
+def test_neb_socket_add_specification_same_1(spec_test_runner):
     spec1 = NEBSpecification(
         program="geometric",
         keywords=NEBKeywords(images=11, spring_constant=1.0, optimize_ts=True, optimize_endpoints=True),
         singlepoint_specification=common_sp_spec,
     )
 
-    meta, id = storage_socket.records.neb.add_specification(spec1)
-    assert meta.success
-    assert meta.inserted_idx == [0]
-    assert meta.existing_idx == []
-    assert id is not None
-
-    # Try inserting again
-    meta, id2 = storage_socket.records.neb.add_specification(spec1)
-    assert meta.success
-    assert meta.inserted_idx == []
-    assert meta.existing_idx == [0]
-    assert id == id2
-
-    spec1 = NEBSpecification(
-        program="geometric",
-        keywords=NEBKeywords(images=11, spring_constant=2.0, optimize_ts=True, optimize_endpoints=True),
-        singlepoint_specification=common_sp_spec,
-    )
-
-    meta, id3 = storage_socket.records.neb.add_specification(spec1)
-    assert meta.success
-    assert meta.inserted_idx == [0]
-    assert meta.existing_idx == []
-    assert id3 != id
+    spec_test_runner("neb", spec1, spec1, True)
 
 
-def test_neb_socket_add_specification_same_1(storage_socket: SQLAlchemySocket):
-    spec1 = NEBSpecification(
-        program="geometric",
-        keywords=NEBKeywords(
-            images=21,
-            spring_constant=1.0,
-        ),
-        singlepoint_specification=common_sp_spec,
-    )
-
+def test_neb_socket_add_specification_same_2(spec_test_runner):
     # model handling defaults
+    spec1 = NEBSpecification(
+        program="geometric",
+        keywords=NEBKeywords(images=11, spring_constant=1.0, optimize_ts=False),
+        singlepoint_specification=common_sp_spec,
+    )
+
     spec2 = NEBSpecification(
         program="geometric",
-        keywords=NEBKeywords(
-            images=21,
-            spring_constant=1.0,
-        ),
+        keywords=NEBKeywords(),
         singlepoint_specification=common_sp_spec,
     )
 
-    meta, id = storage_socket.records.neb.add_specification(spec1)
-    assert meta.success
-    assert meta.inserted_idx == [0]
-    assert meta.existing_idx == []
-    assert id is not None
-
-    meta, id2 = storage_socket.records.neb.add_specification(spec2)
-    assert meta.success
-    assert meta.inserted_idx == []
-    assert meta.existing_idx == [0]
-    assert id == id2
+    spec_test_runner("neb", spec1, spec2, True)
 
 
-def test_neb_socket_add_specification_same_2(storage_socket: SQLAlchemySocket):
+def test_neb_socket_add_specification_same_3(spec_test_runner):
     # Test keywords defaults
     spec1 = NEBSpecification(
         program="geometric",
@@ -169,115 +56,14 @@ def test_neb_socket_add_specification_same_2(storage_socket: SQLAlchemySocket):
     )
 
     spec2 = NEBSpecification(
-        program="geometric",
-        keywords={},
-        singlepoint_specification=common_sp_spec,
+        program="geometric", keywords={}, singlepoint_specification=common_sp_spec, optimization_specification=None
     )
 
-    meta, id = storage_socket.records.neb.add_specification(spec1)
-    assert meta.success
-    assert meta.inserted_idx == [0]
-    assert meta.existing_idx == []
-    assert id is not None
-
-    meta, id2 = storage_socket.records.neb.add_specification(spec2)
-    assert meta.success
-    assert meta.inserted_idx == []
-    assert meta.existing_idx == [0]
-    assert id == id2
+    spec_test_runner("neb", spec1, spec2, True)
 
 
-def test_neb_socket_add_specification_same_3(storage_socket: SQLAlchemySocket):
-    # Test protocol defaults
-
-    sp_spec_1 = QCSpecification(
-        program="psi4",
-        method="CCSD(T)",
-        basis="def2-tzvp",
-        keywords={"k1": "values1"},
-        driver=SinglepointDriver.gradient,
-        protocols=SinglepointProtocols(),
-    )
-
-    sp_spec_2 = QCSpecification(
-        program="psi4",
-        method="CCSD(T)",
-        basis="def2-tzvp",
-        keywords={"k1": "values1"},
-        driver=SinglepointDriver.gradient,
-    )
-
-    spec1 = NEBSpecification(
-        program="geometric",
-        keywords={},
-        singlepoint_specification=sp_spec_1,
-    )
-
-    spec2 = NEBSpecification(
-        program="geometric",
-        keywords={},
-        singlepoint_specification=sp_spec_2,
-    )
-
-    meta, id = storage_socket.records.neb.add_specification(spec1)
-    assert meta.success
-    assert meta.inserted_idx == [0]
-    assert meta.existing_idx == []
-    assert id is not None
-
-    meta, id2 = storage_socket.records.neb.add_specification(spec2)
-    assert meta.success
-    assert meta.inserted_idx == []
-    assert meta.existing_idx == [0]
-    assert id == id2
-
-
-def test_neb_socket_add_specification_same_4(storage_socket: SQLAlchemySocket):
-    # Test protocol defaults
-
-    sp_spec_1 = QCSpecification(
-        program="psi4",
-        method="CCSD(T)",
-        basis="def2-tzvp",
-        keywords={"k1": "values1"},
-        driver=SinglepointDriver.gradient,
-        protocols=SinglepointProtocols(),
-    )
-
-    sp_spec_2 = QCSpecification(
-        program="psi4",
-        method="CCSD(T)",
-        basis="def2-tzvp",
-        keywords={"k1": "values1"},
-        driver=SinglepointDriver.gradient,
-    )
-
-    spec1 = NEBSpecification(
-        program="geometric",
-        keywords={},
-        singlepoint_specification=sp_spec_1,
-    )
-
-    spec2 = NEBSpecification(
-        program="geometric",
-        keywords={},
-        singlepoint_specification=sp_spec_2,
-    )
-
-    meta, id = storage_socket.records.neb.add_specification(spec1)
-    assert meta.success
-    assert meta.inserted_idx == [0]
-    assert meta.existing_idx == []
-    assert id is not None
-
-    meta, id2 = storage_socket.records.neb.add_specification(spec2)
-    assert meta.success
-    assert meta.inserted_idx == []
-    assert meta.existing_idx == [0]
-    assert id == id2
-
-
-def test_neb_socket_add_specification_diff_1(storage_socket: SQLAlchemySocket):
+def test_neb_socket_add_specification_diff_1(spec_test_runner):
+    # Specifying opt spec
     spec1 = NEBSpecification(
         program="geometric",
         keywords=NEBKeywords(
@@ -288,29 +74,12 @@ def test_neb_socket_add_specification_diff_1(storage_socket: SQLAlchemySocket):
         singlepoint_specification=common_sp_spec,
     )
 
-    spec2 = NEBSpecification(
-        program="geometric",
-        keywords=NEBKeywords(
-            images=21,
-            spring_constant=1.5,
-        ),
-        singlepoint_specification=common_sp_spec,
-    )
-
-    meta, id = storage_socket.records.neb.add_specification(spec1)
-    assert meta.success
-    assert meta.inserted_idx == [0]
-    assert meta.existing_idx == []
-    assert id is not None
-
-    meta, id2 = storage_socket.records.neb.add_specification(spec2)
-    assert meta.success
-    assert meta.inserted_idx == [0]
-    assert meta.existing_idx == []
-    assert id != id2
+    spec2 = spec1.copy(update={"optimization_specification": common_opt_spec})
+    spec_test_runner("neb", spec1, spec2, False)
 
 
-def test_neb_socket_add_specification_diff_2(storage_socket: SQLAlchemySocket):
+def test_neb_socket_add_specification_diff_2(spec_test_runner):
+    # change images
     spec1 = NEBSpecification(
         program="geometric",
         keywords=NEBKeywords(
@@ -322,60 +91,116 @@ def test_neb_socket_add_specification_diff_2(storage_socket: SQLAlchemySocket):
         singlepoint_specification=common_sp_spec,
     )
 
-    spec2 = NEBSpecification(
-        program="geometric",
-        keywords=NEBKeywords(
-            images=21,
-            spring_constant=1.5,
-            optimize_endpoints=True,
-        ),
-        singlepoint_specification=common_sp_spec,
-    )
-
-    meta, id = storage_socket.records.neb.add_specification(spec1)
-    assert meta.success
-    assert meta.inserted_idx == [0]
-    assert meta.existing_idx == []
-    assert id is not None
-
-    meta, id2 = storage_socket.records.neb.add_specification(spec2)
-    assert meta.success
-    assert meta.inserted_idx == [0]
-    assert meta.existing_idx == []
-    assert id != id2
+    neb_kw = spec1.keywords.copy(update={"images": 31})
+    spec2 = spec1.copy(update={"keywords": neb_kw})
+    spec_test_runner("neb", spec1, spec2, False)
 
 
-def test_neb_socket_add_specification_diff_3(storage_socket: SQLAlchemySocket):
+def test_neb_socket_add_specification_diff_3(spec_test_runner):
+    # change spring constant
     spec1 = NEBSpecification(
         program="geometric",
         keywords=NEBKeywords(
             images=21,
             spring_constant=1.5,
-            optimize_endpoints=True,
-            optimize_ts=True,
+            optimize_endpoints=False,
+            spring_type=0,
         ),
         singlepoint_specification=common_sp_spec,
     )
 
-    spec2 = NEBSpecification(
+    neb_kw = spec1.keywords.copy(update={"spring_constant": 1.51})
+    spec2 = spec1.copy(update={"keywords": neb_kw})
+    spec_test_runner("neb", spec1, spec2, False)
+
+
+def test_neb_socket_add_specification_diff_4(spec_test_runner):
+    # change opt endpoints
+    spec1 = NEBSpecification(
         program="geometric",
         keywords=NEBKeywords(
             images=21,
             spring_constant=1.5,
-            optimize_endpoints=True,
-            optimize_ts=False,
+            optimize_endpoints=False,
+            spring_type=0,
         ),
         singlepoint_specification=common_sp_spec,
     )
 
-    meta, id = storage_socket.records.neb.add_specification(spec1)
-    assert meta.success
-    assert meta.inserted_idx == [0]
-    assert meta.existing_idx == []
-    assert id is not None
+    neb_kw = spec1.keywords.copy(update={"optimize_endpoints": True})
+    spec2 = spec1.copy(update={"keywords": neb_kw})
+    spec_test_runner("neb", spec1, spec2, False)
 
-    meta, id2 = storage_socket.records.neb.add_specification(spec2)
-    assert meta.success
-    assert meta.inserted_idx == [0]
-    assert meta.existing_idx == []
-    assert id != id2
+
+def test_neb_socket_add_specification_diff_5(spec_test_runner):
+    # change max force
+    spec1 = NEBSpecification(
+        program="geometric",
+        keywords=NEBKeywords(
+            images=21,
+            spring_constant=1.5,
+            optimize_endpoints=False,
+            spring_type=0,
+        ),
+        singlepoint_specification=common_sp_spec,
+    )
+
+    neb_kw = spec1.keywords.copy(update={"maximum_force": 0.051})
+    spec2 = spec1.copy(update={"keywords": neb_kw})
+    spec_test_runner("neb", spec1, spec2, False)
+
+
+def test_neb_socket_add_specification_diff_6(spec_test_runner):
+    # change align
+    spec1 = NEBSpecification(
+        program="geometric",
+        keywords=NEBKeywords(
+            images=21,
+            spring_constant=1.5,
+            optimize_endpoints=False,
+            spring_type=0,
+        ),
+        singlepoint_specification=common_sp_spec,
+    )
+
+    neb_kw = spec1.keywords.copy(update={"align": False})
+    spec2 = spec1.copy(update={"keywords": neb_kw})
+    spec_test_runner("neb", spec1, spec2, False)
+
+
+def test_neb_socket_add_specification_diff_7(spec_test_runner):
+    # change sp basis
+    spec1 = NEBSpecification(
+        program="geometric",
+        keywords=NEBKeywords(
+            images=21,
+            spring_constant=1.5,
+            optimize_endpoints=False,
+            spring_type=0,
+        ),
+        singlepoint_specification=common_sp_spec,
+        optimization_specification=common_opt_spec,
+    )
+
+    sp_spec = spec1.singlepoint_specification.copy(update={"basis": "def2-qzvp"})
+    spec2 = spec1.copy(update={"singlepoint_specification": sp_spec})
+    spec_test_runner("neb", spec1, spec2, False)
+
+
+def test_neb_socket_add_specification_diff_8(spec_test_runner):
+    # change opt protocols
+    spec1 = NEBSpecification(
+        program="geometric",
+        keywords=NEBKeywords(
+            images=21,
+            spring_constant=1.5,
+            optimize_endpoints=False,
+            spring_type=0,
+        ),
+        singlepoint_specification=common_sp_spec,
+        optimization_specification=common_opt_spec,
+    )
+
+    opt_spec = spec1.optimization_specification.copy(update={"protocols": OptimizationProtocols(trajectory="all")})
+    spec2 = spec1.copy(update={"optimization_specification": opt_spec})
+    spec_test_runner("neb", spec1, spec2, False)
