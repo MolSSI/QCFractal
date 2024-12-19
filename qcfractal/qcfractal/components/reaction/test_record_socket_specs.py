@@ -1,351 +1,130 @@
-from qcfractal.db_socket import SQLAlchemySocket
-from qcportal.optimization import OptimizationSpecification
+from qcfractal.components.testing_fixtures import spec_test_runner
+from qcportal.optimization import OptimizationSpecification, OptimizationProtocols
 from qcportal.reaction import ReactionSpecification, ReactionKeywords
-from qcportal.singlepoint import SinglepointProtocols, QCSpecification
+from qcportal.singlepoint import QCSpecification, SinglepointDriver, SinglepointProtocols
+
+common_sp_spec = QCSpecification(
+    program="prog2",
+    driver=SinglepointDriver.energy,
+    method="",
+    basis="def2-tzvp",
+    keywords={"k": "value"},
+    protocols=SinglepointProtocols(wavefunction="orbitals_and_eigenvalues"),
+)
+
+common_opt_spec = OptimizationSpecification(
+    program="optprog2",
+    keywords={"k": "value"},
+    protocols=OptimizationProtocols(trajectory="none"),
+    qc_specification=common_sp_spec.copy(),
+)
 
 
-def test_reaction_socket_add_specification_same_0(storage_socket: SQLAlchemySocket):
+def test_reaction_socket_add_specification_same_1(spec_test_runner):
+    # both sp and opt
     spec1 = ReactionSpecification(
         program="reaction",
         keywords=ReactionKeywords(),
-        singlepoint_specification=QCSpecification(
-            program="prog1",
-            driver="energy",
-            method="b3lyp",
-            basis="6-31G*",
-            keywords={"k": "value"},
-            protocols=SinglepointProtocols(wavefunction="all"),
-        ),
-        optimization_specification=OptimizationSpecification(
-            program="geometric",
-            qc_specification=QCSpecification(
-                program="prog1",
-                driver="energy",
-                method="b3lyp",
-                basis="sto-3g",
-                keywords={"k": "value"},
-                protocols=SinglepointProtocols(),
-            ),
-            keywords={},
-        ),
+        singlepoint_specification=common_sp_spec,
+        optimization_specification=common_opt_spec,
     )
 
-    meta, id = storage_socket.records.reaction.add_specification(spec1)
-    assert meta.success
-    assert meta.inserted_idx == [0]
-    assert meta.existing_idx == []
-    assert id is not None
-
-    # Try inserting again
-    meta, id2 = storage_socket.records.reaction.add_specification(spec1)
-    assert meta.success
-    assert meta.inserted_idx == []
-    assert meta.existing_idx == [0]
-    assert id == id2
+    spec_test_runner("reaction", spec1, spec1, True)
 
 
-def test_reaction_socket_add_specification_same_1(storage_socket: SQLAlchemySocket):
-    # Case sensitivity
-
+def test_reaction_socket_add_specification_same_2(spec_test_runner):
+    # only sp
     spec1 = ReactionSpecification(
         program="reaction",
         keywords=ReactionKeywords(),
-        singlepoint_specification=QCSpecification(
-            program="prog1",
-            driver="energy",
-            method="b3lyp",
-            basis="6-31G*",
-            keywords={"k": "value"},
-            protocols=SinglepointProtocols(wavefunction="all"),
-        ),
-        optimization_specification=OptimizationSpecification(
-            program="geometric",
-            qc_specification=QCSpecification(
-                program="prog1",
-                driver="energy",
-                method="b3lyp",
-                basis="sto-3g",
-                keywords={"k": "value"},
-                protocols=SinglepointProtocols(),
-            ),
-            keywords={},
-        ),
-    )
-
-    spec2 = ReactionSpecification(
-        program="reaction",
-        keywords=ReactionKeywords(),
-        singlepoint_specification=QCSpecification(
-            program="pROG1",
-            driver="energy",
-            method="b3lyp",
-            basis="6-31G*",
-            keywords={"k": "value"},
-            protocols=SinglepointProtocols(wavefunction="all"),
-        ),
-        optimization_specification=OptimizationSpecification(
-            program="geoMetric",
-            qc_specification=QCSpecification(
-                program="prog1",
-                driver="energy",
-                method="b3LYP",
-                basis="sto-3G",
-                keywords={"k": "value"},
-                protocols=SinglepointProtocols(),
-            ),
-            keywords={},
-        ),
-    )
-
-    meta, id = storage_socket.records.reaction.add_specification(spec1)
-    assert meta.success
-    assert meta.inserted_idx == [0]
-    assert meta.existing_idx == []
-    assert id is not None
-
-    meta, id2 = storage_socket.records.reaction.add_specification(spec2)
-    assert meta.success
-    assert meta.inserted_idx == []
-    assert meta.existing_idx == [0]
-    assert id == id2
-
-
-def test_reaction_socket_add_specification_same_2(storage_socket: SQLAlchemySocket):
-    # Defaults
-
-    spec1 = ReactionSpecification(
-        program="reaction",
-        keywords=ReactionKeywords(),
-        singlepoint_specification=QCSpecification(
-            program="prog1",
-            driver="energy",
-            method="b3lyp",
-            basis="6-31G*",
-            keywords={"k": "value"},
-        ),
-        optimization_specification=OptimizationSpecification(
-            program="geometric",
-            qc_specification=QCSpecification(
-                program="prog1",
-                driver="energy",
-                method="b3lyp",
-                basis="sto-3g",
-                keywords={"k": "value"},
-            ),
-            keywords={},
-        ),
-    )
-
-    spec2 = ReactionSpecification(
-        program="reaction",
-        keywords=ReactionKeywords(),
-        singlepoint_specification=QCSpecification(
-            program="prog1",
-            driver="energy",
-            method="b3lyp",
-            basis="6-31G*",
-            keywords={"k": "value"},
-            protocols=SinglepointProtocols(),
-        ),
-        optimization_specification=OptimizationSpecification(
-            program="geometric",
-            qc_specification=QCSpecification(
-                program="prog1",
-                driver="energy",
-                method="b3lyp",
-                basis="sto-3g",
-                keywords={"k": "value"},
-                protocols=SinglepointProtocols(),
-            ),
-            keywords={},
-        ),
-    )
-
-    meta, id = storage_socket.records.reaction.add_specification(spec1)
-    assert meta.success
-    assert meta.inserted_idx == [0]
-    assert meta.existing_idx == []
-    assert id is not None
-
-    meta, id2 = storage_socket.records.reaction.add_specification(spec2)
-    assert meta.success
-    assert meta.inserted_idx == []
-    assert meta.existing_idx == [0]
-    assert id == id2
-
-
-def test_reaction_socket_add_specification_same_3(storage_socket: SQLAlchemySocket):
-    # Defaults
-
-    spec1 = ReactionSpecification(
-        program="reaction",
-        keywords=ReactionKeywords(),
-        singlepoint_specification=QCSpecification(
-            program="prog1",
-            driver="energy",
-            method="b3lyp",
-            basis="6-31G*",
-            keywords={},
-        ),
-        optimization_specification=OptimizationSpecification(
-            program="geometric",
-            qc_specification=QCSpecification(
-                program="prog1",
-                driver="energy",
-                method="b3lyp",
-                basis="sto-3g",
-            ),
-            keywords={},
-        ),
-    )
-
-    spec2 = ReactionSpecification(
-        program="reaction",
-        keywords=ReactionKeywords(),
-        singlepoint_specification=QCSpecification(
-            program="prog1",
-            driver="energy",
-            method="b3lyp",
-            basis="6-31G*",
-        ),
-        optimization_specification=OptimizationSpecification(
-            program="geometric",
-            qc_specification=QCSpecification(
-                program="prog1",
-                driver="energy",
-                method="b3lyp",
-                basis="sto-3g",
-                keywords={},
-            ),
-            keywords={},
-        ),
-    )
-
-    meta, id = storage_socket.records.reaction.add_specification(spec1)
-    assert meta.success
-    assert meta.inserted_idx == [0]
-    assert meta.existing_idx == []
-    assert id is not None
-
-    meta, id2 = storage_socket.records.reaction.add_specification(spec2)
-    assert meta.success
-    assert meta.inserted_idx == []
-    assert meta.existing_idx == [0]
-    assert id == id2
-
-
-def test_reaction_socket_add_specification_diff_1(storage_socket: SQLAlchemySocket):
-    spec1 = ReactionSpecification(
-        program="reaction",
-        keywords=ReactionKeywords(),
-        singlepoint_specification=QCSpecification(
-            program="prog1",
-            driver="energy",
-            method="b3lyp",
-            basis="6-31G*",
-            keywords={"k": "value"},
-            protocols=SinglepointProtocols(wavefunction="all"),
-        ),
-        optimization_specification=OptimizationSpecification(
-            program="geometric",
-            qc_specification=QCSpecification(
-                program="prog1",
-                driver="energy",
-                method="b3lyp",
-                basis="sto-3g",
-                keywords={"k": "value"},
-                protocols=SinglepointProtocols(),
-            ),
-            keywords={},
-        ),
-    )
-
-    spec2 = ReactionSpecification(
-        program="reaction",
-        keywords=ReactionKeywords(),
-        singlepoint_specification=QCSpecification(
-            program="pROG1",
-            driver="energy",
-            method="b3lyp",
-            basis="6-31G*",
-            keywords={"k": "value"},
-            protocols=SinglepointProtocols(wavefunction="all"),
-        ),
+        singlepoint_specification=common_sp_spec,
         optimization_specification=None,
     )
 
-    meta, id = storage_socket.records.reaction.add_specification(spec1)
-    assert meta.success
-    assert meta.inserted_idx == [0]
-    assert meta.existing_idx == []
-    assert id is not None
-
-    meta, id2 = storage_socket.records.reaction.add_specification(spec2)
-    assert meta.success
-    assert meta.inserted_idx == [0]
-    assert meta.existing_idx == []
+    spec_test_runner("reaction", spec1, spec1, True)
 
 
-def test_reaction_socket_add_specification_diff_2(storage_socket: SQLAlchemySocket):
-    # Differt qc method in opt
-
+def test_reaction_socket_add_specification_same_3(spec_test_runner):
+    # only opt
     spec1 = ReactionSpecification(
         program="reaction",
         keywords=ReactionKeywords(),
-        singlepoint_specification=QCSpecification(
-            program="prog1",
-            driver="energy",
-            method="b3lyp",
-            basis="6-31G*",
-            keywords={"k": "value"},
-            protocols=SinglepointProtocols(wavefunction="all"),
-        ),
-        optimization_specification=OptimizationSpecification(
-            program="geometric",
-            qc_specification=QCSpecification(
-                program="prog1",
-                driver="energy",
-                method="b3lyp",
-                basis="sto-3g",
-                keywords={"k": "value"},
-                protocols=SinglepointProtocols(),
-            ),
-            keywords={},
-        ),
+        singlepoint_specification=None,
+        optimization_specification=common_opt_spec,
+    )
+
+    spec_test_runner("reaction", spec1, spec1, True)
+
+
+def test_reaction_socket_add_specification_diff_1(spec_test_runner):
+    # removing opt spec
+    spec1 = ReactionSpecification(
+        program="reaction",
+        keywords=ReactionKeywords(),
+        singlepoint_specification=common_sp_spec,
+        optimization_specification=common_opt_spec,
+    )
+
+    spec2 = spec1.copy(update={"optimization_specification": None})
+    spec_test_runner("reaction", spec1, spec2, False)
+
+
+def test_reaction_socket_add_specification_diff_2(spec_test_runner):
+    # removing qc spec
+    spec1 = ReactionSpecification(
+        program="reaction",
+        keywords=ReactionKeywords(),
+        singlepoint_specification=common_sp_spec,
+        optimization_specification=common_opt_spec,
+    )
+
+    spec2 = spec1.copy(update={"singlepoint_specification": None})
+    spec_test_runner("reaction", spec1, spec2, False)
+
+
+def test_reaction_socket_add_specification_diff_3(spec_test_runner):
+    # removing qc spec
+    spec1 = ReactionSpecification(
+        program="reaction",
+        keywords=ReactionKeywords(),
+        singlepoint_specification=None,
+        optimization_specification=common_opt_spec,
     )
 
     spec2 = ReactionSpecification(
         program="reaction",
         keywords=ReactionKeywords(),
-        singlepoint_specification=QCSpecification(
-            program="prog1",
-            driver="energy",
-            method="b3lyp",
-            basis="6-31G*",
-            keywords={"k": "value"},
-            protocols=SinglepointProtocols(wavefunction="all"),
-        ),
-        optimization_specification=OptimizationSpecification(
-            program="geometric",
-            qc_specification=QCSpecification(
-                program="prog1",
-                driver="energy",
-                method="hf",
-                basis="sto-3g",
-                keywords={"k": "value"},
-                protocols=SinglepointProtocols(),
-            ),
-            keywords={},
-        ),
+        singlepoint_specification=common_sp_spec,
+        optimization_specification=None,
     )
 
-    meta, id = storage_socket.records.reaction.add_specification(spec1)
-    assert meta.success
-    assert meta.inserted_idx == [0]
-    assert meta.existing_idx == []
-    assert id is not None
+    spec_test_runner("reaction", spec1, spec2, False)
 
-    meta, id2 = storage_socket.records.reaction.add_specification(spec2)
-    assert meta.success
-    assert meta.inserted_idx == [0]
-    assert meta.existing_idx == []
+
+def test_reaction_socket_add_specification_diff_4(spec_test_runner):
+    # different basis in qc spec
+    spec1 = ReactionSpecification(
+        program="reaction",
+        keywords=ReactionKeywords(),
+        singlepoint_specification=common_sp_spec,
+        optimization_specification=common_opt_spec,
+    )
+
+    qc_spec = spec1.singlepoint_specification.copy(update={"basis": "sto-3g"})
+    spec2 = spec1.copy(update={"singlepoint_specification": qc_spec})
+    spec_test_runner("reaction", spec1, spec2, False)
+
+
+def test_reaction_socket_add_specification_diff_5(spec_test_runner):
+    # different basis in opt spec
+    spec1 = ReactionSpecification(
+        program="reaction",
+        keywords=ReactionKeywords(),
+        singlepoint_specification=common_sp_spec,
+        optimization_specification=common_opt_spec,
+    )
+
+    qc_spec = spec1.optimization_specification.qc_specification.copy(update={"basis": "sto-3g"})
+    opt_spec = spec1.optimization_specification.copy(update={"qc_specification": qc_spec})
+    spec2 = spec1.copy(update={"optimization_specification": opt_spec})
+    spec_test_runner("reaction", spec1, spec2, False)
