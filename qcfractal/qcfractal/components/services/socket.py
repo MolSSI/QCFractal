@@ -393,9 +393,7 @@ class ServiceSubtaskRecordSocket(BaseRecordSocket):
         # Return in the input order
         return [task_specs[rid] for rid in record_ids]
 
-    def update_completed_task(
-        self, session: Session, record_id: int, result: GenericTaskResult, manager_name: str
-    ) -> None:
+    def update_completed_task(self, session: Session, record_id: int, result: GenericTaskResult) -> None:
 
         record_updates = {"results": result.results}
         stmt = update(ServiceSubtaskRecordORM).where(ServiceSubtaskRecordORM.id == record_id).values(record_updates)

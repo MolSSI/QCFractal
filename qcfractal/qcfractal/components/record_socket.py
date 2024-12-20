@@ -196,9 +196,7 @@ class BaseRecordSocket:
             f"generate_task_specification not implemented for {type(self)}! This is a developer error"
         )
 
-    def update_completed_task(
-        self, session: Session, record_id: int, result: AllResultTypes, manager_name: str
-    ) -> None:
+    def update_completed_task(self, session: Session, record_id: int, result: AllResultTypes) -> None:
         """
         Update a record ORM based on the result of a successfully-completed computation
         """
@@ -1062,7 +1060,7 @@ class RecordSocket:
 
         # Now update fields specific to each record
         record_socket = self._handler_map[record_type]
-        record_socket.update_completed_task(session, record_id, result, manager_name)
+        record_socket.update_completed_task(session, record_id, result)
 
         # Now extras and properties
         extras, properties = build_extras_properties(result)
