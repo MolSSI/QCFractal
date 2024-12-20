@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from collections import defaultdict
 from typing import TYPE_CHECKING
 
 from qcelemental.models import FailedOperation
@@ -202,15 +203,15 @@ class BaseRecordSocket:
         """
         raise NotImplementedError(f"updated_completed not implemented for {type(self)}! This is a developer error")
 
-    def insert_complete_record(
+    def insert_complete_records(
         self,
         session: Session,
-        result: AllResultTypes,
-    ) -> BaseRecordORM:
+        results: Sequence[AllResultTypes],
+    ) -> List[BaseRecordORM]:
         """
-        Create a new ORM based on the result of a successfully-completed computation
+        Create new ORMs based on the result of a successfully-completed computations
 
-        This will always create new ORM from scratch, and not update any existing records.
+        This will always create new ORMs from scratch, and not update any existing records.
         """
         raise NotImplementedError(f"insert_completed not implemented for {type(self)}! This is a developer error")
 
@@ -917,7 +918,7 @@ class RecordSocket:
         logger = logging.getLogger(__name__)
 
         history_orm = RecordComputeHistoryORM()
-        history_orm.status = "complete" if result.success else "error"
+        history_orm.status = RecordStatusEnum.complete if result.success else RecordStatusEnum.error
         history_orm.provenance = result.provenance.dict()
         history_orm.modified_on = now_at_utc()
 
@@ -1228,46 +1229,65 @@ class RecordSocket:
         record_orm.status = RecordStatusEnum.error
         record_orm.modified_on = now_at_utc()
 
-    def insert_complete_record(self, session: Session, results: Sequence[AllResultTypes]) -> List[int]:
+    def insert_complete_records(self, session: Session, results: Sequence[AllResultTypes]) -> List[int]:
         """
-        Create a new ORM based on the result of a successfully-completed computation
+        Create new ORMs based on the result of successfully-completed computations
 
-        This will always create new ORM from scratch, and not update any existing records.
+        This will always create new ORMs from scratch, and not update any existing records.
         """
 
-        ids = []
+        if len(results) == 0:
+            return []
 
-        for result in results:
+        # Map of schema name stored in the result to (index, result)
+        type_map: Dict[str, List[Tuple[int, AllResultTypes]]] = defaultdict(list)
+
+        for idx, result in enumerate(results):
             if isinstance(result, FailedOperation) or not result.success:
                 raise UserReportableError("Cannot insert a completed, failed operation")
 
+            type_map[result.schema_name].append((idx, result))
+
+        # Key is the index in the original "results" dict
+        to_add: Dict[int, BaseRecordORM] = {}
+
+        for schema_name, idx_results in type_map.items():
             # Get the outputs & status, storing in the history orm.
             # Do this before calling the individual record handlers since it modifies extras
             # (looking for compressed outputs and compressed native files)
-            history_orm = self.create_compute_history_entry(result)
-            native_files_orm = self.create_native_files_orms(result)
+
+            type_results = [r for _, r in idx_results]
+            history_orms = [self.create_compute_history_entry(r) for r in type_results]
+            native_files_orms = [self.create_native_files_orms(r) for r in type_results]
 
             # Now the record-specific stuff
-            handler = self._handler_map_by_schema[result.schema_name]
-            record_orm = handler.insert_complete_record(session, result)
-            record_orm.is_service = False
+            handler = self._handler_map_by_schema[schema_name]
+            record_orms = handler.insert_complete_records(session, type_results)
 
-            # Now extras and properties
-            extras, properties = build_extras_properties(result)
-            record_orm.extras = extras
-            record_orm.properties = properties
+            for record_orm, (idx, type_result) in zip(record_orms, idx_results):
+                record_orm.is_service = False
 
-            # Now back to the common modifications
-            record_orm.compute_history.append(history_orm)
-            record_orm.native_files = native_files_orm
-            record_orm.status = history_orm.status
-            record_orm.modified_on = history_orm.modified_on
+                # Now extras and properties
+                extras, properties = build_extras_properties(type_result)
+                record_orm.extras = extras
+                record_orm.properties = properties
 
-            session.add(record_orm)
-            session.flush()
-            ids.append(record_orm.id)
+                # Now back to the common modifications
+                record_orm.compute_history.append(history_orms[idx])
+                record_orm.native_files = native_files_orms[idx]
+                record_orm.status = history_orms[idx].status
+                record_orm.modified_on = history_orms[idx].modified_on
 
-        return ids
+                to_add[idx] = record_orm
+
+        to_add_orm = sorted(to_add.items())
+
+        # Check that everything is in the original order
+        assert to_add_orm[0][0] == 0 and to_add_orm[-1][0] == len(to_add_orm) - 1 and len(to_add_orm) == len(results)
+
+        session.add_all(o for _, o in to_add_orm)
+        session.flush()
+        return [x[1].id for x in to_add_orm]
 
     def add_comment(
         self, record_ids: Sequence[int], user_id: Optional[int], comment: str, *, session: Optional[Session] = None

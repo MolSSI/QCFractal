@@ -7,7 +7,6 @@ from qcelemental.models import (
     OptimizationResult as QCEl_OptimizationResult,
 )
 from sqlalchemy import select, update
-from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import lazyload, joinedload, selectinload, defer, undefer, load_only
 
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
@@ -132,7 +131,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
             raise RuntimeError("Unable to add final molecule: " + meta.error_string)
 
         # Insert the trajectory
-        traj_ids = self.root_socket.records.insert_complete_record(session, result.trajectory)
+        traj_ids = self.root_socket.records.insert_complete_records(session, result.trajectory)
 
         for position, traj_id in enumerate(traj_ids):
             assoc_orm = OptimizationTrajectoryORM(singlepoint_id=traj_id)
