@@ -4,7 +4,7 @@ import logging
 import traceback
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select, or_
+from sqlalchemy import select, update, or_
 from sqlalchemy.dialects.postgresql import array_agg
 from sqlalchemy.orm import contains_eager, aliased, defer, selectinload, joinedload, load_only, lazyload
 
@@ -394,9 +394,12 @@ class ServiceSubtaskRecordSocket(BaseRecordSocket):
         return [task_specs[rid] for rid in record_ids]
 
     def update_completed_task(
-        self, session: Session, record_orm: ServiceSubtaskRecordORM, result: GenericTaskResult, manager_name: str
+        self, session: Session, record_id: int, result: GenericTaskResult, manager_name: str
     ) -> None:
-        record_orm.results = result.results
+
+        record_updates = {"results": result.results}
+        stmt = update(ServiceSubtaskRecordORM).where(ServiceSubtaskRecordORM.id == record_id).values(record_updates)
+        session.execute(stmt)
 
     def add(
         self,
