@@ -1252,6 +1252,7 @@ class RecordSocket:
             # Now the record-specific stuff
             handler = self._handler_map_by_schema[result.schema_name]
             record_orm = handler.insert_complete_record(session, result)
+            record_orm.is_service = False
 
             # Now extras and properties
             extras, properties = build_extras_properties(result)
@@ -1264,6 +1265,7 @@ class RecordSocket:
             record_orm.status = history_orm.status
             record_orm.modified_on = history_orm.modified_on
 
+            session.add(record_orm)
             session.flush()
             ids.append(record_orm.id)
 

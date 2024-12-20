@@ -299,8 +299,7 @@ def test_singlepoint_socket_insert(storage_socket: SQLAlchemySocket, session: Se
     )
 
     # Typical workflow
-    rec_orm = session.get(SinglepointRecordORM, id2[0])
-    storage_socket.records.update_completed_task(session, rec_orm, result_data_2, None)
+    storage_socket.records.update_completed_task(session, id2[0], "singlepoint", result_data_2, None)
 
     # Actually insert the whole thing
     with storage_socket.session_scope() as session2:

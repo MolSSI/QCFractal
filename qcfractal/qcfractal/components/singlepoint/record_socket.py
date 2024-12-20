@@ -141,17 +141,15 @@ class SinglepointRecordSocket(BaseRecordSocket):
         if not mol_meta.success:
             raise RuntimeError("Aborted single point insertion - could not add molecule: " + spec_meta.error_string)
 
-        record_orm = SinglepointRecordORM()
-        record_orm.is_service = False
-        record_orm.specification_id = spec_id
-        record_orm.molecule_id = mol_ids[0]
-        record_orm.status = RecordStatusEnum.complete
+        record_orm = SinglepointRecordORM(
+            specification_id=spec_id,
+            molecule_id=mol_ids[0],
+            status=RecordStatusEnum.complete,
+        )
 
         if result.wavefunction:
             record_orm.wavefunction = self.create_wavefunction_orm(result.wavefunction)
 
-        session.add(record_orm)
-        session.flush()
         return record_orm
 
     def add_specifications(
