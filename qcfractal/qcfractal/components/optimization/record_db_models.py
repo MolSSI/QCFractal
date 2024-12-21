@@ -42,6 +42,7 @@ class OptimizationSpecificationORM(BaseORM):
     __tablename__ = "optimization_specification"
 
     id = Column(Integer, primary_key=True)
+    specification_hash = Column(String, nullable=False)
 
     program = Column(String(100), nullable=False)
 
@@ -49,18 +50,10 @@ class OptimizationSpecificationORM(BaseORM):
     qc_specification = relationship(QCSpecificationORM, lazy="joined")
 
     keywords = Column(JSONB, nullable=False)
-    keywords_hash = Column(String, nullable=False)
-
     protocols = Column(JSONB, nullable=False)
 
     __table_args__ = (
-        UniqueConstraint(
-            "program",
-            "qc_specification_id",
-            "keywords_hash",
-            "protocols",
-            name="ux_optimization_specification_keys",
-        ),
+        UniqueConstraint("specification_hash", "qc_specification_id", name="ux_optimization_specification_keys"),
         Index("ix_optimization_specification_program", "program"),
         Index("ix_optimization_specification_qc_specification_id", "qc_specification_id"),
         # Enforce lowercase on some fields
@@ -69,7 +62,7 @@ class OptimizationSpecificationORM(BaseORM):
         CheckConstraint("program = LOWER(program)", name="ck_optimization_specification_program_lower"),
     )
 
-    _qcportal_model_excludes = ["id", "keywords_hash", "qc_specification_id"]
+    _qcportal_model_excludes = ["id", "specification_hash", "qc_specification_id"]
 
     @property
     def required_programs(self) -> Dict[str, Optional[str]]:

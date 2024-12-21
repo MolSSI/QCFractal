@@ -244,7 +244,15 @@ def test_singlepoint_client_query(snowflake: QCATestingSnowflake):
     # keywords
     query_res = snowflake_client.query_singlepoints(keywords={})
     query_res_l = list(query_res)
-    assert len(query_res_l) == 2
+    assert len(query_res_l) == 3
+
+    query_res = snowflake_client.query_singlepoints(keywords={"maxiter": 100})
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 1
+
+    query_res = snowflake_client.query_singlepoints(keywords=[{"maxiter": 100}, {"something": 100}])
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 1
 
     query_res = snowflake_client.query_singlepoints(keywords=[{}], program="rdkit")
     query_res_l = list(query_res)

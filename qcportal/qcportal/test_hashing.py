@@ -17,7 +17,7 @@ def shuffle_dict(d):
 
 
 def test_hash_stable():
-    test_data = load_hash_test_data()
+    test_data = load_hash_test_data("dict_hash_test_data")
 
     for hash, data in test_data.items():
         assert hash == hash_dict(data)
