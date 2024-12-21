@@ -1189,31 +1189,12 @@ class RecordSocket:
             # The sort date should almost always be the created_on of the parent service
             # This way, earlier services will have their tasks run first, rather than having to wait
             # for all other services' tasks to finish
-            # But, it should be the earliest time for all services that depend on that record
-
-            br = aliased(BaseRecordORM)  # BaseRecord for a dependent record
-            br_svc = aliased(BaseRecordORM)  # BaseRecord for the parent service(s)
-
-            earliest = func.least(br.created_on, func.min(br_svc.created_on)).label("created_on")
-            stmt = select(br.id.label("record_id"), earliest)
-            stmt = stmt.join(ServiceDependencyORM, ServiceDependencyORM.record_id == br.id, isouter=True)
-            stmt = stmt.join(ServiceQueueORM, ServiceQueueORM.id == ServiceDependencyORM.service_id, isouter=True)
-            stmt = stmt.join(br_svc, br_svc.id == ServiceQueueORM.record_id, isouter=True)
-            stmt = stmt.where(ServiceQueueORM.id == service_orm.id)
-            stmt = stmt.group_by(br.id)
-
-            least_dates = session.execute(stmt).all()
-            least_dates = {x[0]: x[1] for x in least_dates}
-
+            # But, it could be the original submission date of the record
+            parent_created_on = service_orm.record.created_on
             for svc_record in service_orm.dependencies:
-                # print("HERE", svc_record.record_id, svc_record.record.status, svc_record.record.task)
-                if svc_record.record_id not in least_dates:
-                    continue
-
-                if svc_record.record.is_service:
-                    raise RuntimeError("Cannot have a service as a dependency of a service (yet)")
-                elif svc_record.record.task is not None:
-                    svc_record.record.task.sort_date = least_dates[svc_record.record_id]
+                if svc_record.record.status != RecordStatusEnum.complete and svc_record.record.task is not None:
+                    record_sort_date = svc_record.record.task.sort_date
+                    svc_record.record.task.sort_date = min(record_sort_date, parent_created_on)
 
         return finished
 

@@ -33,7 +33,7 @@ class TaskQueueORM(BaseORM):
     # when claiming tasks don't work
     required_programs = Column(ARRAY(TEXT), nullable=False)
 
-    sort_date = Column(TIMESTAMP(timezone=True), default=now_at_utc(), nullable=False)
+    sort_date = Column(TIMESTAMP(timezone=True), default=now_at_utc, nullable=False)
     tag = Column(String, nullable=False)
     priority = Column(Integer, nullable=False)
     available = Column(Boolean, nullable=False)
