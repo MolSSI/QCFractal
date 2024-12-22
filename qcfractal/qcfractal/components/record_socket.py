@@ -4,7 +4,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from qcelemental.models import FailedOperation
-from sqlalchemy import select, union, or_, func
+from sqlalchemy import select, union, or_, func, text
 from sqlalchemy.orm import (
     joinedload,
     selectinload,
@@ -1193,10 +1193,17 @@ class RecordSocket:
             # for all other services' tasks to finish
             # But, it could be the original submission date of the record
             parent_created_on = service_orm.record.created_on
-            for svc_record in service_orm.dependencies:
-                if svc_record.record.status != RecordStatusEnum.complete and svc_record.record.task is not None:
-                    record_sort_date = svc_record.record.task.sort_date
-                    svc_record.record.task.sort_date = min(record_sort_date, parent_created_on)
+
+            stmt = """
+                UPDATE task_queue AS tq
+                SET sort_date = LEAST(sort_date, :parent_created_on)
+                FROM service_dependency AS sd
+                WHERE tq.record_id = sd.record_id
+                  AND sd.service_id = :service_id
+                  AND tq.available = true
+            """
+
+            session.execute(text(stmt), {"parent_created_on": parent_created_on, "service_id": service_orm.id})
 
         return finished
 
