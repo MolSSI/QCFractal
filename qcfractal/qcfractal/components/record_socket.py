@@ -898,7 +898,7 @@ class RecordSocket:
 
         # If all columns are included, then we can load
         # the data from derived classes as well.
-        if (include is None or "*" in include) and not exclude:
+        if (include is None or "*" in include or "**" in include) and not exclude:
             wp = with_polymorphic(BaseRecordORM, "*")
         else:
             wp = BaseRecordORM

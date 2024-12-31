@@ -515,6 +515,10 @@ def get_general(
     if len(search_values) == 0:
         return []
 
+    # If '**' was requested, that implies '*'
+    if include and "**" in include:
+        include = set(include) | {"*"}
+
     # We must make sure the column we are searching for is included
     if include is not None and "*" not in include:
         include = set(include) | {search_col.key}
