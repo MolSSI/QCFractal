@@ -902,10 +902,11 @@ class BaseDataset(BaseModel):
 
         # Update the locally-stored metadata for these dataset records
         # zip(record_info, records) = ((entry_name, spec_name, record_id), record)
-        update_info = [(ename, sname, r) for (ename, sname, _), r in zip(record_info, records)]
+        update_records = [(ename, sname, r) for (ename, sname, _), r in zip(record_info, records)]
+        update_info = [(ename, sname, r.id) for (ename, sname, r) in update_records]
         self._cache_data.update_dataset_records(update_info)
 
-        return update_info
+        return update_records
 
     def _internal_update_records(
         self,
