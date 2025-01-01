@@ -472,6 +472,7 @@ def get_general(
     exclude: Optional[Iterable[str]],
     missing_ok: bool,
     additional_options: Optional[Iterable[Any]] = None,
+    internal_batchsize: int = 500,
 ) -> List[Optional[Dict[str, Any]]]:
     """
     Perform a query for records based on a unique id
@@ -528,16 +529,16 @@ def get_general(
     unique_values = list(set(search_values))
     proj_options = get_query_proj_options(orm_type, include, exclude)
 
-    stmt = select(orm_type).filter(search_col.in_(unique_values))
-    stmt = stmt.options(*proj_options)
-    if additional_options:
-        stmt = stmt.options(*additional_options)
-
-    results = session.execute(stmt).scalars().all()
-
     col_name = search_col.key
-    result_list = [r.model_dict() for r in results]
-    result_map = {r[col_name]: r for r in result_list}
+    result_map = {}
+    for values_chunk in chunk_iterable(unique_values, internal_batchsize):
+        stmt = select(orm_type).filter(search_col.in_(values_chunk))
+        stmt = stmt.options(*proj_options)
+        if additional_options:
+            stmt = stmt.options(*additional_options)
+
+        results = session.execute(stmt).scalars().all()
+        result_map |= {r_model[col_name]: r_model for r_model in (r.model_dict() for r in results)}
 
     # Put into the requested order
     ret = [result_map.get(x, None) for x in search_values]
