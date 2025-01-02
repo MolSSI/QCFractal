@@ -67,7 +67,7 @@ def run_service(
 
     while n_iterations < max_iterations:
         with storage_socket.session_scope() as session:
-            n_services = storage_socket.services.iterate_services(session, DummyJobProgress())
+            n_services = storage_socket.services.iterate_services(session)
 
             # iterate_services will handle errors
             if n_services == 0:

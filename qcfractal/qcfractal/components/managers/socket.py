@@ -5,10 +5,9 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
 from sqlalchemy import and_, update, select
-from sqlalchemy.orm import selectinload, defer, undefer, lazyload, joinedload
 
 from qcfractal.db_socket.helpers import get_query_proj_options, get_count, get_general
-from qcportal.exceptions import MissingDataError, ComputeManagerError
+from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerStatusEnum, ManagerName, ManagerQueryFilters
 from qcportal.utils import now_at_utc
 from .db_models import ComputeManagerORM
@@ -16,7 +15,6 @@ from .db_models import ComputeManagerORM
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from qcfractal.components.internal_jobs.status import JobProgress
     from typing import List, Iterable, Optional, Sequence, Sequence, Dict, Any
 
 
@@ -32,31 +30,15 @@ class ManagerSocket:
         self._manager_heartbeat_frequency = root_socket.qcf_config.heartbeat_frequency
         self._manager_max_missed_heartbeats = root_socket.qcf_config.heartbeat_max_missed
 
-        # Add the initial job for checking on managers
-        self.add_internal_job_check_heartbeats(0.0)
-
-    def add_internal_job_check_heartbeats(self, delay: float, *, session: Optional[Session] = None):
-        """
-        Adds an internal job to check for dead managers
-
-        Parameters
-        ----------
-        delay
-            Schedule for this many seconds in the future
-        session
-            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed (but not committed) before returning from this function.
-        """
-        with self.root_socket.optional_session(session) as session:
+        with self.root_socket.session_scope() as session:
             self.root_socket.internal_jobs.add(
                 "check_manager_heartbeats",
-                now_at_utc() + timedelta(seconds=delay),
+                now_at_utc(),
                 "managers.check_manager_heartbeats",
                 {},
                 user_id=None,
                 unique_name=True,
-                after_function="managers.add_internal_job_check_heartbeats",
-                after_function_kwargs={"delay": self._manager_heartbeat_frequency},
+                repeat_delay=self._manager_heartbeat_frequency,
                 session=session,
             )
 
@@ -298,7 +280,7 @@ class ManagerSocket:
 
         return result_dicts
 
-    def check_manager_heartbeats(self, session: Session, job_progress: JobProgress) -> None:
+    def check_manager_heartbeats(self, session: Session) -> None:
         """
         Checks for manager heartbeats
 

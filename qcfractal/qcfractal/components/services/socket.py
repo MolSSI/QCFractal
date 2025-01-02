@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import traceback
-from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select, or_
@@ -23,7 +22,6 @@ from ..record_socket import BaseRecordSocket
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from qcfractal.components.internal_jobs.status import JobProgress
     from typing import List, Dict, Tuple, Optional, Any, Union, Sequence
 
 
@@ -38,31 +36,15 @@ class ServiceSocket:
         self._max_active_services = root_socket.qcf_config.max_active_services
         self._service_frequency = root_socket.qcf_config.service_frequency
 
-        # Add the initial job for iterating the service
-        self.add_internal_job_iterate_services(0.0)
-
-    def add_internal_job_iterate_services(self, delay: float, *, session: Optional[Session] = None):
-        """
-        Adds an internal job to check/update the services
-
-        Parameters
-        ----------
-        delay
-            Schedule for this many seconds in the future
-        session
-            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed (but not committed) before returning from this function.
-        """
-        with self.root_socket.optional_session(session) as session:
+        with self.root_socket.session_scope() as session:
             self.root_socket.internal_jobs.add(
                 "iterate_services",
-                now_at_utc() + timedelta(seconds=delay),
+                now_at_utc(),
                 "services.iterate_services",
                 {},
                 user_id=None,
                 unique_name=True,
-                after_function="services.add_internal_job_iterate_services",
-                after_function_kwargs={"delay": self._service_frequency},
+                repeat_delay=self._service_frequency,
                 session=session,
             )
 
@@ -78,7 +60,7 @@ class ServiceSocket:
         session.commit()
         self.root_socket.notify_finished_watch(service_orm.record_id, RecordStatusEnum.complete)
 
-    def _iterate_service(self, session: Session, job_progress: JobProgress, service_id: int) -> bool:
+    def _iterate_service(self, session: Session, service_id: int) -> bool:
         """
         Iterate a single service given its service id
 
@@ -86,8 +68,6 @@ class ServiceSocket:
         -----------
         session
             An existing SQLAlchemy session to use. This session will be committed at the end of this function
-        job_progress
-            An object used to report the current job progress and status
         service_id
             ID of the service to iterate (not the record ID)
 
@@ -151,7 +131,7 @@ class ServiceSocket:
             session.commit()
             return False
 
-    def iterate_services(self, session: Session, job_progress: JobProgress) -> int:
+    def iterate_services(self, session: Session) -> int:
         """
         Check for services that have their dependencies finished, and then either queue them for iteration
         or mark them as errored
@@ -166,8 +146,6 @@ class ServiceSocket:
         ----------
         session
             An existing SQLAlchemy session to use. This session will be periodically committed
-        job_progress
-            An object used to report the current job progress and status
 
         Returns
         -------

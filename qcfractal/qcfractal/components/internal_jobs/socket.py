@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 import logging
 import select as io_select
 import traceback
@@ -46,30 +47,18 @@ class InternalJobSocket:
         self._delete_internal_job_frequency = 60 * 60 * 24  # one day
         self._internal_job_keep = root_socket.qcf_config.internal_job_keep
 
-        # Wait a bit after startup
-        self.add_internal_job_delete_old_internal_jobs(2.0)
-
-    def add_internal_job_delete_old_internal_jobs(self, delay: float, *, session: Optional[Session] = None):
-        """
-        Adds an internal job to delete old, finished internal jobs
-        """
-
-        # Only add this if we are going to delete some
-        if self._internal_job_keep <= 0:
-            return
-
-        with self.root_socket.optional_session(session) as session:
-            self.add(
-                "delete_old_internal_jobs",
-                now_at_utc() + timedelta(seconds=delay),
-                "internal_jobs.delete_old_internal_jobs",
-                {},
-                user_id=None,
-                unique_name=True,
-                after_function="internal_jobs.add_internal_job_delete_old_internal_jobs",
-                after_function_kwargs={"delay": self._delete_internal_job_frequency},  # wait one day
-                session=session,
-            )
+        if self._internal_job_keep > 0:
+            with self.root_socket.session_scope() as session:
+                self.add(
+                    "delete_old_internal_jobs",
+                    now_at_utc() + timedelta(seconds=2.0),
+                    "internal_jobs.delete_old_internal_jobs",
+                    {},
+                    user_id=None,
+                    unique_name=True,
+                    repeat_delay=self._delete_internal_job_frequency,
+                    session=session,
+                )
 
     def add(
         self,
@@ -81,6 +70,7 @@ class InternalJobSocket:
         unique_name: bool = False,
         after_function: Optional[str] = None,
         after_function_kwargs: Optional[Dict[str, Any]] = None,
+        repeat_delay: Optional[int] = None,
         *,
         session: Optional[Session] = None,
     ) -> int:
@@ -107,6 +97,8 @@ class InternalJobSocket:
             When this job is done, call this function
         after_function_kwargs
             Arguments to use when calling `after_function`
+        repeat_delay
+            If set, will submit a new, identical job to be run repeat_delay seconds after this one finishes
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -122,48 +114,45 @@ class InternalJobSocket:
                 stmt = insert(InternalJobORM)
                 stmt = stmt.values(
                     name=name,
+                    status=InternalJobStatusEnum.waiting,
                     unique_name=name,
                     scheduled_date=scheduled_date,
                     function=function,
                     kwargs=kwargs,
                     after_function=after_function,
                     after_function_kwargs=after_function_kwargs,
-                    status=InternalJobStatusEnum.waiting,
+                    repeat_delay=repeat_delay,
                     user_id=user_id,
                 )
-                stmt = stmt.on_conflict_do_nothing()
+                stmt = stmt.on_conflict_do_update(
+                    constraint="ux_internal_jobs_unique_name",
+                    set_={
+                        "after_function": after_function,
+                        "after_function_kwargs": after_function_kwargs,
+                        "repeat_delay": repeat_delay,
+                    },
+                )
                 stmt = stmt.returning(InternalJobORM.id)
                 job_id = session.execute(stmt).scalar_one_or_none()
 
-                if job_id is None:
+                if job_id is not None:
+                    self._logger.debug(f"Job with name {name} added or updated - id: {job_id}")
+                else:
                     # Nothing was returned, meaning nothing was inserted
-                    self._logger.debug(f"Job with name {name} already found. Not adding")
+                    self._logger.debug(f"Job with name {name} already found. Not adding?")
                     stmt = select(InternalJobORM.id).where(InternalJobORM.unique_name == name)
                     job_id = session.execute(stmt).scalar_one_or_none()
-
-                if job_id is None:
-                    # Should be very rare (time-of-check to time-of-use condition: was deleted
-                    # after checking for existence but before getting ID)
-                    self._logger.debug(f"Handling job {name} time-of-check to time-of-use condition")
-                    self.add(
-                        name=name,
-                        scheduled_date=scheduled_date,
-                        function=function,
-                        kwargs=kwargs,
-                        user_id=user_id,
-                        unique_name=unique_name,
-                        after_function=after_function,
-                        after_function_kwargs=after_function_kwargs,
-                        session=session,
-                    )
 
             else:
                 job_orm = InternalJobORM(
                     name=name,
+                    status=InternalJobStatusEnum.waiting,
                     scheduled_date=scheduled_date,
                     function=function,
                     kwargs=kwargs,
-                    status=InternalJobStatusEnum.waiting,
+                    after_function=after_function,
+                    after_function_kwargs=after_function_kwargs,
+                    repeat_delay=repeat_delay,
                     user_id=user_id,
                 )
                 if unique_name:
@@ -289,7 +278,7 @@ class InternalJobSocket:
         with self.root_socket.optional_session(session) as session:
             session.execute(stmt)
 
-    def delete_old_internal_jobs(self, session: Session, job_progress: JobProgress) -> None:
+    def delete_old_internal_jobs(self, session: Session) -> None:
         """
         Deletes old internal jobs (as defined by the configuration)
         """
@@ -343,7 +332,20 @@ class InternalJobSocket:
 
             # Function must be part of the sockets
             func = func_attr(self.root_socket)
-            result = func(**job_orm.kwargs, job_progress=job_progress, session=session)
+
+            # We need to determine the parameters of this function
+            func_params = inspect.signature(func).parameters
+
+            add_kwargs = {}
+
+            # If the function has a "job_progress" and/or "session" args, pass those in
+            if "job_progress" in func_params:
+                add_kwargs["job_progress"] = job_progress
+
+            if "session" in func_params:
+                add_kwargs["session"] = session
+
+            result = func(**job_orm.kwargs, **add_kwargs)
 
             # Mark complete, unless this was cancelled
             if not job_progress.cancelled():
@@ -363,6 +365,7 @@ class InternalJobSocket:
             job_orm.result = result
 
             # Clear the unique name so we can add another one if needed
+            has_unique_name = job_orm.unique_name is not None
             job_orm.unique_name = None
 
             # Flush but don't commit. This will prevent marking the task as finished
@@ -374,10 +377,30 @@ class InternalJobSocket:
             if job_orm.status == InternalJobStatusEnum.complete and job_orm.after_function is not None:
                 after_func_attr = attrgetter(job_orm.after_function)
                 after_func = after_func_attr(self.root_socket)
-                after_func(**job_orm.after_function_kwargs, session=session)
+
+                after_func_params = inspect.signature(after_func).parameters
+                add_after_kwargs = {}
+                if "session" in after_func_params:
+                    add_after_kwargs["session"] = session
+                after_func(**job_orm.after_function_kwargs, **add_after_kwargs)
+
+            if job_orm.status == InternalJobStatusEnum.complete and job_orm.repeat_delay is not None:
+                self.add(
+                    name=job_orm.name,
+                    scheduled_date=now_at_utc() + timedelta(seconds=job_orm.repeat_delay),
+                    function=job_orm.function,
+                    kwargs=job_orm.kwargs,
+                    user_id=job_orm.user_id,
+                    unique_name=has_unique_name,
+                    after_function=job_orm.after_function,
+                    after_function_kwargs=job_orm.after_function_kwargs,
+                    repeat_delay=job_orm.repeat_delay,
+                    session=session,
+                )
             session.commit()
 
-    def _wait_for_job(self, session: Session, logger, conn, end_event) -> Optional[InternalJobORM]:
+    @staticmethod
+    def _wait_for_job(session: Session, logger, conn, end_event):
         """
         Blocks until a job is possibly available to run
         """

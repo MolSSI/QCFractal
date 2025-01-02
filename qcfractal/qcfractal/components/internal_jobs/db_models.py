@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, TIMESTAMP, String, JSON, Index, Enum, UniqueConstraint, ForeignKey
+from sqlalchemy import Column, Integer, TIMESTAMP, String, Index, Enum, UniqueConstraint, ForeignKey
 from sqlalchemy import DDL, event
+from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.orm import relationship
 
 from qcfractal.components.auth.db_models import UserIDMapSubquery, UserORM
@@ -35,7 +36,9 @@ class InternalJobORM(BaseORM):
     kwargs = Column(JSON, nullable=False)
 
     after_function = Column(String, nullable=True)
-    after_function_kwargs = Column(JSON, nullable=True)
+    after_function_kwargs = Column(JSON(none_as_null=True), nullable=True)
+
+    repeat_delay = Column(Integer, nullable=True)
 
     result = Column(JSON)
     user_id = Column(Integer, ForeignKey(UserORM.id, ondelete="cascade"), nullable=True)
