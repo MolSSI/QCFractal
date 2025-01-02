@@ -54,6 +54,7 @@ class InternalJob(BaseModel):
     ended_date: Optional[datetime]
     runner_hostname: Optional[str]
     runner_uuid: Optional[str]
+    repeat_delay: Optional[int]
 
     progress: int
 

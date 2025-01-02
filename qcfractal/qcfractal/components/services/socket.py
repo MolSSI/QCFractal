@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import traceback
-from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select, or_
@@ -37,31 +36,15 @@ class ServiceSocket:
         self._max_active_services = root_socket.qcf_config.max_active_services
         self._service_frequency = root_socket.qcf_config.service_frequency
 
-        # Add the initial job for iterating the service
-        self.add_internal_job_iterate_services(0.0)
-
-    def add_internal_job_iterate_services(self, delay: float, *, session: Optional[Session] = None):
-        """
-        Adds an internal job to check/update the services
-
-        Parameters
-        ----------
-        delay
-            Schedule for this many seconds in the future
-        session
-            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed (but not committed) before returning from this function.
-        """
-        with self.root_socket.optional_session(session) as session:
+        with self.root_socket.session_scope() as session:
             self.root_socket.internal_jobs.add(
                 "iterate_services",
-                now_at_utc() + timedelta(seconds=delay),
+                now_at_utc(),
                 "services.iterate_services",
                 {},
                 user_id=None,
                 unique_name=True,
-                after_function="services.add_internal_job_iterate_services",
-                after_function_kwargs={"delay": self._service_frequency},
+                repeat_delay=self._service_frequency,
                 session=session,
             )
 

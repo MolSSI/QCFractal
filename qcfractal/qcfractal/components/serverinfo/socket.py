@@ -73,79 +73,50 @@ class ServerInfoSocket:
                     "GeoIP2 package not found. To include locations in access logs, install the geoip2 package"
                 )
 
-        # Updating the geolocation database file
-        self.add_internal_job_update_geoip2(0.0)
+        ################################
+        # Add various internal jobs
+        ################################
+        with self.root_socket.session_scope() as session:
+            # updating geoip2 file
+            # Only add this if we have the maxmind license key
+            if self._geoip2_enabled and self._maxmind_license_key:
+                with self.root_socket.optional_session(session) as session:
+                    self.root_socket.internal_jobs.add(
+                        "update_geoip2_file",
+                        now_at_utc(),
+                        "serverinfo.update_geoip2_file",
+                        {},
+                        user_id=None,
+                        unique_name=True,
+                        repeat_delay=self._update_geoip2_frequency,
+                        session=session,
+                    )
 
-        # Updating the access log with geolocation info. Don't do it right at startup
-        self.add_internal_job_geolocate_accesses(self._geolocate_accesses_frequency)
+            # Doing processing of access log
+            if self._geoip2_enabled:
+                self.root_socket.internal_jobs.add(
+                    "geolocate_accesses",
+                    now_at_utc(),
+                    "serverinfo.geolocate_accesses",
+                    {},
+                    user_id=None,
+                    unique_name=True,
+                    repeat_delay=self._geolocate_accesses_frequency,
+                    session=session,
+                )
 
-        # Deleting old access logs. Wait a bit after startup
-        self.add_internal_job_delete_accesses(2.0)
-
-    def add_internal_job_delete_accesses(self, delay: float, *, session: Optional[Session] = None):
-        """
-        Adds an internal job to delete old access log entries
-        """
-
-        # Only add this if we are going to delete some
-        if self._access_log_keep <= 0 or not self._access_log_enabled:
-            return
-
-        with self.root_socket.optional_session(session) as session:
-            self.root_socket.internal_jobs.add(
-                "delete_old_access_log",
-                now_at_utc() + timedelta(seconds=delay),
-                "serverinfo.delete_old_access_logs",
-                {},
-                user_id=None,
-                unique_name=True,
-                after_function="serverinfo.add_internal_job_delete_accesses",
-                after_function_kwargs={"delay": self._delete_access_log_frequency},  # wait one day
-                session=session,
-            )
-
-    def add_internal_job_update_geoip2(self, delay: float, *, session: Optional[Session] = None):
-        """
-        Adds an internal job to update the geoip database
-        """
-
-        # Only add this if we have the maxmind license key
-        if not (self._geoip2_enabled and self._maxmind_license_key):
-            return
-
-        with self.root_socket.optional_session(session) as session:
-            self.root_socket.internal_jobs.add(
-                "update_geoip2_file",
-                now_at_utc() + timedelta(seconds=delay),
-                "serverinfo.update_geoip2_file",
-                {},
-                user_id=None,
-                unique_name=True,
-                after_function="serverinfo.add_internal_job_update_geoip2",
-                after_function_kwargs={"delay": self._update_geoip2_frequency},  # wait one day
-                session=session,
-            )
-
-    def add_internal_job_geolocate_accesses(self, delay: float, *, session: Optional[Session] = None):
-        """
-        Adds an internal job to update the access log with geolocation information
-        """
-
-        if not self._geoip2_enabled:
-            return
-
-        with self.root_socket.optional_session(session) as session:
-            self.root_socket.internal_jobs.add(
-                "geolocate_accesses",
-                now_at_utc() + timedelta(seconds=delay),
-                "serverinfo.geolocate_accesses",
-                {},
-                user_id=None,
-                unique_name=True,
-                after_function="serverinfo.add_internal_job_geolocate_accesses",
-                after_function_kwargs={"delay": self._geolocate_accesses_frequency},  # wait 2 minutes
-                session=session,
-            )
+            # Deleting old access logs
+            if self._access_log_keep > 0 and self._access_log_enabled:
+                self.root_socket.internal_jobs.add(
+                    "delete_old_access_log",
+                    now_at_utc() + timedelta(seconds=2.0),
+                    "serverinfo.delete_old_access_logs",
+                    {},
+                    user_id=None,
+                    unique_name=True,
+                    repeat_delay=self._delete_access_log_frequency,
+                    session=session,
+                )
 
     def update_geoip2_file(self) -> None:
         # Possible to reach this if we changed the settings, but have a job still in the queue
