@@ -2,7 +2,18 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, ForeignKey, String, UniqueConstraint, Index, Boolean, event, DDL
+from sqlalchemy import (
+    Column,
+    Integer,
+    ForeignKey,
+    String,
+    UniqueConstraint,
+    CheckConstraint,
+    Index,
+    Boolean,
+    event,
+    DDL,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.orm import relationship
@@ -67,6 +78,7 @@ class NEBSpecificationORM(BaseORM):
     id = Column(Integer, primary_key=True)
 
     program = Column(String(100), nullable=False)
+    specification_hash = Column(String, nullable=False)
 
     singlepoint_specification_id = Column(Integer, ForeignKey(QCSpecificationORM.id), nullable=False)
     singlepoint_specification = relationship(QCSpecificationORM, lazy="joined", uselist=False)
@@ -75,23 +87,29 @@ class NEBSpecificationORM(BaseORM):
     optimization_specification = relationship(OptimizationSpecificationORM, lazy="joined")
 
     keywords = Column(JSONB, nullable=False)
-    keywords_hash = Column(String, nullable=False)
+    protocols = Column(JSONB, nullable=False)
 
     __table_args__ = (
         UniqueConstraint(
-            "program",
+            "specification_hash",
             "singlepoint_specification_id",
             "optimization_specification_id",
-            "keywords_hash",
             name="ux_neb_specification_keys",
         ),
         Index("ix_neb_specification_program", "program"),
         Index("ix_neb_specification_singlepoint_specification_id", "singlepoint_specification_id"),
         Index("ix_neb_specification_optimization_specification_id", "optimization_specification_id"),
-        # Enforce lowercase on some fields
+        CheckConstraint("program = LOWER(program)", name="ck_neb_specification_program_lower"),
     )
 
-    _qcportal_model_excludes = ["id", "keywords_hash", "singlepoint_specification_id", "optimization_specification_id"]
+    # TODO - protocols will eventually be in the model
+    _qcportal_model_excludes = [
+        "id",
+        "specification_hash",
+        "singlepoint_specification_id",
+        "optimization_specification_id",
+        "protocols",
+    ]
 
     @property
     def short_description(self) -> str:

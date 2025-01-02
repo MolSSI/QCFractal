@@ -48,22 +48,23 @@ class ReactionSpecificationORM(BaseORM):
     __tablename__ = "reaction_specification"
 
     id = Column(Integer, primary_key=True)
+    specification_hash = Column(String, nullable=False)
 
     program = Column(String, nullable=False)
     singlepoint_specification_id = Column(Integer, ForeignKey(QCSpecificationORM.id), nullable=True)
     optimization_specification_id = Column(Integer, ForeignKey(OptimizationSpecificationORM.id), nullable=True)
+
     keywords = Column(JSONB, nullable=False)
-    keywords_hash = Column(String, nullable=False)
+    protocols = Column(JSONB, nullable=False)
 
     singlepoint_specification = relationship(QCSpecificationORM, lazy="joined")
     optimization_specification = relationship(OptimizationSpecificationORM, lazy="joined")
 
     __table_args__ = (
         UniqueConstraint(
-            "program",
+            "specification_hash",
             "singlepoint_specification_id",
             "optimization_specification_id",
-            "keywords_hash",
             name="ux_reaction_specification_keys",
         ),
         Index("ix_reaction_specification_program", "program"),
@@ -76,7 +77,14 @@ class ReactionSpecificationORM(BaseORM):
         ),
     )
 
-    _qcportal_model_excludes = ["id", "keywords_hash", "singlepoint_specification_id", "optimization_specification_id"]
+    # TODO - protocols will eventually be in the model
+    _qcportal_model_excludes = [
+        "id",
+        "specification_hash",
+        "singlepoint_specification_id",
+        "optimization_specification_id",
+        "protocols",
+    ]
 
     @property
     def short_description(self) -> str:
