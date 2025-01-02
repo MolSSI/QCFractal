@@ -35,7 +35,7 @@ from qcportal.torsiondrive import (
     TorsiondriveSpecification,
     TorsiondriveQueryFilters,
 )
-from qcportal.utils import hash_dict
+from qcportal.utils import hash_dict, is_included
 from .record_db_models import (
     TorsiondriveSpecificationORM,
     TorsiondriveInitialMoleculeORM,
@@ -443,19 +443,19 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         options = []
         if include:
             # Initial molecules will get both the ids and the actual molecule
-            if "**" in include or "initial_molecules" in include:
+            if is_included("initial_molecules", include, exclude, False):
                 options.append(
                     selectinload(TorsiondriveRecordORM.initial_molecules).joinedload(
                         TorsiondriveInitialMoleculeORM.molecule
                     )
                 )
-            elif "initial_molecules_ids" in include:
+            elif is_included("initial_molecules_ids", include, exclude, False):
                 options.append(selectinload(TorsiondriveRecordORM.initial_molecules))
 
-            if "**" in include or "optimizations" in include:
+            if is_included("optimizations", include, exclude, False):
                 options.append(selectinload(TorsiondriveRecordORM.optimizations))
 
-            if "**" in include or "minimum_optimizations" in include:
+            if is_included("minimum_optimizations", include, exclude, False):
                 options.append(undefer(TorsiondriveRecordORM.minimum_optimizations))
 
         with self.root_socket.optional_session(session, True) as session:

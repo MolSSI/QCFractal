@@ -20,7 +20,7 @@ from qcportal.reaction import (
     ReactionQueryFilters,
 )
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
-from qcportal.utils import hash_dict
+from qcportal.utils import hash_dict, is_included
 from .record_db_models import ReactionComponentORM, ReactionSpecificationORM, ReactionRecordORM
 from ..record_socket import BaseRecordSocket
 
@@ -458,7 +458,7 @@ class ReactionRecordSocket(BaseRecordSocket):
         options = []
 
         if include:
-            if "**" in include or "components" in include:
+            if is_included("components", include, exclude, False):
                 options.append(
                     selectinload(ReactionRecordORM.components).options(selectinload(ReactionComponentORM.molecule))
                 )

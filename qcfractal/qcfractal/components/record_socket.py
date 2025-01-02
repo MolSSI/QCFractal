@@ -30,7 +30,7 @@ from qcportal.exceptions import UserReportableError, MissingDataError
 from qcportal.managers.models import ManagerStatusEnum
 from qcportal.metadata_models import DeleteMetadata, UpdateMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
-from qcportal.utils import chunk_iterable, now_at_utc
+from qcportal.utils import chunk_iterable, now_at_utc, is_included
 from .record_db_models import (
     RecordComputeHistoryORM,
     BaseRecordORM,
@@ -841,19 +841,22 @@ class RecordSocket:
     ):
         options = []
         if include is not None:
-            if "**" in include or "compute_history" in include or "outputs" in include:
+            include_history = is_included("compute_history", include, exclude, False)
+            include_outputs = is_included("outputs", include, exclude, False)
+
+            if include_history or include_outputs:
                 options.append(selectinload(orm_type.compute_history))
-            if "**" in include or "outputs" in include:
+            if include_outputs:
                 options.append(
                     selectinload(orm_type.compute_history, RecordComputeHistoryORM.outputs).undefer(OutputStoreORM.data)
                 )
-            if "**" in include or "task" in include:
+            if is_included("task", include, exclude, False):
                 options.append(joinedload(orm_type.task))
-            if "**" in include or "service" in include:
+            if is_included("service", include, exclude, False):
                 options.append(joinedload(orm_type.service))
-            if "**" in include or "comments" in include:
+            if is_included("comments", include, exclude, False):
                 options.append(selectinload(orm_type.comments))
-            if "**" in include or "native_files" in include:
+            if is_included("native_files", include, exclude, False):
                 options.append(selectinload(orm_type.native_files).options(undefer(NativeFileORM.data)))
 
         if additional_options:
