@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import concurrent.futures
 import datetime
+import functools
 import io
 import itertools
 import json
@@ -10,7 +11,7 @@ import math
 import time
 from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from hashlib import sha256
-from typing import Optional, Union, Sequence, List, TypeVar, Any, Dict, Generator, Iterable, Callable, Set
+from typing import Optional, Union, Sequence, List, TypeVar, Any, Dict, Generator, Iterable, Callable, Set, Tuple
 
 import numpy as np
 
@@ -359,3 +360,35 @@ def now_at_utc() -> datetime.datetime:
     # Note that the utcnow() function is deprecated, and does not result in a
     # timezone-aware datetime object
     return datetime.datetime.now(datetime.timezone.utc)
+
+
+@functools.lru_cache
+def _is_included(
+    key: str, include: Optional[Tuple[str, ...]], exclude: Optional[Tuple[str, ...]], default: bool
+) -> bool:
+    if exclude is None:
+        exclude = []
+
+    if include is not None:
+        in_include = ("*" in include and default) or "**" in include or key in include
+    else:
+        in_include = default
+
+    in_exclude = key in exclude
+
+    return in_include and not in_exclude
+
+
+def is_included(key: str, include: Optional[Iterable[str]], exclude: Optional[Iterable[str]], default: bool) -> bool:
+    """
+    Determine if a field should be included given the include and exclude lists
+
+    Handles "*" and "**" as well
+    """
+
+    if include is not None:
+        include = tuple(sorted(include))
+    if exclude is not None:
+        exclude = tuple(sorted(exclude))
+
+    return _is_included(key, include, exclude, default)

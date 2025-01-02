@@ -23,7 +23,7 @@ from qcportal.serialization import convert_numpy_recursive
 from qcportal.singlepoint import (
     SinglepointDriver,
 )
-from qcportal.utils import hash_dict
+from qcportal.utils import hash_dict, is_included
 from .record_db_models import OptimizationSpecificationORM, OptimizationRecordORM, OptimizationTrajectoryORM
 from ..record_socket import BaseRecordSocket
 
@@ -256,11 +256,11 @@ class OptimizationRecordSocket(BaseRecordSocket):
     ) -> List[Optional[Dict[str, Any]]]:
         options = []
         if include:
-            if "**" in include or "initial_molecule" in include:
+            if is_included("initial_molecule", include, exclude, False):
                 options.append(joinedload(OptimizationRecordORM.initial_molecule))
-            if "**" in include or "final_molecule" in include:
+            if is_included("final_molecule", include, exclude, False):
                 options.append(joinedload(OptimizationRecordORM.final_molecule))
-            if "**" in include or "trajectory" in include or "trajectory_ids" in include:
+            if is_included("trajectory", include, exclude, False):
                 options.append(selectinload(OptimizationRecordORM.trajectory))
 
         with self.root_socket.optional_session(session, True) as session:

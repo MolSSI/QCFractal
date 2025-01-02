@@ -11,7 +11,7 @@ from typing_extensions import Literal
 from qcportal.cache import get_records_with_cache
 from qcportal.molecules import Molecule
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
-from qcportal.utils import recursive_normalizer
+from qcportal.utils import recursive_normalizer, is_included
 from ..optimization.record_models import OptimizationRecord, OptimizationSpecification
 from ..singlepoint.record_models import QCSpecification, SinglepointRecord
 
@@ -163,8 +163,8 @@ class NEBRecord(BaseRecord):
         assert records
         assert all(isinstance(x, NEBRecord) for x in records)
 
-        do_sp = "singlepoints" in include or "**" in include
-        do_opt = "optimizations" in include or "**" in include
+        do_sp = is_included("singlepoints", include, None, False)
+        do_opt = is_included("optimizations", include, None, False)
 
         if not do_sp and not do_opt:
             return

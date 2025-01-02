@@ -1,4 +1,4 @@
-from qcportal.utils import chunk_iterable, seconds_to_hms
+from qcportal.utils import chunk_iterable, seconds_to_hms, is_included
 
 
 def test_chunk_iterable():
@@ -27,3 +27,34 @@ def test_seconds_to_hms():
 
     assert seconds_to_hms(31.0) == "00:00:31.00"
     assert seconds_to_hms(3670.12) == "01:01:10.12"
+
+
+def test_is_included():
+    assert is_included("test", None, None, True) is True
+    assert is_included("test", None, None, False) is False
+    assert is_included("test", None, [], True) is True
+    assert is_included("test", None, [], False) is False
+
+    assert is_included("test", [], [], True) is False
+    assert is_included("test", [], [], False) is False
+
+    for d in (True, False):
+        assert is_included("test", ["test"], None, d) is True
+        assert is_included("test", ["test"], [], d) is True
+        assert is_included("test", ["**"], None, d) is True
+        assert is_included("test", ["**"], [], d) is True
+        assert is_included("test", ["*"], None, d) is d
+        assert is_included("test", ["*"], [], d) is d
+
+    for d in (True, False):
+        assert is_included("test", [], None, d) is False
+        assert is_included("test", ["test2"], None, d) is False
+
+    # Being in exclude overrides all
+    for d in (True, False):
+        assert is_included("test", None, ["test"], d) is False
+        assert is_included("test", [], ["test"], d) is False
+        assert is_included("test", ["*"], ["test"], d) is False
+        assert is_included("test", ["**"], ["test"], d) is False
+        assert is_included("test", ["test"], ["test"], d) is False
+        assert is_included("test", ["test2"], ["test"], d) is False

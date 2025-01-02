@@ -18,6 +18,7 @@ from typing_extensions import Literal
 from typing import Iterable
 
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters, RecordStatusEnum
+from qcportal.utils import is_included
 from qcportal.cache import get_records_with_cache
 from qcportal.singlepoint import SinglepointProtocols, SinglepointRecord, QCSpecification, SinglepointDriver
 
@@ -79,7 +80,7 @@ class OptimizationRecord(BaseRecord):
         assert records
         assert all(isinstance(x, OptimizationRecord) for x in records)
 
-        if "trajectory" in include or "**" in include:
+        if is_included("trajectory", include, None, False):
             # collect all singlepoint ids for all optimizations
             sp_ids = set()
             for r in records:

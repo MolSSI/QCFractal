@@ -113,8 +113,10 @@ class BaseDataset(BaseModel):
     # All local cache data. May be backed by memory or disk
     _cache_data: DatasetCache = PrivateAttr()
 
-    # Values computed outside QCA
-    _contributed_values: Optional[Dict[str, ContributedValues]] = PrivateAttr(None)
+    ######################################################
+    # Fields not always included when fetching the dataset
+    ######################################################
+    contributed_values_: Optional[Dict[str, ContributedValues]] = Field(None, alias="contributed_values")
 
     #############################
     # Private non-pydantic fields
@@ -902,10 +904,11 @@ class BaseDataset(BaseModel):
 
         # Update the locally-stored metadata for these dataset records
         # zip(record_info, records) = ((entry_name, spec_name, record_id), record)
-        update_info = [(ename, sname, r) for (ename, sname, _), r in zip(record_info, records)]
+        update_records = [(ename, sname, r) for (ename, sname, _), r in zip(record_info, records)]
+        update_info = [(ename, sname, r.id) for (ename, sname, r) in update_records]
         self._cache_data.update_dataset_records(update_info)
 
-        return update_info
+        return update_records
 
     def _internal_update_records(
         self,
@@ -1698,7 +1701,7 @@ class BaseDataset(BaseModel):
         self.assert_is_not_view()
         self.assert_online()
 
-        self._contributed_values = self._client.make_request(
+        self.contributed_values_ = self._client.make_request(
             "get",
             f"api/v1/datasets/{self.id}/contributed_values",
             Optional[Dict[str, ContributedValues]],
@@ -1706,10 +1709,10 @@ class BaseDataset(BaseModel):
 
     @property
     def contributed_values(self) -> Dict[str, ContributedValues]:
-        if not self.contributed_values:
+        if not self.contributed_values_:
             self.fetch_contributed_values()
 
-        return self.contributed_values
+        return self.contributed_values_
 
 
 class DatasetAddBody(RestModelBase):

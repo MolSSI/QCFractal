@@ -13,7 +13,7 @@ from typing_extensions import Literal
 from qcportal.molecules import Molecule
 from qcportal.optimization.record_models import OptimizationSpecification, OptimizationRecord
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
-from qcportal.utils import recursive_normalizer
+from qcportal.utils import recursive_normalizer, is_included
 from qcportal.cache import get_records_with_cache
 
 
@@ -225,7 +225,7 @@ class GridoptimizationRecord(BaseRecord):
         assert all(isinstance(x, GridoptimizationRecord) for x in records)
 
         # Collect optimization id for all grid optimizations
-        if "optimizations" in include or "**" in include:
+        if is_included("optimizations", include, None, False):
             opt_ids = set()
             for r in records:
                 if r.optimizations_:

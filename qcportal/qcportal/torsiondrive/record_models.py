@@ -12,7 +12,7 @@ from typing_extensions import Literal
 from qcportal.molecules import Molecule
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
 from qcportal.cache import get_records_with_cache
-from qcportal.utils import recursive_normalizer
+from qcportal.utils import recursive_normalizer, is_included
 from ..optimization.record_models import OptimizationSpecification, OptimizationRecord
 
 
@@ -160,8 +160,8 @@ class TorsiondriveRecord(BaseRecord):
         assert records
         assert all(isinstance(x, TorsiondriveRecord) for x in records)
 
-        do_opt = "optimizations" in include or "**" in include
-        do_minopt = "minimum_optimizations" in include or "**" in include
+        do_opt = is_included("optimizations", include, None, False)
+        do_minopt = is_included("minimum_optimizations", include, None, False)
 
         if not do_opt and not do_minopt:
             return

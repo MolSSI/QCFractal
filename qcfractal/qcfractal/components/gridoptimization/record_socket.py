@@ -13,7 +13,6 @@ try:
 except ImportError:
     from pydantic import BaseModel, Extra, parse_obj_as
 from sqlalchemy import select, func
-from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import lazyload, joinedload, selectinload, undefer, defer
 
 from qcfractal import __version__ as qcfractal_version
@@ -34,7 +33,7 @@ from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
 from qcportal.optimization import OptimizationSpecification
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
-from qcportal.utils import hash_dict
+from qcportal.utils import hash_dict, is_included
 from .record_db_models import (
     GridoptimizationSpecificationORM,
     GridoptimizationOptimizationORM,
@@ -525,11 +524,11 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         options = []
 
         if include:
-            if "**" in include or "initial_molecule" in include:
+            if is_included("initial_molecule", include, exclude, False):
                 options.append(joinedload(GridoptimizationRecordORM.initial_molecule))
-            if "**" in include or "starting_molecule" in include:
+            if is_included("starting_molecule", include, exclude, False):
                 options.append(joinedload(GridoptimizationRecordORM.starting_molecule))
-            if "**" in include or "optimizations" in include:
+            if is_included("optimizations", include, exclude, False):
                 options.append(selectinload(GridoptimizationRecordORM.optimizations))
 
         with self.root_socket.optional_session(session, True) as session:

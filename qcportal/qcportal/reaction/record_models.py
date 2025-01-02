@@ -9,6 +9,7 @@ except ImportError:
 from typing_extensions import Literal
 
 from qcportal.molecules import Molecule
+from qcportal.utils import is_included
 from qcportal.cache import get_records_with_cache
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
 from ..optimization.record_models import OptimizationRecord, OptimizationSpecification
@@ -112,7 +113,7 @@ class ReactionRecord(BaseRecord):
         assert records
         assert all(isinstance(x, ReactionRecord) for x in records)
 
-        if "components" in include or "**" in include:
+        if is_included("components", include, None, False):
             # collect all singlepoint * optimization ids for all optimization
             sp_ids = set()
             opt_ids = set()

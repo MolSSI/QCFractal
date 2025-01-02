@@ -32,8 +32,7 @@ from qcportal.optimization import OptimizationSpecification
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
 from qcportal.serialization import convert_numpy_recursive
 from qcportal.singlepoint import QCSpecification
-from qcportal.utils import capture_all_output
-from qcportal.utils import hash_dict
+from qcportal.utils import capture_all_output, hash_dict, is_included
 from .record_db_models import (
     NEBOptimizationsORM,
     NEBSpecificationORM,
@@ -620,11 +619,11 @@ class NEBRecordSocket(BaseRecordSocket):
         options = []
 
         if include:
-            if "**" in include or "initial_chain" in include:
+            if is_included("initial_chain", include, exclude, False):
                 options.append(selectinload(NEBRecordORM.initial_chain).joinedload(NEBInitialchainORM.molecule))
-            if "**" in include or "singlepoints" in include:
+            if is_included("singlepoints", include, exclude, False):
                 options.append(selectinload(NEBRecordORM.singlepoints))
-            if "**" in include or "optimizations" in include:
+            if is_included("optimizations", include, exclude, False):
                 options.append(selectinload(NEBRecordORM.optimizations))
 
         with self.root_socket.optional_session(session, True) as session:

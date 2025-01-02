@@ -19,7 +19,7 @@ from qcportal.singlepoint import (
     WavefunctionProperties,
     SinglepointQueryFilters,
 )
-from qcportal.utils import hash_dict
+from qcportal.utils import hash_dict, is_included
 from .record_db_models import QCSpecificationORM, SinglepointRecordORM, WavefunctionORM
 from ..record_socket import BaseRecordSocket
 
@@ -264,9 +264,9 @@ class SinglepointRecordSocket(BaseRecordSocket):
     ) -> List[Optional[Dict[str, Any]]]:
         options = []
         if include:
-            if "**" in include or "molecule" in include:
+            if is_included("molecule", include, exclude, False):
                 options.append(joinedload(SinglepointRecordORM.molecule))
-            if "**" in include or "wavefunction" in include:
+            if is_included("wavefunction", include, exclude, False):
                 options.append(joinedload(SinglepointRecordORM.wavefunction).undefer(WavefunctionORM.data))
 
         with self.root_socket.optional_session(session, True) as session:

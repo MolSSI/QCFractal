@@ -419,10 +419,8 @@ class DatasetCache(RecordCache):
 
         return all_records
 
-    def update_dataset_records(self, record_info: Iterable[Tuple[str, str, _RECORD_T]]):
+    def update_dataset_records(self, record_info: Iterable[Tuple[str, str, int]]):
         self._assert_writable()
-
-        assert all(isinstance(r, self._record_type) for _, _, r in record_info)
 
         with self._conn:
             for info_batch in chunk_iterable(record_info, 10):
@@ -430,8 +428,8 @@ class DatasetCache(RecordCache):
                 values_params = ",".join(["(?, ?, ?)"] * n_batch)
 
                 all_params = []
-                for e, s, r in info_batch:
-                    all_params.extend((e, s, r.id))
+                for e, s, rid in info_batch:
+                    all_params.extend((e, s, rid))
 
                 stmt = f"""REPLACE INTO dataset_records (entry_name, specification_name, record_id)
                           VALUES {values_params}"""
