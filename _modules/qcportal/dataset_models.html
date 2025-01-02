@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.dataset_models &#8212; QCArchive 0.57.post35+gc1667871 documentation</title>
+    <title>qcportal.dataset_models &#8212; QCArchive 0.57.post41+gbf839b2d documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=49fe4000"></script>
+    <script src="../../_static/documentation_options.js?v=72eee364"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.57.post35+gc1667871" />
+  <meta name="docsearch:version" content="0.57.post41+gbf839b2d" />
   </head>
   
   
@@ -555,8 +555,10 @@
     <span class="c1"># All local cache data. May be backed by memory or disk</span>
     <span class="n">_cache_data</span><span class="p">:</span> <span class="n">DatasetCache</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">()</span>
 
-    <span class="c1"># Values computed outside QCA</span>
-    <span class="n">_contributed_values</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ContributedValues</span><span class="p">]]</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+    <span class="c1">######################################################</span>
+    <span class="c1"># Fields not always included when fetching the dataset</span>
+    <span class="c1">######################################################</span>
+    <span class="n">contributed_values_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ContributedValues</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;contributed_values&quot;</span><span class="p">)</span>
 
     <span class="c1">#############################</span>
     <span class="c1"># Private non-pydantic fields</span>
@@ -1434,10 +1436,11 @@
 
         <span class="c1"># Update the locally-stored metadata for these dataset records</span>
         <span class="c1"># zip(record_info, records) = ((entry_name, spec_name, record_id), record)</span>
-        <span class="n">update_info</span> <span class="o">=</span> <span class="p">[(</span><span class="n">ename</span><span class="p">,</span> <span class="n">sname</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">ename</span><span class="p">,</span> <span class="n">sname</span><span class="p">,</span> <span class="n">_</span><span class="p">),</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">record_info</span><span class="p">,</span> <span class="n">records</span><span class="p">)]</span>
+        <span class="n">update_records</span> <span class="o">=</span> <span class="p">[(</span><span class="n">ename</span><span class="p">,</span> <span class="n">sname</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">ename</span><span class="p">,</span> <span class="n">sname</span><span class="p">,</span> <span class="n">_</span><span class="p">),</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">record_info</span><span class="p">,</span> <span class="n">records</span><span class="p">)]</span>
+        <span class="n">update_info</span> <span class="o">=</span> <span class="p">[(</span><span class="n">ename</span><span class="p">,</span> <span class="n">sname</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">ename</span><span class="p">,</span> <span class="n">sname</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span> <span class="ow">in</span> <span class="n">update_records</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">update_dataset_records</span><span class="p">(</span><span class="n">update_info</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">update_info</span>
+        <span class="k">return</span> <span class="n">update_records</span>
 
     <span class="k">def</span> <span class="nf">_internal_update_records</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -2271,7 +2274,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_contributed_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contributed_values_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
             <span class="s2">&quot;get&quot;</span><span class="p">,</span>
             <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/contributed_values&quot;</span><span class="p">,</span>
             <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ContributedValues</span><span class="p">]],</span>
@@ -2280,10 +2283,10 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">contributed_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ContributedValues</span><span class="p">]:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">contributed_values</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">contributed_values_</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fetch_contributed_values</span><span class="p">()</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">contributed_values</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">contributed_values_</span></div>
 
 
 
