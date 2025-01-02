@@ -23,7 +23,6 @@ from ..record_socket import BaseRecordSocket
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from qcfractal.components.internal_jobs.status import JobProgress
     from typing import List, Dict, Tuple, Optional, Any, Union, Sequence
 
 
@@ -78,7 +77,7 @@ class ServiceSocket:
         session.commit()
         self.root_socket.notify_finished_watch(service_orm.record_id, RecordStatusEnum.complete)
 
-    def _iterate_service(self, session: Session, job_progress: JobProgress, service_id: int) -> bool:
+    def _iterate_service(self, session: Session, service_id: int) -> bool:
         """
         Iterate a single service given its service id
 
@@ -86,8 +85,6 @@ class ServiceSocket:
         -----------
         session
             An existing SQLAlchemy session to use. This session will be committed at the end of this function
-        job_progress
-            An object used to report the current job progress and status
         service_id
             ID of the service to iterate (not the record ID)
 
@@ -151,7 +148,7 @@ class ServiceSocket:
             session.commit()
             return False
 
-    def iterate_services(self, session: Session, job_progress: JobProgress) -> int:
+    def iterate_services(self, session: Session) -> int:
         """
         Check for services that have their dependencies finished, and then either queue them for iteration
         or mark them as errored
@@ -166,8 +163,6 @@ class ServiceSocket:
         ----------
         session
             An existing SQLAlchemy session to use. This session will be periodically committed
-        job_progress
-            An object used to report the current job progress and status
 
         Returns
         -------

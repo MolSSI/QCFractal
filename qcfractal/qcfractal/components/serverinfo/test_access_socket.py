@@ -6,7 +6,6 @@ import pytest
 
 from qcarchivetesting import load_ip_test_data, ip_tests_enabled
 from qcarchivetesting.testing_classes import QCATestingSnowflake
-from qcfractal.testing_helpers import DummyJobProgress
 from qcportal.serverinfo.models import AccessLogQueryFilters
 from qcportal.utils import now_at_utc
 
@@ -120,7 +119,7 @@ def test_serverinfo_socket_save_access(secure_snowflake: QCATestingSnowflake):
 
     # Update the IP addresses with geo data
     with storage_socket.session_scope() as session:
-        storage_socket.serverinfo.geolocate_accesses(session, DummyJobProgress())
+        storage_socket.serverinfo.geolocate_accesses(session)
 
     accesses = storage_socket.serverinfo.query_access_log(AccessLogQueryFilters())
     assert len(accesses) >= 6

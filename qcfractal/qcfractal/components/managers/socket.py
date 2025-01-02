@@ -5,10 +5,9 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
 from sqlalchemy import and_, update, select
-from sqlalchemy.orm import selectinload, defer, undefer, lazyload, joinedload
 
 from qcfractal.db_socket.helpers import get_query_proj_options, get_count, get_general
-from qcportal.exceptions import MissingDataError, ComputeManagerError
+from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerStatusEnum, ManagerName, ManagerQueryFilters
 from qcportal.utils import now_at_utc
 from .db_models import ComputeManagerORM
@@ -16,7 +15,6 @@ from .db_models import ComputeManagerORM
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from qcfractal.components.internal_jobs.status import JobProgress
     from typing import List, Iterable, Optional, Sequence, Sequence, Dict, Any
 
 
@@ -298,7 +296,7 @@ class ManagerSocket:
 
         return result_dicts
 
-    def check_manager_heartbeats(self, session: Session, job_progress: JobProgress) -> None:
+    def check_manager_heartbeats(self, session: Session) -> None:
         """
         Checks for manager heartbeats
 

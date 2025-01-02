@@ -5,6 +5,8 @@ import time
 import uuid
 from typing import TYPE_CHECKING
 
+import pytest
+
 from qcfractal.components.internal_jobs.db_models import InternalJobORM
 from qcfractal.components.internal_jobs.socket import InternalJobSocket
 from qcportal.internal_jobs import InternalJobStatusEnum
@@ -16,11 +18,13 @@ if TYPE_CHECKING:
 
 
 # Add in another function to the internal_jobs socket for testing
-def dummmy_internal_job(self, iterations: int, session, job_progress):
+def dummy_internal_job(self, iterations: int, session, job_progress):
+    assert session is not None
+    assert job_progress is not None
     for i in range(iterations):
         time.sleep(1.0)
         job_progress.update_progress(100 * ((i + 1) / iterations))
-        print("Dummy internal job counter ", i)
+        # print("Dummy internal job counter ", i)
 
         if job_progress.cancelled():
             return "Internal job cancelled"
@@ -28,7 +32,18 @@ def dummmy_internal_job(self, iterations: int, session, job_progress):
     return "Internal job finished"
 
 
-setattr(InternalJobSocket, "dummy_job", dummmy_internal_job)
+# Add in another function to the internal_jobs socket for testing
+# This one doesn't have session or job_progress
+def dummy_internal_job_2(self, iterations: int):
+    for i in range(iterations):
+        time.sleep(1.0)
+        # print("Dummy internal job counter ", i)
+
+    return "Internal job finished"
+
+
+setattr(InternalJobSocket, "dummy_job", dummy_internal_job)
+setattr(InternalJobSocket, "dummy_job_2", dummy_internal_job_2)
 
 
 def test_internal_jobs_socket_add_unique(storage_socket: SQLAlchemySocket):
@@ -59,9 +74,10 @@ def test_internal_jobs_socket_add_non_unique(storage_socket: SQLAlchemySocket):
     assert len({id_1, id_2, id_3}) == 3
 
 
-def test_internal_jobs_socket_run(storage_socket: SQLAlchemySocket, session: Session):
+@pytest.mark.parametrize("job_func", ("internal_jobs.dummy_job", "internal_jobs.dummy_job_2"))
+def test_internal_jobs_socket_run(storage_socket: SQLAlchemySocket, session: Session, job_func: str):
     id_1 = storage_socket.internal_jobs.add(
-        "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
+        "dummy_job", now_at_utc(), job_func, {"iterations": 10}, None, unique_name=False
     )
 
     # Faster updates for testing
@@ -77,8 +93,12 @@ def test_internal_jobs_socket_run(storage_socket: SQLAlchemySocket, session: Ses
     try:
         job_1 = session.get(InternalJobORM, id_1)
         assert job_1.status == InternalJobStatusEnum.running
-        assert job_1.progress > 10
         assert time_0 < job_1.last_updated < time_1
+
+        if job_func == "internal_jobs.dummy_job":
+            assert job_1.progress > 10
+        else:
+            assert job_1.progress == 0
 
         time.sleep(8)
         time_2 = now_at_utc()

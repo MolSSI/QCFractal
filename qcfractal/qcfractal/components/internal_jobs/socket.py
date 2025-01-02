@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 import logging
 import select as io_select
 import traceback
@@ -289,7 +290,7 @@ class InternalJobSocket:
         with self.root_socket.optional_session(session) as session:
             session.execute(stmt)
 
-    def delete_old_internal_jobs(self, session: Session, job_progress: JobProgress) -> None:
+    def delete_old_internal_jobs(self, session: Session) -> None:
         """
         Deletes old internal jobs (as defined by the configuration)
         """
@@ -343,7 +344,20 @@ class InternalJobSocket:
 
             # Function must be part of the sockets
             func = func_attr(self.root_socket)
-            result = func(**job_orm.kwargs, job_progress=job_progress, session=session)
+
+            # We need to determine the parameters of this function
+            func_params = inspect.signature(func).parameters
+
+            add_kwargs = {}
+
+            # If the function has a "job_progress" and/or "session" args, pass those in
+            if "job_progress" in func_params:
+                add_kwargs["job_progress"] = job_progress
+
+            if "session" in func_params:
+                add_kwargs["session"] = session
+
+            result = func(**job_orm.kwargs, **add_kwargs)
 
             # Mark complete, unless this was cancelled
             if not job_progress.cancelled():

@@ -19,7 +19,6 @@ from qcfractal.components.singlepoint.testing_helpers import (
 )
 from qcfractal.components.testing_helpers import populate_records_status
 from qcfractal.components.torsiondrive.testing_helpers import submit_test_data as submit_td_test_data
-from qcfractal.testing_helpers import DummyJobProgress
 from qcportal import PortalRequestError
 from qcportal.molecules import Molecule
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
@@ -269,10 +268,10 @@ def test_record_client_modify_service(snowflake: QCATestingSnowflake):
     rec_id, _ = submit_td_test_data(storage_socket, "td_H2O2_mopac_pm6", "test_tag", PriorityEnum.high)
 
     with storage_socket.session_scope() as s:
-        storage_socket.services.iterate_services(s, DummyJobProgress())
+        storage_socket.services.iterate_services(s)
 
         svc_id = s.get(BaseRecordORM, rec_id).service.id
-        storage_socket.services._iterate_service(s, DummyJobProgress(), svc_id)
+        storage_socket.services._iterate_service(s, svc_id)
 
     with storage_socket.session_scope() as session:
         rec = session.get(BaseRecordORM, rec_id)
