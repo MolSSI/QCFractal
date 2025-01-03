@@ -94,7 +94,10 @@ def wrap_route(
             # Now call the function, and validate the output
             ret = fn(*args, **kwargs)
 
-            # Serialize the output
+            # Serialize the output it it's not a normal flask response
+            if isinstance(ret, Response):
+                return ret
+
             serialized = serialize(ret, accept_type)
             return Response(serialized, content_type=accept_type)
 
