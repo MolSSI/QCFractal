@@ -100,6 +100,7 @@ class SQLAlchemySocket:
         from ..components.managers.socket import ManagerSocket
         from ..components.tasks.socket import TaskSocket
         from ..components.services.socket import ServiceSocket
+        from ..components.external_files import ExternalFileSocket
         from ..components.record_socket import RecordSocket
         from ..components.dataset_socket import DatasetSocket
 
@@ -111,6 +112,7 @@ class SQLAlchemySocket:
         self.molecules = MoleculeSocket(self)
         self.datasets = DatasetSocket(self)
         self.records = RecordSocket(self)
+        self.external_files = ExternalFileSocket(self)
         self.tasks = TaskSocket(self)
         self.services = ServiceSocket(self)
         self.managers = ManagerSocket(self)

@@ -324,6 +324,37 @@ class WebAPIConfig(ConfigBase):
         env_prefix = "QCF_API_"
 
 
+class S3BucketMap(ConfigBase):
+    dataset_attachment: str = Field("dataset_attachment", description="Bucket to hold dataset views")
+
+
+class S3Config(ConfigBase):
+    """
+    Settings for using external files with S3
+    """
+
+    enabled: bool = False
+    verify: bool = True
+    passthrough: bool = False
+    endpoint_url: Optional[str] = Field(None, description="S3 endpoint URL")
+    access_key_id: Optional[str] = Field(None, description="AWS/S3 access key")
+    secret_access_key: Optional[str] = Field(None, description="AWS/S3 secret key")
+
+    bucket_map: S3BucketMap = Field(S3BucketMap(), description="Configuration for where to store various files")
+
+    class Config(ConfigCommon):
+        env_prefix = "QCF_S3_"
+
+    @root_validator()
+    def _check_enabled(cls, values):
+        if values.get("enabled", False) is True:
+            for key in ["endpoint_url", "access_key_id", "secret_access_key"]:
+                if values.get(key, None) is None:
+                    raise ValueError(f"S3 enabled but {key} not set")
+
+        return values
+
+
 class FractalConfig(ConfigBase):
     """
     Fractal Server settings
@@ -332,6 +363,11 @@ class FractalConfig(ConfigBase):
     base_folder: str = Field(
         ...,
         description="The base directory to use as the default for some options (logs, etc). Default is the location of the config file.",
+    )
+
+    temporary_dir: Optional[str] = Field(
+        None,
+        description="Temporary directory to use for things such as view creation. If None, uses system default. This may require a lot of space!",
     )
 
     # Info for the REST interface
@@ -413,6 +449,7 @@ class FractalConfig(ConfigBase):
     # Other settings blocks
     database: DatabaseConfig = Field(..., description="Configuration of the settings for the database")
     api: WebAPIConfig = Field(..., description="Configuration of the REST interface")
+    s3: S3Config = Field(S3Config(), description="Configuration of the S3 file storage (optional)")
     api_limits: APILimitConfig = Field(..., description="Configuration of the limits to the api")
     auto_reset: AutoResetConfig = Field(..., description="Configuration for automatic resetting of tasks")
 
