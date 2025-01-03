@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict
 
 from flask import current_app, g
 
@@ -12,6 +12,7 @@ from qcportal.dataset_models import (
     DatasetFetchRecordsBody,
     DatasetFetchEntryBody,
     DatasetFetchSpecificationBody,
+    DatasetCreateViewBody,
     DatasetSubmitBody,
     DatasetDeleteStrBody,
     DatasetRecordModifyBody,
@@ -159,6 +160,24 @@ def get_dataset_computed_properties_v1(dataset_type: str, dataset_id: int):
 def modify_dataset_metadata_v1(dataset_type: str, dataset_id: int, body_data: DatasetModifyMetadata):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.update_metadata(dataset_id, new_metadata=body_data)
+
+
+#########################
+# Views
+#########################
+@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/create_view", methods=["POST"])
+@wrap_route("WRITE")
+def create_dataset_view_v1(dataset_type: str, dataset_id: int, body_data: DatasetCreateViewBody):
+    return storage_socket.datasets.add_create_view_attachment_job(
+        dataset_id,
+        dataset_type,
+        description=body_data.description,
+        provenance=body_data.provenance,
+        status=body_data.status,
+        include=body_data.include,
+        exclude=body_data.exclude,
+        include_children=body_data.include_children,
+    )
 
 
 #########################

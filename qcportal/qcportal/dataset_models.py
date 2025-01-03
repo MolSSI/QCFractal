@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 import os
 from datetime import datetime
+from enum import Enum
 from typing import (
     TYPE_CHECKING,
     Optional,
@@ -30,15 +31,29 @@ from tabulate import tabulate
 from tqdm import tqdm
 
 from qcportal.base_models import RestModelBase, validate_list_to_single, CommonBulkGetBody
-from qcportal.metadata_models import DeleteMetadata
-from qcportal.metadata_models import InsertMetadata
+from qcportal.internal_jobs import InternalJob
+from qcportal.metadata_models import DeleteMetadata, InsertMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, BaseRecord
 from qcportal.utils import make_list, chunk_iterable
 from qcportal.cache import DatasetCache, read_dataset_metadata, get_records_with_cache
+from qcportal.external_files import ExternalFile
 
 if TYPE_CHECKING:
     from qcportal.client import PortalClient
     from pandas import DataFrame
+
+
+class DatasetAttachmentType(str, Enum):
+    """
+    The type of attachment a file is for a dataset
+    """
+
+    other = "other"
+    view = "view"
+
+
+class DatasetAttachment(ExternalFile):
+    attached_type = DatasetAttachmentType
 
 
 class Citation(BaseModel):
@@ -103,6 +118,8 @@ class BaseDataset(BaseModel):
 
     metadata: Dict[str, Any]
     extras: Dict[str, Any]
+
+    attachments: List[DatasetAttachment]
 
     ########################################
     # Caches of information
@@ -319,6 +336,63 @@ class BaseDataset(BaseModel):
                 self._client.make_request(
                     "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/submit", Any, body=body_data
                 )
+
+    def create_view(
+        self,
+        description: str,
+        provenance: Dict[str, Any],
+        status: Optional[Iterable[RecordStatusEnum]] = None,
+        include: Optional[Iterable[str]] = None,
+        exclude: Optional[Iterable[str]] = None,
+        *,
+        include_children: bool = True,
+    ) -> InternalJob:
+        """
+        Creates a view of this dataset on the server
+
+        This function will return an :ref:`InternalJob` which can be used to watch
+        for completion if desired. The job will run server side without user interaction.
+
+        Note the ID field of the object if you with to retrieve this internal job later
+        (via :ref:`PortalClient.get_internal_job`)
+
+        Parameters
+        ----------
+        description
+            Optional string describing the view file
+        provenance
+            Dictionary with any metadata or other information about the view. Information regarding
+            the options used to create the view will be added.
+        status
+            List of statuses to include. Default is to include records with any status
+        include
+            List of specific record fields to include in the export. Default is to include most fields
+        exclude
+            List of specific record fields to exclude from the export. Defaults to excluding none.
+        include_children
+            Specifies whether child records associated with the main records should also be included (recursively)
+            in the view file.
+
+        Returns
+        -------
+        :
+            An :ref:`InternalJob` object which can be used to watch for completion.
+        """
+
+        body = DatasetCreateViewBody(
+            description=description,
+            provenance=provenance,
+            status=status,
+            include=include,
+            exclude=exclude,
+            include_children=include_children,
+        )
+
+        job_id = self._client.make_request(
+            "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/create_view", int, body=body
+        )
+
+        return self._client.get_internal_job(job_id)
 
     #########################################
     # Various properties and getters/setters
@@ -1784,6 +1858,15 @@ class DatasetFetchRecordsBody(RestModelBase):
     entry_names: List[str]
     specification_names: List[str]
     status: Optional[List[RecordStatusEnum]] = None
+
+
+class DatasetCreateViewBody(RestModelBase):
+    description: Optional[str]
+    provenance: Dict[str, Any]
+    status: Optional[List[RecordStatusEnum]] = (None,)
+    include: Optional[List[str]] = (None,)
+    exclude: Optional[List[str]] = (None,)
+    include_children: bool = (True,)
 
 
 class DatasetSubmitBody(RestModelBase):
