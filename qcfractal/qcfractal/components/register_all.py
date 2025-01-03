@@ -9,6 +9,7 @@ from .managers import db_models, routes
 from .tasks import db_models, routes
 from .services import db_models
 from .internal_jobs import db_models, routes
+from .external_files import db_models, routes
 
 from . import record_db_models, dataset_db_models, record_routes, dataset_routes
 from .singlepoint import record_db_models, dataset_db_models, routes
