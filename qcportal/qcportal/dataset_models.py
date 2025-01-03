@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 import os
 from datetime import datetime
+from enum import Enum
 from typing import (
     TYPE_CHECKING,
     Optional,
@@ -39,6 +40,15 @@ from qcportal.cache import DatasetCache, read_dataset_metadata, get_records_with
 if TYPE_CHECKING:
     from qcportal.client import PortalClient
     from pandas import DataFrame
+
+
+class DatasetAttachmentType(str, Enum):
+    """
+    The type of attachment a file is for a dataset
+    """
+
+    other = "other"
+    view = "view"
 
 
 class Citation(BaseModel):
