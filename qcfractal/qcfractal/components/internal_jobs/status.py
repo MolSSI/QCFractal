@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Optional
 import threading
 import weakref
 
@@ -26,6 +27,8 @@ class JobProgress:
             .returning(InternalJobORM.status, InternalJobORM.runner_uuid)
         )
         self._progress = 0
+        self._description = None
+
         self._cancelled = False
         self._deleted = False
 
@@ -45,7 +48,9 @@ class JobProgress:
     def _update_thread(self, session: Session, end_thread: threading.Event):
         while True:
             # Update progress
-            stmt = self._stmt.values(progress=self._progress, last_updated=now_at_utc())
+            stmt = self._stmt.values(
+                progress=self._progress, progress_description=self._description, last_updated=now_at_utc()
+            )
             ret = session.execute(stmt).one_or_none()
             session.commit()
 
@@ -80,8 +85,9 @@ class JobProgress:
     def stop(self):
         self._finalizer()
 
-    def update_progress(self, progress: int):
+    def update_progress(self, progress: int, description: Optional[str] = None):
         self._progress = progress
+        self._description = description
 
     def cancelled(self) -> bool:
         return self._cancelled

@@ -1,16 +1,19 @@
+import time
 from datetime import datetime
 from enum import Enum
 from typing import Optional, Dict, Any, List, Union
 
 from dateutil.parser import parse as date_parser
+from rich.jupyter import display
 
 try:
-    from pydantic.v1 import BaseModel, Extra, validator
+    from pydantic.v1 import BaseModel, Extra, validator, PrivateAttr
 except ImportError:
-    from pydantic import BaseModel, Extra, validator
+    from pydantic import BaseModel, Extra, validator, PrivateAttr
 
 from qcportal.base_models import QueryProjModelBase
 from ..base_models import QueryIteratorBase
+from tqdm import tqdm
 
 
 class InternalJobStatusEnum(str, Enum):
@@ -57,6 +60,7 @@ class InternalJob(BaseModel):
     repeat_delay: Optional[int]
 
     progress: int
+    progress_description: Optional[str] = None
 
     function: str
     kwargs: Dict[str, Any]
@@ -64,6 +68,73 @@ class InternalJob(BaseModel):
     after_function_kwargs: Optional[Dict[str, Any]]
     result: Any
     user: Optional[str]
+
+    _client: Any = PrivateAttr(None)
+
+    def __init__(self, client=None, **kwargs):
+        BaseModel.__init__(self, **kwargs)
+        self._client = client
+
+    def refresh(self):
+        """
+        Updates the data of this object with information from the server
+        """
+
+        if self._client is None:
+            raise RuntimeError("Client is not set")
+
+        server_data = self._client.get_internal_job(self.id)
+        for k, v in server_data:
+            setattr(self, k, v)
+
+    def watch(self, interval: float = 2.0, timeout: Optional[float] = None):
+        """
+        Watch an internal job for completion
+
+        Will poll every `interval` seconds until the job is finished (complete, error, cancelled, etc).
+
+        Parameters
+        ----------
+        interval
+            Time (in seconds) between polls on the server
+        timeout
+            Max amount of time (in seconds) to wait. If None, will wait forever.
+
+        Returns
+        -------
+
+        """
+
+        if self.status not in [InternalJobStatusEnum.waiting, InternalJobStatusEnum.running]:
+            return
+
+        begin_time = time.time()
+
+        end_time = None
+        if timeout is not None:
+            end_time = begin_time + timeout
+
+        pbar = tqdm(initial=self.progress, total=100, desc=self.progress_description)
+
+        while True:
+            t = time.time()
+
+            self.refresh()
+            pbar.update(self.progress - pbar.n)
+            pbar.set_description(self.progress_description)
+
+            if end_time is not None and t >= end_time:
+                raise TimeoutError("Timed out waiting for job to complete")
+
+            if self.status not in [InternalJobStatusEnum.waiting, InternalJobStatusEnum.running]:
+                break
+            curtime = time.time()
+
+            if end_time is not None:
+                #  sleep the normal interval, or up to the timeout time
+                time.sleep(min(interval, end_time - curtime + 0.1))
+            else:
+                time.sleep(interval)
 
 
 class InternalJobQueryFilters(QueryProjModelBase):
@@ -118,9 +189,11 @@ class InternalJobQueryIterator(QueryIteratorBase[InternalJob]):
         QueryIteratorBase.__init__(self, client, query_filters, batch_limit)
 
     def _request(self) -> List[InternalJob]:
-        return self._client.make_request(
+        ij_dicts = self._client.make_request(
             "post",
             "api/v1/internal_jobs/query",
-            List[InternalJob],
+            List[Dict[str, Any]],
             body=self._query_filters,
         )
+
+        return [InternalJob(client=self, **ij_dict) for ij_dict in ij_dicts]

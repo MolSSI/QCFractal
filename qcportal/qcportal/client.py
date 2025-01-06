@@ -2685,7 +2685,8 @@ class PortalClient(PortalClientBase):
         Gets information about an internal job on the server
         """
 
-        return self.make_request("get", f"api/v1/internal_jobs/{job_id}", InternalJob)
+        ij_dict = self.make_request("get", f"api/v1/internal_jobs/{job_id}", Dict[str, Any])
+        return InternalJob(client=self, **ij_dict)
 
     def query_internal_jobs(
         self,

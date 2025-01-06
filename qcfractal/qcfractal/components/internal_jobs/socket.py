@@ -351,6 +351,7 @@ class InternalJobSocket:
             if not job_progress.cancelled():
                 job_orm.status = InternalJobStatusEnum.complete
                 job_orm.progress = 100
+                job_orm.progress_description = "Complete"
 
         except Exception:
             session.rollback()

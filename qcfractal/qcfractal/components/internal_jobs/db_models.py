@@ -31,6 +31,7 @@ class InternalJobORM(BaseORM):
     runner_uuid = Column(String)
 
     progress = Column(Integer, nullable=False, default=0)
+    progress_description = Column(String, nullable=True)
 
     function = Column(String, nullable=False)
     kwargs = Column(JSON, nullable=False)

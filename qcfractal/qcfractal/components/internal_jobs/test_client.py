@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 def dummmy_internal_job(self, iterations: int, session, job_progress):
     for i in range(iterations):
         time.sleep(1.0)
-        job_progress.update_progress(100 * ((i + 1) / iterations))
+        job_progress.update_progress(100 * ((i + 1) / iterations), f"Interation {i} of {iterations}")
         print("Dummy internal job counter ", i)
 
         if job_progress.cancelled():
