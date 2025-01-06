@@ -38,7 +38,14 @@ def get_general_dataset_v1(dataset_id: int, url_params: ProjURLParameters):
     with storage_socket.session_scope(True) as session:
         ds_type = storage_socket.datasets.lookup_type(dataset_id, session=session)
         ds_socket = storage_socket.datasets.get_socket(ds_type)
-        return ds_socket.get(dataset_id, url_params.include, url_params.exclude, session=session)
+
+        r = ds_socket.get(dataset_id, url_params.include, url_params.exclude, session=session)
+
+        # TODO - remove this eventually
+        # Don't return attachments by default
+        r.pop("attachments", None)
+
+        return r
 
 
 @api_v1.route("/datasets/query", methods=["POST"])
@@ -163,7 +170,7 @@ def modify_dataset_metadata_v1(dataset_type: str, dataset_id: int, body_data: Da
 
 
 #########################
-# Views
+# Views & Attachments
 #########################
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/create_view", methods=["POST"])
 @wrap_route("WRITE")
@@ -361,10 +368,16 @@ def revert_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: Dat
     )
 
 
-###################
-# Contributed Values
-###################
+#################################
+# Fields not returned by default
+#################################
 @api_v1.route("/datasets/<int:dataset_id>/contributed_values", methods=["GET"])
 @wrap_route("READ")
 def fetch_dataset_contributed_values_v1(dataset_id: int):
     return storage_socket.datasets.get_contributed_values(dataset_id)
+
+
+@api_v1.route("/datasets/<int:dataset_id>/attachments", methods=["GET"])
+@wrap_route("READ")
+def fetch_dataset_attachments_v1(dataset_id: int):
+    return storage_socket.datasets.get_attachments(dataset_id)

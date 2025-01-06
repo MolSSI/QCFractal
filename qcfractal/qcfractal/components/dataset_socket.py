@@ -1660,6 +1660,18 @@ class DatasetSocket:
             cv = session.execute(stmt).scalars().all()
             return [x.model_dict() for x in cv]
 
+    def get_attachments(self, dataset_id: int, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
+        """
+        Get the attachments for a dataset
+        """
+
+        stmt = select(DatasetAttachmentORM)
+        stmt = stmt.where(DatasetAttachmentORM.dataset_id == dataset_id)
+
+        with self.root_socket.optional_session(session, True) as session:
+            att = session.execute(stmt).scalars().all()
+            return [x.model_dict() for x in att]
+
     def attach_file(
         self,
         dataset_id: int,

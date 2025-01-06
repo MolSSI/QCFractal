@@ -85,7 +85,6 @@ class BaseDatasetORM(BaseORM):
         "DatasetAttachmentORM",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        lazy="selectin",
     )
 
     __table_args__ = (

@@ -53,7 +53,7 @@ class DatasetAttachmentType(str, Enum):
 
 
 class DatasetAttachment(ExternalFile):
-    attached_type = DatasetAttachmentType
+    attachment_type: DatasetAttachmentType
 
 
 class Citation(BaseModel):
@@ -119,8 +119,6 @@ class BaseDataset(BaseModel):
     metadata: Dict[str, Any]
     extras: Dict[str, Any]
 
-    attachments: List[DatasetAttachment]
-
     ########################################
     # Caches of information
     ########################################
@@ -134,6 +132,7 @@ class BaseDataset(BaseModel):
     # Fields not always included when fetching the dataset
     ######################################################
     contributed_values_: Optional[Dict[str, ContributedValues]] = Field(None, alias="contributed_values")
+    attachments_: Optional[List[DatasetAttachment]] = Field(None, alias="attachments")
 
     #############################
     # Private non-pydantic fields
@@ -336,6 +335,130 @@ class BaseDataset(BaseModel):
                 self._client.make_request(
                     "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/submit", Any, body=body_data
                 )
+
+    #########################################
+    # Attachments
+    #########################################
+    def fetch_attachments(self):
+        self.assert_is_not_view()
+        self.assert_online()
+
+        self.attachments_ = self._client.make_request(
+            "get",
+            f"api/v1/datasets/{self.id}/attachments",
+            Optional[List[DatasetAttachment]],
+        )
+
+    @property
+    def attachments(self) -> List[DatasetAttachment]:
+        if not self.attachments_:
+            self.fetch_attachments()
+
+        return self.attachments_
+
+    #########################################
+    # View creation and use
+    #########################################
+    def list_views(self):
+        return [x for x in self.attachments if x.attachment_type == DatasetAttachmentType.view]
+
+    def download_view(
+        self,
+        view_file_id: Optional[int] = None,
+        destination_path: Optional[str] = None,
+        overwrite: bool = True,
+    ):
+        """
+        Downloads a view for this dataset
+
+        If a `view_file_id` is not given, the most recent view will be downloaded.
+
+        If destination path is not given, the file will be placed in the current directory, and the
+        filename determined by what is stored on the server.
+
+        Parameters
+        ----------
+        view_file_id
+            ID of the view to download. See :ref:`list_views`. If `None`, will download the latest view
+        destination_path
+            Full path to the destination file (including filename)
+        overwrite
+            If True, any existing file will be overwritten
+        """
+
+        my_views = self.list_views()
+
+        if not my_views:
+            raise ValueError(f"No views available for this dataset")
+
+        if view_file_id is None:
+            latest_view_ids = max(my_views, key=lambda x: x.created_on)
+            view_file_id = latest_view_ids.id
+
+        view_map = {x.id: x for x in self.list_views()}
+        if view_file_id not in view_map:
+            raise ValueError(f"File id {view_file_id} is not a valid ID for this dataset")
+
+        if destination_path is None:
+            view_data = view_map[view_file_id]
+            destination_path = os.path.join(os.getcwd(), view_data.file_name)
+
+        self._client.download_external_file(view_file_id, destination_path, overwrite=overwrite)
+
+    def use_view_cache(
+        self,
+        view_file_path: str,
+    ):
+        """
+        Downloads and loads a view for this dataset
+
+        Parameters
+        ----------
+        view_file_path
+            Full path to the view file
+        """
+
+        cache_uri = f"file:{view_file_path}"
+        dcache = DatasetCache(cache_uri=cache_uri, read_only=False, dataset_type=type(self))
+
+        meta = dcache.get_metadata("dataset_metadata")
+
+        if meta["id"] != self.id:
+            raise ValueError(
+                f"Info in view file does not match this dataset. ID in the file {meta['id']}, ID of this dataset {self.id}"
+            )
+
+        if meta["dataset_type"] != self.dataset_type:
+            raise ValueError(
+                f"Info in view file does not match this dataset. Dataset type in the file {meta['dataset_type']}, dataset type of this dataset {self.dataset_type}"
+            )
+
+        if meta["name"] != self.name:
+            raise ValueError(
+                f"Info in view file does not match this dataset. Dataset name in the file {meta['name']}, name of this dataset {self.name}"
+            )
+
+        self._cache_data = dcache
+
+    def preload_cache(self, view_file_id: Optional[int] = None):
+        """
+        Downloads a view file and uses it as the current cache
+
+        Parameters
+        ----------
+        view_file_id
+            ID of the view to download. See :ref:`list_views`. If `None`, will download the latest view
+        """
+
+        self.assert_is_not_view()
+        self.assert_online()
+
+        if not self._client.cache.is_disk:
+            raise RuntimeError("Caching to disk is not enabled. Set the cache_dir path when constructing the client")
+
+        destination_path = self._client.cache.get_dataset_cache_path(self.id)
+        self.download_view(view_file_id=view_file_id, destination_path=destination_path, overwrite=True)
+        self.use_view_cache(destination_path)
 
     def create_view(
         self,
