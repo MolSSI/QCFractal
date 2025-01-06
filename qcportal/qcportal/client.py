@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import logging
 import math
+import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Union, Sequence, Iterable, TypeVar, Type
 
 from tabulate import tabulate
 
 from qcportal.cache import DatasetCache, read_dataset_metadata
+from qcportal.external_files import ExternalFile
 from qcportal.gridoptimization import (
     GridoptimizationKeywords,
     GridoptimizationAddBody,
@@ -324,6 +326,52 @@ class PortalClient(PortalClientBase):
     def delete_dataset(self, dataset_id: int, delete_records: bool):
         params = DatasetDeleteParams(delete_records=delete_records)
         return self.make_request("delete", f"api/v1/datasets/{dataset_id}", None, url_params=params)
+
+    ##############################################################
+    # External files
+    ##############################################################
+    def download_external_file(self, file_id: int, destination_path: str, overwrite: bool = False) -> Tuple[int, str]:
+        """
+        Downloads an external file to the given path
+
+        The file size and checksum will be checked against the metadata stored on the server
+
+        Parameters
+        ----------
+        file_id
+            ID of the file to obtain
+        destination_path
+            Full path to the destination file (including filename)
+        overwrite
+            If True, allow for overwriting an existing file. If False, and a file already exists at the given
+            destination path, an exception will be raised.
+
+        Returns
+        -------
+        :
+            A tuple of file size and sha256 checksum.
+
+        """
+        meta_url = f"api/v1/external_files/{file_id}"
+        download_url = f"api/v1/external_files/{file_id}/download"
+
+        # Check for local file existence before doing any requests
+        if os.path.exists(destination_path) and not overwrite:
+            raise RuntimeError(f"File already exists at {destination_path}. To overwrite, use `overwrite=True`")
+
+        # First, get the metadata
+        file_info = self.make_request("get", meta_url, ExternalFile)
+
+        # Now actually download the file
+        file_size, file_sha256 = self.download_file(download_url, destination_path, overwrite=overwrite)
+
+        if file_size != file_info.file_size:
+            raise RuntimeError(f"Inconsistent file size. Expected {file_info.file_size}, got {file_size}")
+
+        if file_sha256 != file_info.sha256sum:
+            raise RuntimeError(f"Inconsistent file checksum. Expected {file_info.sha256sum}, got {file_sha256}")
+
+        return file_size, file_sha256
 
     ##############################################################
     # Molecules
