@@ -540,20 +540,36 @@ class PortalCache:
 
             self.cache_dir = None
 
+    def get_cache_path(self, cache_name: str) -> str:
+        if not self._is_disk:
+            raise RuntimeError("Cannot get path to cache for memory-only cache")
+
+        return os.path.join(self.cache_dir, f"{cache_name}.sqlite")
+
     def get_cache_uri(self, cache_name: str) -> str:
         if self._is_disk:
-            file_path = os.path.join(self.cache_dir, f"{cache_name}.sqlite")
+            file_path = self.get_cache_path(cache_name)
             uri = f"file:{file_path}"
         else:
             uri = ":memory:"
 
         return uri
 
+    def get_dataset_cache_path(self, dataset_id: int) -> str:
+        return self.get_cache_path(f"dataset_{dataset_id}")
+
+    def get_dataset_cache_uri(self, dataset_id: int) -> str:
+        return self.get_cache_uri(f"dataset_{dataset_id}")
+
     def get_dataset_cache(self, dataset_id: int, dataset_type: Type[_DATASET_T]) -> DatasetCache:
-        uri = self.get_cache_uri(f"dataset_{dataset_id}")
+        uri = self.get_dataset_cache_uri(dataset_id)
 
         # If you are asking this for a dataset cache, it should be writable
         return DatasetCache(uri, False, dataset_type)
+
+    @property
+    def is_disk(self) -> bool:
+        return self._is_disk
 
     def vacuum(self, cache_name: Optional[str] = None):
         if self._is_disk:
