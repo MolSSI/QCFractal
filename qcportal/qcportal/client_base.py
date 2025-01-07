@@ -336,7 +336,9 @@ class PortalClientBase:
 
         try:
             if not allow_retries:
-                r = self._req_session.send(prep_req, verify=self._verify, timeout=self.timeout)
+                r = self._req_session.send(prep_req, verify=self._verify, timeout=self.timeout, allow_redirects=False)
+                if r.is_redirect:
+                    raise RuntimeError("Redirection is not allowed")
             else:
                 current_retries = 0
                 while True:
