@@ -8,6 +8,7 @@ import itertools
 import json
 import logging
 import math
+import re
 import time
 from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from hashlib import sha256
@@ -259,6 +260,37 @@ def seconds_to_hms(seconds: Union[float, int]) -> str:
         return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
     else:
         return f"{hours:02d}:{minutes:02d}:{seconds+fraction:02.2f}"
+
+
+def duration_to_seconds(s: Union[int, str]) -> int:
+    """
+    Parses a string in dd:hh:mm:ss or 1d2h3m4s to an integer number of seconds
+    """
+
+    # Is already an int
+    if isinstance(s, int):
+        return s
+
+    # Plain number of seconds (as a string)
+    if s.isdigit():
+        return int(s)
+
+    # Handle dd:hh:mm:ss format
+    if ":" in s:
+        parts = list(map(int, s.split(":")))
+        while len(parts) < 4:  # Pad missing parts with zeros
+            parts.insert(0, 0)
+        days, hours, minutes, seconds = parts
+        return days * 86400 + hours * 3600 + minutes * 60 + seconds
+
+    # Handle format like 3d4h7m10s
+    pattern = re.compile(r"(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?")
+    match = pattern.fullmatch(s)
+    if not match:
+        raise ValueError(f"Invalid duration format: {s}")
+
+    days, hours, minutes, seconds = map(lambda x: int(x) if x else 0, match.groups())
+    return days * 86400 + hours * 3600 + minutes * 60 + seconds
 
 
 def recursive_normalizer(value: Any, digits: int = 10, lowercase: bool = True) -> Any:
