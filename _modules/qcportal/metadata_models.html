@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.metadata_models &#8212; QCArchive 0.57.post41+gbf839b2d documentation</title>
+    <title>qcportal.metadata_models &#8212; QCArchive 0.57.post46+gf5b076e3 documentation</title>
   
   
   
@@ -29,7 +29,7 @@
   <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=72eee364"></script>
+    <script src="../../_static/documentation_options.js?v=b4c5247e"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.57.post41+gbf839b2d" />
+  <meta name="docsearch:version" content="0.57.post46+gf5b076e3" />
   </head>
   
   
@@ -438,23 +438,23 @@
                 <article class="bd-article">
                   
   <h1>Source code for qcportal.metadata_models</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">dataclasses</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Any</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">pydantic.v1</span> <span class="kn">import</span> <span class="n">validator</span><span class="p">,</span> <span class="n">root_validator</span>
-    <span class="kn">from</span> <span class="nn">pydantic.v1.dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic.v1</span><span class="w"> </span><span class="kn">import</span> <span class="n">validator</span><span class="p">,</span> <span class="n">root_validator</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic.v1.dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">validator</span><span class="p">,</span> <span class="n">root_validator</span>
-    <span class="kn">from</span> <span class="nn">pydantic.dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">validator</span><span class="p">,</span> <span class="n">root_validator</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic.dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 
 
 <div class="viewcode-block" id="InsertMetadata">
 <a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.InsertMetadata">[docs]</a>
 <span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">InsertMetadata</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">InsertMetadata</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Metadata returned by insertion / adding functions</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -466,27 +466,27 @@
     <span class="n">existing_idx</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>  <span class="c1"># existing but not updated</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">n_inserted</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_inserted</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inserted_idx</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">n_existing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_existing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">existing_idx</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">n_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">error_idx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">error_idx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="p">]</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">success</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">success</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_description</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">error_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">error_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_description</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_description</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
@@ -496,14 +496,14 @@
 <div class="viewcode-block" id="InsertMetadata.sort_fields">
 <a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.InsertMetadata.sort_fields">[docs]</a>
     <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;errors&quot;</span><span class="p">,</span> <span class="s2">&quot;inserted_idx&quot;</span><span class="p">,</span> <span class="s2">&quot;existing_idx&quot;</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">sort_fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sort_fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">v</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="InsertMetadata.check_all_indices">
 <a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.InsertMetadata.check_all_indices">[docs]</a>
     <span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">skip_on_failure</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">check_all_indices</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_all_indices</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
         <span class="c1"># Test that all indices are accounted for and that the same index doesn&#39;t show up in</span>
         <span class="c1"># inserted_idx, existing_idx, or errors</span>
         <span class="n">ins_idx</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="s2">&quot;inserted_idx&quot;</span><span class="p">])</span>
@@ -539,7 +539,7 @@
 
 <div class="viewcode-block" id="InsertMetadata.dict">
 <a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.InsertMetadata.dict">[docs]</a>
-    <span class="k">def</span> <span class="nf">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the information from this dataclass as a dictionary</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -550,7 +550,7 @@
 <div class="viewcode-block" id="InsertMetadata.merge">
 <a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.InsertMetadata.merge">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="n">metadata</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">InsertMetadata</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">InsertMetadata</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">merge</span><span class="p">(</span><span class="n">metadata</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">InsertMetadata</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">InsertMetadata</span><span class="p">:</span>
         <span class="n">new_inserted_idx</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">new_existing_idx</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">new_errors</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -580,7 +580,7 @@
 
 
 <span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">InsertCountsMetadata</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">InsertCountsMetadata</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Metadata returned by insertion / adding functions, only including counts</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -592,22 +592,22 @@
     <span class="n">errors</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">n_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">success</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">success</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_description</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">error_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">error_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_description</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_description</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Index </span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">y</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">s</span>
 
-    <span class="k">def</span> <span class="nf">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the information from this dataclass as a dictionary</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -618,7 +618,7 @@
 <div class="viewcode-block" id="DeleteMetadata">
 <a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata">[docs]</a>
 <span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">DeleteMetadata</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DeleteMetadata</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Metadata returned by delete functions</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -630,23 +630,23 @@
     <span class="n">n_children_deleted</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">n_deleted</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_deleted</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">deleted_idx</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">n_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">error_idx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">error_idx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="p">]</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">success</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">success</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_description</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">error_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">error_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_description</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_description</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
@@ -656,14 +656,14 @@
 <div class="viewcode-block" id="DeleteMetadata.sort_fields">
 <a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata.sort_fields">[docs]</a>
     <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;errors&quot;</span><span class="p">,</span> <span class="s2">&quot;deleted_idx&quot;</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">sort_fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sort_fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">v</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="DeleteMetadata.check_all_indices">
 <a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata.check_all_indices">[docs]</a>
     <span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">skip_on_failure</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">check_all_indices</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_all_indices</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
         <span class="c1"># Test that all indices are accounted for and that the same index doesn&#39;t show up in</span>
         <span class="c1"># deleted_idx, or errors</span>
         <span class="n">del_idx</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="s2">&quot;deleted_idx&quot;</span><span class="p">])</span>
@@ -690,7 +690,7 @@
 
 <div class="viewcode-block" id="DeleteMetadata.dict">
 <a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.DeleteMetadata.dict">[docs]</a>
-    <span class="k">def</span> <span class="nf">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the information from this dataclass as a dictionary</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -703,7 +703,7 @@
 <div class="viewcode-block" id="UpdateMetadata">
 <a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata">[docs]</a>
 <span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">UpdateMetadata</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">UpdateMetadata</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Metadata returned by update functions</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -715,23 +715,23 @@
     <span class="n">n_children_updated</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">n_updated</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_updated</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">updated_idx</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">n_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">error_idx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">error_idx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="p">]</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">success</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">success</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_description</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">error_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">error_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_description</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_description</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
@@ -741,14 +741,14 @@
 <div class="viewcode-block" id="UpdateMetadata.sort_fields">
 <a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata.sort_fields">[docs]</a>
     <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;errors&quot;</span><span class="p">,</span> <span class="s2">&quot;updated_idx&quot;</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">sort_fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sort_fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">v</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="UpdateMetadata.check_all_indices">
 <a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata.check_all_indices">[docs]</a>
     <span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">skip_on_failure</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">check_all_indices</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_all_indices</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
         <span class="c1"># Test that all indices are accounted for and that the same index doesn&#39;t show up in</span>
         <span class="c1"># inserted_idx, existing_idx, or errors</span>
         <span class="n">upd_idx</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="s2">&quot;updated_idx&quot;</span><span class="p">])</span>
@@ -775,7 +775,7 @@
 
 <div class="viewcode-block" id="UpdateMetadata.dict">
 <a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.UpdateMetadata.dict">[docs]</a>
-    <span class="k">def</span> <span class="nf">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the information from this dataclass as a dictionary</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -788,7 +788,7 @@
 <div class="viewcode-block" id="TaskReturnMetadata">
 <a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.TaskReturnMetadata">[docs]</a>
 <span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">TaskReturnMetadata</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TaskReturnMetadata</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Metadata returned to managers that have sent completed tasks back to the server</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -799,23 +799,23 @@
     <span class="n">accepted_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>  <span class="c1"># Accepted by the server</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">n_accepted</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_accepted</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">accepted_ids</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">n_rejected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_rejected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rejected_ids</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">rejected_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rejected_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rejected_info</span><span class="p">]</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">success</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">success</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_description</span> <span class="ow">is</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">error_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">error_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_description</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_description</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
@@ -825,13 +825,13 @@
 <div class="viewcode-block" id="TaskReturnMetadata.sort_fields">
 <a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.TaskReturnMetadata.sort_fields">[docs]</a>
     <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;rejected_info&quot;</span><span class="p">,</span> <span class="s2">&quot;accepted_ids&quot;</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">sort_fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sort_fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">v</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="TaskReturnMetadata.dict">
 <a class="viewcode-back" href="../../user_guide/metadata.html#qcportal.metadata_models.TaskReturnMetadata.dict">[docs]</a>
-    <span class="k">def</span> <span class="nf">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the information from this dataclass as a dictionary</span>
 <span class="sd">        &quot;&quot;&quot;</span>

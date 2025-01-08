@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.singlepoint.record_models &#8212; QCArchive 0.57.post41+gbf839b2d documentation</title>
+    <title>qcportal.singlepoint.record_models &#8212; QCArchive 0.57.post46+gf5b076e3 documentation</title>
   
   
   
@@ -29,7 +29,7 @@
   <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/autodoc_pydantic.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=72eee364"></script>
+    <script src="../../../_static/documentation_options.js?v=b4c5247e"></script>
     <script src="../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.57.post41+gbf839b2d" />
+  <meta name="docsearch:version" content="0.57.post46+gf5b076e3" />
   </head>
   
   
@@ -438,16 +438,16 @@
                 <article class="bd-article">
                   
   <h1>Source code for qcportal.singlepoint.record_models</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
-<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">pydantic.v1</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">constr</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">PrivateAttr</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic.v1</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">constr</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">PrivateAttr</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">constr</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">PrivateAttr</span>
-<span class="kn">from</span> <span class="nn">qcelemental.models</span> <span class="kn">import</span> <span class="n">Molecule</span>
-<span class="kn">from</span> <span class="nn">qcelemental.models.results</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">constr</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">PrivateAttr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcelemental.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Molecule</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcelemental.models.results</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">AtomicResult</span><span class="p">,</span>
     <span class="n">Model</span> <span class="k">as</span> <span class="n">AtomicResultModel</span><span class="p">,</span>
     <span class="n">AtomicResultProtocols</span> <span class="k">as</span> <span class="n">SinglepointProtocols</span><span class="p">,</span>
@@ -455,13 +455,13 @@
     <span class="n">WavefunctionProperties</span><span class="p">,</span>
     <span class="n">WavefunctionProtocolEnum</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Literal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
 
-<span class="kn">from</span> <span class="nn">qcportal.compression</span> <span class="kn">import</span> <span class="n">CompressionEnum</span><span class="p">,</span> <span class="n">decompress</span>
-<span class="kn">from</span> <span class="nn">qcportal.record_models</span> <span class="kn">import</span> <span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="n">BaseRecord</span><span class="p">,</span> <span class="n">RecordAddBodyBase</span><span class="p">,</span> <span class="n">RecordQueryFilters</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.compression</span><span class="w"> </span><span class="kn">import</span> <span class="n">CompressionEnum</span><span class="p">,</span> <span class="n">decompress</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.record_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="n">BaseRecord</span><span class="p">,</span> <span class="n">RecordAddBodyBase</span><span class="p">,</span> <span class="n">RecordQueryFilters</span>
 
 
-<span class="k">class</span> <span class="nc">SinglepointDriver</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SinglepointDriver</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
     <span class="c1"># Copied from qcelemental to add &quot;deferred&quot;</span>
     <span class="n">energy</span> <span class="o">=</span> <span class="s2">&quot;energy&quot;</span>
     <span class="n">gradient</span> <span class="o">=</span> <span class="s2">&quot;gradient&quot;</span>
@@ -472,10 +472,10 @@
 
 <div class="viewcode-block" id="QCSpecification">
 <a class="viewcode-back" href="../../../user_guide/records/singlepoint.html#qcportal.singlepoint.QCSpecification">[docs]</a>
-<span class="k">class</span> <span class="nc">QCSpecification</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QCSpecification</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <div class="viewcode-block" id="QCSpecification.Config">
 <a class="viewcode-back" href="../../../user_guide/records/singlepoint.html#qcportal.singlepoint.QCSpecification.Config">[docs]</a>
-    <span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
         <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span></div>
 
 
@@ -497,19 +497,19 @@
     <span class="n">protocols</span><span class="p">:</span> <span class="n">SinglepointProtocols</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">SinglepointProtocols</span><span class="p">(),</span> <span class="n">description</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">SinglepointProtocols</span><span class="o">.</span><span class="n">__base_doc__</span><span class="p">))</span>
 
     <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;basis&quot;</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">_convert_basis</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_convert_basis</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="c1"># Convert empty string to None</span>
         <span class="c1"># Lowercasing is handled by constr</span>
         <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span> <span class="k">else</span> <span class="n">v</span></div>
 
 
 
-<span class="k">class</span> <span class="nc">Wavefunction</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Wavefunction</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Storage of wavefunctions, with compression</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
         <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span>
 
     <span class="n">compression_type</span><span class="p">:</span> <span class="n">CompressionEnum</span>
@@ -518,11 +518,11 @@
     <span class="n">_data_url</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">_client</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">record_base_url</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">record_base_url</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="o">=</span> <span class="n">client</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_data_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">record_base_url</span><span class="si">}</span><span class="s2">/wavefunction/data&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_fetch_raw_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fetch_raw_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span>
 
@@ -539,7 +539,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">data_</span> <span class="o">=</span> <span class="n">cdata</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WavefunctionProperties</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WavefunctionProperties</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_raw_data</span><span class="p">()</span>
         <span class="n">wfn_dict</span> <span class="o">=</span> <span class="n">decompress</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">compression_type</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">WavefunctionProperties</span><span class="p">(</span><span class="o">**</span><span class="n">wfn_dict</span><span class="p">)</span>
@@ -547,7 +547,7 @@
 
 <div class="viewcode-block" id="SinglepointRecord">
 <a class="viewcode-back" href="../../../user_guide/records/singlepoint.html#qcportal.singlepoint.SinglepointRecord">[docs]</a>
-<span class="k">class</span> <span class="nc">SinglepointRecord</span><span class="p">(</span><span class="n">BaseRecord</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SinglepointRecord</span><span class="p">(</span><span class="n">BaseRecord</span><span class="p">):</span>
     <span class="n">record_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;singlepoint&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;singlepoint&quot;</span>
     <span class="n">specification</span><span class="p">:</span> <span class="n">QCSpecification</span>
     <span class="n">molecule_id</span><span class="p">:</span> <span class="nb">int</span>
@@ -560,18 +560,18 @@
 
 <div class="viewcode-block" id="SinglepointRecord.propagate_client">
 <a class="viewcode-back" href="../../../user_guide/records/singlepoint.html#qcportal.singlepoint.SinglepointRecord.propagate_client">[docs]</a>
-    <span class="k">def</span> <span class="nf">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">):</span>
         <span class="n">BaseRecord</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wavefunction_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">wavefunction_</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_fetch_molecule</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fetch_molecule</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_assert_online</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">molecule_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get_molecules</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">molecule_id</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">_fetch_wavefunction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fetch_wavefunction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_assert_online</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">wavefunction_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
@@ -583,18 +583,18 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">return_result</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">return_result</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
         <span class="c1"># Return result is stored in properties in QCFractal</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;return_result&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">molecule</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Molecule</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">molecule</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Molecule</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">molecule_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_molecule</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">molecule_</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">wavefunction</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">WavefunctionProperties</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wavefunction</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">WavefunctionProperties</span><span class="p">]:</span>
         <span class="c1"># wavefunction may be None if it doesn&#39;t exist or hasn&#39;t been fetched yet</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wavefunction_</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">&quot;wavefunction_&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__fields_set__</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_wavefunction</span><span class="p">()</span>
@@ -606,7 +606,7 @@
 
 <div class="viewcode-block" id="SinglepointRecord.to_qcschema_result">
 <a class="viewcode-back" href="../../../user_guide/records/singlepoint.html#qcportal.singlepoint.SinglepointRecord.to_qcschema_result">[docs]</a>
-    <span class="k">def</span> <span class="nf">to_qcschema_result</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AtomicResult</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_qcschema_result</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AtomicResult</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">complete</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot create QCSchema result from record with status </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -643,12 +643,12 @@
 
 
 
-<span class="k">class</span> <span class="nc">SinglepointAddBody</span><span class="p">(</span><span class="n">RecordAddBodyBase</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SinglepointAddBody</span><span class="p">(</span><span class="n">RecordAddBodyBase</span><span class="p">):</span>
     <span class="n">specification</span><span class="p">:</span> <span class="n">QCSpecification</span>
     <span class="n">molecules</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Molecule</span><span class="p">]]</span>
 
 
-<span class="k">class</span> <span class="nc">SinglepointQueryFilters</span><span class="p">(</span><span class="n">RecordQueryFilters</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SinglepointQueryFilters</span><span class="p">(</span><span class="n">RecordQueryFilters</span><span class="p">):</span>
     <span class="n">program</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">constr</span><span class="p">(</span><span class="n">to_lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">driver</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">SinglepointDriver</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">method</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">constr</span><span class="p">(</span><span class="n">to_lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)]]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -657,7 +657,7 @@
     <span class="n">keywords</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;basis&quot;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">_convert_basis</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_convert_basis</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="c1"># Convert empty string to None</span>
         <span class="c1"># Lowercasing is handled by constr</span>
         <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>

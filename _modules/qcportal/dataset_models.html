@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.dataset_models &#8212; QCArchive 0.57.post41+gbf839b2d documentation</title>
+    <title>qcportal.dataset_models &#8212; QCArchive 0.57.post46+gf5b076e3 documentation</title>
   
   
   
@@ -29,7 +29,7 @@
   <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=72eee364"></script>
+    <script src="../../_static/documentation_options.js?v=b4c5247e"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.57.post41+gbf839b2d" />
+  <meta name="docsearch:version" content="0.57.post46+gf5b076e3" />
   </head>
   
   
@@ -438,12 +438,12 @@
                 <article class="bd-article">
                   
   <h1>Source code for qcportal.dataset_models</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">TYPE_CHECKING</span><span class="p">,</span>
     <span class="n">Optional</span><span class="p">,</span>
     <span class="n">Dict</span><span class="p">,</span>
@@ -460,31 +460,31 @@
 <span class="p">)</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">pydantic.v1</span> <span class="k">as</span> <span class="nn">pydantic</span>
-    <span class="kn">from</span> <span class="nn">pydantic.v1</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">PrivateAttr</span><span class="p">,</span> <span class="n">Field</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">pydantic.v1</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pydantic</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic.v1</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">PrivateAttr</span><span class="p">,</span> <span class="n">Field</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">pydantic</span>
-    <span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">PrivateAttr</span><span class="p">,</span> <span class="n">Field</span>
-<span class="kn">from</span> <span class="nn">qcelemental.models.types</span> <span class="kn">import</span> <span class="n">Array</span>
-<span class="kn">from</span> <span class="nn">tabulate</span> <span class="kn">import</span> <span class="n">tabulate</span>
-<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">pydantic</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">PrivateAttr</span><span class="p">,</span> <span class="n">Field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcelemental.models.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">Array</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tabulate</span><span class="w"> </span><span class="kn">import</span> <span class="n">tabulate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
 
-<span class="kn">from</span> <span class="nn">qcportal.base_models</span> <span class="kn">import</span> <span class="n">RestModelBase</span><span class="p">,</span> <span class="n">validate_list_to_single</span><span class="p">,</span> <span class="n">CommonBulkGetBody</span>
-<span class="kn">from</span> <span class="nn">qcportal.metadata_models</span> <span class="kn">import</span> <span class="n">DeleteMetadata</span>
-<span class="kn">from</span> <span class="nn">qcportal.metadata_models</span> <span class="kn">import</span> <span class="n">InsertMetadata</span>
-<span class="kn">from</span> <span class="nn">qcportal.record_models</span> <span class="kn">import</span> <span class="n">PriorityEnum</span><span class="p">,</span> <span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="n">BaseRecord</span>
-<span class="kn">from</span> <span class="nn">qcportal.utils</span> <span class="kn">import</span> <span class="n">make_list</span><span class="p">,</span> <span class="n">chunk_iterable</span>
-<span class="kn">from</span> <span class="nn">qcportal.cache</span> <span class="kn">import</span> <span class="n">DatasetCache</span><span class="p">,</span> <span class="n">read_dataset_metadata</span><span class="p">,</span> <span class="n">get_records_with_cache</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.base_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">RestModelBase</span><span class="p">,</span> <span class="n">validate_list_to_single</span><span class="p">,</span> <span class="n">CommonBulkGetBody</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.metadata_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeleteMetadata</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.metadata_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">InsertMetadata</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.record_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">PriorityEnum</span><span class="p">,</span> <span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="n">BaseRecord</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_list</span><span class="p">,</span> <span class="n">chunk_iterable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.cache</span><span class="w"> </span><span class="kn">import</span> <span class="n">DatasetCache</span><span class="p">,</span> <span class="n">read_dataset_metadata</span><span class="p">,</span> <span class="n">get_records_with_cache</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">qcportal.client</span> <span class="kn">import</span> <span class="n">PortalClient</span>
-    <span class="kn">from</span> <span class="nn">pandas</span> <span class="kn">import</span> <span class="n">DataFrame</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">PortalClient</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataFrame</span>
 
 
-<span class="k">class</span> <span class="nc">Citation</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Citation</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A literature citation.&quot;&quot;&quot;</span>
 
-    <span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
         <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span>
         <span class="n">allow_mutation</span> <span class="o">=</span> <span class="kc">False</span>
 
@@ -493,13 +493,13 @@
     <span class="n">doi</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">url</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">to_acs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_acs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns an ACS-formatted citation&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">acs_citation</span>
 
 
-<span class="k">class</span> <span class="nc">ContributedValues</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ContributedValues</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
         <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span>
         <span class="n">allow_mutation</span> <span class="o">=</span> <span class="kc">False</span>
 
@@ -521,8 +521,8 @@
 
 <div class="viewcode-block" id="BaseDataset">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset">[docs]</a>
-<span class="k">class</span> <span class="nc">BaseDataset</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">BaseDataset</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
         <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span>
         <span class="n">allow_mutation</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="n">validate_assignment</span> <span class="o">=</span> <span class="kc">True</span>
@@ -578,7 +578,7 @@
     <span class="c1"># Some dataset options</span>
     <span class="n">auto_fetch_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Automatically fetch missing records from the server</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PortalClient</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cache_data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DatasetCache</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PortalClient</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cache_data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DatasetCache</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">BaseModel</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="c1"># Calls derived class propagate_client</span>
@@ -605,7 +605,7 @@
             <span class="c1"># Only address, not username/password</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">update_metadata</span><span class="p">(</span><span class="s2">&quot;client_address&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Register derived classes for later use</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -620,7 +620,7 @@
 <div class="viewcode-block" id="BaseDataset.get_subclass">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.get_subclass">[docs]</a>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">get_subclass</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">dataset_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_subclass</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">dataset_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="n">subcls</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_all_subclasses</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dataset_type</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">subcls</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot find subclass for record type </span><span class="si">{</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -629,7 +629,7 @@
 
 <div class="viewcode-block" id="BaseDataset.propagate_client">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.propagate_client">[docs]</a>
-    <span class="k">def</span> <span class="nf">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Propagates a client to this record to any fields within this record that need it</span>
 
@@ -638,7 +638,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="o">=</span> <span class="n">client</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_add_entries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entries</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">InsertMetadata</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_entries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entries</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">InsertMetadata</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Internal function for adding entries to a dataset</span>
 
@@ -673,7 +673,7 @@
 
         <span class="k">return</span> <span class="n">InsertMetadata</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">all_meta</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_add_specifications</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">specifications</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">InsertMetadata</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_specifications</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">specifications</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">InsertMetadata</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Internal function for adding specifications to a dataset</span>
 
@@ -697,7 +697,7 @@
 
         <span class="k">return</span> <span class="n">ret</span>
 
-    <span class="k">def</span> <span class="nf">_update_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_update_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
 
         <span class="n">new_body</span> <span class="o">=</span> <span class="p">{</span>
@@ -732,7 +732,7 @@
 
 <div class="viewcode-block" id="BaseDataset.submit">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.submit">[docs]</a>
-    <span class="k">def</span> <span class="nf">submit</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">submit</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">entry_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">specification_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -776,12 +776,12 @@
     <span class="c1">#########################################</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">is_view</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_view</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">read_only</span>
 
 <div class="viewcode-block" id="BaseDataset.status">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.status">[docs]</a>
-    <span class="k">def</span> <span class="nf">status</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">status</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
@@ -793,7 +793,7 @@
 
 <div class="viewcode-block" id="BaseDataset.status_table">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.status_table">[docs]</a>
-    <span class="k">def</span> <span class="nf">status_table</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">status_table</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the status of the dataset&#39;s computations as a table (in a string)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -814,13 +814,13 @@
 
 <div class="viewcode-block" id="BaseDataset.print_status">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.print_status">[docs]</a>
-    <span class="k">def</span> <span class="nf">print_status</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">print_status</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">status_table</span><span class="p">())</span></div>
 
 
 <div class="viewcode-block" id="BaseDataset.detailed_status">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.detailed_status">[docs]</a>
-    <span class="k">def</span> <span class="nf">detailed_status</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">RecordStatusEnum</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">detailed_status</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">RecordStatusEnum</span><span class="p">]]:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
@@ -831,18 +831,18 @@
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">offline</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">offline</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="ow">is</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="BaseDataset.assert_online">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.assert_online">[docs]</a>
-    <span class="k">def</span> <span class="nf">assert_online</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">assert_online</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">offline</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Dataset is not connected to a QCFractal server&quot;</span><span class="p">)</span></div>
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">record_count</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">record_count</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
@@ -852,7 +852,7 @@
         <span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">computed_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">computed_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
@@ -863,68 +863,68 @@
 
 <div class="viewcode-block" id="BaseDataset.assert_is_not_view">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.assert_is_not_view">[docs]</a>
-    <span class="k">def</span> <span class="nf">assert_is_not_view</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">assert_is_not_view</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_view</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Dataset loaded from an offline view&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="BaseDataset.set_name">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.set_name">[docs]</a>
-    <span class="k">def</span> <span class="nf">set_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_metadata</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">new_name</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="BaseDataset.set_description">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.set_description">[docs]</a>
-    <span class="k">def</span> <span class="nf">set_description</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_description</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_description</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_description</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_metadata</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="n">new_description</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="BaseDataset.set_visibility">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.set_visibility">[docs]</a>
-    <span class="k">def</span> <span class="nf">set_visibility</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_visibility</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_visibility</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_visibility</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_metadata</span><span class="p">(</span><span class="n">visibility</span><span class="o">=</span><span class="n">new_visibility</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="BaseDataset.set_group">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.set_group">[docs]</a>
-    <span class="k">def</span> <span class="nf">set_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_group</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_group</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_metadata</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="n">new_group</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="BaseDataset.set_tags">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.set_tags">[docs]</a>
-    <span class="k">def</span> <span class="nf">set_tags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_tags</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_tags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_tags</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_metadata</span><span class="p">(</span><span class="n">tags</span><span class="o">=</span><span class="n">new_tags</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="BaseDataset.set_tagline">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.set_tagline">[docs]</a>
-    <span class="k">def</span> <span class="nf">set_tagline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_tagline</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_tagline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_tagline</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_metadata</span><span class="p">(</span><span class="n">tagline</span><span class="o">=</span><span class="n">new_tagline</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="BaseDataset.set_provenance">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.set_provenance">[docs]</a>
-    <span class="k">def</span> <span class="nf">set_provenance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_provenance</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_provenance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_provenance</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_metadata</span><span class="p">(</span><span class="n">provenance</span><span class="o">=</span><span class="n">new_provenance</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="BaseDataset.set_metadata">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.set_metadata">[docs]</a>
-    <span class="k">def</span> <span class="nf">set_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_metadata</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_metadata</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_metadata</span><span class="p">(</span><span class="n">metadata</span><span class="o">=</span><span class="n">new_metadata</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="BaseDataset.set_default_tag">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.set_default_tag">[docs]</a>
-    <span class="k">def</span> <span class="nf">set_default_tag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_default_tag</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_default_tag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_default_tag</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_metadata</span><span class="p">(</span><span class="n">default_tag</span><span class="o">=</span><span class="n">new_default_tag</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="BaseDataset.set_default_priority">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.set_default_priority">[docs]</a>
-    <span class="k">def</span> <span class="nf">set_default_priority</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_default_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_default_priority</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_default_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_metadata</span><span class="p">(</span><span class="n">default_priority</span><span class="o">=</span><span class="n">new_default_priority</span><span class="p">)</span></div>
 
 
@@ -933,7 +933,7 @@
     <span class="c1">###################################</span>
 <div class="viewcode-block" id="BaseDataset.fetch_specification_names">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.fetch_specification_names">[docs]</a>
-    <span class="k">def</span> <span class="nf">fetch_specification_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fetch_specification_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Fetch all entry names from the remote server</span>
 
@@ -949,7 +949,7 @@
         <span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_internal_fetch_specifications</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_internal_fetch_specifications</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">specification_names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -990,7 +990,7 @@
 
 <div class="viewcode-block" id="BaseDataset.fetch_specifications">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.fetch_specifications">[docs]</a>
-    <span class="k">def</span> <span class="nf">fetch_specifications</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fetch_specifications</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">specification_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">force_refetch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1029,7 +1029,7 @@
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">specification_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">specification_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_specification_names</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_view</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_specification_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">get_specification_names</span><span class="p">()</span>
@@ -1039,7 +1039,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_specification_names</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">specifications</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">specifications</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="n">specs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">get_all_specifications</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">specs</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_view</span><span class="p">:</span>
@@ -1050,7 +1050,7 @@
 
 <div class="viewcode-block" id="BaseDataset.rename_specification">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.rename_specification">[docs]</a>
-    <span class="k">def</span> <span class="nf">rename_specification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">new_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rename_specification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">new_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
 
@@ -1071,7 +1071,7 @@
 
 <div class="viewcode-block" id="BaseDataset.delete_specification">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.delete_specification">[docs]</a>
-    <span class="k">def</span> <span class="nf">delete_specification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">delete_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DeleteMetadata</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_specification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">delete_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DeleteMetadata</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
 
@@ -1096,7 +1096,7 @@
     <span class="c1">###################################</span>
 <div class="viewcode-block" id="BaseDataset.fetch_entry_names">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.fetch_entry_names">[docs]</a>
-    <span class="k">def</span> <span class="nf">fetch_entry_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fetch_entry_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Fetch all entry names from the remote server</span>
 
@@ -1112,7 +1112,7 @@
         <span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_internal_fetch_entries</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_internal_fetch_entries</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">entry_names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -1153,7 +1153,7 @@
 
 <div class="viewcode-block" id="BaseDataset.fetch_entries">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.fetch_entries">[docs]</a>
-    <span class="k">def</span> <span class="nf">fetch_entries</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fetch_entries</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">entry_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">force_refetch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -1201,7 +1201,7 @@
 
 <div class="viewcode-block" id="BaseDataset.get_entry">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.get_entry">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_entry</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_entry</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">entry_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">force_refetch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -1223,7 +1223,7 @@
 
 <div class="viewcode-block" id="BaseDataset.iterate_entries">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.iterate_entries">[docs]</a>
-    <span class="k">def</span> <span class="nf">iterate_entries</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">iterate_entries</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">entry_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">force_refetch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -1291,7 +1291,7 @@
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">entry_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">entry_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_entry_names</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_view</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_entry_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">get_entry_names</span><span class="p">()</span>
@@ -1302,7 +1302,7 @@
 
 <div class="viewcode-block" id="BaseDataset.rename_entries">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.rename_entries">[docs]</a>
-    <span class="k">def</span> <span class="nf">rename_entries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rename_entries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
 
@@ -1322,7 +1322,7 @@
 
 <div class="viewcode-block" id="BaseDataset.modify_entries">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.modify_entries">[docs]</a>
-    <span class="k">def</span> <span class="nf">modify_entries</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">modify_entries</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">attribute_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">comment_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1351,7 +1351,7 @@
 
 <div class="viewcode-block" id="BaseDataset.delete_entries">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.delete_entries">[docs]</a>
-    <span class="k">def</span> <span class="nf">delete_entries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">delete_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DeleteMetadata</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_entries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">delete_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DeleteMetadata</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
 
@@ -1376,7 +1376,7 @@
     <span class="c1">###########################</span>
     <span class="c1"># Records</span>
     <span class="c1">###########################</span>
-    <span class="k">def</span> <span class="nf">_internal_fetch_records</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_internal_fetch_records</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">entry_names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
         <span class="n">specification_names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
@@ -1442,7 +1442,7 @@
 
         <span class="k">return</span> <span class="n">update_records</span>
 
-    <span class="k">def</span> <span class="nf">_internal_update_records</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_internal_update_records</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">entry_names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
         <span class="n">specification_names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
@@ -1524,7 +1524,7 @@
 
 <div class="viewcode-block" id="BaseDataset.fetch_records">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.fetch_records">[docs]</a>
-    <span class="k">def</span> <span class="nf">fetch_records</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fetch_records</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">entry_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">specification_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1625,7 +1625,7 @@
 
 <div class="viewcode-block" id="BaseDataset.get_record">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.get_record">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_record</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_record</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">entry_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">specification_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -1672,7 +1672,7 @@
 
 <div class="viewcode-block" id="BaseDataset.iterate_records">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.iterate_records">[docs]</a>
-    <span class="k">def</span> <span class="nf">iterate_records</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">iterate_records</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">entry_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">specification_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1764,7 +1764,7 @@
 
 <div class="viewcode-block" id="BaseDataset.remove_records">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.remove_records">[docs]</a>
-    <span class="k">def</span> <span class="nf">remove_records</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">remove_records</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">entry_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">specification_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1800,7 +1800,7 @@
 
 <div class="viewcode-block" id="BaseDataset.modify_records">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.modify_records">[docs]</a>
-    <span class="k">def</span> <span class="nf">modify_records</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">modify_records</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">entry_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">specification_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1839,7 +1839,7 @@
 
 <div class="viewcode-block" id="BaseDataset.reset_records">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.reset_records">[docs]</a>
-    <span class="k">def</span> <span class="nf">reset_records</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_records</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">entry_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">specification_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1873,7 +1873,7 @@
 
 <div class="viewcode-block" id="BaseDataset.cancel_records">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.cancel_records">[docs]</a>
-    <span class="k">def</span> <span class="nf">cancel_records</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cancel_records</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">entry_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">specification_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1907,7 +1907,7 @@
 
 <div class="viewcode-block" id="BaseDataset.uncancel_records">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.uncancel_records">[docs]</a>
-    <span class="k">def</span> <span class="nf">uncancel_records</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">uncancel_records</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">entry_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">specification_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1941,7 +1941,7 @@
 
 <div class="viewcode-block" id="BaseDataset.invalidate_records">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.invalidate_records">[docs]</a>
-    <span class="k">def</span> <span class="nf">invalidate_records</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">invalidate_records</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">entry_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">specification_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1975,7 +1975,7 @@
 
 <div class="viewcode-block" id="BaseDataset.uninvalidate_records">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.uninvalidate_records">[docs]</a>
-    <span class="k">def</span> <span class="nf">uninvalidate_records</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">uninvalidate_records</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">entry_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">specification_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -2009,7 +2009,7 @@
 
 <div class="viewcode-block" id="BaseDataset.compile_values">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.compile_values">[docs]</a>
-    <span class="k">def</span> <span class="nf">compile_values</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compile_values</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">value_call</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
         <span class="n">value_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span>
@@ -2062,9 +2062,9 @@
 <span class="sd">        to be distributed across columns in the resulting DataFrame. &#39;value_call&#39; should always return the</span>
 <span class="sd">        same number of values for each record if unpack is True.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
-        <span class="k">def</span> <span class="nf">_data_generator</span><span class="p">(</span><span class="n">unpack</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_data_generator</span><span class="p">(</span><span class="n">unpack</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">entry_name</span><span class="p">,</span> <span class="n">spec_name</span><span class="p">,</span> <span class="n">record</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterate_records</span><span class="p">(</span>
                 <span class="n">entry_names</span><span class="o">=</span><span class="n">entry_names</span><span class="p">,</span>
                 <span class="n">specification_names</span><span class="o">=</span><span class="n">specification_names</span><span class="p">,</span>
@@ -2077,7 +2077,7 @@
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">yield</span> <span class="n">entry_name</span><span class="p">,</span> <span class="n">spec_name</span><span class="p">,</span> <span class="n">value_call</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">_check_first</span><span class="p">():</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_check_first</span><span class="p">():</span>
             <span class="n">gen</span> <span class="o">=</span> <span class="n">_data_generator</span><span class="p">()</span>
             <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">first_value</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
 
@@ -2109,7 +2109,7 @@
 
 <div class="viewcode-block" id="BaseDataset.get_properties_df">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.get_properties_df">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_properties_df</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">properties_list</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;DataFrame&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_properties_df</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">properties_list</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;DataFrame&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Retrieve a DataFrame populated with the specified properties from dataset records.</span>
 
@@ -2147,7 +2147,7 @@
     <span class="c1">##############################</span>
 <div class="viewcode-block" id="BaseDataset.refresh_cache">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.refresh_cache">[docs]</a>
-    <span class="k">def</span> <span class="nf">refresh_cache</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">refresh_cache</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">entry_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">specification_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -2270,7 +2270,7 @@
 
 <div class="viewcode-block" id="BaseDataset.fetch_contributed_values">
 <a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.fetch_contributed_values">[docs]</a>
-    <span class="k">def</span> <span class="nf">fetch_contributed_values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fetch_contributed_values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
 
@@ -2282,7 +2282,7 @@
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">contributed_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ContributedValues</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">contributed_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ContributedValues</span><span class="p">]:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">contributed_values_</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fetch_contributed_values</span><span class="p">()</span>
 
@@ -2290,7 +2290,7 @@
 
 
 
-<span class="k">class</span> <span class="nc">DatasetAddBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DatasetAddBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">description</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">tagline</span><span class="p">:</span> <span class="nb">str</span>
@@ -2305,7 +2305,7 @@
     <span class="n">existing_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 
 
-<span class="k">class</span> <span class="nc">DatasetModifyMetadata</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DatasetModifyMetadata</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">description</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">tags</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
@@ -2319,49 +2319,49 @@
     <span class="n">default_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span>
 
 
-<span class="k">class</span> <span class="nc">DatasetQueryModel</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DatasetQueryModel</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
     <span class="n">dataset_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">dataset_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">exclude</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
 
 
-<span class="k">class</span> <span class="nc">DatasetFetchSpecificationBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DatasetFetchSpecificationBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
     <span class="n">names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">missing_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 
 
-<span class="k">class</span> <span class="nc">DatasetFetchEntryBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DatasetFetchEntryBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
     <span class="n">names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">missing_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 
 
-<span class="k">class</span> <span class="nc">DatasetDeleteStrBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DatasetDeleteStrBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
     <span class="n">names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">delete_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 
 
-<span class="k">class</span> <span class="nc">DatasetRemoveRecordsBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DatasetRemoveRecordsBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
     <span class="n">entry_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">specification_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">delete_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 
 
-<span class="k">class</span> <span class="nc">DatasetDeleteParams</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DatasetDeleteParams</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
     <span class="n">delete_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;delete_records&quot;</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">validate_lists</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_lists</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">validate_list_to_single</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">DatasetFetchRecordsBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DatasetFetchRecordsBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
     <span class="n">entry_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">specification_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
 
 
-<span class="k">class</span> <span class="nc">DatasetSubmitBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DatasetSubmitBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
     <span class="n">entry_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">specification_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">tag</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -2370,7 +2370,7 @@
     <span class="n">find_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
 
 
-<span class="k">class</span> <span class="nc">DatasetRecordModifyBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DatasetRecordModifyBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
     <span class="n">entry_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">specification_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -2379,34 +2379,34 @@
     <span class="n">comment</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
 
-<span class="k">class</span> <span class="nc">DatasetRecordRevertBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DatasetRecordRevertBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
     <span class="n">entry_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">specification_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">revert_status</span><span class="p">:</span> <span class="n">RecordStatusEnum</span> <span class="o">=</span> <span class="kc">None</span>
 
 
-<span class="k">class</span> <span class="nc">DatasetQueryRecords</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DatasetQueryRecords</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
     <span class="n">record_id</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
     <span class="n">dataset_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
 
 
-<span class="k">class</span> <span class="nc">DatasetDeleteEntryBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DatasetDeleteEntryBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
     <span class="n">names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">delete_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 
 
-<span class="k">class</span> <span class="nc">DatasetDeleteSpecificationBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DatasetDeleteSpecificationBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
     <span class="n">names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">delete_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 
 
-<span class="k">class</span> <span class="nc">DatasetModifyEntryBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DatasetModifyEntryBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
     <span class="n">attribute_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">comment_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">overwrite_attributes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 
 
-<span class="k">def</span> <span class="nf">dataset_from_dict</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">client</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">cache_data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DatasetCache</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseDataset</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">dataset_from_dict</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">client</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">cache_data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DatasetCache</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseDataset</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Create a dataset object from a datamodel</span>
 
@@ -2421,7 +2421,7 @@
     <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">,</span> <span class="n">cache_data</span><span class="o">=</span><span class="n">cache_data</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">load_dataset_view</span><span class="p">(</span><span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseDataset</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_dataset_view</span><span class="p">(</span><span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseDataset</span><span class="p">:</span>
     <span class="c1"># Reads this as a read-only &quot;view&quot;</span>
     <span class="n">ds_meta</span> <span class="o">=</span> <span class="n">read_dataset_metadata</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
     <span class="n">ds_type</span> <span class="o">=</span> <span class="n">BaseDataset</span><span class="o">.</span><span class="n">get_subclass</span><span class="p">(</span><span class="n">ds_meta</span><span class="p">[</span><span class="s2">&quot;dataset_type&quot;</span><span class="p">])</span>
@@ -2434,12 +2434,12 @@
     <span class="k">return</span> <span class="n">dataset_from_dict</span><span class="p">(</span><span class="n">ds_meta</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cache_data</span><span class="o">=</span><span class="n">ds_cache</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">dataset_from_cache</span><span class="p">(</span><span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseDataset</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">dataset_from_cache</span><span class="p">(</span><span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseDataset</span><span class="p">:</span>
     <span class="c1"># Keep old name around</span>
     <span class="k">return</span> <span class="n">load_dataset_view</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">create_dataset_view</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_dataset_view</span><span class="p">(</span>
     <span class="n">client</span><span class="p">:</span> <span class="n">PortalClient</span><span class="p">,</span>
     <span class="n">dataset_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.client &#8212; QCArchive 0.57.post41+gbf839b2d documentation</title>
+    <title>qcportal.client &#8212; QCArchive 0.57.post46+gf5b076e3 documentation</title>
   
   
   
@@ -29,7 +29,7 @@
   <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=72eee364"></script>
+    <script src="../../_static/documentation_options.js?v=b4c5247e"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.57.post41+gbf839b2d" />
+  <meta name="docsearch:version" content="0.57.post46+gf5b076e3" />
   </head>
   
   
@@ -438,51 +438,51 @@
                 <article class="bd-article">
                   
   <h1>Source code for qcportal.client</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Type</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Type</span>
 
-<span class="kn">from</span> <span class="nn">tabulate</span> <span class="kn">import</span> <span class="n">tabulate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tabulate</span><span class="w"> </span><span class="kn">import</span> <span class="n">tabulate</span>
 
-<span class="kn">from</span> <span class="nn">qcportal.cache</span> <span class="kn">import</span> <span class="n">DatasetCache</span><span class="p">,</span> <span class="n">read_dataset_metadata</span>
-<span class="kn">from</span> <span class="nn">qcportal.gridoptimization</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.cache</span><span class="w"> </span><span class="kn">import</span> <span class="n">DatasetCache</span><span class="p">,</span> <span class="n">read_dataset_metadata</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.gridoptimization</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">GridoptimizationKeywords</span><span class="p">,</span>
     <span class="n">GridoptimizationAddBody</span><span class="p">,</span>
     <span class="n">GridoptimizationRecord</span><span class="p">,</span>
     <span class="n">GridoptimizationQueryFilters</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">qcportal.manybody</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.manybody</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">ManybodyKeywords</span><span class="p">,</span>
     <span class="n">ManybodyRecord</span><span class="p">,</span>
     <span class="n">ManybodyAddBody</span><span class="p">,</span>
     <span class="n">ManybodyQueryFilters</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">qcportal.neb</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.neb</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">NEBKeywords</span><span class="p">,</span>
     <span class="n">NEBAddBody</span><span class="p">,</span>
     <span class="n">NEBQueryFilters</span><span class="p">,</span>
     <span class="n">NEBRecord</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">qcportal.optimization</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.optimization</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">OptimizationProtocols</span><span class="p">,</span>
     <span class="n">OptimizationRecord</span><span class="p">,</span>
     <span class="n">OptimizationQueryFilters</span><span class="p">,</span>
     <span class="n">OptimizationSpecification</span><span class="p">,</span>
     <span class="n">OptimizationAddBody</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">qcportal.reaction</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.reaction</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">ReactionAddBody</span><span class="p">,</span>
     <span class="n">ReactionRecord</span><span class="p">,</span>
     <span class="n">ReactionKeywords</span><span class="p">,</span>
     <span class="n">ReactionQueryFilters</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">qcportal.services.models</span> <span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.services.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa</span>
     <span class="n">ServiceSubtaskRecord</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">qcportal.singlepoint</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">QCSpecification</span><span class="p">,</span>
     <span class="n">SinglepointRecord</span><span class="p">,</span>
     <span class="n">SinglepointAddBody</span><span class="p">,</span>
@@ -490,13 +490,13 @@
     <span class="n">SinglepointDriver</span><span class="p">,</span>
     <span class="n">SinglepointProtocols</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">qcportal.torsiondrive</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.torsiondrive</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">TorsiondriveKeywords</span><span class="p">,</span>
     <span class="n">TorsiondriveAddBody</span><span class="p">,</span>
     <span class="n">TorsiondriveRecord</span><span class="p">,</span>
     <span class="n">TorsiondriveQueryFilters</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.auth</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.auth</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">UserInfo</span><span class="p">,</span>
     <span class="n">RoleInfo</span><span class="p">,</span>
     <span class="n">GroupInfo</span><span class="p">,</span>
@@ -505,10 +505,10 @@
     <span class="n">is_valid_rolename</span><span class="p">,</span>
     <span class="n">is_valid_groupname</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.base_models</span> <span class="kn">import</span> <span class="n">CommonBulkGetNamesBody</span><span class="p">,</span> <span class="n">CommonBulkGetBody</span>
-<span class="kn">from</span> <span class="nn">.cache</span> <span class="kn">import</span> <span class="n">PortalCache</span>
-<span class="kn">from</span> <span class="nn">.client_base</span> <span class="kn">import</span> <span class="n">PortalClientBase</span>
-<span class="kn">from</span> <span class="nn">.dataset_models</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.base_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">CommonBulkGetNamesBody</span><span class="p">,</span> <span class="n">CommonBulkGetBody</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.cache</span><span class="w"> </span><span class="kn">import</span> <span class="n">PortalCache</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.client_base</span><span class="w"> </span><span class="kn">import</span> <span class="n">PortalClientBase</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.dataset_models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">BaseDataset</span><span class="p">,</span>
     <span class="n">DatasetQueryModel</span><span class="p">,</span>
     <span class="n">DatasetQueryRecords</span><span class="p">,</span>
@@ -518,11 +518,11 @@
     <span class="n">load_dataset_view</span><span class="p">,</span>  <span class="c1"># noqa</span>
     <span class="n">create_dataset_view</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.internal_jobs</span> <span class="kn">import</span> <span class="n">InternalJob</span><span class="p">,</span> <span class="n">InternalJobQueryFilters</span><span class="p">,</span> <span class="n">InternalJobQueryIterator</span><span class="p">,</span> <span class="n">InternalJobStatusEnum</span>
-<span class="kn">from</span> <span class="nn">.managers</span> <span class="kn">import</span> <span class="n">ManagerQueryFilters</span><span class="p">,</span> <span class="n">ManagerQueryIterator</span><span class="p">,</span> <span class="n">ComputeManager</span>
-<span class="kn">from</span> <span class="nn">.metadata_models</span> <span class="kn">import</span> <span class="n">UpdateMetadata</span><span class="p">,</span> <span class="n">InsertMetadata</span><span class="p">,</span> <span class="n">DeleteMetadata</span>
-<span class="kn">from</span> <span class="nn">.molecules</span> <span class="kn">import</span> <span class="n">Molecule</span><span class="p">,</span> <span class="n">MoleculeIdentifiers</span><span class="p">,</span> <span class="n">MoleculeModifyBody</span><span class="p">,</span> <span class="n">MoleculeQueryIterator</span><span class="p">,</span> <span class="n">MoleculeQueryFilters</span>
-<span class="kn">from</span> <span class="nn">.record_models</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.internal_jobs</span><span class="w"> </span><span class="kn">import</span> <span class="n">InternalJob</span><span class="p">,</span> <span class="n">InternalJobQueryFilters</span><span class="p">,</span> <span class="n">InternalJobQueryIterator</span><span class="p">,</span> <span class="n">InternalJobStatusEnum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.managers</span><span class="w"> </span><span class="kn">import</span> <span class="n">ManagerQueryFilters</span><span class="p">,</span> <span class="n">ManagerQueryIterator</span><span class="p">,</span> <span class="n">ComputeManager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.metadata_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">UpdateMetadata</span><span class="p">,</span> <span class="n">InsertMetadata</span><span class="p">,</span> <span class="n">DeleteMetadata</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.molecules</span><span class="w"> </span><span class="kn">import</span> <span class="n">Molecule</span><span class="p">,</span> <span class="n">MoleculeIdentifiers</span><span class="p">,</span> <span class="n">MoleculeModifyBody</span><span class="p">,</span> <span class="n">MoleculeQueryIterator</span><span class="p">,</span> <span class="n">MoleculeQueryFilters</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.record_models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">RecordStatusEnum</span><span class="p">,</span>
     <span class="n">PriorityEnum</span><span class="p">,</span>
     <span class="n">RecordQueryFilters</span><span class="p">,</span>
@@ -533,7 +533,7 @@
     <span class="n">RecordQueryIterator</span><span class="p">,</span>
     <span class="n">records_from_dicts</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.serverinfo</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.serverinfo</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">AccessLogQueryFilters</span><span class="p">,</span>
     <span class="n">AccessLogSummaryFilters</span><span class="p">,</span>
     <span class="n">AccessLogSummaryEntry</span><span class="p">,</span>
@@ -543,19 +543,19 @@
     <span class="n">ErrorLogQueryIterator</span><span class="p">,</span>
     <span class="n">DeleteBeforeDateBody</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">make_list</span><span class="p">,</span> <span class="n">chunk_iterable</span><span class="p">,</span> <span class="n">process_chunk_iterable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_list</span><span class="p">,</span> <span class="n">chunk_iterable</span><span class="p">,</span> <span class="n">process_chunk_iterable</span>
 
 <span class="n">_T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;_T&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">BaseRecord</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="PortalClient">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient">[docs]</a>
-<span class="k">class</span> <span class="nc">PortalClient</span><span class="p">(</span><span class="n">PortalClientBase</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PortalClient</span><span class="p">(</span><span class="n">PortalClientBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Main class for interacting with a QCArchive server</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">address</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">username</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -593,7 +593,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;PortalClient&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">PortalCache</span><span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">,</span> <span class="n">cache_max_size</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;A short representation of the current PortalClient.</span>
 
 <span class="sd">        Returns</span>
@@ -606,7 +606,7 @@
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span>
 
-    <span class="k">def</span> <span class="nf">_repr_html_</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_repr_html_</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="n">output</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">        &lt;h3&gt;PortalClient&lt;/h3&gt;</span>
 <span class="s2">        &lt;ul&gt;</span>
@@ -621,7 +621,7 @@
 
 <div class="viewcode-block" id="PortalClient.get_server_information">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_server_information">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_server_information</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_server_information</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Request general information about the server</span>
 
 <span class="sd">        Returns</span>
@@ -639,7 +639,7 @@
     <span class="c1">#################################################</span>
 <div class="viewcode-block" id="PortalClient.get_motd">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_motd">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_motd</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_motd</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Gets the Message-of-the-Day (MOTD) from the server</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -649,7 +649,7 @@
 
 <div class="viewcode-block" id="PortalClient.set_motd">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.set_motd">[docs]</a>
-    <span class="k">def</span> <span class="nf">set_motd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_motd</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_motd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_motd</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sets the Message-of-the-Day (MOTD) on the server</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -662,13 +662,13 @@
     <span class="c1">##############################################################</span>
 <div class="viewcode-block" id="PortalClient.list_datasets">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.list_datasets">[docs]</a>
-    <span class="k">def</span> <span class="nf">list_datasets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">list_datasets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/datasets&quot;</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]])</span></div>
 
 
 <div class="viewcode-block" id="PortalClient.list_datasets_table">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.list_datasets_table">[docs]</a>
-    <span class="k">def</span> <span class="nf">list_datasets_table</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">list_datasets_table</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="n">ds_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_datasets</span><span class="p">()</span>
 
         <span class="c1"># older servers don&#39;t have record_count</span>
@@ -684,13 +684,13 @@
 
 <div class="viewcode-block" id="PortalClient.print_datasets_table">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.print_datasets_table">[docs]</a>
-    <span class="k">def</span> <span class="nf">print_datasets_table</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">print_datasets_table</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">list_datasets_table</span><span class="p">())</span></div>
 
 
 <div class="viewcode-block" id="PortalClient.get_dataset">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_dataset">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dataset_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dataset_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="n">body</span> <span class="o">=</span> <span class="n">DatasetQueryModel</span><span class="p">(</span><span class="n">dataset_name</span><span class="o">=</span><span class="n">dataset_name</span><span class="p">,</span> <span class="n">dataset_type</span><span class="o">=</span><span class="n">dataset_type</span><span class="p">)</span>
         <span class="n">ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/query&quot;</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">)</span>
 
@@ -699,7 +699,7 @@
 
 <div class="viewcode-block" id="PortalClient.query_dataset_records">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.query_dataset_records">[docs]</a>
-    <span class="k">def</span> <span class="nf">query_dataset_records</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">query_dataset_records</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">record_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
         <span class="n">dataset_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -710,14 +710,14 @@
 
 <div class="viewcode-block" id="PortalClient.get_dataset_by_id">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_dataset_by_id">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_dataset_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dataset_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="n">ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="n">dataset_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">dataset_from_dict</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="PortalClient.dataset_from_cache">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.dataset_from_cache">[docs]</a>
-    <span class="k">def</span> <span class="nf">dataset_from_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseDataset</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dataset_from_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseDataset</span><span class="p">:</span>
         <span class="n">ds_meta</span> <span class="o">=</span> <span class="n">read_dataset_metadata</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
         <span class="n">ds_type</span> <span class="o">=</span> <span class="n">BaseDataset</span><span class="o">.</span><span class="n">get_subclass</span><span class="p">(</span><span class="n">ds_meta</span><span class="p">[</span><span class="s2">&quot;dataset_type&quot;</span><span class="p">])</span>
         <span class="n">ds_cache</span> <span class="o">=</span> <span class="n">DatasetCache</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="n">ds_type</span><span class="p">)</span>
@@ -740,7 +740,7 @@
 
 <div class="viewcode-block" id="PortalClient.create_dataset_view">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.create_dataset_view">[docs]</a>
-    <span class="k">def</span> <span class="nf">create_dataset_view</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_dataset_view</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">dataset_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="p">):</span>
         <span class="k">return</span> <span class="n">create_dataset_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset_id</span><span class="p">,</span> <span class="n">file_path</span><span class="p">,</span> <span class="n">include</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">)</span></div>
@@ -748,13 +748,13 @@
 
 <div class="viewcode-block" id="PortalClient.get_dataset_status_by_id">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_dataset_status_by_id">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_dataset_status_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dataset_status_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="n">dataset_id</span><span class="si">}</span><span class="s2">/status&quot;</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="nb">int</span><span class="p">]])</span></div>
 
 
 <div class="viewcode-block" id="PortalClient.add_dataset">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.add_dataset">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_dataset</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_dataset</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">dataset_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -804,7 +804,7 @@
 
 <div class="viewcode-block" id="PortalClient.delete_dataset">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.delete_dataset">[docs]</a>
-    <span class="k">def</span> <span class="nf">delete_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">delete_records</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">delete_records</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
         <span class="n">params</span> <span class="o">=</span> <span class="n">DatasetDeleteParams</span><span class="p">(</span><span class="n">delete_records</span><span class="o">=</span><span class="n">delete_records</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;delete&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="n">dataset_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">url_params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span></div>
 
@@ -815,7 +815,7 @@
 
 <div class="viewcode-block" id="PortalClient.get_molecules">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_molecules">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_molecules</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_molecules</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">molecule_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
         <span class="n">missing_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -860,7 +860,7 @@
 
 <div class="viewcode-block" id="PortalClient.query_molecules">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.query_molecules">[docs]</a>
-    <span class="k">def</span> <span class="nf">query_molecules</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">query_molecules</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">molecule_hash</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -905,7 +905,7 @@
 
 <div class="viewcode-block" id="PortalClient.add_molecules">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.add_molecules">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_molecules</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">molecules</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Molecule</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">InsertMetadata</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_molecules</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">molecules</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Molecule</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">InsertMetadata</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add molecules to the server database</span>
 
 <span class="sd">        If the same molecule (defined by having the same hash) already exists, then the existing</span>
@@ -939,7 +939,7 @@
 
 <div class="viewcode-block" id="PortalClient.modify_molecule">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.modify_molecule">[docs]</a>
-    <span class="k">def</span> <span class="nf">modify_molecule</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">modify_molecule</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">molecule_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -986,7 +986,7 @@
 
 <div class="viewcode-block" id="PortalClient.delete_molecules">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.delete_molecules">[docs]</a>
-    <span class="k">def</span> <span class="nf">delete_molecules</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">molecule_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">DeleteMetadata</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_molecules</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">molecule_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">DeleteMetadata</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Deletes molecules from the server</span>
 
 <span class="sd">        This will not delete any molecules that are in use</span>
@@ -1013,7 +1013,7 @@
     <span class="c1"># General record functions</span>
     <span class="c1">##############################################################</span>
 
-    <span class="k">def</span> <span class="nf">_fetch_records</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fetch_records</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">record_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">_T</span><span class="p">]],</span>
         <span class="n">record_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
@@ -1065,7 +1065,7 @@
         <span class="n">max_batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_records&quot;</span><span class="p">]</span>
         <span class="n">initial_batch_size</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">max_batch_size</span> <span class="o">//</span> <span class="mi">10</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">_download_chunk</span><span class="p">(</span><span class="n">id_chunk</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_download_chunk</span><span class="p">(</span><span class="n">id_chunk</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
             <span class="n">body</span> <span class="o">=</span> <span class="n">CommonBulkGetBody</span><span class="p">(</span><span class="n">ids</span><span class="o">=</span><span class="n">id_chunk</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="n">include</span><span class="p">,</span> <span class="n">missing_ok</span><span class="o">=</span><span class="n">missing_ok</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]],</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">)</span>
 
@@ -1090,7 +1090,7 @@
 
 <div class="viewcode-block" id="PortalClient.get_records">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_records">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_records</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_records</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
         <span class="n">missing_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -1126,7 +1126,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_records_by_type</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">,</span> <span class="n">missing_ok</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_get_records_by_type</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_records_by_type</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">record_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">_T</span><span class="p">]],</span>
         <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
@@ -1190,7 +1190,7 @@
 
 <div class="viewcode-block" id="PortalClient.query_records">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.query_records">[docs]</a>
-    <span class="k">def</span> <span class="nf">query_records</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">query_records</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">record_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1280,7 +1280,7 @@
 
 <div class="viewcode-block" id="PortalClient.reset_records">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.reset_records">[docs]</a>
-    <span class="k">def</span> <span class="nf">reset_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">UpdateMetadata</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">UpdateMetadata</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Resets running or errored records to be waiting again</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1295,7 +1295,7 @@
 
 <div class="viewcode-block" id="PortalClient.cancel_records">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.cancel_records">[docs]</a>
-    <span class="k">def</span> <span class="nf">cancel_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">UpdateMetadata</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cancel_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">UpdateMetadata</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Marks running, waiting, or errored records as cancelled</span>
 
@@ -1312,7 +1312,7 @@
 
 <div class="viewcode-block" id="PortalClient.invalidate_records">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.invalidate_records">[docs]</a>
-    <span class="k">def</span> <span class="nf">invalidate_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">UpdateMetadata</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">invalidate_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">UpdateMetadata</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Marks a completed record as invalid</span>
 
@@ -1330,7 +1330,7 @@
 
 <div class="viewcode-block" id="PortalClient.delete_records">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.delete_records">[docs]</a>
-    <span class="k">def</span> <span class="nf">delete_records</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_records</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="n">soft_delete</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">delete_children</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DeleteMetadata</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1359,7 +1359,7 @@
 
 <div class="viewcode-block" id="PortalClient.uninvalidate_records">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.uninvalidate_records">[docs]</a>
-    <span class="k">def</span> <span class="nf">uninvalidate_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">UpdateMetadata</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">uninvalidate_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">UpdateMetadata</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Undo the invalidation of records</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1374,7 +1374,7 @@
 
 <div class="viewcode-block" id="PortalClient.uncancel_records">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.uncancel_records">[docs]</a>
-    <span class="k">def</span> <span class="nf">uncancel_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">UpdateMetadata</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">uncancel_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">UpdateMetadata</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Undo the cancellation of records</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1389,7 +1389,7 @@
 
 <div class="viewcode-block" id="PortalClient.undelete_records">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.undelete_records">[docs]</a>
-    <span class="k">def</span> <span class="nf">undelete_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">UpdateMetadata</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">undelete_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">UpdateMetadata</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Undo the (soft) deletion of records</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1404,7 +1404,7 @@
 
 <div class="viewcode-block" id="PortalClient.modify_records">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.modify_records">[docs]</a>
-    <span class="k">def</span> <span class="nf">modify_records</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">modify_records</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
         <span class="n">new_tag</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1426,7 +1426,7 @@
 
 <div class="viewcode-block" id="PortalClient.add_comment">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.add_comment">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_comment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="n">comment</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UpdateMetadata</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_comment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="n">comment</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UpdateMetadata</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Adds a comment to records</span>
 
@@ -1453,7 +1453,7 @@
 
 <div class="viewcode-block" id="PortalClient.get_waiting_reason">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_waiting_reason">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_waiting_reason</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_waiting_reason</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the reason a record is in the waiting status</span>
 
@@ -1480,7 +1480,7 @@
 
 <div class="viewcode-block" id="PortalClient.add_singlepoints">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.add_singlepoints">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_singlepoints</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_singlepoints</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">molecules</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Molecule</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Molecule</span><span class="p">]]],</span>
         <span class="n">program</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -1571,7 +1571,7 @@
 
 <div class="viewcode-block" id="PortalClient.get_singlepoints">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_singlepoints">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_singlepoints</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_singlepoints</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
         <span class="n">missing_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -1606,7 +1606,7 @@
 
 <div class="viewcode-block" id="PortalClient.query_singlepoints">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.query_singlepoints">[docs]</a>
-    <span class="k">def</span> <span class="nf">query_singlepoints</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">query_singlepoints</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">record_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1713,7 +1713,7 @@
 
 <div class="viewcode-block" id="PortalClient.add_optimizations">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.add_optimizations">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_optimizations</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_optimizations</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">initial_molecules</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Molecule</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Molecule</span><span class="p">]]],</span>
         <span class="n">program</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -1800,7 +1800,7 @@
 
 <div class="viewcode-block" id="PortalClient.get_optimizations">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_optimizations">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_optimizations</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_optimizations</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
         <span class="n">missing_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -1835,7 +1835,7 @@
 
 <div class="viewcode-block" id="PortalClient.query_optimizations">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.query_optimizations">[docs]</a>
-    <span class="k">def</span> <span class="nf">query_optimizations</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">query_optimizations</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">record_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1945,7 +1945,7 @@
 
 <div class="viewcode-block" id="PortalClient.add_torsiondrives">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.add_torsiondrives">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_torsiondrives</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_torsiondrives</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">initial_molecules</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Molecule</span><span class="p">]]],</span>
         <span class="n">program</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -2022,7 +2022,7 @@
 
 <div class="viewcode-block" id="PortalClient.get_torsiondrives">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_torsiondrives">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_torsiondrives</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_torsiondrives</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
         <span class="n">missing_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -2057,7 +2057,7 @@
 
 <div class="viewcode-block" id="PortalClient.query_torsiondrives">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.query_torsiondrives">[docs]</a>
-    <span class="k">def</span> <span class="nf">query_torsiondrives</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">query_torsiondrives</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">record_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -2167,7 +2167,7 @@
 
 <div class="viewcode-block" id="PortalClient.add_gridoptimizations">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.add_gridoptimizations">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_gridoptimizations</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_gridoptimizations</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">initial_molecules</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Molecule</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Molecule</span><span class="p">]]],</span>
         <span class="n">program</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -2244,7 +2244,7 @@
 
 <div class="viewcode-block" id="PortalClient.get_gridoptimizations">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_gridoptimizations">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_gridoptimizations</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_gridoptimizations</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
         <span class="n">missing_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -2279,7 +2279,7 @@
 
 <div class="viewcode-block" id="PortalClient.query_gridoptimizations">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.query_gridoptimizations">[docs]</a>
-    <span class="k">def</span> <span class="nf">query_gridoptimizations</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">query_gridoptimizations</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">record_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -2389,7 +2389,7 @@
 
 <div class="viewcode-block" id="PortalClient.add_reactions">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.add_reactions">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_reactions</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_reactions</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">stoichiometries</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Molecule</span><span class="p">]]]],</span>
         <span class="n">program</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -2474,7 +2474,7 @@
 
 <div class="viewcode-block" id="PortalClient.get_reactions">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_reactions">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_reactions</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_reactions</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
         <span class="n">missing_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -2509,7 +2509,7 @@
 
 <div class="viewcode-block" id="PortalClient.query_reactions">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.query_reactions">[docs]</a>
-    <span class="k">def</span> <span class="nf">query_reactions</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">query_reactions</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">record_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -2619,7 +2619,7 @@
 
 <div class="viewcode-block" id="PortalClient.add_manybodys">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.add_manybodys">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_manybodys</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_manybodys</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">initial_molecules</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Molecule</span><span class="p">]],</span>
         <span class="n">program</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -2695,7 +2695,7 @@
 
 <div class="viewcode-block" id="PortalClient.get_manybodys">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_manybodys">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_manybodys</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_manybodys</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
         <span class="n">missing_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -2730,7 +2730,7 @@
 
 <div class="viewcode-block" id="PortalClient.query_manybodys">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.query_manybodys">[docs]</a>
-    <span class="k">def</span> <span class="nf">query_manybodys</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">query_manybodys</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">record_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -2836,7 +2836,7 @@
 
 <div class="viewcode-block" id="PortalClient.add_nebs">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.add_nebs">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_nebs</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_nebs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">initial_chains</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Molecule</span><span class="p">]]],</span>
         <span class="n">program</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -2918,7 +2918,7 @@
 
 <div class="viewcode-block" id="PortalClient.get_nebs">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_nebs">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_nebs</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_nebs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">record_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
         <span class="n">missing_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -2953,7 +2953,7 @@
 
 <div class="viewcode-block" id="PortalClient.query_nebs">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.query_nebs">[docs]</a>
-    <span class="k">def</span> <span class="nf">query_nebs</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">query_nebs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">record_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -3059,7 +3059,7 @@
 
 <div class="viewcode-block" id="PortalClient.get_managers">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_managers">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_managers</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_managers</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
         <span class="n">missing_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -3104,7 +3104,7 @@
 
 <div class="viewcode-block" id="PortalClient.query_managers">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.query_managers">[docs]</a>
-    <span class="k">def</span> <span class="nf">query_managers</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">query_managers</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">manager_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -3161,7 +3161,7 @@
 
 <div class="viewcode-block" id="PortalClient.query_access_log">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.query_access_log">[docs]</a>
-    <span class="k">def</span> <span class="nf">query_access_log</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">query_access_log</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">module</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -3211,7 +3211,7 @@
 
 <div class="viewcode-block" id="PortalClient.delete_access_log">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.delete_access_log">[docs]</a>
-    <span class="k">def</span> <span class="nf">delete_access_log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">before</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_access_log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">before</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Delete access log entries from the server</span>
 
@@ -3232,7 +3232,7 @@
 
 <div class="viewcode-block" id="PortalClient.query_error_log">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.query_error_log">[docs]</a>
-    <span class="k">def</span> <span class="nf">query_error_log</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">query_error_log</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">error_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -3278,7 +3278,7 @@
 
 <div class="viewcode-block" id="PortalClient.delete_error_log">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.delete_error_log">[docs]</a>
-    <span class="k">def</span> <span class="nf">delete_error_log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">before</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_error_log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">before</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Delete error log entries from the server</span>
 
@@ -3298,7 +3298,7 @@
 
 <div class="viewcode-block" id="PortalClient.get_internal_job">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_internal_job">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_internal_job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InternalJob</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_internal_job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InternalJob</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Gets information about an internal job on the server</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -3308,7 +3308,7 @@
 
 <div class="viewcode-block" id="PortalClient.query_internal_jobs">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.query_internal_jobs">[docs]</a>
-    <span class="k">def</span> <span class="nf">query_internal_jobs</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">query_internal_jobs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">job_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -3381,7 +3381,7 @@
 
 <div class="viewcode-block" id="PortalClient.cancel_internal_job">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.cancel_internal_job">[docs]</a>
-    <span class="k">def</span> <span class="nf">cancel_internal_job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cancel_internal_job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Cancels (to the best of our ability) an internal job</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -3393,13 +3393,13 @@
 
 <div class="viewcode-block" id="PortalClient.delete_internal_job">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.delete_internal_job">[docs]</a>
-    <span class="k">def</span> <span class="nf">delete_internal_job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_internal_job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;delete&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/internal_jobs/</span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="PortalClient.query_access_summary">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.query_access_summary">[docs]</a>
-    <span class="k">def</span> <span class="nf">query_access_summary</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">query_access_summary</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">group_by</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;day&quot;</span><span class="p">,</span>
@@ -3436,7 +3436,7 @@
 
 <div class="viewcode-block" id="PortalClient.list_roles">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.list_roles">[docs]</a>
-    <span class="k">def</span> <span class="nf">list_roles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">RoleInfo</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">list_roles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">RoleInfo</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        List all user roles on the server</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -3446,7 +3446,7 @@
 
 <div class="viewcode-block" id="PortalClient.get_role">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_role">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_role</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rolename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RoleInfo</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_role</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rolename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RoleInfo</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get information about a role on the server</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -3457,7 +3457,7 @@
 
 <div class="viewcode-block" id="PortalClient.add_role">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.add_role">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_role</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">role_info</span><span class="p">:</span> <span class="n">RoleInfo</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_role</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">role_info</span><span class="p">:</span> <span class="n">RoleInfo</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Adds a role with permissions to the server</span>
 
@@ -3470,7 +3470,7 @@
 
 <div class="viewcode-block" id="PortalClient.modify_role">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.modify_role">[docs]</a>
-    <span class="k">def</span> <span class="nf">modify_role</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">role_info</span><span class="p">:</span> <span class="n">RoleInfo</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RoleInfo</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">modify_role</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">role_info</span><span class="p">:</span> <span class="n">RoleInfo</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RoleInfo</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Modifies the permissions of a role on the server</span>
 
@@ -3488,7 +3488,7 @@
 
 <div class="viewcode-block" id="PortalClient.delete_role">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.delete_role">[docs]</a>
-    <span class="k">def</span> <span class="nf">delete_role</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rolename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_role</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rolename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Deletes a role from the server</span>
 
@@ -3508,7 +3508,7 @@
 
 <div class="viewcode-block" id="PortalClient.list_groups">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.list_groups">[docs]</a>
-    <span class="k">def</span> <span class="nf">list_groups</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">GroupInfo</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">list_groups</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">GroupInfo</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        List all user groups on the server</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -3518,7 +3518,7 @@
 
 <div class="viewcode-block" id="PortalClient.get_group">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_group">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">groupname_or_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">GroupInfo</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">groupname_or_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">GroupInfo</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get information about a group on the server</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -3531,7 +3531,7 @@
 
 <div class="viewcode-block" id="PortalClient.add_group">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.add_group">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group_info</span><span class="p">:</span> <span class="n">GroupInfo</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group_info</span><span class="p">:</span> <span class="n">GroupInfo</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Adds a group with permissions to the server</span>
 
@@ -3546,7 +3546,7 @@
 
 <div class="viewcode-block" id="PortalClient.delete_group">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.delete_group">[docs]</a>
-    <span class="k">def</span> <span class="nf">delete_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">groupname_or_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">groupname_or_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Deletes a group on the server</span>
 
@@ -3561,7 +3561,7 @@
 
 <div class="viewcode-block" id="PortalClient.list_users">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.list_users">[docs]</a>
-    <span class="k">def</span> <span class="nf">list_users</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">UserInfo</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">list_users</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">UserInfo</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        List all user roles on the server</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -3571,7 +3571,7 @@
 
 <div class="viewcode-block" id="PortalClient.get_user">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.get_user">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username_or_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UserInfo</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username_or_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UserInfo</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get information about a user on the server</span>
 
@@ -3602,7 +3602,7 @@
 
 <div class="viewcode-block" id="PortalClient.add_user">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.add_user">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_info</span><span class="p">:</span> <span class="n">UserInfo</span><span class="p">,</span> <span class="n">password</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_info</span><span class="p">:</span> <span class="n">UserInfo</span><span class="p">,</span> <span class="n">password</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Adds a user to the server</span>
 
@@ -3632,7 +3632,7 @@
 
 <div class="viewcode-block" id="PortalClient.modify_user">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.modify_user">[docs]</a>
-    <span class="k">def</span> <span class="nf">modify_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_info</span><span class="p">:</span> <span class="n">UserInfo</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UserInfo</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">modify_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_info</span><span class="p">:</span> <span class="n">UserInfo</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UserInfo</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Modifies a user on the server</span>
 
@@ -3657,7 +3657,7 @@
 
 <div class="viewcode-block" id="PortalClient.change_user_password">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.change_user_password">[docs]</a>
-    <span class="k">def</span> <span class="nf">change_user_password</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">change_user_password</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">username_or_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">new_password</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -3699,7 +3699,7 @@
 
 <div class="viewcode-block" id="PortalClient.delete_user">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference.html#qcportal.client.PortalClient.delete_user">[docs]</a>
-    <span class="k">def</span> <span class="nf">delete_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username_or_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username_or_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Delete a user from the server</span>
 <span class="sd">        &quot;&quot;&quot;</span>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcfractalcompute.config &#8212; QCArchive 0.57.post41+gbf839b2d documentation</title>
+    <title>qcfractalcompute.config &#8212; QCArchive 0.57.post46+gf5b076e3 documentation</title>
   
   
   
@@ -29,7 +29,7 @@
   <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=72eee364"></script>
+    <script src="../../_static/documentation_options.js?v=b4c5247e"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.57.post41+gbf839b2d" />
+  <meta name="docsearch:version" content="0.57.post46+gf5b076e3" />
   </head>
   
   
@@ -438,22 +438,22 @@
                 <article class="bd-article">
                   
   <h1>Source code for qcfractalcompute.config</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span>
 
-<span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">pydantic.v1</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">validator</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic.v1</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">validator</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">validator</span>
-<span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Literal</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">validator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
 
-<span class="kn">from</span> <span class="nn">qcportal.utils</span> <span class="kn">import</span> <span class="n">seconds_to_hms</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">seconds_to_hms</span><span class="p">,</span> <span class="n">duration_to_seconds</span>
 
 
-<span class="k">def</span> <span class="nf">_make_abs_path</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">base_folder</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">default_filename</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_make_abs_path</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">base_folder</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">default_filename</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
     <span class="c1"># No path specified, no default</span>
     <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">default_filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
@@ -471,7 +471,7 @@
         <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">update_nested_dict</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_nested_dict</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">u</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">update_nested_dict</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="p">{}),</span> <span class="n">v</span><span class="p">)</span>
@@ -480,7 +480,7 @@
     <span class="k">return</span> <span class="n">d</span>
 
 
-<span class="k">class</span> <span class="nc">PackageEnvironmentSettings</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PackageEnvironmentSettings</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Environments with installed packages that can be used to run calculations</span>
 
@@ -495,7 +495,7 @@
     <span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">ExecutorConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ExecutorConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
     <span class="nb">type</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">queue_tags</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">worker_init</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -510,19 +510,19 @@
 
     <span class="n">environments</span><span class="p">:</span> <span class="n">PackageEnvironmentSettings</span> <span class="o">=</span> <span class="n">PackageEnvironmentSettings</span><span class="p">()</span>
 
-    <span class="k">class</span> <span class="nc">Config</span><span class="p">(</span><span class="n">BaseModel</span><span class="o">.</span><span class="n">Config</span><span class="p">):</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">(</span><span class="n">BaseModel</span><span class="o">.</span><span class="n">Config</span><span class="p">):</span>
         <span class="n">case_insensitive</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="n">extra</span> <span class="o">=</span> <span class="s2">&quot;forbid&quot;</span>
 
 
-<span class="k">class</span> <span class="nc">CustomExecutorConfig</span><span class="p">(</span><span class="n">ExecutorConfig</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CustomExecutorConfig</span><span class="p">(</span><span class="n">ExecutorConfig</span><span class="p">):</span>
     <span class="nb">type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;custom&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;custom&quot;</span>
     <span class="n">path</span><span class="p">:</span> <span class="nb">str</span>
 
 
 <div class="viewcode-block" id="LocalExecutorConfig">
 <a class="viewcode-back" href="../../admin_guide/managers/index.html#qcfractalcompute.config.LocalExecutorConfig">[docs]</a>
-<span class="k">class</span> <span class="nc">LocalExecutorConfig</span><span class="p">(</span><span class="n">ExecutorConfig</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LocalExecutorConfig</span><span class="p">(</span><span class="n">ExecutorConfig</span><span class="p">):</span>
     <span class="nb">type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;local&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;local&quot;</span>
     <span class="n">max_workers</span><span class="p">:</span> <span class="nb">int</span></div>
 
@@ -530,7 +530,7 @@
 
 <div class="viewcode-block" id="SlurmExecutorConfig">
 <a class="viewcode-back" href="../../admin_guide/managers/index.html#qcfractalcompute.config.SlurmExecutorConfig">[docs]</a>
-<span class="k">class</span> <span class="nc">SlurmExecutorConfig</span><span class="p">(</span><span class="n">ExecutorConfig</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SlurmExecutorConfig</span><span class="p">(</span><span class="n">ExecutorConfig</span><span class="p">):</span>
     <span class="nb">type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;slurm&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;slurm&quot;</span>
 
     <span class="n">walltime</span><span class="p">:</span> <span class="nb">str</span>
@@ -546,7 +546,7 @@
 <div class="viewcode-block" id="SlurmExecutorConfig.walltime_must_be_str">
 <a class="viewcode-back" href="../../admin_guide/managers/index.html#qcfractalcompute.config.SlurmExecutorConfig.walltime_must_be_str">[docs]</a>
     <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;walltime&quot;</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">walltime_must_be_str</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">walltime_must_be_str</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">seconds_to_hms</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -557,7 +557,7 @@
 
 <div class="viewcode-block" id="TorqueExecutorConfig">
 <a class="viewcode-back" href="../../admin_guide/managers/index.html#qcfractalcompute.config.TorqueExecutorConfig">[docs]</a>
-<span class="k">class</span> <span class="nc">TorqueExecutorConfig</span><span class="p">(</span><span class="n">ExecutorConfig</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TorqueExecutorConfig</span><span class="p">(</span><span class="n">ExecutorConfig</span><span class="p">):</span>
     <span class="nb">type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;torque&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;torque&quot;</span>
 
     <span class="n">walltime</span><span class="p">:</span> <span class="nb">str</span>
@@ -572,18 +572,15 @@
 <div class="viewcode-block" id="TorqueExecutorConfig.walltime_must_be_str">
 <a class="viewcode-back" href="../../admin_guide/managers/index.html#qcfractalcompute.config.TorqueExecutorConfig.walltime_must_be_str">[docs]</a>
     <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;walltime&quot;</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">walltime_must_be_str</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">seconds_to_hms</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">v</span></div>
+    <span class="k">def</span><span class="w"> </span><span class="nf">walltime_must_be_str</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">seconds_to_hms</span><span class="p">(</span><span class="n">duration_to_seconds</span><span class="p">(</span><span class="n">v</span><span class="p">))</span></div>
 </div>
 
 
 
 <div class="viewcode-block" id="LSFExecutorConfig">
 <a class="viewcode-back" href="../../admin_guide/managers/index.html#qcfractalcompute.config.LSFExecutorConfig">[docs]</a>
-<span class="k">class</span> <span class="nc">LSFExecutorConfig</span><span class="p">(</span><span class="n">ExecutorConfig</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LSFExecutorConfig</span><span class="p">(</span><span class="n">ExecutorConfig</span><span class="p">):</span>
     <span class="nb">type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;lsf&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;lsf&quot;</span>
 
     <span class="n">walltime</span><span class="p">:</span> <span class="nb">str</span>
@@ -601,11 +598,8 @@
 <div class="viewcode-block" id="LSFExecutorConfig.walltime_must_be_str">
 <a class="viewcode-back" href="../../admin_guide/managers/index.html#qcfractalcompute.config.LSFExecutorConfig.walltime_must_be_str">[docs]</a>
     <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;walltime&quot;</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">walltime_must_be_str</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">seconds_to_hms</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">v</span></div>
+    <span class="k">def</span><span class="w"> </span><span class="nf">walltime_must_be_str</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">seconds_to_hms</span><span class="p">(</span><span class="n">duration_to_seconds</span><span class="p">(</span><span class="n">v</span><span class="p">))</span></div>
 </div>
 
 
@@ -615,7 +609,7 @@
 <span class="p">]</span>
 
 
-<span class="k">class</span> <span class="nc">FractalServerSettings</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FractalServerSettings</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Settings pertaining to the Fractal Server you wish to pull tasks from and push completed tasks to. Each manager</span>
 <span class="sd">    supports exactly 1 Fractal Server to be in communication with, and exactly 1 user on that Fractal Server. These</span>
@@ -637,12 +631,12 @@
     <span class="p">)</span>
     <span class="n">verify</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Use Server-side generated SSL certification or not.&quot;</span><span class="p">)</span>
 
-    <span class="k">class</span> <span class="nc">Config</span><span class="p">(</span><span class="n">BaseModel</span><span class="o">.</span><span class="n">Config</span><span class="p">):</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">(</span><span class="n">BaseModel</span><span class="o">.</span><span class="n">Config</span><span class="p">):</span>
         <span class="n">case_insensitive</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="n">extra</span> <span class="o">=</span> <span class="s2">&quot;forbid&quot;</span>
 
 
-<span class="k">class</span> <span class="nc">FractalComputeConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FractalComputeConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
     <span class="n">base_folder</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="o">...</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The base folder to use as the default for some options (logs, etc). Default is the location of the config file.&quot;</span><span class="p">,</span>
@@ -675,20 +669,24 @@
     <span class="n">environments</span><span class="p">:</span> <span class="n">PackageEnvironmentSettings</span> <span class="o">=</span> <span class="n">PackageEnvironmentSettings</span><span class="p">()</span>
     <span class="n">executors</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AllExecutorTypes</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 
-    <span class="k">class</span> <span class="nc">Config</span><span class="p">(</span><span class="n">BaseModel</span><span class="o">.</span><span class="n">Config</span><span class="p">):</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">(</span><span class="n">BaseModel</span><span class="o">.</span><span class="n">Config</span><span class="p">):</span>
         <span class="n">case_insensitive</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="n">extra</span> <span class="o">=</span> <span class="s2">&quot;forbid&quot;</span>
 
     <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;logfile&quot;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">_check_logfile</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_logfile</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">_make_abs_path</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;base_folder&quot;</span><span class="p">],</span> <span class="kc">None</span><span class="p">)</span>
 
     <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;parsl_run_dir&quot;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">_check_run_dir</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_run_dir</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">_make_abs_path</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;base_folder&quot;</span><span class="p">],</span> <span class="s2">&quot;parsl_run_dir&quot;</span><span class="p">)</span>
 
+    <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;update_frequency&quot;</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_convert_durations</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">duration_to_seconds</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
 
-<span class="k">def</span> <span class="nf">read_configuration</span><span class="p">(</span><span class="n">file_paths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">extra_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FractalComputeConfig</span><span class="p">:</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">read_configuration</span><span class="p">(</span><span class="n">file_paths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">extra_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FractalComputeConfig</span><span class="p">:</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
     <span class="n">config_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
