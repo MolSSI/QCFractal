@@ -201,6 +201,12 @@ class FractalComputeConfig(BaseModel):
         gt=0,
     )
 
+    max_idle_time: Optional[int] = Field(
+        None,
+        description="Maximum consecutive time in seconds that the manager "
+        "should be allowed to run. If this is reached, the manager will shutdown.",
+    )
+
     parsl_run_dir: str = "parsl_run_dir"
     parsl_usage_tracking: int = 0
 

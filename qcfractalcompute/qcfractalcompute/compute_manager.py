@@ -203,6 +203,9 @@ class ComputeManager:
         # Number of failed heartbeats. After missing a bunch, we will shutdown
         self._failed_heartbeats = 0
 
+        # Time at which the worker started idling (no jobs being run)
+        self._idle_start_time = None
+
     @staticmethod
     def _get_max_workers(executor: ParslExecutor) -> int:
         """
@@ -296,6 +299,10 @@ class ComputeManager:
         self.logger.info("Compute Manager successfully started.")
 
         self._failed_heartbeats = 0
+
+        # Start the idle timer to be right now, since we aren't doing anything
+        self._idle_start_time = time.time()
+
         self.scheduler.enter(0, 1, scheduler_update)
         self.scheduler.enter(0, 2, scheduler_heartbeat)
 
@@ -502,16 +509,7 @@ class ComputeManager:
         self._deferred_tasks = new_deferred_tasks
         return ret
 
-    def update(self, new_tasks) -> None:
-        """Examines the queue for completed tasks and adds successful completions to the database
-        while unsuccessful are logged for future inspection.
-
-        Parameters
-        ----------
-        new_tasks
-            Try to get new tasks from the server
-        """
-
+    def _update(self, new_tasks) -> None:
         # First, try pushing back any stale results
         deferred_return_info = self._update_deferred_tasks()
 
@@ -659,6 +657,40 @@ class ComputeManager:
                     # Add new tasks to queue
                     self.preprocess_new_tasks(new_task_info)
                     self._submit_tasks(executor_label, new_task_info)
+
+    def update(self, new_tasks) -> None:
+        """Examines the queue for completed tasks and adds successful completions to the database
+        while unsuccessful are logged for future inspection.
+
+        Parameters
+        ----------
+        new_tasks
+            Try to get new tasks from the server
+        """
+
+        self._update(new_tasks=new_tasks)
+
+        if self.manager_config.max_idle_time is None:
+            return
+
+        # Check if we are idle. If we are beyond the max idle time, then shut down
+        is_idle = (self.n_total_active_tasks == 0) and (self.n_deferred_tasks == 0)
+
+        if is_idle and self._idle_start_time is None:
+            self._idle_start_time = time.time()
+
+        if not is_idle:
+            self._idle_start_time = None
+        else:
+            idle_time = time.time() - self._idle_start_time
+            if idle_time >= self.manager_config.max_idle_time:
+                self.logger.warning(
+                    f"Manager has been idle for {idle_time:.2f} seconds - max is "
+                    f"{self.manager_config.max_idle_time}, shutting down"
+                )
+                self.stop()
+            else:
+                self.logger.info(f"Manager has been idle for {idle_time:.2f} seconds")
 
     def preprocess_new_tasks(self, new_tasks: List[RecordTask]):
         """

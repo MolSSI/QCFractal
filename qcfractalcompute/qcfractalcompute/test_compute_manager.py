@@ -236,3 +236,41 @@ def test_manager_missed_heartbeats_shutdown(snowflake: QCATestingSnowflake):
 
     compute_thread._compute_thread.join(5)
     assert compute_thread.is_alive() is False
+
+
+def test_manager_idle_shutdown_0(snowflake: QCATestingSnowflake):
+    add_config = {"max_idle_time": 0}
+    compute_thread = QCATestingComputeThread(snowflake._qcf_config, additional_manager_config=add_config)
+    compute_thread.start(manual_updates=False)
+
+    for i in range(10):
+        time.sleep(1)
+        if not compute_thread.is_alive():
+            break
+    else:
+        raise RuntimeError("Compute thread did not stop in 10 seconds")
+
+    compute_thread._compute_thread.join(5)
+    assert compute_thread.is_alive() is False
+
+
+def test_manager_idle_shutdown_5(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+
+    add_config = {"max_idle_time": 5}
+    compute_thread = QCATestingComputeThread(snowflake._qcf_config, additional_manager_config=add_config)
+    compute_thread.start(manual_updates=False)
+
+    time.sleep(2)
+    assert compute_thread.is_alive()
+
+    populate_db(storage_socket)
+
+    time.sleep(9)
+    assert compute_thread.is_alive()
+
+    time.sleep(6)
+    assert not compute_thread.is_alive()
+
+    compute_thread._compute_thread.join(5)
+    assert compute_thread.is_alive() is False
