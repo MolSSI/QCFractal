@@ -191,6 +191,10 @@ class QCATestingSnowflake(FractalSnowflake):
         self._stop_compute()
         self._all_completed = set()
         self._qcf_config = self._original_config.copy(deep=True)
+
+        if self._api_proc is None:
+            self.start_api()
+
         self.pg_harness.recreate_database()
 
     def get_storage_socket(self) -> SQLAlchemySocket:
