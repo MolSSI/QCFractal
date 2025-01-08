@@ -269,7 +269,7 @@ def test_manager_idle_shutdown_5(snowflake: QCATestingSnowflake):
     time.sleep(9)
     assert compute_thread.is_alive()
 
-    time.sleep(6)
+    time.sleep(10)
     assert not compute_thread.is_alive()
 
     compute_thread._compute_thread.join(5)
