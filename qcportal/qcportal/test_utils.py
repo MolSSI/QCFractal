@@ -1,4 +1,4 @@
-from qcportal.utils import chunk_iterable, seconds_to_hms, is_included
+from qcportal.utils import chunk_iterable, seconds_to_hms, duration_to_seconds, is_included
 
 
 def test_chunk_iterable():
@@ -27,6 +27,38 @@ def test_seconds_to_hms():
 
     assert seconds_to_hms(31.0) == "00:00:31.00"
     assert seconds_to_hms(3670.12) == "01:01:10.12"
+
+
+def test_duration_to_seconds():
+    assert duration_to_seconds(0) == 0
+    assert duration_to_seconds("0") == 0
+    assert duration_to_seconds(17) == 17
+    assert duration_to_seconds("17") == 17
+    assert duration_to_seconds(17.0) == 17
+    assert duration_to_seconds("17.0") == 17
+
+    assert duration_to_seconds("17s") == 17
+    assert duration_to_seconds("70s") == 70
+    assert duration_to_seconds("8m17s") == 497
+    assert duration_to_seconds("80m72s") == 4872
+    assert duration_to_seconds("3h8m17s") == 11297
+    assert duration_to_seconds("03h08m07s") == 11287
+    assert duration_to_seconds("03h08m070s") == 11350
+    assert duration_to_seconds("9d03h08m070s") == 788950
+
+    assert duration_to_seconds("9d") == 777600
+    assert duration_to_seconds("10m") == 600
+    assert duration_to_seconds("90m") == 5400
+    assert duration_to_seconds("04h") == 14400
+    assert duration_to_seconds("4h5s") == 14405
+    assert duration_to_seconds("1d9s") == 86409
+
+    assert duration_to_seconds("8:17") == 497
+    assert duration_to_seconds("80:72") == 4872
+    assert duration_to_seconds("3:8:17") == 11297
+    assert duration_to_seconds("03:08:07") == 11287
+    assert duration_to_seconds("03:08:070") == 11350
+    assert duration_to_seconds("9:03:08:07") == 788887
 
 
 def test_is_included():
