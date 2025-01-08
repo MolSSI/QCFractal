@@ -56,7 +56,7 @@ def test_duration_to_seconds():
     assert duration_to_seconds("3:8:17") == 11297
     assert duration_to_seconds("03:08:07") == 11287
     assert duration_to_seconds("03:08:070") == 11350
-    assert duration_to_seconds("9:03:08:07") == 788950
+    assert duration_to_seconds("9:03:08:07") == 788887
 
 
 def test_is_included():
