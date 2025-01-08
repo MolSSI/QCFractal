@@ -10,7 +10,7 @@ except ImportError:
     from pydantic import BaseModel, Field, validator
 from typing_extensions import Literal
 
-from qcportal.utils import seconds_to_hms
+from qcportal.utils import seconds_to_hms, duration_to_seconds
 
 
 def _make_abs_path(path: Optional[str], base_folder: str, default_filename: Optional[str]) -> Optional[str]:
@@ -120,10 +120,7 @@ class TorqueExecutorConfig(ExecutorConfig):
 
     @validator("walltime", pre=True)
     def walltime_must_be_str(cls, v):
-        if isinstance(v, int):
-            return seconds_to_hms(v)
-        else:
-            return v
+        return seconds_to_hms(duration_to_seconds(v))
 
 
 class LSFExecutorConfig(ExecutorConfig):
@@ -143,10 +140,7 @@ class LSFExecutorConfig(ExecutorConfig):
 
     @validator("walltime", pre=True)
     def walltime_must_be_str(cls, v):
-        if isinstance(v, int):
-            return seconds_to_hms(v)
-        else:
-            return v
+        return seconds_to_hms(duration_to_seconds(v))
 
 
 AllExecutorTypes = Union[
@@ -225,6 +219,10 @@ class FractalComputeConfig(BaseModel):
     @validator("parsl_run_dir")
     def _check_run_dir(cls, v, values):
         return _make_abs_path(v, values["base_folder"], "parsl_run_dir")
+
+    @validator("update_frequency", pre=True)
+    def _convert_durations(cls, v):
+        return duration_to_seconds(v)
 
 
 def read_configuration(file_paths: List[str], extra_config: Optional[Dict[str, Any]] = None) -> FractalComputeConfig:

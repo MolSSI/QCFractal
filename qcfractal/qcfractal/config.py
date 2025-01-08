@@ -21,6 +21,7 @@ except ImportError:
 from sqlalchemy.engine.url import URL, make_url
 
 from qcfractal.port_util import find_open_port
+from qcportal.utils import duration_to_seconds
 
 
 def update_nested_dict(d, u):
@@ -315,6 +316,10 @@ class WebAPIConfig(ConfigBase):
         None, description="Any additional options to pass directly to the waitress serve function"
     )
 
+    @validator("jwt_access_token_expires", "jwt_refresh_token_expires", pre=True)
+    def _convert_durations(cls, v):
+        return duration_to_seconds(v)
+
     class Config(ConfigCommon):
         env_prefix = "QCF_API_"
 
@@ -374,7 +379,9 @@ class FractalConfig(ConfigBase):
 
     # Access logging
     log_access: bool = Field(False, description="Store API access in the database")
-    access_log_keep: int = Field(0, description="Number of days of access logs to keep. 0 means keep all")
+    access_log_keep: int = Field(
+        0, description="How far back to keep access logs (in seconds or a string). 0 means keep all"
+    )
 
     # maxmind_account_id: Optional[int] = Field(None, description="Account ID for MaxMind GeoIP2 service")
     maxmind_license_key: Optional[str] = Field(
@@ -453,6 +460,10 @@ class FractalConfig(ConfigBase):
         if v not in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
             raise ValidationError(f"{v} is not a valid loglevel. Must be DEBUG, INFO, WARNING, ERROR, or CRITICAL")
         return v
+
+    @validator("service_frequency", "heartbeat_frequency", "access_log_keep", pre=True)
+    def _convert_durations(cls, v):
+        return duration_to_seconds(v)
 
     class Config(ConfigCommon):
         env_prefix = "QCF_"
