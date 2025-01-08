@@ -262,7 +262,7 @@ def seconds_to_hms(seconds: Union[float, int]) -> str:
         return f"{hours:02d}:{minutes:02d}:{seconds+fraction:02.2f}"
 
 
-def duration_to_seconds(s: Union[int, str]) -> int:
+def duration_to_seconds(s: Union[int, str, float]) -> int:
     """
     Parses a string in dd:hh:mm:ss or 1d2h3m4s to an integer number of seconds
     """
@@ -271,9 +271,25 @@ def duration_to_seconds(s: Union[int, str]) -> int:
     if isinstance(s, int):
         return s
 
+    # Is a float but represents an integer
+    if isinstance(s, float):
+        if s.is_integer():
+            return int(s)
+        else:
+            raise ValueError(f"Invalid duration format: {s} - cannot represent fractional seconds")
+
     # Plain number of seconds (as a string)
     if s.isdigit():
         return int(s)
+
+    try:
+        f = float(s)
+        if f.is_integer():
+            return int(f)
+        else:
+            raise ValueError(f"Invalid duration format: {s} - cannot represent fractional seconds")
+    except ValueError:
+        pass
 
     # Handle dd:hh:mm:ss format
     if ":" in s:

@@ -34,6 +34,8 @@ def test_duration_to_seconds():
     assert duration_to_seconds("0") == 0
     assert duration_to_seconds(17) == 17
     assert duration_to_seconds("17") == 17
+    assert duration_to_seconds(17.0) == 17
+    assert duration_to_seconds("17.0") == 17
 
     assert duration_to_seconds("17s") == 17
     assert duration_to_seconds("70s") == 70

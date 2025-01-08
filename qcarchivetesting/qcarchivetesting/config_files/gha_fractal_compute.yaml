@@ -1,6 +1,6 @@
 cluster: testworker
 loglevel: DEBUG
-update_frequency: 5.0
+update_frequency: 5
 
 server:
   fractal_uri: http://localhost:7900
