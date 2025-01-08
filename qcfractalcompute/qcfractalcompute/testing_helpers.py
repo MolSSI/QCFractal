@@ -23,10 +23,7 @@ from qcportal.record_models import PriorityEnum, RecordTask
 
 failed_op = FailedOperation(
     input_data=None,
-    error={
-        'error_type': 'internal_error',
-        'error_message': 'This is a test error message'
-    },
+    error={"error_type": "internal_error", "error_message": "This is a test error message"},
 )
 
 
@@ -108,7 +105,9 @@ class MockTestingComputeManager(ComputeManager):
             if result is None:
                 return AppTaskResult(success=False, walltime=2.0, result_compressed=compress_result(failed_op.dict()))
             else:
-                return AppTaskResult(success=result.success, walltime=2.0, result_compressed=compress_result(result.dict()))
+                return AppTaskResult(
+                    success=result.success, walltime=2.0, result_compressed=compress_result(result.dict())
+                )
 
         for task in tasks:
             self._record_id_map[task.id] = task.record_id

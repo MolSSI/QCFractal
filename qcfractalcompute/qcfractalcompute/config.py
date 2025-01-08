@@ -226,7 +226,7 @@ class FractalComputeConfig(BaseModel):
     def _check_run_dir(cls, v, values):
         return _make_abs_path(v, values["base_folder"], "parsl_run_dir")
 
-    @validator("update_frequency", pre=True)
+    @validator("update_frequency", "max_idle_time", pre=True)
     def _convert_durations(cls, v):
         return duration_to_seconds(v)
 
