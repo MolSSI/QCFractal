@@ -9,7 +9,14 @@ from sqlalchemy import select, delete, func, union, text, and_
 from sqlalchemy.orm import load_only, lazyload, joinedload, with_polymorphic
 from sqlalchemy.orm.attributes import flag_modified
 
-from qcfractal.components.dataset_db_models import BaseDatasetORM, ContributedValuesORM, DatasetAttachmentORM
+from qcfractal.components.dataset_db_models import (
+    BaseDatasetORM,
+    ContributedValuesORM,
+    DatasetAttachmentORM,
+    DatasetInternalJobORM,
+)
+from qcfractal.components.dataset_processing import create_view_file
+from qcfractal.components.internal_jobs.db_models import InternalJobORM
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.db_socket.helpers import (
     get_general,
@@ -17,10 +24,10 @@ from qcfractal.db_socket.helpers import (
 )
 from qcportal.dataset_models import DatasetAttachmentType
 from qcportal.exceptions import AlreadyExistsError, MissingDataError, UserReportableError
+from qcportal.internal_jobs import InternalJobStatusEnum
 from qcportal.metadata_models import InsertMetadata, DeleteMetadata, UpdateMetadata
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.utils import chunk_iterable, now_at_utc
-from qcfractal.components.dataset_processing import create_view_file
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -1660,6 +1667,42 @@ class DatasetSocket:
             cv = session.execute(stmt).scalars().all()
             return [x.model_dict() for x in cv]
 
+    def get_internal_job(
+        self,
+        dataset_id: int,
+        job_id: int,
+        *,
+        session: Optional[Session] = None,
+    ):
+        stmt = select(InternalJobORM)
+        stmt = stmt.join(DatasetInternalJobORM, DatasetInternalJobORM.internal_job_id == InternalJobORM.id)
+        stmt = stmt.where(DatasetInternalJobORM.dataset_id == dataset_id)
+        stmt = stmt.where(DatasetInternalJobORM.internal_job_id == job_id)
+
+        with self.root_socket.optional_session(session, True) as session:
+            ij_orm = session.execute(stmt).scalar_one_or_none()
+            if ij_orm is None:
+                raise MissingDataError(f"Job id {job_id} not found in dataset {dataset_id}")
+            return ij_orm.model_dict()
+
+    def list_internal_jobs(
+        self,
+        dataset_id: int,
+        status: Optional[Iterable[InternalJobStatusEnum]] = None,
+        *,
+        session: Optional[Session] = None,
+    ):
+        stmt = select(InternalJobORM)
+        stmt = stmt.join(DatasetInternalJobORM, DatasetInternalJobORM.internal_job_id == InternalJobORM.id)
+        stmt = stmt.where(DatasetInternalJobORM.dataset_id == dataset_id)
+
+        if status is not None:
+            stmt = stmt.where(InternalJobORM.status.in_(status))
+
+        with self.root_socket.optional_session(session, True) as session:
+            ij_orm = session.execute(stmt).scalars().all()
+            return [i.model_dict() for i in ij_orm]
+
     def get_attachments(self, dataset_id: int, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
         """
         Get the attachments for a dataset
@@ -1850,21 +1893,26 @@ class DatasetSocket:
         if not self.root_socket.qcf_config.s3.enabled:
             raise UserReportableError("S3 storage is not enabled. Can not not create view")
 
-        return self.root_socket.internal_jobs.add(
-            f"create_attach_view_ds_{dataset_id}",
-            now_at_utc(),
-            f"datasets.create_view_attachment",
-            {
-                "dataset_id": dataset_id,
-                "dataset_type": dataset_type,
-                "description": description,
-                "provenance": provenance,
-                "status": status,
-                "include": include,
-                "exclude": exclude,
-                "include_children": include_children,
-            },
-            user_id=None,
-            unique_name=True,
-            session=session,
-        )
+        with self.root_socket.optional_session(session) as session:
+            job_id = self.root_socket.internal_jobs.add(
+                f"create_attach_view_ds_{dataset_id}",
+                now_at_utc(),
+                f"datasets.create_view_attachment",
+                {
+                    "dataset_id": dataset_id,
+                    "dataset_type": dataset_type,
+                    "description": description,
+                    "provenance": provenance,
+                    "status": status,
+                    "include": include,
+                    "exclude": exclude,
+                    "include_children": include_children,
+                },
+                user_id=None,
+                unique_name=True,
+                session=session,
+            )
+
+            ds_job_orm = DatasetInternalJobORM(dataset_id=dataset_id, internal_job_id=job_id)
+            session.add(ds_job_orm)
+            return job_id

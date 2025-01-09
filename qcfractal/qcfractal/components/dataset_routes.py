@@ -22,6 +22,7 @@ from qcportal.dataset_models import (
     DatasetQueryRecords,
     DatasetDeleteParams,
     DatasetModifyEntryBody,
+    DatasetGetInternalJobParams,
 )
 from qcportal.exceptions import LimitExceededError
 
@@ -366,6 +367,21 @@ def revert_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: Dat
         body_data.entry_names,
         body_data.specification_names,
     )
+
+
+#################################
+# Internal Jobs
+#################################
+@api_v1.route("/datasets/<int:dataset_id>/internal_jobs/<int:job_id>", methods=["GET"])
+@wrap_route("READ")
+def get_dataset_internal_job_v1(dataset_id: int, job_id: int):
+    return storage_socket.datasets.get_internal_job(dataset_id, job_id)
+
+
+@api_v1.route("/datasets/<int:dataset_id>/internal_jobs", methods=["GET"])
+@wrap_route("READ")
+def list_dataset_internal_jobs_v1(dataset_id: int, url_params: DatasetGetInternalJobParams):
+    return storage_socket.datasets.list_internal_jobs(dataset_id, status=url_params.status)
 
 
 #################################

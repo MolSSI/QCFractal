@@ -4,7 +4,6 @@ from enum import Enum
 from typing import Optional, Dict, Any, List, Union
 
 from dateutil.parser import parse as date_parser
-from rich.jupyter import display
 
 try:
     from pydantic.v1 import BaseModel, Extra, validator, PrivateAttr
@@ -70,10 +69,12 @@ class InternalJob(BaseModel):
     user: Optional[str]
 
     _client: Any = PrivateAttr(None)
+    _refresh_url: Optional[str] = PrivateAttr(None)
 
-    def __init__(self, client=None, **kwargs):
+    def __init__(self, client=None, refresh_url=None, **kwargs):
         BaseModel.__init__(self, **kwargs)
         self._client = client
+        self._refresh_url = refresh_url
 
     def refresh(self):
         """
@@ -83,7 +84,11 @@ class InternalJob(BaseModel):
         if self._client is None:
             raise RuntimeError("Client is not set")
 
-        server_data = self._client.get_internal_job(self.id)
+        if self._refresh_url is None:
+            server_data = self._client.get_internal_job(self.id)
+        else:
+            server_data = self._client.make_request("get", self._refresh_url, InternalJob)
+
         for k, v in server_data:
             setattr(self, k, v)
 

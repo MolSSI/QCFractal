@@ -31,7 +31,7 @@ from tabulate import tabulate
 from tqdm import tqdm
 
 from qcportal.base_models import RestModelBase, validate_list_to_single, CommonBulkGetBody
-from qcportal.internal_jobs import InternalJob
+from qcportal.internal_jobs import InternalJob, InternalJobStatusEnum
 from qcportal.metadata_models import DeleteMetadata, InsertMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, BaseRecord
 from qcportal.utils import make_list, chunk_iterable
@@ -337,6 +337,32 @@ class BaseDataset(BaseModel):
                 )
 
     #########################################
+    # Internal jobs
+    #########################################
+    def get_internal_job(self, job_id: int) -> InternalJob:
+        self.assert_is_not_view()
+        self.assert_online()
+
+        ij_dict = self._client.make_request("get", f"/api/v1/datasets/{self.id}/internal_jobs/{job_id}", Dict[str, Any])
+        refresh_url = f"/api/v1/datasets/{self.id}/internal_jobs/{ij_dict['id']}"
+        return InternalJob(client=self._client, refresh_url=refresh_url, **ij_dict)
+
+    def list_internal_jobs(
+        self, status: Optional[Union[InternalJobStatusEnum, Iterable[InternalJobStatusEnum]]] = None
+    ) -> List[InternalJob]:
+        self.assert_is_not_view()
+        self.assert_online()
+
+        url_params = DatasetGetInternalJobParams(status=make_list(status))
+        ij_dicts = self._client.make_request(
+            "get", f"/api/v1/datasets/{self.id}/internal_jobs", List[Dict[str, Any]], url_params=url_params
+        )
+        return [
+            InternalJob(client=self._client, refresh_url=f"/api/v1/datasets/{self.id}/internal_jobs/{ij['id']}", **ij)
+            for ij in ij_dicts
+        ]
+
+    #########################################
     # Attachments
     #########################################
     def fetch_attachments(self):
@@ -477,7 +503,7 @@ class BaseDataset(BaseModel):
         for completion if desired. The job will run server side without user interaction.
 
         Note the ID field of the object if you with to retrieve this internal job later
-        (via :ref:`PortalClient.get_internal_job`)
+        (via :ref:`PortalClient.get_internal_job` and :ref:`get_internal_jobs`)
 
         Parameters
         ----------
@@ -515,7 +541,7 @@ class BaseDataset(BaseModel):
             "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/create_view", int, body=body
         )
 
-        return self._client.get_internal_job(job_id)
+        return self.get_internal_job(job_id)
 
     #########################################
     # Various properties and getters/setters
@@ -2035,6 +2061,10 @@ class DatasetModifyEntryBody(RestModelBase):
     attribute_map: Optional[Dict[str, Dict[str, Any]]] = None
     comment_map: Optional[Dict[str, str]] = None
     overwrite_attributes: bool = False
+
+
+class DatasetGetInternalJobParams(RestModelBase):
+    status: Optional[List[InternalJobStatusEnum]] = None
 
 
 def dataset_from_dict(data: Dict[str, Any], client: Any, cache_data: Optional[DatasetCache] = None) -> BaseDataset:

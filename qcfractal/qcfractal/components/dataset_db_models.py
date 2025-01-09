@@ -20,6 +20,7 @@ from sqlalchemy.orm.collections import attribute_keyed_dict
 
 from qcfractal.components.auth.db_models import UserIDMapSubquery, GroupIDMapSubquery, UserORM, GroupORM
 from qcfractal.components.external_files.db_models import ExternalFileORM
+from qcfractal.components.internal_jobs.db_models import InternalJobORM
 from qcfractal.db_socket import BaseORM, MsgpackExt
 from qcportal.dataset_models import DatasetAttachmentType
 
@@ -138,6 +139,13 @@ class ContributedValuesORM(BaseORM):
     __table_args__ = (Index("ix_contributed_values_dataset_id", "dataset_id"),)
 
     _qcportal_model_excludes = ["dataset_id"]
+
+
+class DatasetInternalJobORM(BaseORM):
+    __tablename__ = "dataset_internal_job"
+
+    internal_job_id = Column(Integer, ForeignKey(InternalJobORM.id, ondelete="cascade"), primary_key=True)
+    dataset_id = Column(Integer, ForeignKey("base_dataset.id", ondelete="cascade"), primary_key=True)
 
 
 class DatasetAttachmentORM(ExternalFileORM):
