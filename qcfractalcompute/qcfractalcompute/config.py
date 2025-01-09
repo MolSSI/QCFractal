@@ -201,6 +201,12 @@ class FractalComputeConfig(BaseModel):
         gt=0,
     )
 
+    max_idle_time: Optional[int] = Field(
+        None,
+        description="Maximum consecutive time in seconds that the manager "
+        "should be allowed to run. If this is reached, the manager will shutdown.",
+    )
+
     parsl_run_dir: str = "parsl_run_dir"
     parsl_usage_tracking: int = 0
 
@@ -220,7 +226,7 @@ class FractalComputeConfig(BaseModel):
     def _check_run_dir(cls, v, values):
         return _make_abs_path(v, values["base_folder"], "parsl_run_dir")
 
-    @validator("update_frequency", pre=True)
+    @validator("update_frequency", "max_idle_time", pre=True)
     def _convert_durations(cls, v):
         return duration_to_seconds(v)
 

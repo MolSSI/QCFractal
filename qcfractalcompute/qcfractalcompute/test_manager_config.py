@@ -56,17 +56,25 @@ def test_manager_config_durations(tmp_path):
     base_config = copy.deepcopy(_base_config)
 
     base_config["update_frequency"] = "900"
+    base_config["max_idle_time"] = "3600"
     manager_config = FractalComputeConfig(base_folder=base_folder, **base_config)
     assert manager_config.update_frequency == 900
+    assert manager_config.max_idle_time == 3600
 
     base_config["update_frequency"] = 900
+    base_config["max_idle_time"] = 3600
     manager_config = FractalComputeConfig(base_folder=base_folder, **base_config)
     assert manager_config.update_frequency == 900
+    assert manager_config.max_idle_time == 3600
 
     base_config["update_frequency"] = "3d4h80m09s"
+    base_config["max_idle_time"] = "1d8h99m77s"
     manager_config = FractalComputeConfig(base_folder=base_folder, **base_config)
     assert manager_config.update_frequency == 278409
+    assert manager_config.max_idle_time == 121217
 
     base_config["update_frequency"] = "3:04:80:9"
+    base_config["max_idle_time"] = "1:8:99:77"
     manager_config = FractalComputeConfig(base_folder=base_folder, **base_config)
     assert manager_config.update_frequency == 278409
+    assert manager_config.max_idle_time == 121217
