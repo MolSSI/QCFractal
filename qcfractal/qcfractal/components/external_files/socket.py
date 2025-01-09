@@ -15,7 +15,7 @@ from .db_models import ExternalFileORM
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from typing import Optional, Dict, Any, Tuple, Union, BinaryIO
+    from typing import Optional, Dict, Any, Tuple, Union, BinaryIO, Callable, Generator
 
 
 class ExternalFileSocket:
@@ -266,3 +266,36 @@ class ExternalFileSocket:
             )
 
             return ef.file_name, url
+
+    def get_file_streamer(
+        self, file_id: int, *, session: Optional[Session] = None
+    ) -> Tuple[str, Callable[[], Generator[bytes, None, None]]]:
+        """
+        Returns a function that streams a file from an S3 bucket.
+
+        Parameters
+        ----------
+        file_id
+            ID of the external file
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            The recommended filename and a generator function that yields chunks of the file
+        """
+
+        with self.root_socket.optional_session(session, True) as session:
+            ef = session.get(ExternalFileORM, file_id)
+            if ef is None:
+                raise MissingDataError(f"Cannot find external file with id {file_id} in the database")
+
+            s3_obj = self._s3_client.get_object(Bucket=ef.bucket, Key=ef.object_key)
+
+            def _generator_func():
+                for chunk in s3_obj["Body"].iter_chunks(chunk_size=(8 * 1048576)):
+                    yield chunk
+
+            return ef.file_name, _generator_func
