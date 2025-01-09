@@ -1,12 +1,18 @@
 from __future__ import annotations
 
 import hashlib
+import importlib
 import logging
 import os
 import uuid
 from typing import TYPE_CHECKING
 
-import boto3
+# Torsiondrive package is optional
+_boto3_spec = importlib.util.find_spec("boto3")
+
+if _boto3_spec is not None:
+    boto3 = importlib.util.module_from_spec(_boto3_spec)
+    _boto3_spec.loader.exec_module(boto3)
 
 from qcportal.exceptions import MissingDataError
 from qcportal.external_files import ExternalFileTypeEnum, ExternalFileStatusEnum
@@ -31,6 +37,8 @@ class ExternalFileSocket:
         if not self._s3_config.enabled:
             self._logger.info("S3 service for external files is not configured")
             return
+        elif _boto3_spec is None:
+            raise RuntimeError("boto3 package is required for S3 support")
 
         self._s3_client = boto3.client(
             "s3",
