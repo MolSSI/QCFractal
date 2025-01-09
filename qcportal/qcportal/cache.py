@@ -74,11 +74,11 @@ class RecordCache:
         self._conn.execute(
             """
             CREATE TABLE IF NOT EXISTS records (
-                id INTEGER NOT NULL PRIMARY KEY,
+                id INTEGER PRIMARY KEY,
                 status TEXT NOT NULL,
                 modified_on DECIMAL NOT NULL,
                 record BLOB NOT NULL
-            ) WITHOUT ROWID
+            )
             """
         )
 
