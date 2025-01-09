@@ -376,14 +376,21 @@ class InternalJobSocket:
 
             # Run the function specified to be run after
             if job_orm.status == InternalJobStatusEnum.complete and job_orm.after_function is not None:
-                after_func_attr = attrgetter(job_orm.after_function)
-                after_func = after_func_attr(self.root_socket)
+                try:
+                    after_func_attr = attrgetter(job_orm.after_function)
+                    after_func = after_func_attr(self.root_socket)
 
-                after_func_params = inspect.signature(after_func).parameters
-                add_after_kwargs = {}
-                if "session" in after_func_params:
-                    add_after_kwargs["session"] = session
-                after_func(**job_orm.after_function_kwargs, **add_after_kwargs)
+                    after_func_params = inspect.signature(after_func).parameters
+                    add_after_kwargs = {}
+                    if "session" in after_func_params:
+                        add_after_kwargs["session"] = session
+                    after_func(**job_orm.after_function_kwargs, **add_after_kwargs)
+                except Exception:
+                    # Don't rollback? not sure what to do here
+                    result = traceback.format_exc()
+                    logger.error(f"Job {job_orm.id} failed with exception:\n{result}")
+
+                    job_orm.status = InternalJobStatusEnum.error
 
             if job_orm.status == InternalJobStatusEnum.complete and job_orm.repeat_delay is not None:
                 self.add(
