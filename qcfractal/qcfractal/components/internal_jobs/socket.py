@@ -287,7 +287,7 @@ class InternalJobSocket:
         if self._internal_job_keep <= 0:
             return
 
-        before = now_at_utc() - timedelta(days=self._internal_job_keep)
+        before = now_at_utc() - timedelta(seconds=self._internal_job_keep)
 
         stmt = delete(InternalJobORM)
         stmt = stmt.where(

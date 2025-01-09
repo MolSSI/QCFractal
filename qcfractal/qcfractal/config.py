@@ -380,7 +380,7 @@ class FractalConfig(ConfigBase):
     # Access logging
     log_access: bool = Field(False, description="Store API access in the database")
     access_log_keep: int = Field(
-        0, description="How far back to keep access logs (in seconds or a string). 0 means keep all"
+        0, description="How far back to keep access logs (in days or as a duration string). 0 means keep all"
     )
 
     # maxmind_account_id: Optional[int] = Field(None, description="Account ID for MaxMind GeoIP2 service")
@@ -403,7 +403,7 @@ class FractalConfig(ConfigBase):
         1, description="Number of processes for processing internal jobs and async requests"
     )
     internal_job_keep: int = Field(
-        0, description="Number of days of finished internal job logs to keep. 0 means keep all"
+        0, description="How far back to keep finished internal jobs (in days or as a duration string). 0 means keep all"
     )
 
     # Homepage settings
@@ -461,8 +461,14 @@ class FractalConfig(ConfigBase):
             raise ValidationError(f"{v} is not a valid loglevel. Must be DEBUG, INFO, WARNING, ERROR, or CRITICAL")
         return v
 
-    @validator("service_frequency", "heartbeat_frequency", "access_log_keep", pre=True)
+    @validator("service_frequency", "heartbeat_frequency", pre=True)
     def _convert_durations(cls, v):
+        return duration_to_seconds(v)
+
+    @validator("access_log_keep", "internal_job_keep", pre=True)
+    def _convert_durations_days(cls, v):
+        if isinstance(v, int) or (isinstance(v, str) and v.isdigit()):
+            return int(v) * 86400
         return duration_to_seconds(v)
 
     class Config(ConfigCommon):
