@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 import psycopg2.extensions
 from sqlalchemy import select, delete, update, and_, or_
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.exc import IntegrityError
 
 from qcfractal.components.auth.db_models import UserIDMapSubquery
 from qcfractal.db_socket.helpers import get_query_proj_options
@@ -71,6 +72,7 @@ class InternalJobSocket:
         after_function: Optional[str] = None,
         after_function_kwargs: Optional[Dict[str, Any]] = None,
         repeat_delay: Optional[int] = None,
+        serial_group: Optional[str] = None,
         *,
         session: Optional[Session] = None,
     ) -> int:
@@ -99,6 +101,8 @@ class InternalJobSocket:
             Arguments to use when calling `after_function`
         repeat_delay
             If set, will submit a new, identical job to be run repeat_delay seconds after this one finishes
+        serial_group
+            Only one job within this group may be run at once. If None, there is no limit
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -122,6 +126,7 @@ class InternalJobSocket:
                     after_function=after_function,
                     after_function_kwargs=after_function_kwargs,
                     repeat_delay=repeat_delay,
+                    serial_group=serial_group,
                     user_id=user_id,
                 )
                 stmt = stmt.on_conflict_do_update(
@@ -153,6 +158,7 @@ class InternalJobSocket:
                     after_function=after_function,
                     after_function_kwargs=after_function_kwargs,
                     repeat_delay=repeat_delay,
+                    serial_group=serial_group,
                     user_id=user_id,
                 )
                 if unique_name:
@@ -413,8 +419,16 @@ class InternalJobSocket:
         Blocks until a job is possibly available to run
         """
 
+        serial_cte = select(InternalJobORM.serial_group).distinct()
+        serial_cte = serial_cte.where(InternalJobORM.status == InternalJobStatusEnum.running)
+        serial_cte = serial_cte.where(InternalJobORM.serial_group.is_not(None))
+        serial_cte = serial_cte.cte()
+
         next_job_stmt = select(InternalJobORM.scheduled_date)
         next_job_stmt = next_job_stmt.where(InternalJobORM.status == InternalJobStatusEnum.waiting)
+        next_job_stmt = next_job_stmt.where(
+            or_(InternalJobORM.serial_group.is_(None), InternalJobORM.serial_group.not_in(select(serial_cte)))
+        )
         next_job_stmt = next_job_stmt.order_by(InternalJobORM.scheduled_date.asc())
 
         # Skip any that are being claimed for running right now
@@ -516,6 +530,11 @@ class InternalJobSocket:
         conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
 
         # Prepare a statement for finding jobs. Filters will be added in the loop
+        serial_cte = select(InternalJobORM.serial_group).distinct()
+        serial_cte = serial_cte.where(InternalJobORM.status == InternalJobStatusEnum.running)
+        serial_cte = serial_cte.where(InternalJobORM.serial_group.is_not(None))
+        serial_cte = serial_cte.cte()
+
         stmt = select(InternalJobORM)
         stmt = stmt.order_by(InternalJobORM.scheduled_date.asc()).limit(1)
         stmt = stmt.with_for_update(skip_locked=True)
@@ -528,10 +547,20 @@ class InternalJobSocket:
             logger.debug("checking for jobs")
 
             # Pick up anything waiting, or anything that hasn't been updated in a while (12 update periods)
+
             now = now_at_utc()
             dead = now - timedelta(seconds=(self._update_frequency * 12))
             logger.debug(f"checking for jobs before date {now}")
-            cond1 = and_(InternalJobORM.status == InternalJobStatusEnum.waiting, InternalJobORM.scheduled_date <= now)
+
+            # Job is waiting, schedule to be run now or in the past,
+            # Serial group does not have any running or is not set
+            cond1 = and_(
+                InternalJobORM.status == InternalJobStatusEnum.waiting,
+                InternalJobORM.scheduled_date <= now,
+                or_(InternalJobORM.serial_group.is_(None), InternalJobORM.serial_group.not_in(select(serial_cte))),
+            )
+
+            # Job is running but runner is determined to be dead. Serial group doesn't matter
             cond2 = and_(InternalJobORM.status == InternalJobStatusEnum.running, InternalJobORM.last_updated < dead)
 
             stmt_now = stmt.where(or_(cond1, cond2))
@@ -560,8 +589,21 @@ class InternalJobSocket:
             job_orm.runner_uuid = runner_uuid
             job_orm.status = InternalJobStatusEnum.running
 
-            # Releases the row-level lock (from the with_for_update() in the original query)
-            session_main.commit()
+            # For logging below - the object might be in an odd state after the exception, where accessing
+            # it results in further exceptions
+            serial_group = job_orm.serial_group
+
+            # Violation of the unique constraint may occur - two runners attempting to take
+            # different jobs of the same serial group at the same time
+            try:
+                # Releases the row-level lock (from the with_for_update() in the original query)
+                session_main.commit()
+            except IntegrityError:
+                logger.info(
+                    f"Attempting to run job from serial group '{serial_group}, but seems like another runner got to another job from the same group first"
+                )
+                session_main.rollback()
+                continue
 
             job_progress = JobProgress(job_orm.id, runner_uuid, session_status, self._update_frequency, end_event)
             self._run_single(session_main, job_orm, logger, job_progress=job_progress)

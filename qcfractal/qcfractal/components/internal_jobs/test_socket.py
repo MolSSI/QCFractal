@@ -116,6 +116,50 @@ def test_internal_jobs_socket_run(storage_socket: SQLAlchemySocket, session: Ses
         th.join()
 
 
+@pytest.mark.parametrize("job_func", ("internal_jobs.dummy_job", "internal_jobs.dummy_job_2"))
+def test_internal_jobs_socket_run_serial(storage_socket: SQLAlchemySocket, session: Session, job_func: str):
+    id_1 = storage_socket.internal_jobs.add(
+        "dummy_job", now_at_utc(), job_func, {"iterations": 10}, None, unique_name=False, serial_group="test"
+    )
+    id_2 = storage_socket.internal_jobs.add(
+        "dummy_job", now_at_utc(), job_func, {"iterations": 10}, None, unique_name=False, serial_group="test"
+    )
+    id_3 = storage_socket.internal_jobs.add(
+        "dummy_job",
+        now_at_utc(),
+        job_func,
+        {"iterations": 10},
+        None,
+        unique_name=False,
+    )
+
+    # Faster updates for testing
+    storage_socket.internal_jobs._update_frequency = 1
+
+    end_event = threading.Event()
+    th1 = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
+    th2 = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
+    th3 = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
+    th1.start()
+    th2.start()
+    th3.start()
+    time.sleep(8)
+
+    try:
+        job_1 = session.get(InternalJobORM, id_1)
+        job_2 = session.get(InternalJobORM, id_2)
+        job_3 = session.get(InternalJobORM, id_3)
+        assert job_1.status == InternalJobStatusEnum.running
+        assert job_2.status == InternalJobStatusEnum.waiting
+        assert job_3.status == InternalJobStatusEnum.running
+
+    finally:
+        end_event.set()
+        th1.join()
+        th2.join()
+        th3.join()
+
+
 def test_internal_jobs_socket_recover(storage_socket: SQLAlchemySocket, session: Session):
     id_1 = storage_socket.internal_jobs.add(
         "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False

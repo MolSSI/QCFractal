@@ -57,6 +57,7 @@ class InternalJob(BaseModel):
     runner_hostname: Optional[str]
     runner_uuid: Optional[str]
     repeat_delay: Optional[int]
+    serial_group: Optional[str]
 
     progress: int
     progress_description: Optional[str] = None

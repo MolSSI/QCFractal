@@ -6,6 +6,7 @@ import tempfile
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select, delete, func, union, text, and_
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import load_only, lazyload, joinedload, with_polymorphic
 from sqlalchemy.orm.attributes import flag_modified
 
@@ -1923,9 +1924,14 @@ class DatasetSocket:
                 },
                 user_id=None,
                 unique_name=True,
+                serial_group="ds_create_view",
                 session=session,
             )
 
-            ds_job_orm = DatasetInternalJobORM(dataset_id=dataset_id, internal_job_id=job_id)
-            session.add(ds_job_orm)
+            stmt = (
+                insert(DatasetInternalJobORM)
+                .values(dataset_id=dataset_id, internal_job_id=job_id)
+                .on_conflict_do_nothing()
+            )
+            session.execute(stmt)
             return job_id
