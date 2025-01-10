@@ -17,6 +17,7 @@ if _boto3_spec is not None:
 from qcportal.exceptions import MissingDataError
 from qcportal.external_files import ExternalFileTypeEnum, ExternalFileStatusEnum
 from .db_models import ExternalFileORM
+from sqlalchemy import select
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -215,27 +216,39 @@ class ExternalFileSocket:
 
             return ef.model_dict()
 
-    # def delete(self, file_id: int, *, session: Optional[Session] = None):
-    #    """
-    #    Deletes an external file from the database and from remote storage
+    def delete(self, file_id: int, *, session: Optional[Session] = None):
+        """
+        Deletes an external file from the database and from remote storage
 
-    #    Parameters
-    #    ----------
-    #    file_id
-    #        ID of the external file to remove
-    #    session
-    #        An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-    #        is used, it will be flushed (but not committed) before returning from this function.
+        Parameters
+        ----------
+        file_id
+            ID of the external file to remove
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
 
-    #    Returns
-    #    -------
-    #    :
-    #        Metadata about what was deleted and any errors that occurred
-    #    """
+        Returns
+        -------
+        :
+            Metadata about what was deleted and any errors that occurred
+        """
 
-    #    with self.root_socket.optional_session(session) as session:
-    #        stmt = delete(ExternalFileORM).where(ExternalFileORM.id == file_id)
-    #        session.execute(stmt)
+        with self.root_socket.optional_session(session) as session:
+            stmt = select(ExternalFileORM).where(ExternalFileORM.id == file_id)
+            ef_orm = session.execute(stmt).scalar_one_or_none()
+
+            if ef_orm is None:
+                raise MissingDataError(f"Cannot find external file with id {file_id} in the database")
+
+            bucket = ef_orm.bucket
+            object_key = ef_orm.object_key
+
+            session.delete(ef_orm)
+            session.flush()
+
+            # now delete from S3 storage
+            self._s3_client.delete_object(Bucket=bucket, Key=object_key)
 
     def get_url(self, file_id: int, *, session: Optional[Session] = None) -> Tuple[str, str]:
         """

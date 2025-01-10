@@ -1715,6 +1715,19 @@ class DatasetSocket:
             att = session.execute(stmt).scalars().all()
             return [x.model_dict() for x in att]
 
+    def delete_attachment(self, dataset_id: int, file_id: int, *, session: Optional[Session] = None):
+        stmt = select(DatasetAttachmentORM)
+        stmt = stmt.where(DatasetAttachmentORM.dataset_id == dataset_id)
+        stmt = stmt.where(DatasetAttachmentORM.id == file_id)
+        stmt = stmt.with_for_update()
+
+        with self.root_socket.optional_session(session) as session:
+            att = session.execute(stmt).scalar_one_or_none()
+            if att is None:
+                raise MissingDataError(f"Attachment with file id {file_id} not found in dataset {dataset_id}")
+
+            return self.root_socket.external_files.delete(file_id, session=session)
+
     def attach_file(
         self,
         dataset_id: int,

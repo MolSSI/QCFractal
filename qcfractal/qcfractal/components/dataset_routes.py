@@ -385,15 +385,24 @@ def list_dataset_internal_jobs_v1(dataset_id: int, url_params: DatasetGetInterna
 
 
 #################################
-# Fields not returned by default
+# Attachments
+#################################
+@api_v1.route("/datasets/<int:dataset_id>/attachments", methods=["GET"])
+@wrap_route("READ")
+def fetch_dataset_attachments_v1(dataset_id: int):
+    return storage_socket.datasets.get_attachments(dataset_id)
+
+
+@api_v1.route("/datasets/<int:dataset_id>/attachments/<int:attachment_id>", methods=["DELETE"])
+@wrap_route("DELETE")
+def delete_dataset_attachment_v1(dataset_id: int, attachment_id: int):
+    return storage_socket.datasets.delete_attachment(dataset_id, attachment_id)
+
+
+#################################
+# Contributed Values
 #################################
 @api_v1.route("/datasets/<int:dataset_id>/contributed_values", methods=["GET"])
 @wrap_route("READ")
 def fetch_dataset_contributed_values_v1(dataset_id: int):
     return storage_socket.datasets.get_contributed_values(dataset_id)
-
-
-@api_v1.route("/datasets/<int:dataset_id>/attachments", methods=["GET"])
-@wrap_route("READ")
-def fetch_dataset_attachments_v1(dataset_id: int):
-    return storage_socket.datasets.get_attachments(dataset_id)

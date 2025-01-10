@@ -382,6 +382,18 @@ class BaseDataset(BaseModel):
 
         return self.attachments_
 
+    def delete_attachment(self, file_id: int):
+        self.assert_is_not_view()
+        self.assert_online()
+
+        self._client.make_request(
+            "delete",
+            f"api/v1/datasets/{self.id}/attachments/{file_id}",
+            None,
+        )
+
+        self.fetch_attachments()
+
     #########################################
     # View creation and use
     #########################################
