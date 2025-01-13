@@ -3,6 +3,7 @@ from __future__ import annotations
 import threading
 import time
 import uuid
+from datetime import timedelta
 from typing import TYPE_CHECKING
 
 import pytest
@@ -26,8 +27,7 @@ def dummy_internal_job(self, iterations: int, session, job_progress):
         job_progress.update_progress(100 * ((i + 1) / iterations))
         # print("Dummy internal job counter ", i)
 
-        if job_progress.cancelled():
-            return "Internal job cancelled"
+        job_progress.raise_if_cancelled()
 
     return "Internal job finished"
 
@@ -160,7 +160,7 @@ def test_internal_jobs_socket_run_serial(storage_socket: SQLAlchemySocket, sessi
         th3.join()
 
 
-def test_internal_jobs_socket_recover(storage_socket: SQLAlchemySocket, session: Session):
+def test_internal_jobs_socket_runnerstop(storage_socket: SQLAlchemySocket, session: Session):
     id_1 = storage_socket.internal_jobs.add(
         "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
     )
@@ -179,8 +179,13 @@ def test_internal_jobs_socket_recover(storage_socket: SQLAlchemySocket, session:
     assert not th.is_alive()
 
     job_1 = session.get(InternalJobORM, id_1)
-    assert job_1.status == InternalJobStatusEnum.running
-    assert job_1.progress > 10
+    assert job_1.status == InternalJobStatusEnum.waiting
+    assert job_1.progress == 0
+    assert job_1.started_date is None
+    assert job_1.last_updated is None
+    assert job_1.runner_uuid is None
+
+    return
     old_uuid = job_1.runner_uuid
 
     # Change uuid
@@ -192,6 +197,46 @@ def test_internal_jobs_socket_recover(storage_socket: SQLAlchemySocket, session:
     th = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
     th.start()
     time.sleep(30)
+
+    try:
+        session.expire(job_1)
+        job_1 = session.get(InternalJobORM, id_1)
+        assert job_1.status == InternalJobStatusEnum.complete
+        assert job_1.runner_uuid != old_uuid
+        assert job_1.progress == 100
+        assert job_1.result == "Internal job finished"
+    finally:
+        end_event.set()
+        th.join()
+
+
+def test_internal_jobs_socket_recover(storage_socket: SQLAlchemySocket, session: Session):
+    id_1 = storage_socket.internal_jobs.add(
+        "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 5}, None, unique_name=False
+    )
+
+    # Faster updates for testing
+    storage_socket.internal_jobs._update_frequency = 1
+
+    # Manually make it seem like it's running
+    old_uuid = str(uuid.uuid4())
+    job_1 = session.get(InternalJobORM, id_1)
+    job_1.status = InternalJobStatusEnum.running
+    job_1.progress = 10
+    job_1.last_updated = now_at_utc() - timedelta(seconds=60)
+    job_1.runner_uuid = old_uuid
+    session.commit()
+
+    session.expire(job_1)
+    job_1 = session.get(InternalJobORM, id_1)
+    assert job_1.status == InternalJobStatusEnum.running
+    assert job_1.runner_uuid == old_uuid
+
+    # Job is now running but orphaned. Should be picked up next time
+    end_event = threading.Event()
+    th = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
+    th.start()
+    time.sleep(10)
 
     try:
         session.expire(job_1)

@@ -21,7 +21,7 @@ from qcportal.exceptions import MissingDataError
 from qcportal.internal_jobs.models import InternalJobStatusEnum, InternalJobQueryFilters
 from qcportal.utils import now_at_utc
 from .db_models import InternalJobORM
-from .status import JobProgress
+from .status import JobProgress, CancelledJobException, JobRunnerStoppingException
 
 if TYPE_CHECKING:
     from qcfractal.db_socket.socket import SQLAlchemySocket
@@ -333,6 +333,9 @@ class InternalJobSocket:
         Runs a single job
         """
 
+        # For logging (ORM may end up detached or somthing)
+        job_id = job_orm.id
+
         try:
             func_attr = attrgetter(job_orm.function)
 
@@ -351,29 +354,55 @@ class InternalJobSocket:
             if "session" in func_params:
                 add_kwargs["session"] = session
 
+            # Run the desired function
+            # Raises an exception if cancelled
             result = func(**job_orm.kwargs, **add_kwargs)
 
-            # Mark complete, unless this was cancelled
-            if not job_progress.cancelled():
-                job_orm.status = InternalJobStatusEnum.complete
-                job_orm.progress = 100
-                job_orm.progress_description = "Complete"
-
-        except Exception:
-            session.rollback()
-            result = traceback.format_exc()
-            logger.error(f"Job {job_orm.id} failed with exception:\n{result}")
-
-            job_orm.status = InternalJobStatusEnum.error
-
-        if not job_progress.deleted():
-            job_orm.ended_date = now_at_utc()
-            job_orm.last_updated = job_orm.ended_date
+            job_orm.status = InternalJobStatusEnum.complete
+            job_orm.progress = 100
+            job_orm.progress_description = "Complete"
             job_orm.result = result
 
-            # Clear the unique name so we can add another one if needed
-            has_unique_name = job_orm.unique_name is not None
-            job_orm.unique_name = None
+        # Job itself is being cancelled
+        except CancelledJobException:
+            session.rollback()
+            logger.info(f"Job {job_id} was cancelled")
+            job_orm.status = InternalJobStatusEnum.cancelled
+            job_orm.result = None
+
+        # Runner is stopping down
+        except JobRunnerStoppingException:
+            session.rollback()
+            logger.info(f"Job {job_id} was running, but runner is stopping")
+
+            # Basically reset everything
+            job_orm.status = InternalJobStatusEnum.waiting
+            job_orm.progress = 0
+            job_orm.progress_description = None
+            job_orm.started_date = None
+            job_orm.last_updated = None
+            job_orm.result = None
+            job_orm.runner_uuid = None
+
+        # Function itself had an error
+        except:
+            session.rollback()
+            job_orm.result = traceback.format_exc()
+            logger.error(f"Job {job_id} failed with exception:\n{job_orm.result}")
+            job_orm.status = InternalJobStatusEnum.error
+
+        if job_progress.deleted:
+            # Row does not exist anymore
+            session.expunge(job_orm)
+        else:
+            # If status is waiting, that means the runner itself is stopping or something
+            if job_orm.status != InternalJobStatusEnum.waiting:
+                job_orm.ended_date = now_at_utc()
+                job_orm.last_updated = job_orm.ended_date
+
+                # Clear the unique name so we can add another one if needed
+                has_unique_name = job_orm.unique_name is not None
+                job_orm.unique_name = None
 
             # Flush but don't commit. This will prevent marking the task as finished
             # before the after_func has been run, but allow new ones to be added
@@ -411,7 +440,8 @@ class InternalJobSocket:
                     repeat_delay=job_orm.repeat_delay,
                     session=session,
                 )
-            session.commit()
+
+        session.commit()
 
     @staticmethod
     def _wait_for_job(session: Session, logger, conn, end_event):
