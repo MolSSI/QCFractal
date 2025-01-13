@@ -104,9 +104,13 @@ def test_singlepoint_dataset_model_remove_record(snowflake_client: PortalClient)
     ds_helpers.run_dataset_model_remove_record(snowflake_client, ds, test_entries, test_specs)
 
 
-def test_singlepoint_dataset_model_submit(snowflake_client: PortalClient):
-    ds = snowflake_client.add_dataset(
-        "singlepoint", "Test dataset", default_tag="default_tag", default_priority=PriorityEnum.low
+def test_singlepoint_dataset_model_submit(submitter_client: PortalClient):
+    ds = submitter_client.add_dataset(
+        "singlepoint",
+        "Test dataset",
+        default_tag="default_tag",
+        default_priority=PriorityEnum.low,
+        owner_group="group1",
     )
     ds_helpers.run_dataset_model_submit(ds, test_entries, test_specs[0], record_compare)
 
