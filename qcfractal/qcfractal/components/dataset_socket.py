@@ -1738,6 +1738,7 @@ class DatasetSocket:
         description: Optional[str],
         provenance: Dict[str, Any],
         *,
+        job_progress: Optional[JobProgress] = None,
         session: Optional[Session] = None,
     ) -> int:
         """
@@ -1761,6 +1762,8 @@ class DatasetSocket:
             An optional description of the file
         provenance
             A dictionary containing metadata regarding the origin or history of the file.
+        job_progress
+            Object used to track progress if this function is being run in a background job
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -1784,7 +1787,10 @@ class DatasetSocket:
                 provenance=provenance,
             )
 
-            file_id = self.root_socket.external_files.add_file(file_path, ef, session=session)
+            file_id = self.root_socket.external_files.add_file(
+                file_path, ef, session=session, job_progress=job_progress
+            )
+
             self._logger.info(f"Dataset attachment {file_path} successfully uploaded to S3. ID is {file_id}")
             return file_id
 
@@ -1828,7 +1834,7 @@ class DatasetSocket:
             Specifies whether child records associated with the main records should also be included (recursively)
             in the view file.
         job_progress
-            Object used to track the progress of the job
+            Object used to track progress if this function is being run in a background job
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.

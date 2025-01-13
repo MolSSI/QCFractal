@@ -7,15 +7,15 @@ from typing import TYPE_CHECKING
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
+from qcfractal.components.internal_jobs.status import JobProgress
 from qcfractal.components.record_db_models import BaseRecordORM
+from qcportal.cache import DatasetCache
 from qcportal.dataset_models import BaseDataset
 from qcportal.record_models import RecordStatusEnum, BaseRecord
 from qcportal.utils import chunk_iterable
-from qcportal.cache import DatasetCache
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
-    from qcfractal.components.internal_jobs.status import JobProgress
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from typing import Optional, Iterable
     from typing import Iterable
@@ -88,6 +88,7 @@ def create_view_file(
 
     # Entries
     if job_progress is not None:
+        job_progress.raise_if_cancelled()
         job_progress.update_progress(0, "Processing dataset entries")
 
     stmt = select(ds_socket.entry_orm)
@@ -99,6 +100,7 @@ def create_view_file(
     view_db.update_entries(entries)
 
     if job_progress is not None:
+        job_progress.raise_if_cancelled()
         job_progress.update_progress(5, "Processing dataset specifications")
 
     # Specifications
@@ -111,6 +113,7 @@ def create_view_file(
     view_db.update_specifications(specs)
 
     if job_progress is not None:
+        job_progress.raise_if_cancelled()
         job_progress.update_progress(10, "Loading record information")
 
     # Now all the records
@@ -143,6 +146,7 @@ def create_view_file(
             record_type_map[record_type].append(record_id)
 
     if job_progress is not None:
+        job_progress.raise_if_cancelled()
         job_progress.update_progress(15, "Processing individual records")
 
     ############################################################################
@@ -163,6 +167,8 @@ def create_view_file(
 
             finished_count += len(id_chunk)
             if job_progress is not None:
+                job_progress.raise_if_cancelled()
+
                 # Fraction of the 75% left over (15 to start, 10 left over for uploading)
                 job_progress.update_progress(
                     15 + int(75 * finished_count / record_count), "Processing individual records"

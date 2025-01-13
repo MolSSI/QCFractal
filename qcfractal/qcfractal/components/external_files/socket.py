@@ -7,20 +7,23 @@ import os
 import uuid
 from typing import TYPE_CHECKING
 
-# Torsiondrive package is optional
+from sqlalchemy import select
+
+from qcportal.exceptions import MissingDataError
+from qcportal.external_files import ExternalFileTypeEnum, ExternalFileStatusEnum
+from .db_models import ExternalFileORM
+
+# Boto3 package is optional
 _boto3_spec = importlib.util.find_spec("boto3")
 
 if _boto3_spec is not None:
     boto3 = importlib.util.module_from_spec(_boto3_spec)
     _boto3_spec.loader.exec_module(boto3)
 
-from qcportal.exceptions import MissingDataError
-from qcportal.external_files import ExternalFileTypeEnum, ExternalFileStatusEnum
-from .db_models import ExternalFileORM
-from sqlalchemy import select
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
+    from qcfractal.components.internal_jobs.status import JobProgress
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from typing import Optional, Dict, Any, Tuple, Union, BinaryIO, Callable, Generator
 
@@ -73,6 +76,7 @@ class ExternalFileSocket:
         file_data: BinaryIO,
         file_orm: ExternalFileORM,
         *,
+        job_progress: Optional[JobProgress] = None,
         session: Optional[Session] = None,
     ) -> int:
         """
@@ -91,6 +95,8 @@ class ExternalFileSocket:
             Binary data to be read from
         file_orm
             Existing ORM object that will be filled in with metadata
+        job_progress
+            Object used to track progress if this function is being run in a background job
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -127,6 +133,8 @@ class ExternalFileSocket:
 
             try:
                 while chunk := file_data.read(10 * 1024 * 1024):
+                    job_progress.raise_if_cancelled()
+
                     sha256.update(chunk)
                     file_size += len(chunk)
 
@@ -157,6 +165,7 @@ class ExternalFileSocket:
         file_path: str,
         file_orm: ExternalFileORM,
         *,
+        job_progress: Optional[JobProgress] = None,
         session: Optional[Session] = None,
     ) -> int:
         """
@@ -170,6 +179,8 @@ class ExternalFileSocket:
             Path to an existing file to be read from
         file_orm
             Existing ORM object that will be filled in with metadata
+        job_progress
+            Object used to track progress if this function is being run in a background job
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -183,7 +194,7 @@ class ExternalFileSocket:
         self._logger.info(f"Uploading {file_path} to S3. File size: {os.path.getsize(file_path)/1048576} MiB")
 
         with open(file_path, "rb") as f:
-            return self.add_data(f, file_orm, session=session)
+            return self.add_data(f, file_orm, job_progress=job_progress, session=session)
 
     def get_metadata(
         self,
