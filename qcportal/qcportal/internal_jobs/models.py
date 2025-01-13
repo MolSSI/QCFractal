@@ -132,8 +132,14 @@ class InternalJob(BaseModel):
             if end_time is not None and t >= end_time:
                 raise TimeoutError("Timed out waiting for job to complete")
 
-            if self.status not in [InternalJobStatusEnum.waiting, InternalJobStatusEnum.running]:
+            if self.status == InternalJobStatusEnum.error:
+                print("Internal job resulted in an error:")
+                print(self.result)
                 break
+            elif self.status not in [InternalJobStatusEnum.waiting, InternalJobStatusEnum.running]:
+                print(f"Internal job final status: {self.status.value}")
+                break
+
             curtime = time.time()
 
             if end_time is not None:
