@@ -7,6 +7,7 @@ from __future__ import annotations
 import logging
 import os
 import secrets
+import tempfile
 from typing import Optional, Dict, Union, Any
 
 import yaml
@@ -507,6 +508,15 @@ class FractalConfig(ConfigBase):
         if isinstance(v, int) or (isinstance(v, str) and v.isdigit()):
             return int(v) * 86400
         return duration_to_seconds(v)
+
+    @validator("temporary_dir", pre=True)
+    def _create_temporary_directory(cls, v, values):
+        v = _make_abs_path(v, values["base_folder"], tempfile.gettempdir())
+
+        if v is not None and not os.path.exists(v):
+            os.makedirs(v)
+
+        return v
 
     class Config(ConfigCommon):
         env_prefix = "QCF_"
