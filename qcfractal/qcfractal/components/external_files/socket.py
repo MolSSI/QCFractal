@@ -133,7 +133,8 @@ class ExternalFileSocket:
 
             try:
                 while chunk := file_data.read(10 * 1024 * 1024):
-                    job_progress.raise_if_cancelled()
+                    if job_progress is not None:
+                        job_progress.raise_if_cancelled()
 
                     sha256.update(chunk)
                     file_size += len(chunk)
