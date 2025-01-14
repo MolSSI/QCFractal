@@ -25,7 +25,8 @@ def upgrade():
         sa.Column("program", sa.String(), nullable=False),
         sa.Column("bsse_correction", postgresql.ARRAY(sa.String()), nullable=False),
         sa.Column("keywords", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
-        sa.Column("keywords_hash", sa.String(), nullable=False),
+        sa.Column("protocols", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column("specification_hash", sa.String(), nullable=False),
         sa.CheckConstraint("program = LOWER(program)", name="ck_manybody_specification_program_lower"),
         sa.PrimaryKeyConstraint("id"),
     )

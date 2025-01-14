@@ -39,6 +39,7 @@ class ManybodySpecification(BaseModel):
     levels: Dict[Union[int, Literal["supersystem"]], QCSpecification]
     bsse_correction: List[BSSECorrectionEnum]
     keywords: ManybodyKeywords = Field(ManybodyKeywords())
+    protocols: Dict[str, Any] = Field(default_factory=dict)
 
 
 class ManybodyAddBody(RecordAddBodyBase):

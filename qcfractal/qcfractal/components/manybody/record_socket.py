@@ -7,6 +7,7 @@ import logging
 import textwrap
 from typing import List, Dict, Tuple, Optional, Sequence, Any, Union, TYPE_CHECKING
 
+import qcmanybody
 import tabulate
 from sqlalchemy import select, func
 from sqlalchemy.dialects.postgresql import array_agg, aggregate_order_by
@@ -30,7 +31,6 @@ from .record_db_models import (
     ManybodySpecificationORM,
     ManybodySpecificationLevelsORM,
 )
-import qcmanybody
 from ..record_socket import BaseRecordSocket
 
 _qcm_spec = importlib.util.find_spec("qcmanybody")
@@ -289,6 +289,49 @@ class ManybodyRecordSocket(BaseRecordSocket):
         # We are done!
         return True
 
+    def add_specifications(
+        self, mb_specs: Sequence[ManybodySpecification], *, session: Optional[Session] = None
+    ) -> Tuple[InsertMetadata, List[int]]:
+        """
+        Adds a specification for a manybody service to the database, returning its id.
+
+        If an identical specification exists, then no insertion takes place and the id of the existing
+        specification is returned.
+
+        Parameters
+        ----------
+        mb_specs
+            Sequence of specifications to add to the database
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the insertion, and the IDs of the specification.
+        """
+
+        # Because of how we handle levels, we do this the opposite of other record types - we add one at a time
+
+        all_metadata = []
+        all_ids = []
+
+        with self.root_socket.optional_session(session) as session:
+            for mb_spec in mb_specs:
+                meta, spec_id = self.add_specification(mb_spec, session=session)
+
+                if not meta.success:
+                    return (
+                        InsertMetadata(error_description="Unable to add manybody specification: " + meta.error_string),
+                        [],
+                    )
+
+                all_metadata.append(meta)
+                all_ids.append(spec_id)
+
+        return InsertMetadata.merge(all_metadata), all_ids
+
     def add_specification(
         self, mb_spec: ManybodySpecification, *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, Optional[int]]:
@@ -313,7 +356,14 @@ class ManybodyRecordSocket(BaseRecordSocket):
         """
 
         mb_kw_dict = mb_spec.keywords.dict()
-        kw_hash = hash_dict(mb_kw_dict)
+
+        mb_spec_dict = {
+            "program": mb_spec.program,
+            "bsse_correction": sorted(mb_spec.bsse_correction),
+            "keywords": mb_kw_dict,
+            "protocols": {},
+        }
+        mb_spec_hash = hash_dict(mb_spec_dict)
 
         # Map 'supersystem' to -1
         # The reverse (mapping -1 to 'supersystem') happens in the specification orm model_dict function
@@ -346,9 +396,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
             mb_spec_cte = (
                 select(
                     ManybodySpecificationORM.id,
-                    ManybodySpecificationORM.program,
-                    ManybodySpecificationORM.bsse_correction,
-                    ManybodySpecificationORM.keywords_hash,
+                    ManybodySpecificationORM.specification_hash,
                     array_agg(
                         aggregate_order_by(
                             ManybodySpecificationLevelsORM.singlepoint_specification_id,
@@ -371,9 +419,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
             )
 
             stmt = select(mb_spec_cte.c.id)
-            stmt = stmt.where(mb_spec_cte.c.program == mb_spec.program)
-            stmt = stmt.where(mb_spec_cte.c.bsse_correction == mb_spec.bsse_correction)
-            stmt = stmt.where(mb_spec_cte.c.keywords_hash == kw_hash)
+            stmt = stmt.where(mb_spec_cte.c.specification_hash == mb_spec_hash)
             stmt = stmt.where(mb_spec_cte.c.levels == sorted(level_spec_id_map.keys()))
             stmt = stmt.where(mb_spec_cte.c.singlepoint_ids == sorted(level_spec_id_map.values()))
 
@@ -383,21 +429,19 @@ class ManybodyRecordSocket(BaseRecordSocket):
                 return InsertMetadata(existing_idx=[0]), existing_id
 
             # Does not exist. Insert new
-            sp_spec_orms = {}
+            mb_levels_orms = {}
             for level, sp_spec_id in level_spec_id_map.items():
-                sp_spec_orms[level] = ManybodySpecificationLevelsORM(
+                mb_levels_orms[level] = ManybodySpecificationLevelsORM(
                     level=level, singlepoint_specification_id=sp_spec_id
                 )
-
-            if "supersystem" in sp_spec_orms:
-                sp_spec_orms[-1] = sp_spec_orms.pop("supersystem")
 
             new_orm = ManybodySpecificationORM(
                 program=mb_spec.program,
                 bsse_correction=mb_spec.bsse_correction,
                 keywords=mb_kw_dict,
-                keywords_hash=kw_hash,
-                levels=sp_spec_orms,
+                specification_hash=mb_spec_hash,
+                levels=mb_levels_orms,
+                protocols={},
             )
 
             session.add(new_orm)

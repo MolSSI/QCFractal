@@ -64,23 +64,27 @@ class ManybodySpecificationORM(BaseORM):
     __tablename__ = "manybody_specification"
 
     id = Column(Integer, primary_key=True)
+    specification_hash = Column(String, nullable=False)
 
     program = Column(String, nullable=False)
     bsse_correction = Column(ARRAY(String), nullable=False)
 
     keywords = Column(JSONB, nullable=False)
-    keywords_hash = Column(String, nullable=False)
+    protocols = Column(JSONB, nullable=False)
 
     levels = relationship(
         "ManybodySpecificationLevelsORM", lazy="selectin", collection_class=attribute_keyed_dict("level")
     )
 
+    # Note - specification_hash will not be unique because of the different levels!
+    # The levels are stored in another table with FK to this table, so seemingly
+    # duplicate rows in this table could have different rows in the levels table
     __table_args__ = (
         Index("ix_manybody_specification_program", "program"),
         CheckConstraint("program = LOWER(program)", name="ck_manybody_specification_program_lower"),
     )
 
-    _qcportal_model_excludes = ["id", "keywords_hash"]
+    _qcportal_model_excludes = ["id", "specification_hash"]
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         d = BaseORM.model_dict(self, exclude)
