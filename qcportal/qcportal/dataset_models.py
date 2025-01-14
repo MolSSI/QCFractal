@@ -306,6 +306,27 @@ class BaseDataset(BaseModel):
         priority: PriorityEnum = None,
         find_existing: bool = True,
     ):
+        """
+        Create records for this dataset
+
+        This function actually populates the datasets records given the entry and
+        specification information.
+
+        Parameters
+        ----------
+        entry_names
+            Submit only records for these entries
+        specification_names
+            Submit only records for these specifications
+        tag
+            Use this tag for submissions (overrides the dataset default tag)
+        priority
+            Use this tag for submissions (overrides the dataset default priority)
+        find_existing
+            If True, the database will be searched for existing records that match the requested calculations, and new
+            records created for those that don't match. If False, new records will always be created.
+        """
+
         self.assert_is_not_view()
         self.assert_online()
 
@@ -335,6 +356,56 @@ class BaseDataset(BaseModel):
                 self._client.make_request(
                     "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/submit", Any, body=body_data
                 )
+
+    def background_submit(
+        self,
+        entry_names: Optional[Union[str, Iterable[str]]] = None,
+        specification_names: Optional[Union[str, Iterable[str]]] = None,
+        tag: Optional[str] = None,
+        priority: PriorityEnum = None,
+        find_existing: bool = True,
+    ) -> InternalJob:
+        """
+        Adds a dataset submission internal job to the server
+
+        This internal job is the one to actually do the submission, which can take a while.
+
+        You can check the progress of the internal job using the return object.
+
+        See :ref:`submit` for info on the function parameters.
+
+        Returns
+        -------
+        :
+            An internal job object that can be watch or used to determine the progress of the job.
+        """
+
+        self.assert_is_not_view()
+        self.assert_online()
+
+        entry_names = make_list(entry_names)
+        specification_names = make_list(specification_names)
+
+        # Do automatic batching here
+        # (will be removed when we move to async)
+        if entry_names is None:
+            entry_names = self.entry_names
+        if specification_names is None:
+            specification_names = self.specification_names
+
+        body_data = DatasetSubmitBody(
+            entry_names=entry_names,
+            specification_names=specification_names,
+            tag=tag,
+            priority=priority,
+            find_existing=find_existing,
+        )
+
+        job_id = self._client.make_request(
+            "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/background_submit", Any, body=body_data
+        )
+
+        return self.get_internal_job(job_id)
 
     #########################################
     # Internal jobs

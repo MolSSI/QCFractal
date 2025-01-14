@@ -1305,6 +1305,61 @@ class BaseDatasetSocket:
                 find_existing,
             )
 
+    def background_submit(
+        self,
+        dataset_id: int,
+        entry_names: Optional[Iterable[str]],
+        specification_names: Optional[Iterable[str]],
+        tag: Optional[str],
+        priority: Optional[PriorityEnum],
+        owner_user: Optional[Union[int, str]],
+        owner_group: Optional[Union[int, str]],
+        find_existing: bool,
+        *,
+        session: Optional[Session] = None,
+    ) -> int:
+        """
+        Submit computations for this dataset as an internal job
+
+        This creates an internal job for the submission and returns the ID
+
+        See :ref:`submit` for details for the rest of the details on functionality and parameters.
+
+        Returns
+        -------
+        :
+            ID of the created internal job
+        """
+
+        with self.root_socket.optional_session(session) as session:
+            job_id = self.root_socket.internal_jobs.add(
+                f"dataset_submit_{dataset_id}",
+                now_at_utc(),
+                f"datasets.submit",
+                {
+                    "dataset_id": dataset_id,
+                    "entry_names": entry_names,
+                    "specification_names": specification_names,
+                    "tag": tag,
+                    "priority": priority,
+                    "owner_user": owner_user,
+                    "owner_group": owner_group,
+                    "find_existing": find_existing,
+                },
+                user_id=None,
+                unique_name=False,
+                serial_group=f"ds_submit_{dataset_id}",  # only run one submission for this dataset at a time
+                session=session,
+            )
+
+            stmt = (
+                insert(DatasetInternalJobORM)
+                .values(dataset_id=dataset_id, internal_job_id=job_id)
+                .on_conflict_do_nothing()
+            )
+            session.execute(stmt)
+            return job_id
+
     #######################
     # Record modification
     #######################
@@ -1941,3 +1996,38 @@ class DatasetSocket:
             )
             session.execute(stmt)
             return job_id
+
+    def submit(
+        self,
+        dataset_id: int,
+        entry_names: Optional[Iterable[str]],
+        specification_names: Optional[Iterable[str]],
+        tag: Optional[str],
+        priority: Optional[PriorityEnum],
+        owner_user: Optional[Union[int, str]],
+        owner_group: Optional[Union[int, str]],
+        find_existing: bool,
+        *,
+        session: Optional[Session] = None,
+    ):
+        """
+        Submit computations for a dataset
+
+        This function looks up the dataset socket and then call submit on that socket
+        """
+
+        with self.root_socket.optional_session(session) as session:
+            ds_type = self.lookup_type(dataset_id)
+            ds_socket = self.get_socket(ds_type)
+
+            return ds_socket.submit(
+                dataset_id=dataset_id,
+                entry_names=entry_names,
+                specification_names=specification_names,
+                tag=tag,
+                priority=priority,
+                owner_user=owner_user,
+                owner_group=owner_group,
+                find_existing=find_existing,
+                session=session,
+            )
