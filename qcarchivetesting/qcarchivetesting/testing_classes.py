@@ -101,7 +101,6 @@ class QCATestingSnowflake(FractalSnowflake):
         self,
         pg_harness: QCATestingPostgresHarness,
         encoding: str,
-        start_api=True,
         create_users=False,
         enable_security=False,
         allow_unauthenticated_read=False,
@@ -172,9 +171,7 @@ class QCATestingSnowflake(FractalSnowflake):
         if create_users:
             self.create_users()
 
-        # Start the flask api process if requested
-        if start_api:
-            self.start_api()
+        self.start_api()
 
     def create_users(self):
         # Get a storage socket and add the roles/users/passwords
