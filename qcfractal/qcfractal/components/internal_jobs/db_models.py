@@ -31,6 +31,7 @@ class InternalJobORM(BaseORM):
     runner_uuid = Column(String)
 
     progress = Column(Integer, nullable=False, default=0)
+    progress_description = Column(String, nullable=True)
 
     function = Column(String, nullable=False)
     kwargs = Column(JSON, nullable=False)
@@ -55,6 +56,9 @@ class InternalJobORM(BaseORM):
     # it must be unique. null != null always
     unique_name = Column(String, nullable=True)
 
+    # If this job is part of a serial group (only one may run at a time)
+    serial_group = Column(String, nullable=True)
+
     __table_args__ = (
         Index("ix_internal_jobs_added_date", "added_date", postgresql_using="brin"),
         Index("ix_internal_jobs_scheduled_date", "scheduled_date", postgresql_using="brin"),
@@ -63,6 +67,14 @@ class InternalJobORM(BaseORM):
         Index("ix_internal_jobs_name", "name"),
         Index("ix_internal_jobs_user_id", "user_id"),
         UniqueConstraint("unique_name", name="ux_internal_jobs_unique_name"),
+        # Enforces only one running per serial group
+        Index(
+            "ux_internal_jobs_status_serial_group",
+            "status",
+            "serial_group",
+            unique=True,
+            postgresql_where=(status == InternalJobStatusEnum.running),
+        ),
     )
 
     _qcportal_model_excludes = ["unique_name", "user_id"]

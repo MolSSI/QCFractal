@@ -1,29 +1,45 @@
 from __future__ import annotations
 
 import logging
+import os
+import tempfile
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select, delete, func, union, text, and_
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import load_only, lazyload, joinedload, with_polymorphic
 from sqlalchemy.orm.attributes import flag_modified
 
-from qcfractal.components.dataset_db_models import BaseDatasetORM, ContributedValuesORM
+from qcfractal.components.dataset_db_models import (
+    BaseDatasetORM,
+    ContributedValuesORM,
+    DatasetAttachmentORM,
+    DatasetInternalJobORM,
+)
+from qcfractal.components.dataset_processing import create_view_file
+from qcfractal.components.internal_jobs.db_models import InternalJobORM
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.db_socket.helpers import (
     get_general,
     get_query_proj_options,
 )
-from qcportal.exceptions import AlreadyExistsError, MissingDataError
+from qcportal.dataset_models import DatasetAttachmentType
+from qcportal.exceptions import AlreadyExistsError, MissingDataError, UserReportableError
+from qcportal.internal_jobs import InternalJobStatusEnum
 from qcportal.metadata_models import InsertMetadata, DeleteMetadata, UpdateMetadata
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
-from qcportal.utils import chunk_iterable
+from qcportal.utils import chunk_iterable, now_at_utc
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcportal.dataset_models import DatasetModifyMetadata
+    from qcfractal.components.internal_jobs.status import JobProgress
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from qcfractal.db_socket.base_orm import BaseORM
     from typing import Dict, Any, Optional, Sequence, Iterable, Tuple, List, Union
+    from typing import Iterable, List, Dict, Any
+    from qcfractal.db_socket.socket import SQLAlchemySocket
+    from sqlalchemy.orm.session import Session
 
 
 class BaseDatasetSocket:
@@ -55,6 +71,8 @@ class BaseDatasetSocket:
 
         # Use the identity from the ORM object. This keeps everything consistent
         self.dataset_type = self.dataset_orm.__mapper_args__["polymorphic_identity"]
+
+        self._logger = logging.getLogger(__name__)
 
     def _add_specification(self, session, specification) -> Tuple[InsertMetadata, Optional[int]]:
         raise NotImplementedError("_add_specification must be overridden by the derived class")
@@ -1649,3 +1667,277 @@ class DatasetSocket:
         with self.root_socket.optional_session(session, True) as session:
             cv = session.execute(stmt).scalars().all()
             return [x.model_dict() for x in cv]
+
+    def get_internal_job(
+        self,
+        dataset_id: int,
+        job_id: int,
+        *,
+        session: Optional[Session] = None,
+    ):
+        stmt = select(InternalJobORM)
+        stmt = stmt.join(DatasetInternalJobORM, DatasetInternalJobORM.internal_job_id == InternalJobORM.id)
+        stmt = stmt.where(DatasetInternalJobORM.dataset_id == dataset_id)
+        stmt = stmt.where(DatasetInternalJobORM.internal_job_id == job_id)
+
+        with self.root_socket.optional_session(session, True) as session:
+            ij_orm = session.execute(stmt).scalar_one_or_none()
+            if ij_orm is None:
+                raise MissingDataError(f"Job id {job_id} not found in dataset {dataset_id}")
+            return ij_orm.model_dict()
+
+    def list_internal_jobs(
+        self,
+        dataset_id: int,
+        status: Optional[Iterable[InternalJobStatusEnum]] = None,
+        *,
+        session: Optional[Session] = None,
+    ):
+        stmt = select(InternalJobORM)
+        stmt = stmt.join(DatasetInternalJobORM, DatasetInternalJobORM.internal_job_id == InternalJobORM.id)
+        stmt = stmt.where(DatasetInternalJobORM.dataset_id == dataset_id)
+
+        if status is not None:
+            stmt = stmt.where(InternalJobORM.status.in_(status))
+
+        with self.root_socket.optional_session(session, True) as session:
+            ij_orm = session.execute(stmt).scalars().all()
+            return [i.model_dict() for i in ij_orm]
+
+    def get_attachments(self, dataset_id: int, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
+        """
+        Get the attachments for a dataset
+        """
+
+        stmt = select(DatasetAttachmentORM)
+        stmt = stmt.where(DatasetAttachmentORM.dataset_id == dataset_id)
+
+        with self.root_socket.optional_session(session, True) as session:
+            att = session.execute(stmt).scalars().all()
+            return [x.model_dict() for x in att]
+
+    def delete_attachment(self, dataset_id: int, file_id: int, *, session: Optional[Session] = None):
+        stmt = select(DatasetAttachmentORM)
+        stmt = stmt.where(DatasetAttachmentORM.dataset_id == dataset_id)
+        stmt = stmt.where(DatasetAttachmentORM.id == file_id)
+        stmt = stmt.with_for_update()
+
+        with self.root_socket.optional_session(session) as session:
+            att = session.execute(stmt).scalar_one_or_none()
+            if att is None:
+                raise MissingDataError(f"Attachment with file id {file_id} not found in dataset {dataset_id}")
+
+            return self.root_socket.external_files.delete(file_id, session=session)
+
+    def attach_file(
+        self,
+        dataset_id: int,
+        attachment_type: DatasetAttachmentType,
+        file_path: str,
+        file_name: str,
+        description: Optional[str],
+        provenance: Dict[str, Any],
+        *,
+        job_progress: Optional[JobProgress] = None,
+        session: Optional[Session] = None,
+    ) -> int:
+        """
+        Attach a file to a dataset
+
+        This function uploads the specified file and associates it with the dataset by creating
+        a corresponding dataset attachment record. This operation requires S3 storage to be enabled.
+
+        Parameters
+        ----------
+        dataset_id
+            The ID of the dataset to which the file will be attached.
+        attachment_type
+            The type of attachment that categorizes the file being added.
+        file_path
+            The local file system path to the file that needs to be uploaded.
+        file_name
+            The name of the file to be used in the attachment record. This is the filename that is
+            recommended to the user by default.
+        description
+            An optional description of the file
+        provenance
+            A dictionary containing metadata regarding the origin or history of the file.
+        job_progress
+            Object used to track progress if this function is being run in a background job
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Raises
+        ------
+        UserReportableError
+            Raised if S3 storage is not enabled
+        """
+
+        if not self.root_socket.qcf_config.s3.enabled:
+            raise UserReportableError("S3 storage is not enabled. Can not attach file to a dataset")
+
+        self._logger.info(f"Uploading/Attaching dataset-related file: {file_path}")
+        with self.root_socket.optional_session(session) as session:
+            ef = DatasetAttachmentORM(
+                dataset_id=dataset_id,
+                attachment_type=attachment_type,
+                file_name=file_name,
+                description=description,
+                provenance=provenance,
+            )
+
+            file_id = self.root_socket.external_files.add_file(
+                file_path, ef, session=session, job_progress=job_progress
+            )
+
+            self._logger.info(f"Dataset attachment {file_path} successfully uploaded to S3. ID is {file_id}")
+            return file_id
+
+    def create_view_attachment(
+        self,
+        dataset_id: int,
+        dataset_type: str,
+        description: Optional[str],
+        provenance: Dict[str, Any],
+        status: Optional[Iterable[RecordStatusEnum]] = None,
+        include: Optional[Iterable[str]] = None,
+        exclude: Optional[Iterable[str]] = None,
+        *,
+        include_children: bool = True,
+        job_progress: Optional[JobProgress] = None,
+        session: Optional[Session] = None,
+    ):
+        """
+        Creates a dataset view and attaches it to the dataset
+
+        Uses a temporary directory within the globally-configured `temporary_dir`
+
+        Parameters
+        ----------
+        dataset_id : int
+            ID of the dataset to create the view for
+        dataset_type
+            Type of dataset the ID is
+        description
+            Optional string describing the view file
+        provenance
+            Dictionary with any metadata or other information about the view. Information regarding
+            the options used to create the view will be added.
+        status
+            List of statuses to include. Default is to include records with any status
+        include
+            List of specific record fields to include in the export. Default is to include most fields
+        exclude
+            List of specific record fields to exclude from the export. Defaults to excluding none.
+        include_children
+            Specifies whether child records associated with the main records should also be included (recursively)
+            in the view file.
+        job_progress
+            Object used to track progress if this function is being run in a background job
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+        """
+
+        if not self.root_socket.qcf_config.s3.enabled:
+            raise UserReportableError("S3 storage is not enabled. Can not not create view")
+
+        # Add the options for the view creation to the provenance
+        provenance = provenance | {
+            "options": {
+                "status": status,
+                "include": include,
+                "exclude": exclude,
+                "include_children": include_children,
+            }
+        }
+
+        with tempfile.TemporaryDirectory(dir=self.root_socket.qcf_config.temporary_dir) as tmpdir:
+            self._logger.info(f"Using temporary directory {tmpdir} for view creation")
+
+            file_name = f"dataset_{dataset_id}_view.sqlite"
+            tmp_file_path = os.path.join(tmpdir, file_name)
+
+            create_view_file(
+                session,
+                self.root_socket,
+                dataset_id,
+                dataset_type,
+                tmp_file_path,
+                status=status,
+                include=include,
+                exclude=exclude,
+                include_children=include_children,
+                job_progress=job_progress,
+            )
+
+            self._logger.info(f"View file created. File size is {os.path.getsize(tmp_file_path)/1048576} MiB.")
+
+            if job_progress is not None:
+                job_progress.update_progress(90, "Uploading view file to S3")
+
+            file_id = self.attach_file(
+                dataset_id, DatasetAttachmentType.view, tmp_file_path, file_name, description, provenance
+            )
+
+            if job_progress is not None:
+                job_progress.update_progress(100)
+
+            return file_id
+
+    def add_create_view_attachment_job(
+        self,
+        dataset_id: int,
+        dataset_type: str,
+        description: str,
+        provenance: Dict[str, Any],
+        status: Optional[Iterable[RecordStatusEnum]] = None,
+        include: Optional[Iterable[str]] = None,
+        exclude: Optional[Iterable[str]] = None,
+        *,
+        include_children: bool = True,
+        session: Optional[Session] = None,
+    ) -> int:
+        """
+        Creates an internal job for creating and attaching a view to a dataset
+
+        See :ref:`create_view_attachment` for a description of the parameters
+
+        Returns
+        -------
+        :
+            ID of the created internal job
+        """
+
+        if not self.root_socket.qcf_config.s3.enabled:
+            raise UserReportableError("S3 storage is not enabled. Can not not create view")
+
+        with self.root_socket.optional_session(session) as session:
+            job_id = self.root_socket.internal_jobs.add(
+                f"create_attach_view_ds_{dataset_id}",
+                now_at_utc(),
+                f"datasets.create_view_attachment",
+                {
+                    "dataset_id": dataset_id,
+                    "dataset_type": dataset_type,
+                    "description": description,
+                    "provenance": provenance,
+                    "status": status,
+                    "include": include,
+                    "exclude": exclude,
+                    "include_children": include_children,
+                },
+                user_id=None,
+                unique_name=True,
+                serial_group="ds_create_view",
+                session=session,
+            )
+
+            stmt = (
+                insert(DatasetInternalJobORM)
+                .values(dataset_id=dataset_id, internal_job_id=job_id)
+                .on_conflict_do_nothing()
+            )
+            session.execute(stmt)
+            return job_id

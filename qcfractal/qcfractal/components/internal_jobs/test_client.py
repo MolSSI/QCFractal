@@ -22,11 +22,10 @@ if TYPE_CHECKING:
 def dummmy_internal_job(self, iterations: int, session, job_progress):
     for i in range(iterations):
         time.sleep(1.0)
-        job_progress.update_progress(100 * ((i + 1) / iterations))
-        print("Dummy internal job counter ", i)
+        job_progress.update_progress(100 * ((i + 1) / iterations), f"Interation {i} of {iterations}")
+        # print("Dummy internal job counter ", i)
 
-        if job_progress.cancelled():
-            return "Internal job cancelled"
+        job_progress.raise_if_cancelled()
 
     return "Internal job finished"
 
@@ -36,8 +35,8 @@ def dummmy_internal_job_error(self, session, job_progress):
     raise RuntimeError("Expected error")
 
 
-setattr(InternalJobSocket, "dummy_job", dummmy_internal_job)
-setattr(InternalJobSocket, "dummy_job_error", dummmy_internal_job_error)
+setattr(InternalJobSocket, "client_dummy_job", dummmy_internal_job)
+setattr(InternalJobSocket, "client_dummy_job_error", dummmy_internal_job_error)
 
 
 def test_internal_jobs_client_error(snowflake: QCATestingSnowflake):
@@ -45,7 +44,7 @@ def test_internal_jobs_client_error(snowflake: QCATestingSnowflake):
     snowflake_client = snowflake.client()
 
     id_1 = storage_socket.internal_jobs.add(
-        "dummy_job_error", now_at_utc(), "internal_jobs.dummy_job_error", {}, None, unique_name=False
+        "client_dummy_job_error", now_at_utc(), "internal_jobs.client_dummy_job_error", {}, None, unique_name=False
     )
 
     # Faster updates for testing
@@ -73,7 +72,7 @@ def test_internal_jobs_client_cancel_waiting(snowflake: QCATestingSnowflake):
     snowflake_client = snowflake.client()
 
     id_1 = storage_socket.internal_jobs.add(
-        "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
+        "client_dummy_job", now_at_utc(), "internal_jobs.client.dummy_job", {"iterations": 10}, None, unique_name=False
     )
 
     snowflake_client.cancel_internal_job(id_1)
@@ -90,7 +89,7 @@ def test_internal_jobs_client_cancel_running(snowflake: QCATestingSnowflake):
     snowflake_client = snowflake.client()
 
     id_1 = storage_socket.internal_jobs.add(
-        "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
+        "client_dummy_job", now_at_utc(), "internal_jobs.client_dummy_job", {"iterations": 10}, None, unique_name=False
     )
 
     # Faster updates for testing
@@ -112,7 +111,7 @@ def test_internal_jobs_client_cancel_running(snowflake: QCATestingSnowflake):
         job_1 = snowflake_client.get_internal_job(id_1)
         assert job_1.status == InternalJobStatusEnum.cancelled
         assert job_1.progress < 70
-        assert job_1.result == "Internal job cancelled"
+        assert job_1.result is None
 
     finally:
         end_event.set()
@@ -124,7 +123,7 @@ def test_internal_jobs_client_delete_waiting(snowflake: QCATestingSnowflake):
     snowflake_client = snowflake.client()
 
     id_1 = storage_socket.internal_jobs.add(
-        "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
+        "client_dummy_job", now_at_utc(), "internal_jobs.client_dummy_job", {"iterations": 10}, None, unique_name=False
     )
 
     snowflake_client.delete_internal_job(id_1)
@@ -138,7 +137,7 @@ def test_internal_jobs_client_delete_running(snowflake: QCATestingSnowflake):
     snowflake_client = snowflake.client()
 
     id_1 = storage_socket.internal_jobs.add(
-        "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=False
+        "client_dummy_job", now_at_utc(), "internal_jobs.client_dummy_job", {"iterations": 10}, None, unique_name=False
     )
 
     # Faster updates for testing
@@ -173,7 +172,12 @@ def test_internal_jobs_client_query(secure_snowflake: QCATestingSnowflake):
 
     time_0 = now_at_utc()
     id_1 = storage_socket.internal_jobs.add(
-        "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 1}, read_id, unique_name=False
+        "client_dummy_job",
+        now_at_utc(),
+        "internal_jobs.client_dummy_job",
+        {"iterations": 1},
+        read_id,
+        unique_name=False,
     )
     time_1 = now_at_utc()
 
@@ -196,7 +200,7 @@ def test_internal_jobs_client_query(secure_snowflake: QCATestingSnowflake):
 
     # Add one that will be waiting
     id_2 = storage_socket.internal_jobs.add(
-        "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 1}, None, unique_name=False
+        "client_dummy_job", now_at_utc(), "internal_jobs.client_dummy_job", {"iterations": 1}, None, unique_name=False
     )
 
     time_3 = now_at_utc()
@@ -217,31 +221,31 @@ def test_internal_jobs_client_query(secure_snowflake: QCATestingSnowflake):
     assert len(r) == 1
     assert r[0].id == id_1
 
-    result = client.query_internal_jobs(name="dummy_job", status=["complete"])
+    result = client.query_internal_jobs(name="client_dummy_job", status=["complete"])
     r = list(result)
     assert len(r) == 1
     assert r[0].id == id_1
 
-    result = client.query_internal_jobs(name="dummy_job", status="waiting")
+    result = client.query_internal_jobs(name="client_dummy_job", status="waiting")
     r = list(result)
     assert len(r) == 1
     assert r[0].id == id_2
 
-    result = client.query_internal_jobs(name="dummy_job", added_after=time_0)
+    result = client.query_internal_jobs(name="client_dummy_job", added_after=time_0)
     r = list(result)
     assert len(r) == 2
     assert {r[0].id, r[1].id} == {id_1, id_2}
 
-    result = client.query_internal_jobs(name="dummy_job", added_after=time_1, added_before=time_3)
+    result = client.query_internal_jobs(name="client_dummy_job", added_after=time_1, added_before=time_3)
     r = list(result)
     assert len(r) == 1
     assert r[0].id == id_2
 
-    result = client.query_internal_jobs(name="dummy_job", last_updated_after=time_2)
+    result = client.query_internal_jobs(name="client_dummy_job", last_updated_after=time_2)
     r = list(result)
     assert len(r) == 0
 
-    result = client.query_internal_jobs(name="dummy_job", last_updated_before=time_2)
+    result = client.query_internal_jobs(name="client_dummy_job", last_updated_before=time_2)
     r = list(result)
     assert len(r) == 1
     assert r[0].id == id_1

@@ -42,6 +42,9 @@ geoip = [
 snowflake = [
     "qcfractalcompute"
 ]
+s3 = [
+    "boto3"
+]
 
 
 [project.urls]

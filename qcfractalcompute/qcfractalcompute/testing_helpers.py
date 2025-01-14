@@ -12,7 +12,6 @@ from qcarchivetesting.testing_classes import _activated_manager_programs
 from qcfractal.components.optimization.testing_helpers import submit_test_data as submit_opt_test_data
 from qcfractal.components.singlepoint.testing_helpers import submit_test_data as submit_sp_test_data
 from qcfractal.config import FractalConfig
-from qcfractal.config import update_nested_dict
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractalcompute.apps.models import AppTaskResult
 from qcfractalcompute.compress import compress_result
@@ -20,6 +19,7 @@ from qcfractalcompute.compute_manager import ComputeManager
 from qcfractalcompute.config import FractalComputeConfig, FractalServerSettings, LocalExecutorConfig
 from qcportal.all_results import AllResultTypes, FailedOperation
 from qcportal.record_models import PriorityEnum, RecordTask
+from qcportal.utils import update_nested_dict
 
 failed_op = FailedOperation(
     input_data=None,

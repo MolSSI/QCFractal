@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 import os
 from datetime import datetime
+from enum import Enum
 from typing import (
     TYPE_CHECKING,
     Optional,
@@ -30,15 +31,29 @@ from tabulate import tabulate
 from tqdm import tqdm
 
 from qcportal.base_models import RestModelBase, validate_list_to_single, CommonBulkGetBody
-from qcportal.metadata_models import DeleteMetadata
-from qcportal.metadata_models import InsertMetadata
+from qcportal.internal_jobs import InternalJob, InternalJobStatusEnum
+from qcportal.metadata_models import DeleteMetadata, InsertMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, BaseRecord
 from qcportal.utils import make_list, chunk_iterable
 from qcportal.cache import DatasetCache, read_dataset_metadata, get_records_with_cache
+from qcportal.external_files import ExternalFile
 
 if TYPE_CHECKING:
     from qcportal.client import PortalClient
     from pandas import DataFrame
+
+
+class DatasetAttachmentType(str, Enum):
+    """
+    The type of attachment a file is for a dataset
+    """
+
+    other = "other"
+    view = "view"
+
+
+class DatasetAttachment(ExternalFile):
+    attachment_type: DatasetAttachmentType
 
 
 class Citation(BaseModel):
@@ -117,6 +132,7 @@ class BaseDataset(BaseModel):
     # Fields not always included when fetching the dataset
     ######################################################
     contributed_values_: Optional[Dict[str, ContributedValues]] = Field(None, alias="contributed_values")
+    attachments_: Optional[List[DatasetAttachment]] = Field(None, alias="attachments")
 
     #############################
     # Private non-pydantic fields
@@ -319,6 +335,225 @@ class BaseDataset(BaseModel):
                 self._client.make_request(
                     "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/submit", Any, body=body_data
                 )
+
+    #########################################
+    # Internal jobs
+    #########################################
+    def get_internal_job(self, job_id: int) -> InternalJob:
+        self.assert_is_not_view()
+        self.assert_online()
+
+        ij_dict = self._client.make_request("get", f"/api/v1/datasets/{self.id}/internal_jobs/{job_id}", Dict[str, Any])
+        refresh_url = f"/api/v1/datasets/{self.id}/internal_jobs/{ij_dict['id']}"
+        return InternalJob(client=self._client, refresh_url=refresh_url, **ij_dict)
+
+    def list_internal_jobs(
+        self, status: Optional[Union[InternalJobStatusEnum, Iterable[InternalJobStatusEnum]]] = None
+    ) -> List[InternalJob]:
+        self.assert_is_not_view()
+        self.assert_online()
+
+        url_params = DatasetGetInternalJobParams(status=make_list(status))
+        ij_dicts = self._client.make_request(
+            "get", f"/api/v1/datasets/{self.id}/internal_jobs", List[Dict[str, Any]], url_params=url_params
+        )
+        return [
+            InternalJob(client=self._client, refresh_url=f"/api/v1/datasets/{self.id}/internal_jobs/{ij['id']}", **ij)
+            for ij in ij_dicts
+        ]
+
+    #########################################
+    # Attachments
+    #########################################
+    def fetch_attachments(self):
+        self.assert_is_not_view()
+        self.assert_online()
+
+        self.attachments_ = self._client.make_request(
+            "get",
+            f"api/v1/datasets/{self.id}/attachments",
+            Optional[List[DatasetAttachment]],
+        )
+
+    @property
+    def attachments(self) -> List[DatasetAttachment]:
+        if not self.attachments_:
+            self.fetch_attachments()
+
+        return self.attachments_
+
+    def delete_attachment(self, file_id: int):
+        self.assert_is_not_view()
+        self.assert_online()
+
+        self._client.make_request(
+            "delete",
+            f"api/v1/datasets/{self.id}/attachments/{file_id}",
+            None,
+        )
+
+        self.fetch_attachments()
+
+    #########################################
+    # View creation and use
+    #########################################
+    def list_views(self):
+        return [x for x in self.attachments if x.attachment_type == DatasetAttachmentType.view]
+
+    def download_view(
+        self,
+        view_file_id: Optional[int] = None,
+        destination_path: Optional[str] = None,
+        overwrite: bool = True,
+    ):
+        """
+        Downloads a view for this dataset
+
+        If a `view_file_id` is not given, the most recent view will be downloaded.
+
+        If destination path is not given, the file will be placed in the current directory, and the
+        filename determined by what is stored on the server.
+
+        Parameters
+        ----------
+        view_file_id
+            ID of the view to download. See :ref:`list_views`. If `None`, will download the latest view
+        destination_path
+            Full path to the destination file (including filename)
+        overwrite
+            If True, any existing file will be overwritten
+        """
+
+        my_views = self.list_views()
+
+        if not my_views:
+            raise ValueError(f"No views available for this dataset")
+
+        if view_file_id is None:
+            latest_view_ids = max(my_views, key=lambda x: x.created_on)
+            view_file_id = latest_view_ids.id
+
+        view_map = {x.id: x for x in self.list_views()}
+        if view_file_id not in view_map:
+            raise ValueError(f"File id {view_file_id} is not a valid ID for this dataset")
+
+        if destination_path is None:
+            view_data = view_map[view_file_id]
+            destination_path = os.path.join(os.getcwd(), view_data.file_name)
+
+        self._client.download_external_file(view_file_id, destination_path, overwrite=overwrite)
+
+    def use_view_cache(
+        self,
+        view_file_path: str,
+    ):
+        """
+        Downloads and loads a view for this dataset
+
+        Parameters
+        ----------
+        view_file_path
+            Full path to the view file
+        """
+
+        cache_uri = f"file:{view_file_path}"
+        dcache = DatasetCache(cache_uri=cache_uri, read_only=False, dataset_type=type(self))
+
+        meta = dcache.get_metadata("dataset_metadata")
+
+        if meta["id"] != self.id:
+            raise ValueError(
+                f"Info in view file does not match this dataset. ID in the file {meta['id']}, ID of this dataset {self.id}"
+            )
+
+        if meta["dataset_type"] != self.dataset_type:
+            raise ValueError(
+                f"Info in view file does not match this dataset. Dataset type in the file {meta['dataset_type']}, dataset type of this dataset {self.dataset_type}"
+            )
+
+        if meta["name"] != self.name:
+            raise ValueError(
+                f"Info in view file does not match this dataset. Dataset name in the file {meta['name']}, name of this dataset {self.name}"
+            )
+
+        self._cache_data = dcache
+
+    def preload_cache(self, view_file_id: Optional[int] = None):
+        """
+        Downloads a view file and uses it as the current cache
+
+        Parameters
+        ----------
+        view_file_id
+            ID of the view to download. See :ref:`list_views`. If `None`, will download the latest view
+        """
+
+        self.assert_is_not_view()
+        self.assert_online()
+
+        if not self._client.cache.is_disk:
+            raise RuntimeError("Caching to disk is not enabled. Set the cache_dir path when constructing the client")
+
+        destination_path = self._client.cache.get_dataset_cache_path(self.id)
+        self.download_view(view_file_id=view_file_id, destination_path=destination_path, overwrite=True)
+        self.use_view_cache(destination_path)
+
+    def create_view(
+        self,
+        description: str,
+        provenance: Dict[str, Any],
+        status: Optional[Iterable[RecordStatusEnum]] = None,
+        include: Optional[Iterable[str]] = None,
+        exclude: Optional[Iterable[str]] = None,
+        *,
+        include_children: bool = True,
+    ) -> InternalJob:
+        """
+        Creates a view of this dataset on the server
+
+        This function will return an :ref:`InternalJob` which can be used to watch
+        for completion if desired. The job will run server side without user interaction.
+
+        Note the ID field of the object if you with to retrieve this internal job later
+        (via :ref:`PortalClient.get_internal_job` and :ref:`get_internal_jobs`)
+
+        Parameters
+        ----------
+        description
+            Optional string describing the view file
+        provenance
+            Dictionary with any metadata or other information about the view. Information regarding
+            the options used to create the view will be added.
+        status
+            List of statuses to include. Default is to include records with any status
+        include
+            List of specific record fields to include in the export. Default is to include most fields
+        exclude
+            List of specific record fields to exclude from the export. Defaults to excluding none.
+        include_children
+            Specifies whether child records associated with the main records should also be included (recursively)
+            in the view file.
+
+        Returns
+        -------
+        :
+            An :ref:`InternalJob` object which can be used to watch for completion.
+        """
+
+        body = DatasetCreateViewBody(
+            description=description,
+            provenance=provenance,
+            status=status,
+            include=include,
+            exclude=exclude,
+            include_children=include_children,
+        )
+
+        job_id = self._client.make_request(
+            "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/create_view", int, body=body
+        )
+
+        return self.get_internal_job(job_id)
 
     #########################################
     # Various properties and getters/setters
@@ -1786,6 +2021,15 @@ class DatasetFetchRecordsBody(RestModelBase):
     status: Optional[List[RecordStatusEnum]] = None
 
 
+class DatasetCreateViewBody(RestModelBase):
+    description: Optional[str]
+    provenance: Dict[str, Any]
+    status: Optional[List[RecordStatusEnum]] = (None,)
+    include: Optional[List[str]] = (None,)
+    exclude: Optional[List[str]] = (None,)
+    include_children: bool = (True,)
+
+
 class DatasetSubmitBody(RestModelBase):
     entry_names: Optional[List[str]] = None
     specification_names: Optional[List[str]] = None
@@ -1829,6 +2073,10 @@ class DatasetModifyEntryBody(RestModelBase):
     attribute_map: Optional[Dict[str, Dict[str, Any]]] = None
     comment_map: Optional[Dict[str, str]] = None
     overwrite_attributes: bool = False
+
+
+class DatasetGetInternalJobParams(RestModelBase):
+    status: Optional[List[InternalJobStatusEnum]] = None
 
 
 def dataset_from_dict(data: Dict[str, Any], client: Any, cache_data: Optional[DatasetCache] = None) -> BaseDataset:

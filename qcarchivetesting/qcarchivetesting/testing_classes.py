@@ -4,13 +4,14 @@ import logging
 from copy import deepcopy
 
 from qcarchivetesting import geoip_path, geoip_filename, ip_tests_enabled
-from qcfractal.config import DatabaseConfig, update_nested_dict
+from qcfractal.config import DatabaseConfig
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.postgres_harness import PostgresHarness, create_snowflake_postgres
 from qcfractal.snowflake import FractalSnowflake
 from qcportal import PortalClient, ManagerClient
 from qcportal.auth import UserInfo, GroupInfo
 from qcportal.managers import ManagerName
+from qcportal.utils import update_nested_dict
 from .helpers import test_users, test_groups
 
 _activated_manager_programs = {
@@ -100,7 +101,6 @@ class QCATestingSnowflake(FractalSnowflake):
         self,
         pg_harness: QCATestingPostgresHarness,
         encoding: str,
-        start_api=True,
         create_users=False,
         enable_security=False,
         allow_unauthenticated_read=False,
@@ -171,9 +171,7 @@ class QCATestingSnowflake(FractalSnowflake):
         if create_users:
             self.create_users()
 
-        # Start the flask api process if requested
-        if start_api:
-            self.start_api()
+        self.start_api()
 
     def create_users(self):
         # Get a storage socket and add the roles/users/passwords

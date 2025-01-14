@@ -441,6 +441,9 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare):
 
     record_compare(rec, test_entries[0], test_spec)
 
+    assert rec.owner_user == "submit_user"
+    assert rec.owner_group == "group1"
+
     # Used default tag/priority
     if rec.is_service:
         assert rec.service.tag == "default_tag"
@@ -476,6 +479,14 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare):
     else:
         assert rec.task.tag == "default_tag"
         assert rec.task.priority == PriorityEnum.low
+
+    # Don't find existing
+    old_rec_id = rec.id
+    ds.remove_records(test_entries[2].name, "spec_1")
+    ds.submit(find_existing=False)
+
+    rec = ds.get_record(test_entries[2].name, "spec_1")
+    assert rec.id != old_rec_id
 
     record_count = len(ds.entry_names) * len(ds.specifications)
     assert ds.record_count == record_count

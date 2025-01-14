@@ -20,7 +20,9 @@ try:
 except ImportError:
     import pydantic
 import requests
+from typing import Tuple
 import yaml
+import hashlib
 from packaging.version import parse as parse_version
 
 from . import __version__
@@ -336,7 +338,9 @@ class PortalClientBase:
 
         try:
             if not allow_retries:
-                r = self._req_session.send(prep_req, verify=self._verify, timeout=self.timeout)
+                r = self._req_session.send(prep_req, verify=self._verify, timeout=self.timeout, allow_redirects=False)
+                if r.is_redirect:
+                    raise RuntimeError("Redirection is not allowed")
             else:
                 current_retries = 0
                 while True:
@@ -427,6 +431,38 @@ class PortalClientBase:
             return None
         else:
             return pydantic.parse_obj_as(response_model, d)
+
+    def download_file(self, endpoint: str, destination_path: str, overwrite: bool = False) -> Tuple[int, str]:
+
+        sha256 = hashlib.sha256()
+        file_size = 0
+
+        # Remove if overwrite=True. This allows for any processes still using the old file to keep using it
+        # (at least on linux)
+        if os.path.exists(destination_path):
+            if overwrite:
+                os.remove(destination_path)
+            else:
+                raise RuntimeError(f"File already exists at {destination_path}. To overwrite, use `overwrite=True`")
+
+        full_uri = self.address + endpoint
+        response = self._req_session.get(full_uri, stream=True, allow_redirects=False)
+
+        if response.is_redirect:
+            # send again, but using a plain requests object
+            # that way, we don't pass the JWT to someone else
+            new_location = response.headers["Location"]
+            response = requests.get(new_location, stream=True, allow_redirects=True)
+
+        response.raise_for_status()
+        with open(destination_path, "wb") as f:
+            for chunk in response.iter_content(chunk_size=None):
+                if chunk:
+                    f.write(chunk)
+                    sha256.update(chunk)
+                    file_size += len(chunk)
+
+        return file_size, sha256.hexdigest()
 
     def ping(self) -> bool:
         """

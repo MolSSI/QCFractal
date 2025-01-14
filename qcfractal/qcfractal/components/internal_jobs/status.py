@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import threading
 import weakref
+from typing import Optional
 
 from sqlalchemy import update
 from sqlalchemy.orm import Session
@@ -9,6 +10,14 @@ from sqlalchemy.orm import Session
 from qcfractal.components.internal_jobs.db_models import InternalJobORM
 from qcportal.internal_jobs.models import InternalJobStatusEnum
 from qcportal.utils import now_at_utc
+
+
+class CancelledJobException(Exception):
+    pass
+
+
+class JobRunnerStoppingException(Exception):
+    pass
 
 
 class JobProgress:
@@ -26,7 +35,10 @@ class JobProgress:
             .returning(InternalJobORM.status, InternalJobORM.runner_uuid)
         )
         self._progress = 0
+        self._description = None
+
         self._cancelled = False
+        self._runner_ending = False
         self._deleted = False
 
         self._end_event = end_event
@@ -45,7 +57,9 @@ class JobProgress:
     def _update_thread(self, session: Session, end_thread: threading.Event):
         while True:
             # Update progress
-            stmt = self._stmt.values(progress=self._progress, last_updated=now_at_utc())
+            stmt = self._stmt.values(
+                progress=self._progress, progress_description=self._description, last_updated=now_at_utc()
+            )
             ret = session.execute(stmt).one_or_none()
             session.commit()
 
@@ -60,9 +74,9 @@ class JobProgress:
                 # Job was stolen from us?
                 self._cancelled = True
 
-            # Are we completely ending?
+            # Are we ending/cancelling because the runner is stopping/closing?
             if self._end_event.is_set():
-                self._cancelled = True
+                self._runner_ending = True
 
             cancel = end_thread.wait(self._update_frequency)
             if cancel is True:
@@ -80,11 +94,34 @@ class JobProgress:
     def stop(self):
         self._finalizer()
 
-    def update_progress(self, progress: int):
+    def update_progress(self, progress: int, description: Optional[str] = None):
         self._progress = progress
+        self._description = description
 
+    @property
     def cancelled(self) -> bool:
-        return self._cancelled
+        return self._cancelled or self._deleted
 
+    @property
+    def runner_ending(self) -> bool:
+        return self._runner_ending
+
+    @property
     def deleted(self) -> bool:
         return self._deleted
+
+    def raise_if_cancelled(self):
+        if self._cancelled or self._deleted:
+            raise CancelledJobException("Job was cancelled or deleted")
+
+        if self._runner_ending:
+            raise JobRunnerStoppingException("Job runner is stopping/ending")
+
+
+def raise_if_cancelled(job_progress: Optional[JobProgress]):
+    """
+    Raises a CancelledJobExcepion if job_progress exists and is in a cancelled or deleted state
+    """
+
+    if job_progress is not None:
+        job_progress.raise_if_cancelled()

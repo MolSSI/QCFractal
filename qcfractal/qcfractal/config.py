@@ -7,6 +7,7 @@ from __future__ import annotations
 import logging
 import os
 import secrets
+import tempfile
 from typing import Optional, Dict, Union, Any
 
 import yaml
@@ -21,16 +22,7 @@ except ImportError:
 from sqlalchemy.engine.url import URL, make_url
 
 from qcfractal.port_util import find_open_port
-from qcportal.utils import duration_to_seconds
-
-
-def update_nested_dict(d, u):
-    for k, v in u.items():
-        if isinstance(v, dict):
-            d[k] = update_nested_dict(d.get(k, {}), v)
-        else:
-            d[k] = v
-    return d
+from qcportal.utils import duration_to_seconds, update_nested_dict
 
 
 def _make_abs_path(path: Optional[str], base_folder: str, default_filename: Optional[str]) -> Optional[str]:
@@ -324,6 +316,37 @@ class WebAPIConfig(ConfigBase):
         env_prefix = "QCF_API_"
 
 
+class S3BucketMap(ConfigBase):
+    dataset_attachment: str = Field("dataset_attachment", description="Bucket to hold dataset views")
+
+
+class S3Config(ConfigBase):
+    """
+    Settings for using external files with S3
+    """
+
+    enabled: bool = False
+    verify: bool = True
+    passthrough: bool = False
+    endpoint_url: Optional[str] = Field(None, description="S3 endpoint URL")
+    access_key_id: Optional[str] = Field(None, description="AWS/S3 access key")
+    secret_access_key: Optional[str] = Field(None, description="AWS/S3 secret key")
+
+    bucket_map: S3BucketMap = Field(S3BucketMap(), description="Configuration for where to store various files")
+
+    class Config(ConfigCommon):
+        env_prefix = "QCF_S3_"
+
+    @root_validator()
+    def _check_enabled(cls, values):
+        if values.get("enabled", False) is True:
+            for key in ["endpoint_url", "access_key_id", "secret_access_key"]:
+                if values.get(key, None) is None:
+                    raise ValueError(f"S3 enabled but {key} not set")
+
+        return values
+
+
 class FractalConfig(ConfigBase):
     """
     Fractal Server settings
@@ -332,6 +355,11 @@ class FractalConfig(ConfigBase):
     base_folder: str = Field(
         ...,
         description="The base directory to use as the default for some options (logs, etc). Default is the location of the config file.",
+    )
+
+    temporary_dir: Optional[str] = Field(
+        None,
+        description="Temporary directory to use for things such as view creation. If None, uses system default. This may require a lot of space!",
     )
 
     # Info for the REST interface
@@ -380,7 +408,7 @@ class FractalConfig(ConfigBase):
     # Access logging
     log_access: bool = Field(False, description="Store API access in the database")
     access_log_keep: int = Field(
-        0, description="How far back to keep access logs (in seconds or a string). 0 means keep all"
+        0, description="How far back to keep access logs (in days or as a duration string). 0 means keep all"
     )
 
     # maxmind_account_id: Optional[int] = Field(None, description="Account ID for MaxMind GeoIP2 service")
@@ -403,7 +431,7 @@ class FractalConfig(ConfigBase):
         1, description="Number of processes for processing internal jobs and async requests"
     )
     internal_job_keep: int = Field(
-        0, description="Number of days of finished internal job logs to keep. 0 means keep all"
+        0, description="How far back to keep finished internal jobs (in days or as a duration string). 0 means keep all"
     )
 
     # Homepage settings
@@ -413,6 +441,7 @@ class FractalConfig(ConfigBase):
     # Other settings blocks
     database: DatabaseConfig = Field(..., description="Configuration of the settings for the database")
     api: WebAPIConfig = Field(..., description="Configuration of the REST interface")
+    s3: S3Config = Field(S3Config(), description="Configuration of the S3 file storage (optional)")
     api_limits: APILimitConfig = Field(..., description="Configuration of the limits to the api")
     auto_reset: AutoResetConfig = Field(..., description="Configuration for automatic resetting of tasks")
 
@@ -461,9 +490,24 @@ class FractalConfig(ConfigBase):
             raise ValidationError(f"{v} is not a valid loglevel. Must be DEBUG, INFO, WARNING, ERROR, or CRITICAL")
         return v
 
-    @validator("service_frequency", "heartbeat_frequency", "access_log_keep", pre=True)
+    @validator("service_frequency", "heartbeat_frequency", pre=True)
     def _convert_durations(cls, v):
         return duration_to_seconds(v)
+
+    @validator("access_log_keep", "internal_job_keep", pre=True)
+    def _convert_durations_days(cls, v):
+        if isinstance(v, int) or (isinstance(v, str) and v.isdigit()):
+            return int(v) * 86400
+        return duration_to_seconds(v)
+
+    @validator("temporary_dir", pre=True)
+    def _create_temporary_directory(cls, v, values):
+        v = _make_abs_path(v, values["base_folder"], tempfile.gettempdir())
+
+        if v is not None and not os.path.exists(v):
+            os.makedirs(v)
+
+        return v
 
     class Config(ConfigCommon):
         env_prefix = "QCF_"

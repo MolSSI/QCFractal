@@ -281,7 +281,7 @@ class ServerInfoSocket:
         if self._access_log_keep <= 0 or not self._access_log_enabled:
             return
 
-        before = now_at_utc() - timedelta(days=self._access_log_keep)
+        before = now_at_utc() - timedelta(seconds=self._access_log_keep)
         num_deleted = self.delete_access_logs(before, session=session)
         self._logger.info(f"Deleted {num_deleted} access logs before {before}")
 

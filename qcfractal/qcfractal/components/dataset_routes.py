@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict
 
 from flask import current_app, g
 
@@ -12,6 +12,7 @@ from qcportal.dataset_models import (
     DatasetFetchRecordsBody,
     DatasetFetchEntryBody,
     DatasetFetchSpecificationBody,
+    DatasetCreateViewBody,
     DatasetSubmitBody,
     DatasetDeleteStrBody,
     DatasetRecordModifyBody,
@@ -21,6 +22,7 @@ from qcportal.dataset_models import (
     DatasetQueryRecords,
     DatasetDeleteParams,
     DatasetModifyEntryBody,
+    DatasetGetInternalJobParams,
 )
 from qcportal.exceptions import LimitExceededError
 
@@ -37,7 +39,14 @@ def get_general_dataset_v1(dataset_id: int, url_params: ProjURLParameters):
     with storage_socket.session_scope(True) as session:
         ds_type = storage_socket.datasets.lookup_type(dataset_id, session=session)
         ds_socket = storage_socket.datasets.get_socket(ds_type)
-        return ds_socket.get(dataset_id, url_params.include, url_params.exclude, session=session)
+
+        r = ds_socket.get(dataset_id, url_params.include, url_params.exclude, session=session)
+
+        # TODO - remove this eventually
+        # Don't return attachments by default
+        r.pop("attachments", None)
+
+        return r
 
 
 @api_v1.route("/datasets/query", methods=["POST"])
@@ -159,6 +168,24 @@ def get_dataset_computed_properties_v1(dataset_type: str, dataset_id: int):
 def modify_dataset_metadata_v1(dataset_type: str, dataset_id: int, body_data: DatasetModifyMetadata):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.update_metadata(dataset_id, new_metadata=body_data)
+
+
+#########################
+# Views & Attachments
+#########################
+@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/create_view", methods=["POST"])
+@wrap_route("WRITE")
+def create_dataset_view_v1(dataset_type: str, dataset_id: int, body_data: DatasetCreateViewBody):
+    return storage_socket.datasets.add_create_view_attachment_job(
+        dataset_id,
+        dataset_type,
+        description=body_data.description,
+        provenance=body_data.provenance,
+        status=body_data.status,
+        include=body_data.include,
+        exclude=body_data.exclude,
+        include_children=body_data.include_children,
+    )
 
 
 #########################
@@ -342,9 +369,39 @@ def revert_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: Dat
     )
 
 
-###################
+#################################
+# Internal Jobs
+#################################
+@api_v1.route("/datasets/<int:dataset_id>/internal_jobs/<int:job_id>", methods=["GET"])
+@wrap_route("READ")
+def get_dataset_internal_job_v1(dataset_id: int, job_id: int):
+    return storage_socket.datasets.get_internal_job(dataset_id, job_id)
+
+
+@api_v1.route("/datasets/<int:dataset_id>/internal_jobs", methods=["GET"])
+@wrap_route("READ")
+def list_dataset_internal_jobs_v1(dataset_id: int, url_params: DatasetGetInternalJobParams):
+    return storage_socket.datasets.list_internal_jobs(dataset_id, status=url_params.status)
+
+
+#################################
+# Attachments
+#################################
+@api_v1.route("/datasets/<int:dataset_id>/attachments", methods=["GET"])
+@wrap_route("READ")
+def fetch_dataset_attachments_v1(dataset_id: int):
+    return storage_socket.datasets.get_attachments(dataset_id)
+
+
+@api_v1.route("/datasets/<int:dataset_id>/attachments/<int:attachment_id>", methods=["DELETE"])
+@wrap_route("DELETE")
+def delete_dataset_attachment_v1(dataset_id: int, attachment_id: int):
+    return storage_socket.datasets.delete_attachment(dataset_id, attachment_id)
+
+
+#################################
 # Contributed Values
-###################
+#################################
 @api_v1.route("/datasets/<int:dataset_id>/contributed_values", methods=["GET"])
 @wrap_route("READ")
 def fetch_dataset_contributed_values_v1(dataset_id: int):

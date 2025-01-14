@@ -13,12 +13,16 @@ from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
     UniqueConstraint,
+    Enum,
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.collections import attribute_keyed_dict
 
 from qcfractal.components.auth.db_models import UserIDMapSubquery, GroupIDMapSubquery, UserORM, GroupORM
+from qcfractal.components.external_files.db_models import ExternalFileORM
+from qcfractal.components.internal_jobs.db_models import InternalJobORM
 from qcfractal.db_socket import BaseORM, MsgpackExt
+from qcportal.dataset_models import DatasetAttachmentType
 
 
 class BaseDatasetORM(BaseORM):
@@ -78,6 +82,12 @@ class BaseDatasetORM(BaseORM):
         passive_deletes=True,
     )
 
+    attachments = relationship(
+        "DatasetAttachmentORM",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
     __table_args__ = (
         UniqueConstraint("dataset_type", "lname", name="ux_base_dataset_dataset_type_lname"),
         Index("ix_base_dataset_dataset_type", "dataset_type"),
@@ -127,5 +137,27 @@ class ContributedValuesORM(BaseORM):
     comments = Column(String)
 
     __table_args__ = (Index("ix_contributed_values_dataset_id", "dataset_id"),)
+
+    _qcportal_model_excludes = ["dataset_id"]
+
+
+class DatasetInternalJobORM(BaseORM):
+    __tablename__ = "dataset_internal_job"
+
+    internal_job_id = Column(Integer, ForeignKey(InternalJobORM.id, ondelete="cascade"), primary_key=True)
+    dataset_id = Column(Integer, ForeignKey("base_dataset.id", ondelete="cascade"), primary_key=True)
+
+
+class DatasetAttachmentORM(ExternalFileORM):
+    __tablename__ = "dataset_attachment"
+
+    id = Column(Integer, ForeignKey(ExternalFileORM.id, ondelete="cascade"), primary_key=True)
+    dataset_id = Column(Integer, ForeignKey("base_dataset.id", ondelete="cascade"), nullable=False)
+
+    attachment_type = Column(Enum(DatasetAttachmentType), nullable=False)
+
+    __mapper_args__ = {"polymorphic_identity": "dataset_attachment"}
+
+    __table_args__ = (Index("ix_dataset_attachment_dataset_id", "dataset_id"),)
 
     _qcportal_model_excludes = ["dataset_id"]
