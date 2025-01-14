@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Base Record &#8212; QCArchive 0.57.post51+g90883d3c documentation</title>
+    <title>Base Record &#8212; QCArchive 0.57.post78+g4f552af8 documentation</title>
   
   
   
@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=7db71a20"></script>
+    <script src="../../_static/documentation_options.js?v=d2e1d8aa"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Computation Types" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.57.post51+g90883d3c" />
+  <meta name="docsearch:version" content="0.57.post78+g4f552af8" />
   </head>
   
   
@@ -788,6 +788,7 @@ that can span multiple records</p>
 </dd>
 <dt class="field-even">Fields<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.attachments_" title="qcportal.dataset_models.BaseDataset.attachments_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">attachments_</span> <span class="pre">(List[qcportal.dataset_models.DatasetAttachment]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.auto_fetch_missing" title="qcportal.dataset_models.BaseDataset.auto_fetch_missing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">auto_fetch_missing</span> <span class="pre">(bool)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.contributed_values_" title="qcportal.dataset_models.BaseDataset.contributed_values_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">contributed_values_</span> <span class="pre">(Dict[str,</span> <span class="pre">qcportal.dataset_models.ContributedValues]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.dataset_type" title="qcportal.dataset_models.BaseDataset.dataset_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dataset_type</span> <span class="pre">(str)</span></code></a></p></li>
@@ -889,6 +890,11 @@ that can span multiple records</p>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.attachments_">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">attachments_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">DatasetAttachment</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"> <span class="pre">(alias</span> <span class="pre">'attachments')</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.attachments_" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.auto_fetch_missing">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">auto_fetch_missing</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.auto_fetch_missing" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
@@ -922,6 +928,127 @@ that can span multiple records</p>
 <li><p><strong>priority</strong> (<a class="reference internal" href="#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a>)</p></li>
 <li><p><strong>find_existing</strong> (<em>bool</em>)</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.get_internal_job">
+<span class="sig-name descname"><span class="pre">get_internal_job</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.get_internal_job"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.get_internal_job" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>job_id</strong> (<em>int</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="../../admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJob" title="qcportal.internal_jobs.models.InternalJob"><em>InternalJob</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.list_internal_jobs">
+<span class="sig-name descname"><span class="pre">list_internal_jobs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.list_internal_jobs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.list_internal_jobs" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>status</strong> (<a class="reference internal" href="../../admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJobStatusEnum" title="qcportal.internal_jobs.models.InternalJobStatusEnum"><em>InternalJobStatusEnum</em></a><em> | </em><em>Iterable</em><em>[</em><a class="reference internal" href="../../admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJobStatusEnum" title="qcportal.internal_jobs.models.InternalJobStatusEnum"><em>InternalJobStatusEnum</em></a><em>] </em><em>| </em><em>None</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>List</em>[<a class="reference internal" href="../../admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJob" title="qcportal.internal_jobs.models.InternalJob"><em>InternalJob</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.fetch_attachments">
+<span class="sig-name descname"><span class="pre">fetch_attachments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.fetch_attachments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.fetch_attachments" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.attachments">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">attachments</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">DatasetAttachment</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.attachments" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.delete_attachment">
+<span class="sig-name descname"><span class="pre">delete_attachment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.delete_attachment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.delete_attachment" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_id</strong> (<em>int</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.list_views">
+<span class="sig-name descname"><span class="pre">list_views</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.list_views"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.list_views" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.download_view">
+<span class="sig-name descname"><span class="pre">download_view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">view_file_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.download_view"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.download_view" title="Link to this definition">#</a></dt>
+<dd><p>Downloads a view for this dataset</p>
+<p>If a <cite>view_file_id</cite> is not given, the most recent view will be downloaded.</p>
+<p>If destination path is not given, the file will be placed in the current directory, and the
+filename determined by what is stored on the server.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>view_file_id</strong> (<em>int</em><em> | </em><em>None</em>) – ID of the view to download. See <span class="xref std std-ref">list_views</span>. If <cite>None</cite>, will download the latest view</p></li>
+<li><p><strong>destination_path</strong> (<em>str</em><em> | </em><em>None</em>) – Full path to the destination file (including filename)</p></li>
+<li><p><strong>overwrite</strong> (<em>bool</em>) – If True, any existing file will be overwritten</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.use_view_cache">
+<span class="sig-name descname"><span class="pre">use_view_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">view_file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.use_view_cache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.use_view_cache" title="Link to this definition">#</a></dt>
+<dd><p>Downloads and loads a view for this dataset</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>view_file_path</strong> (<em>str</em>) – Full path to the view file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.preload_cache">
+<span class="sig-name descname"><span class="pre">preload_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">view_file_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.preload_cache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.preload_cache" title="Link to this definition">#</a></dt>
+<dd><p>Downloads a view file and uses it as the current cache</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>view_file_id</strong> (<em>int</em><em> | </em><em>None</em>) – ID of the view to download. See <span class="xref std std-ref">list_views</span>. If <cite>None</cite>, will download the latest view</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.create_view">
+<span class="sig-name descname"><span class="pre">create_view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provenance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_children</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.create_view"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.create_view" title="Link to this definition">#</a></dt>
+<dd><p>Creates a view of this dataset on the server</p>
+<p>This function will return an <span class="xref std std-ref">InternalJob</span> which can be used to watch
+for completion if desired. The job will run server side without user interaction.</p>
+<p>Note the ID field of the object if you with to retrieve this internal job later
+(via <span class="xref std std-ref">PortalClient.get_internal_job</span> and <span class="xref std std-ref">get_internal_jobs</span>)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>description</strong> (<em>str</em>) – Optional string describing the view file</p></li>
+<li><p><strong>provenance</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – Dictionary with any metadata or other information about the view. Information regarding
+the options used to create the view will be added.</p></li>
+<li><p><strong>status</strong> (<em>Iterable</em><em>[</em><a class="reference internal" href="#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>] </em><em>| </em><em>None</em>) – List of statuses to include. Default is to include records with any status</p></li>
+<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – List of specific record fields to include in the export. Default is to include most fields</p></li>
+<li><p><strong>exclude</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – List of specific record fields to exclude from the export. Defaults to excluding none.</p></li>
+<li><p><strong>include_children</strong> (<em>bool</em>) – Specifies whether child records associated with the main records should also be included (recursively)
+in the view file.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An <span class="xref std std-ref">InternalJob</span> object which can be used to watch for completion.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../../admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJob" title="qcportal.internal_jobs.models.InternalJob"><em>InternalJob</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -2295,10 +2422,21 @@ of a record query, and works with all kinds of records.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.metadata"><code class="docutils literal notranslate"><span class="pre">BaseDataset.metadata</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.extras"><code class="docutils literal notranslate"><span class="pre">BaseDataset.extras</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.contributed_values_"><code class="docutils literal notranslate"><span class="pre">BaseDataset.contributed_values_</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.attachments_"><code class="docutils literal notranslate"><span class="pre">BaseDataset.attachments_</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.auto_fetch_missing"><code class="docutils literal notranslate"><span class="pre">BaseDataset.auto_fetch_missing</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.get_subclass"><code class="docutils literal notranslate"><span class="pre">BaseDataset.get_subclass()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.propagate_client"><code class="docutils literal notranslate"><span class="pre">BaseDataset.propagate_client()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.submit"><code class="docutils literal notranslate"><span class="pre">BaseDataset.submit()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.get_internal_job"><code class="docutils literal notranslate"><span class="pre">BaseDataset.get_internal_job()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.list_internal_jobs"><code class="docutils literal notranslate"><span class="pre">BaseDataset.list_internal_jobs()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.fetch_attachments"><code class="docutils literal notranslate"><span class="pre">BaseDataset.fetch_attachments()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.attachments"><code class="docutils literal notranslate"><span class="pre">BaseDataset.attachments</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.delete_attachment"><code class="docutils literal notranslate"><span class="pre">BaseDataset.delete_attachment()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.list_views"><code class="docutils literal notranslate"><span class="pre">BaseDataset.list_views()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.download_view"><code class="docutils literal notranslate"><span class="pre">BaseDataset.download_view()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.use_view_cache"><code class="docutils literal notranslate"><span class="pre">BaseDataset.use_view_cache()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.preload_cache"><code class="docutils literal notranslate"><span class="pre">BaseDataset.preload_cache()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.create_view"><code class="docutils literal notranslate"><span class="pre">BaseDataset.create_view()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.is_view"><code class="docutils literal notranslate"><span class="pre">BaseDataset.is_view</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.status"><code class="docutils literal notranslate"><span class="pre">BaseDataset.status()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.status_table"><code class="docutils literal notranslate"><span class="pre">BaseDataset.status_table()</span></code></a></li>

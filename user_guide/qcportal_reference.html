@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>QCPortal API Reference &#8212; QCArchive 0.57.post51+g90883d3c documentation</title>
+    <title>QCPortal API Reference &#8212; QCArchive 0.57.post78+g4f552af8 documentation</title>
   
   
   
@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=7db71a20"></script>
+    <script src="../_static/documentation_options.js?v=d2e1d8aa"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="NEB calculations" href="records/neb.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.57.post51+g90883d3c" />
+  <meta name="docsearch:version" content="0.57.post78+g4f552af8" />
   </head>
   
   
@@ -676,6 +676,29 @@ SSL keys.</p></li>
 <li><p><strong>dataset_id</strong> (<em>int</em>)</p></li>
 <li><p><strong>delete_records</strong> (<em>bool</em>)</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.client.PortalClient.download_external_file">
+<span class="sig-name descname"><span class="pre">download_external_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qcportal/client.html#PortalClient.download_external_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.client.PortalClient.download_external_file" title="Link to this definition">#</a></dt>
+<dd><p>Downloads an external file to the given path</p>
+<p>The file size and checksum will be checked against the metadata stored on the server</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_id</strong> (<em>int</em>) – ID of the file to obtain</p></li>
+<li><p><strong>destination_path</strong> (<em>str</em>) – Full path to the destination file (including filename)</p></li>
+<li><p><strong>overwrite</strong> (<em>bool</em>) – If True, allow for overwriting an existing file. If False, and a file already exists at the given
+destination path, an exception will be raised.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple of file size and sha256 checksum.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Tuple</em>[int, str]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2143,6 +2166,23 @@ and username are checked for consistency.</p>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.client.PortalClient.download_file">
+<span class="sig-name descname"><span class="pre">download_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.client.PortalClient.download_file" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>endpoint</strong> (<em>str</em>)</p></li>
+<li><p><strong>destination_path</strong> (<em>str</em>)</p></li>
+<li><p><strong>overwrite</strong> (<em>bool</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Tuple</em>[int, str]</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.client.PortalClient.encoding">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">encoding</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qcportal.client.PortalClient.encoding" title="Link to this definition">#</a></dt>
@@ -2290,6 +2330,7 @@ of a molecule query.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.get_dataset_status_by_id"><code class="docutils literal notranslate"><span class="pre">PortalClient.get_dataset_status_by_id()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.add_dataset"><code class="docutils literal notranslate"><span class="pre">PortalClient.add_dataset()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.delete_dataset"><code class="docutils literal notranslate"><span class="pre">PortalClient.delete_dataset()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.download_external_file"><code class="docutils literal notranslate"><span class="pre">PortalClient.download_external_file()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.get_molecules"><code class="docutils literal notranslate"><span class="pre">PortalClient.get_molecules()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.query_molecules"><code class="docutils literal notranslate"><span class="pre">PortalClient.query_molecules()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.add_molecules"><code class="docutils literal notranslate"><span class="pre">PortalClient.add_molecules()</span></code></a></li>
@@ -2354,6 +2395,7 @@ of a molecule query.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.modify_user"><code class="docutils literal notranslate"><span class="pre">PortalClient.modify_user()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.change_user_password"><code class="docutils literal notranslate"><span class="pre">PortalClient.change_user_password()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.delete_user"><code class="docutils literal notranslate"><span class="pre">PortalClient.delete_user()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.download_file"><code class="docutils literal notranslate"><span class="pre">PortalClient.download_file()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.encoding"><code class="docutils literal notranslate"><span class="pre">PortalClient.encoding</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.from_file"><code class="docutils literal notranslate"><span class="pre">PortalClient.from_file()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.make_request"><code class="docutils literal notranslate"><span class="pre">PortalClient.make_request()</span></code></a></li>

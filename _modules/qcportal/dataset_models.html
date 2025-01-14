@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.dataset_models &#8212; QCArchive 0.57.post51+g90883d3c documentation</title>
+    <title>qcportal.dataset_models &#8212; QCArchive 0.57.post78+g4f552af8 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=7db71a20"></script>
+    <script src="../../_static/documentation_options.js?v=d2e1d8aa"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.57.post51+g90883d3c" />
+  <meta name="docsearch:version" content="0.57.post78+g4f552af8" />
   </head>
   
   
@@ -443,6 +443,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">TYPE_CHECKING</span><span class="p">,</span>
     <span class="n">Optional</span><span class="p">,</span>
@@ -470,15 +471,29 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.base_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">RestModelBase</span><span class="p">,</span> <span class="n">validate_list_to_single</span><span class="p">,</span> <span class="n">CommonBulkGetBody</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.metadata_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeleteMetadata</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.metadata_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">InsertMetadata</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.internal_jobs</span><span class="w"> </span><span class="kn">import</span> <span class="n">InternalJob</span><span class="p">,</span> <span class="n">InternalJobStatusEnum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.metadata_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeleteMetadata</span><span class="p">,</span> <span class="n">InsertMetadata</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.record_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">PriorityEnum</span><span class="p">,</span> <span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="n">BaseRecord</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_list</span><span class="p">,</span> <span class="n">chunk_iterable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.cache</span><span class="w"> </span><span class="kn">import</span> <span class="n">DatasetCache</span><span class="p">,</span> <span class="n">read_dataset_metadata</span><span class="p">,</span> <span class="n">get_records_with_cache</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.external_files</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExternalFile</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">PortalClient</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataFrame</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">DatasetAttachmentType</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The type of attachment a file is for a dataset</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">other</span> <span class="o">=</span> <span class="s2">&quot;other&quot;</span>
+    <span class="n">view</span> <span class="o">=</span> <span class="s2">&quot;view&quot;</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">DatasetAttachment</span><span class="p">(</span><span class="n">ExternalFile</span><span class="p">):</span>
+    <span class="n">attachment_type</span><span class="p">:</span> <span class="n">DatasetAttachmentType</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Citation</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
@@ -559,6 +574,7 @@
     <span class="c1"># Fields not always included when fetching the dataset</span>
     <span class="c1">######################################################</span>
     <span class="n">contributed_values_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ContributedValues</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;contributed_values&quot;</span><span class="p">)</span>
+    <span class="n">attachments_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">DatasetAttachment</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;attachments&quot;</span><span class="p">)</span>
 
     <span class="c1">#############################</span>
     <span class="c1"># Private non-pydantic fields</span>
@@ -769,6 +785,252 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
                     <span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/submit&quot;</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body_data</span>
                 <span class="p">)</span></div>
+
+
+    <span class="c1">#########################################</span>
+    <span class="c1"># Internal jobs</span>
+    <span class="c1">#########################################</span>
+<div class="viewcode-block" id="BaseDataset.get_internal_job">
+<a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.get_internal_job">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_internal_job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InternalJob</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
+
+        <span class="n">ij_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;/api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/internal_jobs/</span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span>
+        <span class="n">refresh_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;/api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/internal_jobs/</span><span class="si">{</span><span class="n">ij_dict</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="n">InternalJob</span><span class="p">(</span><span class="n">client</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="p">,</span> <span class="n">refresh_url</span><span class="o">=</span><span class="n">refresh_url</span><span class="p">,</span> <span class="o">**</span><span class="n">ij_dict</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BaseDataset.list_internal_jobs">
+<a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.list_internal_jobs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">list_internal_jobs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">InternalJobStatusEnum</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">InternalJobStatusEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">InternalJob</span><span class="p">]:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
+
+        <span class="n">url_params</span> <span class="o">=</span> <span class="n">DatasetGetInternalJobParams</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="n">make_list</span><span class="p">(</span><span class="n">status</span><span class="p">))</span>
+        <span class="n">ij_dicts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+            <span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;/api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/internal_jobs&quot;</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">url_params</span><span class="o">=</span><span class="n">url_params</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">InternalJob</span><span class="p">(</span><span class="n">client</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="p">,</span> <span class="n">refresh_url</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;/api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/internal_jobs/</span><span class="si">{</span><span class="n">ij</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">ij</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">ij</span> <span class="ow">in</span> <span class="n">ij_dicts</span>
+        <span class="p">]</span></div>
+
+
+    <span class="c1">#########################################</span>
+    <span class="c1"># Attachments</span>
+    <span class="c1">#########################################</span>
+<div class="viewcode-block" id="BaseDataset.fetch_attachments">
+<a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.fetch_attachments">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fetch_attachments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">attachments_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+            <span class="s2">&quot;get&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/attachments&quot;</span><span class="p">,</span>
+            <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">DatasetAttachment</span><span class="p">]],</span>
+        <span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">attachments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">DatasetAttachment</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">attachments_</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fetch_attachments</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">attachments_</span>
+
+<div class="viewcode-block" id="BaseDataset.delete_attachment">
+<a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.delete_attachment">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_attachment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+            <span class="s2">&quot;delete&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/attachments/</span><span class="si">{</span><span class="n">file_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">fetch_attachments</span><span class="p">()</span></div>
+
+
+    <span class="c1">#########################################</span>
+    <span class="c1"># View creation and use</span>
+    <span class="c1">#########################################</span>
+<div class="viewcode-block" id="BaseDataset.list_views">
+<a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.list_views">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">list_views</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">attachments</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">attachment_type</span> <span class="o">==</span> <span class="n">DatasetAttachmentType</span><span class="o">.</span><span class="n">view</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="BaseDataset.download_view">
+<a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.download_view">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">download_view</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">view_file_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">destination_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Downloads a view for this dataset</span>
+
+<span class="sd">        If a `view_file_id` is not given, the most recent view will be downloaded.</span>
+
+<span class="sd">        If destination path is not given, the file will be placed in the current directory, and the</span>
+<span class="sd">        filename determined by what is stored on the server.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        view_file_id</span>
+<span class="sd">            ID of the view to download. See :ref:`list_views`. If `None`, will download the latest view</span>
+<span class="sd">        destination_path</span>
+<span class="sd">            Full path to the destination file (including filename)</span>
+<span class="sd">        overwrite</span>
+<span class="sd">            If True, any existing file will be overwritten</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">my_views</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_views</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">my_views</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No views available for this dataset&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">view_file_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">latest_view_ids</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">my_views</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">created_on</span><span class="p">)</span>
+            <span class="n">view_file_id</span> <span class="o">=</span> <span class="n">latest_view_ids</span><span class="o">.</span><span class="n">id</span>
+
+        <span class="n">view_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">x</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_views</span><span class="p">()}</span>
+        <span class="k">if</span> <span class="n">view_file_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">view_map</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File id </span><span class="si">{</span><span class="n">view_file_id</span><span class="si">}</span><span class="s2"> is not a valid ID for this dataset&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">destination_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">view_data</span> <span class="o">=</span> <span class="n">view_map</span><span class="p">[</span><span class="n">view_file_id</span><span class="p">]</span>
+            <span class="n">destination_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">view_data</span><span class="o">.</span><span class="n">file_name</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">download_external_file</span><span class="p">(</span><span class="n">view_file_id</span><span class="p">,</span> <span class="n">destination_path</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BaseDataset.use_view_cache">
+<a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.use_view_cache">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">use_view_cache</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">view_file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Downloads and loads a view for this dataset</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        view_file_path</span>
+<span class="sd">            Full path to the view file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">cache_uri</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;file:</span><span class="si">{</span><span class="n">view_file_path</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">dcache</span> <span class="o">=</span> <span class="n">DatasetCache</span><span class="p">(</span><span class="n">cache_uri</span><span class="o">=</span><span class="n">cache_uri</span><span class="p">,</span> <span class="n">read_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dataset_type</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+
+        <span class="n">meta</span> <span class="o">=</span> <span class="n">dcache</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">(</span><span class="s2">&quot;dataset_metadata&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Info in view file does not match this dataset. ID in the file </span><span class="si">{</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, ID of this dataset </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;dataset_type&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Info in view file does not match this dataset. Dataset type in the file </span><span class="si">{</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;dataset_type&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, dataset type of this dataset </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Info in view file does not match this dataset. Dataset name in the file </span><span class="si">{</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, name of this dataset </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span> <span class="o">=</span> <span class="n">dcache</span></div>
+
+
+<div class="viewcode-block" id="BaseDataset.preload_cache">
+<a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.preload_cache">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">preload_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">view_file_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Downloads a view file and uses it as the current cache</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        view_file_id</span>
+<span class="sd">            ID of the view to download. See :ref:`list_views`. If `None`, will download the latest view</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">is_disk</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Caching to disk is not enabled. Set the cache_dir path when constructing the client&quot;</span><span class="p">)</span>
+
+        <span class="n">destination_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">get_dataset_cache_path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">download_view</span><span class="p">(</span><span class="n">view_file_id</span><span class="o">=</span><span class="n">view_file_id</span><span class="p">,</span> <span class="n">destination_path</span><span class="o">=</span><span class="n">destination_path</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_view_cache</span><span class="p">(</span><span class="n">destination_path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BaseDataset.create_view">
+<a class="viewcode-back" href="../../user_guide/records/base.html#qcportal.dataset_models.BaseDataset.create_view">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_view</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">provenance</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">exclude</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">include_children</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InternalJob</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a view of this dataset on the server</span>
+
+<span class="sd">        This function will return an :ref:`InternalJob` which can be used to watch</span>
+<span class="sd">        for completion if desired. The job will run server side without user interaction.</span>
+
+<span class="sd">        Note the ID field of the object if you with to retrieve this internal job later</span>
+<span class="sd">        (via :ref:`PortalClient.get_internal_job` and :ref:`get_internal_jobs`)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        description</span>
+<span class="sd">            Optional string describing the view file</span>
+<span class="sd">        provenance</span>
+<span class="sd">            Dictionary with any metadata or other information about the view. Information regarding</span>
+<span class="sd">            the options used to create the view will be added.</span>
+<span class="sd">        status</span>
+<span class="sd">            List of statuses to include. Default is to include records with any status</span>
+<span class="sd">        include</span>
+<span class="sd">            List of specific record fields to include in the export. Default is to include most fields</span>
+<span class="sd">        exclude</span>
+<span class="sd">            List of specific record fields to exclude from the export. Defaults to excluding none.</span>
+<span class="sd">        include_children</span>
+<span class="sd">            Specifies whether child records associated with the main records should also be included (recursively)</span>
+<span class="sd">            in the view file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :</span>
+<span class="sd">            An :ref:`InternalJob` object which can be used to watch for completion.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">body</span> <span class="o">=</span> <span class="n">DatasetCreateViewBody</span><span class="p">(</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+            <span class="n">provenance</span><span class="o">=</span><span class="n">provenance</span><span class="p">,</span>
+            <span class="n">status</span><span class="o">=</span><span class="n">status</span><span class="p">,</span>
+            <span class="n">include</span><span class="o">=</span><span class="n">include</span><span class="p">,</span>
+            <span class="n">exclude</span><span class="o">=</span><span class="n">exclude</span><span class="p">,</span>
+            <span class="n">include_children</span><span class="o">=</span><span class="n">include_children</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">job_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+            <span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/datasets/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/create_view&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_internal_job</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span></div>
 
 
     <span class="c1">#########################################</span>
@@ -2361,6 +2623,15 @@
     <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
 
 
+<span class="k">class</span><span class="w"> </span><span class="nc">DatasetCreateViewBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+    <span class="n">description</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">provenance</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+    <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,)</span>
+    <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,)</span>
+    <span class="n">exclude</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,)</span>
+    <span class="n">include_children</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="p">(</span><span class="kc">True</span><span class="p">,)</span>
+
+
 <span class="k">class</span><span class="w"> </span><span class="nc">DatasetSubmitBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
     <span class="n">entry_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">specification_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -2404,6 +2675,10 @@
     <span class="n">attribute_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">comment_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">overwrite_attributes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">DatasetGetInternalJobParams</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+    <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">InternalJobStatusEnum</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">dataset_from_dict</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">client</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">cache_data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DatasetCache</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseDataset</span><span class="p">:</span>
