@@ -235,6 +235,43 @@ class PortalClientBase:
 
         return cls(**data)
 
+    @classmethod
+    def from_env(cls):
+        """Creates a new client given information stored in environment variables
+
+        The environment variables are:
+
+          * QCPORTAL_ADDRESS (required)
+          * QCPORTAL_USERNAME (optional)
+          * QCPORTAL_PASSWORD (optional)
+          * QCPORTAL_VERIFY (optional, defaults to True)
+          * QCPORTAL_CACHE_DIR (optional)
+        """
+
+        address = os.environ.get("QCPORTAL_ADDRESS", None)
+        username = os.environ.get("QCPORTAL_USERNAME", None)
+        password = os.environ.get("QCPORTAL_PASSWORD", None)
+        verify = os.environ.get("QCPORTAL_VERIFY", True)
+        cache_dir = os.environ.get("QCPORTAL_CACHE_DIR", None)
+
+        if address is None:
+            raise KeyError("Required environment variable 'QCPORTAL_ADDRESS' not found")
+
+        data = {"address": address}
+
+        if username is not None:
+            data["username"] = username
+
+        if password is not None:
+            data["password"] = password
+
+        if cache_dir is not None:
+            data["cache_dir"] = cache_dir
+
+        data["verify"] = verify
+
+        return cls(**data)
+
     @property
     def encoding(self) -> str:
         return self._encoding

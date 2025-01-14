@@ -125,7 +125,6 @@ class PortalClient(PortalClientBase):
         *,
         cache_dir: Optional[str] = None,
         cache_max_size: int = 0,
-        memory_cache_key: Optional[str] = None,
     ) -> None:
         """
         Parameters
