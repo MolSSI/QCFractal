@@ -13,8 +13,34 @@ from qcfractal.config import FractalConfig
 from qcfractal.db_socket.socket import SQLAlchemySocket
 from qcportal import PortalClient
 from qcportal.managers import ManagerName
+from qcportal.utils import update_nested_dict
 from .helpers import geoip_path, geoip_filename, ip_tests_enabled, test_users
 from .testing_classes import QCATestingPostgresServer, QCATestingSnowflake, _activated_manager_programs
+
+
+def _generate_default_config(pg_harness, extra_config=None) -> FractalConfig:
+    # Create a configuration. Since this is mostly just for a storage socket,
+    # We can use defaults for almost all, since a flask server, etc, won't be instantiated
+    # Also disable connection pooling in the storage socket
+    # (which can leave db connections open, causing problems when we go to delete
+    # the database)
+    cfg_dict = {}
+    cfg_dict["base_folder"] = pg_harness.config.base_folder
+    cfg_dict["loglevel"] = "DEBUG"
+    cfg_dict["database"] = pg_harness.config.dict()
+    cfg_dict["database"]["pool_size"] = 0
+    cfg_dict["log_access"] = True
+
+    if ip_tests_enabled:
+        cfg_dict["geoip2_dir"] = geoip_path
+        cfg_dict["geoip2_filename"] = geoip_filename
+
+    cfg_dict["api"] = {"secret_key": secrets.token_urlsafe(32), "jwt_secret_key": secrets.token_urlsafe(32)}
+
+    if extra_config:
+        cfg_dict = update_nested_dict(cfg_dict, extra_config)
+
+    return FractalConfig(**cfg_dict)
 
 
 @pytest.fixture(scope="session")
@@ -40,26 +66,7 @@ def session_storage_socket(postgres_server):
     """
 
     pg_harness = postgres_server.get_new_harness("session_storage")
-
-    # Create a configuration. Since this is mostly just for a storage socket,
-    # We can use defaults for almost all, since a flask server, etc, won't be instantiated
-    # Also disable connection pooling in the storage socket
-    # (which can leave db connections open, causing problems when we go to delete
-    # the database)
-    cfg_dict = {}
-    cfg_dict["base_folder"] = pg_harness.config.base_folder
-    cfg_dict["loglevel"] = "DEBUG"
-    cfg_dict["database"] = pg_harness.config.dict()
-    cfg_dict["database"]["pool_size"] = 0
-    cfg_dict["log_access"] = True
-
-    if ip_tests_enabled:
-        cfg_dict["geoip2_dir"] = geoip_path
-        cfg_dict["geoip2_filename"] = geoip_filename
-
-    cfg_dict["api"] = {"secret_key": secrets.token_urlsafe(32), "jwt_secret_key": secrets.token_urlsafe(32)}
-    qcf_config = FractalConfig(**cfg_dict)
-
+    qcf_config = _generate_default_config(pg_harness)
     socket = SQLAlchemySocket(qcf_config)
 
     # Create the template database for use in re-creating the database
