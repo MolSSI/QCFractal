@@ -2,9 +2,17 @@ from __future__ import annotations
 
 import pytest
 
+from qcarchivetesting.helpers import test_users
 from qcportal import PortalRequestError
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.utils import now_at_utc
+
+
+@pytest.fixture(scope="function")
+def dataset_submit_test_client(secure_snowflake):
+    secure_snowflake.start_job_runner()
+    client = secure_snowflake.client("submit_user", test_users["submit_user"]["pw"])
+    yield client
 
 
 def run_dataset_model_add_get_entry(snowflake_client, ds, test_entries, entry_extra_compare):
@@ -423,7 +431,7 @@ def run_dataset_model_remove_record(snowflake_client, ds, test_entries, test_spe
     assert rec_ids[none_idx] == to_delete_id
 
 
-def run_dataset_model_submit(ds, test_entries, test_spec, record_compare):
+def run_dataset_model_submit(ds, test_entries, test_spec, record_compare, background):
     assert ds.record_count == 0
     assert ds._client.list_datasets()[0]["record_count"] == 0
 
@@ -432,7 +440,12 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare):
 
     ds.add_specification("spec_1", test_spec)
     ds.add_entries(test_entries[0])
-    ds.submit()
+
+    if background:
+        ij = ds.background_submit()
+        ij.watch(interval=0.1, timeout=10)
+    else:
+        ds.submit()
 
     all_records = list(ds.iterate_records())
     assert len(all_records) == 1
@@ -454,13 +467,25 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare):
 
     # Now additional keywords
     ds.add_entries(test_entries[2])
-    ds.submit()
+
+    if background:
+        ij = ds.background_submit()
+        ij.watch(interval=0.1, timeout=10)
+    else:
+        ds.submit()
+
     rec = ds.get_record(test_entries[2].name, "spec_1")
     record_compare(rec, test_entries[2], test_spec)
 
     # Additional submission stuff
     ds.add_entries(test_entries[1])
-    ds.submit(tag="new_tag", priority=PriorityEnum.high)
+
+    if background:
+        ij = ds.background_submit(tag="new_tag", priority=PriorityEnum.high)
+        ij.watch(interval=0.1, timeout=10)
+    else:
+        ds.submit(tag="new_tag", priority=PriorityEnum.high)
+
     rec = ds.get_record(test_entries[1].name, "spec_1")
 
     if rec.is_service:
@@ -483,7 +508,12 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare):
     # Don't find existing
     old_rec_id = rec.id
     ds.remove_records(test_entries[2].name, "spec_1")
-    ds.submit(find_existing=False)
+
+    if background:
+        ij = ds.background_submit(find_existing=False)
+        ij.watch(interval=0.1, timeout=10)
+    else:
+        ds.submit(find_existing=False)
 
     rec = ds.get_record(test_entries[2].name, "spec_1")
     assert rec.id != old_rec_id
