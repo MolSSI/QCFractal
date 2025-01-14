@@ -22,16 +22,7 @@ except ImportError:
 from sqlalchemy.engine.url import URL, make_url
 
 from qcfractal.port_util import find_open_port
-from qcportal.utils import duration_to_seconds
-
-
-def update_nested_dict(d, u):
-    for k, v in u.items():
-        if isinstance(v, dict):
-            d[k] = update_nested_dict(d.get(k, {}), v)
-        else:
-            d[k] = v
-    return d
+from qcportal.utils import duration_to_seconds, update_nested_dict
 
 
 def _make_abs_path(path: Optional[str], base_folder: str, default_filename: Optional[str]) -> Optional[str]:

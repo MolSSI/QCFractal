@@ -17,7 +17,8 @@ import requests
 
 from qcportal import PortalClient
 from qcportal.record_models import RecordStatusEnum
-from .config import FractalConfig, DatabaseConfig, update_nested_dict
+from qcportal.utils import update_nested_dict
+from .config import FractalConfig, DatabaseConfig
 from .flask_app.waitress_app import FractalWaitressApp
 from .job_runner import FractalJobRunner
 from .port_util import find_open_port

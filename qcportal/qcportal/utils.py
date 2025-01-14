@@ -440,3 +440,12 @@ def is_included(key: str, include: Optional[Iterable[str]], exclude: Optional[It
         exclude = tuple(sorted(exclude))
 
     return _is_included(key, include, exclude, default)
+
+
+def update_nested_dict(d: Dict[str, Any], u: Dict[str, Any]):
+    for k, v in u.items():
+        if isinstance(v, dict):
+            d[k] = update_nested_dict(d.get(k, {}), v)
+        else:
+            d[k] = v
+    return d

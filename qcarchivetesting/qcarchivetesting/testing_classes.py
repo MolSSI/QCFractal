@@ -4,13 +4,14 @@ import logging
 from copy import deepcopy
 
 from qcarchivetesting import geoip_path, geoip_filename, ip_tests_enabled
-from qcfractal.config import DatabaseConfig, update_nested_dict
+from qcfractal.config import DatabaseConfig
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.postgres_harness import PostgresHarness, create_snowflake_postgres
 from qcfractal.snowflake import FractalSnowflake
 from qcportal import PortalClient, ManagerClient
 from qcportal.auth import UserInfo, GroupInfo
 from qcportal.managers import ManagerName
+from qcportal.utils import update_nested_dict
 from .helpers import test_users, test_groups
 
 _activated_manager_programs = {
