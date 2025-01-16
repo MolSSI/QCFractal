@@ -1247,7 +1247,7 @@ class BaseDatasetSocket:
             ################################
             stmt = select(self.specification_orm)
 
-            # We want the actual optimization specification as well
+            # We want the actual full specification as well
             stmt = stmt.join(self.specification_orm.specification)
             stmt = stmt.where(self.specification_orm.dataset_id == dataset_id)
             if specification_names is not None:
@@ -1265,45 +1265,81 @@ class BaseDatasetSocket:
             ################################
             # Get entry details
             ################################
-            stmt = select(self.entry_orm)
-            stmt = stmt.where(self.entry_orm.dataset_id == dataset_id)
+            if entry_names is None:
+                # Do all entries in batches using server-side cursors
+                stmt = select(self.entry_orm)
+                stmt = stmt.where(self.entry_orm.dataset_id == dataset_id)
+                r = session.execute(stmt).scalars()
 
-            if entry_names is not None:
-                stmt = stmt.where(self.entry_orm.name.in_(entry_names))
+                while entries_batch := r.fetchmany(500):
+                    entries_batch_names = [e.name for e in entries_batch]
 
-            entries = session.execute(stmt).scalars().all()
+                    # Find which records/record_items already exist
+                    stmt = select(self.record_item_orm.entry_name, self.record_item_orm.specification_name)
+                    stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
 
-            # Check to make sure we found all the entries
-            if entry_names is not None:
-                found_entries = {x.name for x in entries}
-                missing_entries = set(entry_names) - found_entries
-                if missing_entries:
-                    raise MissingDataError(f"Could not find all entries. Missing: {missing_entries}")
+                    stmt = stmt.where(self.record_item_orm.entry_name.in_(entries_batch_names))
+                    if specification_names is not None:
+                        stmt = stmt.where(self.record_item_orm.specification_name.in_(specification_names))
 
-            # Find which records/record_items already exist
-            stmt = select(self.record_item_orm)
-            stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
+                    existing_records = session.execute(stmt).all()
 
-            if entry_names is not None:
-                stmt = stmt.where(self.record_item_orm.entry_name.in_(entry_names))
-            if specification_names is not None:
-                stmt = stmt.where(self.record_item_orm.specification_name.in_(specification_names))
+                    self._submit(
+                        session,
+                        dataset_id,
+                        entries_batch,
+                        ds_specs,
+                        existing_records,
+                        tag,
+                        priority,
+                        owner_user_id,
+                        owner_group_id,
+                        find_existing,
+                    )
 
-            existing_record_orm = session.execute(stmt).scalars().all()
-            existing_records = [(x.entry_name, x.specification_name) for x in existing_record_orm]
+            else:  # entry names were given
 
-            return self._submit(
-                session,
-                dataset_id,
-                entries,
-                ds_specs,
-                existing_records,
-                tag,
-                priority,
-                owner_user_id,
-                owner_group_id,
-                find_existing,
-            )
+                # For checking for missing entries
+                found_entries = []
+
+                # Do entries in batches via the given entry names (in batches)
+                for entries_names_batch in chunk_iterable(entry_names, 500):
+                    stmt = select(self.entry_orm)
+                    stmt = stmt.where(self.entry_orm.dataset_id == dataset_id)
+                    stmt = stmt.where(self.entry_orm.name.in_(entries_names_batch))
+
+                    entries_batch = session.execute(stmt).scalars().all()
+
+                    entries_batch_names = [e.name for e in entries_batch]
+                    found_entries.extend(entries_batch_names)
+
+                    # Find which records/record_items already exist
+                    stmt = select(self.record_item_orm.entry_name, self.record_item_orm.specification_name)
+                    stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
+
+                    stmt = stmt.where(self.record_item_orm.entry_name.in_(entries_batch_names))
+                    if specification_names is not None:
+                        stmt = stmt.where(self.record_item_orm.specification_name.in_(specification_names))
+
+                    existing_records = session.execute(stmt).all()
+
+                    self._submit(
+                        session,
+                        dataset_id,
+                        entries_batch,
+                        ds_specs,
+                        existing_records,
+                        tag,
+                        priority,
+                        owner_user_id,
+                        owner_group_id,
+                        find_existing,
+                    )
+
+                if entry_names is not None:
+                    missing_entries = set(entry_names) - set(found_entries)
+                    if missing_entries:
+                        raise MissingDataError(f"Could not find all entries. Missing: {missing_entries}")
 
     def background_submit(
         self,
