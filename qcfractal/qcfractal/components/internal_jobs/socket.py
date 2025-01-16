@@ -12,6 +12,9 @@ from typing import TYPE_CHECKING
 
 import psycopg2.extensions
 from sqlalchemy import select, delete, update, and_, or_
+
+from qcportal.serialization import encode_to_json
+
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 
@@ -361,7 +364,7 @@ class InternalJobSocket:
             job_orm.status = InternalJobStatusEnum.complete
             job_orm.progress = 100
             job_orm.progress_description = "Complete"
-            job_orm.result = result
+            job_orm.result = encode_to_json(result)
 
         # Job itself is being cancelled
         except CancelledJobException:
