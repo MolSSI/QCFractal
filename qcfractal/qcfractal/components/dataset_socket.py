@@ -9,6 +9,7 @@ from sqlalchemy import select, delete, func, union, text, and_
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import load_only, lazyload, joinedload, with_polymorphic
 from sqlalchemy.orm.attributes import flag_modified
+from qcfractal.db_socket.helpers import get_count
 
 from qcfractal.components.dataset_db_models import (
     BaseDatasetORM,
@@ -1206,6 +1207,7 @@ class BaseDatasetSocket:
         owner_group: Optional[Union[int, str]],
         find_existing: bool,
         *,
+        job_progress: Optional[JobProgress] = None,
         session: Optional[Session] = None,
     ) -> InsertCountsMetadata:
         """
@@ -1232,6 +1234,8 @@ class BaseDatasetSocket:
             Group with additional permission for these records
         find_existing
             If True, search for existing records and return those. If False, always add new records
+        job_progress
+            Object used to track progress if this function is being run in a background job
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -1279,6 +1283,12 @@ class BaseDatasetSocket:
                 # Do all entries in batches using server-side cursors
                 stmt = select(self.entry_orm)
                 stmt = stmt.where(self.entry_orm.dataset_id == dataset_id)
+
+                # for progress tracking
+                if job_progress is not None:
+                    total_records = len(ds_specs) * get_count(session, stmt)
+                    records_done = 0
+
                 r = session.execute(stmt).scalars()
 
                 while entries_batch := r.fetchmany(500):
@@ -1310,7 +1320,17 @@ class BaseDatasetSocket:
                     n_inserted += batch_meta.n_inserted
                     n_existing += batch_meta.n_existing
 
+                    if job_progress is not None:
+                        job_progress.raise_if_cancelled()
+                        records_done += len(entries_batch)
+                        job_progress.update_progress(100 * (records_done * len(ds_specs)) / total_records)
+
             else:  # entry names were given
+
+                # for progress tracking
+                if job_progress is not None:
+                    total_records = len(ds_specs) * len(entry_names)
+                    records_done = 0
 
                 # For checking for missing entries
                 found_entries = []
@@ -1351,6 +1371,11 @@ class BaseDatasetSocket:
 
                     n_inserted += batch_meta.n_inserted
                     n_existing += batch_meta.n_existing
+
+                    if job_progress is not None:
+                        job_progress.raise_if_cancelled()
+                        records_done += len(entries_names_batch)
+                        job_progress.update_progress(100 * (records_done * len(ds_specs)) / total_records)
 
                 if entry_names is not None:
                     missing_entries = set(entry_names) - set(found_entries)
