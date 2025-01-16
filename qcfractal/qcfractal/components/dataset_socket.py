@@ -26,7 +26,7 @@ from qcfractal.db_socket.helpers import (
 from qcportal.dataset_models import DatasetAttachmentType
 from qcportal.exceptions import AlreadyExistsError, MissingDataError, UserReportableError
 from qcportal.internal_jobs import InternalJobStatusEnum
-from qcportal.metadata_models import InsertMetadata, DeleteMetadata, UpdateMetadata
+from qcportal.metadata_models import InsertMetadata, DeleteMetadata, UpdateMetadata, InsertCountsMetadata
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.utils import chunk_iterable, now_at_utc
 
@@ -123,7 +123,7 @@ class BaseDatasetSocket:
         owner_user_id: Optional[int],
         owner_group_id: Optional[int],
         find_existing: bool,
-    ):
+    ) -> InsertCountsMetadata:
         raise NotImplementedError("_submit must be overridden by the derived class")
 
     def get_submit_info(
@@ -1207,7 +1207,7 @@ class BaseDatasetSocket:
         find_existing: bool,
         *,
         session: Optional[Session] = None,
-    ):
+    ) -> InsertCountsMetadata:
         """
         Submit computations for this dataset
 
@@ -1235,7 +1235,17 @@ class BaseDatasetSocket:
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Counts of how many records were inserted or already existing. This only applies to records - existing
+            records already part of this dataset (ie, a given entry/specification pair already has a record)
+            is not counted as existing in the return value.
         """
+
+        n_inserted = 0
+        n_existing = 0
 
         with self.root_socket.optional_session(session) as session:
             tag, priority, owner_user_id, owner_group_id = self.get_submit_info(
@@ -1284,7 +1294,7 @@ class BaseDatasetSocket:
 
                     existing_records = session.execute(stmt).all()
 
-                    self._submit(
+                    batch_meta = self._submit(
                         session,
                         dataset_id,
                         entries_batch,
@@ -1296,6 +1306,9 @@ class BaseDatasetSocket:
                         owner_group_id,
                         find_existing,
                     )
+
+                    n_inserted += batch_meta.n_inserted
+                    n_existing += batch_meta.n_existing
 
             else:  # entry names were given
 
@@ -1323,7 +1336,7 @@ class BaseDatasetSocket:
 
                     existing_records = session.execute(stmt).all()
 
-                    self._submit(
+                    batch_meta = self._submit(
                         session,
                         dataset_id,
                         entries_batch,
@@ -1336,10 +1349,15 @@ class BaseDatasetSocket:
                         find_existing,
                     )
 
+                    n_inserted += batch_meta.n_inserted
+                    n_existing += batch_meta.n_existing
+
                 if entry_names is not None:
                     missing_entries = set(entry_names) - set(found_entries)
                     if missing_entries:
                         raise MissingDataError(f"Could not find all entries. Missing: {missing_entries}")
+
+        return InsertCountsMetadata(n_inserted=n_inserted, n_existing=n_existing)
 
     def background_submit(
         self,

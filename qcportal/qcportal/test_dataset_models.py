@@ -170,6 +170,8 @@ def test_dataset_model_add_submit_many(snowflake_client: PortalClient):
         "test_spec_2", specification={"program": "test_prog_2", "driver": "energy", "method": "HF", "basis": "sto-3g"}
     )
 
-    ds.submit()
+    meta = ds.submit()
+    assert meta.n_inserted == test_count * 2
+    assert meta.n_existing == 0
 
     assert ds.record_count == test_count * 2

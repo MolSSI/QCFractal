@@ -12,9 +12,6 @@ from typing import TYPE_CHECKING
 
 import psycopg2.extensions
 from sqlalchemy import select, delete, update, and_, or_
-
-from qcportal.serialization import encode_to_json
-
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 
@@ -22,6 +19,7 @@ from qcfractal.components.auth.db_models import UserIDMapSubquery
 from qcfractal.db_socket.helpers import get_query_proj_options
 from qcportal.exceptions import MissingDataError
 from qcportal.internal_jobs.models import InternalJobStatusEnum, InternalJobQueryFilters
+from qcportal.serialization import encode_to_json
 from qcportal.utils import now_at_utc
 from .db_models import InternalJobORM
 from .status import JobProgress, CancelledJobException, JobRunnerStoppingException

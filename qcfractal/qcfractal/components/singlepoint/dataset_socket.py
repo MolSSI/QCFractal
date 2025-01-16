@@ -78,7 +78,11 @@ class SinglepointDatasetSocket(BaseDatasetSocket):
         owner_user_id: Optional[int],
         owner_group_id: Optional[int],
         find_existing: bool,
-    ):
+    ) -> InsertCountsMetadata:
+
+        n_inserted = 0
+        n_existing = 0
+
         # Weed out any with additional keywords
         special_entries = [x for x in entry_orm if x.additional_keywords]
         normal_entries = [x for x in entry_orm if not x.additional_keywords]
@@ -104,6 +108,9 @@ class SinglepointDatasetSocket(BaseDatasetSocket):
                     dataset_id=dataset_id, entry_name=entry.name, specification_name=spec.name, record_id=oid
                 )
                 session.add(rec)
+
+            n_inserted += meta.n_inserted
+            n_existing += meta.n_existing
 
         # Now the ones with additional keywords
         for spec in spec_orm:
@@ -136,6 +143,11 @@ class SinglepointDatasetSocket(BaseDatasetSocket):
                         record_id=sp_ids[0],
                     )
                     session.add(rec)
+
+                n_inserted += meta.n_inserted
+                n_existing += meta.n_existing
+
+        return InsertCountsMetadata(n_inserted=n_inserted, n_existing=n_existing)
 
     def add_entries_from_ds(
         self,

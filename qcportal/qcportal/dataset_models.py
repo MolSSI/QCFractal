@@ -32,7 +32,7 @@ from tqdm import tqdm
 
 from qcportal.base_models import RestModelBase, validate_list_to_single, CommonBulkGetBody
 from qcportal.internal_jobs import InternalJob, InternalJobStatusEnum
-from qcportal.metadata_models import DeleteMetadata, InsertMetadata
+from qcportal.metadata_models import DeleteMetadata, InsertMetadata, InsertCountsMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, BaseRecord
 from qcportal.utils import make_list, chunk_iterable
 from qcportal.cache import DatasetCache, read_dataset_metadata, get_records_with_cache
@@ -305,7 +305,7 @@ class BaseDataset(BaseModel):
         tag: Optional[str] = None,
         priority: PriorityEnum = None,
         find_existing: bool = True,
-    ):
+    ) -> InsertCountsMetadata:
         """
         Create records for this dataset
 
@@ -343,6 +343,9 @@ class BaseDataset(BaseModel):
         batch_size = math.ceil(self._client.api_limits["get_records"] / 4)
         n_batches = math.ceil(len(entry_names) / batch_size)
 
+        n_inserted = 0
+        n_existing = 0
+
         for spec in specification_names:
             for entry_batch in tqdm(chunk_iterable(entry_names, batch_size), total=n_batches, disable=None):
                 body_data = DatasetSubmitBody(
@@ -353,9 +356,17 @@ class BaseDataset(BaseModel):
                     find_existing=find_existing,
                 )
 
-                self._client.make_request(
-                    "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/submit", Any, body=body_data
+                meta = self._client.make_request(
+                    "post",
+                    f"api/v1/datasets/{self.dataset_type}/{self.id}/submit",
+                    InsertCountsMetadata,
+                    body=body_data,
                 )
+
+                n_inserted += meta.n_inserted
+                n_existing += meta.n_existing
+
+        return InsertCountsMetadata(n_inserted=n_inserted, n_existing=n_existing)
 
     def background_submit(
         self,

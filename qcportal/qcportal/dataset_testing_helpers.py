@@ -4,6 +4,7 @@ import pytest
 
 from qcarchivetesting.helpers import test_users
 from qcportal import PortalRequestError
+from qcportal.metadata_models import InsertCountsMetadata
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.utils import now_at_utc
 
@@ -444,8 +445,13 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare, backgr
     if background:
         ij = ds.background_submit()
         ij.watch(interval=0.1, timeout=10)
+        meta = InsertCountsMetadata(**ij.result)
     else:
-        ds.submit()
+        meta = ds.submit()
+
+    assert meta.success
+    assert meta.n_inserted == 1
+    assert meta.n_existing == 0
 
     all_records = list(ds.iterate_records())
     assert len(all_records) == 1
@@ -471,8 +477,13 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare, backgr
     if background:
         ij = ds.background_submit()
         ij.watch(interval=0.1, timeout=10)
+        meta = InsertCountsMetadata(**ij.result)
     else:
-        ds.submit()
+        meta = ds.submit()
+
+    assert meta.success
+    assert meta.n_inserted == 1
+    assert meta.n_existing == 0
 
     rec = ds.get_record(test_entries[2].name, "spec_1")
     record_compare(rec, test_entries[2], test_spec)
@@ -483,8 +494,13 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare, backgr
     if background:
         ij = ds.background_submit(tag="new_tag", priority=PriorityEnum.high)
         ij.watch(interval=0.1, timeout=10)
+        meta = InsertCountsMetadata(**ij.result)
     else:
-        ds.submit(tag="new_tag", priority=PriorityEnum.high)
+        meta = ds.submit(tag="new_tag", priority=PriorityEnum.high)
+
+    assert meta.success
+    assert meta.n_inserted == 1
+    assert meta.n_existing == 0
 
     rec = ds.get_record(test_entries[1].name, "spec_1")
 
@@ -505,6 +521,28 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare, backgr
         assert rec.task.tag == "default_tag"
         assert rec.task.priority == PriorityEnum.low
 
+    # Find existing, but not already attached
+    old_rec_id = rec.id
+    ds.remove_records(test_entries[2].name, "spec_1")
+
+    if background:
+        ij = ds.background_submit()
+        ij.watch(interval=0.1, timeout=10)
+        meta = InsertCountsMetadata(**ij.result)
+    else:
+        meta = ds.submit()
+
+    assert meta.success
+    assert meta.n_inserted == 0
+    assert meta.n_existing == 1
+
+    rec = ds.get_record(test_entries[2].name, "spec_1")
+    assert rec.id == old_rec_id
+
+    record_count = len(ds.entry_names) * len(ds.specifications)
+    assert ds.record_count == record_count
+    assert ds._client.list_datasets()[0]["record_count"] == record_count
+
     # Don't find existing
     old_rec_id = rec.id
     ds.remove_records(test_entries[2].name, "spec_1")
@@ -512,8 +550,13 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare, backgr
     if background:
         ij = ds.background_submit(find_existing=False)
         ij.watch(interval=0.1, timeout=10)
+        meta = InsertCountsMetadata(**ij.result)
     else:
-        ds.submit(find_existing=False)
+        meta = ds.submit(find_existing=False)
+
+    assert meta.success
+    assert meta.n_inserted == 1
+    assert meta.n_existing == 0
 
     rec = ds.get_record(test_entries[2].name, "spec_1")
     assert rec.id != old_rec_id
