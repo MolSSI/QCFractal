@@ -1,0 +1,21 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+EXPOSE 8000
+
+RUN apt-get upgrade -y && apt-get update -y && apt-get install -yqq --no-install-recommends python3-pip && pip3 install --upgrade pip
+RUN apt-get install npm nodejs -y \
+    && npm install -g configurable-http-proxy \
+    && pip3 install jupyterhub \
+    && pip3 install --upgrade notebook \
+    && pip3 install --upgrade jupyterlab \
+    && pip3 install --upgrade qcportal \
+    && rm -rf /var/lib/apt/lists/* /var/log/* /var/tmp/* ~/.npm
+
+ADD docker/jupyterhub_config.py /etc/jupyterhub_config.py
+ADD docker/qcarchive_authenticator.py /etc/qcarchive_authenticator.py
+
+ENV PYTHONPATH="${PYTHONPATH}:/etc"
+
+CMD ["jupyterhub", "--ip=0.0.0.0", "--port=8000", "--no-ssl", "-f", "/etc/jupyterhub_config.py"]
