@@ -1,7 +1,6 @@
-"""sample jupyterhub config file for testing
+"""Jupyterhub Config file for hosting QCPortal.
 
-configures jupyterhub with dummyauthenticator and simplespawner
-to enable testing without administrative privileges.
+This authenticates using QCArchive server usernames and passwords.
 """
 
 c = get_config()  # noqa
@@ -19,6 +18,4 @@ c.JupyterHub.tornado_settings = {
 c.JupyterHub.allow_named_servers = True
 c.JupyterHub.default_url = "/hub/home"
 
-# make sure admin UI is available and any user can login
-#c.Authenticator.admin_users = {"admin"}
 c.Authenticator.allow_all = True
