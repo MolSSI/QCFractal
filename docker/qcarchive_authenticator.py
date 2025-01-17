@@ -4,7 +4,8 @@ from jupyterhub.auth import Authenticator
 import requests
 import jwt
 from subprocess import PIPE, STDOUT, Popen
-
+import pwd
+import warnings
 
 class QCArchiveAuthenticator(Authenticator):
 
@@ -25,8 +26,11 @@ class QCArchiveAuthenticator(Authenticator):
         r = requests.post(login_address, json=body, verify=True)
 
         if r.status_code != 200:
-            fail_msg = r.json()["msg"]
-            raise RuntimeError(f"Login failure: {r.status_code} - {fail_msg}")
+            try:
+                details = r.json()
+            except:
+                details = {"msg": r.reason}
+            raise RuntimeError(f"Request failed: {details['msg']}", r.status_code, details)
 
         print("Successfully logged in!")
 
@@ -47,16 +51,42 @@ class QCArchiveAuthenticator(Authenticator):
         user_id = uinfo["id"]
         role = uinfo["role"]
 
-        cmd = [
-            "adduser",
-            "-q",
-            "--disabled-password",
-            "--uid",
-            f"{100000+user_id}",
-            username,
-        ]
-        p = Popen(cmd, stdout=PIPE, stderr=STDOUT)
-        p.wait()
+        # Check if the user has a home directory.
+        home_dir = False
+        if os.path.isdir(f"/home/{username}"):
+            home_dir = True
+
+        # Check if the user exists already.
+        user_exists = True
+        try:
+            pwd.getpwnam(username)
+        except KeyError:
+            print(f'User {username} does not exist.')
+            user_exists = False
+
+        # Create the user if they do not exist.
+        if not user_exists:
+            cmd = [
+                "adduser",
+                "-q",
+                "--disabled-password",
+                "--uid",
+                f"{100000+user_id}",
+                username,
+            ]
+            p = Popen(cmd, stdout=PIPE, stderr=STDOUT)
+            p.wait()
+
+
+        # If they did not have a home directory before user creation, clone the QCArchive demos.
+        if not home_dir:
+            cmd = ["git", "clone", "https://github.com/MolSSI/QCArchiveDemos.git", f"/home/{username}/QCArchiveDemos"]
+            p = Popen(cmd, stdout=PIPE, stderr=STDOUT)
+            p.wait()
+
+            cmd = ["chown", f"{username}", f"/home/{username}/QCArchiveDemos"]
+            p = Popen(cmd, stdout=PIPE, stderr=STDOUT)
+            p.wait()
 
         os.environ["QCPORTAL_ADDRESS"] = base_address
         os.environ["QCPORTAL_USERNAME"] = username
