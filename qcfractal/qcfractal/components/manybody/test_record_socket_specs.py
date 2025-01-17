@@ -26,7 +26,7 @@ def test_manybody_hash_canaries(storage_socket: SQLAlchemySocket):
 
 def test_manybody_socket_add_specification_same_1(spec_test_runner):
     spec1 = ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         levels={
             1: QCSpecification(
                 program="prog1",
@@ -47,7 +47,7 @@ def test_manybody_socket_add_specification_same_1(spec_test_runner):
 def test_manybody_socket_add_specification_same_2(spec_test_runner):
     # Test case sensitivity
     spec1 = ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         levels={
             1: QCSpecification(
                 program="prog1",
@@ -63,7 +63,7 @@ def test_manybody_socket_add_specification_same_2(spec_test_runner):
     )
 
     spec2 = ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         levels={
             1: QCSpecification(
                 program="prOg1",
@@ -84,7 +84,7 @@ def test_manybody_socket_add_specification_same_2(spec_test_runner):
 def test_manybody_socket_add_specification_same_3(spec_test_runner):
     # Test supersystem
     spec1 = ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         levels={
             1: QCSpecification(
                 program="prog1",
@@ -113,7 +113,7 @@ def test_manybody_socket_add_specification_same_3(spec_test_runner):
 def test_manybody_socket_add_specification_same_4(spec_test_runner):
     # Test ordering
     spec1 = ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         levels={
             1: QCSpecification(
                 program="prog1",
@@ -146,7 +146,7 @@ def test_manybody_socket_add_specification_same_4(spec_test_runner):
 
     # Test ordering
     spec2 = ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         levels={
             2: QCSpecification(
                 program="prog1",
@@ -183,7 +183,7 @@ def test_manybody_socket_add_specification_same_4(spec_test_runner):
 def test_manybody_socket_add_specification_diff_1(spec_test_runner):
     # Test different parameters
     spec1 = ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         levels={
             1: QCSpecification(
                 program="prog1",
@@ -199,7 +199,7 @@ def test_manybody_socket_add_specification_diff_1(spec_test_runner):
     )
 
     spec2 = ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         levels={
             1: QCSpecification(
                 program="prog1",
@@ -220,7 +220,7 @@ def test_manybody_socket_add_specification_diff_1(spec_test_runner):
 def test_manybody_socket_add_specification_diff_2(spec_test_runner):
     # Test different parameters
     spec1 = ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         levels={
             1: QCSpecification(
                 program="prog1",
@@ -236,7 +236,7 @@ def test_manybody_socket_add_specification_diff_2(spec_test_runner):
     )
 
     spec2 = ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         levels={
             1: QCSpecification(
                 program="prog1",
@@ -257,7 +257,7 @@ def test_manybody_socket_add_specification_diff_2(spec_test_runner):
 def test_manybody_socket_add_specification_diff_3(spec_test_runner):
     # Test different parameters
     spec1 = ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         levels={
             1: QCSpecification(
                 program="prog1",
@@ -273,7 +273,7 @@ def test_manybody_socket_add_specification_diff_3(spec_test_runner):
     )
 
     spec2 = ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         levels={
             1: QCSpecification(
                 program="prog1",
@@ -293,7 +293,7 @@ def test_manybody_socket_add_specification_diff_3(spec_test_runner):
 def test_manybody_socket_add_specification_diff_4(spec_test_runner):
     # Test different parameters
     spec1 = ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         levels={
             1: QCSpecification(
                 program="prog1",
@@ -309,7 +309,7 @@ def test_manybody_socket_add_specification_diff_4(spec_test_runner):
     )
 
     spec2 = ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         levels={
             1: QCSpecification(
                 program="prog1",
@@ -328,7 +328,7 @@ def test_manybody_socket_add_specification_diff_4(spec_test_runner):
 def test_manybody_socket_add_specification_diff_5(spec_test_runner):
     # Test different levels
     spec1 = ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         levels={
             1: QCSpecification(
                 program="prog1",
@@ -352,7 +352,7 @@ def test_manybody_socket_add_specification_diff_5(spec_test_runner):
     )
 
     spec2 = ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         levels={
             1: QCSpecification(
                 program="prog1",
@@ -373,7 +373,7 @@ def test_manybody_socket_add_specification_diff_5(spec_test_runner):
 def test_manybody_socket_add_specification_diff_6(spec_test_runner):
     # Test different levels
     spec1 = ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         levels={
             1: QCSpecification(
                 program="prog1",
@@ -397,7 +397,7 @@ def test_manybody_socket_add_specification_diff_6(spec_test_runner):
     )
 
     spec2 = ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         levels={
             1: QCSpecification(
                 program="prog1",
@@ -426,7 +426,7 @@ def test_manybody_socket_add_specification_diff_6(spec_test_runner):
 def test_manybody_socket_add_specification_diff_7(spec_test_runner):
     # Test different levels
     spec1 = ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         levels={
             1: QCSpecification(
                 program="prog1",
@@ -450,7 +450,7 @@ def test_manybody_socket_add_specification_diff_7(spec_test_runner):
     )
 
     spec2 = ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         levels={
             1: QCSpecification(
                 program="prog1",
@@ -478,7 +478,7 @@ def test_manybody_socket_add_specification_diff_7(spec_test_runner):
 def test_manybody_socket_add_specification_diff_8(spec_test_runner):
     # Test different levels
     spec1 = ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         levels={
             1: QCSpecification(
                 program="prog1",
@@ -501,7 +501,7 @@ def test_manybody_socket_add_specification_diff_8(spec_test_runner):
     )
 
     spec2 = ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         levels={
             1: QCSpecification(
                 program="prog1",

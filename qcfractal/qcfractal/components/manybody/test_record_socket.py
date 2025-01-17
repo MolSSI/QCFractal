@@ -53,7 +53,7 @@ def test_manybody_socket_add_get(storage_socket: SQLAlchemySocket, session: Sess
 
 def test_manybody_socket_add_same_1(storage_socket: SQLAlchemySocket):
     spec = ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         levels={
             2: QCSpecification(
                 program="prog1",

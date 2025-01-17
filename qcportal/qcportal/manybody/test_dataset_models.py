@@ -37,7 +37,7 @@ test_entries = [
 
 test_specs = [
     ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         bsse_correction=[BSSECorrectionEnum.nocp, BSSECorrectionEnum.cp],
         levels={
             1: QCSpecification(
@@ -48,7 +48,7 @@ test_specs = [
         keywords={"return_total_data": True},
     ),
     ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         bsse_correction=[BSSECorrectionEnum.vmfc],
         levels={
             1: QCSpecification(
@@ -59,7 +59,7 @@ test_specs = [
         keywords={"return_total_data": True},
     ),
     ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         bsse_correction=[BSSECorrectionEnum.vmfc],
         levels={
             1: QCSpecification(

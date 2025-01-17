@@ -35,7 +35,7 @@ class ManybodySpecification(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    program: constr(to_lower=True) = "manybody"
+    program: constr(to_lower=True) = "qcmanybody"
     levels: Dict[Union[int, Literal["supersystem"]], QCSpecification]
     bsse_correction: List[BSSECorrectionEnum]
     keywords: ManybodyKeywords = Field(ManybodyKeywords())

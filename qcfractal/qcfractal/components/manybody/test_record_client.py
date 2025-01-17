@@ -32,7 +32,7 @@ def test_manybody_client_tag_priority(snowflake_client: PortalClient):
 
         meta1, id1 = snowflake_client.add_manybodys(
             [water],
-            "manybody",
+            "qcmanybody",
             bsse_correction=["nocp"],
             levels={1: sp_spec},
             keywords={"return_total_data": True},
@@ -274,7 +274,7 @@ def test_manybody_client_query(snowflake: QCATestingSnowflake):
     all_mbs = snowflake_client.get_manybodys([id_1, id_2])
     mol_ids = [x.initial_molecule_id for x in all_mbs]
 
-    query_res = snowflake_client.query_manybodys(program=["manybody"])
+    query_res = snowflake_client.query_manybodys(program=["qcmanybody"])
     query_res_l = list(query_res)
     assert len(query_res_l) == 2
 

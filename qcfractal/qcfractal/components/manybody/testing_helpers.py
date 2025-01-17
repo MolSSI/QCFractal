@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
 test_specs = [
     ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         bsse_correction=["nocp"],
         levels={
             1: QCSpecification(
@@ -36,7 +36,7 @@ test_specs = [
         keywords={"return_total_data": True},
     ),
     ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         bsse_correction=["cp"],
         levels={
             1: QCSpecification(
@@ -51,7 +51,7 @@ test_specs = [
         keywords={"return_total_data": True},
     ),
     ManybodySpecification(
-        program="manybody",
+        program="qcmanybody",
         bsse_correction=["cp", "vmfc"],
         levels={
             1: QCSpecification(

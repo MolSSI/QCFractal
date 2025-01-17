@@ -128,6 +128,9 @@ class ManybodyRecordSocket(BaseRecordSocket):
         for k, v in mb_orm.specification.keywords.items():
             table_rows.append((k, v))
 
+        if mb_orm.specification.program != "qcmanybody":
+            raise RuntimeError(f"Unknown program: {mb_orm.specification.program}")
+
         table_rows.append(("bsse_correction", str(mb_orm.specification.bsse_correction)))
         output += tabulate.tabulate(table_rows, tablefmt="plain")
         output += "\n\n"

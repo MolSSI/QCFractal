@@ -29,7 +29,7 @@ def test_manybody_full_1(fulltest_client: PortalClient):
 
     meta, ids = fulltest_client.add_manybodys(
         initial_molecules=[molecule],
-        program="manybody",
+        program="qcmanybody",
         bsse_correction=["nocp"],
         levels=levels,
         keywords={"return_total_data": True},
@@ -85,7 +85,7 @@ def test_manybody_full_2(fulltest_client: PortalClient):
 
     meta, ids = fulltest_client.add_manybodys(
         initial_molecules=[molecule],
-        program="manybody",
+        program="qcmanybody",
         bsse_correction=["nocp", "cp", "vmfc"],
         levels=levels,
         keywords={"return_total_data": True},

@@ -83,7 +83,7 @@ def create_datasets(
         datasets[n] = client.add_dataset("manybody", f"{dataset_basename}: {nmer_names[n - 1]}")
 
         mb_spec = ManybodySpecification(
-            program="manybody",
+            program="qcmanybody",
             levels={k: qc_specification for k in range(1, n + 1)},
             bsse_correction=bsse_correction,
             keywords=manybody_keywords,
