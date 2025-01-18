@@ -1249,13 +1249,15 @@ class RecordSocket:
             type_map[result.schema_name].append((idx, result))
 
         # Key is the index in the original "results" dict
-        to_add: Dict[int, BaseRecordORM] = {}
+        to_add: List[Tuple[int, BaseRecordORM]] = []
 
         for schema_name, idx_results in type_map.items():
             # Get the outputs & status, storing in the history orm.
             # Do this before calling the individual record handlers since it modifies extras
             # (looking for compressed outputs and compressed native files)
 
+            # idx_results is a list of tuple (idx, result). idx is the index in the
+            # original results (function parameter)
             type_results = [r for _, r in idx_results]
             history_orms = [self.create_compute_history_entry(r) for r in type_results]
             native_files_orms = [self.create_native_files_orms(r) for r in type_results]
@@ -1264,7 +1266,9 @@ class RecordSocket:
             handler = self._handler_map_by_schema[schema_name]
             record_orms = handler.insert_complete_records(session, type_results)
 
-            for record_orm, (idx, type_result) in zip(record_orms, idx_results):
+            for record_orm, history_orm, native_files_orm, (idx, type_result) in zip(
+                record_orms, history_orms, native_files_orms, idx_results
+            ):
                 record_orm.is_service = False
 
                 # Now extras and properties
@@ -1273,21 +1277,23 @@ class RecordSocket:
                 record_orm.properties = properties
 
                 # Now back to the common modifications
-                record_orm.compute_history.append(history_orms[idx])
-                record_orm.native_files = native_files_orms[idx]
-                record_orm.status = history_orms[idx].status
-                record_orm.modified_on = history_orms[idx].modified_on
+                record_orm.compute_history.append(history_orm)
+                record_orm.native_files = native_files_orm
+                record_orm.status = history_orm.status
+                record_orm.modified_on = history_orm.modified_on
 
-                to_add[idx] = record_orm
+                to_add.append((idx, record_orm))
 
-        to_add_orm = sorted(to_add.items())
+        to_add.sort()
 
         # Check that everything is in the original order
-        assert to_add_orm[0][0] == 0 and to_add_orm[-1][0] == len(to_add_orm) - 1 and len(to_add_orm) == len(results)
+        assert tuple(idx for idx, _ in to_add) == tuple(range(len(to_add)))
+        to_add_orm = [o for _, o in to_add]
 
-        session.add_all(o for _, o in to_add_orm)
+        session.add_all(to_add_orm)
         session.flush()
-        return [x[1].id for x in to_add_orm]
+
+        return [o.id for o in to_add_orm]
 
     def add_comment(
         self, record_ids: Sequence[int], user_id: Optional[int], comment: str, *, session: Optional[Session] = None

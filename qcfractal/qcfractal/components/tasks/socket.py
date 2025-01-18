@@ -139,12 +139,14 @@ class TaskSocket:
                 result = pydantic.parse_obj_as(AllResultTypes, result_dict)
 
                 notify_status = None
+
+                ##################################################################
+                # The rest of the checks are done in a try/except block because
+                # they are much more complicated and can result in exceptions
+                # which should be handled
+                ##################################################################
+
                 try:
-                    ##################################################################
-                    # The rest of these are done in a try/except block because
-                    # they are much more complicated and can result in exceptions
-                    # which should be handled
-                    ##################################################################
                     savepoint = session.begin_nested()
 
                     # Failed task returning FailedOperation
