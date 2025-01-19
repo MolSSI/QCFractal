@@ -1202,12 +1202,18 @@ class RecordSocket:
             parent_created_on = service_orm.record.created_on
 
             stmt = """
+                WITH tq_cte AS (
+                    SELECT tq.id FROM task_queue tq
+                    INNER JOIN service_dependency sd ON tq.record_id = sd.record_id
+                    WHERE sd.service_id = :service_id
+                    AND tq.available = true
+                    AND tq.sort_date > :parent_created_on
+                    FOR UPDATE OF tq SKIP LOCKED
+                )
                 UPDATE task_queue AS tq
-                SET sort_date = LEAST(sort_date, :parent_created_on)
-                FROM service_dependency AS sd
-                WHERE tq.record_id = sd.record_id
-                  AND sd.service_id = :service_id
-                  AND tq.available = true
+                SET sort_date = :parent_created_on
+                FROM tq_cte
+                WHERE tq_cte.id = tq.id
             """
 
             session.execute(text(stmt), {"parent_created_on": parent_created_on, "service_id": service_orm.id})
