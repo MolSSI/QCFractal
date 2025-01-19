@@ -303,7 +303,7 @@ def test_singlepoint_socket_insert(storage_socket: SQLAlchemySocket, session: Se
 
     # Actually insert the whole thing
     with storage_socket.session_scope() as session2:
-        dup_id = storage_socket.records.insert_complete_records(session2, [result_copy])
+        dup_id = storage_socket.records.insert_complete_schema_v1(session2, [result_copy])
 
     recs = [session.get(SinglepointRecordORM, id2[0]), session.get(SinglepointRecordORM, dup_id)]
 

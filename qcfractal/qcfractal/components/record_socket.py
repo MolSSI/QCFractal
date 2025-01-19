@@ -203,13 +203,13 @@ class BaseRecordSocket:
         """
         raise NotImplementedError(f"updated_completed not implemented for {type(self)}! This is a developer error")
 
-    def insert_complete_records(
+    def insert_complete_schema_v1(
         self,
         session: Session,
         results: Sequence[AllResultTypes],
     ) -> List[BaseRecordORM]:
         """
-        Create new ORMs based on the result of a successfully-completed computations
+        Insert records into the database from a QCSchema result
 
         This will always create new ORMs from scratch, and not update any existing records.
         """
@@ -1235,9 +1235,9 @@ class RecordSocket:
         record_orm.status = RecordStatusEnum.error
         record_orm.modified_on = now_at_utc()
 
-    def insert_complete_records(self, session: Session, results: Sequence[AllResultTypes]) -> List[int]:
+    def insert_complete_schema_v1(self, session: Session, results: Sequence[AllResultTypes]) -> List[int]:
         """
-        Create new ORMs based on the result of successfully-completed computations
+        Insert records into the database from a QCSchema result
 
         This will always create new ORMs from scratch, and not update any existing records.
         """
@@ -1270,7 +1270,7 @@ class RecordSocket:
 
             # Now the record-specific stuff
             handler = self._handler_map_by_schema[schema_name]
-            record_orms = handler.insert_complete_records(session, type_results)
+            record_orms = handler.insert_complete_schema_v1(session, type_results)
 
             for record_orm, history_orm, native_files_orm, (idx, type_result) in zip(
                 record_orms, history_orms, native_files_orms, idx_results

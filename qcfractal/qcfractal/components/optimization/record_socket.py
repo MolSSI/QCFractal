@@ -131,7 +131,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
             raise RuntimeError("Unable to add final molecule: " + meta.error_string)
 
         # Insert the trajectory
-        traj_ids = self.root_socket.records.insert_complete_records(session, result.trajectory)
+        traj_ids = self.root_socket.records.insert_complete_schema_v1(session, result.trajectory)
 
         for position, traj_id in enumerate(traj_ids):
             assoc_orm = OptimizationTrajectoryORM(singlepoint_id=traj_id)
