@@ -915,8 +915,6 @@ class RecordSocket:
         Retrieves status and (possibly compressed) outputs from a result, and creates
         a record computation history entry
         """
-        logger = logging.getLogger(__name__)
-
         history_orm = RecordComputeHistoryORM()
         history_orm.status = RecordStatusEnum.complete if result.success else RecordStatusEnum.error
         history_orm.provenance = result.provenance.dict()
@@ -937,17 +935,13 @@ class RecordSocket:
                 history_orm.outputs[output_type] = out_orm
 
         else:
-            # This generally shouldn't happen, but if they aren't compressed, check for uncompressed
             if result.stdout is not None:
-                logger.warning(f"Found uncompressed stdout for record id {result.id}")
                 stdout_orm = self.create_output_orm(OutputTypeEnum.stdout, result.stdout)
                 history_orm.outputs["stdout"] = stdout_orm
             if result.stderr is not None:
-                logger.warning(f"Found uncompressed stderr for record id {result.id}")
                 stderr_orm = self.create_output_orm(OutputTypeEnum.stderr, result.stderr)
                 history_orm.outputs["stderr"] = stderr_orm
             if result.error is not None:
-                logger.warning(f"Found uncompressed error for record id {result.id}")
                 error_orm = self.create_output_orm(OutputTypeEnum.error, result.error.dict())
                 history_orm.outputs["error"] = error_orm
 
@@ -958,20 +952,38 @@ class RecordSocket:
         Convert the native files stored in a QCElemental result to an ORM
         """
 
-        compressed_nf = result.extras.pop("_qcfractal_compressed_native_files", {})
+        compressed_nf = result.extras.pop("_qcfractal_compressed_native_files", None)
 
-        native_files = {}
-        for name, nf_data in compressed_nf.items():
-            # nf_data is a dictionary with keys 'data', 'compression_type', "compression_level"
-            nf_orm = NativeFileORM(
-                name=name,
-                compression_type=nf_data["compression_type"],
-                compression_level=nf_data["compression_level"],
-                data=nf_data["data"],
-            )
-            native_files[name] = nf_orm
+        if compressed_nf is not None:
+            native_files = {}
+            for name, nf_data in compressed_nf.items():
+                # nf_data is a dictionary with keys 'data', 'compression_type', "compression_level"
+                nf_orm = NativeFileORM(
+                    name=name,
+                    compression_type=nf_data["compression_type"],
+                    compression_level=nf_data["compression_level"],
+                    data=nf_data["data"],
+                )
+                native_files[name] = nf_orm
 
-        return native_files
+            return native_files
+        elif "native_files" in result.__fields__:  # Not compressed, but part of result
+            native_files = {}
+            for name, nf_data in result.native_files.items():
+
+                compressed_data, compression_type, compression_level = compress(nf_data, CompressionEnum.zstd)
+                nf_orm = NativeFileORM(
+                    name=name,
+                    compression_type=compression_type,
+                    compression_level=compression_level,
+                    data=compressed_data,
+                )
+
+                native_files[name] = nf_orm
+
+            return native_files
+        else:
+            return {}
 
     def create_output_orm(self, output_type: OutputTypeEnum, output: Any) -> OutputStoreORM:
         compressed_out, compression_type, compression_level = compress(output, CompressionEnum.zstd)
