@@ -7,8 +7,8 @@ import pytest
 from qcarchivetesting import load_molecule_data
 from qcfractal.components.optimization.record_db_models import OptimizationRecordORM
 from qcfractal.components.optimization.testing_helpers import test_specs, load_test_data, run_test_data
+from qcfractal.components.testing_helpers import convert_to_plain_qcschema_result
 from qcfractal.db_socket import SQLAlchemySocket
-from qcportal.compression import decompress
 from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule
 from qcportal.optimization import (
@@ -21,11 +21,54 @@ from qcportal.singlepoint import (
     SinglepointProtocols,
 )
 from qcportal.utils import now_at_utc
+from ..record_socket import build_extras_properties
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from sqlalchemy.orm.session import Session
     from typing import List, Dict
+
+
+def _compare_record_with_schema(record_orm, result_schema):
+    assert record_orm.status == RecordStatusEnum.complete
+    assert record_orm.specification.program == result_schema.provenance.creator.lower()
+
+    kw_no_prog = result_schema.keywords.copy()
+    kw_no_prog["program"] = result_schema.keywords["program"]
+    assert kw_no_prog == result_schema.keywords
+
+    # The singlepoint spec
+    assert record_orm.specification.qc_specification.program == result_schema.keywords["program"]
+    assert record_orm.specification.qc_specification.method == result_schema.input_specification.model.method
+    assert record_orm.specification.qc_specification.basis == result_schema.input_specification.model.basis
+    assert record_orm.specification.qc_specification.keywords == result_schema.input_specification.keywords
+
+    assert len(record_orm.compute_history) == 1
+    assert record_orm.compute_history[0].status == RecordStatusEnum.complete
+    assert record_orm.compute_history[0].provenance == result_schema.provenance
+
+    # Test the trajectory
+    assert len(record_orm.trajectory) == len(result_schema.trajectory)
+    for db_traj, res_traj in zip(record_orm.trajectory, result_schema.trajectory):
+        assert db_traj.singlepoint_record.specification.program == res_traj.provenance.creator.lower()
+        assert db_traj.singlepoint_record.specification.basis == res_traj.model.basis
+        assert db_traj.singlepoint_record.molecule.identifiers["molecule_hash"] == res_traj.molecule.get_hash()
+
+    # Use plain schema, where compressed stuff is removed
+    new_extras, new_properties = build_extras_properties(result_schema.copy(deep=True))
+    assert record_orm.properties == new_properties
+    assert record_orm.extras == new_extras
+
+    # TODO - eventually schema may have these
+    assert record_orm.native_files == {}
+
+    for k in ("stdout", "stderr", "error"):
+        plain_output = getattr(result_schema, k)
+        if plain_output is not None:
+            out_str = record_orm.compute_history[0].outputs[k].get_output()
+            assert out_str == plain_output
+        else:
+            assert k not in record_orm.compute_history[0].outputs
 
 
 @pytest.mark.parametrize("spec", test_specs)
@@ -240,50 +283,42 @@ def test_optimization_socket_run(
 
     for rec_id, result in zip(all_id, all_results):
         record = session.get(OptimizationRecordORM, rec_id)
-        assert record.status == RecordStatusEnum.complete
-        assert record.specification.program == result.provenance.creator.lower()
 
-        kw_no_prog = result.keywords.copy()
-        kw_no_prog["program"] = result.keywords["program"]
-        assert kw_no_prog == result.keywords
+        plain_result = convert_to_plain_qcschema_result(result)
+        _compare_record_with_schema(record, plain_result)
 
-        # The singlepoint spec
-        assert record.specification.qc_specification.program == result.keywords["program"]
-        assert record.specification.qc_specification.method == result.input_specification.model.method
-        assert record.specification.qc_specification.basis == result.input_specification.model.basis
-        assert record.specification.qc_specification.keywords == result.input_specification.keywords
 
-        assert len(record.compute_history) == 1
-        assert record.compute_history[0].status == RecordStatusEnum.complete
-        assert record.compute_history[0].provenance == result.provenance
+def test_optimization_socket_insert_complete_schema_v1(storage_socket: SQLAlchemySocket, session: Session):
+    test_names = [
+        "opt_psi4_benzene",
+        "opt_psi4_fluoroethane_notraj",
+        "opt_psi4_methane",
+        "opt_psi4_methane_sometraj",
+    ]
 
-        desc_info = storage_socket.records.get_short_descriptions([rec_id])[0]
-        short_desc = desc_info["description"]
-        assert desc_info["record_type"] == record.record_type
-        assert desc_info["created_on"] == record.created_on
-        assert record.specification.program in short_desc
-        assert record.specification.qc_specification.program in short_desc
-        assert record.specification.qc_specification.method in short_desc
+    all_ids = []
 
-        outs = record.compute_history[0].outputs
+    for test_name in test_names:
+        _, _, result_schema = load_test_data(test_name)
 
-        avail_outputs = set(outs.keys())
-        result_outputs = {x for x in ["stdout", "stderr", "error"] if getattr(result, x, None) is not None}
-        compressed_outputs = result.extras.get("_qcfractal_compressed_outputs", {})
-        result_outputs |= set(compressed_outputs.keys())
-        assert avail_outputs == result_outputs
+        plain_schema = convert_to_plain_qcschema_result(result_schema)
 
-        # NOTE - this only works for string outputs (not dicts)
-        # but those are used for errors, which aren't covered here
-        for out in outs.values():
-            o_str = out.get_output()
-            co = result.extras["_qcfractal_compressed_outputs"][out.output_type]
-            ro = decompress(co["data"], co["compression_type"])
-            assert o_str == ro
+        # Need a full copy of results - they can get mutated
+        with storage_socket.session_scope() as session2:
+            ins_ids_1 = storage_socket.records.insert_complete_schema_v1(session2, [result_schema.copy(deep=True)])
+            ins_ids_2 = storage_socket.records.insert_complete_schema_v1(session2, [plain_schema.copy(deep=True)])
 
-        # Test the trajectory
-        assert len(record.trajectory) == len(result.trajectory)
-        for db_traj, res_traj in zip(record.trajectory, result.trajectory):
-            assert db_traj.singlepoint_record.specification.program == res_traj.provenance.creator.lower()
-            assert db_traj.singlepoint_record.specification.basis == res_traj.model.basis
-            assert db_traj.singlepoint_record.molecule.identifiers["molecule_hash"] == res_traj.molecule.get_hash()
+        ins_id_1 = ins_ids_1[0]
+        ins_id_2 = ins_ids_2[0]
+
+        # insert_complete_schema always inserts
+        assert ins_id_1 != ins_id_2
+        assert ins_id_1 not in all_ids
+        assert ins_id_2 not in all_ids
+        all_ids.extend([ins_id_1, ins_id_2])
+
+        rec_1 = session.get(OptimizationRecordORM, ins_id_1)
+        rec_2 = session.get(OptimizationRecordORM, ins_id_2)
+
+        _compare_record_with_schema(rec_1, plain_schema)
+        _compare_record_with_schema(rec_2, plain_schema)
