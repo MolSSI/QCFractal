@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from qcelemental.models import (
     OptimizationResult as QCEl_OptimizationResult,
 )
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import lazyload, joinedload, selectinload, defer, undefer, load_only
 
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
@@ -123,24 +123,30 @@ class OptimizationRecordSocket(BaseRecordSocket):
         # Return in the input order
         return [task_specs[rid] for rid in record_ids]
 
-    def update_completed_task(
-        self, session: Session, record_orm: OptimizationRecordORM, result: QCEl_OptimizationResult, manager_name: str
-    ) -> None:
+    def update_completed_task(self, session: Session, record_id: int, result: QCEl_OptimizationResult) -> None:
+
         # Add the final molecule
         meta, final_mol_id = self.root_socket.molecules.add([result.final_molecule], session=session)
         if not meta.success:
             raise RuntimeError("Unable to add final molecule: " + meta.error_string)
 
         # Insert the trajectory
-        traj_ids = self.root_socket.records.insert_complete_record(session, result.trajectory)
-        record_orm.trajectory = []
+        traj_ids = self.root_socket.records.insert_complete_schema_v1(session, result.trajectory)
+
         for position, traj_id in enumerate(traj_ids):
             assoc_orm = OptimizationTrajectoryORM(singlepoint_id=traj_id)
-            record_orm.trajectory.append(assoc_orm)
+            assoc_orm.optimization_id = record_id
+            assoc_orm.position = position
+            session.add(assoc_orm)
 
         # Update the fields themselves
-        record_orm.final_molecule_id = final_mol_id[0]
-        record_orm.energies = result.energies
+        record_updates = {
+            "final_molecule_id": final_mol_id[0],
+            "energies": result.energies,
+        }
+
+        stmt = update(OptimizationRecordORM).where(OptimizationRecordORM.id == record_id).values(record_updates)
+        session.execute(stmt)
 
     def add_specifications(
         self, opt_specs: Sequence[OptimizationSpecification], *, session: Optional[Session] = None

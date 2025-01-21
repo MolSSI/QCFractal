@@ -98,63 +98,68 @@ class SinglepointRecordSocket(BaseRecordSocket):
         # Return in the input order
         return [task_specs[rid] for rid in record_ids]
 
-    def wavefunction_to_orm(
-        self, session: Session, wavefunction: Optional[WavefunctionProperties]
-    ) -> Optional[WavefunctionORM]:
+    def create_wavefunction_orm(self, wavefunction: WavefunctionProperties) -> WavefunctionORM:
         """
         Convert a QCElemental wavefunction into a wavefunction ORM
         """
 
-        if wavefunction is None:
-            return None
-
         wfn_dict = wavefunction.dict(encoding="json")
         cdata, ctype, clevel = compress(wfn_dict, CompressionEnum.zstd)
 
-        wfn_orm = WavefunctionORM(compression_type=ctype, compression_level=clevel, data=cdata)
+        return WavefunctionORM(compression_type=ctype, compression_level=clevel, data=cdata)
 
-        return wfn_orm
-
-    def update_completed_task(
-        self, session: Session, record_orm: SinglepointRecordORM, result: QCEl_AtomicResult, manager_name: str
-    ) -> None:
+    def update_completed_task(self, session: Session, record_id: int, result: QCEl_AtomicResult) -> None:
         # Update the fields themselves
-        record_orm.wavefunction = self.wavefunction_to_orm(session, result.wavefunction)
+        if result.wavefunction:
+            wavefunction_orm = self.create_wavefunction_orm(result.wavefunction)
+            wavefunction_orm.record_id = record_id
+            session.add(wavefunction_orm)
 
-    def insert_complete_record(
+    def insert_complete_schema_v1(
         self,
         session: Session,
-        result: QCEl_AtomicResult,
-    ) -> SinglepointRecordORM:
-        qc_spec = QCSpecification(
-            program=result.provenance.creator.lower(),
-            driver=result.driver,
-            method=result.model.method,
-            basis=result.model.basis,
-            keywords=result.keywords,
-            protocols=result.protocols,
-        )
+        results: Sequence[QCEl_AtomicResult],
+    ) -> List[SinglepointRecordORM]:
 
-        spec_meta, spec_id = self.add_specification(qc_spec, session=session)
-        if not spec_meta.success:
-            raise RuntimeError(
-                "Aborted single point insertion - could not add specification: " + spec_meta.error_string
+        ret = []
+
+        mols = []
+        qc_specs = []
+
+        for result in results:
+            mols.append(result.molecule)
+
+            qc_spec = QCSpecification(
+                program=result.provenance.creator.lower(),
+                driver=result.driver,
+                method=result.model.method,
+                basis=result.model.basis,
+                keywords=result.keywords,
+                protocols=result.protocols,
+            )
+            qc_specs.append(qc_spec)
+
+        meta, spec_ids = self.root_socket.records.singlepoint.add_specifications(qc_specs, session=session)
+        if not meta.success:
+            raise RuntimeError("Aborted single point insertion - could not add specifications: " + meta.error_string)
+
+        meta, mol_ids = self.root_socket.molecules.add(mols, session=session)
+        if not meta.success:
+            raise RuntimeError("Aborted single point insertion - could not add molecules: " + meta.error_string)
+
+        for result, mol_id, spec_id in zip(results, mol_ids, spec_ids):
+            record_orm = SinglepointRecordORM(
+                specification_id=spec_id,
+                molecule_id=mol_id,
+                status=RecordStatusEnum.complete,
             )
 
-        mol_meta, mol_ids = self.root_socket.molecules.add([result.molecule], session=session)
-        if not mol_meta.success:
-            raise RuntimeError("Aborted single point insertion - could not add molecule: " + spec_meta.error_string)
+            if result.wavefunction:
+                record_orm.wavefunction = self.create_wavefunction_orm(result.wavefunction)
 
-        record_orm = SinglepointRecordORM()
-        record_orm.is_service = False
-        record_orm.specification_id = spec_id
-        record_orm.molecule_id = mol_ids[0]
-        record_orm.status = RecordStatusEnum.complete
-        record_orm.wavefunction = self.wavefunction_to_orm(session, result.wavefunction)
+            ret.append(record_orm)
 
-        session.add(record_orm)
-        session.flush()
-        return record_orm
+        return ret
 
     def add_specifications(
         self, qc_specs: Sequence[QCSpecification], *, session: Optional[Session] = None
