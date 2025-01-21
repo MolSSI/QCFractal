@@ -19,6 +19,7 @@ from qcfractal.components.auth.db_models import UserIDMapSubquery
 from qcfractal.db_socket.helpers import get_query_proj_options
 from qcportal.exceptions import MissingDataError
 from qcportal.internal_jobs.models import InternalJobStatusEnum, InternalJobQueryFilters
+from qcportal.serialization import encode_to_json
 from qcportal.utils import now_at_utc
 from .db_models import InternalJobORM
 from .status import JobProgress, CancelledJobException, JobRunnerStoppingException
@@ -361,7 +362,7 @@ class InternalJobSocket:
             job_orm.status = InternalJobStatusEnum.complete
             job_orm.progress = 100
             job_orm.progress_description = "Complete"
-            job_orm.result = result
+            job_orm.result = encode_to_json(result)
 
         # Job itself is being cancelled
         except CancelledJobException:

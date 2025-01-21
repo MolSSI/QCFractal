@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from qcfractal.components.dataset_socket import BaseDatasetSocket
 from qcfractal.components.reaction.record_db_models import ReactionRecordORM
+from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.reaction import ReactionDatasetNewEntry, ReactionSpecification
 from qcportal.record_models import PriorityEnum
 from .dataset_db_models import (
@@ -18,7 +19,6 @@ from .dataset_db_models import (
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
-    from qcportal.metadata_models import InsertMetadata
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from typing import Optional, Sequence, Iterable, Tuple
 
@@ -87,7 +87,11 @@ class ReactionDatasetSocket(BaseDatasetSocket):
         owner_user_id: Optional[int],
         owner_group_id: Optional[int],
         find_existing: bool,
-    ):
+    ) -> InsertCountsMetadata:
+
+        n_inserted = 0
+        n_existing = 0
+
         # Weed out any with additional keywords
         special_entries = [x for x in entry_orm if x.additional_keywords]
         normal_entries = [x for x in entry_orm if not x.additional_keywords]
@@ -113,6 +117,9 @@ class ReactionDatasetSocket(BaseDatasetSocket):
                     dataset_id=dataset_id, entry_name=entry.name, specification_name=spec.name, record_id=oid
                 )
                 session.add(rec)
+
+            n_inserted += meta.n_inserted
+            n_existing += meta.n_existing
 
         # Now the ones with additional keywords
         for spec in spec_orm:
@@ -147,3 +154,8 @@ class ReactionDatasetSocket(BaseDatasetSocket):
                         record_id=rxn_ids[0],
                     )
                     session.add(rec)
+
+                n_inserted += meta.n_inserted
+                n_existing += meta.n_existing
+
+        return InsertCountsMetadata(n_inserted=n_inserted, n_existing=n_existing)

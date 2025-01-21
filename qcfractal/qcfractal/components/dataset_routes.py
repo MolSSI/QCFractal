@@ -207,6 +207,22 @@ def submit_dataset_v1(dataset_type: str, dataset_id: int, body_data: DatasetSubm
     )
 
 
+@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/background_submit", methods=["POST"])
+@wrap_route("WRITE")
+def background_submit_dataset_v1(dataset_type: str, dataset_id: int, body_data: DatasetSubmitBody):
+    ds_socket = storage_socket.datasets.get_socket(dataset_type)
+    return ds_socket.background_submit(
+        dataset_id,
+        entry_names=body_data.entry_names,
+        specification_names=body_data.specification_names,
+        tag=body_data.tag,
+        priority=body_data.priority,
+        owner_user=g.username,
+        owner_group=body_data.owner_group,
+        find_existing=body_data.find_existing,
+    )
+
+
 ###################
 # Specifications
 ###################
