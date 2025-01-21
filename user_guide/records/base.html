@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Base Record &#8212; QCArchive 0.57.post80+g260aca00 documentation</title>
+    <title>Base Record &#8212; QCArchive 0.57.post88+g78a3b15f documentation</title>
   
   
   
@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=0752dea3"></script>
+    <script src="../../_static/documentation_options.js?v=a1fd7a70"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Computation Types" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.57.post80+g260aca00" />
+  <meta name="docsearch:version" content="0.57.post88+g78a3b15f" />
   </head>
   
   
@@ -919,15 +919,48 @@ that can span multiple records</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.submit">
 <span class="sig-name descname"><span class="pre">submit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">find_existing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.submit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.submit" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Create records for this dataset</p>
+<p>This function actually populates the datasets records given the entry and
+specification information.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Submit only records for these entries</p></li>
+<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Submit only records for these specifications</p></li>
+<li><p><strong>tag</strong> (<em>str</em><em> | </em><em>None</em>) – Use this tag for submissions (overrides the dataset default tag)</p></li>
+<li><p><strong>priority</strong> (<a class="reference internal" href="#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a>) – Use this tag for submissions (overrides the dataset default priority)</p></li>
+<li><p><strong>find_existing</strong> (<em>bool</em>) – If True, the database will be searched for existing records that match the requested calculations, and new
+records created for those that don’t match. If False, new records will always be created.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>InsertCountsMetadata</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.background_submit">
+<span class="sig-name descname"><span class="pre">background_submit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">find_existing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.background_submit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.background_submit" title="Link to this definition">#</a></dt>
+<dd><p>Adds a dataset submission internal job to the server</p>
+<p>This internal job is the one to actually do the submission, which can take a while.</p>
+<p>You can check the progress of the internal job using the return object.</p>
+<p>See <span class="xref std std-ref">submit</span> for info on the function parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>An internal job object that can be watch or used to determine the progress of the job.</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
 <li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
 <li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
 <li><p><strong>tag</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>priority</strong> (<a class="reference internal" href="#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a>)</p></li>
 <li><p><strong>find_existing</strong> (<em>bool</em>)</p></li>
 </ul>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../../admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJob" title="qcportal.internal_jobs.models.InternalJob"><em>InternalJob</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -2427,6 +2460,7 @@ of a record query, and works with all kinds of records.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.get_subclass"><code class="docutils literal notranslate"><span class="pre">BaseDataset.get_subclass()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.propagate_client"><code class="docutils literal notranslate"><span class="pre">BaseDataset.propagate_client()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.submit"><code class="docutils literal notranslate"><span class="pre">BaseDataset.submit()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.background_submit"><code class="docutils literal notranslate"><span class="pre">BaseDataset.background_submit()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.get_internal_job"><code class="docutils literal notranslate"><span class="pre">BaseDataset.get_internal_job()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.list_internal_jobs"><code class="docutils literal notranslate"><span class="pre">BaseDataset.list_internal_jobs()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.fetch_attachments"><code class="docutils literal notranslate"><span class="pre">BaseDataset.fetch_attachments()</span></code></a></li>
