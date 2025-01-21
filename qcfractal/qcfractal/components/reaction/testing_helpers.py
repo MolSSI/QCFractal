@@ -6,9 +6,15 @@ try:
     import pydantic.v1 as pydantic
 except ImportError:
     import pydantic
-from qcelemental.models import Molecule, FailedOperation, ComputeError, AtomicResult, OptimizationResult
-
 from qcarchivetesting.helpers import read_record_data
+from qcelemental.models import (
+    Molecule,
+    FailedOperation,
+    ComputeError,
+    AtomicResult as QCEl_AtomicResult,
+    OptimizationResult as QCEl_OptimizationResult,
+)
+
 from qcfractal.components.reaction.record_db_models import ReactionRecordORM
 from qcfractal.testing_helpers import run_service
 from qcportal.reaction import ReactionSpecification, ReactionKeywords
@@ -71,13 +77,15 @@ def generate_task_key(task: RecordTask):
 
 def load_test_data(
     name: str,
-) -> Tuple[ReactionSpecification, List[Tuple[float, Molecule]], Dict[str, Union[AtomicResult, OptimizationResult]]]:
+) -> Tuple[
+    ReactionSpecification, List[Tuple[float, Molecule]], Dict[str, Union[QCEl_AtomicResult, QCEl_OptimizationResult]]
+]:
     test_data = read_record_data(name)
 
     return (
         pydantic.parse_obj_as(ReactionSpecification, test_data["specification"]),
         pydantic.parse_obj_as(List[Tuple[float, Molecule]], test_data["stoichiometry"]),
-        pydantic.parse_obj_as(Dict[str, Union[AtomicResult, OptimizationResult]], test_data["results"]),
+        pydantic.parse_obj_as(Dict[str, Union[QCEl_AtomicResult, QCEl_OptimizationResult]], test_data["results"]),
     )
 
 
@@ -86,7 +94,7 @@ def submit_test_data(
     name: str,
     tag: Optional[str] = "*",
     priority: PriorityEnum = PriorityEnum.normal,
-) -> Tuple[int, Dict[str, Union[AtomicResult, OptimizationResult]]]:
+) -> Tuple[int, Dict[str, Union[QCEl_AtomicResult, QCEl_OptimizationResult]]]:
     input_spec, stoich, result = load_test_data(name)
     meta, record_ids = storage_socket.records.reaction.add([stoich], input_spec, tag, priority, None, None, True)
     assert meta.success

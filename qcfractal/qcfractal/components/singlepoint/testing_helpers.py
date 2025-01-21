@@ -6,9 +6,14 @@ try:
     import pydantic.v1 as pydantic
 except ImportError:
     import pydantic
-from qcelemental.models import Molecule, FailedOperation, ComputeError, AtomicResult
-
 from qcarchivetesting.helpers import read_record_data
+from qcelemental.models import (
+    Molecule,
+    FailedOperation,
+    ComputeError,
+    AtomicResult as QCEl_AtomicResult,
+)
+
 from qcfractal.components.singlepoint.record_db_models import SinglepointRecordORM
 from qcfractalcompute.compress import compress_result
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
@@ -53,13 +58,13 @@ test_specs = [
 ]
 
 
-def load_test_data(name: str) -> Tuple[QCSpecification, Molecule, AtomicResult]:
+def load_test_data(name: str) -> Tuple[QCSpecification, Molecule, QCEl_AtomicResult]:
     test_data = read_record_data(name)
 
     return (
         pydantic.parse_obj_as(QCSpecification, test_data["specification"]),
         pydantic.parse_obj_as(Molecule, test_data["molecule"]),
-        pydantic.parse_obj_as(AtomicResult, test_data["result"]),
+        pydantic.parse_obj_as(QCEl_AtomicResult, test_data["result"]),
     )
 
 
@@ -69,7 +74,7 @@ def submit_test_data(
     tag: Optional[str] = "*",
     priority: PriorityEnum = PriorityEnum.normal,
     find_existing: bool = True,
-) -> Tuple[int, AtomicResult]:
+) -> Tuple[int, QCEl_AtomicResult]:
     input_spec, molecule, result = load_test_data(name)
     meta, record_ids = storage_socket.records.singlepoint.add(
         [molecule], input_spec, tag, priority, None, None, find_existing

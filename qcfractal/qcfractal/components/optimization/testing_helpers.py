@@ -6,9 +6,14 @@ try:
     import pydantic.v1 as pydantic
 except ImportError:
     import pydantic
-from qcelemental.models import Molecule, FailedOperation, ComputeError, OptimizationResult
-
 from qcarchivetesting.helpers import read_record_data
+from qcelemental.models import (
+    Molecule,
+    FailedOperation,
+    ComputeError,
+    OptimizationResult as QCEl_OptimizationResult,
+)
+
 from qcfractal.components.optimization.record_db_models import OptimizationRecordORM
 from qcfractalcompute.compress import compress_result
 from qcportal.optimization import OptimizationSpecification
@@ -71,13 +76,13 @@ test_specs = [
 ]
 
 
-def load_test_data(name: str) -> Tuple[OptimizationSpecification, Molecule, OptimizationResult]:
+def load_test_data(name: str) -> Tuple[OptimizationSpecification, Molecule, QCEl_OptimizationResult]:
     test_data = read_record_data(name)
 
     return (
         pydantic.parse_obj_as(OptimizationSpecification, test_data["specification"]),
         pydantic.parse_obj_as(Molecule, test_data["initial_molecule"]),
-        pydantic.parse_obj_as(OptimizationResult, test_data["result"]),
+        pydantic.parse_obj_as(QCEl_OptimizationResult, test_data["result"]),
     )
 
 
@@ -86,7 +91,7 @@ def submit_test_data(
     name: str,
     tag: Optional[str] = "*",
     priority: PriorityEnum = PriorityEnum.normal,
-) -> Tuple[int, OptimizationResult]:
+) -> Tuple[int, QCEl_OptimizationResult]:
     input_spec, molecule, result = load_test_data(name)
     meta, record_ids = storage_socket.records.optimization.add([molecule], input_spec, tag, priority, None, None, True)
     assert meta.success
