@@ -20,6 +20,7 @@ from qcportal.optimization import (
 )
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.serialization import convert_numpy_recursive
+from qcportal.singlepoint import QCSpecification
 from qcportal.singlepoint import (
     SinglepointDriver,
 )
@@ -147,6 +148,76 @@ class OptimizationRecordSocket(BaseRecordSocket):
 
         stmt = update(OptimizationRecordORM).where(OptimizationRecordORM.id == record_id).values(record_updates)
         session.execute(stmt)
+
+    def insert_complete_schema_v1(
+        self,
+        session: Session,
+        results: Sequence[QCEl_OptimizationResult],
+    ) -> List[OptimizationRecordORM]:
+
+        ret = []
+
+        initial_mols = []
+        final_mols = []
+        opt_specs = []
+
+        for result in results:
+            initial_mols.append(result.initial_molecule)
+            final_mols.append(result.final_molecule)
+
+            # in v1 of the schema, the qc program is stored as a keyword
+            qc_program = result.keywords.pop("program", "")
+
+            qc_spec = QCSpecification(
+                program=qc_program,
+                driver=result.input_specification.driver,
+                method=result.input_specification.model.method,
+                basis=result.input_specification.model.basis,
+                keywords=result.input_specification.keywords,
+                # no protocols allowed in v1 of the schema
+            )
+
+            opt_spec = OptimizationSpecification(
+                program=result.provenance.creator.lower(),
+                qc_specification=qc_spec,
+                keywords=result.keywords,
+                protocols=result.protocols,
+            )
+
+            opt_specs.append(opt_spec)
+
+        meta, spec_ids = self.root_socket.records.optimization.add_specifications(opt_specs, session=session)
+        if not meta.success:
+            raise RuntimeError("Aborted optimization insertion - could not add specifications: " + meta.error_string)
+
+        meta, initial_mol_ids = self.root_socket.molecules.add(initial_mols, session=session)
+        if not meta.success:
+            raise RuntimeError("Aborted optimization insertion - could not add initial molecules: " + meta.error_string)
+
+        meta, final_mol_ids = self.root_socket.molecules.add(final_mols, session=session)
+        if not meta.success:
+            raise RuntimeError("Aborted optimization insertion - could not add final molecules: " + meta.error_string)
+
+        for result, initial_mol_id, final_mol_id, spec_id in zip(results, initial_mol_ids, final_mol_ids, spec_ids):
+            record_orm = OptimizationRecordORM(
+                specification_id=spec_id,
+                initial_molecule_id=initial_mol_id,
+                final_molecule_id=final_mol_id,
+                energies=result.energies,
+                status=RecordStatusEnum.complete,
+            )
+
+            if result.trajectory:
+                trajectory_ids = self.root_socket.records.insert_complete_schema_v1(session, result.trajectory)
+                opt_traj_orm = [
+                    OptimizationTrajectoryORM(singlepoint_id=tid, position=idx)
+                    for idx, tid in enumerate(trajectory_ids)
+                ]
+                record_orm.trajectory = opt_traj_orm
+
+            ret.append(record_orm)
+
+        return ret
 
     def add_specifications(
         self, opt_specs: Sequence[OptimizationSpecification], *, session: Optional[Session] = None

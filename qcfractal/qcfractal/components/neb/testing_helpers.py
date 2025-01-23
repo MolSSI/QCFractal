@@ -6,9 +6,15 @@ try:
     import pydantic.v1 as pydantic
 except ImportError:
     import pydantic
-from qcelemental.models import Molecule, FailedOperation, ComputeError, AtomicResult, OptimizationResult
-
 from qcarchivetesting.helpers import read_record_data
+from qcelemental.models import (
+    Molecule,
+    FailedOperation,
+    ComputeError,
+    AtomicResult as QCEl_AtomicResult,
+    OptimizationResult as QCEl_OptimizationResult,
+)
+
 from qcfractal.components.neb.record_db_models import NEBRecordORM
 from qcfractal.testing_helpers import run_service
 from qcportal.generic_result import GenericTaskResult
@@ -91,14 +97,16 @@ def generate_task_key(task: RecordTask):
 
 def load_test_data(
     name: str,
-) -> Tuple[NEBSpecification, List[Molecule], Dict[str, Union[AtomicResult, OptimizationResult, GenericTaskResult]]]:
+) -> Tuple[
+    NEBSpecification, List[Molecule], Dict[str, Union[QCEl_AtomicResult, QCEl_OptimizationResult, GenericTaskResult]]
+]:
     test_data = read_record_data(name)
 
     return (
         pydantic.parse_obj_as(NEBSpecification, test_data["specification"]),
         pydantic.parse_obj_as(List[Molecule], test_data["initial_chain"]),
         pydantic.parse_obj_as(
-            Dict[str, Union[AtomicResult, OptimizationResult, GenericTaskResult]], test_data["results"]
+            Dict[str, Union[QCEl_AtomicResult, QCEl_OptimizationResult, GenericTaskResult]], test_data["results"]
         ),
     )
 

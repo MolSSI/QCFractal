@@ -7,7 +7,7 @@ try:
     import pydantic.v1 as pydantic
 except ImportError:
     import pydantic
-from qcelemental.models import Molecule, FailedOperation, ComputeError, OptimizationResult
+from qcelemental.models import Molecule, FailedOperation, ComputeError, OptimizationResult as QCEl_OptimizationResult
 from qcelemental.models.procedures import OptimizationProtocols
 
 from qcarchivetesting.helpers import read_record_data
@@ -101,13 +101,13 @@ def generate_task_key(task: RecordTask):
     return mol_hash + "|" + constraints_str
 
 
-def load_test_data(name: str) -> Tuple[GridoptimizationSpecification, Molecule, Dict[str, OptimizationResult]]:
+def load_test_data(name: str) -> Tuple[GridoptimizationSpecification, Molecule, Dict[str, QCEl_OptimizationResult]]:
     test_data = read_record_data(name)
 
     return (
         pydantic.parse_obj_as(GridoptimizationSpecification, test_data["specification"]),
         pydantic.parse_obj_as(Molecule, test_data["initial_molecule"]),
-        pydantic.parse_obj_as(Dict[str, OptimizationResult], test_data["results"]),
+        pydantic.parse_obj_as(Dict[str, QCEl_OptimizationResult], test_data["results"]),
     )
 
 
@@ -116,7 +116,7 @@ def submit_test_data(
     name: str,
     tag: Optional[str] = "*",
     priority: PriorityEnum = PriorityEnum.normal,
-) -> Tuple[int, Dict[str, OptimizationResult]]:
+) -> Tuple[int, Dict[str, QCEl_OptimizationResult]]:
     input_spec, molecule, result = load_test_data(name)
     meta, record_ids = storage_socket.records.gridoptimization.add(
         [molecule], input_spec, tag, priority, None, None, True

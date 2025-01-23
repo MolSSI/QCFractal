@@ -6,7 +6,7 @@ try:
     import pydantic.v1 as pydantic
 except ImportError:
     import pydantic
-from qcelemental.models import Molecule, FailedOperation, ComputeError, AtomicResult
+from qcelemental.models import Molecule, FailedOperation, ComputeError, AtomicResult as QCEl_AtomicResult
 
 from qcarchivetesting.helpers import read_record_data
 from qcfractal.components.manybody.record_db_models import ManybodyRecordORM
@@ -95,13 +95,13 @@ def generate_task_key(task: RecordTask):
     return "singlepoint" + "|" + mol_hash
 
 
-def load_test_data(name: str) -> Tuple[ManybodySpecification, Molecule, Dict[str, AtomicResult]]:
+def load_test_data(name: str) -> Tuple[ManybodySpecification, Molecule, Dict[str, QCEl_AtomicResult]]:
     test_data = read_record_data(name)
 
     return (
         pydantic.parse_obj_as(ManybodySpecification, test_data["specification"]),
         pydantic.parse_obj_as(Molecule, test_data["molecule"]),
-        pydantic.parse_obj_as(Dict[str, AtomicResult], test_data["results"]),
+        pydantic.parse_obj_as(Dict[str, QCEl_AtomicResult], test_data["results"]),
     )
 
 
@@ -110,7 +110,7 @@ def submit_test_data(
     name: str,
     tag: Optional[str] = "*",
     priority: PriorityEnum = PriorityEnum.normal,
-) -> Tuple[int, Dict[str, AtomicResult]]:
+) -> Tuple[int, Dict[str, QCEl_AtomicResult]]:
     input_spec, molecule, result = load_test_data(name)
     meta, record_ids = storage_socket.records.manybody.add([molecule], input_spec, tag, priority, None, None, True)
     assert meta.success
