@@ -115,7 +115,7 @@ def deserialize(data: Union[bytes, str], content_type: str):
         content_type = content_type[12:]
 
     if content_type == "msgpack":
-        return msgpack.loads(data, object_hook=_msgpack_decode, raw=False)
+        return msgpack.loads(data, object_hook=_msgpack_decode, raw=False, strict_map_key=False)
     elif content_type == "json":
         # JSON stored as bytes? Decode into a string for json to load
         if isinstance(data, bytes):

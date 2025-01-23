@@ -38,6 +38,7 @@ dependencies:
 
   # QCFractal Services
   - torsiondrive
+  - qcmanybody
 
   - pip:
       - "geometric @ git+https://github.com/leeping/geomeTRIC"

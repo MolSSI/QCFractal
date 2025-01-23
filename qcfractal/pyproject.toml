@@ -35,6 +35,7 @@ dependencies = [
 [project.optional-dependencies]
 services = [
     "torsiondrive",
+    "qcmanybody",
 ]
 geoip = [
     "geoip2"

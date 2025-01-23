@@ -7,7 +7,7 @@ import pytest
 
 from qcarchivetesting import load_molecule_data
 from qcfractal.components.manybody.record_db_models import ManybodyRecordORM
-from qcportal.manybody import ManybodySpecification, ManybodyKeywords
+from qcportal.manybody import ManybodySpecification
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification
 from qcportal.utils import now_at_utc
@@ -30,9 +30,15 @@ def test_manybody_client_tag_priority(snowflake_client: PortalClient):
             keywords={"tag_priority": [tag, priority]},
         )
 
-        kw = ManybodyKeywords(max_nbody=1, bsse_correction="none")
-
-        meta1, id1 = snowflake_client.add_manybodys([water], "manybody", sp_spec, kw, tag=tag, priority=priority)
+        meta1, id1 = snowflake_client.add_manybodys(
+            [water],
+            "qcmanybody",
+            bsse_correction=["nocp"],
+            levels={1: sp_spec},
+            keywords={"return_total_data": True},
+            tag=tag,
+            priority=priority,
+        )
 
         assert meta1.n_inserted == 1
         rec = snowflake_client.get_records(id1, include=["service"])
@@ -52,8 +58,9 @@ def test_manybody_client_add_get(
     meta1, id1 = submitter_client.add_manybodys(
         [water2, water4],
         spec.program,
-        spec.singlepoint_specification,
-        spec.keywords,
+        spec.levels,
+        spec.bsse_correction,
+        keywords=spec.keywords,
         tag="tag1",
         priority=PriorityEnum.low,
         owner_group=owner_group,
@@ -97,8 +104,9 @@ def test_manybody_client_add_duplicate(
     meta, id = submitter_client.add_manybodys(
         all_mols,
         spec.program,
-        spec.singlepoint_specification,
-        spec.keywords,
+        spec.levels,
+        spec.bsse_correction,
+        keywords=spec.keywords,
         tag="tag1",
         priority=PriorityEnum.low,
         owner_group=None,
@@ -110,8 +118,9 @@ def test_manybody_client_add_duplicate(
     meta, id2 = submitter_client.add_manybodys(
         all_mols,
         spec.program,
-        spec.singlepoint_specification,
-        spec.keywords,
+        spec.levels,
+        spec.bsse_correction,
+        keywords=spec.keywords,
         tag="tag1",
         priority=PriorityEnum.low,
         owner_group=None,
@@ -141,8 +150,9 @@ def test_manybody_client_add_existing_molecule(snowflake_client: PortalClient):
     meta1, id1 = snowflake_client.add_manybodys(
         [mol1, mol2, mol1],
         spec.program,
-        spec.singlepoint_specification,
-        spec.keywords,
+        spec.levels,
+        spec.bsse_correction,
+        keywords=spec.keywords,
         tag="tag1",
         priority=PriorityEnum.low,
     )
@@ -167,7 +177,7 @@ def test_manybody_client_delete(snowflake: QCATestingSnowflake):
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    mb_id = run_test_data(storage_socket, activated_manager_name, "mb_none_he4_psi4_mp2")
+    mb_id = run_test_data(storage_socket, activated_manager_name, "mb_cp_he4_psi4_mp2")
 
     with storage_socket.session_scope() as session:
         rec = session.get(ManybodyRecordORM, mb_id)
@@ -188,7 +198,7 @@ def test_manybody_client_delete(snowflake: QCATestingSnowflake):
     meta = snowflake_client.delete_records(mb_id, soft_delete=True, delete_children=True)
     assert meta.success
     assert meta.deleted_idx == [0]
-    assert meta.n_children_deleted == len(child_ids)
+    assert meta.n_children_deleted == len(set(child_ids))
 
     child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
     assert all(x.status == RecordStatusEnum.deleted for x in child_recs)
@@ -198,7 +208,7 @@ def test_manybody_client_delete(snowflake: QCATestingSnowflake):
     meta = snowflake_client.delete_records(mb_id, soft_delete=False, delete_children=True)
     assert meta.success
     assert meta.deleted_idx == [0]
-    assert meta.n_children_deleted == len(child_ids)
+    assert meta.n_children_deleted == len(set(child_ids))
 
     recs = snowflake_client.get_manybodys(mb_id, missing_ok=True)
     assert recs is None
@@ -217,7 +227,7 @@ def test_manybody_client_harddelete_nochildren(snowflake: QCATestingSnowflake):
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    mb_id = run_test_data(storage_socket, activated_manager_name, "mb_none_he4_psi4_mp2")
+    mb_id = run_test_data(storage_socket, activated_manager_name, "mb_cp_he4_psi4_mp2")
 
     with storage_socket.session_scope() as session:
         rec = session.get(ManybodyRecordORM, mb_id)
@@ -240,7 +250,7 @@ def test_manybody_client_delete_opt_inuse(snowflake: QCATestingSnowflake):
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    mb_id = run_test_data(storage_socket, activated_manager_name, "mb_none_he4_psi4_mp2")
+    mb_id = run_test_data(storage_socket, activated_manager_name, "mb_cp_he4_psi4_mp2")
 
     with storage_socket.session_scope() as session:
         rec = session.get(ManybodyRecordORM, mb_id)
@@ -258,13 +268,13 @@ def test_manybody_client_query(snowflake: QCATestingSnowflake):
     storage_socket = snowflake.get_storage_socket()
     snowflake_client = snowflake.client()
 
-    id_1, _ = submit_test_data(storage_socket, "mb_none_he4_psi4_mp2")
-    id_2, _ = submit_test_data(storage_socket, "mb_cp_he4_psi4_mp2")
+    id_1, _ = submit_test_data(storage_socket, "mb_cp_he4_psi4_mp2")
+    id_2, _ = submit_test_data(storage_socket, "mb_all_he4_psi4_multiss")
 
     all_mbs = snowflake_client.get_manybodys([id_1, id_2])
     mol_ids = [x.initial_molecule_id for x in all_mbs]
 
-    query_res = snowflake_client.query_manybodys(program=["manybody"])
+    query_res = snowflake_client.query_manybodys(program=["qcmanybody"])
     query_res_l = list(query_res)
     assert len(query_res_l) == 2
 
@@ -304,7 +314,7 @@ def test_manybody_client_query(snowflake: QCATestingSnowflake):
     # query for method
     query_res = snowflake_client.query_manybodys(qc_method=["hf"])
     query_res_l = list(query_res)
-    assert len(query_res_l) == 0
+    assert len(query_res_l) == 1
 
     query_res = snowflake_client.query_manybodys(qc_method=["mp2"])
     query_res_l = list(query_res)

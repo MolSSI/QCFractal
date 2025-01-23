@@ -25,10 +25,14 @@ def test_manybody_full_1(fulltest_client: PortalClient):
         "keywords": {"e_convergence": 1e-10, "d_convergence": 1e-10},
     }
 
-    mb_keywords = {"max_nbody": None, "bsse_correction": "none"}
+    levels = {1: sp_spec, 2: sp_spec, 3: sp_spec, 4: sp_spec}
 
     meta, ids = fulltest_client.add_manybodys(
-        initial_molecules=[molecule], program="manybody", singlepoint_specification=sp_spec, keywords=mb_keywords
+        initial_molecules=[molecule],
+        program="qcmanybody",
+        bsse_correction=["nocp"],
+        levels=levels,
+        keywords={"return_total_data": True},
     )
 
     for i in range(240):
@@ -49,18 +53,42 @@ def test_manybody_full_2(fulltest_client: PortalClient):
         fragments=[[0], [1], [2], [3]],
     )
 
-    sp_spec = {
+    sp_spec_1 = {
         "program": "psi4",
         "driver": "energy",
         "method": "mp2",
-        "basis": "aug-cc-pvdz",
-        "keywords": {"e_convergence": 1e-10, "d_convergence": 1e-10},
+        "basis": "sto-3g",
+        "keywords": {"cc_type": "df", "df_basis_mp2": "def2-qzvpp-ri"},
     }
 
-    mb_keywords = {"max_nbody": 2, "bsse_correction": "cp"}
+    sp_spec_2 = {
+        "program": "psi4",
+        "driver": "energy",
+        "method": "b3lyp",
+        "basis": "sto-3g",
+        "keywords": {"cc_type": "df", "df_basis_mp2": "def2-qzvpp-ri"},
+    }
+
+    sp_spec_3 = {
+        "program": "psi4",
+        "driver": "energy",
+        "method": "hf",
+        "basis": "sto-3g",
+        "keywords": {"cc_type": "df", "df_basis_mp2": "def2-qzvpp-ri"},
+    }
+
+    levels = {
+        1: sp_spec_1,
+        2: sp_spec_2,
+        "supersystem": sp_spec_3,
+    }
 
     meta, ids = fulltest_client.add_manybodys(
-        initial_molecules=[molecule], program="manybody", singlepoint_specification=sp_spec, keywords=mb_keywords
+        initial_molecules=[molecule],
+        program="qcmanybody",
+        bsse_correction=["nocp", "cp", "vmfc"],
+        levels=levels,
+        keywords={"return_total_data": True},
     )
 
     for i in range(240):

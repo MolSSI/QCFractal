@@ -436,9 +436,6 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare, backgr
     assert ds.record_count == 0
     assert ds._client.list_datasets()[0]["record_count"] == 0
 
-    # test_entries[2] should have additional keywords
-    assert test_entries[2].additional_keywords
-
     ds.add_specification("spec_1", test_spec)
     ds.add_entries(test_entries[0])
 

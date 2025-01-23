@@ -54,7 +54,7 @@ class ManybodyDatasetSocket(BaseDatasetSocket):
                 name=entry.name,
                 comment=entry.comment,
                 initial_molecule_id=molecule_id,
-                additional_keywords=entry.additional_keywords,
+                additional_singlepoint_keywords=entry.additional_singlepoint_keywords,
                 attributes=entry.attributes,
             )
 
@@ -80,8 +80,8 @@ class ManybodyDatasetSocket(BaseDatasetSocket):
         n_existing = 0
 
         # Weed out any with additional keywords
-        special_entries = [x for x in entry_orm if x.additional_keywords]
-        normal_entries = [x for x in entry_orm if not x.additional_keywords]
+        special_entries = [x for x in entry_orm if x.additional_singlepoint_keywords]
+        normal_entries = [x for x in entry_orm if not x.additional_singlepoint_keywords]
 
         # Normal entries - just let it rip
         for spec in spec_orm:
@@ -118,7 +118,8 @@ class ManybodyDatasetSocket(BaseDatasetSocket):
                     continue
 
                 new_spec = copy.deepcopy(spec_input_dict)
-                new_spec["keywords"].update(entry.additional_keywords)
+                for v in new_spec["levels"].values():
+                    v["keywords"].update(entry.additional_singlepoint_keywords)
 
                 meta, mb_ids = self.root_socket.records.manybody.add(
                     initial_molecules=[entry.initial_molecule_id],

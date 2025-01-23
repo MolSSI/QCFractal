@@ -9,7 +9,7 @@ from qcfractal.components.manybody.record_db_models import ManybodyRecordORM
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service
 from qcportal.auth import UserInfo, GroupInfo
-from qcportal.manybody import ManybodySpecification, ManybodyKeywords
+from qcportal.manybody import ManybodySpecification
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 from qcportal.utils import now_at_utc
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
 
 
-@pytest.mark.parametrize("spec", test_specs[:1])
+@pytest.mark.parametrize("spec", test_specs)
 def test_manybody_socket_add_get(storage_socket: SQLAlchemySocket, session: Session, spec: ManybodySpecification):
     water2 = load_molecule_data("water_dimer_minima")
     water4 = load_molecule_data("water_stacked")
@@ -53,16 +53,27 @@ def test_manybody_socket_add_get(storage_socket: SQLAlchemySocket, session: Sess
 
 def test_manybody_socket_add_same_1(storage_socket: SQLAlchemySocket):
     spec = ManybodySpecification(
-        program="manybody",
-        keywords=ManybodyKeywords(max_nbody=None, bsse_correction="none"),
-        singlepoint_specification=QCSpecification(
-            program="prog1",
-            driver="energy",
-            method="b3lyp",
-            basis="6-31G*",
-            keywords={"k": "value"},
-            protocols=SinglepointProtocols(wavefunction="all"),
-        ),
+        program="qcmanybody",
+        levels={
+            2: QCSpecification(
+                program="prog1",
+                driver="energy",
+                method="b3lyp",
+                basis="6-31G*",
+                keywords={"k": "value"},
+                protocols=SinglepointProtocols(wavefunction="all"),
+            ),
+            1: QCSpecification(
+                program="prog1",
+                driver="energy",
+                method="b3lyp",
+                basis="6-31G*",
+                keywords={"k": "value"},
+                protocols=SinglepointProtocols(wavefunction="all"),
+            ),
+        },
+        bsse_correction=["nocp"],
+        keywords={"return_total_data": True},
     )
 
     water2 = load_molecule_data("water_dimer_minima")
@@ -83,8 +94,9 @@ def test_manybody_socket_add_same_1(storage_socket: SQLAlchemySocket):
 @pytest.mark.parametrize(
     "test_data_name",
     [
-        "mb_none_he4_psi4_mp2",
         "mb_cp_he4_psi4_mp2",
+        "mb_all_he4_psi4_multi",
+        "mb_all_he4_psi4_multiss",
     ],
 )
 def test_manybody_socket_run(
@@ -124,13 +136,12 @@ def test_manybody_socket_run(
     assert desc_info["record_type"] == rec.record_type
     assert desc_info["created_on"] == rec.created_on
     assert rec.specification.program in short_desc
-    assert rec.specification.singlepoint_specification.program in short_desc
-    assert rec.specification.singlepoint_specification.method in short_desc
 
     out = rec.compute_history[-1].outputs["stdout"].get_output()
     assert "All manybody singlepoint computations are complete" in out
 
-    assert len(rec.clusters) == n_singlepoints
+    unique_sp = set(x.singlepoint_id for x in rec.clusters)
+    assert len(unique_sp) == n_singlepoints
 
 
 def test_manybody_socket_run_duplicate(

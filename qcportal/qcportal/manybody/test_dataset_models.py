@@ -7,7 +7,7 @@ import pytest
 import qcportal.dataset_testing_helpers as ds_helpers
 from qcarchivetesting import load_molecule_data
 from qcportal.dataset_testing_helpers import dataset_submit_test_client
-from qcportal.manybody import ManybodyDatasetNewEntry, ManybodySpecification, ManybodyKeywords, BSSECorrectionEnum
+from qcportal.manybody import ManybodyDatasetNewEntry, ManybodySpecification, BSSECorrectionEnum
 from qcportal.record_models import PriorityEnum
 from qcportal.singlepoint.record_models import QCSpecification
 
@@ -31,42 +31,59 @@ test_entries = [
     ManybodyDatasetNewEntry(
         name="test_mb_3",
         initial_molecule=water4,
-        additional_keywords={"max_nbody": 1234},
+        additional_singlepoint_keywords={"maxiter": 1234},
     ),
 ]
 
 test_specs = [
     ManybodySpecification(
-        singlepoint_specification=QCSpecification(
-            program="prog1", driver="energy", method="b3lyp", basis="6-31g*", keywords={"maxiter": 20}
-        ),
-        keywords=ManybodyKeywords(bsse_correction=BSSECorrectionEnum.none, max_nbody=4),
+        program="qcmanybody",
+        bsse_correction=[BSSECorrectionEnum.nocp, BSSECorrectionEnum.cp],
+        levels={
+            1: QCSpecification(
+                program="prog1", driver="energy", method="b3lyp", basis="6-31g*", keywords={"maxiter": 20}
+            ),
+            2: QCSpecification(program="prog1", driver="energy", method="hf", basis="6-31g*", keywords={"maxiter": 20}),
+        },
+        keywords={"return_total_data": True},
     ),
     ManybodySpecification(
-        singlepoint_specification=QCSpecification(
-            program="prog2", driver="energy", method="hf", basis="sto-3g", keywords={"maxiter": 40}
-        ),
-        keywords=ManybodyKeywords(bsse_correction=BSSECorrectionEnum.none),
+        program="qcmanybody",
+        bsse_correction=[BSSECorrectionEnum.vmfc],
+        levels={
+            1: QCSpecification(
+                program="prog2", driver="energy", method="b3lyp", basis="6-31g*", keywords={"maxiter": 20}
+            ),
+            2: QCSpecification(program="prog2", driver="energy", method="hf", basis="6-31g*", keywords={"maxiter": 20}),
+        },
+        keywords={"return_total_data": True},
     ),
     ManybodySpecification(
-        singlepoint_specification=QCSpecification(
-            program="prog3", driver="energy", method="hf", basis="sto-3g", keywords={"maxiter": 40}
-        ),
-        keywords=ManybodyKeywords(bsse_correction=BSSECorrectionEnum.cp),
+        program="qcmanybody",
+        bsse_correction=[BSSECorrectionEnum.vmfc],
+        levels={
+            1: QCSpecification(
+                program="prog2", driver="energy", method="b3lyp", basis="sto-3g", keywords={"maxiter": 20}
+            ),
+            2: QCSpecification(program="prog2", driver="energy", method="hf", basis="sto-3g", keywords={"maxiter": 20}),
+        },
+        keywords={"return_total_data": True},
     ),
 ]
 
 
 def entry_extra_compare(ent1, ent2):
     assert ent1.initial_molecule == ent2.initial_molecule
-    assert ent1.additional_keywords == ent2.additional_keywords
+    assert ent1.additional_singlepoint_keywords == ent2.additional_singlepoint_keywords
 
 
 def record_compare(rec, ent, spec):
     assert rec.initial_molecule == ent.initial_molecule
 
     merged_spec = spec.dict()
-    merged_spec["keywords"].update(ent.additional_keywords)
+    for v in merged_spec["levels"].values():
+        v["keywords"] = v["keywords"] or {}
+        v["keywords"].update(ent.additional_singlepoint_keywords)
     assert rec.specification == ManybodySpecification(**merged_spec)
 
 
