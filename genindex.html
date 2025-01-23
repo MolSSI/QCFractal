@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; QCArchive 0.57.post101+gd899f519 documentation</title>
+    <title>Index &#8212; QCArchive 0.57.post111+g830a31fe documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=eb49c993"></script>
+    <script src="_static/documentation_options.js?v=f7dab599"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.57.post101+gd899f519" />
+  <meta name="docsearch:version" content="0.57.post111+g830a31fe" />
   </head>
   
   
@@ -544,6 +544,8 @@
       <li><a href="user_guide/records/base.html#qcportal.record_models.PriorityEnum.bit_count">bit_count() (PriorityEnum method)</a>
 </li>
       <li><a href="user_guide/records/base.html#qcportal.record_models.PriorityEnum.bit_length">bit_length() (PriorityEnum method)</a>
+</li>
+      <li><a href="user_guide/records/manybody.html#qcportal.manybody.ManybodySpecification.bsse_correction">bsse_correction (ManybodySpecification attribute)</a>
 </li>
       <li><a href="admin_guide/managers/index.html#qcfractalcompute.config.LSFExecutorConfig.bsub_redirection">bsub_redirection (LSFExecutorConfig attribute)</a>
 </li>
@@ -1483,6 +1485,8 @@
 </li>
       <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_before">last_updated_before (InternalJobQueryFilters attribute)</a>
 </li>
+      <li><a href="user_guide/records/manybody.html#qcportal.manybody.ManybodySpecification.levels">levels (ManybodySpecification attribute)</a>
+</li>
       <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJobQueryFilters.limit">limit (InternalJobQueryFilters attribute)</a>
 </li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.list_datasets">list_datasets() (PortalClient method)</a>
@@ -1493,10 +1497,10 @@
 </li>
       <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.list_internal_jobs">list_internal_jobs() (BaseDataset method)</a>
 </li>
-      <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.list_roles">list_roles() (PortalClient method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.list_roles">list_roles() (PortalClient method)</a>
+</li>
       <li><a href="user_guide/qcportal_reference.html#qcportal.client.PortalClient.list_users">list_users() (PortalClient method)</a>
 </li>
       <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.list_views">list_views() (BaseDataset method)</a>
@@ -1920,9 +1924,11 @@
         <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.properties">(TorsiondriveRecord attribute)</a>
 </li>
       </ul></li>
-      <li><a href="user_guide/records/optimization.html#qcportal.optimization.OptimizationSpecification.protocols">protocols (OptimizationSpecification attribute)</a>
+      <li><a href="user_guide/records/manybody.html#qcportal.manybody.ManybodySpecification.protocols">protocols (ManybodySpecification attribute)</a>
 
       <ul>
+        <li><a href="user_guide/records/optimization.html#qcportal.optimization.OptimizationSpecification.protocols">(OptimizationSpecification attribute)</a>
+</li>
         <li><a href="user_guide/records/singlepoint.html#qcportal.singlepoint.QCSpecification.protocols">(QCSpecification attribute)</a>
 </li>
       </ul></li>
@@ -2115,8 +2121,6 @@
         <li><a href="user_guide/records/neb.html#qcportal.neb.NEBRecord.result">(NEBRecord property)</a>
 </li>
       </ul></li>
-      <li><a href="user_guide/records/manybody.html#qcportal.manybody.ManybodyRecord.results">results (ManybodyRecord attribute)</a>
-</li>
       <li><a href="user_guide/records/singlepoint.html#qcportal.singlepoint.SinglepointRecord.return_result">return_result (SinglepointRecord property)</a>
 </li>
       <li><a href="admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJobStatusEnum.rfind">rfind() (InternalJobStatusEnum method)</a>
@@ -2261,11 +2265,9 @@
 </li>
       <li><a href="user_guide/records/base.html#qcportal.dataset_models.BaseDataset.set_visibility">set_visibility() (BaseDataset method)</a>
 </li>
-      <li><a href="user_guide/records/manybody.html#qcportal.manybody.ManybodySpecification.singlepoint_specification">singlepoint_specification (ManybodySpecification attribute)</a>
+      <li><a href="user_guide/records/neb.html#qcportal.neb.NEBSpecification.singlepoint_specification">singlepoint_specification (NEBSpecification attribute)</a>
 
       <ul>
-        <li><a href="user_guide/records/neb.html#qcportal.neb.NEBSpecification.singlepoint_specification">(NEBSpecification attribute)</a>
-</li>
         <li><a href="user_guide/records/reaction.html#qcportal.reaction.ReactionSpecification.singlepoint_specification">(ReactionSpecification attribute)</a>
 </li>
       </ul></li>

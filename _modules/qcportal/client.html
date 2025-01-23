@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.client &#8212; QCArchive 0.57.post101+gd899f519 documentation</title>
+    <title>qcportal.client &#8212; QCArchive 0.57.post111+g830a31fe documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=eb49c993"></script>
+    <script src="../../_static/documentation_options.js?v=f7dab599"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.57.post101+gd899f519" />
+  <meta name="docsearch:version" content="0.57.post111+g830a31fe" />
   </head>
   
   
@@ -444,7 +444,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Type</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Literal</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">tabulate</span><span class="w"> </span><span class="kn">import</span> <span class="n">tabulate</span>
 
@@ -457,9 +457,10 @@
     <span class="n">GridoptimizationQueryFilters</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.manybody</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">ManybodyKeywords</span><span class="p">,</span>
+    <span class="n">BSSECorrectionEnum</span><span class="p">,</span>
     <span class="n">ManybodyRecord</span><span class="p">,</span>
     <span class="n">ManybodyAddBody</span><span class="p">,</span>
+    <span class="n">ManybodyKeywords</span><span class="p">,</span>
     <span class="n">ManybodyQueryFilters</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.neb</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -2673,8 +2674,9 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">initial_molecules</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Molecule</span><span class="p">]],</span>
         <span class="n">program</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">singlepoint_specification</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">,</span>
-        <span class="n">keywords</span><span class="p">:</span> <span class="n">ManybodyKeywords</span><span class="p">,</span>
+        <span class="n">levels</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;supersystem&quot;</span><span class="p">]],</span> <span class="n">QCSpecification</span><span class="p">],</span>
+        <span class="n">bsse_correction</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">BSSECorrectionEnum</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">BSSECorrectionEnum</span><span class="p">]],</span>
+        <span class="n">keywords</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ManybodyKeywords</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
         <span class="n">tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span>
         <span class="n">priority</span><span class="p">:</span> <span class="n">PriorityEnum</span> <span class="o">=</span> <span class="n">PriorityEnum</span><span class="o">.</span><span class="n">normal</span><span class="p">,</span>
         <span class="n">owner_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -2727,7 +2729,8 @@
             <span class="s2">&quot;initial_molecules&quot;</span><span class="p">:</span> <span class="n">initial_molecules</span><span class="p">,</span>
             <span class="s2">&quot;specification&quot;</span><span class="p">:</span> <span class="p">{</span>
                 <span class="s2">&quot;program&quot;</span><span class="p">:</span> <span class="n">program</span><span class="p">,</span>
-                <span class="s2">&quot;singlepoint_specification&quot;</span><span class="p">:</span> <span class="n">singlepoint_specification</span><span class="p">,</span>
+                <span class="s2">&quot;levels&quot;</span><span class="p">:</span> <span class="n">levels</span><span class="p">,</span>
+                <span class="s2">&quot;bsse_correction&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">bsse_correction</span><span class="p">),</span>
                 <span class="s2">&quot;keywords&quot;</span><span class="p">:</span> <span class="n">keywords</span><span class="p">,</span>
             <span class="p">},</span>
             <span class="s2">&quot;tag&quot;</span><span class="p">:</span> <span class="n">tag</span><span class="p">,</span>
