@@ -4,6 +4,7 @@ Tests the general record socket
 
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import TYPE_CHECKING
 
 from qcelemental.models import FailedOperation, ComputeError
@@ -13,6 +14,7 @@ from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.singlepoint.testing_helpers import load_test_data as load_sp_test_data
 from qcfractal.testing_helpers import mname1
 from qcfractalcompute.compress import compress_result
+from qcportal.compression import decompress
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 
 if TYPE_CHECKING:
@@ -132,3 +134,37 @@ def populate_records_status(storage_socket: SQLAlchemySocket):
         assert all_rec[6].status == RecordStatusEnum.invalid
 
     return all_id
+
+
+def convert_to_plain_qcschema_result(result):
+    """
+    Converts a manager-mangled qcschema result into a plain qcschema result.
+
+    Managers typically compress outputs and native files then store them in extras.
+    This removes those and puts them back in the proper place
+    """
+
+    update = {}
+
+    extras = deepcopy(result.extras)
+
+    compressed_outputs = extras.pop("_qcfractal_compressed_outputs", None)
+    compressed_native_files = extras.pop("_qcfractal_compressed_native_files", None)
+
+    if compressed_outputs or compressed_native_files:
+        update["extras"] = extras
+
+    if compressed_outputs:
+        # Keys are stdout, stderr, error, which match the fields of the result (I hope)
+        for k, v in compressed_outputs.items():
+            update[k] = decompress(v["data"], v["compression_type"])
+
+    if compressed_native_files:
+        update["native_files"] = {}
+        for k, v in compressed_native_files.items():
+            update["native_files"][k] = decompress(v["data"], v["compression_type"])
+
+    if update:
+        return result.copy(update=update)
+    else:
+        return result
