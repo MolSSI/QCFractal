@@ -23,6 +23,7 @@ from qcportal.dataset_models import (
     DatasetDeleteParams,
     DatasetModifyEntryBody,
     DatasetGetInternalJobParams,
+    DatasetCloneBody,
 )
 from qcportal.exceptions import LimitExceededError
 
@@ -422,3 +423,15 @@ def delete_dataset_attachment_v1(dataset_id: int, attachment_id: int):
 @wrap_route("READ")
 def fetch_dataset_contributed_values_v1(dataset_id: int):
     return storage_socket.datasets.get_contributed_values(dataset_id)
+
+
+#################################
+# Cloning and copying
+#################################
+@api_v1.route("/datasets/clone", methods=["POST"])
+@wrap_route("WRITE")
+def clone_dataset_v1(body_data: DatasetCloneBody):
+    with storage_socket.session_scope(True) as session:
+        ds_type = storage_socket.datasets.lookup_type(body_data.source_dataset_id, session=session)
+        ds_socket = storage_socket.datasets.get_socket(ds_type)
+        return ds_socket.clone(body_data.source_dataset_id, body_data.new_dataset_name)

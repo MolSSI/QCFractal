@@ -563,6 +563,39 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare, backgr
     assert ds._client.list_datasets()[0]["record_count"] == record_count
 
 
+def run_dataset_model_clone(snowflake_client, dataset_type, test_entries, test_specs, entry_extra_compare):
+    ds = snowflake_client.add_dataset(dataset_type, "Test dataset")
+    ds.add_specification("spec_1", test_specs[0])
+    ds.add_specification("spec_2", test_specs[1])
+    ds.add_entries(test_entries)
+    ds.submit()
+
+    ds2 = snowflake_client.clone_dataset(ds.id, "Test dataset 2")
+
+    assert ds2.id != ds.id
+    assert ds2.dataset_type == ds.dataset_type == dataset_type
+    assert set(ds.entry_names) == set(ds2.entry_names)
+    assert set(ds.specifications.keys()) == set(ds2.specifications.keys())
+
+    for e in ds.iterate_entries():
+        e2 = ds2.get_entry(e.name)
+
+        assert e.name == e2.name
+        assert e.comment == e2.comment
+        assert e.attributes == e2.attributes
+
+        # Compare molecules or other stuff
+        entry_extra_compare(e, e2)
+
+    for k, v in ds.specifications.items():
+        v2 = ds2.specifications[k]
+        assert v == v2
+
+    for e, s, r in ds.iterate_records():
+        r2 = ds2.get_record(e, s)
+        assert r.id == r2.id  # only really need to check ids
+
+
 def run_dataset_model_submit_missing(ds, test_entries, test_spec):
     ds.add_specification("spec_1", test_spec)
     ds.add_entries(test_entries)

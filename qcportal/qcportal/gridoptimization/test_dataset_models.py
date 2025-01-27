@@ -164,6 +164,12 @@ def test_gridoptimization_dataset_model_remove_record(snowflake_client: PortalCl
     ds_helpers.run_dataset_model_remove_record(snowflake_client, ds, test_entries, test_specs)
 
 
+def test_gridoptimization_dataset_model_clone(snowflake_client: PortalClient):
+    ds_helpers.run_dataset_model_clone(
+        snowflake_client, "gridoptimization", test_entries, test_specs, entry_extra_compare
+    )
+
+
 @pytest.mark.parametrize("background", [True, False])
 def test_gridoptimization_dataset_model_submit(dataset_submit_test_client: PortalClient, background):
     ds = dataset_submit_test_client.add_dataset(

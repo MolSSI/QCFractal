@@ -4,6 +4,9 @@ import copy
 import logging
 from typing import TYPE_CHECKING
 
+from sqlalchemy import select, literal
+from sqlalchemy.dialects.postgresql import insert
+
 from qcfractal.components.dataset_socket import BaseDatasetSocket
 from qcfractal.components.neb.record_db_models import NEBRecordORM
 from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
@@ -119,3 +122,68 @@ class NEBDatasetSocket(BaseDatasetSocket):
                 n_existing += meta.n_existing
 
         return InsertCountsMetadata(n_inserted=n_inserted, n_existing=n_existing)
+
+    def copy_entries(
+        self,
+        session: Session,
+        source_dataset_id: int,
+        destination_dataset_id: int,
+        entry_names: Optional[Iterable[str]] = None,
+    ):
+
+        select_stmt = select(
+            literal(destination_dataset_id),
+            self.entry_orm.name,
+            self.entry_orm.comment,
+            self.entry_orm.additional_keywords,
+            self.entry_orm.additional_singlepoint_keywords,
+            self.entry_orm.attributes,
+        )
+
+        select_stmt = select_stmt.where(self.entry_orm.dataset_id == source_dataset_id)
+
+        if entry_names is not None:
+            select_stmt = select_stmt.where(self.entry_orm.name.in_(entry_names))
+
+        stmt = insert(self.entry_orm)
+        stmt = stmt.from_select(
+            [
+                self.entry_orm.dataset_id,
+                self.entry_orm.name,
+                self.entry_orm.comment,
+                self.entry_orm.additional_keywords,
+                self.entry_orm.additional_singlepoint_keywords,
+                self.entry_orm.attributes,
+            ],
+            select_stmt,
+        )
+
+        stmt = stmt.on_conflict_do_nothing()
+        session.execute(stmt)
+
+        # Now do the molecules (stored in a separate table)
+        select_stmt = select(
+            literal(destination_dataset_id),
+            NEBDatasetInitialMoleculeORM.entry_name,
+            NEBDatasetInitialMoleculeORM.molecule_id,
+            NEBDatasetInitialMoleculeORM.position,
+        )
+
+        select_stmt = select_stmt.where(NEBDatasetInitialMoleculeORM.dataset_id == source_dataset_id)
+
+        if entry_names is not None:
+            select_stmt = select_stmt.where(NEBDatasetInitialMoleculeORM.entry_name.in_(entry_names))
+
+        stmt = insert(NEBDatasetInitialMoleculeORM)
+        stmt = stmt.from_select(
+            [
+                NEBDatasetInitialMoleculeORM.dataset_id,
+                NEBDatasetInitialMoleculeORM.entry_name,
+                NEBDatasetInitialMoleculeORM.molecule_id,
+                NEBDatasetInitialMoleculeORM.position,
+            ],
+            select_stmt,
+        )
+
+        stmt = stmt.on_conflict_do_nothing()
+        session.execute(stmt)

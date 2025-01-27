@@ -5,11 +5,10 @@ import os
 import tempfile
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select, delete, func, union, text, and_
+from sqlalchemy import select, delete, func, union, text, and_, literal
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import load_only, lazyload, joinedload, with_polymorphic
+from sqlalchemy.orm import load_only, lazyload, joinedload, noload, with_polymorphic
 from sqlalchemy.orm.attributes import flag_modified
-from qcfractal.db_socket.helpers import get_count
 
 from qcfractal.components.dataset_db_models import (
     BaseDatasetORM,
@@ -20,6 +19,7 @@ from qcfractal.components.dataset_db_models import (
 from qcfractal.components.dataset_processing import create_view_file
 from qcfractal.components.internal_jobs.db_models import InternalJobORM
 from qcfractal.components.record_db_models import BaseRecordORM
+from qcfractal.db_socket.helpers import get_count
 from qcfractal.db_socket.helpers import (
     get_general,
     get_query_proj_options,
@@ -1587,6 +1587,244 @@ class BaseDatasetSocket:
             record_ids = self._lookup_record_ids(session, dataset_id, entry_names, specification_names, for_update=True)
 
             return self.root_socket.records.revert_generic(record_ids, revert_status)
+
+    def copy_entries(
+        self,
+        session: Session,
+        source_dataset_id: int,
+        destination_dataset_id: int,
+        entry_names: Optional[Iterable[str]] = None,
+    ):
+        """
+        Copy entries from one dataset to another
+
+        If `entry_names` is not provided, all entries will be copied
+        """
+
+        raise NotImplementedError("_clone_entries must be overridden by the derived class")
+
+    def copy_specifications(
+        self,
+        session: Session,
+        source_dataset_id: int,
+        destination_dataset_id: int,
+        specification_names: Optional[Iterable[str]] = None,
+    ):
+        """
+        Copy specifications from one dataset to another
+
+        If `specification_names` is not provided, all specifications will be copied
+        """
+
+        # All dataset specifications (so far) have the same structure. So we can do it for all
+        # types of datasets here
+        select_stmt = select(
+            literal(destination_dataset_id),
+            self.specification_orm.name,
+            self.specification_orm.description,
+            self.specification_orm.specification_id,
+        )
+
+        select_stmt = select_stmt.where(self.specification_orm.dataset_id == source_dataset_id)
+
+        if specification_names is not None:
+            select_stmt = select_stmt.where(self.specification_orm.name.in_(specification_names))
+
+        stmt = insert(self.specification_orm)
+        stmt = stmt.from_select(
+            [
+                self.specification_orm.dataset_id,
+                self.specification_orm.name,
+                self.specification_orm.description,
+                self.specification_orm.specification_id,
+            ],
+            select_stmt,
+        )
+
+        stmt = stmt.on_conflict_do_nothing()
+        session.execute(stmt)
+
+    def copy_record_items(
+        self,
+        session: Session,
+        source_dataset_id: int,
+        destination_dataset_id: int,
+        entry_names: Optional[Iterable[str]] = None,
+        specification_names: Optional[Iterable[str]] = None,
+    ):
+        """
+        Copy record items from one dataset to another
+
+        This doesn't clone actual records, just the links to the records for the dataset
+
+        If `entry_names` is not provided, all entries will be copied
+        If `specification_names` is not provided, all entries will be copied.
+        """
+
+        # All dataset record items (so far) have the same structure. So we can do it for all
+        # types of datasets here
+        select_stmt = select(
+            literal(destination_dataset_id),
+            self.record_item_orm.entry_name,
+            self.record_item_orm.specification_name,
+            self.record_item_orm.record_id,
+        )
+
+        select_stmt = select_stmt.where(self.record_item_orm.dataset_id == source_dataset_id)
+
+        if entry_names is not None:
+            select_stmt = select_stmt.where(self.record_item_orm.entry_name.in_(entry_names))
+        if specification_names is not None:
+            select_stmt = select_stmt.where(self.record_item_orm.specification_name.in_(specification_names))
+
+        stmt = insert(self.record_item_orm)
+        stmt = stmt.from_select(
+            [
+                self.record_item_orm.dataset_id,
+                self.record_item_orm.entry_name,
+                self.record_item_orm.specification_name,
+                self.record_item_orm.record_id,
+            ],
+            select_stmt,
+        )
+
+        stmt = stmt.on_conflict_do_nothing()
+        session.execute(stmt)
+
+    def copy_from(
+        self,
+        source_dataset_id: int,
+        destination_dataset_id: int,
+        entry_names: Optional[Iterable[str]] = None,
+        specification_names: Optional[Iterable[str]] = None,
+        *,
+        session: Optional[Session] = None,
+    ):
+        """
+        Copies entries, specifications, and record items from one dataset to another
+
+        Entries and specifications are copied. Actual records are not duplicated - the new
+        dataset will still refer to the same records as the source.
+
+        Parameters
+        ----------
+        source_dataset_id
+            ID of the dataset to copy from
+        destination_dataset_id
+            ID of the dataset to copy to
+        entry_names
+            Only copy records for these entries. If none, copy records for all entries
+        specification_names
+            Only copy records for these specifications. If none, copy records for all specifications
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+        """
+
+        with self.root_socket.optional_session(session) as session:
+
+            destination_dataset_type = self.root_socket.datasets.lookup_type(destination_dataset_id)
+            if destination_dataset_type != self.dataset_type:
+                raise UserReportableError(
+                    f"Destination dataset type {destination_dataset_type} does not match this type {self.dataset_type}"
+                )
+
+            # Copy specifications
+            self.copy_specifications(
+                session, source_dataset_id, destination_dataset_id, specification_names=specification_names
+            )
+
+            # Copy entries
+            self.copy_entries(session, source_dataset_id, destination_dataset_id, entry_names=entry_names)
+
+            # Copy record items
+            self.copy_record_items(
+                session,
+                source_dataset_id,
+                destination_dataset_id,
+                entry_names=entry_names,
+                specification_names=specification_names,
+            )
+
+    def clone(
+        self,
+        source_dataset_id: int,
+        new_dataset_name: str,
+        *,
+        session: Optional[Session] = None,
+    ):
+        """
+        Clones a dataset, copying all entries, specifications and record items
+
+        Entries and specifications are copied. Actual records are not duplicated - the new
+        dataset will still refer to the same records as the source.
+
+        Parameters
+        ----------
+        source_dataset_id
+            ID of the dataset to clone
+        new_dataset_name
+            Name of the new, cloned dataset
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+        """
+
+        with self.root_socket.optional_session(session) as session:
+            stmt = select(self.dataset_orm).where(BaseDatasetORM.id == source_dataset_id)
+            stmt = stmt.options(noload("*"))
+            source_orm = session.execute(stmt).scalar_one_or_none()
+
+            if source_orm is None:
+                raise MissingDataError(f"Cannot find dataset with ID {source_dataset_id} for cloning")
+
+            ds_socket = self.root_socket.datasets.get_socket(source_orm.dataset_type)
+            new_dataset_id = ds_socket.add(
+                name=new_dataset_name,
+                description=source_orm.description,
+                tagline=source_orm.tagline,
+                tags=source_orm.tags,
+                group=source_orm.group,
+                provenance=source_orm.provenance,
+                visibility=source_orm.visibility,
+                default_tag=source_orm.default_tag,
+                default_priority=source_orm.default_priority,
+                metadata=source_orm.meta,
+                owner_user=source_orm.owner_user,
+                owner_group=source_orm.owner_group,
+                existing_ok=False,
+            )
+
+            #################################################
+            # Copy entries, specifications, and record items
+            #################################################
+            self.copy_from(source_dataset_id, new_dataset_id, session=session)
+
+            #####################
+            # Contributed values
+            #####################
+            # I changed my mind - maybe we shouldn't copy contributed values. But leaving this here
+            # in case we want to in the future
+            # stmt = text("""
+            #    INSERT INTO contributed_values (dataset_id, name, values, index, values_structure, theory_level,
+            #                                    units, theory_level_details, citations, external_url, doi, comments)
+            #    SELECT :new_dataset_id, name, values, index, values_structure, theory_level,
+            #           units, theory_level_details, citations, external_url, doi, comments
+            #    FROM contributed_values
+            #    WHERE dataset_id = :source_dataset_id
+            # """)
+
+            # stmt = stmt.bindparams(new_dataset_id=new_dataset_id, source_dataset_id=source_dataset_id)
+            # session.execute(stmt)
+
+            #####################
+            # Attachments
+            #####################
+            # Similarly, I don't think we want to copy attachments. The whole point is that the new
+            # dataset will be modified/expanded, so not sure it makes sense. But someone might want it
+            # in the future
+
+            return new_dataset_id
 
 
 class DatasetSocket:

@@ -76,6 +76,7 @@ from .dataset_models import (
     DatasetQueryModel,
     DatasetQueryRecords,
     DatasetDeleteParams,
+    DatasetCloneBody,
     DatasetAddBody,
     dataset_from_dict,
     load_dataset_view,  # noqa
@@ -326,6 +327,11 @@ class PortalClient(PortalClientBase):
     def delete_dataset(self, dataset_id: int, delete_records: bool):
         params = DatasetDeleteParams(delete_records=delete_records)
         return self.make_request("delete", f"api/v1/datasets/{dataset_id}", None, url_params=params)
+
+    def clone_dataset(self, source_dataset_id: int, new_dataset_name: str):
+        body = DatasetCloneBody(source_dataset_id=source_dataset_id, new_dataset_name=new_dataset_name)
+        new_id = self.make_request("post", f"api/v1/datasets/clone", int, body=body)
+        return self.get_dataset_by_id(new_id)
 
     ##############################################################
     # External files

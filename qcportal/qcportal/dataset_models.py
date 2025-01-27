@@ -2097,6 +2097,11 @@ class DatasetDeleteParams(RestModelBase):
         return validate_list_to_single(v)
 
 
+class DatasetCloneBody(RestModelBase):
+    source_dataset_id: int
+    new_dataset_name: str
+
+
 class DatasetFetchRecordsBody(RestModelBase):
     entry_names: List[str]
     specification_names: List[str]
