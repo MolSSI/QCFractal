@@ -36,6 +36,7 @@ dependencies = [
 services = [
     "torsiondrive",
     "qcmanybody",
+    "geometric",
 ]
 geoip = [
     "geoip2"
