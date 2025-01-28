@@ -40,3 +40,4 @@ dependencies:
   - torsiondrive
   - qcmanybody
   - geometric
+  - scipy # TODO Required for geometric REMOVE EVENTUALLY

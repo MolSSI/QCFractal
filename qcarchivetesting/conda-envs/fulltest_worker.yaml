@@ -33,3 +33,4 @@ dependencies:
   - psi4>=1.9.1
   - rdkit
   - geometric
+  - scipy # TODO Required for geometric REMOVE EVENTUALLY
