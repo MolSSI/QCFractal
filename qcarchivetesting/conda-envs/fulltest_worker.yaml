@@ -32,8 +32,5 @@ dependencies:
   - qcengine<0.70a0
   - psi4>=1.9.1
   - rdkit
-
-  # Geometric service
-  - pip:
-    - scipy
-    - "geometric @ git+https://github.com/leeping/geomeTRIC"
+  - geometric
+  - scipy # TODO Required for geometric REMOVE EVENTUALLY

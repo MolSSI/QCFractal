@@ -42,6 +42,8 @@ dependencies:
   # QCFractal Services
   - torsiondrive
   - qcmanybody
+  - geometric
+  - scipy # TODO Required for geometric REMOVE EVENTUALLY
 
   # Worker codes below
   - qcengine<0.70a0
@@ -50,7 +52,3 @@ dependencies:
 
   # Testing packages
   - pytest
-
-  - pip:
-      - "geometric @ git+https://github.com/leeping/geomeTRIC"
-      - scipy # for geometric
