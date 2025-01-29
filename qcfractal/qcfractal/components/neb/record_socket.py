@@ -300,7 +300,7 @@ class NEBRecordSocket(BaseRecordSocket):
                 else:
                     # Hessian completed, do optimization
                     complete_sp = service_orm.dependencies[0]
-                    service_orm.service_state["tshessian"] = complete_sp.record.properties["return_hessian"]
+                    service_orm.service_state["tshessian"] = complete_sp.record.properties["return_result"]
                     self.submit_optimizations(session, service_orm, [Molecule(**TS_mol.model_dict())])
                     service_state.tsoptimize = False
 
