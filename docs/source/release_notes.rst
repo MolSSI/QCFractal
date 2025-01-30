@@ -1,6 +1,43 @@
 Release Notes
 =============
 
+0.58 / 2025-01-31
+-----------------
+
+This release has some big new features! These new features should be stable, but report
+any bugs you may find.
+
+1. Dataset views can now be attached to a dataset and stored in S3-compatible storage. The views are
+created server-side, which is very efficient.
+2. Dataset record submission can now be handled server-side as well. A call to `background_submit`
+will return immediately, while the submission happens via an internal job on the server
+3. New manybody implementation
+
+**Note:** The new manybody implementation is not compatible with old manybody data. The upgrade
+will check if manybody records exist and will not upgrade if any are present. I don't expect this to
+cause issues, but if it does, contact me.
+
+In addition, there are many other small features and fixes
+
+Notable PRs:
+
+- (:pr:`866`) Better error message with snowflake import of qcfractalcompute
+- (:pr:`867`) Fix an awkward exception when a dataset record could not be found
+- (:pr:`869`) Allow for manual specification of snowflake host
+- (:pr:`871`) Improvement for the way specifications are added to the database
+- (:pr:`872`) Simplification of how task queue sorts records that belong to services
+- (:pr:`874`) Improvements to internal job handling
+- (:pr:`876`) Ability to specify times in configurations files as user-friendly strings
+- (:pr:`877`) Option to shut down managers that are idle for too long (ie, do not pick up tasks)
+- (:pr:`878`) Dataset internal jobs, external files, and server-side view creation
+- (:pr:`879`) New manybody implementation
+- (:pr:`880`) Ability to create a portal client object from environment variables
+- (:pr:`881`) Ability to submit dataset records as a background job
+- (:pr:`882`) Improvements to processing of returned data
+- (:pr:`885`) Use officially-released geometric
+- (:pr:`886`) Use retries for JWT fetching (to help with some sporadic errors)
+
+
 0.57 / 2024-12-12
 -----------------
 
