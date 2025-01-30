@@ -529,4 +529,8 @@ class PortalClientBase:
         """
 
         # Request the info, and store here for later use
-        return self.make_request("get", self._information_endpoint, Dict[str, Any])
+        # TODO - this fallback is temporary - remove in a future version
+        try:
+            return self.make_request("get", self._information_endpoint, Dict[str, Any])
+        except PortalRequestError as e:
+            return self.make_request("get", "api/v1/information", Dict[str, Any])
