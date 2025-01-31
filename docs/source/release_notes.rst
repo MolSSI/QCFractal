@@ -36,6 +36,7 @@ Notable PRs:
 - (:pr:`882`) Improvements to processing of returned data
 - (:pr:`885`) Use officially-released geometric
 - (:pr:`886`) Use retries for JWT fetching (to help with some sporadic errors)
+- (:pr:`889`) Implement jitter for manager heartbeats and updates
 
 
 0.57 / 2024-12-12
