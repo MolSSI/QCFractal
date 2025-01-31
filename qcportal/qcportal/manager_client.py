@@ -62,6 +62,7 @@ class ManagerClient(PortalClientBase):
             None,
             body=manager_update,
             allow_retries=False,
+            additional_headers={"Connection": "close"},
         )
 
     def activate(

@@ -29,7 +29,7 @@ from qcportal import ManagerClient
 from qcportal.managers import ManagerName
 from qcportal.metadata_models import TaskReturnMetadata
 from qcportal.record_models import RecordTask
-from qcportal.utils import seconds_to_hms
+from qcportal.utils import seconds_to_hms, apply_jitter
 from . import __version__
 from .apps.models import AppTaskResult
 from .compress import compress_result
@@ -185,6 +185,7 @@ class ComputeManager:
         # Pull server info
         self.server_info = self.client.get_server_information()
         self.heartbeat_frequency = self.server_info["manager_heartbeat_frequency"]
+        self.heartbeat_frequency_jitter = self.server_info.get("manager_heartbeat_frequency_jitter", 0.0)
 
         self.client.activate(__version__, self.all_program_info, tags=self.all_queue_tags)
 
@@ -288,13 +289,15 @@ class ComputeManager:
             if not manual_updates:
                 self.update(new_tasks=True)
             if not self._is_stopping:
-                self.scheduler.enter(self.manager_config.update_frequency, 1, scheduler_update)
+                delay = apply_jitter(self.manager_config.update_frequency, self.manager_config.update_frequency_jitter)
+                self.scheduler.enter(delay, 1, scheduler_update)
 
         def scheduler_heartbeat():
             if not manual_updates:
                 self.heartbeat()
             if not self._is_stopping:
-                self.scheduler.enter(self.heartbeat_frequency, 1, scheduler_heartbeat)
+                delay = apply_jitter(self.heartbeat_frequency, self.heartbeat_frequency_jitter)
+                self.scheduler.enter(delay, 1, scheduler_heartbeat)
 
         self.logger.info("Compute Manager successfully started.")
 

@@ -232,6 +232,7 @@ class FractalSnowflake:
         qcf_cfg["hide_internal_errors"] = False
         qcf_cfg["service_frequency"] = 10
         qcf_cfg["heartbeat_frequency"] = 5
+        qcf_cfg["heartbeat_frequency_jitter"] = 0.0
         qcf_cfg["heartbeat_max_missed"] = 3
         qcf_cfg["api"] = {
             "host": host,
@@ -262,6 +263,7 @@ class FractalSnowflake:
             parsl_run_dir=parsl_run_dir,
             cluster="snowflake_compute",
             update_frequency=5,
+            update_frequency_jitter=0.0,
             server=FractalServerSettings(
                 fractal_uri=uri,
                 verify=False,

@@ -191,6 +191,14 @@ class FractalComputeConfig(BaseModel):
         "itself down to maintain integrity between it and the Fractal Server. Units of seconds",
         gt=0,
     )
+    update_frequency_jitter: float = Field(
+        0.1,
+        description="The update frequency will be modified by up to a certain amount for each request. The "
+        "update_frequency_jitter represents a fraction of the update_frequency to allow as a max. "
+        "Ie, update_frequency=60, and jitter=0.1, updates will happen between 54 and 66 seconds. "
+        "This helps with spreading out server load.",
+        ge=0,
+    )
 
     max_idle_time: Optional[int] = Field(
         None,

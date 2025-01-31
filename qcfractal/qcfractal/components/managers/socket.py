@@ -28,6 +28,7 @@ class ManagerSocket:
         self._logger = logging.getLogger(__name__)
 
         self._manager_heartbeat_frequency = root_socket.qcf_config.heartbeat_frequency
+        self._manager_heartbeat_frequency_jitter = root_socket.qcf_config.heartbeat_frequency_jitter
         self._manager_max_missed_heartbeats = root_socket.qcf_config.heartbeat_max_missed
 
         with self.root_socket.session_scope() as session:
@@ -292,11 +293,13 @@ class ManagerSocket:
         ----------
         session
             An existing SQLAlchemy session to use.
-        job_progress
-            An object used to report the current job progress and status
         """
         self._logger.debug("Checking manager heartbeats")
-        manager_window = self._manager_max_missed_heartbeats * self._manager_heartbeat_frequency
+
+        # Take into account the maximum jitter allowed
+        manager_window = self._manager_max_missed_heartbeats * (
+            self._manager_heartbeat_frequency + self._manager_heartbeat_frequency_jitter
+        )
         dt = now_at_utc() - timedelta(seconds=manager_window)
 
         dead_managers = self.deactivate(modified_before=dt, reason="missing heartbeat", session=session)
