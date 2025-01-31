@@ -293,8 +293,6 @@ class ManagerSocket:
         ----------
         session
             An existing SQLAlchemy session to use.
-        job_progress
-            An object used to report the current job progress and status
         """
         self._logger.debug("Checking manager heartbeats")
 
