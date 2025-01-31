@@ -400,6 +400,7 @@ class FractalConfig(ConfigBase):
     heartbeat_frequency: int = Field(
         1800, description="The frequency (in seconds) to check the heartbeat of compute managers"
     )
+    heartbeat_frequency_jitter: int = Field(0.1, description="Jitter fraction to be applied to the heartbeat frequency")
     heartbeat_max_missed: int = Field(
         5,
         description="The maximum number of heartbeats that a compute manager can miss. If more are missed, the worker is considered dead",

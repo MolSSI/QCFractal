@@ -182,6 +182,7 @@ def get_public_server_information():
     public_info = {
         "name": qcf_cfg.name,
         "manager_heartbeat_frequency": qcf_cfg.heartbeat_frequency,
+        "manager_heartbeat_frequency_jitter": qcf_cfg.heartbeat_frequency_jitter,
         "manager_heartbeat_max_missed": qcf_cfg.heartbeat_max_missed,
         "version": qcfractal_version,
         "api_limits": qcf_cfg.api_limits.dict(),

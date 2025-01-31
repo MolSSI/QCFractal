@@ -142,6 +142,7 @@ class QCATestingSnowflake(FractalSnowflake):
         qcf_config["service_frequency"] = 5
         qcf_config["loglevel"] = "DEBUG"
         qcf_config["heartbeat_frequency"] = 3
+        qcf_config["heartbeat_frequency_jitter"] = 0.0
         qcf_config["heartbeat_max_missed"] = 2
 
         qcf_config["database"] = {"pool_size": 0}

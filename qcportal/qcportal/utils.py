@@ -8,6 +8,7 @@ import itertools
 import json
 import logging
 import math
+import random
 import re
 import time
 from contextlib import contextmanager, redirect_stderr, redirect_stdout
@@ -449,3 +450,8 @@ def update_nested_dict(d: Dict[str, Any], u: Dict[str, Any]):
         else:
             d[k] = v
     return d
+
+
+def apply_jitter(t: Union[int, float], jitter_fraction: float) -> float:
+    f = random.uniform(-jitter_fraction, jitter_fraction)
+    return max(t * (1 + f), 0.0)
