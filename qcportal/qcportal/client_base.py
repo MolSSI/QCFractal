@@ -288,7 +288,7 @@ class PortalClientBase:
 
         Parameters
         ----------
-        prep_req
+        req
             A prepared request to send
         allow_retries
             If true, attempts to retry on certain kinds of errors
@@ -423,6 +423,7 @@ class PortalClientBase:
         url_params: Optional[Dict[str, Any]] = None,
         internal_retry: Optional[bool] = True,
         allow_retries: bool = True,
+        additional_headers: Optional[Dict[str, Any]] = None,
     ) -> requests.Response:
         # If refresh token has expired, log in again
         if self._jwt_refresh_exp and self._jwt_refresh_exp < time.time():
@@ -433,7 +434,9 @@ class PortalClientBase:
             self._refresh_JWT_token()
 
         full_uri = self.address + endpoint
-        req = requests.Request(method=method.upper(), url=full_uri, data=body, params=url_params)
+        req = requests.Request(
+            method=method.upper(), url=full_uri, data=body, params=url_params, headers=additional_headers
+        )
         r = self._send_request(req, allow_retries=allow_retries)
 
         # If JWT token expired, automatically renew it and retry once. This should have been caught above,
@@ -468,6 +471,7 @@ class PortalClientBase:
         body: Optional[Union[_T, Dict[str, Any]]] = None,
         url_params: Optional[Union[_U, Dict[str, Any]]] = None,
         allow_retries: bool = True,
+        additional_headers: Optional[Dict[str, Any]] = None,
     ) -> _V:
         # If body_model or url_params_model are None, then use the type given
         if body_model is None and body is not None:
@@ -489,7 +493,12 @@ class PortalClientBase:
             parsed_url_params = parsed_url_params.dict()
 
         r = self._request(
-            method, endpoint, body=serialized_body, url_params=parsed_url_params, allow_retries=allow_retries
+            method,
+            endpoint,
+            body=serialized_body,
+            url_params=parsed_url_params,
+            allow_retries=allow_retries,
+            additional_headers=additional_headers,
         )
         d = deserialize(r.content, r.headers["Content-Type"])
 
