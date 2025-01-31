@@ -197,6 +197,7 @@ class FractalComputeConfig(BaseModel):
         "update_frequency_jitter represents a fraction of the update_frequency to allow as a max. "
         "Ie, update_frequency=60, and jitter=0.1, updates will happen between 54 and 66 seconds. "
         "This helps with spreading out server load.",
+        ge=0,
     )
 
     max_idle_time: Optional[int] = Field(

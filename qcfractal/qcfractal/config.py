@@ -398,12 +398,17 @@ class FractalConfig(ConfigBase):
     service_frequency: int = Field(60, description="The frequency at which to update services (in seconds)")
     max_active_services: int = Field(20, description="The maximum number of concurrent active services")
     heartbeat_frequency: int = Field(
-        1800, description="The frequency (in seconds) to check the heartbeat of compute managers"
+        1800,
+        description="The frequency (in seconds) to check the heartbeat of compute managers",
+        gt=0,
     )
-    heartbeat_frequency_jitter: int = Field(0.1, description="Jitter fraction to be applied to the heartbeat frequency")
+    heartbeat_frequency_jitter: int = Field(
+        0.1, description="Jitter fraction to be applied to the heartbeat frequency", ge=0
+    )
     heartbeat_max_missed: int = Field(
         5,
         description="The maximum number of heartbeats that a compute manager can miss. If more are missed, the worker is considered dead",
+        ge=0,
     )
 
     # Access logging
