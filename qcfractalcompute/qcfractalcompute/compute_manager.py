@@ -185,7 +185,7 @@ class ComputeManager:
         # Pull server info
         self.server_info = self.client.get_server_information()
         self.heartbeat_frequency = self.server_info["manager_heartbeat_frequency"]
-        self.heartbeat_frequency_jitter = self.server_info.get("manager_heartbeat_frequency_jitter", 0.1)
+        self.heartbeat_frequency_jitter = self.server_info.get("manager_heartbeat_frequency_jitter", 0.0)
 
         self.client.activate(__version__, self.all_program_info, tags=self.all_queue_tags)
 
