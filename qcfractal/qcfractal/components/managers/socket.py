@@ -298,7 +298,7 @@ class ManagerSocket:
 
         # Take into account the maximum jitter allowed
         manager_window = self._manager_max_missed_heartbeats * (
-            self._manager_heartbeat_frequency + self._manager_heartbeat_frequency_jitter
+            self._manager_heartbeat_frequency * (1 + self._manager_heartbeat_frequency_jitter)
         )
         dt = now_at_utc() - timedelta(seconds=manager_window)
 
