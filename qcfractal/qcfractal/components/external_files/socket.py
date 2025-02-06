@@ -132,7 +132,9 @@ class ExternalFileSocket:
             session.flush()
 
             try:
-                while chunk := file_data.read(10 * 1024 * 1024):
+                # Chunk size = 256MiB. There is a limit of 10,000 chunks, which would be
+                # 2.56TiB
+                while chunk := file_data.read(256 * 1024 * 1024):
                     if job_progress is not None:
                         job_progress.raise_if_cancelled()
 
@@ -192,7 +194,8 @@ class ExternalFileSocket:
             ID of the external file (which is also set in the given ORM object)
         """
 
-        self._logger.info(f"Uploading {file_path} to S3. File size: {os.path.getsize(file_path)/1048576} MiB")
+        file_size = os.path.getsize(file_path)
+        self._logger.info(f"Uploading {file_path} to S3. File size: {file_size/1048576} MiB")
 
         with open(file_path, "rb") as f:
             return self.add_data(f, file_orm, job_progress=job_progress, session=session)
