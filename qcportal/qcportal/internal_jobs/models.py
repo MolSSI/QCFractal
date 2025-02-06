@@ -1,5 +1,5 @@
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 from typing import Optional, Dict, Any, List, Union
 
@@ -11,6 +11,7 @@ except ImportError:
     from pydantic import BaseModel, Extra, validator, PrivateAttr
 
 from qcportal.base_models import QueryProjModelBase
+from qcportal.utils import seconds_to_hms
 from ..base_models import QueryIteratorBase
 from tqdm import tqdm
 
@@ -147,6 +148,20 @@ class InternalJob(BaseModel):
                 time.sleep(min(interval, end_time - curtime + 0.1))
             else:
                 time.sleep(interval)
+
+    @property
+    def duration(self) -> timedelta:
+        if self.started_date is None:
+            return timedelta()
+
+        if self.ended_date is None:
+            return datetime.now() - self.started_date
+
+        return self.ended_date - self.started_date
+
+    @property
+    def duration_str(self) -> str:
+        return seconds_to_hms(self.duration.total_seconds())
 
 
 class InternalJobQueryFilters(QueryProjModelBase):
