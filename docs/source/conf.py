@@ -61,7 +61,7 @@ autodoc_typehints = "description"
 autodoc_default_options = {
     "members": True,
     "undoc-members": True,
-    "inherited-members": "BaseModel",
+    "inherited-members": "BaseModel,str,int,float,bool",
     "show-inheritance": True,
     "member-order": "bysource",
 }
