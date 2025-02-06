@@ -39,6 +39,5 @@ list. In this case, all the records will be fetched from the server as the list 
 Iterators API
 -------------
 
-.. autoclass:: qcportal.molecules.models.MoleculeQueryIterator
-
-.. autoclass:: qcportal.record_models.RecordQueryIterator
+* :class:`qcportal.molecules.models.MoleculeQueryIterator`
+* :class:`qcportal.record_models.RecordQueryIterator`

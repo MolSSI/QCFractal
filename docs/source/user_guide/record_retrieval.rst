@@ -1,12 +1,10 @@
 Retrieving records
 ==================
 
-A *record* is a representation of a single computation that is stored on the server. Records are generally
-not created by hand by the user, but retrieved from the server.
+A *record* is a representation of a single computation that is stored on the server.
+Records are uniquely identified on a server by an integer ID.
 
-Records contain an ID that uniquely identifies this record on the server.
-
-Using the :class:`~qcportal.client.PortalClient`, records are retrieved from the server in two ways.
+Using the :class:`~qcportal.client.PortalClient`, records can retrieved from the server in two ways.
 The first is through ``get_`` functions,  which is used to retrieve records by their ID.
 These functions (such as :func:`~qcportal.client.PortalClient.get_records` and :func:`~qcportal.client.PortalClient.get_singlepoints`)
 take a list or other sequence of IDs, and returns a list of records in the same order as the given IDs
