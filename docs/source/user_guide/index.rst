@@ -21,4 +21,4 @@ If you are interested in running your own QCArchive server, please see :doc:`../
    record_management
    datasets
    records/index
-   qcportal_reference
+   qcportal_reference/index
