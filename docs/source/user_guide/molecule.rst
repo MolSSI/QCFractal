@@ -7,6 +7,7 @@ from ``qcportal.molecules.Molecule``, but is otherwise the same as the
 `QCElemental Molecule <https://molssi.github.io/QCElemental/model_molecule.html>`_.
 
 .. _creating_molecules:
+
 Creating Molecules
 ------------------
 
