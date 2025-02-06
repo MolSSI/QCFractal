@@ -1,7 +1,8 @@
 Connecting to a server
 ====================================
 
-The central object of QCPortal is the :class:`~qcportal.client.PortalClient` (usually referred to as just `client`).
+The central object of QCPortal is the :class:`~qcportal.client.PortalClient`
+(usually referred to as just ``client``).
 This class handles connecting to the server and exposing all the functionality of the server for use in python.
 
 Connecting to the server is handled by the constructor of the :class:`~qcportal.client.PortalClient` class.
@@ -43,14 +44,16 @@ For a description of the other parameters, see :class:`~qcportal.client.PortalCl
 
 .. _qcportal_connecting_file:
 
-Using user information from a file
-----------------------------------
+
+Using connection information from a file
+----------------------------------------
 
 Rather than place your username and password in the script or notebook, you may also
-have the client read the credentials from a file (see :ref:`qcportal_setup_configfile`).
+have the client read the credentials from a file
+(see :ref:`documentation for QCPortal configuration files <qcportal_setup_configfile>`).
 
 To use this file, construct the client using the
-:meth:`~qcportal.client.PortalClient.from_file` method.
+:meth:`PortalClient.from_file <qcportal.client.PortalClient.from_file>` method.
 
 If no path is passed to this function, then the current working directory
 and then the ``~/.qca`` directory are search for ``qcportal_config.yaml``.
@@ -71,6 +74,25 @@ and then the ``~/.qca`` directory are search for ``qcportal_config.yaml``.
         >>> client = PortalClient.from_file('group_server', '/path/to/config')
         >>> print(client.server_name)
         Professor's Group Server
+
+
+Using connection information in environment variables
+-----------------------------------------------------
+
+If the connection information is stored in environment variables (:ref:`qcportal_setup_envvar`)
+then you can use the :meth:`PortalClient.from_env <qcportal.client.PortalClient.from_env>` function
+
+.. tab-set::
+
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+        # A file containing a single server, file stored in working directory or ~/.qca
+        >>> from qcportal import PortalClient
+        >>> client = PortalClient.from_env()
+        >>> print(client.server_name)
+        MolSSI QCArchive Demo Server
 
 
 Viewing server metadata
