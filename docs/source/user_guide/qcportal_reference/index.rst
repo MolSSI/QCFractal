@@ -21,7 +21,7 @@ QCPortal API Reference
 Records
 -------
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :titlesonly:
 
    records/base_record_models

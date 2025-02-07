@@ -9,6 +9,7 @@ If you are interested in running your own QCArchive server, please see :doc:`../
 
 .. toctree::
    :maxdepth: 2
+   :includehidden:
    :titlesonly:
 
    client_setup
