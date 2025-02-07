@@ -5,6 +5,18 @@ body, h1, h2, h3, h4, h5, h6 {
 }
 
 
+/* Make headings a little bit smaller */
+html {
+	--pst-font-family-base: 'Roboto', sans-serif;
+    --pst-font-size-h1: 2.00rem;
+    --pst-font-size-h2: 1.50rem;
+    --pst-font-size-h3: 1.25rem;
+    --pst-font-size-h4: 1.00rem;
+    --pst-font-size-h5: 1.00rem;
+    --pst-font-size-h6: 1.00rem;
+}
+
+
 html[data-theme="light"] {
     --pst-color-primary: #0080C7;
 	--pst-color-warning: #ed1c24;
