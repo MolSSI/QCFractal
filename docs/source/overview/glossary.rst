@@ -103,7 +103,7 @@ A dataset contains :ref:`entries <glossary_dataset_entry>` which typically corre
 :ref:`molecules <glossary_molecule>`, and :ref:`specifications <glossary_dataset_specification>` that
 define how a computation is to be run.
 
-See :doc:`../user_guide/datasets`
+See :doc:`../user_guide/datasets/index`
 
 
 .. _glossary_dataset_entry:
@@ -115,7 +115,7 @@ An object that represents a :ref:`glossary_molecule` or similar input in a datas
 The :ref:`specifications <glossary_dataset_specification>` of the dataset are then applied to the
 entries.
 
-See :doc:`../user_guide/datasets`
+See :doc:`../user_guide/datasets/index`
 
 
 .. _glossary_dataset_specification:
@@ -130,4 +130,4 @@ organize a dataset.
 Specifications are then applied to :ref:`entries <glossary_dataset_entry>` to
 form :ref:`records <glossary_record>` that are associated with the dataset.
 
-See :doc:`../user_guide/datasets`
+See :doc:`../user_guide/datasets/index`

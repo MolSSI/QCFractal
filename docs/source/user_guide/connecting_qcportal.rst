@@ -137,5 +137,5 @@ From here, you probably want to look at:
 
 * :doc:`Retrieve records <record_retrieval>`
 * :doc:`Add records <record_submission>`
-* :doc:`Use datasets <datasets>`
+* :doc:`Use datasets <datasets/index>`
 * :class:`View the PortalClient API documentation <qcportal.client.PortalClient>`

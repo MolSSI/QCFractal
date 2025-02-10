@@ -13,7 +13,7 @@ rather than a single molecule. This will create one computation per molecule, bu
 
 .. hint::
 
-  If working with lots of calculations, it is almost always better to use a :doc:`dataset <datasets>`.
+  If working with lots of calculations, it is almost always better to use a :doc:`dataset <datasets/index>`.
   Datasets allow for coordinating large numbers of similar calculations.
 
 The ``add_`` functions return two objects. The first is :class:`qcportal.metadata_models.InsertMetadata`

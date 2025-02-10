@@ -200,7 +200,7 @@ See :doc:`../record_submission` for more information about other fields.
 Singlepoint Datasets
 --------------------
 
-Singlepoint :doc:`datasets <../datasets>` are collections of singlepoint records.
+Singlepoint :ref:`datasets <glossary_dataset>` are collections of singlepoint records.
 :class:`Entries <qcportal.singlepoint.dataset_models.SinglepointDatasetEntry>` contain a single molecule.
 The :class:`dataset specifications <qcportal.singlepoint.dataset_models.SinglepointDatasetSpecification>`
 contain a singlepoint specification (see :ref:`above <singlepoint_specification>`)
@@ -343,7 +343,7 @@ Client Examples
 Dataset Examples
 ----------------
 
-See :doc:`../datasets` for more information and advanced usage.
+See :doc:`../datasets/index` for more information and advanced usage.
 See the :ref:`specification <singlepoint_specification>` section for all the options in creating specifications.
 
 .. dropdown:: Create a singlepoint dataset with default options
