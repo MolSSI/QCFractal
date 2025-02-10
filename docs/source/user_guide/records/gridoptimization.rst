@@ -23,6 +23,4 @@ Stuff
 Gridoptimization QCPortal API
 -----------------------------
 
-.. autoclass:: qcportal.gridoptimization.GridoptimizationRecord
-
-.. autoclass:: qcportal.gridoptimization.GridoptimizationSpecification
+TODO

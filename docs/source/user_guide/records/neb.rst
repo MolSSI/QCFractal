@@ -23,6 +23,4 @@ Stuff
 NEB QCPortal API
 -------------------------
 
-.. autoclass:: qcportal.neb.NEBRecord
-
-.. autoclass:: qcportal.neb.NEBSpecification
+TODO

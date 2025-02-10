@@ -23,6 +23,4 @@ Stuff
 Manybody QCPortal API
 -------------------------
 
-.. autoclass:: qcportal.manybody.ManybodyRecord
-
-.. autoclass:: qcportal.manybody.ManybodySpecification
+TODO
