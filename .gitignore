@@ -116,3 +116,5 @@ GeoLite2-City.mmdb
 qce.vdata_first
 qce_optim.xyz
 
+# From sphinx or jetbrains
+jupyter_execute
