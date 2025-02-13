@@ -20,6 +20,7 @@ If you are interested in running your own QCArchive server, please see :doc:`../
    record_retrieval
    record_submission
    record_management
+   troubleshooting
    datasets/index
    records/index
    qcportal_reference/index

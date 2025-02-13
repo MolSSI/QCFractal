@@ -205,6 +205,34 @@ Singlepoint :ref:`datasets <glossary_dataset>` are collections of singlepoint re
 The :class:`dataset specifications <qcportal.singlepoint.dataset_models.SinglepointDatasetSpecification>`
 contain a singlepoint specification (see :ref:`above <singlepoint_specification>`)
 
+.. _singlepoint_dataset_add_entries_from:
+
+Adding entries from other types of datasets
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Singlepoint datasets contain a :meth:`~qcportal.singlepoint.dataset_models.SinglepointDataset.add_entries_from`
+method which can be used to add entries from another singlepoint dataset or from an optimization dataset.
+
+When copying from an optimization dataset, a specification must be given. The new entries
+will have the same name and metadata as in the source dataset, however will contain the optimized
+molecules from the records for the given specification. If a particular record is not complete,
+the given entry will not be added.
+
+If an entry with the same name already exists, it will be ignored.
+
+.. tab-set::
+
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+      >>> ds = client.add_dataset("singlepoint", "Dataset from optimization")
+      >>> ds.add_entries_from(377, 'default') # from an optimization dataset
+      InsertCountsMetadata(n_inserted=20, n_existing=0, error_description=None, errors=[])
+
+      >>> print(ds.entry_names)
+      ['000280960', '000524682', '010464300', ...
+
 
 .. _singlepoint_client_examples:
 

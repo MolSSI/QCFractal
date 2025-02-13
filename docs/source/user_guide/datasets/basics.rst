@@ -31,6 +31,10 @@ Dataset entries, specifications, and records are dependent on the type of datase
 have different types for these items. That is, entries in a :ref:`singlepoint_dataset` are different than entries
 in an :ref:`optimization_dataset`, and the same is true for specifications.
 
+One important thing to keep in mind is that records exist outside of a dataset, and a dataset
+references these records. Therefore, `records can be part of multiple datasets`, or not be part of any dataset.
+This has implications, for example, when :ref:`submitting calculations <dataset_submission>`.
+
 
 Dataset Limitations
 -------------------
@@ -41,6 +45,50 @@ calculations.
 
 A specification should work for all entries in the dataset. There is some limited ability to override
 keywords on a per-entry basis, but there is no way to assign a different basis for a particular entry.
+
+
+Listing Datasets
+-------------------
+
+Datasets that are currently available on the server can be listed using :meth:`~qcportal.client.PortalClient.list_datasets`.
+This returns the dataset information as a list of dictionaries
+
+.. tab-set::
+
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+      >>> client.list_datasets()
+      [{'id': 54,
+        'dataset_type': 'optimization',
+        'dataset_name': 'JGI Metabolite Set 1',
+        'record_count': 808},
+       {'id': 150,
+        'dataset_type': 'singlepoint',
+        'dataset_name': 'QM7',
+        'record_count': 343920},
+       {'id': 154,
+        'dataset_type': 'singlepoint',
+        'dataset_name': 'GDB13-T',
+        'record_count': 24000}]
+
+
+In an interactive environment, the :meth:`~qcportal.client.PortalClient.print_datasets_table` function prints out
+a more user-friendly version
+
+.. tab-set::
+
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+      >>> client.print_datasets_table()
+        id  type            record_count  name
+      ----  ------------  --------------  ----------------------------------------------------------
+        54  optimization             808  JGI Metabolite Set 1
+       150  singlepoint           343920  QM7
+       154  singlepoint            24000  GDB13-T
 
 
 Retrieving Datasets
@@ -107,8 +155,8 @@ with :meth:`~qcportal.dataset_models.BaseDataset.set_name`,
       A new description
 
 
-Status
-------
+Record Status
+-------------
 
 The :meth:`~qcportal.dataset_models.BaseDataset.status` returns a dictionary describing the status of the computations.
 This is indexed by specification
@@ -161,6 +209,12 @@ Specifications and Entries
 
 The specifications of the dataset are available with the ``.specification_names`` and ``.specifications`` properties.
 ``.specifications`` returns a dictionary, with the key being the name of the specification.
+
+.. note::
+
+  The contents of the specifications and entries are different for each type of dataset. See
+  :doc:`individual record documentation <../records/index>` for the different types.
+
 
 .. tab-set::
 

@@ -558,7 +558,7 @@ class BaseDataset(BaseModel):
         view_file_path: str,
     ):
         """
-        Downloads and loads a view for this dataset
+        Loads a vuew for this dataset as a cache file
 
         Parameters
         ----------

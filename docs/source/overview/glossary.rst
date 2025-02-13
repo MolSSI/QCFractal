@@ -131,3 +131,15 @@ Specifications are then applied to :ref:`entries <glossary_dataset_entry>` to
 form :ref:`records <glossary_record>` that are associated with the dataset.
 
 See :doc:`../user_guide/datasets/index`
+
+
+.. _glossary_dataset_view:
+
+dataset view
+--------------------------
+
+An standalone file that contains data from a dataset. This file can be loaded independent of any
+server connection and used as a dataset - that is, you can iterate entries and records, view records,
+compile pandas dataframes, etc, without connecting to a server.
+
+See to :ref:`dataset_views`

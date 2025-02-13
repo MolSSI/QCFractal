@@ -8,3 +8,6 @@ Datasets
 
    basics
    creating
+   maintenance
+   caching
+   attachments
