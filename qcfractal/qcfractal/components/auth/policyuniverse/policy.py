@@ -1,6 +1,6 @@
 """
-    Credit: https://github.com/Netflix-Skunkworks/policyuniverse
-    Patrick Kelley <patrick@netflix.com>
+Credit: https://github.com/Netflix-Skunkworks/policyuniverse
+Patrick Kelley <patrick@netflix.com>
 
 """
 

@@ -1,7 +1,7 @@
 """Add username to manager
 
 Revision ID: d28e52d86633
-Revises: 
+Revises:
 Create Date: 2019-07-02 22:51:25.613742
 
 """
