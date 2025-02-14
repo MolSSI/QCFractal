@@ -476,6 +476,38 @@ class BaseDataset(BaseModel):
 
         self.fetch_attachments()
 
+    def download_attachment(
+        self,
+        attachment_id: int,
+        destination_path: Optional[str] = None,
+        overwrite: bool = True,
+    ):
+        """
+        Downloads an attachment
+
+        If destination path is not given, the file will be placed in the current directory, and the
+        filename determined by what is stored on the server.
+
+        Parameters
+        ----------
+        attachment_id
+            ID of the attachment to download. See the `attachments` property
+        destination_path
+            Full path to the destination file (including filename)
+        overwrite
+            If True, any existing file will be overwritten
+        """
+
+        attachment_map = {x.id: x for x in self.attachments}
+        if attachment_id not in attachment_map:
+            raise ValueError(f"File id {attachment_id} is not a valid attachment for this dataset")
+
+        if destination_path is None:
+            attachment_data = attachment_map[attachment_id]
+            destination_path = os.path.join(os.getcwd(), attachment_data.file_name)
+
+        self._client.download_external_file(attachment_id, destination_path, overwrite=overwrite)
+
     #########################################
     # View creation and use
     #########################################
@@ -517,13 +549,9 @@ class BaseDataset(BaseModel):
 
         view_map = {x.id: x for x in self.list_views()}
         if view_file_id not in view_map:
-            raise ValueError(f"File id {view_file_id} is not a valid ID for this dataset")
+            raise ValueError(f"File id {view_file_id} is not a valid view for this dataset")
 
-        if destination_path is None:
-            view_data = view_map[view_file_id]
-            destination_path = os.path.join(os.getcwd(), view_data.file_name)
-
-        self._client.download_external_file(view_file_id, destination_path, overwrite=overwrite)
+        self.download_attachment(view_file_id, destination_path, overwrite=overwrite)
 
     def use_view_cache(
         self,
