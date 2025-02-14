@@ -1721,6 +1721,9 @@ class BaseDatasetSocket:
         destination_dataset_id: int,
         entry_names: Optional[Iterable[str]] = None,
         specification_names: Optional[Iterable[str]] = None,
+        copy_entries: bool = False,
+        copy_specifications: bool = False,
+        copy_records: bool = False,
         *,
         session: Optional[Session] = None,
     ):
@@ -1740,6 +1743,14 @@ class BaseDatasetSocket:
             Only copy records for these entries. If none, copy records for all entries
         specification_names
             Only copy records for these specifications. If none, copy records for all specifications
+        copy_entries
+            If True, copy entries from the source dataset.
+        copy_entries
+            If True, copy entries from the source dataset.
+        copy_specifications
+            If True, copy specifications from the source dataset.
+        copy_records
+            If True, copy record (items) from the source dataset. Implies copy_entries and copy_specifications.
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -1755,21 +1766,24 @@ class BaseDatasetSocket:
                 )
 
             # Copy specifications
-            self.copy_specifications(
-                session, source_dataset_id, destination_dataset_id, specification_names=specification_names
-            )
+            if copy_specifications or copy_records:
+                self.copy_specifications(
+                    session, source_dataset_id, destination_dataset_id, specification_names=specification_names
+                )
 
             # Copy entries
-            self.copy_entries(session, source_dataset_id, destination_dataset_id, entry_names=entry_names)
+            if copy_entries or copy_records:
+                self.copy_entries(session, source_dataset_id, destination_dataset_id, entry_names=entry_names)
 
             # Copy record items
-            self.copy_record_items(
-                session,
-                source_dataset_id,
-                destination_dataset_id,
-                entry_names=entry_names,
-                specification_names=specification_names,
-            )
+            if copy_records:
+                self.copy_record_items(
+                    session,
+                    source_dataset_id,
+                    destination_dataset_id,
+                    entry_names=entry_names,
+                    specification_names=specification_names,
+                )
 
     def clone(
         self,
@@ -1823,7 +1837,7 @@ class BaseDatasetSocket:
             #################################################
             # Copy entries, specifications, and record items
             #################################################
-            self.copy_from(source_dataset_id, new_dataset_id, session=session)
+            self.copy_from(source_dataset_id, new_dataset_id, copy_records=True, session=session)
 
             #####################
             # Contributed values

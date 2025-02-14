@@ -243,4 +243,4 @@ def test_dataset_client_copy_from_incompatible(snowflake_client: PortalClient):
     ds_2 = snowflake_client.add_dataset("optimization", "Test opt dataset")
 
     with pytest.raises(PortalRequestError, match="does not match destination type"):
-        ds_2.copy_from(ds_1.id)
+        ds_2.copy_records_from(ds_1.id)

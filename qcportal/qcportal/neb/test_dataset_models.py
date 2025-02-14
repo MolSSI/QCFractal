@@ -170,6 +170,11 @@ def test_neb_dataset_model_copy(snowflake_client: PortalClient):
     ds_helpers.run_dataset_model_copy(snowflake_client, "neb", test_entries, test_specs, entry_extra_compare)
 
 
+def test_neb_dataset_model_copy_full(snowflake_client: PortalClient):
+
+    ds_helpers.run_dataset_model_copy_full(snowflake_client, "neb", test_entries, test_specs, entry_extra_compare)
+
+
 def test_neb_dataset_model_clone(snowflake_client: PortalClient):
     ds_helpers.run_dataset_model_clone(snowflake_client, "neb", test_entries, test_specs, entry_extra_compare)
 

@@ -1762,12 +1762,95 @@ class BaseDataset(BaseModel):
 
         return ret
 
-    def copy_from(
+    def copy_entries_from(
+        self,
+        source_dataset_id: int,
+        entry_names: Optional[Union[str, Iterable[str]]] = None,
+    ):
+        """
+        Copies entries from another dataset into this one
+
+        If entries already exist with the same name, an exception is raised.
+
+        Parameters
+        ----------
+        source_dataset_id
+            The ID of the dataset to copy entries from
+        entry_names
+            Names of the entries to copy. If not provided, all entries will be copied.
+        """
+
+        self.assert_is_not_view()
+        self.assert_online()
+
+        body_data = DatasetCopyFromBody(
+            source_dataset_id=source_dataset_id,
+            entry_names=make_list(entry_names),
+            copy_entries=True,
+        )
+
+        self._client.make_request(
+            "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/copy_from", None, body=body_data
+        )
+
+        self.fetch_entry_names()
+
+    def copy_specifications_from(
+        self,
+        source_dataset_id: int,
+        specification_names: Optional[Union[str, Iterable[str]]] = None,
+    ):
+        """
+        Copies specifications from another dataset into this one
+
+        If specifications already exist with the same name, an exception is raised.
+
+        Parameters
+        ----------
+        source_dataset_id
+            The ID of the dataset to copy entries from
+        specification_names
+            Names of the specifications to copy. If not provided, all specifications will be copied.
+        """
+        self.assert_is_not_view()
+        self.assert_online()
+
+        body_data = DatasetCopyFromBody(
+            source_dataset_id=source_dataset_id,
+            specification_names=make_list(specification_names),
+            copy_specifications=True,
+        )
+
+        self._client.make_request(
+            "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/copy_from", None, body=body_data
+        )
+
+        self.fetch_specifications()
+
+    def copy_records_from(
         self,
         source_dataset_id: int,
         entry_names: Optional[Union[str, Iterable[str]]] = None,
         specification_names: Optional[Union[str, Iterable[str]]] = None,
     ):
+        """
+        Copies records from another dataset into this one
+
+        Entries and specifications will also be copied.
+        If entries or specifications already exist with the same name, an exception is raised.
+
+        This does not actually fully copy records - the records will be linked to both datasets
+
+        Parameters
+        ----------
+        source_dataset_id
+            The ID of the dataset to copy entries from
+        entry_names
+            Names of the entries to copy. If not provided, all entries will be copied.
+        specification_names
+            Names of the specifications to copy. If not provided, all specifications will be copied.
+        """
+
         self.assert_is_not_view()
         self.assert_online()
 
@@ -1775,14 +1858,15 @@ class BaseDataset(BaseModel):
             source_dataset_id=source_dataset_id,
             entry_names=make_list(entry_names),
             specification_names=make_list(specification_names),
+            copy_records=True,
         )
 
         self._client.make_request(
-            "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/copy_records", None, body=body_data
+            "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/copy_from", None, body=body_data
         )
 
         self.fetch_entry_names()
-        self.fetch_specification_names()
+        self.fetch_specifications()
 
     def compile_values(
         self,
@@ -2128,6 +2212,9 @@ class DatasetCopyFromBody(RestModelBase):
     source_dataset_id: int
     entry_names: Optional[List[str]] = None
     specification_names: Optional[List[str]] = None
+    copy_entries: bool = False
+    copy_specifications: bool = False
+    copy_records: bool = False
 
 
 class DatasetFetchRecordsBody(RestModelBase):

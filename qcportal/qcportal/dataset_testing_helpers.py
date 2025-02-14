@@ -16,6 +16,13 @@ def dataset_submit_test_client(secure_snowflake):
     yield client
 
 
+def _compare_entries(ent1, ent2, entry_extra_compare):
+    assert ent1.name == ent2.name
+    assert ent1.comment == ent2.comment
+    assert ent1.attributes == ent2.attributes
+    entry_extra_compare(ent1, ent2)
+
+
 def run_dataset_model_add_get_entry(snowflake_client, ds, test_entries, entry_extra_compare):
     ent_map = {x.name: x for x in test_entries}
 
@@ -42,22 +49,12 @@ def run_dataset_model_add_get_entry(snowflake_client, ds, test_entries, entry_ex
 
     for ent in ent_map.values():
         test_ent = ds.get_entry(ent.name)
-        assert test_ent.name == ent.name
-        assert test_ent.comment == ent.comment
-        assert test_ent.attributes == ent.attributes
-
-        # Compare molecules or other stuff
-        entry_extra_compare(test_ent, ent)
+        _compare_entries(test_ent, ent, entry_extra_compare)
 
     # Get directly from the cache
     for ent in ent_map.values():
         test_ent = ds._cache_data.get_entry(ent.name)
-        assert test_ent.name == ent.name
-        assert test_ent.comment == ent.comment
-        assert test_ent.attributes == ent.attributes
-
-        # Compare molecules or other stuff
-        entry_extra_compare(test_ent, ent)
+        _compare_entries(test_ent, ent, entry_extra_compare)
 
 
 def run_dataset_model_add_entry_duplicate(snowflake_client, ds, test_entries, entry_extra_compare):
@@ -563,7 +560,7 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare, backgr
     assert ds._client.list_datasets()[0]["record_count"] == record_count
 
 
-def run_dataset_model_copy(snowflake_client, dataset_type, test_entries, test_specs, entry_extra_compare):
+def run_dataset_model_copy_full(snowflake_client, dataset_type, test_entries, test_specs, entry_extra_compare):
     ds1 = snowflake_client.add_dataset(dataset_type, "Test dataset 1")
     ds2 = snowflake_client.add_dataset(dataset_type, "Test dataset 2")
     ds3 = snowflake_client.add_dataset(dataset_type, "Test dataset 3")
@@ -576,23 +573,17 @@ def run_dataset_model_copy(snowflake_client, dataset_type, test_entries, test_sp
     #################
     # Copy all to ds2
     #################
-    ds2.copy_from(ds1.id)
+    ds2.copy_records_from(ds1.id)
     ds2 = snowflake_client.get_dataset_by_id(ds2.id)
 
     with pytest.raises(PortalRequestError, match="already has specifications with the same name"):
-        ds2.copy_from(ds1.id)
+        ds2.copy_records_from(ds1.id)
 
     for e in ds1.iterate_entries():
         e2 = ds2.get_entry(e.name)
+        _compare_entries(e, e2, entry_extra_compare)
 
-        assert e.name == e2.name
-        assert e.comment == e2.comment
-        assert e.attributes == e2.attributes
-        entry_extra_compare(e, e2)
-
-    for k, v in ds1.specifications.items():
-        v2 = ds2.specifications[k]
-        assert v == v2
+    assert ds1.specifications == ds2.specifications
 
     for e, s, r in ds1.iterate_records():
         r2 = ds2.get_record(e, s)
@@ -601,20 +592,16 @@ def run_dataset_model_copy(snowflake_client, dataset_type, test_entries, test_sp
     ###########################
     # Copy only one spec to ds3
     ###########################
-    ds3.copy_from(ds1.id, specification_names=["spec_1"])
+    ds3.copy_records_from(ds1.id, specification_names=["spec_1"])
 
     with pytest.raises(PortalRequestError, match="already has specifications with the same name"):
-        ds3.copy_from(ds1.id, specification_names=["spec_1"])
+        ds3.copy_records_from(ds1.id, specification_names=["spec_1"])
 
     ds3 = snowflake_client.get_dataset_by_id(ds3.id)
 
     for e in ds1.iterate_entries():
         e3 = ds3.get_entry(e.name)
-
-        assert e.name == e3.name
-        assert e.comment == e3.comment
-        assert e.attributes == e3.attributes
-        entry_extra_compare(e, e3)
+        _compare_entries(e, e3, entry_extra_compare)
 
     assert len(ds3.specifications) == 1
     assert ds1.specifications["spec_1"] == ds3.specifications["spec_1"]
@@ -627,18 +614,14 @@ def run_dataset_model_copy(snowflake_client, dataset_type, test_entries, test_sp
     # Only one spec and entry to ds3
     #################################
     ename = ds1.entry_names[0]
-    ds4.copy_from(ds1.id, entry_names=[ename], specification_names=["spec_1"])
+    ds4.copy_records_from(ds1.id, entry_names=[ename], specification_names=["spec_1"])
 
     ds4 = snowflake_client.get_dataset_by_id(ds4.id)
-
     assert len(ds4.entry_names) == 1
 
     e = ds1.get_entry(ename)
     e4 = ds4.get_entry(ename)
-    assert e.name == e4.name
-    assert e.comment == e4.comment
-    assert e.attributes == e4.attributes
-    entry_extra_compare(e, e4)
+    _compare_entries(e, e4, entry_extra_compare)
 
     assert len(ds3.specifications) == 1
     assert ds1.specifications["spec_1"] == ds3.specifications["spec_1"]
@@ -654,7 +637,53 @@ def run_dataset_model_copy(snowflake_client, dataset_type, test_entries, test_sp
     ds5.add_entries(test_entries)
 
     with pytest.raises(PortalRequestError, match="already has entries with the same name"):
-        ds5.copy_from(ds1.id)
+        ds5.copy_records_from(ds1.id)
+
+
+def run_dataset_model_copy(snowflake_client, dataset_type, test_entries, test_specs, entry_extra_compare):
+    ds1 = snowflake_client.add_dataset(dataset_type, "Test dataset 1")
+    ds2 = snowflake_client.add_dataset(dataset_type, "Test dataset 2")
+    ds3 = snowflake_client.add_dataset(dataset_type, "Test dataset 3")
+    ds4 = snowflake_client.add_dataset(dataset_type, "Test dataset 4")
+    ds1.add_specification("spec_1", test_specs[0])
+    ds1.add_specification("spec_2", test_specs[1])
+    ds1.add_entries(test_entries)
+
+    #################################################
+    # Copy all entries and specs to ds2
+    #################################################
+    ds2.copy_entries_from(ds1.id)
+    assert set(ds2.entry_names) == set(ds1.entry_names)
+    assert len(ds2.specifications) == 0
+
+    for e in ds1.iterate_entries():
+        e2 = ds2.get_entry(e.name)
+        _compare_entries(e, e2, entry_extra_compare)
+
+    ds2.copy_specifications_from(ds1.id)
+    assert ds1.specifications == ds2.specifications
+
+    all_recs = [(e, s, r) for e, s, r in ds2.iterate_records()]
+    assert len(all_recs) == 0
+
+    #################################################
+    # Selectively copy spec and entry
+    #################################################
+    ename = ds1.entry_names[0]
+    ds3.copy_entries_from(ds1.id, entry_names=ename)  # not using lists on purpose
+    ds3.copy_specifications_from(ds1.id, specification_names="spec_1")
+
+    assert len(ds3.specifications) == 1
+    assert ds1.specifications["spec_1"] == ds3.specifications["spec_1"]
+    assert len(ds3.entry_names) == 1
+
+    e = ds1.get_entry(ename)
+    e3 = ds3.get_entry(ename)
+    _compare_entries(e, e3, entry_extra_compare)
+
+    # records not copied
+    all_recs = [(e, s, r) for e, s, r in ds2.iterate_records()]
+    assert len(all_recs) == 0
 
 
 def run_dataset_model_clone(snowflake_client, dataset_type, test_entries, test_specs, entry_extra_compare):
@@ -673,11 +702,7 @@ def run_dataset_model_clone(snowflake_client, dataset_type, test_entries, test_s
 
     for e in ds.iterate_entries():
         e2 = ds2.get_entry(e.name)
-
-        assert e.name == e2.name
-        assert e.comment == e2.comment
-        assert e.attributes == e2.attributes
-        entry_extra_compare(e, e2)
+        _compare_entries(e, e2, entry_extra_compare)
 
     for k, v in ds.specifications.items():
         v2 = ds2.specifications[k]

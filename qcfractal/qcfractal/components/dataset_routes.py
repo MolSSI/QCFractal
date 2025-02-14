@@ -438,7 +438,7 @@ def clone_dataset_v1(body_data: DatasetCloneBody):
         return ds_socket.clone(body_data.source_dataset_id, body_data.new_dataset_name, session=session)
 
 
-@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/copy_records", methods=["POST"])
+@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/copy_from", methods=["POST"])
 @wrap_route("WRITE")
 def copy_from_dataset_v1(dataset_type: str, dataset_id: int, body_data: DatasetCopyFromBody):
     # the dataset_id in the URI is the destination dataset
@@ -450,5 +450,8 @@ def copy_from_dataset_v1(dataset_type: str, dataset_id: int, body_data: DatasetC
             dataset_id,
             body_data.entry_names,
             body_data.specification_names,
+            body_data.copy_entries,
+            body_data.copy_specifications,
+            body_data.copy_records,
             session=session,
         )
