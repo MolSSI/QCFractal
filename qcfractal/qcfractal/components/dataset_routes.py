@@ -24,6 +24,7 @@ from qcportal.dataset_models import (
     DatasetModifyEntryBody,
     DatasetGetInternalJobParams,
     DatasetCloneBody,
+    DatasetCopyFromBody,
 )
 from qcportal.exceptions import LimitExceededError
 
@@ -434,4 +435,20 @@ def clone_dataset_v1(body_data: DatasetCloneBody):
     with storage_socket.session_scope(True) as session:
         ds_type = storage_socket.datasets.lookup_type(body_data.source_dataset_id, session=session)
         ds_socket = storage_socket.datasets.get_socket(ds_type)
-        return ds_socket.clone(body_data.source_dataset_id, body_data.new_dataset_name)
+        return ds_socket.clone(body_data.source_dataset_id, body_data.new_dataset_name, session=session)
+
+
+@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/copy_records", methods=["POST"])
+@wrap_route("WRITE")
+def copy_from_dataset_v1(dataset_type: str, dataset_id: int, body_data: DatasetCopyFromBody):
+    # the dataset_id in the URI is the destination dataset
+    # (ie, the user has a dataset, then copies FROM another dataset
+    with storage_socket.session_scope(True) as session:
+        ds_socket = storage_socket.datasets.get_socket(dataset_type)
+        return ds_socket.copy_from(
+            body_data.source_dataset_id,
+            dataset_id,
+            body_data.entry_names,
+            body_data.specification_names,
+            session=session,
+        )

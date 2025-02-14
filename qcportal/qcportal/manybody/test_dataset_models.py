@@ -137,6 +137,10 @@ def test_manybody_dataset_model_remove_record(snowflake_client: PortalClient):
     ds_helpers.run_dataset_model_remove_record(snowflake_client, ds, test_entries, test_specs)
 
 
+def test_manybody_dataset_model_copy(snowflake_client: PortalClient):
+    ds_helpers.run_dataset_model_copy(snowflake_client, "manybody", test_entries, test_specs, entry_extra_compare)
+
+
 def test_manybody_dataset_model_clone(snowflake_client: PortalClient):
     ds_helpers.run_dataset_model_clone(snowflake_client, "manybody", test_entries, test_specs, entry_extra_compare)
 

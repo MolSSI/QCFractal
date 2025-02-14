@@ -563,6 +563,90 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare, backgr
     assert ds._client.list_datasets()[0]["record_count"] == record_count
 
 
+def run_dataset_model_copy(snowflake_client, dataset_type, test_entries, test_specs, entry_extra_compare):
+    ds1 = snowflake_client.add_dataset(dataset_type, "Test dataset 1")
+    ds2 = snowflake_client.add_dataset(dataset_type, "Test dataset 2")
+    ds3 = snowflake_client.add_dataset(dataset_type, "Test dataset 3")
+    ds4 = snowflake_client.add_dataset(dataset_type, "Test dataset 4")
+    ds1.add_specification("spec_1", test_specs[0])
+    ds1.add_specification("spec_2", test_specs[1])
+    ds1.add_entries(test_entries)
+    ds1.submit()
+
+    #################
+    # Copy all to ds2
+    #################
+    # Do it twice - shouldn't make any difference
+    ds2.copy_from(ds1.id)
+    ds2.copy_from(ds1.id)
+    ds2 = snowflake_client.get_dataset_by_id(ds2.id)
+
+    for e in ds1.iterate_entries():
+        e2 = ds2.get_entry(e.name)
+
+        assert e.name == e2.name
+        assert e.comment == e2.comment
+        assert e.attributes == e2.attributes
+        entry_extra_compare(e, e2)
+
+    for k, v in ds1.specifications.items():
+        v2 = ds2.specifications[k]
+        assert v == v2
+
+    for e, s, r in ds1.iterate_records():
+        r2 = ds2.get_record(e, s)
+        assert r.id == r2.id  # only really need to check ids
+
+    ###########################
+    # Copy only one spec to ds3
+    ###########################
+    # Do it twice - shouldn't make any difference
+    ds3.copy_from(ds1.id, specification_names=["spec_1"])
+    ds3.copy_from(ds1.id, specification_names=["spec_1"])
+    ds3 = snowflake_client.get_dataset_by_id(ds3.id)
+
+    for e in ds1.iterate_entries():
+        e3 = ds3.get_entry(e.name)
+
+        assert e.name == e3.name
+        assert e.comment == e3.comment
+        assert e.attributes == e3.attributes
+        entry_extra_compare(e, e3)
+
+    assert len(ds3.specifications) == 1
+    assert ds1.specifications["spec_1"] == ds3.specifications["spec_1"]
+
+    for e, s, r3 in ds3.iterate_records():
+        r = ds1.get_record(e, s)
+        assert r.id == r3.id  # only really need to check ids
+
+    #################################
+    # Only one spec and entry to ds3
+    #################################
+    # Do it twice - shouldn't make any difference
+    ename = ds1.entry_names[0]
+    ds4.copy_from(ds1.id, entry_names=[ename], specification_names=["spec_1"])
+    ds4.copy_from(ds1.id, entry_names=[ename], specification_names=["spec_1"])
+
+    ds4 = snowflake_client.get_dataset_by_id(ds4.id)
+
+    assert len(ds4.entry_names) == 1
+
+    e = ds1.get_entry(ename)
+    e4 = ds4.get_entry(ename)
+    assert e.name == e4.name
+    assert e.comment == e4.comment
+    assert e.attributes == e4.attributes
+    entry_extra_compare(e, e4)
+
+    assert len(ds3.specifications) == 1
+    assert ds1.specifications["spec_1"] == ds3.specifications["spec_1"]
+
+    r4 = ds4.get_record(ename, "spec_1")
+    r = ds1.get_record(ename, "spec_1")
+    assert r.id == r4.id
+
+
 def run_dataset_model_clone(snowflake_client, dataset_type, test_entries, test_specs, entry_extra_compare):
     ds = snowflake_client.add_dataset(dataset_type, "Test dataset")
     ds.add_specification("spec_1", test_specs[0])
@@ -583,8 +667,6 @@ def run_dataset_model_clone(snowflake_client, dataset_type, test_entries, test_s
         assert e.name == e2.name
         assert e.comment == e2.comment
         assert e.attributes == e2.attributes
-
-        # Compare molecules or other stuff
         entry_extra_compare(e, e2)
 
     for k, v in ds.specifications.items():

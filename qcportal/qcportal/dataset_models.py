@@ -1762,6 +1762,25 @@ class BaseDataset(BaseModel):
 
         return ret
 
+    def copy_from(
+        self,
+        source_dataset_id: int,
+        entry_names: Optional[Union[str, Iterable[str]]] = None,
+        specification_names: Optional[Union[str, Iterable[str]]] = None,
+    ):
+        self.assert_is_not_view()
+        self.assert_online()
+
+        body_data = DatasetCopyFromBody(
+            source_dataset_id=source_dataset_id,
+            entry_names=make_list(entry_names),
+            specification_names=make_list(specification_names),
+        )
+
+        return self._client.make_request(
+            "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/copy_records", None, body=body_data
+        )
+
     def compile_values(
         self,
         value_call: Callable,
@@ -2100,6 +2119,12 @@ class DatasetDeleteParams(RestModelBase):
 class DatasetCloneBody(RestModelBase):
     source_dataset_id: int
     new_dataset_name: str
+
+
+class DatasetCopyFromBody(RestModelBase):
+    source_dataset_id: int
+    entry_names: Optional[List[str]] = None
+    specification_names: Optional[List[str]] = None
 
 
 class DatasetFetchRecordsBody(RestModelBase):

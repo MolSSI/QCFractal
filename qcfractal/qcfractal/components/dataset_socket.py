@@ -1723,10 +1723,11 @@ class BaseDatasetSocket:
 
         with self.root_socket.optional_session(session) as session:
 
-            destination_dataset_type = self.root_socket.datasets.lookup_type(destination_dataset_id)
-            if destination_dataset_type != self.dataset_type:
+            source_dataset_type = self.root_socket.datasets.lookup_type(source_dataset_id, session=session)
+
+            if source_dataset_type != self.dataset_type:
                 raise UserReportableError(
-                    f"Destination dataset type {destination_dataset_type} does not match this type {self.dataset_type}"
+                    f"Source dataset type {source_dataset_type} does not match destination type {self.dataset_type}"
                 )
 
             # Copy specifications
