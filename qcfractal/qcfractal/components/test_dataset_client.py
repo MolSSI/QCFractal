@@ -236,3 +236,11 @@ def test_dataset_client_get_computed_properties(snowflake: QCATestingSnowflake):
     assert "spec_1" in computed_prop
     assert "scf_total_energy" in computed_prop["spec_1"]
     assert "calcinfo_natom" in computed_prop["spec_1"]
+
+
+def test_dataset_client_copy_from_incompatible(snowflake_client: PortalClient):
+    ds_1 = snowflake_client.add_dataset("singlepoint", "Test sp dataset")
+    ds_2 = snowflake_client.add_dataset("optimization", "Test opt dataset")
+
+    with pytest.raises(PortalRequestError, match="does not match destination type"):
+        ds_2.copy_records_from(ds_1.id)

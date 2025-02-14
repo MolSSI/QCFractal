@@ -9,6 +9,7 @@ from qcarchivetesting import load_molecule_data
 from qcportal.dataset_testing_helpers import dataset_submit_test_client
 from qcportal.optimization.record_models import OptimizationSpecification, OptimizationProtocols
 from qcportal.reaction import ReactionDatasetNewEntry, ReactionSpecification
+from qcportal.reaction.dataset_models import ReactionDatasetEntryStoichiometry
 from qcportal.record_models import PriorityEnum
 from qcportal.singlepoint.record_models import QCSpecification
 
@@ -77,8 +78,17 @@ test_specs = [
 
 
 def entry_extra_compare(ent1, ent2):
-    stoich_tmp = [(x.coefficient, x.molecule) for x in ent1.stoichiometries]
-    assert sorted(stoich_tmp) == sorted(ent2.stoichiometries)
+    if isinstance(ent1.stoichiometries[0], ReactionDatasetEntryStoichiometry):
+        stoich_tmp = [(x.coefficient, x.molecule.get_hash()) for x in ent1.stoichiometries]
+    else:
+        stoich_tmp = [(x, y.get_hash()) for x, y in ent1.stoichiometries]
+
+    if isinstance(ent2.stoichiometries[0], ReactionDatasetEntryStoichiometry):
+        stoich_tmp_2 = [(x.coefficient, x.molecule.get_hash()) for x in ent2.stoichiometries]
+    else:
+        stoich_tmp_2 = [(x, y.get_hash()) for x, y in ent2.stoichiometries]
+
+    assert sorted(stoich_tmp) == sorted(stoich_tmp_2)
     assert ent1.additional_keywords == ent2.additional_keywords
 
 
@@ -140,6 +150,18 @@ def test_reaction_dataset_model_delete_spec(snowflake_client: PortalClient):
 def test_reaction_dataset_model_remove_record(snowflake_client: PortalClient):
     ds = snowflake_client.add_dataset("reaction", "Test dataset")
     ds_helpers.run_dataset_model_remove_record(snowflake_client, ds, test_entries, test_specs)
+
+
+def test_reaction_dataset_model_copy(snowflake_client: PortalClient):
+    ds_helpers.run_dataset_model_copy(snowflake_client, "reaction", test_entries, test_specs, entry_extra_compare)
+
+
+def test_reaction_dataset_model_copy_full(snowflake_client: PortalClient):
+    ds_helpers.run_dataset_model_copy_full(snowflake_client, "reaction", test_entries, test_specs, entry_extra_compare)
+
+
+def test_reaction_dataset_model_clone(snowflake_client: PortalClient):
+    ds_helpers.run_dataset_model_clone(snowflake_client, "reaction", test_entries, test_specs, entry_extra_compare)
 
 
 @pytest.mark.parametrize("background", [True, False])

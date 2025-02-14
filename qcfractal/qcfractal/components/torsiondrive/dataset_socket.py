@@ -4,6 +4,8 @@ import copy
 import logging
 from typing import TYPE_CHECKING
 
+from sqlalchemy import select, literal, insert
+
 from qcfractal.components.dataset_socket import BaseDatasetSocket
 from qcfractal.components.torsiondrive.record_db_models import TorsiondriveRecordORM
 from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
@@ -124,3 +126,64 @@ class TorsiondriveDatasetSocket(BaseDatasetSocket):
                 n_existing += meta.n_existing
 
         return InsertCountsMetadata(n_inserted=n_inserted, n_existing=n_existing)
+
+    def _copy_entries(
+        self,
+        session: Session,
+        source_dataset_id: int,
+        destination_dataset_id: int,
+        entry_names: Optional[Iterable[str]] = None,
+    ):
+
+        select_stmt = select(
+            literal(destination_dataset_id),
+            self.entry_orm.name,
+            self.entry_orm.comment,
+            self.entry_orm.additional_keywords,
+            self.entry_orm.additional_optimization_keywords,
+            self.entry_orm.attributes,
+        )
+
+        select_stmt = select_stmt.where(self.entry_orm.dataset_id == source_dataset_id)
+
+        if entry_names is not None:
+            select_stmt = select_stmt.where(self.entry_orm.name.in_(entry_names))
+
+        stmt = insert(self.entry_orm)
+        stmt = stmt.from_select(
+            [
+                self.entry_orm.dataset_id,
+                self.entry_orm.name,
+                self.entry_orm.comment,
+                self.entry_orm.additional_keywords,
+                self.entry_orm.additional_optimization_keywords,
+                self.entry_orm.attributes,
+            ],
+            select_stmt,
+        )
+
+        session.execute(stmt)
+
+        # Now do the molecules (stored in a separate table)
+        select_stmt = select(
+            literal(destination_dataset_id),
+            TorsiondriveDatasetMoleculeORM.entry_name,
+            TorsiondriveDatasetMoleculeORM.molecule_id,
+        )
+
+        select_stmt = select_stmt.where(TorsiondriveDatasetMoleculeORM.dataset_id == source_dataset_id)
+
+        if entry_names is not None:
+            select_stmt = select_stmt.where(TorsiondriveDatasetMoleculeORM.entry_name.in_(entry_names))
+
+        stmt = insert(TorsiondriveDatasetMoleculeORM)
+        stmt = stmt.from_select(
+            [
+                TorsiondriveDatasetMoleculeORM.dataset_id,
+                TorsiondriveDatasetMoleculeORM.entry_name,
+                TorsiondriveDatasetMoleculeORM.molecule_id,
+            ],
+            select_stmt,
+        )
+
+        session.execute(stmt)
