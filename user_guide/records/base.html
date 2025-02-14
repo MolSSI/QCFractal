@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Base Record &#8212; QCArchive 0.58.post7+g8f463e8d4 documentation</title>
+    <title>Base Record &#8212; QCArchive 0.58.post9+gca8b72ed0 documentation</title>
   
   
   
@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=8bae6a5d"></script>
+    <script src="../../_static/documentation_options.js?v=6ef6e126"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Computation Types" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.58.post7+g8f463e8d4" />
+  <meta name="docsearch:version" content="0.58.post9+gca8b72ed0" />
   </head>
   
   
@@ -1007,6 +1007,23 @@ records created for those that don’t match. If False, new records will always 
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>file_id</strong> (<em>int</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.download_attachment">
+<span class="sig-name descname"><span class="pre">download_attachment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attachment_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.download_attachment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.download_attachment" title="Link to this definition">#</a></dt>
+<dd><p>Downloads an attachment</p>
+<p>If destination path is not given, the file will be placed in the current directory, and the
+filename determined by what is stored on the server.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>attachment_id</strong> (<em>int</em>) – ID of the attachment to download. See the <cite>attachments</cite> property</p></li>
+<li><p><strong>destination_path</strong> (<em>str</em><em> | </em><em>None</em>) – Full path to the destination file (including filename)</p></li>
+<li><p><strong>overwrite</strong> (<em>bool</em>) – If True, any existing file will be overwritten</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -2466,6 +2483,7 @@ of a record query, and works with all kinds of records.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.fetch_attachments"><code class="docutils literal notranslate"><span class="pre">BaseDataset.fetch_attachments()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.attachments"><code class="docutils literal notranslate"><span class="pre">BaseDataset.attachments</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.delete_attachment"><code class="docutils literal notranslate"><span class="pre">BaseDataset.delete_attachment()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.download_attachment"><code class="docutils literal notranslate"><span class="pre">BaseDataset.download_attachment()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.list_views"><code class="docutils literal notranslate"><span class="pre">BaseDataset.list_views()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.download_view"><code class="docutils literal notranslate"><span class="pre">BaseDataset.download_view()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.use_view_cache"><code class="docutils literal notranslate"><span class="pre">BaseDataset.use_view_cache()</span></code></a></li>
