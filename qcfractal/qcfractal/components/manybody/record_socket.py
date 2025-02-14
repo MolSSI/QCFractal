@@ -7,7 +7,6 @@ import logging
 import textwrap
 from typing import List, Dict, Tuple, Optional, Sequence, Any, Union, TYPE_CHECKING
 
-import qcmanybody
 import tabulate
 from sqlalchemy import select, func
 from sqlalchemy.dialects.postgresql import array_agg, aggregate_order_by
