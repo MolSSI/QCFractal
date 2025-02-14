@@ -4,8 +4,7 @@ import copy
 import logging
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select, literal, text
-from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy import select, literal, text, insert
 
 from qcfractal.components.dataset_socket import BaseDatasetSocket
 from qcfractal.components.singlepoint.record_db_models import SinglepointRecordORM
@@ -150,7 +149,7 @@ class SinglepointDatasetSocket(BaseDatasetSocket):
 
         return InsertCountsMetadata(n_inserted=n_inserted, n_existing=n_existing)
 
-    def copy_entries(
+    def _copy_entries(
         self,
         session: Session,
         source_dataset_id: int,
@@ -187,7 +186,6 @@ class SinglepointDatasetSocket(BaseDatasetSocket):
             select_stmt,
         )
 
-        stmt = stmt.on_conflict_do_nothing()
         session.execute(stmt)
 
     def add_entries_from_ds(

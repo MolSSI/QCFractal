@@ -576,10 +576,11 @@ def run_dataset_model_copy(snowflake_client, dataset_type, test_entries, test_sp
     #################
     # Copy all to ds2
     #################
-    # Do it twice - shouldn't make any difference
-    ds2.copy_from(ds1.id)
     ds2.copy_from(ds1.id)
     ds2 = snowflake_client.get_dataset_by_id(ds2.id)
+
+    with pytest.raises(PortalRequestError, match="already has specifications with the same name"):
+        ds2.copy_from(ds1.id)
 
     for e in ds1.iterate_entries():
         e2 = ds2.get_entry(e.name)
@@ -600,9 +601,11 @@ def run_dataset_model_copy(snowflake_client, dataset_type, test_entries, test_sp
     ###########################
     # Copy only one spec to ds3
     ###########################
-    # Do it twice - shouldn't make any difference
     ds3.copy_from(ds1.id, specification_names=["spec_1"])
-    ds3.copy_from(ds1.id, specification_names=["spec_1"])
+
+    with pytest.raises(PortalRequestError, match="already has specifications with the same name"):
+        ds3.copy_from(ds1.id, specification_names=["spec_1"])
+
     ds3 = snowflake_client.get_dataset_by_id(ds3.id)
 
     for e in ds1.iterate_entries():
@@ -623,9 +626,7 @@ def run_dataset_model_copy(snowflake_client, dataset_type, test_entries, test_sp
     #################################
     # Only one spec and entry to ds3
     #################################
-    # Do it twice - shouldn't make any difference
     ename = ds1.entry_names[0]
-    ds4.copy_from(ds1.id, entry_names=[ename], specification_names=["spec_1"])
     ds4.copy_from(ds1.id, entry_names=[ename], specification_names=["spec_1"])
 
     ds4 = snowflake_client.get_dataset_by_id(ds4.id)
@@ -645,6 +646,15 @@ def run_dataset_model_copy(snowflake_client, dataset_type, test_entries, test_sp
     r4 = ds4.get_record(ename, "spec_1")
     r = ds1.get_record(ename, "spec_1")
     assert r.id == r4.id
+
+    #################################
+    # Test duplicate entry finding
+    #################################
+    ds5 = snowflake_client.add_dataset(dataset_type, "Test dataset 5")
+    ds5.add_entries(test_entries)
+
+    with pytest.raises(PortalRequestError, match="already has entries with the same name"):
+        ds5.copy_from(ds1.id)
 
 
 def run_dataset_model_clone(snowflake_client, dataset_type, test_entries, test_specs, entry_extra_compare):

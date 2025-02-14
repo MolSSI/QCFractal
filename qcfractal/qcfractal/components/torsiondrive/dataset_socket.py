@@ -4,8 +4,7 @@ import copy
 import logging
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select, literal
-from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy import select, literal, insert
 
 from qcfractal.components.dataset_socket import BaseDatasetSocket
 from qcfractal.components.torsiondrive.record_db_models import TorsiondriveRecordORM
@@ -128,7 +127,7 @@ class TorsiondriveDatasetSocket(BaseDatasetSocket):
 
         return InsertCountsMetadata(n_inserted=n_inserted, n_existing=n_existing)
 
-    def copy_entries(
+    def _copy_entries(
         self,
         session: Session,
         source_dataset_id: int,
@@ -163,7 +162,6 @@ class TorsiondriveDatasetSocket(BaseDatasetSocket):
             select_stmt,
         )
 
-        stmt = stmt.on_conflict_do_nothing()
         session.execute(stmt)
 
         # Now do the molecules (stored in a separate table)
@@ -188,5 +186,4 @@ class TorsiondriveDatasetSocket(BaseDatasetSocket):
             select_stmt,
         )
 
-        stmt = stmt.on_conflict_do_nothing()
         session.execute(stmt)

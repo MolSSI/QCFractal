@@ -1777,9 +1777,12 @@ class BaseDataset(BaseModel):
             specification_names=make_list(specification_names),
         )
 
-        return self._client.make_request(
+        self._client.make_request(
             "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/copy_records", None, body=body_data
         )
+
+        self.fetch_entry_names()
+        self.fetch_specification_names()
 
     def compile_values(
         self,

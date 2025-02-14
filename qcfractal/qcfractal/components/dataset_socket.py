@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import select, delete, func, union, text, and_, literal
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only, lazyload, joinedload, noload, with_polymorphic
 from sqlalchemy.orm.attributes import flag_modified
 
@@ -1588,7 +1589,7 @@ class BaseDatasetSocket:
 
             return self.root_socket.records.revert_generic(record_ids, revert_status)
 
-    def copy_entries(
+    def _copy_entries(
         self,
         session: Session,
         source_dataset_id: int,
@@ -1602,6 +1603,26 @@ class BaseDatasetSocket:
         """
 
         raise NotImplementedError("_clone_entries must be overridden by the derived class")
+
+    def copy_entries(
+        self,
+        session: Session,
+        source_dataset_id: int,
+        destination_dataset_id: int,
+        entry_names: Optional[Iterable[str]] = None,
+    ):
+        """
+        Copy entries from one dataset to another
+
+        If `entry_names` is not provided, all entries will be copied
+        """
+
+        try:
+            self._copy_entries(session, source_dataset_id, destination_dataset_id, entry_names)
+        except IntegrityError:
+            raise UserReportableError(
+                "Cannot copy entries from dataset - destination already has entries with the same name"
+            )
 
     def copy_specifications(
         self,
@@ -1641,8 +1662,12 @@ class BaseDatasetSocket:
             select_stmt,
         )
 
-        stmt = stmt.on_conflict_do_nothing()
-        session.execute(stmt)
+        try:
+            session.execute(stmt)
+        except IntegrityError:
+            raise UserReportableError(
+                "Cannot copy specifications from dataset - destination already has specifications with the same name"
+            )
 
     def copy_record_items(
         self,
@@ -1688,7 +1713,6 @@ class BaseDatasetSocket:
             select_stmt,
         )
 
-        stmt = stmt.on_conflict_do_nothing()
         session.execute(stmt)
 
     def copy_from(
