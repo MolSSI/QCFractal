@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Base Record &#8212; QCArchive 0.58.post9+gca8b72ed0 documentation</title>
+    <title>Base Record &#8212; QCArchive 0.58.post15+g67115c819 documentation</title>
   
   
   
@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=6ef6e126"></script>
+    <script src="../../_static/documentation_options.js?v=e3ad77e6"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Computation Types" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.58.post9+gca8b72ed0" />
+  <meta name="docsearch:version" content="0.58.post15+g67115c819" />
   </head>
   
   
@@ -1615,6 +1615,54 @@ If a record does not exist for this entry and specification, None is returned</p
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.copy_entries_from">
+<span class="sig-name descname"><span class="pre">copy_entries_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_dataset_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.copy_entries_from"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.copy_entries_from" title="Link to this definition">#</a></dt>
+<dd><p>Copies entries from another dataset into this one</p>
+<p>If entries already exist with the same name, an exception is raised.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source_dataset_id</strong> (<em>int</em>) – The ID of the dataset to copy entries from</p></li>
+<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names of the entries to copy. If not provided, all entries will be copied.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.copy_specifications_from">
+<span class="sig-name descname"><span class="pre">copy_specifications_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_dataset_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.copy_specifications_from"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.copy_specifications_from" title="Link to this definition">#</a></dt>
+<dd><p>Copies specifications from another dataset into this one</p>
+<p>If specifications already exist with the same name, an exception is raised.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source_dataset_id</strong> (<em>int</em>) – The ID of the dataset to copy entries from</p></li>
+<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names of the specifications to copy. If not provided, all specifications will be copied.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.copy_records_from">
+<span class="sig-name descname"><span class="pre">copy_records_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_dataset_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.copy_records_from"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.copy_records_from" title="Link to this definition">#</a></dt>
+<dd><p>Copies records from another dataset into this one</p>
+<p>Entries and specifications will also be copied.
+If entries or specifications already exist with the same name, an exception is raised.</p>
+<p>This does not actually fully copy records - the records will be linked to both datasets</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source_dataset_id</strong> (<em>int</em>) – The ID of the dataset to copy entries from</p></li>
+<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names of the entries to copy. If not provided, all entries will be copied.</p></li>
+<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names of the specifications to copy. If not provided, all specifications will be copied.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.compile_values">
 <span class="sig-name descname"><span class="pre">compile_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value_call</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'value'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/dataset_models.html#BaseDataset.compile_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.compile_values" title="Link to this definition">#</a></dt>
 <dd><p>Compile values from records into a pandas DataFrame.</p>
@@ -2533,6 +2581,9 @@ of a record query, and works with all kinds of records.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.uncancel_records"><code class="docutils literal notranslate"><span class="pre">BaseDataset.uncancel_records()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.invalidate_records"><code class="docutils literal notranslate"><span class="pre">BaseDataset.invalidate_records()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.uninvalidate_records"><code class="docutils literal notranslate"><span class="pre">BaseDataset.uninvalidate_records()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.copy_entries_from"><code class="docutils literal notranslate"><span class="pre">BaseDataset.copy_entries_from()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.copy_specifications_from"><code class="docutils literal notranslate"><span class="pre">BaseDataset.copy_specifications_from()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.copy_records_from"><code class="docutils literal notranslate"><span class="pre">BaseDataset.copy_records_from()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.compile_values"><code class="docutils literal notranslate"><span class="pre">BaseDataset.compile_values()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.get_properties_df"><code class="docutils literal notranslate"><span class="pre">BaseDataset.get_properties_df()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.refresh_cache"><code class="docutils literal notranslate"><span class="pre">BaseDataset.refresh_cache()</span></code></a></li>
