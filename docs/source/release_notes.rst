@@ -1,6 +1,21 @@
 Release Notes
 =============
 
+0.59 / 2025-02-17
+-----------------
+
+A few bug fixes in this, but one big new feature - the ability to copy entries, specifications,
+and records from another dataset! See
+`documentation <https://docs.qcarchive.molssi.org/user_guide/datasets/creating.html#cloning-a-dataset>`_
+for details.
+
+Notable PRs:
+
+- (:pr:`890`) Fixes a math error in finding dead managers
+- (:pr:`892`) Fix error when creating large files on S3
+- (:pr:`896`) Ability to clone datasets and copy entries/specifications/records from other datasets
+
+
 0.58 / 2025-01-31
 -----------------
 
