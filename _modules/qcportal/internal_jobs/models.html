@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.internal_jobs.models &#8212; QCArchive 0.58.post17+g70a35cb3c documentation</title>
+    <title>qcportal.internal_jobs.models &#8212; QCArchive documentation</title>
   
   
   
@@ -34,7 +34,7 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=6f1775e9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=68b739ae" />
   
   <!-- So that users can add custom icons -->
   <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=362ea571"></script>
+    <script src="../../../_static/documentation_options.js?v=89ebbeef"></script>
     <script src="../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.58.post17+g70a35cb3c" />
+  <meta name="docsearch:version" content="0.58.post34+g79c2d6e67" />
   </head>
   
   
@@ -457,7 +457,7 @@
 
 
 <div class="viewcode-block" id="InternalJobStatusEnum">
-<a class="viewcode-back" href="../../../admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJobStatusEnum">[docs]</a>
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJobStatusEnum">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">InternalJobStatusEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The state of a record object. The states which are available are a finite set.</span>
@@ -487,7 +487,7 @@
 
 
 <div class="viewcode-block" id="InternalJob">
-<a class="viewcode-back" href="../../../admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJob">[docs]</a>
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJob">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">InternalJob</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
     <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
         <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span>
@@ -524,7 +524,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_url</span> <span class="o">=</span> <span class="n">refresh_url</span>
 
 <div class="viewcode-block" id="InternalJob.refresh">
-<a class="viewcode-back" href="../../../admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJob.refresh">[docs]</a>
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJob.refresh">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">refresh</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Updates the data of this object with information from the server</span>
@@ -543,7 +543,7 @@
 
 
 <div class="viewcode-block" id="InternalJob.watch">
-<a class="viewcode-back" href="../../../admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJob.watch">[docs]</a>
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJob.watch">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">watch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Watch an internal job for completion</span>
@@ -617,7 +617,7 @@
 
 
 <div class="viewcode-block" id="InternalJobQueryFilters">
-<a class="viewcode-back" href="../../../admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJobQueryFilters">[docs]</a>
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJobQueryFilters">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">InternalJobQueryFilters</span><span class="p">(</span><span class="n">QueryProjModelBase</span><span class="p">):</span>
     <span class="n">job_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -632,7 +632,7 @@
     <span class="n">scheduled_after</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="InternalJobQueryFilters.parse_dates">
-<a class="viewcode-back" href="../../../admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJobQueryFilters.parse_dates">[docs]</a>
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJobQueryFilters.parse_dates">[docs]</a>
     <span class="nd">@validator</span><span class="p">(</span>
         <span class="s2">&quot;last_updated_before&quot;</span><span class="p">,</span>
         <span class="s2">&quot;last_updated_after&quot;</span><span class="p">,</span>
@@ -651,7 +651,7 @@
 
 
 <div class="viewcode-block" id="InternalJobQueryIterator">
-<a class="viewcode-back" href="../../../admin_guide/monitoring.html#qcportal.internal_jobs.models.InternalJobQueryIterator">[docs]</a>
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJobQueryIterator">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">InternalJobQueryIterator</span><span class="p">(</span><span class="n">QueryIteratorBase</span><span class="p">[</span><span class="n">InternalJob</span><span class="p">]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Iterator for internal job queries</span>

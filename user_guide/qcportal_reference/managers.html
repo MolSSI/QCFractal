@@ -1,0 +1,1207 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Managers &#8212; QCArchive documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=68b739ae" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=89ebbeef"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/qcportal_reference/managers';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="External Files" href="external_files.html" />
+    <link rel="prev" title="Server Information" href="serverinfo.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.58.post34+g79c2d6e67" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/qcarchive_logo.svg" class="logo__image only-light" alt=""/>
+    <img src="../../_static/qcarchive_logo_inverted.svg" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">QCArchive</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../quickstart/index.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../overview/index.html">
+    Overview
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../release_notes.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../admin_guide/index.html">
+    Admin Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../web_api/index.html">
+    Web API
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../developer_guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-external" href="https://molssi.org">
+    MolSSI
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MolSSI/QCFractal" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../quickstart/index.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../overview/index.html">
+    Overview
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../release_notes.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../admin_guide/index.html">
+    Admin Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../web_api/index.html">
+    Web API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer_guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://molssi.org">
+    MolSSI
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MolSSI/QCFractal" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../client_setup.html">QCPortal Installation &amp; Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../connecting_qcportal.html">Connecting to a server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata.html">Interpreting metadata</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../query_iterators.html">Query Iterators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../molecule.html">Molecules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../record_retrieval.html">Retrieving records</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../record_submission.html">Submitting computations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../record_management.html">Managing Records</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../datasets/index.html">Datasets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/basics.html">Using datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/creating.html">Creating datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/maintenance.html">Maintenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/caching.html">Caching &amp; Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/attachments.html">Attachments</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../records/index.html">Record &amp; Computation Types</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../records/base.html">Base Record</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/singlepoint.html">Singlepoint calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/optimization.html">Optimization calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/gridoptimization.html">Gridoptimization calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/torsiondrive.html">Torsiondrive calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/manybody.html">Manybody calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/reaction.html">Reaction calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/neb.html">NEB calculations</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">QCPortal API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="clients.html">QCPortal Clients</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auth.html">Authentication and User Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="base_models.html">Base Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="molecules.html">Molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="metadata_models.html">Metadata Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tasks_services.html">Tasks and Services</a></li>
+<li class="toctree-l2"><a class="reference internal" href="internal_jobs.html">Internal Jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="serverinfo.html">Server Information</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Managers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="external_files.html">External Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils_misc.html">Utilities and Miscellaneous</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/base_record_models.html">Base Record Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/singlepoint.html">Singlepoint Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/optimization.html">Optimization Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/torsiondrive.html">Torsiondrive Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/gridoptimization.html">Gridoptimization Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/manybody.html">Manybody Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/reaction.html">Reaction Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/neb.html">NEB Records</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">QCArchive User Guide</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">QCPortal API Reference</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Managers</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-qcportal.managers.models">
+<span id="managers"></span><h1>Managers<a class="headerlink" href="#module-qcportal.managers.models" title="Link to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerStatusEnum">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ManagerStatusEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerStatusEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerStatusEnum" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>The state of a Queue Manager. The states which are available are a finite set.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerStatusEnum.active">
+<span class="sig-name descname"><span class="pre">active</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'active'</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerStatusEnum.active" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerStatusEnum.inactive">
+<span class="sig-name descname"><span class="pre">inactive</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'inactive'</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerStatusEnum.inactive" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class pydantic_model">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerName">
+<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ManagerName</span></span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerName"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerName" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Config<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extra</strong>: <em>Extra = Extra.forbid</em></p></li>
+</ul>
+</dd>
+<dt class="field-even">Fields<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerName.cluster" title="qcportal.managers.models.ManagerName.cluster"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cluster</span> <span class="pre">(str)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerName.hostname" title="qcportal.managers.models.ManagerName.hostname"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hostname</span> <span class="pre">(str)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerName.uuid" title="qcportal.managers.models.ManagerName.uuid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">uuid</span> <span class="pre">(str)</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerName.cluster">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerName.cluster" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerName.hostname">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">hostname</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerName.hostname" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerName.uuid">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">uuid</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerName.uuid" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerName.fullname">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fullname</span></span><a class="headerlink" href="#qcportal.managers.models.ManagerName.fullname" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class pydantic_model">
+<dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager">
+<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ComputeManager</span></span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ComputeManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ComputeManager" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Config<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extra</strong>: <em>Extra = Extra.forbid</em></p></li>
+</ul>
+</dd>
+<dt class="field-even">Fields<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.active_cores" title="qcportal.managers.models.ComputeManager.active_cores"><code class="xref py py-obj docutils literal notranslate"><span class="pre">active_cores</span> <span class="pre">(int)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.active_memory" title="qcportal.managers.models.ComputeManager.active_memory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">active_memory</span> <span class="pre">(float)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.active_tasks" title="qcportal.managers.models.ComputeManager.active_tasks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">active_tasks</span> <span class="pre">(int)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.claimed" title="qcportal.managers.models.ComputeManager.claimed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">claimed</span> <span class="pre">(int)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.cluster" title="qcportal.managers.models.ComputeManager.cluster"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cluster</span> <span class="pre">(str)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.created_on" title="qcportal.managers.models.ComputeManager.created_on"><code class="xref py py-obj docutils literal notranslate"><span class="pre">created_on</span> <span class="pre">(datetime.datetime)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.failures" title="qcportal.managers.models.ComputeManager.failures"><code class="xref py py-obj docutils literal notranslate"><span class="pre">failures</span> <span class="pre">(int)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.hostname" title="qcportal.managers.models.ComputeManager.hostname"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hostname</span> <span class="pre">(str)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.id" title="qcportal.managers.models.ComputeManager.id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id</span> <span class="pre">(int)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.manager_version" title="qcportal.managers.models.ComputeManager.manager_version"><code class="xref py py-obj docutils literal notranslate"><span class="pre">manager_version</span> <span class="pre">(str)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.modified_on" title="qcportal.managers.models.ComputeManager.modified_on"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modified_on</span> <span class="pre">(datetime.datetime)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.name" title="qcportal.managers.models.ComputeManager.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span> <span class="pre">(str)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.programs" title="qcportal.managers.models.ComputeManager.programs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">programs</span> <span class="pre">(Dict[str,</span> <span class="pre">List[str]])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.rejected" title="qcportal.managers.models.ComputeManager.rejected"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rejected</span> <span class="pre">(int)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.status" title="qcportal.managers.models.ComputeManager.status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">status</span> <span class="pre">(qcportal.managers.models.ManagerStatusEnum)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.successes" title="qcportal.managers.models.ComputeManager.successes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">successes</span> <span class="pre">(int)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.tags" title="qcportal.managers.models.ComputeManager.tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tags</span> <span class="pre">(List[str])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.total_cpu_hours" title="qcportal.managers.models.ComputeManager.total_cpu_hours"><code class="xref py py-obj docutils literal notranslate"><span class="pre">total_cpu_hours</span> <span class="pre">(float)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.username" title="qcportal.managers.models.ComputeManager.username"><code class="xref py py-obj docutils literal notranslate"><span class="pre">username</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.id">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.id" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.name">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.name" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.cluster">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.cluster" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.hostname">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">hostname</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.hostname" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.username">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">username</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.username" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.tags">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tags</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.tags" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.claimed">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">claimed</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.claimed" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.successes">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">successes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.successes" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.failures">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">failures</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.failures" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.rejected">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rejected</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.rejected" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.total_cpu_hours">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">total_cpu_hours</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.total_cpu_hours" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.active_tasks">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">active_tasks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.active_tasks" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.active_cores">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">active_cores</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.active_cores" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.active_memory">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">active_memory</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.active_memory" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.status">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.managers.models.ManagerStatusEnum" title="qcportal.managers.models.ManagerStatusEnum"><span class="pre">ManagerStatusEnum</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.status" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.created_on">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">created_on</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.created_on" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.modified_on">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">modified_on</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.modified_on" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.manager_version">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">manager_version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.manager_version" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.programs">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">programs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.programs" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.propagate_client">
+<span class="sig-name descname"><span class="pre">propagate_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ComputeManager.propagate_client"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ComputeManager.propagate_client" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class pydantic_model">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerActivationBody">
+<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ManagerActivationBody</span></span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerActivationBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base_models.html#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Config<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extra</strong>: <em>Extra = Extra.forbid</em></p></li>
+<li><p><strong>validate_assignment</strong>: <em>bool = True</em></p></li>
+</ul>
+</dd>
+<dt class="field-even">Fields<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.manager_version" title="qcportal.managers.models.ManagerActivationBody.manager_version"><code class="xref py py-obj docutils literal notranslate"><span class="pre">manager_version</span> <span class="pre">(str)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.name_data" title="qcportal.managers.models.ManagerActivationBody.name_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name_data</span> <span class="pre">(qcportal.managers.models.ManagerName)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.programs" title="qcportal.managers.models.ManagerActivationBody.programs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">programs</span> <span class="pre">(Dict[qcportal.managers.models.ConstrainedStrValue,</span> <span class="pre">List[str]])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.tags" title="qcportal.managers.models.ManagerActivationBody.tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tags</span> <span class="pre">(List[qcportal.managers.models.ConstrainedStrValue])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.username" title="qcportal.managers.models.ManagerActivationBody.username"><code class="xref py py-obj docutils literal notranslate"><span class="pre">username</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+</ul>
+</dd>
+<dt class="field-odd">Validators<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.validate_programs" title="qcportal.managers.models.ManagerActivationBody.validate_programs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_programs</span></code></a> » <a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.programs" title="qcportal.managers.models.ManagerActivationBody.programs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">programs</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.validate_tags" title="qcportal.managers.models.ManagerActivationBody.validate_tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_tags</span></code></a> » <a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.tags" title="qcportal.managers.models.ManagerActivationBody.tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tags</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerActivationBody.name_data">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name_data</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.managers.models.ManagerName" title="qcportal.managers.models.ManagerName"><span class="pre">ManagerName</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody.name_data" title="Link to this definition">#</a></dt>
+<dd><p>Name information about this manager</p>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerActivationBody.manager_version">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">manager_version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody.manager_version" title="Link to this definition">#</a></dt>
+<dd><p>Version of the manager itself</p>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerActivationBody.username">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">username</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody.username" title="Link to this definition">#</a></dt>
+<dd><p>Username this manager is connected with</p>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerActivationBody.programs">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">programs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">ConstrainedStrValue</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody.programs" title="Link to this definition">#</a></dt>
+<dd><p>Programs available on this manager</p>
+<dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.validate_programs" title="qcportal.managers.models.ManagerActivationBody.validate_programs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_programs</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerActivationBody.tags">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tags</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ConstrainedStrValue</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody.tags" title="Link to this definition">#</a></dt>
+<dd><p>Tags this manager will compute for</p>
+<dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.validate_tags" title="qcportal.managers.models.ManagerActivationBody.validate_tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_tags</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method pydantic_validator">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerActivationBody.validate_tags">
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_tags</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.tags" title="qcportal.managers.models.ManagerActivationBody.tags"><em class="xref py py-obj"><span class="pre">tags</span></em></a><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerActivationBody.validate_tags"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody.validate_tags" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method pydantic_validator">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerActivationBody.validate_programs">
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_programs</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.programs" title="qcportal.managers.models.ManagerActivationBody.programs"><em class="xref py py-obj"><span class="pre">programs</span></em></a><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerActivationBody.validate_programs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody.validate_programs" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class pydantic_model">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerUpdateBody">
+<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ManagerUpdateBody</span></span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerUpdateBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerUpdateBody" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base_models.html#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Config<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extra</strong>: <em>Extra = Extra.forbid</em></p></li>
+<li><p><strong>validate_assignment</strong>: <em>bool = True</em></p></li>
+</ul>
+</dd>
+<dt class="field-even">Fields<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerUpdateBody.active_cores" title="qcportal.managers.models.ManagerUpdateBody.active_cores"><code class="xref py py-obj docutils literal notranslate"><span class="pre">active_cores</span> <span class="pre">(int)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerUpdateBody.active_memory" title="qcportal.managers.models.ManagerUpdateBody.active_memory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">active_memory</span> <span class="pre">(float)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerUpdateBody.active_tasks" title="qcportal.managers.models.ManagerUpdateBody.active_tasks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">active_tasks</span> <span class="pre">(int)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerUpdateBody.status" title="qcportal.managers.models.ManagerUpdateBody.status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">status</span> <span class="pre">(qcportal.managers.models.ManagerStatusEnum)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerUpdateBody.total_cpu_hours" title="qcportal.managers.models.ManagerUpdateBody.total_cpu_hours"><code class="xref py py-obj docutils literal notranslate"><span class="pre">total_cpu_hours</span> <span class="pre">(float)</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerUpdateBody.status">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.managers.models.ManagerStatusEnum" title="qcportal.managers.models.ManagerStatusEnum"><span class="pre">ManagerStatusEnum</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerUpdateBody.status" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerUpdateBody.active_tasks">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">active_tasks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerUpdateBody.active_tasks" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerUpdateBody.active_cores">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">active_cores</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerUpdateBody.active_cores" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerUpdateBody.active_memory">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">active_memory</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerUpdateBody.active_memory" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerUpdateBody.total_cpu_hours">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">total_cpu_hours</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerUpdateBody.total_cpu_hours" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class pydantic_model">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters">
+<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ManagerQueryFilters</span></span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerQueryFilters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base_models.html#qcportal.base_models.QueryProjModelBase" title="qcportal.base_models.QueryProjModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">QueryProjModelBase</span></code></a></p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Config<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extra</strong>: <em>Extra = Extra.forbid</em></p></li>
+<li><p><strong>validate_assignment</strong>: <em>bool = True</em></p></li>
+</ul>
+</dd>
+<dt class="field-even">Fields<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.cluster" title="qcportal.managers.models.ManagerQueryFilters.cluster"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cluster</span> <span class="pre">(List[str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.cursor" title="qcportal.managers.models.ManagerQueryFilters.cursor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cursor</span> <span class="pre">(int</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.exclude" title="qcportal.managers.models.ManagerQueryFilters.exclude"><code class="xref py py-obj docutils literal notranslate"><span class="pre">exclude</span> <span class="pre">(List[str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.hostname" title="qcportal.managers.models.ManagerQueryFilters.hostname"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hostname</span> <span class="pre">(List[str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.include" title="qcportal.managers.models.ManagerQueryFilters.include"><code class="xref py py-obj docutils literal notranslate"><span class="pre">include</span> <span class="pre">(List[str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.limit" title="qcportal.managers.models.ManagerQueryFilters.limit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">limit</span> <span class="pre">(int</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.manager_id" title="qcportal.managers.models.ManagerQueryFilters.manager_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">manager_id</span> <span class="pre">(List[int]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.modified_after" title="qcportal.managers.models.ManagerQueryFilters.modified_after"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modified_after</span> <span class="pre">(datetime.datetime</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.modified_before" title="qcportal.managers.models.ManagerQueryFilters.modified_before"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modified_before</span> <span class="pre">(datetime.datetime</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.name" title="qcportal.managers.models.ManagerQueryFilters.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span> <span class="pre">(List[str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.status" title="qcportal.managers.models.ManagerQueryFilters.status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">status</span> <span class="pre">(List[qcportal.managers.models.ManagerStatusEnum]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+</ul>
+</dd>
+<dt class="field-odd">Validators<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.parse_dates" title="qcportal.managers.models.ManagerQueryFilters.parse_dates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_dates</span></code></a> » <a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.modified_after" title="qcportal.managers.models.ManagerQueryFilters.modified_after"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modified_after</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.parse_dates" title="qcportal.managers.models.ManagerQueryFilters.parse_dates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_dates</span></code></a> » <a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.modified_before" title="qcportal.managers.models.ManagerQueryFilters.modified_before"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modified_before</span></code></a></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_lists</span></code> » <a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.cursor" title="qcportal.managers.models.ManagerQueryFilters.cursor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cursor</span></code></a></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_lists</span></code> » <a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.limit" title="qcportal.managers.models.ManagerQueryFilters.limit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">limit</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters.manager_id">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">manager_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.manager_id" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters.name">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.name" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters.cluster">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.cluster" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters.hostname">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">hostname</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.hostname" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters.status">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#qcportal.managers.models.ManagerStatusEnum" title="qcportal.managers.models.ManagerStatusEnum"><span class="pre">ManagerStatusEnum</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.status" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters.modified_before">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">modified_before</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.modified_before" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.parse_dates" title="qcportal.managers.models.ManagerQueryFilters.parse_dates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_dates</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters.modified_after">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">modified_after</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.modified_after" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.parse_dates" title="qcportal.managers.models.ManagerQueryFilters.parse_dates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_dates</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method pydantic_validator">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters.parse_dates">
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.modified_after" title="qcportal.managers.models.ManagerQueryFilters.modified_after"><em class="xref py py-obj"><span class="pre">modified_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.modified_before" title="qcportal.managers.models.ManagerQueryFilters.modified_before"><em class="xref py py-obj"><span class="pre">modified_before</span></em></a><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerQueryFilters.parse_dates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method pydantic_validator">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters.validate_lists">
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_lists</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.cursor" title="qcportal.managers.models.ManagerQueryFilters.cursor"><em class="xref py py-obj"><span class="pre">cursor</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.limit" title="qcportal.managers.models.ManagerQueryFilters.limit"><em class="xref py py-obj"><span class="pre">limit</span></em></a><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.validate_lists" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters.limit">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">limit</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.limit" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_lists</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters.cursor">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cursor</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.cursor" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_lists</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters.include">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">include</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.include" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters.exclude">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exclude</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.exclude" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryIterator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ManagerQueryIterator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_filters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerQueryIterator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerQueryIterator" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base_models.html#qcportal.base_models.QueryIteratorBase" title="qcportal.base_models.QueryIteratorBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">QueryIteratorBase</span></code></a>[<a class="reference internal" href="#qcportal.managers.models.ComputeManager" title="qcportal.managers.models.ComputeManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">ComputeManager</span></code></a>]</p>
+<p>Iterator for manager queries</p>
+<p>This iterator transparently handles batching and pagination over the results
+of a manager query</p>
+<p>Construct an iterator</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>client</strong> – QCPortal client object used to contact/retrieve data from the server</p></li>
+<li><p><strong>query_filters</strong> (<a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters" title="qcportal.managers.models.ManagerQueryFilters"><em>ManagerQueryFilters</em></a>) – The actual query information to send to the server</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryIterator.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.managers.models.ManagerQueryIterator.reset" title="Link to this definition">#</a></dt>
+<dd><p>Starts retrieval of results from the beginning again</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="serverinfo.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Server Information</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="external_files.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">External Files</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerStatusEnum"><code class="docutils literal notranslate"><span class="pre">ManagerStatusEnum</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerStatusEnum.active"><code class="docutils literal notranslate"><span class="pre">ManagerStatusEnum.active</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerStatusEnum.inactive"><code class="docutils literal notranslate"><span class="pre">ManagerStatusEnum.inactive</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerName"><code class="docutils literal notranslate"><span class="pre">ManagerName</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerName.cluster"><code class="docutils literal notranslate"><span class="pre">ManagerName.cluster</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerName.hostname"><code class="docutils literal notranslate"><span class="pre">ManagerName.hostname</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerName.uuid"><code class="docutils literal notranslate"><span class="pre">ManagerName.uuid</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerName.fullname"><code class="docutils literal notranslate"><span class="pre">ManagerName.fullname</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager"><code class="docutils literal notranslate"><span class="pre">ComputeManager</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.id"><code class="docutils literal notranslate"><span class="pre">ComputeManager.id</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.name"><code class="docutils literal notranslate"><span class="pre">ComputeManager.name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.cluster"><code class="docutils literal notranslate"><span class="pre">ComputeManager.cluster</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.hostname"><code class="docutils literal notranslate"><span class="pre">ComputeManager.hostname</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.username"><code class="docutils literal notranslate"><span class="pre">ComputeManager.username</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.tags"><code class="docutils literal notranslate"><span class="pre">ComputeManager.tags</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.claimed"><code class="docutils literal notranslate"><span class="pre">ComputeManager.claimed</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.successes"><code class="docutils literal notranslate"><span class="pre">ComputeManager.successes</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.failures"><code class="docutils literal notranslate"><span class="pre">ComputeManager.failures</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.rejected"><code class="docutils literal notranslate"><span class="pre">ComputeManager.rejected</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.total_cpu_hours"><code class="docutils literal notranslate"><span class="pre">ComputeManager.total_cpu_hours</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.active_tasks"><code class="docutils literal notranslate"><span class="pre">ComputeManager.active_tasks</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.active_cores"><code class="docutils literal notranslate"><span class="pre">ComputeManager.active_cores</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.active_memory"><code class="docutils literal notranslate"><span class="pre">ComputeManager.active_memory</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.status"><code class="docutils literal notranslate"><span class="pre">ComputeManager.status</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.created_on"><code class="docutils literal notranslate"><span class="pre">ComputeManager.created_on</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.modified_on"><code class="docutils literal notranslate"><span class="pre">ComputeManager.modified_on</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.manager_version"><code class="docutils literal notranslate"><span class="pre">ComputeManager.manager_version</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.programs"><code class="docutils literal notranslate"><span class="pre">ComputeManager.programs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.propagate_client"><code class="docutils literal notranslate"><span class="pre">ComputeManager.propagate_client()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerActivationBody"><code class="docutils literal notranslate"><span class="pre">ManagerActivationBody</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerActivationBody.name_data"><code class="docutils literal notranslate"><span class="pre">ManagerActivationBody.name_data</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerActivationBody.manager_version"><code class="docutils literal notranslate"><span class="pre">ManagerActivationBody.manager_version</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerActivationBody.username"><code class="docutils literal notranslate"><span class="pre">ManagerActivationBody.username</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerActivationBody.programs"><code class="docutils literal notranslate"><span class="pre">ManagerActivationBody.programs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerActivationBody.tags"><code class="docutils literal notranslate"><span class="pre">ManagerActivationBody.tags</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerActivationBody.validate_tags"><code class="docutils literal notranslate"><span class="pre">ManagerActivationBody.validate_tags</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerActivationBody.validate_programs"><code class="docutils literal notranslate"><span class="pre">ManagerActivationBody.validate_programs</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerUpdateBody"><code class="docutils literal notranslate"><span class="pre">ManagerUpdateBody</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerUpdateBody.status"><code class="docutils literal notranslate"><span class="pre">ManagerUpdateBody.status</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerUpdateBody.active_tasks"><code class="docutils literal notranslate"><span class="pre">ManagerUpdateBody.active_tasks</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerUpdateBody.active_cores"><code class="docutils literal notranslate"><span class="pre">ManagerUpdateBody.active_cores</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerUpdateBody.active_memory"><code class="docutils literal notranslate"><span class="pre">ManagerUpdateBody.active_memory</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerUpdateBody.total_cpu_hours"><code class="docutils literal notranslate"><span class="pre">ManagerUpdateBody.total_cpu_hours</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryFilters"><code class="docutils literal notranslate"><span class="pre">ManagerQueryFilters</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryFilters.manager_id"><code class="docutils literal notranslate"><span class="pre">ManagerQueryFilters.manager_id</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryFilters.name"><code class="docutils literal notranslate"><span class="pre">ManagerQueryFilters.name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryFilters.cluster"><code class="docutils literal notranslate"><span class="pre">ManagerQueryFilters.cluster</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryFilters.hostname"><code class="docutils literal notranslate"><span class="pre">ManagerQueryFilters.hostname</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryFilters.status"><code class="docutils literal notranslate"><span class="pre">ManagerQueryFilters.status</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryFilters.modified_before"><code class="docutils literal notranslate"><span class="pre">ManagerQueryFilters.modified_before</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryFilters.modified_after"><code class="docutils literal notranslate"><span class="pre">ManagerQueryFilters.modified_after</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryFilters.parse_dates"><code class="docutils literal notranslate"><span class="pre">ManagerQueryFilters.parse_dates</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryFilters.validate_lists"><code class="docutils literal notranslate"><span class="pre">ManagerQueryFilters.validate_lists</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryFilters.limit"><code class="docutils literal notranslate"><span class="pre">ManagerQueryFilters.limit</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryFilters.cursor"><code class="docutils literal notranslate"><span class="pre">ManagerQueryFilters.cursor</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryFilters.include"><code class="docutils literal notranslate"><span class="pre">ManagerQueryFilters.include</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryFilters.exclude"><code class="docutils literal notranslate"><span class="pre">ManagerQueryFilters.exclude</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryIterator"><code class="docutils literal notranslate"><span class="pre">ManagerQueryIterator</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryIterator.reset"><code class="docutils literal notranslate"><span class="pre">ManagerQueryIterator.reset()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/user_guide/qcportal_reference/managers.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  
+
+
+
+  
+  
+  
+  
+  
+  
+  
+
+
+<div class="row h-10">
+    <div class="col-2">
+        <a href="https://molssi.org/" target="_blank" title="Go to MolSSI in a new tab">
+            <img src="../../_static/molssi_main_logo.png" class="logo__image only-light footer_logo" alt="Logo image">
+            <img src="../../_static/molssi_main_logo_inverted_white.png" class="logo__image only-dark footer_logo" alt="Logo image">
+        </a>
+    </div>
+    <div class="col-8">
+        <p> &copy; Copyright 2019-2023 <a href="https://molssi.org/">The Molecular Sciences Software Institute</a></p>
+        <p>Funded by the National Science Foundation 
+          <a href="https://nsf.gov/awardsearch/showAward?AWD_ID=1547580">OAC-1547580</a> and 
+          <a href="https://www.nsf.gov/awardsearch/showAward?AWD_ID=2136142">CHE-2136142.</a></p>
+ 
+        
+        <p class="sphinx-version">
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.4.7.<br>
+        </p>
+        
+
+        <p class="theme-version">
+        Built with a customized <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+        </p>
+
+    </div>
+    <div class="col-2">
+        <a href="https://nsf.gov/" target="_blank" title="Go to the NSF in a new tab">
+            <img src="../../_static/nsf.png" class="footer_logo" alt="The NSF">
+          </a>
+    </div>
+</div></div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

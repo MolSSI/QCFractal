@@ -5,8 +5,8 @@ Installation through conda
 --------------------------
 
 The QCPortal package can be installed via `conda/anaconda <https://www.anaconda.com>`_
-or `mamba <https://github.com/mamba-org/mamba>`_. The packages exist under the
-`QCArchive organization <https://anaconda.org/QCArchive>`_ on Anaconda.
+or `mamba <https://github.com/mamba-org/mamba>`_. The packages are available from the
+`conda-forge <https://anaconda.org/conda-forge/qcportal>`_ channel.
 
 .. tab-set::
 
@@ -23,9 +23,10 @@ or `mamba <https://github.com/mamba-org/mamba>`_. The packages exist under the
 Configuration File
 ------------------
 
-The username and password used to connect to the remote QCFractal server
-can be placed in a configuration file. This file is then
-read by the :meth:`~PortalClient.from_file <qcportal.client.PortalClient.from_file>` function.
+Typically, you pass in the username and password to the :class:`~qcportal.client.PortalClient` constructor.
+However, for frequently-used servers, or for added security, the username and passwords
+used to connect to remote QCFractal servers can be placed in a configuration file. This file is then
+read by the :meth:`PortalClient.from_file <qcportal.client.PortalClient.from_file>` method.
 
 This file can be placed anywhere, with the path passed into that function, or can be placed in the current
 working directory or the ``~/.qca`` directory; on the latter two cases it should be given the name
@@ -71,4 +72,26 @@ differentiate between different servers.
           password: Secret_Password
 
 The path to this file and the section name can passed to the
-:meth:`~qcportal.client.PortalClient.from_file` function.
+:meth:`PortalClient.from_file <qcportal.client.PortalClient.from_file>` method.
+
+
+.. _qcportal_setup_envvar:
+
+Environment Variables
+---------------------
+
+The information needed for constructing a client can also be read from environment variables.
+See :meth:`PortalClient.from_env <qcportal.client.PortalClient.from_env>`
+
+.. tab-set::
+
+  .. tab-item:: CONFIG FILE
+
+    .. code-block:: bash
+
+      export QCPORTAL_ADDRESS="https://qcademo.molssi.org"
+      export QCPORTAL_USERNAME="your_username"
+      export QCPORTAL_PASSWORD="Secret_Password"
+      export QCPORTAL_CACHE_DIR="/path_to_cache"
+
+

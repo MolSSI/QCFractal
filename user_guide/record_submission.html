@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Submitting computations &#8212; QCArchive 0.58.post17+g70a35cb3c documentation</title>
+    <title>Submitting computations &#8212; QCArchive documentation</title>
   
   
   
@@ -35,7 +35,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=6f1775e9" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=68b739ae" />
   
   <!-- So that users can add custom icons -->
   <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=362ea571"></script>
+    <script src="../_static/documentation_options.js?v=89ebbeef"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Retrieving records" href="record_retrieval.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.58.post17+g70a35cb3c" />
+  <meta name="docsearch:version" content="0.58.post34+g79c2d6e67" />
   </head>
   
   
@@ -401,10 +401,17 @@
 <li class="toctree-l1"><a class="reference internal" href="record_retrieval.html">Retrieving records</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Submitting computations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="record_management.html">Managing Records</a></li>
-<li class="toctree-l1"><a class="reference internal" href="datasets.html">Using datasets</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="records/index.html">Computation Types</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="datasets/index.html">Datasets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="datasets/basics.html">Using datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/creating.html">Creating datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/maintenance.html">Maintenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/caching.html">Caching &amp; Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/attachments.html">Attachments</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="records/index.html">Record &amp; Computation Types</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="records/base.html">Base Record</a></li>
-
 <li class="toctree-l2"><a class="reference internal" href="records/singlepoint.html">Singlepoint calculations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="records/optimization.html">Optimization calculations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="records/gridoptimization.html">Gridoptimization calculations</a></li>
@@ -414,7 +421,28 @@
 <li class="toctree-l2"><a class="reference internal" href="records/neb.html">NEB calculations</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1"><a class="reference internal" href="qcportal_reference.html">QCPortal API Reference</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="qcportal_reference/index.html">QCPortal API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/clients.html">QCPortal Clients</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/auth.html">Authentication and User Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/base_models.html">Base Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/molecules.html">Molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/metadata_models.html">Metadata Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/tasks_services.html">Tasks and Services</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/internal_jobs.html">Internal Jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/serverinfo.html">Server Information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/managers.html">Managers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/external_files.html">External Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/utils_misc.html">Utilities and Miscellaneous</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/base_record_models.html">Base Record Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/singlepoint.html">Singlepoint Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/optimization.html">Optimization Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/torsiondrive.html">Torsiondrive Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/gridoptimization.html">Gridoptimization Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/manybody.html">Manybody Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/reaction.html">Reaction Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/neb.html">NEB Records</a></li>
+</ul>
+</details></li>
 </ul>
 </div>
 </nav></div>
@@ -488,10 +516,10 @@ for a single computation, and therefore adding multiple computations requires a 
 </div>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
-<p>If working with lots of calculations, it is almost always better to use a <a class="reference internal" href="datasets.html"><span class="doc">dataset</span></a>.
+<p>If working with lots of calculations, it is almost always better to use a <a class="reference internal" href="datasets/index.html"><span class="doc">dataset</span></a>.
 Datasets allow for coordinating large numbers of similar calculations.</p>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">add_</span></code> functions return two objects. The first is <a class="reference internal" href="metadata.html#qcportal.metadata_models.InsertMetadata" title="qcportal.metadata_models.InsertMetadata"><code class="xref py py-class docutils literal notranslate"><span class="pre">qcportal.metadata_models.InsertMetadata</span></code></a>
+<p>The <code class="docutils literal notranslate"><span class="pre">add_</span></code> functions return two objects. The first is <a class="reference internal" href="qcportal_reference/metadata_models.html#qcportal.metadata_models.InsertMetadata" title="qcportal.metadata_models.InsertMetadata"><code class="xref py py-class docutils literal notranslate"><span class="pre">qcportal.metadata_models.InsertMetadata</span></code></a>
 about the insertion, which describes which records were inserted/created, and which already
 existed on the server (see <a class="reference internal" href="metadata.html"><span class="doc">Interpreting metadata</span></a>).</p>
 <p>The second object is a list of record IDs, in the order of the input molecule(s). It is always a list, even
@@ -529,7 +557,7 @@ for different records</span></a>.</p>
 well. Tasks with a higher priority will be claimed before lower priorities. Priorities can be
 specified either as a string or integer (0 = ‘low’, 1 = ‘normal’, 2 = ‘high’),
 or as an enum member (like <code class="docutils literal notranslate"><span class="pre">PriorityEnum.high</span></code>).</p>
-<p>See <a class="reference internal" href="records/base.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">PriorityEnum</span></code></a>.</p>
+<p>See <a class="reference internal" href="qcportal_reference/records/base_record_models.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">PriorityEnum</span></code></a>.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-1">
@@ -550,7 +578,7 @@ QCPortal</label><div class="sd-tab-content docutils">
 </section>
 <section id="record-deduplication">
 <span id="record-submit-dedup"></span><h2>Record Deduplication<a class="headerlink" href="#record-deduplication" title="Link to this heading">#</a></h2>
-<p>New computations that match existing records will not be added; instead, the IDs of the existing
+<p>By default, new computations that match existing records will not be added; instead, the IDs of the existing
 records are returned.</p>
 <p>What counts as a duplicate calculation varies depending on the type of calculation, but in general
 is quite strict. This means that small differences will likely result in new calculations being added.
@@ -567,10 +595,43 @@ Some features that are usually considered are:</p>
 <li><p>tags</p></li>
 <li><p>priority</p></li>
 </ul>
+<p>This default behavior can be overridden using the <code class="docutils literal notranslate"><span class="pre">find_existing</span></code> argument to the <code class="docutils literal notranslate"><span class="pre">add_</span></code> functions.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-2" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-2">
+QCPortal</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Add a singlepoint computation</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_singlepoints</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="s1">&#39;energy&#39;</span><span class="p">,</span> <span class="s1">&#39;hf&#39;</span><span class="p">,</span> <span class="s1">&#39;sto-3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+<span class="go">InsertMetadata(error_description=None, errors=[], inserted_idx=[0], existing_idx=[])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span>
+<span class="go">[110]</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Add the same computation again</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_singlepoints</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="s1">&#39;energy&#39;</span><span class="p">,</span> <span class="s1">&#39;hf&#39;</span><span class="p">,</span> <span class="s1">&#39;sto-3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+<span class="go">InsertMetadata(error_description=None, errors=[], inserted_idx=[], existing_idx=[0])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span>
+<span class="go">[110]</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Add the same computation again, but force it to be added</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_singlepoints</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="s1">&#39;energy&#39;</span><span class="p">,</span> <span class="s1">&#39;hf&#39;</span><span class="p">,</span> <span class="s1">&#39;sto-3g&#39;</span><span class="p">,</span> <span class="n">find_existing</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+<span class="go">InsertMetadata(error_description=None, errors=[], inserted_idx=[0], existing_idx=[])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span>
+<span class="go">[111]</span>
+</pre></div>
+</div>
+</div>
+</div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Automatic de-duplication will likely be relaxed in the future, and users will have more
-fine-grained control of when to de-duplicate.</p>
+<p>Turning off deduplication also works with services. In this case, the service itself, as well as <strong>all
+records created by the service</strong>, will always be created.</p>
 </div>
 </section>
 </section>

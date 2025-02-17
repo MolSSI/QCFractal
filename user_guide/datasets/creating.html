@@ -1,0 +1,900 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Creating datasets &#8212; QCArchive documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=68b739ae" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=89ebbeef"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/datasets/creating';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Maintenance" href="maintenance.html" />
+    <link rel="prev" title="Using datasets" href="basics.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.58.post34+g79c2d6e67" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/qcarchive_logo.svg" class="logo__image only-light" alt=""/>
+    <img src="../../_static/qcarchive_logo_inverted.svg" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">QCArchive</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../quickstart/index.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../overview/index.html">
+    Overview
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../release_notes.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../admin_guide/index.html">
+    Admin Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../web_api/index.html">
+    Web API
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../developer_guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-external" href="https://molssi.org">
+    MolSSI
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MolSSI/QCFractal" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../quickstart/index.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../overview/index.html">
+    Overview
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../release_notes.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../admin_guide/index.html">
+    Admin Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../web_api/index.html">
+    Web API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer_guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://molssi.org">
+    MolSSI
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MolSSI/QCFractal" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../client_setup.html">QCPortal Installation &amp; Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../connecting_qcportal.html">Connecting to a server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata.html">Interpreting metadata</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../query_iterators.html">Query Iterators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../molecule.html">Molecules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../record_retrieval.html">Retrieving records</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../record_submission.html">Submitting computations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../record_management.html">Managing Records</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Datasets</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="basics.html">Using datasets</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Creating datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="maintenance.html">Maintenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="caching.html">Caching &amp; Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="attachments.html">Attachments</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../records/index.html">Record &amp; Computation Types</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../records/base.html">Base Record</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/singlepoint.html">Singlepoint calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/optimization.html">Optimization calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/gridoptimization.html">Gridoptimization calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/torsiondrive.html">Torsiondrive calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/manybody.html">Manybody calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/reaction.html">Reaction calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/neb.html">NEB calculations</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../qcportal_reference/index.html">QCPortal API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/clients.html">QCPortal Clients</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/auth.html">Authentication and User Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/base_models.html">Base Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/molecules.html">Molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/metadata_models.html">Metadata Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/tasks_services.html">Tasks and Services</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/internal_jobs.html">Internal Jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/serverinfo.html">Server Information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/managers.html">Managers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/external_files.html">External Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/utils_misc.html">Utilities and Miscellaneous</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/base_record_models.html">Base Record Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/singlepoint.html">Singlepoint Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/optimization.html">Optimization Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/torsiondrive.html">Torsiondrive Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/gridoptimization.html">Gridoptimization Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/manybody.html">Manybody Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/reaction.html">Reaction Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/neb.html">NEB Records</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">QCArchive User Guide</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Datasets</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Creating datasets</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="creating-datasets">
+<h1>Creating datasets<a class="headerlink" href="#creating-datasets" title="Link to this heading">#</a></h1>
+<section id="adding-datasets">
+<span id="id1"></span><h2>Adding Datasets<a class="headerlink" href="#adding-datasets" title="Link to this heading">#</a></h2>
+<p>Datasets can be created on a server with the <a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.add_dataset" title="qcportal.client.PortalClient.add_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_dataset()</span></code></a>
+function of the <a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">PortalClient</span></code></a>. This function returns the dataset object
+(such as a <a class="reference internal" href="../qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDataset" title="qcportal.optimization.dataset_models.OptimizationDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationDataset</span></code></a>)</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-0">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;optimization&quot;</span><span class="p">,</span> <span class="s2">&quot;Optimization of important molecules&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+<span class="go">27</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>The <a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.add_dataset" title="qcportal.client.PortalClient.add_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_dataset()</span></code></a> takes several optional arguments, including
+some for descriptions of the dataset as well as default priority and <a class="reference internal" href="../../overview/tasks_services.html#routing-tags"><span class="std std-ref">tags</span></a>.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-1">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;optimization&quot;</span><span class="p">,</span> <span class="s2">&quot;Optimization of large molecules&quot;</span><span class="p">,</span>
+<span class="go">..                          default_tag=&quot;large_mem&quot;, default_priority=&quot;low&quot;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+<span class="go">28</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="adding-entries-and-specifications">
+<h2>Adding Entries and Specifications<a class="headerlink" href="#adding-entries-and-specifications" title="Link to this heading">#</a></h2>
+<p>Entries and specifications can be added with <code class="docutils literal notranslate"><span class="pre">add_entries</span></code>, <code class="docutils literal notranslate"><span class="pre">add_entry</span></code>, and <code class="docutils literal notranslate"><span class="pre">add_specification</span></code>.
+The details of these functions depend on the type of dataset - see <a class="reference internal" href="../records/index.html"><span class="doc">Record &amp; Computation Types</span></a>. The following examples
+are for an <a class="reference internal" href="../records/optimization.html#optimization-dataset"><span class="std std-ref">optimization dataset</span></a>.</p>
+<p>Both entries and specifications are given descriptive names, which can be use later in other functions
+(like <a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.get_record" title="qcportal.dataset_models.BaseDataset.get_record"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_record()</span></code></a>).</p>
+<p>When entries or specifications are added, the changes are reflected immediately on the server.</p>
+<p>First, we add some entries to this dataset. For an optimization dataset, an entry corresponds to
+an unoptimized ‘initial’ molecule. Adding entries returns <a class="reference internal" href="../metadata.html"><span class="doc">metadata</span></a>.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-2" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-2">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.molecules</span><span class="w"> </span><span class="kn">import</span> <span class="n">Molecule</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.optimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationDatasetEntry</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">&quot;carbon monoxide&quot;</span><span class="p">,</span> <span class="n">mol</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+<span class="go">InsertMetadata(error_description=None, errors=[], inserted_idx=[0], existing_idx=[])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Can also create lots of entries and add them at once</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol2</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;F&#39;</span><span class="p">,</span> <span class="s1">&#39;F&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol3</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Br&#39;</span><span class="p">,</span> <span class="s1">&#39;Br&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">entry2</span> <span class="o">=</span> <span class="n">OptimizationDatasetEntry</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;difluorine&#39;</span><span class="p">,</span> <span class="n">initial_molecule</span><span class="o">=</span><span class="n">mol2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">entry3</span> <span class="o">=</span> <span class="n">OptimizationDatasetEntry</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;dibromine&#39;</span><span class="p">,</span> <span class="n">initial_molecule</span><span class="o">=</span><span class="n">mol3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">add_entries</span><span class="p">([</span><span class="n">entry2</span><span class="p">,</span> <span class="n">entry3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+<span class="go">InsertMetadata(error_description=None, errors=[], inserted_idx=[0, 1], existing_idx=[])</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Now our dataset has three entries</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-3">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">entry_names</span><span class="p">)</span>
+<span class="go">[&#39;carbon monoxide&#39;, &#39;difluorine&#39;, &#39;dibromine&#39;]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Next, we will add some specifications. For an optimization dataset, this is an
+<code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationSpecification</span></code>.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-4" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-4">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">SinglepointSpecification</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.optimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationSpecification</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Use geometric, compute gradients with psi4. Optimize with b3lyp/def2-tzvp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">OptimizationSpecification</span><span class="p">(</span>
+<span class="gp">... </span>  <span class="n">program</span><span class="o">=</span><span class="s1">&#39;geometric&#39;</span><span class="p">,</span>
+<span class="gp">... </span>  <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;deferred&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-tzvp&#39;</span><span class="p">,</span>
+<span class="gp">... </span>  <span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;psi4/b3lyp/def2-tzvp&#39;</span><span class="p">,</span> <span class="n">specification</span><span class="o">=</span><span class="n">spec</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+<span class="go">InsertMetadata(error_description=None, errors=[], inserted_idx=[0], existing_idx=[])</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="submitting-computations">
+<span id="dataset-submission"></span><h2>Submitting Computations<a class="headerlink" href="#submitting-computations" title="Link to this heading">#</a></h2>
+<p>Adding entries and specifications does not immediately create the underlying records. To do that,
+we use <a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.submit" title="qcportal.dataset_models.BaseDataset.submit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">submit()</span></code></a>.</p>
+<p>The process of submitting is generally as follows.</p>
+<ol class="arabic simple">
+<li><p>Loop over the given entries and specifications</p></li>
+<li><p>If a record is attached to the dataset for that entry/specification pair, nothing is done</p></li>
+<li><p>If the <code class="docutils literal notranslate"><span class="pre">find_existing</span></code> parameter is false, then a new record is created and attached to the dataset</p></li>
+<li><p>If the <code class="docutils literal notranslate"><span class="pre">find_existing</span></code> parameter is true (default), then the database is searched for an existing record matching that entry and specification.</p>
+<ol class="loweralpha simple">
+<li><p>If a record is found, then that record is attached to the dataset.</p></li>
+<li><p>If a record is not found, then a new record is created and attached to the dataset</p></li>
+</ol>
+</li>
+</ol>
+<p>With no arguments, this will find/create and attach missing records for all entries and specifications, using the
+default tag and priority of the dataset (set when creating the dataset, or <a class="reference internal" href="maintenance.html#dataset-modify-meta"><span class="std std-ref">modified after</span></a>).</p>
+<p>You may also submit only certain entries and specifications, or change the tag and priority of any newly-created records.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-5" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-5">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">submit</span><span class="p">()</span> <span class="c1"># Create everything</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Submit missing difluorine computations with a special tag</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">submit</span><span class="p">([</span><span class="s1">&#39;difluorine&#39;</span><span class="p">],</span> <span class="n">tag</span><span class="o">=</span><span class="s1">&#39;special_tag&#39;</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Submit dibromine hf/sto-3g computation at a high priority</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">submit</span><span class="p">([</span><span class="s1">&#39;dibromine&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;hf/sto-3g&#39;</span><span class="p">],</span> <span class="n">priority</span><span class="o">=</span><span class="s1">&#39;high&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>If there are a lot of records to be created, you may instead submit them using
+<a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.background_submit" title="qcportal.dataset_models.BaseDataset.background_submit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">background_submit()</span></code></a>. This will create a background
+<a class="reference internal" href="../../overview/glossary.html#glossary-internal-job"><span class="std std-ref">internal job</span></a> and return an <a class="reference internal" href="../qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJob" title="qcportal.internal_jobs.models.InternalJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">InternalJob</span></code></a> object that
+you can use to monitor the progress (if desired - see <a class="reference internal" href="../qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJob.watch" title="qcportal.internal_jobs.models.InternalJob.watch"><code class="xref py py-meth docutils literal notranslate"><span class="pre">watch()</span></code></a>).</p>
+<p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.background_submit" title="qcportal.dataset_models.BaseDataset.background_submit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">background_submit()</span></code></a>. Takes the same arguments as
+<a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.submit" title="qcportal.dataset_models.BaseDataset.submit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">submit()</span></code></a>.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-6" name="sd-tab-set-6" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-6">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ij</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">background_submit</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ij</span><span class="o">.</span><span class="n">progress</span><span class="p">)</span>
+<span class="go">50</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="cloning-a-dataset">
+<h2>Cloning a dataset<a class="headerlink" href="#cloning-a-dataset" title="Link to this heading">#</a></h2>
+<p>An entire dataset can be cloned using <a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.clone_dataset" title="qcportal.client.PortalClient.clone_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">PortalClient.clone_dataset()</span></code></a>.
+This will clone all entries, specifications, and records. Records themselves are not duplicated, but will be linked to
+by both datasets.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-7" name="sd-tab-set-7" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-7">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cloned_ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">clone_dataset</span><span class="p">(</span><span class="mi">432</span><span class="p">,</span> <span class="s2">&quot;New dataset name&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">cloned_ds</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<span class="go">New dataset name</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">cloned_ds</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+<span class="go">542</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cloned_ds</span><span class="o">.</span><span class="n">print_status</span><span class="p">()</span>
+<span class="go">specification    complete    error    invalid</span>
+<span class="go">-------------  ----------  -------  ---------</span>
+<span class="go">       spec_2       13569      401</span>
+<span class="go">       spec_6       13926                  44</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="copying-from-another-dataset">
+<h2>Copying from another dataset<a class="headerlink" href="#copying-from-another-dataset" title="Link to this heading">#</a></h2>
+<p>Entries, specifications, and records can be copied from another dataset of the same type using the following
+functions:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.copy_entries_from" title="qcportal.dataset_models.BaseDataset.copy_entries_from"><code class="xref py py-meth docutils literal notranslate"><span class="pre">copy_entries_from()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.copy_specifications_from" title="qcportal.dataset_models.BaseDataset.copy_specifications_from"><code class="xref py py-meth docutils literal notranslate"><span class="pre">copy_specifications_from()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.copy_records_from" title="qcportal.dataset_models.BaseDataset.copy_records_from"><code class="xref py py-meth docutils literal notranslate"><span class="pre">copy_records_from()</span></code></a></p></li>
+</ul>
+<p>These functions take a dataset id, and optionally lists of entry and specification names.</p>
+<p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.copy_records_from" title="qcportal.dataset_models.BaseDataset.copy_records_from"><code class="xref py py-meth docutils literal notranslate"><span class="pre">copy_records_from()</span></code></a> will copy entries and specifications before copying
+the records. The records themselves are not duplicated - instead, the records will be referenced by both datasets.</p>
+<p>The below copies some entries and specifications from another dataset</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-8" name="sd-tab-set-8" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-8">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;singlepoint&quot;</span><span class="p">,</span> <span class="s2">&quot;New combined dataset&quot;</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># If no entry_names are given, all entries will be copied</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">copy_entries_from</span><span class="p">(</span><span class="mi">432</span><span class="p">,</span> <span class="n">entry_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;010 ALA-0&#39;</span><span class="p">,</span> <span class="s1">&#39;010 ALA-1&#39;</span><span class="p">,</span> <span class="s1">&#39;010 ALA-2&#39;</span><span class="p">])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">entry_names</span><span class="p">)</span>
+<span class="go">[&#39;010 ALA-0&#39;, &#39;010 ALA-1&#39;, &#39;010 ALA-2&#39;]</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># If no specification_names are given, all specifications will be copied</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">copy_specifications_from</span><span class="p">(</span><span class="mi">432</span><span class="p">,</span> <span class="n">specification_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;wb97m-d3bj/def2-tzvppd&#39;</span><span class="p">])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">specification_names</span><span class="p">)</span>
+<span class="go">[&#39;wb97m-d3bj/def2-tzvppd&#39;]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>The below copies entries, specifications, and actual records from the other dataset</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-9" name="sd-tab-set-9" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-9">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;singlepoint&quot;</span><span class="p">,</span> <span class="s2">&quot;New combined dataset&quot;</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># If no entry_names or specification_names are given, all will be copied from the source</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">copy_records_from</span><span class="p">(</span><span class="mi">432</span><span class="p">,</span> <span class="n">entry_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;010 ALA-0&#39;</span><span class="p">,</span> <span class="s1">&#39;010 ALA-1&#39;</span><span class="p">,</span> <span class="s1">&#39;010 ALA-2&#39;</span><span class="p">],</span> <span class="n">specification_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;wb97m-d3bj/def2-tzvppd&#39;</span><span class="p">])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">entry_names</span><span class="p">)</span>
+<span class="go">[&#39;010 ALA-0&#39;, &#39;010 ALA-1&#39;, &#39;010 ALA-2&#39;]</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># If no specification_names are given, all specifications will be copied</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">copy_specifications_from</span><span class="p">(</span><span class="mi">432</span><span class="p">,</span> <span class="n">specification_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;wb97m-d3bj/def2-tzvppd&#39;</span><span class="p">])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">specification_names</span><span class="p">)</span>
+<span class="go">[&#39;wb97m-d3bj/def2-tzvppd&#39;]</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">print_status</span><span class="p">()</span>
+<span class="go">         specification    complete</span>
+<span class="go">----------------------  ----------</span>
+<span class="go">wb97m-d3bj/def2-tzvppd           3</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="../records/singlepoint.html#singlepoint-dataset"><span class="std std-ref">Singlepoint datasets</span></a> have the ability to add entries from other types of
+datasets - see the <a class="reference internal" href="../records/singlepoint.html#singlepoint-dataset-add-entries-from"><span class="std std-ref">singlepoint documentation</span></a></p>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="basics.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Using datasets</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="maintenance.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Maintenance</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-datasets">Adding Datasets</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-entries-and-specifications">Adding Entries and Specifications</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submitting-computations">Submitting Computations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cloning-a-dataset">Cloning a dataset</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#copying-from-another-dataset">Copying from another dataset</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/user_guide/datasets/creating.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  
+
+
+
+  
+  
+  
+  
+  
+  
+  
+
+
+<div class="row h-10">
+    <div class="col-2">
+        <a href="https://molssi.org/" target="_blank" title="Go to MolSSI in a new tab">
+            <img src="../../_static/molssi_main_logo.png" class="logo__image only-light footer_logo" alt="Logo image">
+            <img src="../../_static/molssi_main_logo_inverted_white.png" class="logo__image only-dark footer_logo" alt="Logo image">
+        </a>
+    </div>
+    <div class="col-8">
+        <p> &copy; Copyright 2019-2023 <a href="https://molssi.org/">The Molecular Sciences Software Institute</a></p>
+        <p>Funded by the National Science Foundation 
+          <a href="https://nsf.gov/awardsearch/showAward?AWD_ID=1547580">OAC-1547580</a> and 
+          <a href="https://www.nsf.gov/awardsearch/showAward?AWD_ID=2136142">CHE-2136142.</a></p>
+ 
+        
+        <p class="sphinx-version">
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.4.7.<br>
+        </p>
+        
+
+        <p class="theme-version">
+        Built with a customized <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+        </p>
+
+    </div>
+    <div class="col-2">
+        <a href="https://nsf.gov/" target="_blank" title="Go to the NSF in a new tab">
+            <img src="../../_static/nsf.png" class="footer_logo" alt="The NSF">
+          </a>
+    </div>
+</div></div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

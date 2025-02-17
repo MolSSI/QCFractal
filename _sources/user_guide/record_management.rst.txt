@@ -8,7 +8,7 @@ in some way. This includes restarting, deleting, cancelling, or otherwise modify
 
 .. hint::
 
-  If working with lots of calculations, it is almost always better to use a :doc:`dataset <datasets>`.
+  If working with lots of calculations, it is almost always better to use a :doc:`dataset <datasets/index>`.
   Datasets allow for coordinating large numbers of similar calculations.
 
 .. _record_status:

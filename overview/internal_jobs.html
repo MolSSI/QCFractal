@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Internal Jobs &#8212; QCArchive 0.58.post17+g70a35cb3c documentation</title>
+    <title>Internal Jobs &#8212; QCArchive documentation</title>
   
   
   
@@ -35,7 +35,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=6f1775e9" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=68b739ae" />
   
   <!-- So that users can add custom icons -->
   <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=362ea571"></script>
+    <script src="../_static/documentation_options.js?v=89ebbeef"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Tasks and Services" href="tasks_services.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.58.post17+g70a35cb3c" />
+  <meta name="docsearch:version" content="0.58.post34+g79c2d6e67" />
   </head>
   
   
@@ -460,7 +460,7 @@
                   
   <section id="internal-jobs">
 <h1>Internal Jobs<a class="headerlink" href="#internal-jobs" title="Link to this heading">#</a></h1>
-<p>The server contains an internal job queue for periodic maintenance or otherwise asynchronous tasks.
+<p>The server contains an internal job queue for periodic maintenance and other asynchronous tasks.
 This job queue is managed completely by the QCFractal server. While a user (typically an admin)
 can view, cancel, or delete tasks, there is no general way to add tasks to this queue.</p>
 <p>When it is time for an internal job to be run, it is picked up by an internal job worker.
@@ -474,9 +474,18 @@ can only interact with the web API, while job workers can directly interact with
 <li><p>Updating server statistics</p></li>
 <li><p>Checking for dead managers</p></li>
 <li><p>Asynchronous submission/deletion of data</p></li>
+<li><p>Server-side dataset submission and view creation</p></li>
 </ul>
 </dd>
 </dl>
+<section id="internal-jobs-api-reference">
+<h2>Internal Jobs API Reference<a class="headerlink" href="#internal-jobs-api-reference" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.get_internal_job" title="qcportal.client.PortalClient.get_internal_job"><code class="xref py py-meth docutils literal notranslate"><span class="pre">qcportal.client.PortalClient.get_internal_job()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.query_internal_jobs" title="qcportal.client.PortalClient.query_internal_jobs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">qcportal.client.PortalClient.query_internal_jobs()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJob" title="qcportal.internal_jobs.models.InternalJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">qcportal.internal_jobs.models.InternalJob</span></code></a></p></li>
+</ul>
+</section>
 </section>
 
 
@@ -517,6 +526,18 @@ can only interact with the web API, while job workers can directly interact with
                 <dialog id="pst-secondary-sidebar-modal"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#internal-jobs-api-reference">Internal Jobs API Reference</a></li>
+</ul>
+  </nav></div>
 
   <div class="sidebar-secondary-item">
   <div role="note" aria-label="source link">

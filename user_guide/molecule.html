@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Molecules &#8212; QCArchive 0.58.post17+g70a35cb3c documentation</title>
+    <title>Molecules &#8212; QCArchive documentation</title>
   
   
   
@@ -35,7 +35,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=6f1775e9" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=68b739ae" />
   
   <!-- So that users can add custom icons -->
   <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=362ea571"></script>
+    <script src="../_static/documentation_options.js?v=89ebbeef"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Query Iterators" href="query_iterators.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.58.post17+g70a35cb3c" />
+  <meta name="docsearch:version" content="0.58.post34+g79c2d6e67" />
   </head>
   
   
@@ -401,10 +401,17 @@
 <li class="toctree-l1"><a class="reference internal" href="record_retrieval.html">Retrieving records</a></li>
 <li class="toctree-l1"><a class="reference internal" href="record_submission.html">Submitting computations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="record_management.html">Managing Records</a></li>
-<li class="toctree-l1"><a class="reference internal" href="datasets.html">Using datasets</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="records/index.html">Computation Types</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="datasets/index.html">Datasets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="datasets/basics.html">Using datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/creating.html">Creating datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/maintenance.html">Maintenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/caching.html">Caching &amp; Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/attachments.html">Attachments</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="records/index.html">Record &amp; Computation Types</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="records/base.html">Base Record</a></li>
-
 <li class="toctree-l2"><a class="reference internal" href="records/singlepoint.html">Singlepoint calculations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="records/optimization.html">Optimization calculations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="records/gridoptimization.html">Gridoptimization calculations</a></li>
@@ -414,7 +421,28 @@
 <li class="toctree-l2"><a class="reference internal" href="records/neb.html">NEB calculations</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1"><a class="reference internal" href="qcportal_reference.html">QCPortal API Reference</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="qcportal_reference/index.html">QCPortal API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/clients.html">QCPortal Clients</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/auth.html">Authentication and User Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/base_models.html">Base Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/molecules.html">Molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/metadata_models.html">Metadata Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/tasks_services.html">Tasks and Services</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/internal_jobs.html">Internal Jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/serverinfo.html">Server Information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/managers.html">Managers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/external_files.html">External Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/utils_misc.html">Utilities and Miscellaneous</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/base_record_models.html">Base Record Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/singlepoint.html">Singlepoint Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/optimization.html">Optimization Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/torsiondrive.html">Torsiondrive Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/gridoptimization.html">Gridoptimization Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/manybody.html">Manybody Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/reaction.html">Reaction Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/neb.html">NEB Records</a></li>
+</ul>
+</details></li>
 </ul>
 </div>
 </nav></div>
@@ -478,9 +506,9 @@
   <section id="molecules">
 <h1>Molecules<a class="headerlink" href="#molecules" title="Link to this heading">#</a></h1>
 <p>The molecule objects used in QCArchive come from the
-<a class="reference external" href="https://docs.qcarchive.molssi.org/projects/QCElemental">QCElemental package</a>. This class is also accessible
+<a class="reference external" href="https://molssi.github.io/QCElemental">QCElemental package</a>. This class is also accessible
 from <code class="docutils literal notranslate"><span class="pre">qcportal.molecules.Molecule</span></code>, but is otherwise the same as the
-<a class="reference external" href="https://docs.qcarchive.molssi.org/projects/QCElemental/en/stable/model_molecule.html">QCElemental Molecule</a>.</p>
+<a class="reference external" href="https://molssi.github.io/QCElemental/model_molecule.html">QCElemental Molecule</a>.</p>
 <section id="creating-molecules">
 <span id="id1"></span><h2>Creating Molecules<a class="headerlink" href="#creating-molecules" title="Link to this heading">#</a></h2>
 <p>A common way to programmatically create a molecule is with the Molecule constructor. With the constructor,
@@ -544,7 +572,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
 <p>For the most part, this is not needed. You can pass a Molecule object to functions like
-<a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.add_singlepoints" title="qcportal.client.PortalClient.add_singlepoints"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_singlepoints()</span></code></a> and they will be automatically added
+<a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.add_singlepoints" title="qcportal.client.PortalClient.add_singlepoints"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_singlepoints()</span></code></a> and they will be automatically added
 to the database as needed. However, in some cases, this may be useful.</p>
 </div>
 <p>Molecules can be added to the server database with <cite>~qcportal.client.PortalClient.add_molecules</cite>. This returns
@@ -565,13 +593,13 @@ PYTHON</label><div class="sd-tab-content docutils">
 </div>
 </div>
 </div>
-<p>These IDs can be passed into functions like <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.add_singlepoints" title="qcportal.client.PortalClient.add_singlepoints"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_singlepoints()</span></code></a> instead of
+<p>These IDs can be passed into functions like <a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.add_singlepoints" title="qcportal.client.PortalClient.add_singlepoints"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_singlepoints()</span></code></a> instead of
 full molecule objects.</p>
 </section>
 <section id="retrieving-and-querying-molecules">
 <h2>Retrieving and Querying Molecules<a class="headerlink" href="#retrieving-and-querying-molecules" title="Link to this heading">#</a></h2>
-<p>The client has two methods for retrieving molecules: <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.get_molecules" title="qcportal.client.PortalClient.get_molecules"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_molecules()</span></code></a> and
-<a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.query_molecules" title="qcportal.client.PortalClient.query_molecules"><code class="xref py py-meth docutils literal notranslate"><span class="pre">query_molecules()</span></code></a>. The <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.get_molecules" title="qcportal.client.PortalClient.get_molecules"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_molecules()</span></code></a>
+<p>The client has two methods for retrieving molecules: <a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.get_molecules" title="qcportal.client.PortalClient.get_molecules"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_molecules()</span></code></a> and
+<a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.query_molecules" title="qcportal.client.PortalClient.query_molecules"><code class="xref py py-meth docutils literal notranslate"><span class="pre">query_molecules()</span></code></a>. The <a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.get_molecules" title="qcportal.client.PortalClient.get_molecules"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_molecules()</span></code></a>
 method is used to get molecules by ID, and returns molecules in the same order as the given ids.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-4" name="sd-tab-set-4" type="radio">
@@ -596,7 +624,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 </div>
 </div>
 </div>
-<p>You can also query the molecules in the database with <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.query_molecules" title="qcportal.client.PortalClient.query_molecules"><code class="xref py py-meth docutils literal notranslate"><span class="pre">query_molecules()</span></code></a>.
+<p>You can also query the molecules in the database with <a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.query_molecules" title="qcportal.client.PortalClient.query_molecules"><code class="xref py py-meth docutils literal notranslate"><span class="pre">query_molecules()</span></code></a>.
 This function returns an <a class="reference internal" href="query_iterators.html"><span class="doc">iterator</span></a>, which you can then use to
 iterate over the results. The iterator automatically handles returning batches or pages of query results from the
 server.</p>
@@ -621,7 +649,7 @@ and the order may be different even with repeated calls with the same arguments<
 </section>
 <section id="managing-molecules">
 <h2>Managing Molecules<a class="headerlink" href="#managing-molecules" title="Link to this heading">#</a></h2>
-<p>Molecules can be deleted from the server with <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.delete_molecules" title="qcportal.client.PortalClient.delete_molecules"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_molecules()</span></code></a></p>
+<p>Molecules can be deleted from the server with <a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.delete_molecules" title="qcportal.client.PortalClient.delete_molecules"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_molecules()</span></code></a></p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-7" name="sd-tab-set-7" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-7">

@@ -1,0 +1,1033 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>qcportal.utils &#8212; QCArchive documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=68b739ae" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=89ebbeef"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/qcportal/utils';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.58.post34+g79c2d6e67" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/qcarchive_logo.svg" class="logo__image only-light" alt=""/>
+    <img src="../../_static/qcarchive_logo_inverted.svg" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">QCArchive</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../quickstart/index.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../overview/index.html">
+    Overview
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../release_notes.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../admin_guide/index.html">
+    Admin Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../web_api/index.html">
+    Web API
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../developer_guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-external" href="https://molssi.org">
+    MolSSI
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MolSSI/QCFractal" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../quickstart/index.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../overview/index.html">
+    Overview
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../release_notes.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../admin_guide/index.html">
+    Admin Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../web_api/index.html">
+    Web API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer_guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://molssi.org">
+    MolSSI
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MolSSI/QCFractal" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">qcportal.utils</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for qcportal.utils</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">concurrent.futures</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">functools</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">contextmanager</span><span class="p">,</span> <span class="n">redirect_stderr</span><span class="p">,</span> <span class="n">redirect_stdout</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hashlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">sha256</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.serialization</span><span class="w"> </span><span class="kn">import</span> <span class="n">_JSONEncoder</span>
+
+<span class="n">_T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;_T&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="make_list">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/utils_misc.html#qcportal.utils.make_list">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">make_list</span><span class="p">(</span><span class="n">obj</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">_T</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">_T</span><span class="p">],</span> <span class="n">Set</span><span class="p">[</span><span class="n">_T</span><span class="p">]]])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">_T</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a list containing obj if obj is not a list or other iterable type object</span>
+
+<span class="sd">    This will also work with sets</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># NOTE - you might be tempted to change this to work with Iterable rather than Sequence. However,</span>
+    <span class="c1"># pydantic models and dicts and stuff are sequences, too, which we usually just want to return</span>
+    <span class="c1"># within a list</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">obj</span>
+    <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="c1"># Be careful. strings are sequences</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">obj</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">obj</span><span class="p">]</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="chunk_iterable">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/utils_misc.html#qcportal.utils.chunk_iterable">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">chunk_iterable</span><span class="p">(</span><span class="n">it</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">_T</span><span class="p">],</span> <span class="n">chunk_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">_T</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Split an iterable (such as a list) into batches/chunks</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">chunk_size</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;chunk size must be &gt;= 1&quot;</span><span class="p">)</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">it</span><span class="p">)</span>
+
+    <span class="n">batch</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">chunk_size</span><span class="p">))</span>
+    <span class="k">while</span> <span class="n">batch</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">batch</span>
+        <span class="n">batch</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">chunk_size</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="chunk_iterable_time">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/utils_misc.html#qcportal.utils.chunk_iterable_time">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">chunk_iterable_time</span><span class="p">(</span>
+    <span class="n">it</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">_T</span><span class="p">],</span> <span class="n">chunk_time</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">max_chunk_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">initial_chunk_size</span><span class="p">:</span> <span class="nb">int</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">_T</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Split an iterable into chunks, trying to keep a constant time per chunk</span>
+
+<span class="sd">    This function keeps track of the time it takes to process each chunk and tries to keep the time per chunk</span>
+<span class="sd">    as close to &#39;chunk_time&#39; as possible, increasing or decreasing the chunk size as needed (up to &#39;max_chunk_size&#39;)</span>
+
+<span class="sd">    The first chunk will be of size &#39;initial_chunk_size&#39; (assuming there is enough elements in the iterable to fill it).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">chunk_time</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;chunk_time must be &gt; 0&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">max_chunk_size</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_chunk_size must be &gt;= 1&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">initial_chunk_size</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">initial_chunk_size</span> <span class="o">&gt;</span> <span class="n">max_chunk_size</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;initial_chunk_size must be &gt;= 1 and &lt;= max_chunk_size&quot;</span><span class="p">)</span>
+
+    <span class="n">i</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">it</span><span class="p">)</span>
+
+    <span class="n">batch</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">initial_chunk_size</span><span class="p">))</span>
+
+    <span class="k">while</span> <span class="n">batch</span><span class="p">:</span>
+        <span class="c1"># Time how long it takes the caller to process the first chunk</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="k">yield</span> <span class="n">batch</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+        <span class="c1"># How many elements could we fit in the desired chunk_time</span>
+        <span class="n">time_per_element</span> <span class="o">=</span> <span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+        <span class="n">chunk_size</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">chunk_time</span> <span class="o">/</span> <span class="n">time_per_element</span><span class="p">))</span>
+
+        <span class="c1"># Clamp to a valid size</span>
+        <span class="n">chunk_size</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">chunk_size</span><span class="p">,</span> <span class="n">max_chunk_size</span><span class="p">))</span>
+
+        <span class="c1"># Get the next chunk</span>
+        <span class="n">batch</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">chunk_size</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="process_chunk_iterable">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/utils_misc.html#qcportal.utils.process_chunk_iterable">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">process_chunk_iterable</span><span class="p">(</span>
+    <span class="n">fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">_T</span><span class="p">]],</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">it</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">_T</span><span class="p">],</span>
+    <span class="n">chunk_time</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">max_chunk_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">initial_chunk_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">max_workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">keep_order</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">_T</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Process an iterable in chunks, trying to keep a constant time per chunk</span>
+
+<span class="sd">    This function keeps track of the time it takes to process each chunk and tries to keep the time per chunk</span>
+<span class="sd">    as close to &#39;chunk_time&#39; as possible, increasing or decreasing the chunk size as needed (up to &#39;max_chunk_size&#39;)</span>
+
+<span class="sd">    The first chunk will be of size &#39;initial_chunk_size&#39; (assuming there is enough elements in the iterable to fill it).</span>
+
+<span class="sd">    This function returns the results as chunks (lists) of the original iterable. If &#39;keep_order&#39; is True, the results</span>
+<span class="sd">    will be returned in the same order as the original iterable. If &#39;keep_order&#39; is False, the results will be returned</span>
+<span class="sd">    in the order they are completed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># NOTE: You might think that we should spin up another thread to handle all the processing and submission</span>
+    <span class="c1">#       to the thread pool. However, if the user takes a long time processing the chunk (returned via yield) on</span>
+    <span class="c1">#       their end then this would effectively just process all the data and hold that in the cache. This might be</span>
+    <span class="c1">#       undesirable if the user is trying to process a large amount of data. Also, the effect is largely the same</span>
+    <span class="c1">#       in terms of timing.</span>
+    <span class="c1">#       So this function more or less tries to pre-process enough so that the user is never waiting, striking a</span>
+    <span class="c1">#       balance between downloading all the data and doing things completely serially.</span>
+
+    <span class="k">if</span> <span class="n">chunk_time</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;chunk_time must be &gt; 0.0&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">max_chunk_size</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_chunk_size must be &gt;= 1&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">initial_chunk_size</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">initial_chunk_size</span> <span class="o">&gt;</span> <span class="n">max_chunk_size</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;initial_chunk_size must be &gt;= 1 and &lt;= max_chunk_size&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">max_workers</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_workers must be &gt;= 1&quot;</span><span class="p">)</span>
+
+    <span class="n">pool</span> <span class="o">=</span> <span class="n">concurrent</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">ThreadPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="n">max_workers</span><span class="p">)</span>
+
+    <span class="c1"># Get initial chunks to be submitted to the pool</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">it</span><span class="p">)</span>
+    <span class="n">chunks</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">initial_chunk_size</span><span class="p">))</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_workers</span><span class="p">)]</span>
+
+    <span class="c1"># Remove empty chunks</span>
+    <span class="n">chunks</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">chunks</span> <span class="k">if</span> <span class="n">b</span><span class="p">]</span>
+
+    <span class="c1"># Wrap the provided function so that we get timing and chunk id</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_process</span><span class="p">(</span><span class="n">chunk</span><span class="p">,</span> <span class="n">chunk_id</span><span class="p">):</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">fn</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">chunk</span><span class="p">),</span> <span class="n">chunk_id</span><span class="p">,</span> <span class="n">ret</span>
+
+    <span class="c1"># chunk id we should submit next</span>
+    <span class="n">cur_chunk_idx</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Current chunk id we are returning (if order is kept)</span>
+    <span class="n">cur_ret_chunk_id</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Dictionary keeping the results (indexed by chunk id)</span>
+    <span class="n">results_cache</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Submit the given function with the given chunks to the thread pool</span>
+    <span class="n">futures</span> <span class="o">=</span> <span class="p">[</span><span class="n">pool</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">_process</span><span class="p">,</span> <span class="n">chunk</span><span class="p">,</span> <span class="n">cur_chunk_idx</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">chunks</span><span class="p">)]</span>
+    <span class="n">cur_chunk_idx</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">chunks</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">futures</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">break</span>
+
+        <span class="c1"># Wait for any of the futures</span>
+        <span class="n">done</span><span class="p">,</span> <span class="n">not_done</span> <span class="o">=</span> <span class="n">concurrent</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">futures</span><span class="p">,</span> <span class="n">return_when</span><span class="o">=</span><span class="n">concurrent</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">FIRST_COMPLETED</span><span class="p">)</span>
+
+        <span class="c1"># Get the result of the first completed future</span>
+        <span class="n">average_per_element</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">done</span><span class="p">:</span>
+            <span class="n">avg_time</span><span class="p">,</span> <span class="n">chunk_idx</span><span class="p">,</span> <span class="n">ret</span> <span class="o">=</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+            <span class="n">average_per_element</span> <span class="o">+=</span> <span class="n">avg_time</span>  <span class="c1"># Average per element of the iterable</span>
+            <span class="k">assert</span> <span class="n">cur_chunk_idx</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">results_cache</span>
+            <span class="n">results_cache</span><span class="p">[</span><span class="n">chunk_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">ret</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">done</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># compute the next chunk size</span>
+            <span class="n">time_per_element</span> <span class="o">=</span> <span class="n">average_per_element</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">done</span><span class="p">)</span>  <span class="c1"># Average of the averages</span>
+
+            <span class="c1"># How many elements could we fit in the desired chunk_time</span>
+            <span class="n">chunk_size</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">chunk_time</span> <span class="o">/</span> <span class="n">time_per_element</span><span class="p">))</span>
+
+            <span class="c1"># Clamp to a valid size</span>
+            <span class="n">chunk_size</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">chunk_size</span><span class="p">,</span> <span class="n">max_chunk_size</span><span class="p">))</span>
+
+            <span class="c1"># next chunks</span>
+            <span class="n">chunks</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">chunk_size</span><span class="p">))</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">done</span><span class="p">))]</span>
+
+            <span class="c1"># Remove empty chunks</span>
+            <span class="n">chunks</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">chunks</span> <span class="k">if</span> <span class="n">b</span><span class="p">]</span>
+
+            <span class="c1"># Submit to the thread pool</span>
+            <span class="n">futures</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">not_done</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span>
+                <span class="n">pool</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">_process</span><span class="p">,</span> <span class="n">chunk</span><span class="p">,</span> <span class="n">cur_chunk_idx</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">chunks</span><span class="p">)</span>
+            <span class="p">]</span>
+            <span class="n">cur_chunk_idx</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">chunks</span><span class="p">)</span>
+
+        <span class="n">done_results</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">results_cache</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">keep_order</span><span class="p">:</span>
+            <span class="k">while</span> <span class="n">cur_ret_chunk_id</span> <span class="ow">in</span> <span class="n">done_results</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">results_cache</span><span class="p">[</span><span class="n">cur_ret_chunk_id</span><span class="p">]</span>
+                <span class="k">del</span> <span class="n">results_cache</span><span class="p">[</span><span class="n">cur_ret_chunk_id</span><span class="p">]</span>
+                <span class="n">cur_ret_chunk_id</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">done_results</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">results_cache</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                <span class="k">del</span> <span class="n">results_cache</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">results_cache</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span></div>
+
+
+
+<div class="viewcode-block" id="process_iterable">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/utils_misc.html#qcportal.utils.process_iterable">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">process_iterable</span><span class="p">(</span>
+    <span class="n">fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">_T</span><span class="p">]],</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">it</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">_T</span><span class="p">],</span>
+    <span class="n">chunk_time</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">max_chunk_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">initial_chunk_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">max_workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">keep_order</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">_T</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Similar to process_chunk_iterable, but returns individual elements ranther than chunks</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">process_chunk_iterable</span><span class="p">(</span>
+        <span class="n">fn</span><span class="p">,</span> <span class="n">it</span><span class="p">,</span> <span class="n">chunk_time</span><span class="p">,</span> <span class="n">max_chunk_size</span><span class="p">,</span> <span class="n">initial_chunk_size</span><span class="p">,</span> <span class="n">max_workers</span><span class="p">,</span> <span class="n">keep_order</span><span class="o">=</span><span class="n">keep_order</span>
+    <span class="p">):</span>
+        <span class="k">yield from</span> <span class="n">chunk</span></div>
+
+
+
+<div class="viewcode-block" id="seconds_to_hms">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/utils_misc.html#qcportal.utils.seconds_to_hms">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">seconds_to_hms</span><span class="p">(</span><span class="n">seconds</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts a number of seconds (as an integer) to a string representing hh:mm:ss</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">seconds</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="n">fraction</span> <span class="o">=</span> <span class="n">seconds</span> <span class="o">%</span> <span class="mi">1</span>
+        <span class="n">seconds</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">seconds</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fraction</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">hours</span><span class="p">,</span> <span class="n">seconds</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="n">seconds</span><span class="p">,</span> <span class="mi">3600</span><span class="p">)</span>
+    <span class="n">minutes</span><span class="p">,</span> <span class="n">seconds</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="n">seconds</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">fraction</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">hours</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">minutes</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">seconds</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">hours</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">minutes</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">seconds</span><span class="o">+</span><span class="n">fraction</span><span class="si">:</span><span class="s2">02.2f</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="duration_to_seconds">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/utils_misc.html#qcportal.utils.duration_to_seconds">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">duration_to_seconds</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parses a string in dd:hh:mm:ss or 1d2h3m4s to an integer number of seconds</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Is already an int</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+    <span class="c1"># Is a float but represents an integer</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">is_integer</span><span class="p">():</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid duration format: </span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2"> - cannot represent fractional seconds&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Plain number of seconds (as a string)</span>
+    <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">is_integer</span><span class="p">():</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid duration format: </span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2"> - cannot represent fractional seconds&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="c1"># Handle dd:hh:mm:ss format</span>
+    <span class="k">if</span> <span class="s2">&quot;:&quot;</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)))</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>  <span class="c1"># Pad missing parts with zeros</span>
+            <span class="n">parts</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">days</span><span class="p">,</span> <span class="n">hours</span><span class="p">,</span> <span class="n">minutes</span><span class="p">,</span> <span class="n">seconds</span> <span class="o">=</span> <span class="n">parts</span>
+        <span class="k">return</span> <span class="n">days</span> <span class="o">*</span> <span class="mi">86400</span> <span class="o">+</span> <span class="n">hours</span> <span class="o">*</span> <span class="mi">3600</span> <span class="o">+</span> <span class="n">minutes</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">+</span> <span class="n">seconds</span>
+
+    <span class="c1"># Handle format like 3d4h7m10s</span>
+    <span class="n">pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?&quot;</span><span class="p">)</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid duration format: </span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">days</span><span class="p">,</span> <span class="n">hours</span><span class="p">,</span> <span class="n">minutes</span><span class="p">,</span> <span class="n">seconds</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span> <span class="n">match</span><span class="o">.</span><span class="n">groups</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">days</span> <span class="o">*</span> <span class="mi">86400</span> <span class="o">+</span> <span class="n">hours</span> <span class="o">*</span> <span class="mi">3600</span> <span class="o">+</span> <span class="n">minutes</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">+</span> <span class="n">seconds</span></div>
+
+
+
+<div class="viewcode-block" id="recursive_normalizer">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/utils_misc.html#qcportal.utils.recursive_normalizer">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">recursive_normalizer</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">digits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">lowercase</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prepare a structure for hashing by lowercasing all values and round all floats</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">))):</span>
+        <span class="k">pass</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">lowercase</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="n">recursive_normalizer</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">digits</span><span class="p">,</span> <span class="n">lowercase</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">value</span><span class="p">]</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">recursive_normalizer</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">digits</span><span class="p">,</span> <span class="n">lowercase</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">lowercase</span><span class="p">:</span>
+                <span class="n">k</span> <span class="o">=</span> <span class="n">k</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="n">ret</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">recursive_normalizer</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">digits</span><span class="p">,</span> <span class="n">lowercase</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">ret</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">digits</span><span class="p">:</span>
+            <span class="c1"># Round array</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">digits</span><span class="p">)</span>
+            <span class="c1"># Flip zeros</span>
+            <span class="n">value</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">5</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">digits</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">digits</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">digits</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="o">-</span><span class="mf">0.0</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Invalid type in recursive normalizer ({type(value)}), only simple Python types are allowed.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">value</span></div>
+
+
+
+<div class="viewcode-block" id="calculate_limit">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/utils_misc.html#qcportal.utils.calculate_limit">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calculate_limit</span><span class="p">(</span><span class="n">max_limit</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">given_limit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the allowed limit on results to return for a particular or type of object</span>
+
+<span class="sd">    If &#39;given_limit&#39; is given (ie, by the user), this will return min(limit, max_limit)</span>
+<span class="sd">    where max_limit is the set value for the table/type of object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">given_limit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">max_limit</span>
+
+    <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">given_limit</span><span class="p">,</span> <span class="n">max_limit</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="hash_dict">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/utils_misc.html#qcportal.utils.hash_dict">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">hash_dict</span><span class="p">(</span><span class="n">d</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="bp">cls</span><span class="o">=</span><span class="n">_JSONEncoder</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sha256</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="capture_all_output">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/utils_misc.html#qcportal.utils.capture_all_output">[docs]</a>
+<span class="nd">@contextmanager</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">capture_all_output</span><span class="p">(</span><span class="n">top_logger</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Captures all output, including stdout, stderr, and logging&quot;&quot;&quot;</span>
+
+    <span class="n">stdout_io</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()</span>
+    <span class="n">stderr_io</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()</span>
+
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">top_logger</span><span class="p">)</span>
+    <span class="n">old_handlers</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">old_prop</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">propagate</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">propagate</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1"># Make logging go to the string io</span>
+    <span class="n">handler</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">(</span><span class="n">stdout_io</span><span class="p">)</span>
+    <span class="n">handler</span><span class="o">.</span><span class="n">terminator</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">handler</span><span class="p">)</span>
+
+    <span class="c1"># Also redirect stdout/stderr to the string io objects</span>
+    <span class="k">with</span> <span class="n">redirect_stdout</span><span class="p">(</span><span class="n">stdout_io</span><span class="p">)</span> <span class="k">as</span> <span class="n">rdout</span><span class="p">,</span> <span class="n">redirect_stderr</span><span class="p">(</span><span class="n">stderr_io</span><span class="p">)</span> <span class="k">as</span> <span class="n">rderr</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">rdout</span><span class="p">,</span> <span class="n">rderr</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">handlers</span> <span class="o">=</span> <span class="n">old_handlers</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">propagate</span> <span class="o">=</span> <span class="n">old_prop</span></div>
+
+
+
+<div class="viewcode-block" id="now_at_utc">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/utils_misc.html#qcportal.utils.now_at_utc">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">now_at_utc</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the current time as a timezone-aware datetime object&quot;&quot;&quot;</span>
+
+    <span class="c1"># Note that the utcnow() function is deprecated, and does not result in a</span>
+    <span class="c1"># timezone-aware datetime object</span>
+    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span></div>
+
+
+
+<span class="nd">@functools</span><span class="o">.</span><span class="n">lru_cache</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_included</span><span class="p">(</span>
+    <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="n">exclude</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="n">default</span><span class="p">:</span> <span class="nb">bool</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">exclude</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">exclude</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">include</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">in_include</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;*&quot;</span> <span class="ow">in</span> <span class="n">include</span> <span class="ow">and</span> <span class="n">default</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;**&quot;</span> <span class="ow">in</span> <span class="n">include</span> <span class="ow">or</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">include</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">in_include</span> <span class="o">=</span> <span class="n">default</span>
+
+    <span class="n">in_exclude</span> <span class="o">=</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">exclude</span>
+
+    <span class="k">return</span> <span class="n">in_include</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">in_exclude</span>
+
+
+<div class="viewcode-block" id="is_included">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/utils_misc.html#qcportal.utils.is_included">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_included</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">exclude</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">default</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determine if a field should be included given the include and exclude lists</span>
+
+<span class="sd">    Handles &quot;*&quot; and &quot;**&quot; as well</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">include</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">include</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">include</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">exclude</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">exclude</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">exclude</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">_is_included</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">include</span><span class="p">,</span> <span class="n">exclude</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="update_nested_dict">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/utils_misc.html#qcportal.utils.update_nested_dict">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_nested_dict</span><span class="p">(</span><span class="n">d</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">u</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">u</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">update_nested_dict</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="p">{}),</span> <span class="n">v</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+    <span class="k">return</span> <span class="n">d</span></div>
+
+
+
+<div class="viewcode-block" id="apply_jitter">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/utils_misc.html#qcportal.utils.apply_jitter">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">apply_jitter</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">jitter_fraction</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="n">jitter_fraction</span><span class="p">,</span> <span class="n">jitter_fraction</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">t</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">f</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  
+
+
+
+  
+  
+  
+  
+  
+  
+  
+
+
+<div class="row h-10">
+    <div class="col-2">
+        <a href="https://molssi.org/" target="_blank" title="Go to MolSSI in a new tab">
+            <img src="../../_static/molssi_main_logo.png" class="logo__image only-light footer_logo" alt="Logo image">
+            <img src="../../_static/molssi_main_logo_inverted_white.png" class="logo__image only-dark footer_logo" alt="Logo image">
+        </a>
+    </div>
+    <div class="col-8">
+        <p> &copy; Copyright 2019-2023 <a href="https://molssi.org/">The Molecular Sciences Software Institute</a></p>
+        <p>Funded by the National Science Foundation 
+          <a href="https://nsf.gov/awardsearch/showAward?AWD_ID=1547580">OAC-1547580</a> and 
+          <a href="https://www.nsf.gov/awardsearch/showAward?AWD_ID=2136142">CHE-2136142.</a></p>
+ 
+        
+        <p class="sphinx-version">
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.4.7.<br>
+        </p>
+        
+
+        <p class="theme-version">
+        Built with a customized <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+        </p>
+
+    </div>
+    <div class="col-2">
+        <a href="https://nsf.gov/" target="_blank" title="Go to the NSF in a new tab">
+            <img src="../../_static/nsf.png" class="footer_logo" alt="The NSF">
+          </a>
+    </div>
+</div></div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

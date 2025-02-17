@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Connecting to a server &#8212; QCArchive 0.58.post17+g70a35cb3c documentation</title>
+    <title>Connecting to a server &#8212; QCArchive documentation</title>
   
   
   
@@ -35,7 +35,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=6f1775e9" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=68b739ae" />
   
   <!-- So that users can add custom icons -->
   <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=362ea571"></script>
+    <script src="../_static/documentation_options.js?v=89ebbeef"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="QCPortal Installation &amp; Setup" href="client_setup.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.58.post17+g70a35cb3c" />
+  <meta name="docsearch:version" content="0.58.post34+g79c2d6e67" />
   </head>
   
   
@@ -401,10 +401,17 @@
 <li class="toctree-l1"><a class="reference internal" href="record_retrieval.html">Retrieving records</a></li>
 <li class="toctree-l1"><a class="reference internal" href="record_submission.html">Submitting computations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="record_management.html">Managing Records</a></li>
-<li class="toctree-l1"><a class="reference internal" href="datasets.html">Using datasets</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="records/index.html">Computation Types</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="datasets/index.html">Datasets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="datasets/basics.html">Using datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/creating.html">Creating datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/maintenance.html">Maintenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/caching.html">Caching &amp; Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/attachments.html">Attachments</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="records/index.html">Record &amp; Computation Types</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="records/base.html">Base Record</a></li>
-
 <li class="toctree-l2"><a class="reference internal" href="records/singlepoint.html">Singlepoint calculations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="records/optimization.html">Optimization calculations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="records/gridoptimization.html">Gridoptimization calculations</a></li>
@@ -414,7 +421,28 @@
 <li class="toctree-l2"><a class="reference internal" href="records/neb.html">NEB calculations</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1"><a class="reference internal" href="qcportal_reference.html">QCPortal API Reference</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="qcportal_reference/index.html">QCPortal API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/clients.html">QCPortal Clients</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/auth.html">Authentication and User Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/base_models.html">Base Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/molecules.html">Molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/metadata_models.html">Metadata Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/tasks_services.html">Tasks and Services</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/internal_jobs.html">Internal Jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/serverinfo.html">Server Information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/managers.html">Managers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/external_files.html">External Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/utils_misc.html">Utilities and Miscellaneous</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/base_record_models.html">Base Record Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/singlepoint.html">Singlepoint Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/optimization.html">Optimization Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/torsiondrive.html">Torsiondrive Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/gridoptimization.html">Gridoptimization Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/manybody.html">Manybody Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/reaction.html">Reaction Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/neb.html">NEB Records</a></li>
+</ul>
+</details></li>
 </ul>
 </div>
 </nav></div>
@@ -477,9 +505,10 @@
                   
   <section id="connecting-to-a-server">
 <h1>Connecting to a server<a class="headerlink" href="#connecting-to-a-server" title="Link to this heading">#</a></h1>
-<p>The central object of QCPortal is the <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">PortalClient</span></code></a> (usually referred to as just <cite>client</cite>).
+<p>The central object of QCPortal is the <a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">PortalClient</span></code></a>
+(usually referred to as just <code class="docutils literal notranslate"><span class="pre">client</span></code>).
 This class handles connecting to the server and exposing all the functionality of the server for use in python.</p>
-<p>Connecting to the server is handled by the constructor of the <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">PortalClient</span></code></a> class.</p>
+<p>Connecting to the server is handled by the constructor of the <a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">PortalClient</span></code></a> class.</p>
 <p>The first parameter is the address or URI of the server you with to connect to (including <code class="docutils literal notranslate"><span class="pre">http</span></code>/<code class="docutils literal notranslate"><span class="pre">https</span></code>).</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
@@ -519,13 +548,14 @@ PYTHON</label><div class="sd-tab-content docutils">
 </div>
 </div>
 </div>
-<p>For a description of the other parameters, see <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">PortalClient</span></code></a>.</p>
-<section id="using-user-information-from-a-file">
-<span id="qcportal-connecting-file"></span><h2>Using user information from a file<a class="headerlink" href="#using-user-information-from-a-file" title="Link to this heading">#</a></h2>
+<p>For a description of the other parameters, see <a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">PortalClient</span></code></a>.</p>
+<section id="using-connection-information-from-a-file">
+<span id="qcportal-connecting-file"></span><h2>Using connection information from a file<a class="headerlink" href="#using-connection-information-from-a-file" title="Link to this heading">#</a></h2>
 <p>Rather than place your username and password in the script or notebook, you may also
-have the client read the credentials from a file (see <a class="reference internal" href="client_setup.html#qcportal-setup-configfile"><span class="std std-ref">Configuration File</span></a>).</p>
+have the client read the credentials from a file
+(see <a class="reference internal" href="client_setup.html#qcportal-setup-configfile"><span class="std std-ref">documentation for QCPortal configuration files</span></a>).</p>
 <p>To use this file, construct the client using the
-<a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.from_file" title="qcportal.client.PortalClient.from_file"><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_file()</span></code></a> method.</p>
+<a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.from_file" title="qcportal.client.PortalClient.from_file"><code class="xref py py-meth docutils literal notranslate"><span class="pre">PortalClient.from_file</span></code></a> method.</p>
 <p>If no path is passed to this function, then the current working directory
 and then the <code class="docutils literal notranslate"><span class="pre">~/.qca</span></code> directory are search for <code class="docutils literal notranslate"><span class="pre">qcportal_config.yaml</span></code>.</p>
 <div class="sd-tab-set docutils">
@@ -547,14 +577,32 @@ PYTHON</label><div class="sd-tab-content docutils">
 </div>
 </div>
 </section>
+<section id="using-connection-information-in-environment-variables">
+<h2>Using connection information in environment variables<a class="headerlink" href="#using-connection-information-in-environment-variables" title="Link to this heading">#</a></h2>
+<p>If the connection information is stored in environment variables (<a class="reference internal" href="client_setup.html#qcportal-setup-envvar"><span class="std std-ref">Environment Variables</span></a>)
+then you can use the <a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.from_env" title="qcportal.client.PortalClient.from_env"><code class="xref py py-meth docutils literal notranslate"><span class="pre">PortalClient.from_env</span></code></a> function</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-4" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-4">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># A file containing a single server, file stored in working directory or ~/.qca</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal</span><span class="w"> </span><span class="kn">import</span> <span class="n">PortalClient</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">client</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="o">.</span><span class="n">from_env</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">server_name</span><span class="p">)</span>
+<span class="n">MolSSI</span> <span class="n">QCArchive</span> <span class="n">Demo</span> <span class="n">Server</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
 <section id="viewing-server-metadata">
 <h2>Viewing server metadata<a class="headerlink" href="#viewing-server-metadata" title="Link to this heading">#</a></h2>
 <p>Some metadata about the server is stored in the client object. The metadata includes the server
 name and version, as well as limits on API calls. This also contains any Message-of-the-Day (MOTD) that
 the server administrator wishes to include.</p>
 <div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-4" name="sd-tab-set-4" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-4">
+<input checked="checked" id="sd-tab-item-5" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-5">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal</span><span class="w"> </span><span class="kn">import</span> <span class="n">PortalClient</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="p">(</span><span class="s1">&#39;https://qcademo.molssi.org&#39;</span><span class="p">)</span>
@@ -587,8 +635,8 @@ PYTHON</label><div class="sd-tab-content docutils">
 <ul class="simple">
 <li><p><a class="reference internal" href="record_retrieval.html"><span class="doc">Retrieve records</span></a></p></li>
 <li><p><a class="reference internal" href="record_submission.html"><span class="doc">Add records</span></a></p></li>
-<li><p><a class="reference internal" href="datasets.html"><span class="doc">Use datasets</span></a></p></li>
-<li><p><a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">View</span> <span class="pre">the</span> <span class="pre">PortalClient</span> <span class="pre">API</span> <span class="pre">documentation</span></code></a></p></li>
+<li><p><a class="reference internal" href="datasets/index.html"><span class="doc">Use datasets</span></a></p></li>
+<li><p><a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">View</span> <span class="pre">the</span> <span class="pre">PortalClient</span> <span class="pre">API</span> <span class="pre">documentation</span></code></a></p></li>
 </ul>
 </section>
 </section>
@@ -640,7 +688,8 @@ PYTHON</label><div class="sd-tab-content docutils">
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-user-information-from-a-file">Using user information from a file</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-connection-information-from-a-file">Using connection information from a file</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-connection-information-in-environment-variables">Using connection information in environment variables</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#viewing-server-metadata">Viewing server metadata</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next steps</a></li>
 </ul>

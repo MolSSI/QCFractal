@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>QCPortal Installation &amp; Setup &#8212; QCArchive 0.58.post17+g70a35cb3c documentation</title>
+    <title>QCPortal Installation &amp; Setup &#8212; QCArchive documentation</title>
   
   
   
@@ -35,7 +35,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=6f1775e9" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=68b739ae" />
   
   <!-- So that users can add custom icons -->
   <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=362ea571"></script>
+    <script src="../_static/documentation_options.js?v=89ebbeef"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="QCArchive User Guide" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.58.post17+g70a35cb3c" />
+  <meta name="docsearch:version" content="0.58.post34+g79c2d6e67" />
   </head>
   
   
@@ -401,10 +401,17 @@
 <li class="toctree-l1"><a class="reference internal" href="record_retrieval.html">Retrieving records</a></li>
 <li class="toctree-l1"><a class="reference internal" href="record_submission.html">Submitting computations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="record_management.html">Managing Records</a></li>
-<li class="toctree-l1"><a class="reference internal" href="datasets.html">Using datasets</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="records/index.html">Computation Types</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="datasets/index.html">Datasets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="datasets/basics.html">Using datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/creating.html">Creating datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/maintenance.html">Maintenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/caching.html">Caching &amp; Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/attachments.html">Attachments</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="records/index.html">Record &amp; Computation Types</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="records/base.html">Base Record</a></li>
-
 <li class="toctree-l2"><a class="reference internal" href="records/singlepoint.html">Singlepoint calculations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="records/optimization.html">Optimization calculations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="records/gridoptimization.html">Gridoptimization calculations</a></li>
@@ -414,7 +421,28 @@
 <li class="toctree-l2"><a class="reference internal" href="records/neb.html">NEB calculations</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1"><a class="reference internal" href="qcportal_reference.html">QCPortal API Reference</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="qcportal_reference/index.html">QCPortal API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/clients.html">QCPortal Clients</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/auth.html">Authentication and User Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/base_models.html">Base Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/molecules.html">Molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/metadata_models.html">Metadata Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/tasks_services.html">Tasks and Services</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/internal_jobs.html">Internal Jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/serverinfo.html">Server Information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/managers.html">Managers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/external_files.html">External Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/utils_misc.html">Utilities and Miscellaneous</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/base_record_models.html">Base Record Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/singlepoint.html">Singlepoint Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/optimization.html">Optimization Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/torsiondrive.html">Torsiondrive Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/gridoptimization.html">Gridoptimization Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/manybody.html">Manybody Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/reaction.html">Reaction Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/records/neb.html">NEB Records</a></li>
+</ul>
+</details></li>
 </ul>
 </div>
 </nav></div>
@@ -480,8 +508,8 @@
 <section id="installation-through-conda">
 <h2>Installation through conda<a class="headerlink" href="#installation-through-conda" title="Link to this heading">#</a></h2>
 <p>The QCPortal package can be installed via <a class="reference external" href="https://www.anaconda.com">conda/anaconda</a>
-or <a class="reference external" href="https://github.com/mamba-org/mamba">mamba</a>. The packages exist under the
-<a class="reference external" href="https://anaconda.org/QCArchive">QCArchive organization</a> on Anaconda.</p>
+or <a class="reference external" href="https://github.com/mamba-org/mamba">mamba</a>. The packages are available from the
+<a class="reference external" href="https://anaconda.org/conda-forge/qcportal">conda-forge</a> channel.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-0">
@@ -495,12 +523,13 @@ conda<span class="w"> </span>activate<span class="w"> </span>qcportal
 </section>
 <section id="configuration-file">
 <span id="qcportal-setup-configfile"></span><h2>Configuration File<a class="headerlink" href="#configuration-file" title="Link to this heading">#</a></h2>
-<p>The username and password used to connect to the remote QCFractal server
-can be placed in a configuration file. This file is then
-read by the <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.from_file" title="qcportal.client.PortalClient.from_file"><code class="xref py py-meth docutils literal notranslate"><span class="pre">~PortalClient.from_file</span></code></a> function.</p>
+<p>Typically, you pass in the username and password to the <a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">PortalClient</span></code></a> constructor.
+However, for frequently-used servers, or for added security, the username and passwords
+used to connect to remote QCFractal servers can be placed in a configuration file. This file is then
+read by the <a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.from_file" title="qcportal.client.PortalClient.from_file"><code class="xref py py-meth docutils literal notranslate"><span class="pre">PortalClient.from_file</span></code></a> method.</p>
 <p>This file can be placed anywhere, with the path passed into that function, or can be placed in the current
 working directory or the <code class="docutils literal notranslate"><span class="pre">~/.qca</span></code> directory; on the latter two cases it should be given the name
-<code class="docutils literal notranslate"><span class="pre">qcportal_config.yaml</span></code>. See <a class="reference internal" href="connecting_qcportal.html#qcportal-connecting-file"><span class="std std-ref">Using user information from a file</span></a>.</p>
+<code class="docutils literal notranslate"><span class="pre">qcportal_config.yaml</span></code>. See <a class="reference internal" href="connecting_qcportal.html#qcportal-connecting-file"><span class="std std-ref">Using connection information from a file</span></a>.</p>
 <section id="single-server">
 <h3>Single Server<a class="headerlink" href="#single-server" title="Link to this heading">#</a></h3>
 <p>If you are only interested in a single server, then the configuration file can just
@@ -540,8 +569,25 @@ CONFIG FILE</label><div class="sd-tab-content docutils">
 </div>
 </div>
 <p>The path to this file and the section name can passed to the
-<a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.from_file" title="qcportal.client.PortalClient.from_file"><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_file()</span></code></a> function.</p>
+<a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.from_file" title="qcportal.client.PortalClient.from_file"><code class="xref py py-meth docutils literal notranslate"><span class="pre">PortalClient.from_file</span></code></a> method.</p>
 </section>
+</section>
+<section id="environment-variables">
+<span id="qcportal-setup-envvar"></span><h2>Environment Variables<a class="headerlink" href="#environment-variables" title="Link to this heading">#</a></h2>
+<p>The information needed for constructing a client can also be read from environment variables.
+See <a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.from_env" title="qcportal.client.PortalClient.from_env"><code class="xref py py-meth docutils literal notranslate"><span class="pre">PortalClient.from_env</span></code></a></p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-3">
+CONFIG FILE</label><div class="sd-tab-content docutils">
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">QCPORTAL_ADDRESS</span><span class="o">=</span><span class="s2">&quot;https://qcademo.molssi.org&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">QCPORTAL_USERNAME</span><span class="o">=</span><span class="s2">&quot;your_username&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">QCPORTAL_PASSWORD</span><span class="o">=</span><span class="s2">&quot;Secret_Password&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">QCPORTAL_CACHE_DIR</span><span class="o">=</span><span class="s2">&quot;/path_to_cache&quot;</span>
+</pre></div>
+</div>
+</div>
+</div>
 </section>
 </section>
 
@@ -598,6 +644,7 @@ CONFIG FILE</label><div class="sd-tab-content docutils">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-servers">Multiple Servers</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#environment-variables">Environment Variables</a></li>
 </ul>
   </nav></div>
 

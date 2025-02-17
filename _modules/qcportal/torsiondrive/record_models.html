@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.torsiondrive.record_models &#8212; QCArchive 0.58.post17+g70a35cb3c documentation</title>
+    <title>qcportal.torsiondrive.record_models &#8212; QCArchive documentation</title>
   
   
   
@@ -34,7 +34,7 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=6f1775e9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=68b739ae" />
   
   <!-- So that users can add custom icons -->
   <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=362ea571"></script>
+    <script src="../../../_static/documentation_options.js?v=89ebbeef"></script>
     <script src="../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.58.post17+g70a35cb3c" />
+  <meta name="docsearch:version" content="0.58.post34+g79c2d6e67" />
   </head>
   
   
@@ -456,6 +456,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">..optimization.record_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationSpecification</span><span class="p">,</span> <span class="n">OptimizationRecord</span>
 
 
+<div class="viewcode-block" id="serialize_key">
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.serialize_key">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">serialize_key</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Serializes the key used to map to optimization calculations</span>
@@ -471,9 +473,12 @@
 <span class="sd">        A string representation of the key</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">key</span><span class="p">)</span></div>
 
 
+
+<div class="viewcode-block" id="deserialize_key">
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.deserialize_key">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">deserialize_key</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Deserializes the key used to map to optimization calculations</span>
@@ -482,9 +487,12 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">r</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">r</span><span class="p">)</span></div>
 
 
+
+<div class="viewcode-block" id="TorsiondriveKeywords">
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveKeywords">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">TorsiondriveKeywords</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Options for torsiondrive calculations</span>
@@ -520,16 +528,20 @@
         <span class="s2">&quot;minimum energy is -9.9 , then a new task starting with energy -9.8 will be skipped.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
+<div class="viewcode-block" id="TorsiondriveKeywords.normalize">
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveKeywords.normalize">[docs]</a>
     <span class="nd">@root_validator</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">normalize</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">recursive_normalizer</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">recursive_normalizer</span><span class="p">(</span><span class="n">values</span><span class="p">)</span></div>
+</div>
+
 
 
 <div class="viewcode-block" id="TorsiondriveSpecification">
-<a class="viewcode-back" href="../../../user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveSpecification">[docs]</a>
+<a class="viewcode-back" href="../../../user_guide/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveSpecification">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">TorsiondriveSpecification</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <div class="viewcode-block" id="TorsiondriveSpecification.Config">
-<a class="viewcode-back" href="../../../user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveSpecification.Config">[docs]</a>
+<a class="viewcode-back" href="../../../user_guide/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveSpecification.Config">[docs]</a>
     <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
         <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span></div>
 
@@ -540,6 +552,8 @@
 
 
 
+<div class="viewcode-block" id="TorsiondriveOptimization">
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveOptimization">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">TorsiondriveOptimization</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
     <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
         <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span>
@@ -547,15 +561,21 @@
     <span class="n">optimization_id</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">key</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">position</span><span class="p">:</span> <span class="nb">int</span>
-    <span class="n">energy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">energy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 
+
+<div class="viewcode-block" id="TorsiondriveAddBody">
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveAddBody">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">TorsiondriveAddBody</span><span class="p">(</span><span class="n">RecordAddBodyBase</span><span class="p">):</span>
     <span class="n">specification</span><span class="p">:</span> <span class="n">TorsiondriveSpecification</span>
     <span class="n">initial_molecules</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Molecule</span><span class="p">]]]</span>
-    <span class="n">as_service</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">as_service</span><span class="p">:</span> <span class="nb">bool</span></div>
 
 
+
+<div class="viewcode-block" id="TorsiondriveQueryFilters">
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">TorsiondriveQueryFilters</span><span class="p">(</span><span class="n">RecordQueryFilters</span><span class="p">):</span>
     <span class="n">program</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">optimization_program</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>
@@ -571,11 +591,12 @@
         <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">v</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
 
 
 <div class="viewcode-block" id="TorsiondriveRecord">
-<a class="viewcode-back" href="../../../user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord">[docs]</a>
+<a class="viewcode-back" href="../../../user_guide/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">TorsiondriveRecord</span><span class="p">(</span><span class="n">BaseRecord</span><span class="p">):</span>
     <span class="n">record_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;torsiondrive&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;torsiondrive&quot;</span>
     <span class="n">specification</span><span class="p">:</span> <span class="n">TorsiondriveSpecification</span>
@@ -663,7 +684,7 @@
             <span class="n">r</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">_client</span><span class="p">)</span>
 
 <div class="viewcode-block" id="TorsiondriveRecord.propagate_client">
-<a class="viewcode-back" href="../../../user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.propagate_client">[docs]</a>
+<a class="viewcode-back" href="../../../user_guide/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.propagate_client">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">):</span>
         <span class="n">BaseRecord</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
 

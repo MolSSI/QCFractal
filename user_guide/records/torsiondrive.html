@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Torsiondrive calculations &#8212; QCArchive 0.58.post17+g70a35cb3c documentation</title>
+    <title>Torsiondrive calculations &#8212; QCArchive documentation</title>
   
   
   
@@ -35,7 +35,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=6f1775e9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=68b739ae" />
   
   <!-- So that users can add custom icons -->
   <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=362ea571"></script>
+    <script src="../../_static/documentation_options.js?v=89ebbeef"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Gridoptimization calculations" href="gridoptimization.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.58.post17+g70a35cb3c" />
+  <meta name="docsearch:version" content="0.58.post34+g79c2d6e67" />
   </head>
   
   
@@ -401,10 +401,17 @@
 <li class="toctree-l1"><a class="reference internal" href="../record_retrieval.html">Retrieving records</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../record_submission.html">Submitting computations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../record_management.html">Managing Records</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../datasets.html">Using datasets</a></li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Computation Types</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../datasets/index.html">Datasets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/basics.html">Using datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/creating.html">Creating datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/maintenance.html">Maintenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/caching.html">Caching &amp; Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/attachments.html">Attachments</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Record &amp; Computation Types</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="base.html">Base Record</a></li>
-
 <li class="toctree-l2"><a class="reference internal" href="singlepoint.html">Singlepoint calculations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="optimization.html">Optimization calculations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gridoptimization.html">Gridoptimization calculations</a></li>
@@ -414,7 +421,28 @@
 <li class="toctree-l2"><a class="reference internal" href="neb.html">NEB calculations</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1"><a class="reference internal" href="../qcportal_reference.html">QCPortal API Reference</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../qcportal_reference/index.html">QCPortal API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/clients.html">QCPortal Clients</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/auth.html">Authentication and User Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/base_models.html">Base Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/molecules.html">Molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/metadata_models.html">Metadata Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/tasks_services.html">Tasks and Services</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/internal_jobs.html">Internal Jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/serverinfo.html">Server Information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/managers.html">Managers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/external_files.html">External Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/utils_misc.html">Utilities and Miscellaneous</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/base_record_models.html">Base Record Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/singlepoint.html">Singlepoint Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/optimization.html">Optimization Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/torsiondrive.html">Torsiondrive Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/gridoptimization.html">Gridoptimization Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/manybody.html">Manybody Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/reaction.html">Reaction Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/neb.html">NEB Records</a></li>
+</ul>
+</details></li>
 </ul>
 </div>
 </nav></div>
@@ -459,7 +487,7 @@
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">QCArchive User Guide</a></li>
     
     
-    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Computation Types</a></li>
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Record &amp; Computation Types</a></li>
     
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Torsiondrive calculations</span></li>
   </ul>
@@ -494,7 +522,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TorsiondriveRecord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'torsiondrive'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_service</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">properties</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extras</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">manager_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">created_on</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modified_on</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner_user</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner_group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_history</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">service</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">native_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_molecules_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_molecules</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minimum_optimizations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/torsiondrive/record_models.html#TorsiondriveRecord"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="base.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseRecord</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseRecord</span></code></a></p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
 <dl class="field-list simple">
@@ -505,21 +533,21 @@
 <li><p><strong>is_service</strong> (<em>bool</em>)</p></li>
 <li><p><strong>properties</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
 <li><p><strong>extras</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
-<li><p><strong>status</strong> (<a class="reference internal" href="base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a>)</p></li>
+<li><p><strong>status</strong> (<a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a>)</p></li>
 <li><p><strong>manager_name</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>created_on</strong> (<em>datetime</em>)</p></li>
 <li><p><strong>modified_on</strong> (<em>datetime</em>)</p></li>
 <li><p><strong>owner_user</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>owner_group</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>compute_history</strong> (<em>List</em><em>[</em><em>ComputeHistory</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>task</strong> (<a class="reference internal" href="../../overview/tasks_services.html#qcportal.record_models.RecordTask" title="qcportal.record_models.RecordTask"><em>RecordTask</em></a><em> | </em><em>None</em>)</p></li>
-<li><p><strong>service</strong> (<a class="reference internal" href="../../overview/tasks_services.html#qcportal.record_models.RecordService" title="qcportal.record_models.RecordService"><em>RecordService</em></a><em> | </em><em>None</em>)</p></li>
-<li><p><strong>comments</strong> (<em>List</em><em>[</em><em>RecordComment</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>native_files</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>NativeFile</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>specification</strong> (<a class="reference internal" href="#qcportal.torsiondrive.TorsiondriveSpecification" title="qcportal.torsiondrive.record_models.TorsiondriveSpecification"><em>TorsiondriveSpecification</em></a>)</p></li>
+<li><p><strong>compute_history</strong> (<em>List</em><em>[</em><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.ComputeHistory" title="qcportal.record_models.ComputeHistory"><em>ComputeHistory</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>task</strong> (<a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordTask" title="qcportal.record_models.RecordTask"><em>RecordTask</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>service</strong> (<a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordService" title="qcportal.record_models.RecordService"><em>RecordService</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>comments</strong> (<em>List</em><em>[</em><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordComment" title="qcportal.record_models.RecordComment"><em>RecordComment</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>native_files</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.NativeFile" title="qcportal.record_models.NativeFile"><em>NativeFile</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>specification</strong> (<a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveSpecification" title="qcportal.torsiondrive.record_models.TorsiondriveSpecification"><em>TorsiondriveSpecification</em></a>)</p></li>
 <li><p><strong>initial_molecules_ids</strong> (<em>List</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
 <li><p><strong>initial_molecules</strong> (<em>List</em><em>[</em><em>Molecule</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>optimizations</strong> (<em>List</em><em>[</em><em>TorsiondriveOptimization</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>optimizations</strong> (<em>List</em><em>[</em><a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveOptimization" title="qcportal.torsiondrive.record_models.TorsiondriveOptimization"><em>TorsiondriveOptimization</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
 <li><p><strong>minimum_optimizations</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
 </ul>
 </dd>
@@ -546,7 +574,7 @@
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.optimizations_">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">optimizations_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">TorsiondriveOptimization</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"> <span class="pre">(alias</span> <span class="pre">'optimizations')</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.optimizations_" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">optimizations_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveOptimization" title="qcportal.torsiondrive.record_models.TorsiondriveOptimization"><span class="pre">TorsiondriveOptimization</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"> <span class="pre">(alias</span> <span class="pre">'optimizations')</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.optimizations_" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -568,12 +596,12 @@
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.optimizations">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">optimizations</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="optimization.html#qcportal.optimization.OptimizationRecord" title="qcportal.optimization.record_models.OptimizationRecord"><span class="pre">OptimizationRecord</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.optimizations" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">optimizations</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationRecord" title="qcportal.optimization.record_models.OptimizationRecord"><span class="pre">OptimizationRecord</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.optimizations" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.minimum_optimizations">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">minimum_optimizations</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="optimization.html#qcportal.optimization.OptimizationRecord" title="qcportal.optimization.record_models.OptimizationRecord"><span class="pre">OptimizationRecord</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.minimum_optimizations" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">minimum_optimizations</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="../qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationRecord" title="qcportal.optimization.record_models.OptimizationRecord"><span class="pre">OptimizationRecord</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.minimum_optimizations" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -581,47 +609,26 @@
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">final_energies</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.final_energies" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py class pydantic_config">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.Config">
-<em class="property"><span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Config</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.Config" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.Config.allow_mutation">
-<span class="sig-name descname"><span class="pre">allow_mutation</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.Config.allow_mutation" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.Config.extra">
-<span class="sig-name descname"><span class="pre">extra</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'forbid'</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.Config.extra" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.Config.validate_assignment">
-<span class="sig-name descname"><span class="pre">validate_assignment</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.Config.validate_assignment" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.children_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">children_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="base.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><span class="pre">BaseRecord</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.children_errors" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">children_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><span class="pre">BaseRecord</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.children_errors" title="Link to this definition">#</a></dt>
 <dd><p>Returns errored child records</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.children_status">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">children_status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><span class="pre">RecordStatusEnum</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.children_status" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">children_status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><span class="pre">RecordStatusEnum</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.children_status" title="Link to this definition">#</a></dt>
 <dd><p>Returns a dictionary of the status of all children of this record</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.comments">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">comments</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">RecordComment</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.comments" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">comments</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordComment" title="qcportal.record_models.RecordComment"><span class="pre">RecordComment</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.comments" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.compute_history">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_history</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ComputeHistory</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.compute_history" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_history</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.ComputeHistory" title="qcportal.record_models.ComputeHistory"><span class="pre">ComputeHistory</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.compute_history" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -652,7 +659,7 @@ that can span multiple records</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>records</strong> (<em>Iterable</em><em>[</em><a class="reference internal" href="base.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><em>BaseRecord</em></a><em> | </em><em>None</em><em>]</em>)</p></li>
+<li><p><strong>records</strong> (<em>Iterable</em><em>[</em><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><em>BaseRecord</em></a><em> | </em><em>None</em><em>]</em>)</p></li>
 <li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
 <li><p><strong>force_fetch</strong> (<em>bool</em>)</p></li>
 </ul>
@@ -669,7 +676,7 @@ that can span multiple records</p>
 <dd class="field-odd"><p><strong>record_type</strong> (<em>str</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Type</em>[<a class="reference internal" href="base.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><em>BaseRecord</em></a>]</p>
+<dd class="field-even"><p><em>Type</em>[<a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><em>BaseRecord</em></a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -686,7 +693,7 @@ that can span multiple records</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.native_files">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">native_files</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">NativeFile</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.native_files" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">native_files</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.NativeFile" title="qcportal.record_models.NativeFile"><span class="pre">NativeFile</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.native_files" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -701,7 +708,7 @@ that can span multiple records</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.service">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">service</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../../overview/tasks_services.html#qcportal.record_models.RecordService" title="qcportal.record_models.RecordService"><span class="pre">RecordService</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.service" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">service</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordService" title="qcportal.record_models.RecordService"><span class="pre">RecordService</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.service" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -728,7 +735,7 @@ that can span multiple records</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.task">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">task</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../../overview/tasks_services.html#qcportal.record_models.RecordTask" title="qcportal.record_models.RecordTask"><span class="pre">RecordTask</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.task" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">task</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordTask" title="qcportal.record_models.RecordTask"><span class="pre">RecordTask</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.task" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -760,7 +767,7 @@ that can span multiple records</p>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.status">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><span class="pre">RecordStatusEnum</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.status" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><span class="pre">RecordStatusEnum</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.status" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -790,27 +797,27 @@ that can span multiple records</p>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.compute_history_">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_history_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ComputeHistory</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"> <span class="pre">(alias</span> <span class="pre">'compute_history')</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.compute_history_" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_history_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.ComputeHistory" title="qcportal.record_models.ComputeHistory"><span class="pre">ComputeHistory</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"> <span class="pre">(alias</span> <span class="pre">'compute_history')</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.compute_history_" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.task_">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">task_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../../overview/tasks_services.html#qcportal.record_models.RecordTask" title="qcportal.record_models.RecordTask"><span class="pre">RecordTask</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"> <span class="pre">(alias</span> <span class="pre">'task')</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.task_" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">task_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordTask" title="qcportal.record_models.RecordTask"><span class="pre">RecordTask</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"> <span class="pre">(alias</span> <span class="pre">'task')</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.task_" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.service_">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">service_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../../overview/tasks_services.html#qcportal.record_models.RecordService" title="qcportal.record_models.RecordService"><span class="pre">RecordService</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"> <span class="pre">(alias</span> <span class="pre">'service')</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.service_" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">service_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordService" title="qcportal.record_models.RecordService"><span class="pre">RecordService</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"> <span class="pre">(alias</span> <span class="pre">'service')</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.service_" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.comments_">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">comments_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">RecordComment</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"> <span class="pre">(alias</span> <span class="pre">'comments')</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.comments_" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">comments_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordComment" title="qcportal.record_models.RecordComment"><span class="pre">RecordComment</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"> <span class="pre">(alias</span> <span class="pre">'comments')</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.comments_" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.native_files_">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">native_files_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">NativeFile</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"> <span class="pre">(alias</span> <span class="pre">'native_files')</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.native_files_" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">native_files_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.NativeFile" title="qcportal.record_models.NativeFile"><span class="pre">NativeFile</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"> <span class="pre">(alias</span> <span class="pre">'native_files')</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.native_files_" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -825,8 +832,8 @@ that can span multiple records</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>program</strong> (<em>ConstrainedStrValue</em>)</p></li>
-<li><p><strong>optimization_specification</strong> (<a class="reference internal" href="optimization.html#qcportal.optimization.OptimizationSpecification" title="qcportal.optimization.record_models.OptimizationSpecification"><em>OptimizationSpecification</em></a>)</p></li>
-<li><p><strong>keywords</strong> (<em>TorsiondriveKeywords</em>)</p></li>
+<li><p><strong>optimization_specification</strong> (<a class="reference internal" href="../qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationSpecification" title="qcportal.optimization.record_models.OptimizationSpecification"><em>OptimizationSpecification</em></a>)</p></li>
+<li><p><strong>keywords</strong> (<a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveKeywords" title="qcportal.torsiondrive.record_models.TorsiondriveKeywords"><em>TorsiondriveKeywords</em></a>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -848,12 +855,12 @@ that can span multiple records</p>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveSpecification.optimization_specification">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">optimization_specification</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="optimization.html#qcportal.optimization.OptimizationSpecification" title="qcportal.optimization.record_models.OptimizationSpecification"><span class="pre">OptimizationSpecification</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveSpecification.optimization_specification" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">optimization_specification</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationSpecification" title="qcportal.optimization.record_models.OptimizationSpecification"><span class="pre">OptimizationSpecification</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveSpecification.optimization_specification" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveSpecification.keywords">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">keywords</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">TorsiondriveKeywords</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveSpecification.keywords" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">keywords</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveKeywords" title="qcportal.torsiondrive.record_models.TorsiondriveKeywords"><span class="pre">TorsiondriveKeywords</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveSpecification.keywords" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -923,12 +930,6 @@ that can span multiple records</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.optimizations"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.optimizations</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.minimum_optimizations"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.minimum_optimizations</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.final_energies"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.final_energies</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.Config"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.Config</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.Config.allow_mutation"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.Config.allow_mutation</span></code></a></li>
-<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.Config.extra"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.Config.extra</span></code></a></li>
-<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.Config.validate_assignment"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.Config.validate_assignment</span></code></a></li>
-</ul>
-</li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.children_errors"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.children_errors</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.children_status"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.children_status</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.comments"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.comments</span></code></a></li>

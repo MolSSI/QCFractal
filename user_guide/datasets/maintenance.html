@@ -1,0 +1,762 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Maintenance &#8212; QCArchive documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=68b739ae" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=89ebbeef"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/datasets/maintenance';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Caching &amp; Views" href="caching.html" />
+    <link rel="prev" title="Creating datasets" href="creating.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.58.post34+g79c2d6e67" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/qcarchive_logo.svg" class="logo__image only-light" alt=""/>
+    <img src="../../_static/qcarchive_logo_inverted.svg" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">QCArchive</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../quickstart/index.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../overview/index.html">
+    Overview
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../release_notes.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../admin_guide/index.html">
+    Admin Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../web_api/index.html">
+    Web API
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../developer_guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-external" href="https://molssi.org">
+    MolSSI
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MolSSI/QCFractal" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../quickstart/index.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../overview/index.html">
+    Overview
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../release_notes.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../admin_guide/index.html">
+    Admin Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../web_api/index.html">
+    Web API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer_guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://molssi.org">
+    MolSSI
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MolSSI/QCFractal" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../client_setup.html">QCPortal Installation &amp; Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../connecting_qcportal.html">Connecting to a server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata.html">Interpreting metadata</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../query_iterators.html">Query Iterators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../molecule.html">Molecules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../record_retrieval.html">Retrieving records</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../record_submission.html">Submitting computations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../record_management.html">Managing Records</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Datasets</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="basics.html">Using datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="creating.html">Creating datasets</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Maintenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="caching.html">Caching &amp; Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="attachments.html">Attachments</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../records/index.html">Record &amp; Computation Types</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../records/base.html">Base Record</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/singlepoint.html">Singlepoint calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/optimization.html">Optimization calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/gridoptimization.html">Gridoptimization calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/torsiondrive.html">Torsiondrive calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/manybody.html">Manybody calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/reaction.html">Reaction calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/neb.html">NEB calculations</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../qcportal_reference/index.html">QCPortal API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/clients.html">QCPortal Clients</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/auth.html">Authentication and User Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/base_models.html">Base Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/molecules.html">Molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/metadata_models.html">Metadata Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/tasks_services.html">Tasks and Services</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/internal_jobs.html">Internal Jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/serverinfo.html">Server Information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/managers.html">Managers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/external_files.html">External Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/utils_misc.html">Utilities and Miscellaneous</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/base_record_models.html">Base Record Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/singlepoint.html">Singlepoint Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/optimization.html">Optimization Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/torsiondrive.html">Torsiondrive Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/gridoptimization.html">Gridoptimization Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/manybody.html">Manybody Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/reaction.html">Reaction Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/neb.html">NEB Records</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">QCArchive User Guide</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Datasets</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Maintenance</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="maintenance">
+<h1>Maintenance<a class="headerlink" href="#maintenance" title="Link to this heading">#</a></h1>
+<section id="modifying-metadata-and-defaults">
+<span id="dataset-modify-meta"></span><h2>Modifying metadata and defaults<a class="headerlink" href="#modifying-metadata-and-defaults" title="Link to this heading">#</a></h2>
+<p>Various parameters that are set when <a class="reference internal" href="creating.html#id1"><span class="std std-ref">creating a dataset</span></a> can be later
+modified. These include the name, description, tags, tagline, and the default routing tag &amp; priority.
+See the following functions:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_name" title="qcportal.dataset_models.BaseDataset.set_name"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_name()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_description" title="qcportal.dataset_models.BaseDataset.set_description"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_description()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_visibility" title="qcportal.dataset_models.BaseDataset.set_visibility"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_visibility()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_group" title="qcportal.dataset_models.BaseDataset.set_group"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_group()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_tags" title="qcportal.dataset_models.BaseDataset.set_tags"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_tags()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_tagline" title="qcportal.dataset_models.BaseDataset.set_tagline"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_tagline()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_provenance" title="qcportal.dataset_models.BaseDataset.set_provenance"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_provenance()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_metadata" title="qcportal.dataset_models.BaseDataset.set_metadata"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_metadata()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_default_tag" title="qcportal.dataset_models.BaseDataset.set_default_tag"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_default_tag()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_default_priority" title="qcportal.dataset_models.BaseDataset.set_default_priority"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_default_priority()</span></code></a></p></li>
+</ul>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-0">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">get_dataset_by_id</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">set_default_priority</span><span class="p">(</span><span class="s2">&quot;low&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="s2">&quot;New Dataset Name&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<span class="go">New Dataset Name</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">default_priority</span><span class="p">)</span>
+<span class="go">PriorityEnum.low</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="renaming-and-deleting-entries-and-specifications">
+<h2>Renaming and Deleting Entries and Specifications<a class="headerlink" href="#renaming-and-deleting-entries-and-specifications" title="Link to this heading">#</a></h2>
+<p>Entries and specifications can be renamed and deleted. Deletion can also optionally delete the underlying record.</p>
+<p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.rename_entries" title="qcportal.dataset_models.BaseDataset.rename_entries"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rename_entries()</span></code></a> and
+<a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.rename_specification" title="qcportal.dataset_models.BaseDataset.rename_specification"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rename_specification()</span></code></a>
+take a dictionary of old name to new name</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-1">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">rename_entries</span><span class="p">({</span><span class="s1">&#39;difluorine&#39;</span><span class="p">:</span> <span class="s1">&#39;F2 molecule&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ent</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">get_entry</span><span class="p">(</span><span class="s1">&#39;F2 molecule&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ent</span><span class="o">.</span><span class="n">initial_molecule</span><span class="p">)</span>
+<span class="go">initial_molecule=Molecule(name=&#39;F2&#39;, formula=&#39;F2&#39;, hash=&#39;7ffa835&#39;)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Entries and specifications are deleted with
+<a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.delete_entries" title="qcportal.dataset_models.BaseDataset.delete_entries"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_entries()</span></code></a> and
+<a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.delete_specification" title="qcportal.dataset_models.BaseDataset.delete_specification"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_specification()</span></code></a>.
+Note that deleting entries and specifications by default do not delete the records</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-2" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-2">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Keeps any records, but removes from dataset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">delete_entries</span><span class="p">([</span><span class="s1">&#39;carbon monoxide&#39;</span><span class="p">])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Deletes the records too</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">delete_specification</span><span class="p">(</span><span class="s1">&#39;hf/sto-3g&#39;</span><span class="p">,</span> <span class="n">delete_records</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="record-management">
+<h2>Record Management<a class="headerlink" href="#record-management" title="Link to this heading">#</a></h2>
+<p>Records that belong to the dataset can be managed via the usual client methods (see <a class="reference internal" href="../record_management.html"><span class="doc">Managing Records</span></a>).
+However, datasets have convenient methods for management, which use entry and specification names rather than record.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.modify_records" title="qcportal.dataset_models.BaseDataset.modify_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">modify_records()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.reset_records" title="qcportal.dataset_models.BaseDataset.reset_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset_records()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.cancel_records" title="qcportal.dataset_models.BaseDataset.cancel_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cancel_records()</span></code></a> and <a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.uncancel_records" title="qcportal.dataset_models.BaseDataset.uncancel_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncancel_records()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.invalidate_records" title="qcportal.dataset_models.BaseDataset.invalidate_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">invalidate_records()</span></code></a> and <a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.uninvalidate_records" title="qcportal.dataset_models.BaseDataset.uninvalidate_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uninvalidate_records()</span></code></a></p></li>
+</ul>
+<p>These functions are similar to the client counterparts, but instead use entry and specification names.</p>
+<p>In addition, individual records can be removed from a dataset (and optionally deleted) with
+<a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.remove_records" title="qcportal.dataset_models.BaseDataset.remove_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">remove_records()</span></code></a>.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-3">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Reset carbon monoxide records</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">reset_records</span><span class="p">(</span><span class="n">entry_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;carbon monoxide&#39;</span><span class="p">])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Cancel pbe0/def2-qzvp computations</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">cancel_records</span><span class="p">(</span><span class="n">specification_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;pbe0/def2-qzvp&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="internal-jobs">
+<span id="dataset-internal-jobs"></span><h2>Internal Jobs<a class="headerlink" href="#internal-jobs" title="Link to this heading">#</a></h2>
+<p>Internal jobs associated with a dataset can be listed using <a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.list_internal_jobs" title="qcportal.dataset_models.BaseDataset.list_internal_jobs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">list_internal_jobs()</span></code></a>.
+These are <a class="reference internal" href="../qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJob" title="qcportal.internal_jobs.models.InternalJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">InternalJob</span></code></a> objects.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-4" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-4">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">list_internal_jobs</span><span class="p">()</span>
+<span class="go">[InternalJob(id=1614530, name=&#39;create_attach_view_ds_414&#39;, status=&lt;InternalJobStatusEnum.complete: &#39;complete&#39;&gt;, ...</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="creating.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Creating datasets</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="caching.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Caching &amp; Views</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modifying-metadata-and-defaults">Modifying metadata and defaults</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#renaming-and-deleting-entries-and-specifications">Renaming and Deleting Entries and Specifications</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#record-management">Record Management</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#internal-jobs">Internal Jobs</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/user_guide/datasets/maintenance.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  
+
+
+
+  
+  
+  
+  
+  
+  
+  
+
+
+<div class="row h-10">
+    <div class="col-2">
+        <a href="https://molssi.org/" target="_blank" title="Go to MolSSI in a new tab">
+            <img src="../../_static/molssi_main_logo.png" class="logo__image only-light footer_logo" alt="Logo image">
+            <img src="../../_static/molssi_main_logo_inverted_white.png" class="logo__image only-dark footer_logo" alt="Logo image">
+        </a>
+    </div>
+    <div class="col-8">
+        <p> &copy; Copyright 2019-2023 <a href="https://molssi.org/">The Molecular Sciences Software Institute</a></p>
+        <p>Funded by the National Science Foundation 
+          <a href="https://nsf.gov/awardsearch/showAward?AWD_ID=1547580">OAC-1547580</a> and 
+          <a href="https://www.nsf.gov/awardsearch/showAward?AWD_ID=2136142">CHE-2136142.</a></p>
+ 
+        
+        <p class="sphinx-version">
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.4.7.<br>
+        </p>
+        
+
+        <p class="theme-version">
+        Built with a customized <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+        </p>
+
+    </div>
+    <div class="col-2">
+        <a href="https://nsf.gov/" target="_blank" title="Go to the NSF in a new tab">
+            <img src="../../_static/nsf.png" class="footer_logo" alt="The NSF">
+          </a>
+    </div>
+</div></div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

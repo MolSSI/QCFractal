@@ -31,6 +31,10 @@ Dataset entries, specifications, and records are dependent on the type of datase
 have different types for these items. That is, entries in a :ref:`singlepoint_dataset` are different than entries
 in an :ref:`optimization_dataset`, and the same is true for specifications.
 
+One important thing to keep in mind is that records exist outside of a dataset, and a dataset
+references these records. Therefore, `records can be part of multiple datasets`, or not be part of any dataset.
+This has implications, for example, when :ref:`submitting calculations <dataset_submission>`.
+
 
 Dataset Limitations
 -------------------
@@ -41,6 +45,50 @@ calculations.
 
 A specification should work for all entries in the dataset. There is some limited ability to override
 keywords on a per-entry basis, but there is no way to assign a different basis for a particular entry.
+
+
+Listing Datasets
+-------------------
+
+Datasets that are currently available on the server can be listed using :meth:`~qcportal.client.PortalClient.list_datasets`.
+This returns the dataset information as a list of dictionaries
+
+.. tab-set::
+
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+      >>> client.list_datasets()
+      [{'id': 54,
+        'dataset_type': 'optimization',
+        'dataset_name': 'JGI Metabolite Set 1',
+        'record_count': 808},
+       {'id': 150,
+        'dataset_type': 'singlepoint',
+        'dataset_name': 'QM7',
+        'record_count': 343920},
+       {'id': 154,
+        'dataset_type': 'singlepoint',
+        'dataset_name': 'GDB13-T',
+        'record_count': 24000}]
+
+
+In an interactive environment, the :meth:`~qcportal.client.PortalClient.print_datasets_table` function prints out
+a more user-friendly version
+
+.. tab-set::
+
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+      >>> client.print_datasets_table()
+        id  type            record_count  name
+      ----  ------------  --------------  ----------------------------------------------------------
+        54  optimization             808  JGI Metabolite Set 1
+       150  singlepoint           343920  QM7
+       154  singlepoint            24000  GDB13-T
 
 
 Retrieving Datasets
@@ -71,25 +119,6 @@ and its name with :meth:`~qcportal.client.PortalClient.get_dataset`
       >>> print(ds.id, ds.dataset_type, ds.name)
       52 optimization Diatomic geometries
 
-
-Adding Datasets
----------------
-
-Datasets can be created on a server with the :meth:`~qcportal.client.PortalClient.add_dataset`
-function of the :class:`~qcportal.client.PortalClient`. This function returns the dataset:
-
-.. tab-set::
-
-  .. tab-item:: PYTHON
-
-    .. code-block:: py3
-
-      >>> ds = client.add_dataset("optimization", "Optimization of important molecules")
-      >>> print(ds.id)
-      27
-
-The :meth:`~qcportal.client.PortalClient.add_dataset` takes several optional arguments, including
-some for descriptions of the dataset as well as default priority and :ref:`tags <routing_tags>`.
 
 Dataset Metadata
 --------------------------
@@ -126,8 +155,8 @@ with :meth:`~qcportal.dataset_models.BaseDataset.set_name`,
       A new description
 
 
-Status
-~~~~~~
+Record Status
+-------------
 
 The :meth:`~qcportal.dataset_models.BaseDataset.status` returns a dictionary describing the status of the computations.
 This is indexed by specification
@@ -180,6 +209,12 @@ Specifications and Entries
 
 The specifications of the dataset are available with the ``.specification_names`` and ``.specifications`` properties.
 ``.specifications`` returns a dictionary, with the key being the name of the specification.
+
+.. note::
+
+  The contents of the specifications and entries are different for each type of dataset. See
+  :doc:`individual record documentation <../records/index>` for the different types.
+
 
 .. tab-set::
 
@@ -314,174 +349,3 @@ by entry name, specification name, and status
 
 If the record was previously retrieved, it won't be retrieved again unless it has been updated on the server. This can
 be overridden with ``force_refetch=True`` which will always download a fresh record.
-
-
-Manipulating Entries and Specifications
----------------------------------------
-
-Entries and specifications can be added with ``add_entries``, ``add_entry``, and ``add_specification``.
-The details of these functions depend on the type of dataset - see :doc:`records/index`. The following examples
-are for an :ref:`optimization dataset <optimization_dataset>`.
-
-Both entries and specifications are given descriptive names, which can be use later in other functions
-(like :meth:`~qcportal.dataset_models.BaseDataset.get_record`).
-
-When entries or specifications are added, the changes are reflected immediately on the server.
-
-First, we add some entries to this dataset. For an optimization dataset, an entry corresponds to
-an unoptimized 'initial' molecule. Adding entries returns :doc:`metadata <metadata>`.
-
-.. tab-set::
-
-  .. tab-item:: PYTHON
-
-    .. code-block:: py3
-
-      >>> from qcportal.molecules import Molecule
-      >>> from qcportal.optimization import OptimizationDatasetEntry
-
-      >>> mol = Molecule(symbols=['C', 'O'], geometry=[0.0, 0.0, 0.0, 0.0, 0.0, 2.0])
-      >>> meta = ds.add_entry("carbon monoxide", mol)
-      >>> print(meta)
-      InsertMetadata(error_description=None, errors=[], inserted_idx=[0], existing_idx=[])
-
-      >>> # Can also create lots of entries and add them at once
-      >>> mol2 = Molecule(symbols=['F', 'F'], geometry=[0.0, 0.0, 0.0, 0.0, 0.0, 2.0])
-      >>> mol3 = Molecule(symbols=['Br', 'Br'], geometry=[0.0, 0.0, 0.0, 0.0, 0.0, 2.0])
-      >>> entry2 = OptimizationDatasetEntry(name='difluorine', initial_molecule=mol2)
-      >>> entry3 = OptimizationDatasetEntry(name='dibromine', initial_molecule=mol3)
-      >>> meta = ds.add_entries([entry2, entry3])
-      >>> print(meta)
-      InsertMetadata(error_description=None, errors=[], inserted_idx=[0, 1], existing_idx=[])
-
-Now our dataset has three entries
-
-.. tab-set::
-
-  .. tab-item:: PYTHON
-
-    .. code-block:: py3
-
-      >>> print(ds.entry_names)
-      ['carbon monoxide', 'difluorine', 'dibromine']
-
-Next, we will add some specifications. For an optimization dataset, this is an
-:class:`~qcportal.optimization.OptimizationSpecification`.
-
-.. tab-set::
-
-  .. tab-item:: PYTHON
-
-    .. code-block:: py3
-
-      >>> from qcportal.singlepoint import SinglepointSpecification
-      >>> from qcportal.optimization import OptimizationSpecification
-
-      >>> # Use geometric, compute gradients with psi4. Optimize with b3lyp/def2-tzvp
-      >>> spec = OptimizationSpecification(
-      ...   program='geometric',
-      ...   qc_specification=QCSpecification(
-      ...     program='psi4',
-      ...     driver='deferred',
-      ...     method='b3lyp',
-      ...     basis='def2-tzvp',
-      ...   )
-      ... )
-
-      >>> meta = ds.add_specification(name='psi4/b3lyp/def2-tzvp', specification=spec)
-      >>> print(meta)
-      InsertMetadata(error_description=None, errors=[], inserted_idx=[0], existing_idx=[])
-
-
-.. _dataset_submission:
-
-Submitting Computations
------------------------
-
-Adding entries and specifications does not immediately create the underlying records. To do that,
-we use :meth:`~qcportal.dataset_models.BaseDataset.submit`.
-
-With no arguments, this will create missing records for all entries and specifications, using the
-default tag and priority of the dataset. However, you may also submit only certain entries and specifications,
-or change the tag and priority.
-
-.. tab-set::
-
-  .. tab-item:: PYTHON
-
-    .. code-block:: py3
-
-      >>> ds.submit() # Create everything
-
-      >>> # Submit missing difluorine computations with a special tag
-      >>> ds.submit(['difluorine'], tag='special_tag')
-
-      >>> # Submit dibromine hf/sto-3g computation at a high priority
-      >>> ds.submit(['dibromine'], ['hf/sto-3g'], priority='high')
-
-
-Renaming and Deleting Entries and Specifications
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Entries and specifications can be renamed and deleted. Deletion can also optionally delete the underlying record.
-
-:meth:`~qcportal.dataset_models.BaseDataset.rename_entries` and
-:meth:`~qcportal.dataset_models.BaseDataset.rename_specification`
-take a dictionary of old name to new name
-
-.. tab-set::
-
-  .. tab-item:: PYTHON
-
-    .. code-block:: py3
-
-      >>> ds.rename_entries({'difluorine': 'F2 molecule'})
-      >>> ent = ds.get_entry('F2 molecule')
-      >>> print(ent.initial_molecule)
-      initial_molecule=Molecule(name='F2', formula='F2', hash='7ffa835')
-
-Entries and specifications are deleted with
-:meth:`~qcportal.dataset_models.BaseDataset.delete_entries` and
-:meth:`~qcportal.dataset_models.BaseDataset.delete_specification`.
-Note that deleting entries and specifications by default do not delete the records
-
-.. tab-set::
-
-  .. tab-item:: PYTHON
-
-    .. code-block:: py3
-
-      >>> # Keeps any records, but removes from dataset
-      >>> ds.delete_entries(['carbon monoxide'])
-
-      >>> # Deletes the records too
-      >>> ds.delete_specification('hf/sto-3g', delete_records=True)
-
-
-Record Management
------------------
-
-Records that belong to the dataset can be managed via the usual client methods (see :doc:`record_management`).
-However, datasets have convenient methods for management, which use entry and specification names rather than record.
-
-* :meth:`~qcportal.dataset_models.BaseDataset.modify_records`
-* :meth:`~qcportal.dataset_models.BaseDataset.reset_records`
-* :meth:`~qcportal.dataset_models.BaseDataset.cancel_records` and :meth:`~qcportal.dataset_models.BaseDataset.uncancel_records`
-* :meth:`~qcportal.dataset_models.BaseDataset.invalidate_records` and :meth:`~qcportal.dataset_models.BaseDataset.uninvalidate_records`
-
-These functions are similar to the client counterparts, but instead use entry and specification names.
-
-In addition, individual records can be removed from a dataset (and optionally deleted) with
-:meth:`~qcportal.dataset_models.BaseDataset.remove_records`.
-
-.. tab-set::
-
-  .. tab-item:: PYTHON
-
-    .. code-block:: py3
-
-      >>> # Reset carbon monoxide records
-      >>> ds.reset_records(entry_names=['carbon monoxide'])
-
-      >>> # Cancel pbe0/def2-qzvp computations
-      >>> ds.cancel_records(specification_names=['pbe0/def2-qzvp'])

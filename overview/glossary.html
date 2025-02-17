@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Glossary of Common Concepts &#8212; QCArchive 0.58.post17+g70a35cb3c documentation</title>
+    <title>Glossary of Common Concepts &#8212; QCArchive documentation</title>
   
   
   
@@ -35,7 +35,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=6f1775e9" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=68b739ae" />
   
   <!-- So that users can add custom icons -->
   <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=362ea571"></script>
+    <script src="../_static/documentation_options.js?v=89ebbeef"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="QCArchive Overview" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.58.post17+g70a35cb3c" />
+  <meta name="docsearch:version" content="0.58.post34+g79c2d6e67" />
   </head>
   
   
@@ -476,7 +476,7 @@ and identifiers. Molecules in this way are defined to be a specific geometry.</p
 <section id="specification">
 <span id="glossary-specification"></span><h2>specification<a class="headerlink" href="#specification" title="Link to this heading">#</a></h2>
 <p>A <em>specification</em> details how a computation should be run. For example, an
-<a class="reference internal" href="../user_guide/records/optimization.html#qcportal.optimization.OptimizationSpecification" title="qcportal.optimization.OptimizationSpecification"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationSpecification</span></code></a> contains
+<code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationSpecification</span></code> contains
 information about the program used to run the optimization, which method or basis, and other
 input information.</p>
 <p>A specification applied to an input molecule results in a <a class="reference internal" href="#glossary-record"><span class="std std-ref">record</span></a>.</p>
@@ -522,14 +522,14 @@ See <a class="reference internal" href="tasks_services.html#routing-tags"><span 
 A dataset contains <a class="reference internal" href="#glossary-dataset-entry"><span class="std std-ref">entries</span></a> which typically correspond to input
 <a class="reference internal" href="#glossary-molecule"><span class="std std-ref">molecules</span></a>, and <a class="reference internal" href="#glossary-dataset-specification"><span class="std std-ref">specifications</span></a> that
 define how a computation is to be run.</p>
-<p>See <a class="reference internal" href="../user_guide/datasets.html"><span class="doc">Using datasets</span></a></p>
+<p>See <a class="reference internal" href="../user_guide/datasets/index.html"><span class="doc">Datasets</span></a></p>
 </section>
 <section id="dataset-entry">
 <span id="glossary-dataset-entry"></span><h2>dataset entry<a class="headerlink" href="#dataset-entry" title="Link to this heading">#</a></h2>
 <p>An object that represents a <a class="reference internal" href="#glossary-molecule"><span class="std std-ref">molecule</span></a> or similar input in a dataset.
 The <a class="reference internal" href="#glossary-dataset-specification"><span class="std std-ref">specifications</span></a> of the dataset are then applied to the
 entries.</p>
-<p>See <a class="reference internal" href="../user_guide/datasets.html"><span class="doc">Using datasets</span></a></p>
+<p>See <a class="reference internal" href="../user_guide/datasets/index.html"><span class="doc">Datasets</span></a></p>
 </section>
 <section id="dataset-specification">
 <span id="glossary-dataset-specification"></span><h2>dataset specification<a class="headerlink" href="#dataset-specification" title="Link to this heading">#</a></h2>
@@ -538,7 +538,14 @@ entries.</p>
 organize a dataset.</p>
 <p>Specifications are then applied to <a class="reference internal" href="#glossary-dataset-entry"><span class="std std-ref">entries</span></a> to
 form <a class="reference internal" href="#glossary-record"><span class="std std-ref">records</span></a> that are associated with the dataset.</p>
-<p>See <a class="reference internal" href="../user_guide/datasets.html"><span class="doc">Using datasets</span></a></p>
+<p>See <a class="reference internal" href="../user_guide/datasets/index.html"><span class="doc">Datasets</span></a></p>
+</section>
+<section id="dataset-view">
+<span id="glossary-dataset-view"></span><h2>dataset view<a class="headerlink" href="#dataset-view" title="Link to this heading">#</a></h2>
+<p>An standalone file that contains data from a dataset. This file can be loaded independent of any
+server connection and used as a dataset - that is, you can iterate entries and records, view records,
+compile pandas dataframes, etc, without connecting to a server.</p>
+<p>See to <a class="reference internal" href="../user_guide/datasets/caching.html#dataset-views"><span class="std std-ref">Dataset Views</span></a></p>
 </section>
 </section>
 
@@ -600,6 +607,7 @@ form <a class="reference internal" href="#glossary-record"><span class="std std-
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dataset">dataset</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dataset-entry">dataset entry</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dataset-specification">dataset specification</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dataset-view">dataset view</a></li>
 </ul>
   </nav></div>
 

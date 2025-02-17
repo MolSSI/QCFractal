@@ -1,0 +1,1359 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>qcportal.cache &#8212; QCArchive documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=68b739ae" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=89ebbeef"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/qcportal/cache';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.58.post34+g79c2d6e67" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/qcarchive_logo.svg" class="logo__image only-light" alt=""/>
+    <img src="../../_static/qcarchive_logo_inverted.svg" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">QCArchive</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../quickstart/index.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../overview/index.html">
+    Overview
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../release_notes.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../admin_guide/index.html">
+    Admin Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../web_api/index.html">
+    Web API
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../developer_guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-external" href="https://molssi.org">
+    MolSSI
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MolSSI/QCFractal" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../quickstart/index.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../overview/index.html">
+    Overview
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../release_notes.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../admin_guide/index.html">
+    Admin Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../web_api/index.html">
+    Web API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer_guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://molssi.org">
+    MolSSI
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MolSSI/QCFractal" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">qcportal.cache</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for qcportal.cache</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Caching for the PortalClient</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlparse</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">apsw</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">chunk_iterable</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">pydantic.v1</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pydantic</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic.v1</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">PrivateAttr</span><span class="p">,</span> <span class="n">Field</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">pydantic</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">PrivateAttr</span><span class="p">,</span> <span class="n">Field</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">zstandard</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.serialization</span><span class="w"> </span><span class="kn">import</span> <span class="n">serialize</span><span class="p">,</span> <span class="n">deserialize</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.record_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">RecordStatusEnum</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">PortalClient</span>
+
+<span class="n">_DATASET_T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;_DATASET_T&quot;</span><span class="p">)</span>
+<span class="n">_RECORD_T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;_RECORD_T&quot;</span><span class="p">)</span>
+
+<span class="n">_query_chunk_size</span> <span class="o">=</span> <span class="mi">125</span>
+
+
+<div class="viewcode-block" id="compress_for_cache">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.compress_for_cache">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compress_for_cache</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+    <span class="n">serialized_data</span> <span class="o">=</span> <span class="n">serialize</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;msgpack&quot;</span><span class="p">)</span>
+    <span class="n">compressed_data</span> <span class="o">=</span> <span class="n">zstandard</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">serialized_data</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">compressed_data</span></div>
+
+
+
+<div class="viewcode-block" id="decompress_from_cache">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.decompress_from_cache">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">decompress_from_cache</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+    <span class="n">decompressed_data</span> <span class="o">=</span> <span class="n">zstandard</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">deserialized_data</span> <span class="o">=</span> <span class="n">deserialize</span><span class="p">(</span><span class="n">decompressed_data</span><span class="p">,</span> <span class="s2">&quot;msgpack&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">parse_obj_as</span><span class="p">(</span><span class="n">value_type</span><span class="p">,</span> <span class="n">deserialized_data</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="RecordCache">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.RecordCache">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RecordCache</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache_uri</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">read_only</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache_uri</span> <span class="o">=</span> <span class="n">cache_uri</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">read_only</span> <span class="o">=</span> <span class="n">read_only</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_only</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="o">=</span> <span class="n">apsw</span><span class="o">.</span><span class="n">Connection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cache_uri</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="n">apsw</span><span class="o">.</span><span class="n">SQLITE_OPEN_READONLY</span> <span class="o">|</span> <span class="n">apsw</span><span class="o">.</span><span class="n">SQLITE_OPEN_URI</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="o">=</span> <span class="n">apsw</span><span class="o">.</span><span class="n">Connection</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cache_uri</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="n">apsw</span><span class="o">.</span><span class="n">SQLITE_OPEN_READWRITE</span> <span class="o">|</span> <span class="n">apsw</span><span class="o">.</span><span class="n">SQLITE_OPEN_CREATE</span> <span class="o">|</span> <span class="n">apsw</span><span class="o">.</span><span class="n">SQLITE_OPEN_URI</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">pragma</span><span class="p">(</span><span class="s2">&quot;foreign_keys&quot;</span><span class="p">,</span> <span class="s2">&quot;ON&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">read_only</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_tables</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> path=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cache_uri</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;ro&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">read_only</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;rw&#39;</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_assert_writable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_only</span><span class="p">,</span> <span class="s2">&quot;This cache is read-only&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_writable</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            CREATE TABLE IF NOT EXISTS records (</span>
+<span class="sd">                id INTEGER PRIMARY KEY,</span>
+<span class="sd">                status TEXT NOT NULL,</span>
+<span class="sd">                modified_on DECIMAL NOT NULL,</span>
+<span class="sd">                record BLOB NOT NULL</span>
+<span class="sd">            )</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;CREATE INDEX IF NOT EXISTS records_status ON records (status)&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RecordCache.update_metadata">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.RecordCache.update_metadata">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_writable</span><span class="p">()</span>
+        <span class="n">stmt</span> <span class="o">=</span> <span class="s2">&quot;REPLACE INTO metadata (key, value) VALUES (?, ?)&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">serialize</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;msgpack&quot;</span><span class="p">)))</span></div>
+
+
+<div class="viewcode-block" id="RecordCache.get_record">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.RecordCache.get_record">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">record_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">_RECORD_T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">_RECORD_T</span><span class="p">]:</span>
+        <span class="n">stmt</span> <span class="o">=</span> <span class="s2">&quot;SELECT record FROM records WHERE id = ?&quot;</span>
+
+        <span class="n">record_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="p">(</span><span class="n">record_id</span><span class="p">,))</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">record_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">record</span> <span class="o">=</span> <span class="n">decompress_from_cache</span><span class="p">(</span><span class="n">record_data</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">record_type</span><span class="p">)</span>
+
+        <span class="n">record</span><span class="o">.</span><span class="n">_record_cache</span> <span class="o">=</span> <span class="bp">self</span>
+
+        <span class="k">return</span> <span class="n">record</span></div>
+
+
+<div class="viewcode-block" id="RecordCache.get_records">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.RecordCache.get_records">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">record_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">_RECORD_T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">_RECORD_T</span><span class="p">]:</span>
+        <span class="n">all_records</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">record_id_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">record_ids</span><span class="p">,</span> <span class="n">_query_chunk_size</span><span class="p">):</span>
+            <span class="n">id_params</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;?&quot;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">record_id_batch</span><span class="p">))</span>
+            <span class="n">stmt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;SELECT record FROM records WHERE id IN (</span><span class="si">{</span><span class="n">id_params</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+            <span class="n">rdata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">record_id_batch</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+
+            <span class="k">for</span> <span class="n">compressed_record</span> <span class="ow">in</span> <span class="n">rdata</span><span class="p">:</span>
+                <span class="n">record</span> <span class="o">=</span> <span class="n">decompress_from_cache</span><span class="p">(</span><span class="n">compressed_record</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">record_type</span><span class="p">)</span>
+
+                <span class="n">record</span><span class="o">.</span><span class="n">_record_cache</span> <span class="o">=</span> <span class="bp">self</span>
+
+                <span class="n">all_records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">all_records</span></div>
+
+
+<div class="viewcode-block" id="RecordCache.get_existing_records">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.RecordCache.get_existing_records">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_existing_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">record_id_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">record_ids</span><span class="p">,</span> <span class="n">_query_chunk_size</span><span class="p">):</span>
+            <span class="n">record_id_params</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;?&quot;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">record_id_batch</span><span class="p">))</span>
+
+            <span class="n">stmt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;SELECT id FROM records WHERE id IN (</span><span class="si">{</span><span class="n">record_id_params</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">record_id_batch</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ret</span></div>
+
+
+<div class="viewcode-block" id="RecordCache.update_records">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.RecordCache.update_records">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">records</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">_RECORD_T</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_writable</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">record_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">records</span><span class="p">,</span> <span class="mi">10</span><span class="p">):</span>
+                <span class="n">n_batch</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">record_batch</span><span class="p">)</span>
+
+                <span class="n">values_params</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;(?, ?, ?, ?)&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_batch</span><span class="p">)</span>
+
+                <span class="n">all_params</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">record_batch</span><span class="p">:</span>
+                    <span class="n">all_params</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">modified_on</span><span class="o">.</span><span class="n">timestamp</span><span class="p">(),</span> <span class="n">compress_for_cache</span><span class="p">(</span><span class="n">r</span><span class="p">)))</span>
+
+                <span class="n">stmt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;REPLACE INTO records (id, status, modified_on, record) VALUES </span><span class="si">{</span><span class="n">values_params</span><span class="si">}</span><span class="s2">&quot;</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">all_params</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span><span class="p">:</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">_record_cache</span> <span class="o">=</span> <span class="bp">self</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">_cache_dirty</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="RecordCache.writeback_record">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.RecordCache.writeback_record">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">writeback_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_writable</span><span class="p">()</span>
+
+        <span class="n">compressed_record</span> <span class="o">=</span> <span class="n">compress_for_cache</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+
+        <span class="c1"># Only update if timestamp is same or newer, and if this record is larger</span>
+        <span class="c1"># than what is stored already</span>
+        <span class="n">stmt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;INSERT OR REPLACE INTO records (id, status, modified_on, record)</span>
+<span class="s2">                   SELECT ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM records WHERE id = ?</span>
+<span class="s2">                   AND (modified_on &gt; ? OR (modified_on = ? and length(record) &gt; ?)))&quot;&quot;&quot;</span>
+
+        <span class="n">ts</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">modified_on</span><span class="o">.</span><span class="n">timestamp</span><span class="p">()</span>
+        <span class="n">row_data</span> <span class="o">=</span> <span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">ts</span><span class="p">,</span> <span class="n">compressed_record</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">ts</span><span class="p">,</span> <span class="n">ts</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">compressed_record</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">row_data</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RecordCache.delete_record">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.RecordCache.delete_record">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_writable</span><span class="p">()</span>
+
+        <span class="n">stmt</span> <span class="o">=</span> <span class="s2">&quot;DELETE FROM records WHERE id=?&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="p">(</span><span class="n">record_id</span><span class="p">,))</span></div>
+
+
+<div class="viewcode-block" id="RecordCache.delete_records">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.RecordCache.delete_records">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_writable</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">record_id_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">record_ids</span><span class="p">,</span> <span class="n">_query_chunk_size</span><span class="p">):</span>
+            <span class="n">record_id_params</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;?&quot;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">record_id_batch</span><span class="p">))</span>
+            <span class="n">stmt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;DELETE FROM records WHERE id IN (</span><span class="si">{</span><span class="n">record_id_params</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">record_id_batch</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="DatasetCache">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DatasetCache</span><span class="p">(</span><span class="n">RecordCache</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache_uri</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">read_only</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">dataset_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">_DATASET_T</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_entry_type</span> <span class="o">=</span> <span class="n">dataset_type</span><span class="o">.</span><span class="n">_entry_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_specification_type</span> <span class="o">=</span> <span class="n">dataset_type</span><span class="o">.</span><span class="n">_specification_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_record_type</span> <span class="o">=</span> <span class="n">dataset_type</span><span class="o">.</span><span class="n">_record_type</span>
+
+        <span class="n">RecordCache</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache_uri</span><span class="o">=</span><span class="n">cache_uri</span><span class="p">,</span> <span class="n">read_only</span><span class="o">=</span><span class="n">read_only</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">RecordCache</span><span class="o">.</span><span class="n">_create_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            CREATE TABLE IF NOT EXISTS metadata (</span>
+<span class="sd">                key TEXT PRIMARY KEY,</span>
+<span class="sd">                value BLOB NOT NULL</span>
+<span class="sd">            )</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            CREATE TABLE IF NOT EXISTS dataset_entries (</span>
+<span class="sd">                name TEXT PRIMARY KEY,</span>
+<span class="sd">                entry BLOB NOT NULL</span>
+<span class="sd">            )</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            CREATE TABLE IF NOT EXISTS dataset_specifications (</span>
+<span class="sd">                name TEXT PRIMARY KEY,</span>
+<span class="sd">                specification BLOB NOT NULL</span>
+<span class="sd">            )</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            CREATE TABLE IF NOT EXISTS dataset_records (</span>
+<span class="sd">                entry_name TEXT NOT NULL,</span>
+<span class="sd">                specification_name TEXT NOT NULL,</span>
+<span class="sd">                record_id INTEGER NOT NULL,</span>
+<span class="sd">                PRIMARY KEY (entry_name, specification_name),</span>
+<span class="sd">                FOREIGN KEY (entry_name) REFERENCES dataset_entries(name) ON DELETE CASCADE ON UPDATE CASCADE,</span>
+<span class="sd">                FOREIGN KEY (specification_name) REFERENCES dataset_specifications(name) ON DELETE CASCADE ON UPDATE CASCADE</span>
+<span class="sd">            )</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;CREATE INDEX IF NOT EXISTS dataset_records_entry_name ON dataset_records (entry_name)&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="s2">&quot;CREATE INDEX IF NOT EXISTS dataset_records_specification_name ON dataset_records (specification_name)&quot;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;CREATE INDEX IF NOT EXISTS dataset_records_record_id ON dataset_records (record_id)&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DatasetCache.get_metadata">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.get_metadata">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="n">stmt</span> <span class="o">=</span> <span class="s2">&quot;SELECT value FROM metadata WHERE key = ?&quot;</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="p">(</span><span class="n">key</span><span class="p">,))</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">deserialize</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;msgpack&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DatasetCache.entry_exists">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.entry_exists">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">entry_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">stmt</span> <span class="o">=</span> <span class="s2">&quot;SELECT 1 FROM dataset_entries WHERE name=?&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="p">(</span><span class="n">name</span><span class="p">,))</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="DatasetCache.get_entry_names">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.get_entry_names">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_entry_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="n">stmt</span> <span class="o">=</span> <span class="s2">&quot;SELECT name FROM dataset_entries&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="DatasetCache.get_entry">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.get_entry">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_entry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">]:</span>
+        <span class="n">stmt</span> <span class="o">=</span> <span class="s2">&quot;SELECT entry FROM dataset_entries WHERE name=?&quot;</span>
+        <span class="n">entry_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="p">(</span><span class="n">name</span><span class="p">,))</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">entry_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">decompress_from_cache</span><span class="p">(</span><span class="n">entry_data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_entry_type</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DatasetCache.get_entries">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.get_entries">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_entries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">]:</span>
+        <span class="n">all_entries</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">names_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">_query_chunk_size</span><span class="p">):</span>
+            <span class="n">name_param</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;?&quot;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">names_batch</span><span class="p">))</span>
+            <span class="n">stmt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;SELECT entry FROM dataset_entries WHERE name IN (</span><span class="si">{</span><span class="n">name_param</span><span class="si">}</span><span class="s2">)&quot;&quot;&quot;</span>
+            <span class="n">entry_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="p">(</span><span class="o">*</span><span class="n">names_batch</span><span class="p">,))</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+            <span class="n">all_entries</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">decompress_from_cache</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_entry_type</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">entry_data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">all_entries</span></div>
+
+
+<div class="viewcode-block" id="DatasetCache.update_entries">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.update_entries">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_entries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entries</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_writable</span><span class="p">()</span>
+
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_entry_type</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">entry_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">entries</span><span class="p">,</span> <span class="mi">50</span><span class="p">):</span>
+                <span class="n">n_batch</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">entry_batch</span><span class="p">)</span>
+                <span class="n">values_params</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;(?, ?)&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_batch</span><span class="p">)</span>
+
+                <span class="n">all_params</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">entry_batch</span><span class="p">:</span>
+                    <span class="n">all_params</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="n">e</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">compress_for_cache</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+
+                <span class="n">stmt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;REPLACE INTO dataset_entries (name, entry) VALUES </span><span class="si">{</span><span class="n">values_params</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">all_params</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DatasetCache.rename_entry">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.rename_entry">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rename_entry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">new_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_writable</span><span class="p">()</span>
+
+        <span class="n">entry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_entry</span><span class="p">(</span><span class="n">old_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">entry</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># does not exist</span>
+            <span class="k">return</span>
+
+        <span class="n">entry</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">new_name</span>
+
+        <span class="n">stmt</span> <span class="o">=</span> <span class="s2">&quot;UPDATE dataset_entries SET name=?, entry=? WHERE name=?&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="p">(</span><span class="n">new_name</span><span class="p">,</span> <span class="n">compress_for_cache</span><span class="p">(</span><span class="n">entry</span><span class="p">),</span> <span class="n">old_name</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="DatasetCache.delete_entry">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.delete_entry">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_entry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_writable</span><span class="p">()</span>
+
+        <span class="n">stmt</span> <span class="o">=</span> <span class="s2">&quot;DELETE FROM dataset_entries WHERE name=?&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="p">(</span><span class="n">name</span><span class="p">,))</span></div>
+
+
+<div class="viewcode-block" id="DatasetCache.specification_exists">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.specification_exists">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">specification_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">stmt</span> <span class="o">=</span> <span class="s2">&quot;SELECT 1 FROM dataset_specifications WHERE name=?&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="p">(</span><span class="n">name</span><span class="p">,))</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="DatasetCache.get_specification_names">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.get_specification_names">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_specification_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="n">stmt</span> <span class="o">=</span> <span class="s2">&quot;SELECT name FROM dataset_specifications&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="DatasetCache.get_specification">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.get_specification">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_specification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">stmt</span> <span class="o">=</span> <span class="s2">&quot;SELECT specification FROM dataset_specifications WHERE name=?&quot;</span>
+        <span class="n">spec_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="p">(</span><span class="n">name</span><span class="p">,))</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">spec_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">decompress_from_cache</span><span class="p">(</span><span class="n">spec_data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_specification_type</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DatasetCache.get_all_specifications">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.get_all_specifications">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_all_specifications</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">]:</span>
+        <span class="n">stmt</span> <span class="o">=</span> <span class="s2">&quot;SELECT specification FROM dataset_specifications&quot;</span>
+        <span class="n">spec_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">decompress_from_cache</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_specification_type</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">spec_data</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="DatasetCache.get_specifications">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.get_specifications">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_specifications</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">]:</span>
+        <span class="n">name_param</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;?&quot;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">))</span>
+
+        <span class="n">stmt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;SELECT specification FROM dataset_specifications WHERE name IN (</span><span class="si">{</span><span class="n">name_param</span><span class="si">}</span><span class="s2">)&quot;&quot;&quot;</span>
+        <span class="n">entry_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="p">(</span><span class="o">*</span><span class="n">names</span><span class="p">,))</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">decompress_from_cache</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_specification_type</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">entry_data</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="DatasetCache.update_specifications">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.update_specifications">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_specifications</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">specifications</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_writable</span><span class="p">()</span>
+
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_specification_type</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">specifications</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">specification_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">specifications</span><span class="p">,</span> <span class="mi">50</span><span class="p">):</span>
+                <span class="n">n_batch</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">specification_batch</span><span class="p">)</span>
+                <span class="n">values_params</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;(?, ?)&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_batch</span><span class="p">)</span>
+
+                <span class="n">all_params</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">specification_batch</span><span class="p">:</span>
+                    <span class="n">all_params</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">compress_for_cache</span><span class="p">(</span><span class="n">s</span><span class="p">)))</span>
+
+                <span class="n">stmt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;REPLACE INTO dataset_specifications (name, specification) VALUES </span><span class="si">{</span><span class="n">values_params</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">all_params</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DatasetCache.rename_specification">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.rename_specification">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rename_specification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">new_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_writable</span><span class="p">()</span>
+
+        <span class="n">specification</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_specification</span><span class="p">(</span><span class="n">old_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">specification</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># does not exist</span>
+            <span class="k">return</span>
+
+        <span class="n">specification</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">new_name</span>
+
+        <span class="n">stmt</span> <span class="o">=</span> <span class="s2">&quot;UPDATE dataset_specifications SET name=?, specification=? WHERE name=?&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="p">(</span><span class="n">new_name</span><span class="p">,</span> <span class="n">compress_for_cache</span><span class="p">(</span><span class="n">specification</span><span class="p">),</span> <span class="n">old_name</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="DatasetCache.delete_specification">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.delete_specification">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_specification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_writable</span><span class="p">()</span>
+
+        <span class="n">stmt</span> <span class="o">=</span> <span class="s2">&quot;DELETE FROM dataset_specifications WHERE name=?&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="p">(</span><span class="n">name</span><span class="p">,))</span></div>
+
+
+<div class="viewcode-block" id="DatasetCache.dataset_record_exists">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.dataset_record_exists">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dataset_record_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entry_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">specification_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">stmt</span> <span class="o">=</span> <span class="s2">&quot;SELECT 1 FROM dataset_records WHERE entry_name=? and specification_name=?&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="p">(</span><span class="n">entry_name</span><span class="p">,</span> <span class="n">specification_name</span><span class="p">))</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="DatasetCache.get_dataset_record">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.get_dataset_record">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dataset_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entry_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">specification_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">_RECORD_T</span><span class="p">]:</span>
+        <span class="n">stmt</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;SELECT r.record FROM records r</span>
+<span class="s2">                  INNER JOIN dataset_records dr ON r.id = dr.record_id</span>
+<span class="s2">                  WHERE dr.entry_name=? and dr.specification_name=?&quot;&quot;&quot;</span>
+
+        <span class="n">record_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="p">(</span><span class="n">entry_name</span><span class="p">,</span> <span class="n">specification_name</span><span class="p">))</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">record_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">record</span> <span class="o">=</span> <span class="n">decompress_from_cache</span><span class="p">(</span><span class="n">record_data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_record_type</span><span class="p">)</span>
+        <span class="n">record</span><span class="o">.</span><span class="n">_record_cache</span> <span class="o">=</span> <span class="bp">self</span>
+
+        <span class="k">return</span> <span class="n">record</span></div>
+
+
+<div class="viewcode-block" id="DatasetCache.get_dataset_records">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.get_dataset_records">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dataset_records</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">entry_names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">specification_names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">_RECORD_T</span><span class="p">]]:</span>
+        <span class="n">specification_params</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;?&quot;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">specification_names</span><span class="p">))</span>
+        <span class="n">all_records</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">entry_names_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">_query_chunk_size</span><span class="p">):</span>
+            <span class="n">entry_params</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;?&quot;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">entry_names_batch</span><span class="p">))</span>
+
+            <span class="n">stmt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;SELECT dr.entry_name, dr.specification_name, r.record</span>
+<span class="s2">                       FROM dataset_records dr</span>
+<span class="s2">                       INNER JOIN records r ON r.id = dr.record_id</span>
+<span class="s2">                       WHERE dr.entry_name IN (</span><span class="si">{</span><span class="n">entry_params</span><span class="si">}</span><span class="s2">)</span>
+<span class="s2">                       AND dr.specification_name IN (</span><span class="si">{</span><span class="n">specification_params</span><span class="si">}</span><span class="s2">)&quot;&quot;&quot;</span>
+
+            <span class="n">all_params</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">entry_names_batch</span><span class="p">,</span> <span class="o">*</span><span class="n">specification_names</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">status</span><span class="p">:</span>
+                <span class="n">status_params</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;?&quot;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">status</span><span class="p">))</span>
+                <span class="n">stmt</span> <span class="o">=</span> <span class="n">stmt</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;AND r.status IN (</span><span class="si">{</span><span class="n">status_params</span><span class="si">}</span><span class="s2">)&quot;</span>
+                <span class="n">all_params</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">all_params</span><span class="p">,</span> <span class="o">*</span><span class="n">status</span><span class="p">)</span>
+
+            <span class="n">rdata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">all_params</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+
+            <span class="k">for</span> <span class="n">ename</span><span class="p">,</span> <span class="n">sname</span><span class="p">,</span> <span class="n">compressed_record</span> <span class="ow">in</span> <span class="n">rdata</span><span class="p">:</span>
+                <span class="n">record</span> <span class="o">=</span> <span class="n">decompress_from_cache</span><span class="p">(</span><span class="n">compressed_record</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_record_type</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">_record_cache</span> <span class="o">=</span> <span class="bp">self</span>
+
+                <span class="n">all_records</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">ename</span><span class="p">,</span> <span class="n">sname</span><span class="p">,</span> <span class="n">record</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">all_records</span></div>
+
+
+<div class="viewcode-block" id="DatasetCache.update_dataset_records">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.update_dataset_records">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_dataset_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_info</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_writable</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">info_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">record_info</span><span class="p">,</span> <span class="mi">10</span><span class="p">):</span>
+                <span class="n">n_batch</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">info_batch</span><span class="p">)</span>
+                <span class="n">values_params</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;(?, ?, ?)&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_batch</span><span class="p">)</span>
+
+                <span class="n">all_params</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">rid</span> <span class="ow">in</span> <span class="n">info_batch</span><span class="p">:</span>
+                    <span class="n">all_params</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="n">e</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">rid</span><span class="p">))</span>
+
+                <span class="n">stmt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;REPLACE INTO dataset_records (entry_name, specification_name, record_id)</span>
+<span class="s2">                          VALUES </span><span class="si">{</span><span class="n">values_params</span><span class="si">}</span><span class="s2">&quot;&quot;&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">all_params</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DatasetCache.delete_dataset_record">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.delete_dataset_record">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_dataset_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entry_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">specification_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_writable</span><span class="p">()</span>
+
+        <span class="n">stmt</span> <span class="o">=</span> <span class="s2">&quot;DELETE FROM dataset_records WHERE entry_name=? AND specification_name=?&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="p">(</span><span class="n">entry_name</span><span class="p">,</span> <span class="n">specification_name</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="DatasetCache.delete_dataset_records">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.delete_dataset_records">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_dataset_records</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">entry_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">specification_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_writable</span><span class="p">()</span>
+
+        <span class="n">all_params</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">conds</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">stmt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;DELETE FROM dataset_records &quot;</span>
+
+        <span class="k">if</span> <span class="n">entry_names</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">entry_params</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;?&quot;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">entry_names</span><span class="p">))</span>
+            <span class="n">all_params</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">entry_names</span><span class="p">)</span>
+            <span class="n">conds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; entry_name IN (</span><span class="si">{</span><span class="n">entry_params</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">specification_names</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">specification_params</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;?&quot;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">specification_names</span><span class="p">))</span>
+            <span class="n">all_params</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">specification_names</span><span class="p">)</span>
+            <span class="n">conds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; specification_name IN (</span><span class="si">{</span><span class="n">specification_params</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">conds</span><span class="p">:</span>
+            <span class="n">stmt</span> <span class="o">+=</span> <span class="s2">&quot; WHERE &quot;</span> <span class="o">+</span> <span class="s2">&quot; AND &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">conds</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">all_params</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DatasetCache.get_dataset_record_info">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.get_dataset_record_info">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dataset_record_info</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">entry_names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">specification_names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">]]:</span>
+        <span class="n">all_info</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">specification_params</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;?&quot;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">specification_names</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">status</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">status_params</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;?&quot;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">status</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">status_params</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">for</span> <span class="n">entry_names_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">_query_chunk_size</span><span class="p">):</span>
+            <span class="n">entry_params</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;?&quot;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">entry_names_batch</span><span class="p">))</span>
+
+            <span class="n">stmt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;SELECT dr.entry_name, dr.specification_name, dr.record_id, r.status, r.modified_on</span>
+<span class="s2">                       FROM dataset_records dr</span>
+<span class="s2">                       INNER JOIN records r ON r.id = dr.record_id</span>
+<span class="s2">                       WHERE dr.entry_name IN (</span><span class="si">{</span><span class="n">entry_params</span><span class="si">}</span><span class="s2">)</span>
+<span class="s2">                       AND dr.specification_name IN (</span><span class="si">{</span><span class="n">specification_params</span><span class="si">}</span><span class="s2">)&quot;&quot;&quot;</span>
+
+            <span class="k">if</span> <span class="n">status_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">stmt</span> <span class="o">=</span> <span class="n">stmt</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;AND status IN (</span><span class="si">{</span><span class="n">status_params</span><span class="si">}</span><span class="s2">)&quot;</span>
+                <span class="n">all_params</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">entry_names_batch</span><span class="p">,</span> <span class="o">*</span><span class="n">specification_names</span><span class="p">,</span> <span class="o">*</span><span class="n">status</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">all_params</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">entry_names_batch</span><span class="p">,</span> <span class="o">*</span><span class="n">specification_names</span><span class="p">)</span>
+
+            <span class="n">rinfo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">all_params</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+            <span class="n">all_info</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">modified_on</span><span class="p">,</span> <span class="n">tz</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">modified_on</span> <span class="ow">in</span> <span class="n">rinfo</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">all_info</span></div>
+
+
+<div class="viewcode-block" id="DatasetCache.get_existing_dataset_records">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.get_existing_dataset_records">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_existing_dataset_records</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">entry_names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">specification_names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+        <span class="n">specification_params</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;?&quot;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">specification_names</span><span class="p">))</span>
+
+        <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">entry_names_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">entry_names</span><span class="p">,</span> <span class="n">_query_chunk_size</span><span class="p">):</span>
+            <span class="n">entry_params</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;?&quot;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">entry_names_batch</span><span class="p">))</span>
+
+            <span class="n">stmt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;SELECT entry_name, specification_name, record_id</span>
+<span class="s2">                       FROM dataset_records</span>
+<span class="s2">                       WHERE entry_name IN (</span><span class="si">{</span><span class="n">entry_params</span><span class="si">}</span><span class="s2">)</span>
+<span class="s2">                       AND specification_name IN (</span><span class="si">{</span><span class="n">specification_params</span><span class="si">}</span><span class="s2">)&quot;&quot;&quot;</span>
+
+            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="p">(</span><span class="o">*</span><span class="n">entry_names_batch</span><span class="p">,</span> <span class="o">*</span><span class="n">specification_names</span><span class="p">))</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ret</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="PortalCache">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.PortalCache">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PortalCache</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">server_uri</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">max_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">parsed_url</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="n">server_uri</span><span class="p">)</span>
+
+        <span class="c1"># Should work as a reasonable fingerprint?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">server_fingerprint</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parsed_url</span><span class="o">.</span><span class="n">hostname</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">parsed_url</span><span class="o">.</span><span class="n">port</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="k">if</span> <span class="n">cache_dir</span><span class="p">:</span>
+            <span class="c1"># _shared_memory shouldn&#39;t be used, so we don&#39;t set it and wait for errors</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_is_disk</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cache_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_fingerprint</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cache_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_is_disk</span> <span class="o">=</span> <span class="kc">False</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">cache_dir</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="PortalCache.get_cache_path">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.PortalCache.get_cache_path">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_cache_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_disk</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Cannot get path to cache for memory-only cache&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cache_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">cache_name</span><span class="si">}</span><span class="s2">.sqlite&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PortalCache.get_cache_uri">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.PortalCache.get_cache_uri">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_cache_uri</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_disk</span><span class="p">:</span>
+            <span class="n">file_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_cache_path</span><span class="p">(</span><span class="n">cache_name</span><span class="p">)</span>
+            <span class="n">uri</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;file:</span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">uri</span> <span class="o">=</span> <span class="s2">&quot;:memory:&quot;</span>
+
+        <span class="k">return</span> <span class="n">uri</span></div>
+
+
+<div class="viewcode-block" id="PortalCache.get_dataset_cache_path">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.PortalCache.get_dataset_cache_path">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dataset_cache_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_cache_path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;dataset_</span><span class="si">{</span><span class="n">dataset_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PortalCache.get_dataset_cache_uri">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.PortalCache.get_dataset_cache_uri">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dataset_cache_uri</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_cache_uri</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;dataset_</span><span class="si">{</span><span class="n">dataset_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PortalCache.get_dataset_cache">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.PortalCache.get_dataset_cache">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dataset_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">dataset_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">_DATASET_T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">DatasetCache</span><span class="p">:</span>
+        <span class="n">uri</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dataset_cache_uri</span><span class="p">(</span><span class="n">dataset_id</span><span class="p">)</span>
+
+        <span class="c1"># If you are asking this for a dataset cache, it should be writable</span>
+        <span class="k">return</span> <span class="n">DatasetCache</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="n">dataset_type</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_disk</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_disk</span>
+
+<div class="viewcode-block" id="PortalCache.vacuum">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.PortalCache.vacuum">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">vacuum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_disk</span><span class="p">:</span>
+            <span class="c1"># TODO</span>
+            <span class="k">return</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="read_dataset_metadata">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.read_dataset_metadata">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_dataset_metadata</span><span class="p">(</span><span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads the type of dataset stored in a cache file</span>
+
+<span class="sd">    This is needed sometimes to construct the DatasetCache object with a type</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Cannot open cache file &quot;</span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s1">&quot; - does not exist or is not a file&#39;</span><span class="p">)</span>
+
+    <span class="n">uri</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;file:</span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">?mode=ro&quot;</span>
+    <span class="n">conn</span> <span class="o">=</span> <span class="n">apsw</span><span class="o">.</span><span class="n">Connection</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="n">apsw</span><span class="o">.</span><span class="n">SQLITE_OPEN_READONLY</span> <span class="o">|</span> <span class="n">apsw</span><span class="o">.</span><span class="n">SQLITE_OPEN_URI</span><span class="p">)</span>
+
+    <span class="n">r</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;SELECT value FROM metadata WHERE key = &#39;dataset_metadata&#39;&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">r</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot find appropriate metadata in cache file </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">d</span> <span class="o">=</span> <span class="n">deserialize</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;msgpack&quot;</span><span class="p">)</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">d</span></div>
+
+
+
+<div class="viewcode-block" id="get_records_with_cache">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.get_records_with_cache">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_records_with_cache</span><span class="p">(</span>
+    <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PortalClient</span><span class="p">],</span>
+    <span class="n">record_cache</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RecordCache</span><span class="p">],</span>
+    <span class="n">record_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">_RECORD_T</span><span class="p">],</span>
+    <span class="n">record_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">force_fetch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">_RECORD_T</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper function for obtaining child records either from the cache or from the server</span>
+
+<span class="sd">    The records are returned in the same order as the `record_ids` parameter.</span>
+
+<span class="sd">    If records are missing from the cache, and client is None, and exception is raised.</span>
+
+<span class="sd">    Newly-fetched records will not be immediately written to the cache. Instead, they will be attached to this cache</span>
+<span class="sd">    and will be written back to the cache when the record object is destructed.</span>
+
+<span class="sd">    If `include` is specified, additional fields will be fetched from the server. However, if the records are in the</span>
+<span class="sd">    cache already, they may be missing those fields. In that case, the additional information may be fetched</span>
+<span class="sd">    from the server. If a client is not provided, an exception will be raised.</span>
+
+<span class="sd">    This function will fetch the children of the records if enough information</span>
+<span class="sd">    is fetched of the parent record. This is handled by the various fetch_children_multi</span>
+<span class="sd">    class functions of the record types.</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    client</span>
+<span class="sd">        The client to use for fetching records from the server.</span>
+<span class="sd">        If `None`, the function will only use the cache</span>
+<span class="sd">    record_cache</span>
+<span class="sd">        The cache to use for fetching records from the cache.</span>
+<span class="sd">        If `None`, the function will only use the client</span>
+<span class="sd">    record_type</span>
+<span class="sd">        The type of record to fetch</span>
+<span class="sd">    record_ids</span>
+<span class="sd">        Single ID or sequence/list of records to obtain</span>
+<span class="sd">    include</span>
+<span class="sd">        Additional fields to include in the returned record (if fetching from the client)</span>
+<span class="sd">    force_fetch</span>
+<span class="sd">        If `True`, the function will fetch all records from the server,</span>
+<span class="sd">        regardless of whether they are in the cache</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :</span>
+<span class="sd">        List of records in the same order as the input `record_ids`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">record_cache</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">force_fetch</span><span class="p">:</span>
+        <span class="n">existing_records</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">records_tofetch</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">record_ids</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">existing_records</span> <span class="o">=</span> <span class="n">record_cache</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="n">record_ids</span><span class="p">,</span> <span class="n">record_type</span><span class="p">)</span>
+        <span class="n">records_tofetch</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">record_ids</span><span class="p">)</span> <span class="o">-</span> <span class="p">{</span><span class="n">x</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">existing_records</span><span class="p">}</span>
+
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">existing_records</span><span class="p">:</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="n">client</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">records_tofetch</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">client</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Need to fetch some records, but not connected to a client&quot;</span><span class="p">)</span>
+
+        <span class="n">recs</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">_fetch_records</span><span class="p">(</span><span class="n">record_type</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">records_tofetch</span><span class="p">),</span> <span class="n">include</span><span class="o">=</span><span class="n">include</span><span class="p">)</span>
+
+        <span class="c1"># Set up for the writeback on change, but write the record as-is for now</span>
+        <span class="k">if</span> <span class="n">record_cache</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">record_cache</span><span class="o">.</span><span class="n">update_records</span><span class="p">(</span><span class="n">recs</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">recs</span><span class="p">:</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">_record_cache</span> <span class="o">=</span> <span class="n">record_cache</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">_cache_dirty</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="n">existing_records</span> <span class="o">+=</span> <span class="n">recs</span>
+
+    <span class="c1"># Fetch all children as well</span>
+    <span class="n">record_type</span><span class="o">.</span><span class="n">fetch_children_multi</span><span class="p">(</span><span class="n">existing_records</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="n">include</span><span class="p">,</span> <span class="n">force_fetch</span><span class="o">=</span><span class="n">force_fetch</span><span class="p">)</span>
+
+    <span class="c1"># Return everything in the same order as the input</span>
+    <span class="n">all_recs</span> <span class="o">=</span> <span class="p">{</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">existing_records</span><span class="p">}</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="p">[</span><span class="n">all_recs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">rid</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">rid</span> <span class="ow">in</span> <span class="n">record_ids</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ret</span><span class="p">):</span>
+        <span class="n">missing_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">record_ids</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">all_recs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Not all records found either in the cache or on the server. Missing records: </span><span class="si">{</span><span class="n">missing_ids</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ret</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  
+
+
+
+  
+  
+  
+  
+  
+  
+  
+
+
+<div class="row h-10">
+    <div class="col-2">
+        <a href="https://molssi.org/" target="_blank" title="Go to MolSSI in a new tab">
+            <img src="../../_static/molssi_main_logo.png" class="logo__image only-light footer_logo" alt="Logo image">
+            <img src="../../_static/molssi_main_logo_inverted_white.png" class="logo__image only-dark footer_logo" alt="Logo image">
+        </a>
+    </div>
+    <div class="col-8">
+        <p> &copy; Copyright 2019-2023 <a href="https://molssi.org/">The Molecular Sciences Software Institute</a></p>
+        <p>Funded by the National Science Foundation 
+          <a href="https://nsf.gov/awardsearch/showAward?AWD_ID=1547580">OAC-1547580</a> and 
+          <a href="https://www.nsf.gov/awardsearch/showAward?AWD_ID=2136142">CHE-2136142.</a></p>
+ 
+        
+        <p class="sphinx-version">
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.4.7.<br>
+        </p>
+        
+
+        <p class="theme-version">
+        Built with a customized <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+        </p>
+
+    </div>
+    <div class="col-2">
+        <a href="https://nsf.gov/" target="_blank" title="Go to the NSF in a new tab">
+            <img src="../../_static/nsf.png" class="footer_logo" alt="The NSF">
+          </a>
+    </div>
+</div></div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>
