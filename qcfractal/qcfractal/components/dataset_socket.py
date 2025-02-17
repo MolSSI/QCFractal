@@ -1403,7 +1403,7 @@ class BaseDatasetSocket:
 
         This creates an internal job for the submission and returns the ID
 
-        See :ref:`submit` for details for the rest of the details on functionality and parameters.
+        See :meth:`submit` for details for the rest of the details on functionality and parameters.
 
         Returns
         -------
@@ -2313,7 +2313,7 @@ class DatasetSocket:
         """
         Creates an internal job for creating and attaching a view to a dataset
 
-        See :ref:`create_view_attachment` for a description of the parameters
+        See :meth:`create_view_attachment` for a description of the parameters
 
         Returns
         -------

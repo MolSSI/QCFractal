@@ -5,6 +5,18 @@ body, h1, h2, h3, h4, h5, h6 {
 }
 
 
+/* Make headings a little bit smaller */
+html {
+	--pst-font-family-base: 'Roboto', sans-serif;
+    --pst-font-size-h1: 2.00rem;
+    --pst-font-size-h2: 1.50rem;
+    --pst-font-size-h3: 1.25rem;
+    --pst-font-size-h4: 1.00rem;
+    --pst-font-size-h5: 1.00rem;
+    --pst-font-size-h6: 1.00rem;
+}
+
+
 html[data-theme="light"] {
     --pst-color-primary: #0080C7;
 	--pst-color-warning: #ed1c24;
@@ -90,6 +102,16 @@ img:not(.logo__image, .footer_logo) {
 .footer-items__start {
 	width: 100%;
   }
+
+/* Tighten up text in API docs */
+dl.class p {
+    margin-bottom: 0.4rem;
+}
+
+dl.class em.property {
+	font-size: smaller;
+	font-style: normal;
+}
 
 /* Get rid of side bar , based on https://github.com/executablebooks/sphinx-book-theme/issues/732#issuecomment-1752572223 */
 .bd-sidebar-primary div#rtd-footer-container {

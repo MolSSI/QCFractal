@@ -103,6 +103,5 @@ the date the task was created.
 Tasks and Services API
 ----------------------
 
-.. autopydantic_model:: qcportal.record_models.RecordTask
-
-.. autopydantic_model:: qcportal.record_models.RecordService
+* :class:`~qcportal.record_models.RecordTask`
+* :class:`~qcportal.record_models.RecordService`

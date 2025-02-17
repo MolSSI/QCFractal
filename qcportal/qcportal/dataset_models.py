@@ -383,7 +383,7 @@ class BaseDataset(BaseModel):
 
         You can check the progress of the internal job using the return object.
 
-        See :ref:`submit` for info on the function parameters.
+        See :meth:`submit` for info on the function parameters.
 
         Returns
         -------
@@ -531,7 +531,7 @@ class BaseDataset(BaseModel):
         Parameters
         ----------
         view_file_id
-            ID of the view to download. See :ref:`list_views`. If `None`, will download the latest view
+            ID of the view to download. See :meth:`list_views`. If `None`, will download the latest view
         destination_path
             Full path to the destination file (including filename)
         overwrite
@@ -558,7 +558,7 @@ class BaseDataset(BaseModel):
         view_file_path: str,
     ):
         """
-        Downloads and loads a view for this dataset
+        Loads a vuew for this dataset as a cache file
 
         Parameters
         ----------
@@ -595,7 +595,7 @@ class BaseDataset(BaseModel):
         Parameters
         ----------
         view_file_id
-            ID of the view to download. See :ref:`list_views`. If `None`, will download the latest view
+            ID of the view to download. See :meth:`list_views`. If `None`, will download the latest view
         """
 
         self.assert_is_not_view()
@@ -621,11 +621,12 @@ class BaseDataset(BaseModel):
         """
         Creates a view of this dataset on the server
 
-        This function will return an :ref:`InternalJob` which can be used to watch
+        This function will return an :class:`~qcportal.internal_jobs.InternalJob` which can be used to watch
         for completion if desired. The job will run server side without user interaction.
 
         Note the ID field of the object if you with to retrieve this internal job later
-        (via :ref:`PortalClient.get_internal_job` and :ref:`get_internal_jobs`)
+        (via :meth:`get_internal_jobs` or
+        :meth:`PortalClient.get_internal_job <qcportal.client.PortalClient.get_internal_job>`)
 
         Parameters
         ----------
@@ -647,7 +648,7 @@ class BaseDataset(BaseModel):
         Returns
         -------
         :
-            An :ref:`InternalJob` object which can be used to watch for completion.
+            An :class:`~qcportal.internal_job.InternalJob` object which can be used to watch for completion.
         """
 
         body = DatasetCreateViewBody(
@@ -1944,10 +1945,12 @@ class BaseDataset(BaseModel):
 
         Notes
         ------
-        1. The DataFrame is structured such that the rows are entries and columns are specifications.
-        2. If 'unpack' is True, the function assumes 'value_call' returns a sequence of values that need
-        to be distributed across columns in the resulting DataFrame. 'value_call' should always return the
-        same number of values for each record if unpack is True.
+            1. The DataFrame is structured such that the rows are entries and columns are specifications.
+
+            2. If 'unpack' is True, the function assumes 'value_call' returns a sequence of values that need
+            to be distributed across columns in the resulting DataFrame. 'value_call' should always return the
+            same number of values for each record if unpack is True.
+
         """
         import pandas as pd
 

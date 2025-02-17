@@ -23,6 +23,4 @@ Stuff
 Reaction QCPortal API
 -------------------------
 
-.. autoclass:: qcportal.reaction.ReactionRecord
-
-.. autoclass:: qcportal.reaction.ReactionSpecification
+TODO

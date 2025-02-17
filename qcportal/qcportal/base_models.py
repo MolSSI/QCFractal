@@ -33,7 +33,7 @@ class RestModelBase(BaseModel):
 
 class CommonBulkGetBody(RestModelBase):
     """
-    Common URL parameters for get_ functions
+    Common URL parameters for "get_*" functions
 
     These functions typically take a list for ids, and a bool for missing_ok
     """
@@ -46,7 +46,7 @@ class CommonBulkGetBody(RestModelBase):
 
 class CommonBulkGetNamesBody(RestModelBase):
     """
-    Common URL parameters for get_ functions
+    Common URL parameters for "get_*" functions
 
     These functions typically take a list for ids, and a bool for missing_ok
     """

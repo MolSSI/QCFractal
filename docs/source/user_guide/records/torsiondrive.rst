@@ -24,5 +24,6 @@ Torsiondrive QCPortal API
 -------------------------
 
 .. autoclass:: qcportal.torsiondrive.TorsiondriveRecord
+  :exclude-members: Config
 
 .. autoclass:: qcportal.torsiondrive.TorsiondriveSpecification

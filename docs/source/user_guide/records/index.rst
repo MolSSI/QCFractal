@@ -1,4 +1,4 @@
-Computation Types
+Record & Computation Types
 =====================================
 
 QCArchive natively supports several different kinds of computations. Each computation has its own

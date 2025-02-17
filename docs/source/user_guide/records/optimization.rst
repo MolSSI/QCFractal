@@ -23,6 +23,4 @@ Stuff
 Optimization QCPortal API
 -------------------------
 
-.. autoclass:: qcportal.optimization.OptimizationRecord
-
-.. autoclass:: qcportal.optimization.OptimizationSpecification
+TODO

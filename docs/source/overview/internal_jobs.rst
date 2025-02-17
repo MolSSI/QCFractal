@@ -1,7 +1,7 @@
 Internal Jobs
 ==================
 
-The server contains an internal job queue for periodic maintenance or otherwise asynchronous tasks.
+The server contains an internal job queue for periodic maintenance and other asynchronous tasks.
 This job queue is managed completely by the QCFractal server. While a user (typically an admin)
 can view, cancel, or delete tasks, there is no general way to add tasks to this queue.
 
@@ -16,3 +16,12 @@ Examples of internal jobs include:
   * Updating server statistics
   * Checking for dead managers
   * Asynchronous submission/deletion of data
+  * Server-side dataset submission and view creation
+
+
+Internal Jobs API Reference
+---------------------------
+
+* :meth:`qcportal.client.PortalClient.get_internal_job`
+* :meth:`qcportal.client.PortalClient.query_internal_jobs`
+* :class:`qcportal.internal_jobs.models.InternalJob`

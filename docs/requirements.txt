@@ -1,13 +1,12 @@
-sphinx_design
-pydata_sphinx_theme
 sphinx<8.0
+sphinx_design
 sphinx-copybutton
-autodoc-pydantic==1.9.0
-pydantic==1.10.13
+pydata_sphinx_theme
+pydantic<2.0a0
+autodoc-pydantic<2.0a0
 myst-nb
 nglview
 -e ../qcportal
 -e ../qcfractalcompute
 -e ../qcfractal
 -e ../qcarchivetesting
-git+https://github.com/MolSSI/molssi_doc_theme.git

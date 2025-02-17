@@ -2,11 +2,12 @@ Molecules
 =====================================
 
 The molecule objects used in QCArchive come from the
-`QCElemental package <https://docs.qcarchive.molssi.org/projects/QCElemental>`_. This class is also accessible
+`QCElemental package <https://molssi.github.io/QCElemental>`_. This class is also accessible
 from ``qcportal.molecules.Molecule``, but is otherwise the same as the
-`QCElemental Molecule <https://docs.qcarchive.molssi.org/projects/QCElemental/en/stable/model_molecule.html>`_.
+`QCElemental Molecule <https://molssi.github.io/QCElemental/model_molecule.html>`_.
 
 .. _creating_molecules:
+
 Creating Molecules
 ------------------
 
