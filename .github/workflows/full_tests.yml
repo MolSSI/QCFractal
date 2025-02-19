@@ -103,15 +103,15 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: ${{ matrix.python-version }}
-          activate-environment: qcarchive-qcportal
-          environment-file: qcarchive/qcarchivetesting/conda-envs/fulltest_qcportal.yaml
+          activate-environment: qcarchive-testing
+          environment-file: qcarchive/qcarchivetesting/conda-envs/fulltest_testing.yaml
           auto-activate-base: false
 
       - name: Install QCPortal
         shell: bash -l {0}
         run: |
-          pip install --no-deps -e ./qcarchive/qcportal
-          pip install pytest
+          cd qcarchive
+          pip install --no-deps -e ./qcportal -e ./qcfractalcompute -e ./qcfractal -e ./qcarchivetesting
 
       - name: Conda info for the QCPortal client
         shell: bash -l {0}
@@ -126,13 +126,13 @@ jobs:
       - name: Run Tests
         shell: bash -l {0}
         run: |
-          python3 -m venv testing_env
-          source testing_env/bin/activate
-          pip install --upgrade pip
           cd qcarchive
-          pip install -e ./qcportal -e ./qcfractalcompute -e ./qcfractal -e ./qcarchivetesting
-          pytest --log-level=DEBUG --fractal-uri="http://127.0.0.1:7900" qcarchivetesting
+          pytest --log-level=DEBUG --fractal-uri="http://127.0.0.1:7900" qcarchivetesting -k test_full
 
+
+      #################################################
+      # Cleanup
+      #################################################
       - name: Stop server & worker
         shell: bash -l {0}
         run: |
