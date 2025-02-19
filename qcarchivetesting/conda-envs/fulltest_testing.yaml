@@ -1,9 +1,13 @@
-name: qcarchive-qcportal
+name: qcarchive-testing
 channels:
   - conda-forge
   - defaults
 
 dependencies:
+  - pip
+  - postgresql
+
+  # QCPortal dependencies
   # NOTE: msgpack-python in conda is msgpack in pypi (due to a rename around v0.5)
   - numpy
   - msgpack-python
@@ -21,3 +25,18 @@ dependencies:
   - typing_extensions
   - python-dateutil
   - pytz
+
+  # QCFractalCompute dependencies
+  - parsl
+
+  # QCFractal dependencies
+  - flask
+  - flask-jwt-extended
+  - waitress
+  - bcrypt
+  - sqlalchemy>=2.0
+  - alembic
+  - psycopg2
+
+  # Testing packages
+  - pytest
