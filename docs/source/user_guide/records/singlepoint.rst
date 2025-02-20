@@ -407,26 +407,6 @@ See the :ref:`specification <singlepoint_specification>` section for all the opt
 
       .. code-block:: py3
 
-        from qcportal.singlepoint import SinglepointDatasetEntry
-
-        # Construct a list of entries to add somehow
-        new_entries = []
-        for element in ['h', 'n', 'o']:
-            mol = Molecule(symbols=[element], geometry=[0, 0, 0])
-            ent = SinglepointDatasetEntry(name=f"{element}_atom", molecule=mol)
-            new_entries.append(ent)
-
-        # Efficiently add all entries in a single call
-        ds.add_entries(new_entries)
-
-.. dropdown:: Add many entries to a singlepoint dataset
-
-  .. tab-set::
-
-    .. tab-item:: PYTHON
-
-      .. code-block:: py3
-
         # Construct a list of entries to add somehow
         new_entries = []
         for element in ['h', 'n', 'o']:
