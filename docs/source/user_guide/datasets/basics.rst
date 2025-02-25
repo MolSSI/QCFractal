@@ -155,6 +155,42 @@ with :meth:`~qcportal.dataset_models.BaseDataset.set_name`,
       A new description
 
 
+Listing properties
+--------------------------
+
+The :attr:`~qcportal.dataset_models.BaseDataset.computed_properties` property
+returns a dictionary that show what properties records have for each specification.
+The dictionary has specification names as keys, and a list of strings representing
+the properties found in records computed with that specification.
+
+If no records have been completed for a given specification, then there are no properties
+for that specification.
+
+
+.. tab-set::
+
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+      >>> ds.computed_properties
+      {'psi4/wb97x/6-31g**/df': ['pe energy',
+        'scf dipole',
+        'calcinfo_nmo',
+        'mbis charges',
+        'mbis dipoles',
+        'dft xc energy',
+        'return_energy',
+        'return_result',
+        'scf_xc_energy',
+        'calcinfo_natom',
+        'calcinfo_nbeta',
+        'current dipole',
+        'current energy',
+        'lowdin charges',
+      ...
+
+
 Record Status
 -------------
 
@@ -185,16 +221,16 @@ If you are in an interactive session or notebook, or just want a prettier versio
 
     .. code-block:: py3
 
-      >>> ds.print_status_()
+      >>> ds.print_status()
           specification    complete    error    invalid
       -----------------  ----------  -------  ---------
-          pbe/def2-tzvp           3        2
+          pbe/def2-tzvp          3        2
             pbe/sto-3g           4        1
             pbe0/6-31g           4        1
           pbe0/6-31g**           4        1
       pbe0/aug-cc-pvtz           3        1          1
         pbe0/def2-tzvp           4        1
-            pbe0/sto-3g           4        1
+            pbe0/sto-3g          4        1
 
 
 .. note::
