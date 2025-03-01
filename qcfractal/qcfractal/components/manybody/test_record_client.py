@@ -290,6 +290,15 @@ def test_manybody_client_query(snowflake: QCATestingSnowflake):
     query_res_l = list(query_res)
     assert len(query_res_l) == 2
 
+    # query for qc program
+    query_res = snowflake_client.query_manybodys(qc_program=["Psi4"])
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 2
+
+    query_res = snowflake_client.query_manybodys(qc_program=["abc"])
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 0
+
     # query for basis
     query_res = snowflake_client.query_manybodys(qc_basis=["DEF2-tzvp"])
     query_res_l = list(query_res)
