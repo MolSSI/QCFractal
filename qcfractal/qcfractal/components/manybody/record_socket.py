@@ -491,7 +491,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
             and_query.append(ManybodySpecificationORM.program.in_(query_data.program))
             need_spec_join = True
         if query_data.qc_program is not None:
-            and_query.append(QCSpecificationORM.method.in_(query_data.qc_program))
+            and_query.append(QCSpecificationORM.program.in_(query_data.qc_program))
             need_qcspec_join = True
         if query_data.qc_method is not None:
             and_query.append(QCSpecificationORM.method.in_(query_data.qc_method))
