@@ -1996,9 +1996,12 @@ class BaseDataset(BaseModel):
         # Make specification top level index.
         return return_val.swaplevel(axis=1)
 
-    def get_properties_df(self, properties_list: Sequence[str], 
-                          entry_names: Sequence[str] | None = None, 
-                          specification_names: Sequence[str] | None = None) -> pd.DataFrame:
+    def get_properties_df(
+        self,
+        properties_list: Sequence[str],
+        entry_names: Sequence[str] | None = None,
+        specification_names: Sequence[str] | None = None,
+    ) -> "DataFrame":
         """
         Retrieve a DataFrame populated with the specified properties from dataset records.
 
@@ -2021,7 +2024,7 @@ class BaseDataset(BaseModel):
 
         Returns:
         --------
-        pd.DataFrame
+        pandas.DataFrame
             A DataFrame populated with the specified properties for each record.
         """
 
@@ -2029,11 +2032,13 @@ class BaseDataset(BaseModel):
         extract_properties = lambda x: [x.properties.get(property_name) for property_name in properties_list]
 
         # retrieve values.
-        result = self.compile_values(extract_properties, 
-                                     value_names=properties_list, 
-                                     unpack=True, 
-                                     specification_names=specification_names, 
-                                     entry_names=entry_names)
+        result = self.compile_values(
+            extract_properties,
+            value_names=properties_list,
+            unpack=True,
+            specification_names=specification_names,
+            entry_names=entry_names,
+        )
 
         # Drop columns with all nan  values. This will occur if a property that is not part of a
         # specification is requested.
