@@ -13,6 +13,7 @@ Singlepoint Records
 Singlepoint records contain all the fields of a :doc:`base record <base>`, but also contain:
 
 - ``molecule`` - The molecule that was used in the calculation
+- ``specification`` - The level of theory and other options for running the calculation (see below)
 - ``return_result`` - The overall requested result of the calculation (energy, gradient, etc.)
 - ``wavefunction`` - The final wavefunction (orbitals, density, etc)
 
@@ -202,6 +203,7 @@ Singlepoint Datasets
 
 Singlepoint :ref:`datasets <glossary_dataset>` are collections of singlepoint records.
 :class:`Entries <qcportal.singlepoint.dataset_models.SinglepointDatasetEntry>` contain a single molecule.
+
 The :class:`dataset specifications <qcportal.singlepoint.dataset_models.SinglepointDatasetSpecification>`
 contain a singlepoint specification (see :ref:`above <singlepoint_specification>`)
 
@@ -406,6 +408,8 @@ See the :ref:`specification <singlepoint_specification>` section for all the opt
     .. tab-item:: PYTHON
 
       .. code-block:: py3
+
+        from qcportal.singlepoint import SinglepointDatasetEntry
 
         # Construct a list of entries to add somehow
         new_entries = []
