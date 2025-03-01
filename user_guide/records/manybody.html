@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=009d9f42"></script>
+    <script src="../../_static/documentation_options.js?v=24663ea6"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Torsiondrive calculations" href="torsiondrive.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.59.post2+g6e140deba" />
+  <meta name="docsearch:version" content="0.59.post7+gc27882591" />
   </head>
   
   
@@ -508,18 +508,572 @@
                   
   <section id="manybody-calculations">
 <h1>Manybody calculations<a class="headerlink" href="#manybody-calculations" title="Link to this heading">#</a></h1>
-<p>Stuff</p>
+<p>Manybody calculations aim to compute interaction energies and to extrapolate total system energies
+and properties by computing the energies/properties on collections of fragments that compose a larger
+system.</p>
+<p>For more details about manybody calculations in general, see blah.</p>
+<p>Manybody computations in QCArchive are implemented as a <a class="reference internal" href="../../overview/glossary.html#glossary-service"><span class="std std-ref">service</span></a>
+and computed using the <a class="reference external" href="https://github.com/MolSSI/QCManybody">QCManyBody</a>
+package. The individual calculations themselves can be run from any of the QM packages available
+in QCArchive.</p>
+<p>See also <a class="reference external" href="https://doi.org/10.1063/5.0231843">the QCManybody article</a></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The “initial molecules” for the manybody calculations must contain more than one fragment. It’s these
+fragments that are used to construct the clusters for the manybody calculations.</p>
+</div>
 <section id="manybody-record">
 <span id="id1"></span><h2>Manybody Record<a class="headerlink" href="#manybody-record" title="Link to this heading">#</a></h2>
-<p>Stuff</p>
+<p>The <a class="reference internal" href="../qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyRecord" title="qcportal.manybody.record_models.ManybodyRecord"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManybodyRecord</span></code></a> object contains all the fields of the
+<a class="reference internal" href="base.html"><span class="doc">base record class</span></a>, but also contains manybody-specific fields:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">initial_molecule</span></code> - The initial (fragmented molecule) that the manybody calculation was run on</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">specification</span></code> - The level of theory and other options for running the calculation (see below)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">clusters</span></code> - List of <a class="reference internal" href="../qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyCluster" title="qcportal.manybody.record_models.ManybodyCluster"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManybodyCluster</span></code></a> objects that represent the
+individual (child) calculations (that is, the calculations run on all the monomers, dimers, etc).</p></li>
+</ul>
+<p>The <a class="reference internal" href="../qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyCluster" title="qcportal.manybody.record_models.ManybodyCluster"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManybodyCluster</span></code></a> objects contain:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">molecule_id</span></code> and <code class="docutils literal notranslate"><span class="pre">molecule</span></code> - the actual molecule this child calculation used. This molecule is a subset
+of the fragments of the input molecule.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fragments</span></code> - Indices of the fragments this molecule/calculation represents</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">basis</span></code> - The fragment basis used in this molecule. The molecule may contain ghost atoms for
+some centers to deal with basis-set superposition error, and the ghosted fragments
+represent additions to the basis. For example, <code class="docutils literal notranslate"><span class="pre">fragments=[4]</span></code> and <code class="docutils literal notranslate"><span class="pre">basis=[4,8]</span></code> means
+the calculation is run on fragment 4, but includes basis sets from both fragments 4 and 8.
+Note that this is fragments, not atom indices.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mc_level</span></code> - Label of the model chemistry (ie, ‘psi4/b3lyp/6-31g*’). This is automatically generated by QCArchive.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">singlepoint_id</span></code> and <code class="docutils literal notranslate"><span class="pre">singlepoint_record</span></code> - The <a class="reference internal" href="singlepoint.html#singlepoint-record"><span class="std std-ref">singlepoint record</span></a> of the calculation.</p></li>
+</ul>
+<p>The full calculated results of the manybody calculation itself are stored in the <cite>properties</cite> field of the record.</p>
+</section>
+<section id="manybody-specification">
+<span id="id2"></span><h2>Manybody Specification<a class="headerlink" href="#manybody-specification" title="Link to this heading">#</a></h2>
+<p>The <a class="reference internal" href="../../overview/glossary.html#glossary-specification"><span class="std std-ref">specification</span></a> for a manybody record is a <a class="reference internal" href="../qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodySpecification" title="qcportal.manybody.record_models.ManybodySpecification"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManybodySpecification</span></code></a>.
+The fields of that are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">program</span></code> - Program to run the manybody calculation itself. Only value available right now is <code class="docutils literal notranslate"><span class="pre">qcmanybody</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">levels</span></code> - Dictionary of the different singlpoint specifications for different levels of the expansion (see below)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bsse_correction</span></code> - Correction for the basis set superposition error. This is a list that can contain multiple values,
+enabling calculating with different levels of correction simulataneously. Values are:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">nocp</span></code> for no correction</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cp</span></code> for counterpoise correction</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vmfc</span></code> for Valiron-Mayer Function Counterpoise</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">keywords</span></code> - Additional keywords for running the calculation. Currently, one keyword is supported:</p>
+<ul>
+<li><p><cite>return_total_data</cite> - Computes/Returns the total energy/gradient, etc, of the system. If false, only the interaction
+energy is returned. Default is false.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">protocols</span></code> - Additional keywords controlling the return of information. This is reserved for future use.</p></li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">levels</span></code> parameter is a dictionary of levels of expansion to a specification describing
+how that level should be computed. The keys are integers representing the level (1 = monomers, 2 = dimers, etc)
+and the value is a <a class="reference internal" href="singlepoint.html#singlepoint-specification"><span class="std std-ref">singlepoint specification/qc specification</span></a>. A string
+“supersystem” key can be used for the supersystem calculation.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Compute the interaction energy of dimers using one level of theory</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-0">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.manybody</span><span class="w"> </span><span class="kn">import</span> <span class="n">ManybodySpecification</span>
+
+<span class="n">ManybodySpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;qcmanybody&quot;</span><span class="p">,</span>
+    <span class="n">bsse_correction</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;nocp&quot;</span><span class="p">],</span>
+    <span class="n">levels</span><span class="o">=</span><span class="p">{</span>
+        <span class="mi">1</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">(</span>
+            <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
+            <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
+            <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;6-31G*&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="mi">2</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">(</span>
+            <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
+            <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
+            <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;6-31G*&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Interaction energy as above, but adding CP correction</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-1">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.manybody</span><span class="w"> </span><span class="kn">import</span> <span class="n">ManybodySpecification</span>
+
+<span class="n">ManybodySpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;qcmanybody&quot;</span><span class="p">,</span>
+    <span class="n">bsse_correction</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;nocp&quot;</span><span class="p">,</span> <span class="s2">&quot;cp&quot;</span><span class="p">],</span>
+    <span class="n">levels</span><span class="o">=</span><span class="p">{</span>
+        <span class="mi">1</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">(</span>
+            <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
+            <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
+            <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;6-31G*&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="mi">2</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">(</span>
+            <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
+            <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
+            <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;6-31G*&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Include total energy for a 4-fragment system</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-2" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-2">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.manybody</span><span class="w"> </span><span class="kn">import</span> <span class="n">ManybodySpecification</span>
+
+<span class="n">ManybodySpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;qcmanybody&quot;</span><span class="p">,</span>
+    <span class="n">bsse_correction</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;cp&quot;</span><span class="p">],</span>
+    <span class="n">levels</span><span class="o">=</span><span class="p">{</span>
+        <span class="mi">1</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">(</span>
+            <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
+            <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
+            <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;6-31G*&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="mi">2</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">(</span>
+            <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
+            <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
+            <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;6-31G*&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">},</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;return_total_data&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Using different levels of theory</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-3">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.manybody</span><span class="w"> </span><span class="kn">import</span> <span class="n">ManybodySpecification</span>
+
+<span class="n">ManybodySpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;qcmanybody&quot;</span><span class="p">,</span>
+    <span class="n">bsse_correction</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;nocp&quot;</span><span class="p">,</span> <span class="s2">&quot;cp&quot;</span><span class="p">],</span>
+    <span class="n">levels</span><span class="o">=</span><span class="p">{</span>
+        <span class="mi">1</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">(</span>
+            <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
+            <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;ccsd&quot;</span><span class="p">,</span>
+            <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;cc-pvqz&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="mi">2</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">(</span>
+            <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
+            <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;ccsd&quot;</span><span class="p">,</span>
+            <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;cc-pvtz&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="mi">3</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">(</span>
+            <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
+            <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;ccsd&quot;</span><span class="p">,</span>
+            <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;cc-pvdz&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details></section>
+<section id="submitting-records">
+<span id="manybody-submission"></span><h2>Submitting Records<a class="headerlink" href="#submitting-records" title="Link to this heading">#</a></h2>
+<p>Manybody records can be submitted using a client via the <a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.add_manybodys" title="qcportal.client.PortalClient.add_manybodys"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_manybodys()</span></code></a> method.
+This method takes the following information:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">initial_molecules</span></code> - A single molecule or list of molecules to compute</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">program</span></code> - Always <code class="docutils literal notranslate"><span class="pre">qcmanybody</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">levels</span></code>, <code class="docutils literal notranslate"><span class="pre">bsse_correction</span></code>, <code class="docutils literal notranslate"><span class="pre">keywords</span></code> - Same as in the <a class="reference internal" href="#manybody-specification"><span class="std std-ref">specification</span></a> above</p></li>
+</ul>
+<p>See <a class="reference internal" href="../record_submission.html"><span class="doc">Submitting computations</span></a> for more information about other fields.</p>
 </section>
 <section id="manybody-dataset">
-<span id="id2"></span><h2>Manybody Dataset<a class="headerlink" href="#manybody-dataset" title="Link to this heading">#</a></h2>
-<p>Stuff</p>
+<span id="id3"></span><h2>Manybody Dataset<a class="headerlink" href="#manybody-dataset" title="Link to this heading">#</a></h2>
+<p>Manybody <a class="reference internal" href="../../overview/glossary.html#glossary-dataset"><span class="std std-ref">datasets</span></a> are collections of manybody records.
+<a class="reference internal" href="../qcportal_reference/records/manybody.html#qcportal.manybody.dataset_models.ManybodyDatasetEntry" title="qcportal.manybody.dataset_models.ManybodyDatasetEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">Entries</span></code></a> contain the initial (fragmented)
+molecule.</p>
+<p>The <a class="reference internal" href="../qcportal_reference/records/manybody.html#qcportal.manybody.dataset_models.ManybodyDatasetSpecification" title="qcportal.manybody.dataset_models.ManybodyDatasetSpecification"><code class="xref py py-class docutils literal notranslate"><span class="pre">dataset</span> <span class="pre">specifications</span></code></a>
+contain a manybody specification (see <a class="reference internal" href="#manybody-specification"><span class="std std-ref">above</span></a>)</p>
 </section>
+<section id="client-examples">
+<span id="manybody-client-examples"></span><h2>Client Examples<a class="headerlink" href="#client-examples" title="Link to this heading">#</a></h2>
+<p>When creating the <code class="docutils literal notranslate"><span class="pre">levels</span></code> member of the specification or to be passed into the
+<a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.add_manybodys" title="qcportal.client.PortalClient.add_manybodys"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_manybodys()</span></code></a> client function, it is often
+easiest to define the specification separately and use the resulting object
+as values in the <code class="docutils literal notranslate"><span class="pre">levels</span></code> dictionary.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Obtain a single record by ID</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-4" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-4">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_manybodys</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Obtain multiple records by ID</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-5" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-5">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_lst</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_manybodys</span><span class="p">([</span><span class="mi">123</span><span class="p">,</span> <span class="mi">456</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Obtain multiple records by ID, ignoring missing records</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-6" name="sd-tab-set-6" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-6">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_lst</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_manybodys</span><span class="p">([</span><span class="mi">123</span><span class="p">,</span> <span class="mi">456</span><span class="p">,</span> <span class="mi">789</span><span class="p">],</span> <span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Include all data for a record during initial fetch</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-7" name="sd-tab-set-7" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-7">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_lst</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_manybodys</span><span class="p">([</span><span class="mi">123</span><span class="p">,</span> <span class="mi">456</span><span class="p">],</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;**&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Query manybody records by program, method, basis</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-8" name="sd-tab-set-8" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-8">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># NOTE - we are querying by the program actually used in the singlepoint calculations here</span>
+<span class="c1">#        not the overarching manybody program</span>
+
+<span class="n">r_iter</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_manybodys</span><span class="p">(</span><span class="n">qc_program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="n">qc_method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> <span class="n">qc_basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">r_iter</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Query manybody records by program and when the record was created, include all data</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-9" name="sd-tab-set-9" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-9">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># NOTE - we are querying by the program actually used in the singlepoint calculations here</span>
+<span class="c1">#        not the overarching manybody program</span>
+
+<span class="n">r_iter</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_manybodys</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span>
+                                <span class="n">created_after</span><span class="o">=</span><span class="s1">&#39;2024-03-21 12:34:56&#39;</span><span class="p">,</span>
+                                <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;**&#39;</span><span class="p">])</span>
+                                <span class="n">limit</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">r_iter</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Create some fragmented molecules</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-10" name="sd-tab-set-10" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-10">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">water_dimer</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">],</span>
+                       <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">2.81211079</span><span class="p">,</span>  <span class="mf">0.1255717</span><span class="p">,</span>   <span class="mf">0.0</span><span class="p">,</span>
+                                 <span class="mf">3.48216662</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.5543998</span><span class="p">,</span>   <span class="mf">0.0</span><span class="p">,</span>
+                                 <span class="mf">1.00578203</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1092573</span><span class="p">,</span>   <span class="mf">0.0</span><span class="p">,</span>
+                                <span class="o">-</span><span class="mf">2.68215279</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.12325075</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>
+                                <span class="o">-</span><span class="mf">3.27523823</span><span class="p">,</span>  <span class="mf">0.81341093</span><span class="p">,</span>  <span class="mf">1.43347254</span><span class="p">,</span>
+                                <span class="o">-</span><span class="mf">3.27523823</span><span class="p">,</span>  <span class="mf">0.81341093</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.43347254</span><span class="p">],</span>
+                       <span class="n">fragments</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]],</span>
+                      <span class="p">)</span>
+
+<span class="n">water_stacked</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">],</span>
+                         <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">2.81211079</span><span class="p">,</span>  <span class="mf">0.1255717</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>
+                                   <span class="mf">3.48216662</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.5543998</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>
+                                   <span class="mf">1.00578203</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1092573</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>
+                                   <span class="mf">2.81211079</span><span class="p">,</span>  <span class="mf">0.1255717</span><span class="p">,</span>  <span class="mf">4.0</span><span class="p">,</span>
+                                   <span class="mf">3.48216662</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.5543998</span><span class="p">,</span>  <span class="mf">4.0</span><span class="p">,</span>
+                                   <span class="mf">1.00578203</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1092573</span><span class="p">,</span>  <span class="mf">4.0</span><span class="p">,</span>
+                                   <span class="mf">2.81211079</span><span class="p">,</span>  <span class="mf">0.1255717</span><span class="p">,</span>  <span class="mf">8.0</span><span class="p">,</span>
+                                   <span class="mf">3.48216662</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.5543998</span><span class="p">,</span>  <span class="mf">8.0</span><span class="p">,</span>
+                                   <span class="mf">1.00578203</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1092573</span><span class="p">,</span>  <span class="mf">8.0</span><span class="p">,</span>
+                                   <span class="mf">2.81211079</span><span class="p">,</span>  <span class="mf">0.1255717</span><span class="p">,</span> <span class="mf">12.0</span><span class="p">,</span>
+                                   <span class="mf">3.48216662</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.5543998</span><span class="p">,</span> <span class="mf">12.0</span><span class="p">,</span>
+                                   <span class="mf">1.00578203</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1092573</span><span class="p">,</span> <span class="mf">12.0</span>
+                         <span class="p">],</span>
+                         <span class="n">fragments</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span> <span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">]],</span>
+                      <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Add a manybody record - compute the interaction energy of a dimer, no BSSE correction</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-11" name="sd-tab-set-11" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-11">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">qc_spec</span> <span class="o">=</span> <span class="n">QCSpecification</span><span class="p">(</span>
+            <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
+            <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
+            <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;6-31G*&quot;</span><span class="p">,</span>
+          <span class="p">)</span>
+
+<span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_manybodys</span><span class="p">([</span><span class="n">water_dimer</span><span class="p">],</span>
+                                  <span class="n">program</span><span class="o">=</span><span class="s1">&#39;qcmanybody&#39;</span><span class="p">,</span>
+                                  <span class="n">levels</span><span class="o">=</span><span class="p">{</span>
+                                    <span class="mi">1</span><span class="p">:</span> <span class="n">qc_spec</span><span class="p">,</span>
+                                    <span class="mi">2</span><span class="p">:</span> <span class="n">qc_spec</span><span class="p">,</span>
+                                  <span class="p">},</span>
+                                  <span class="n">bsse_correction</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;nocp&#39;</span><span class="p">],</span>
+                                  <span class="n">keywords</span><span class="o">=</span><span class="p">{}</span>
+                                 <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Add a manybody record - compute the interaction energy of a dimer, CP-corrected</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-12" name="sd-tab-set-12" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-12">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">qc_spec</span> <span class="o">=</span> <span class="n">QCSpecification</span><span class="p">(</span>
+            <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
+            <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
+            <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;6-31G*&quot;</span><span class="p">,</span>
+          <span class="p">)</span>
+
+<span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_manybodys</span><span class="p">([</span><span class="n">water_dimer</span><span class="p">],</span>
+                                  <span class="n">program</span><span class="o">=</span><span class="s1">&#39;qcmanybody&#39;</span><span class="p">,</span>
+                                  <span class="n">levels</span><span class="o">=</span><span class="p">{</span>
+                                    <span class="mi">1</span><span class="p">:</span> <span class="n">qc_spec</span><span class="p">,</span>
+                                    <span class="mi">2</span><span class="p">:</span> <span class="n">qc_spec</span><span class="p">,</span>
+                                  <span class="p">},</span>
+                                  <span class="n">bsse_correction</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cp&#39;</span><span class="p">],</span>
+                                  <span class="n">keywords</span><span class="o">=</span><span class="p">{}</span>
+                                 <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Add a manybody record - using different levels of theory</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-13" name="sd-tab-set-13" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-13">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">qc_spec_1</span> <span class="o">=</span> <span class="n">QCSpecification</span><span class="p">(</span>
+              <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
+              <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
+              <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
+              <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-tzvp&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+<span class="n">qc_spec_2</span> <span class="o">=</span> <span class="n">QCSpecification</span><span class="p">(</span>
+              <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
+              <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
+              <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
+              <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+<span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_manybodys</span><span class="p">([</span><span class="n">water_dimer</span><span class="p">],</span>
+                                  <span class="n">program</span><span class="o">=</span><span class="s1">&#39;qcmanybody&#39;</span><span class="p">,</span>
+                                  <span class="n">levels</span><span class="o">=</span><span class="p">{</span>
+                                    <span class="mi">1</span><span class="p">:</span> <span class="n">qc_spec_1</span><span class="p">,</span>
+                                    <span class="mi">2</span><span class="p">:</span> <span class="n">qc_spec_2</span><span class="p">,</span>
+                                  <span class="p">},</span>
+                                  <span class="n">bsse_correction</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;nocp&#39;</span><span class="p">],</span>
+                                  <span class="n">keywords</span><span class="o">=</span><span class="p">{}</span>
+                                 <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details></section>
+<section id="dataset-examples">
+<span id="manybody-dataset-examples"></span><h2>Dataset Examples<a class="headerlink" href="#dataset-examples" title="Link to this heading">#</a></h2>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Create a manybody dataset with default options</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-14" name="sd-tab-set-14" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-14">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span>
+         <span class="s2">&quot;manybody&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;Dataset Name&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;An example of a manybody dataset&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Add a single entry to a manybody dataset</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-15" name="sd-tab-set-15" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-15">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">water_dimer</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">],</span>
+                       <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">2.81211079</span><span class="p">,</span>  <span class="mf">0.1255717</span><span class="p">,</span>   <span class="mf">0.0</span><span class="p">,</span>
+                                 <span class="mf">3.48216662</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.5543998</span><span class="p">,</span>   <span class="mf">0.0</span><span class="p">,</span>
+                                 <span class="mf">1.00578203</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1092573</span><span class="p">,</span>   <span class="mf">0.0</span><span class="p">,</span>
+                                <span class="o">-</span><span class="mf">2.68215279</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.12325075</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>
+                                <span class="o">-</span><span class="mf">3.27523823</span><span class="p">,</span>  <span class="mf">0.81341093</span><span class="p">,</span>  <span class="mf">1.43347254</span><span class="p">,</span>
+                                <span class="o">-</span><span class="mf">3.27523823</span><span class="p">,</span>  <span class="mf">0.81341093</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.43347254</span><span class="p">],</span>
+                       <span class="n">fragments</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]],</span>
+                      <span class="p">)</span>
+
+<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">&quot;water_dimer&quot;</span><span class="p">,</span> <span class="n">water_dimer</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Add many entries to a manybody dataset</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-16" name="sd-tab-set-16" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-16">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.manybody</span><span class="w"> </span><span class="kn">import</span> <span class="n">ManybodyDatasetEntry</span>
+
+<span class="c1"># Construct a list of entries to add somehow</span>
+<span class="n">ent_1</span> <span class="o">=</span> <span class="n">ManybodyDatasetEntry</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;water_dimer&quot;</span><span class="p">,</span> <span class="n">initial_molecule</span><span class="o">=</span><span class="n">water_dimer</span><span class="p">)</span>
+<span class="n">ent_2</span> <span class="o">=</span> <span class="n">ManybodyDatasetEntry</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;water_stacked&quot;</span><span class="p">,</span> <span class="n">initial_molecule</span><span class="o">=</span><span class="n">water_stacked</span><span class="p">)</span>
+
+<span class="n">new_entries</span> <span class="o">=</span> <span class="p">[</span><span class="n">ent_1</span><span class="p">,</span> <span class="n">ent_2</span><span class="p">]</span>
+
+<span class="c1"># Efficiently add all entries in a single call</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_entries</span><span class="p">(</span><span class="n">new_entries</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Add a specification to a manybody dataset</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-17" name="sd-tab-set-17" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-17">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.manybody</span><span class="w"> </span><span class="kn">import</span> <span class="n">ManybodySpecification</span>
+
+<span class="n">spec</span> <span class="o">=</span> <span class="n">ManybodySpecification</span><span class="p">(</span>
+           <span class="n">program</span><span class="o">=</span><span class="s2">&quot;qcmanybody&quot;</span><span class="p">,</span>
+           <span class="n">bsse_correction</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;nocp&quot;</span><span class="p">,</span> <span class="s2">&quot;cp&quot;</span><span class="p">],</span>
+           <span class="n">levels</span><span class="o">=</span><span class="p">{</span>
+               <span class="mi">1</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">(</span>
+                   <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
+                   <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
+                   <span class="n">method</span><span class="o">=</span><span class="s2">&quot;ccsd&quot;</span><span class="p">,</span>
+                   <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;cc-pvqz&quot;</span><span class="p">,</span>
+               <span class="p">),</span>
+               <span class="mi">2</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">(</span>
+                   <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
+                   <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
+                   <span class="n">method</span><span class="o">=</span><span class="s2">&quot;ccsd&quot;</span><span class="p">,</span>
+                   <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;cc-pvtz&quot;</span><span class="p">,</span>
+               <span class="p">),</span>
+               <span class="mi">3</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">(</span>
+                   <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
+                   <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
+                   <span class="n">method</span><span class="o">=</span><span class="s2">&quot;ccsd&quot;</span><span class="p">,</span>
+                   <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;cc-pvdz&quot;</span><span class="p">,</span>
+               <span class="p">),</span>
+           <span class="p">}</span>
+       <span class="p">)</span>
+
+<span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="s2">&quot;psi4/ccsd/multi&quot;</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details></section>
 <section id="manybody-qcportal-api">
-<span id="id3"></span><h2>Manybody QCPortal API<a class="headerlink" href="#manybody-qcportal-api" title="Link to this heading">#</a></h2>
-<p>TODO</p>
+<span id="manybody-api-links"></span><h2>Manybody QCPortal API<a class="headerlink" href="#manybody-qcportal-api" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../qcportal_reference/records/manybody.html#module-qcportal.manybody.record_models" title="qcportal.manybody.record_models"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Record</span> <span class="pre">models</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/records/manybody.html#module-qcportal.manybody.dataset_models" title="qcportal.manybody.dataset_models"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Dataset</span> <span class="pre">models</span></code></a></p></li>
+<li><p>PortalClient methods</p>
+<ul>
+<li><p><a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.add_manybodys" title="qcportal.client.PortalClient.add_manybodys"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_manybodys()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.get_manybodys" title="qcportal.client.PortalClient.get_manybodys"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_manybodys()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.query_manybodys" title="qcportal.client.PortalClient.query_manybodys"><code class="xref py py-meth docutils literal notranslate"><span class="pre">query_manybodys()</span></code></a></p></li>
+</ul>
+</li>
+</ul>
 </section>
 </section>
 
@@ -571,7 +1125,11 @@
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#manybody-record">Manybody Record</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#manybody-specification">Manybody Specification</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submitting-records">Submitting Records</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#manybody-dataset">Manybody Dataset</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#client-examples">Client Examples</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dataset-examples">Dataset Examples</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#manybody-qcportal-api">Manybody QCPortal API</a></li>
 </ul>
   </nav></div>

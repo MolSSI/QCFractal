@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=009d9f42"></script>
+    <script src="../../_static/documentation_options.js?v=24663ea6"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Base Record" href="base.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.59.post2+g6e140deba" />
+  <meta name="docsearch:version" content="0.59.post7+gc27882591" />
   </head>
   
   
@@ -515,6 +515,7 @@ and are used to evaluate the energy and properties of a molecule at a particular
 <p>Singlepoint records contain all the fields of a <a class="reference internal" href="base.html"><span class="doc">base record</span></a>, but also contain:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">molecule</span></code> - The molecule that was used in the calculation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">specification</span></code> - The level of theory and other options for running the calculation (see below)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">return_result</span></code> - The overall requested result of the calculation (energy, gradient, etc.)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">wavefunction</span></code> - The final wavefunction (orbitals, density, etc)</p></li>
 </ul>
@@ -710,8 +711,8 @@ This method takes the following information:</p>
 <section id="singlepoint-datasets">
 <span id="singlepoint-dataset"></span><h2>Singlepoint Datasets<a class="headerlink" href="#singlepoint-datasets" title="Link to this heading">#</a></h2>
 <p>Singlepoint <a class="reference internal" href="../../overview/glossary.html#glossary-dataset"><span class="std std-ref">datasets</span></a> are collections of singlepoint records.
-<a class="reference internal" href="../qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetEntry" title="qcportal.singlepoint.dataset_models.SinglepointDatasetEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">Entries</span></code></a> contain a single molecule.
-The <a class="reference internal" href="../qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetSpecification" title="qcportal.singlepoint.dataset_models.SinglepointDatasetSpecification"><code class="xref py py-class docutils literal notranslate"><span class="pre">dataset</span> <span class="pre">specifications</span></code></a>
+<a class="reference internal" href="../qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetEntry" title="qcportal.singlepoint.dataset_models.SinglepointDatasetEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">Entries</span></code></a> contain a single molecule.</p>
+<p>The <a class="reference internal" href="../qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetSpecification" title="qcportal.singlepoint.dataset_models.SinglepointDatasetSpecification"><code class="xref py py-class docutils literal notranslate"><span class="pre">dataset</span> <span class="pre">specifications</span></code></a>
 contain a singlepoint specification (see <a class="reference internal" href="#singlepoint-specification"><span class="std std-ref">above</span></a>)</p>
 <section id="adding-entries-from-other-types-of-datasets">
 <span id="singlepoint-dataset-add-entries-from"></span><h3>Adding entries from other types of datasets<a class="headerlink" href="#adding-entries-from-other-types-of-datasets" title="Link to this heading">#</a></h3>
@@ -957,31 +958,10 @@ PYTHON</label><div class="sd-tab-content docutils">
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-<span class="sd-summary-text">Add many entries to a singlepoint dataset</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<span class="sd-summary-text">Add a specification to a singlepoint dataset</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-21" name="sd-tab-set-21" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-21">
-PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Construct a list of entries to add somehow</span>
-<span class="n">new_entries</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;h&#39;</span><span class="p">,</span> <span class="s1">&#39;n&#39;</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">]:</span>
-    <span class="n">mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="n">element</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
-    <span class="n">ent</span> <span class="o">=</span> <span class="n">SinglepointDatasetEntry</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">element</span><span class="si">}</span><span class="s2">_atom&quot;</span><span class="p">,</span> <span class="n">molecule</span><span class="o">=</span><span class="n">mol</span><span class="p">)</span>
-    <span class="n">new_entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ent</span><span class="p">)</span>
-
-<span class="c1"># Efficiently add all entries in a single call</span>
-<span class="n">ds</span><span class="o">.</span><span class="n">add_entries</span><span class="p">(</span><span class="n">new_entries</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
-<summary class="sd-summary-title sd-card-header">
-<span class="sd-summary-text">Add a specification to a singlepoint dataset</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
-<div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-22" name="sd-tab-set-22" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-22">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
 
