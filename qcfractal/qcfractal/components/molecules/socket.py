@@ -53,7 +53,10 @@ class MoleculeSocket:
         if molecule.validated is False:
             molecule = Molecule(**molecule.dict(), validate=True)
 
-        mol_dict = molecule.dict(exclude={"id", "validated", "fix_com", "fix_orientation"})
+        mol_dict = molecule.dict(encoding="json", exclude={"id", "validated", "fix_com", "fix_orientation", "geometry"})
+
+        # Geometry should be a nested list
+        mol_dict["geometry"] = molecule.geometry.tolist()
 
         # Build these quantities fresh from what is actually stored
         mol_dict["molecule_hash"] = molecule.get_hash()

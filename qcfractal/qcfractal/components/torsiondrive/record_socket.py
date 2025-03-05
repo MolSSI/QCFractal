@@ -133,7 +133,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                 dihedrals=keywords.dihedrals,
                 grid_spacing=keywords.grid_spacing,
                 elements=molecule_template["symbols"],
-                init_coords=[x["geometry"].tolist() for x in initial_molecules],
+                init_coords=[x["geometry"] for x in initial_molecules],
                 dihedral_ranges=keywords.dihedral_ranges,
                 energy_decrease_thresh=keywords.energy_decrease_thresh,
                 energy_upper_limit=keywords.energy_upper_limit,
@@ -200,8 +200,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             mol_data = self.root_socket.molecules.get(molecule_id=mol_ids, include=["geometry"], session=session)
 
             # Use plain lists rather than numpy arrays
-            initial_mol_geom = mol_data[0]["geometry"].tolist()
-            final_mol_geom = mol_data[1]["geometry"].tolist()
+            initial_mol_geom = mol_data[0]["geometry"]
+            final_mol_geom = mol_data[1]["geometry"]
 
             task_results[td_api_key].append((initial_mol_geom, final_mol_geom, opt_record.energies[-1]))
 

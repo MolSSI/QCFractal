@@ -2,12 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, String, JSON, Float, Boolean, Index, CHAR, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Boolean, JSON, Float, Index, CHAR, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 from sqlalchemy.orm import column_property
 
 from qcfractal.db_socket.base_orm import BaseORM
-from qcfractal.db_socket.column_types import MsgpackExt
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Optional, Iterable
@@ -27,28 +26,28 @@ class MoleculeORM(BaseORM):
     # Required data
     schema_name = Column(String)
     schema_version = Column(Integer, default=2)
-    symbols = Column(MsgpackExt, nullable=False)
-    geometry = Column(MsgpackExt, nullable=False)
+    symbols = Column(ARRAY(String), nullable=False)
+    geometry = Column(ARRAY(Float), nullable=False)  # Handles multi-dim arrays
 
     # Molecule data
     name = Column(String, default="")
     identifiers = Column(JSONB)
     comment = Column(String)
     molecular_charge = Column(Float, default=0)
-    molecular_multiplicity = Column(Integer, default=1)
+    molecular_multiplicity = Column(Float, default=1)
 
     # Atom data
-    masses = Column(MsgpackExt)
-    real = Column(MsgpackExt)
-    atom_labels = Column(MsgpackExt)
-    atomic_numbers = Column(MsgpackExt)
-    mass_numbers = Column(MsgpackExt)
+    masses = Column(ARRAY(Float))
+    real = Column(ARRAY(Boolean))
+    atom_labels = Column(ARRAY(String))
+    atomic_numbers = Column(ARRAY(Integer))
+    mass_numbers = Column(ARRAY(Float))
 
     # Fragment and connection data
-    connectivity = Column(JSON)
-    fragments = Column(MsgpackExt)
-    fragment_charges = Column(JSON)  # Column(ARRAY(Float))
-    fragment_multiplicities = Column(JSON)  # Column(ARRAY(Integer))
+    connectivity = Column(JSON)  # List of Tuple[int, int, float]
+    fragments = Column(JSON)  # multi-dim arrays, but of different dimensions are not handled by ARRAY
+    fragment_charges = Column(ARRAY(Float))
+    fragment_multiplicities = Column(ARRAY(Float))
 
     # Orientation & symmetry
     fix_symmetry = Column(String)
@@ -63,21 +62,6 @@ class MoleculeORM(BaseORM):
     # Extra
     provenance = Column(JSON)
     extras = Column(JSON)
-
-    ################
-    # Temporaries for migrations from msgpack
-    _migrated_status = Column(Boolean, nullable=True, index=True)
-
-    symbols_tmp = Column(ARRAY(String), nullable=True)
-    geometry_tmp = Column(ARRAY(Float), nullable=True)
-    masses_tmp = Column(ARRAY(Float), nullable=True)
-    real_tmp = Column(ARRAY(Boolean), nullable=True)
-    atom_labels_tmp = Column(ARRAY(String), nullable=True)
-    atomic_numbers_tmp = Column(ARRAY(Integer), nullable=True)
-    mass_numbers_tmp = Column(ARRAY(Float), nullable=True)
-    fragments_tmp = Column(JSON(), nullable=True)
-    fragment_charges_tmp = Column(ARRAY(Float), nullable=True)
-    fragment_multiplicities_tmp = Column(ARRAY(Float), nullable=True)
 
     __table_args__ = (
         Index("ix_molecule_identifiers", "identifiers", postgresql_using="gin"),
