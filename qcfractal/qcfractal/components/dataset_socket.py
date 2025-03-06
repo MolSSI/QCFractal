@@ -1902,8 +1902,8 @@ class BaseDatasetSocket:
         )
 
         with self.root_socket.optional_session(session) as session:
-            r = session.execute(stmt, params=params).all()
-            return [tuple(r) for r in r]
+            rows = session.execute(stmt, params=params).all()
+            return [tuple(r) for r in rows]
 
 
 class DatasetSocket:
