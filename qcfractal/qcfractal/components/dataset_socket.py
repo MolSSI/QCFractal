@@ -1894,6 +1894,7 @@ class BaseDatasetSocket:
             FROM {self.record_item_orm.__tablename__} ri, base_record br, jsonb_each(br.properties)
             WHERE ri.dataset_id = :dataset_id
             AND br.id = ri.record_id
+            AND br.status = 'complete'
             AND key = ANY(:properties_list)
             {where_entries}
             {where_specifications}
