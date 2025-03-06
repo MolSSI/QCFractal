@@ -1,15 +1,52 @@
 import logging
+from typing import Any
 
+import msgpack
+import numpy as np
 import sqlalchemy as sa
 import tqdm
 from alembic import op
 from qcelemental.util import msgpackext_loads
 from sqlalchemy.dialects.postgresql import BYTEA
 
+try:
+    from pydantic.v1 import BaseModel
+    from pydantic.v1.json import pydantic_encoder
+except ImportError:
+    from pydantic import BaseModel
+    from pydantic.json import pydantic_encoder
+
 logger = logging.getLogger("alembic")
 
 old_type = sa.JSON
 new_type = BYTEA
+
+
+def _msgpackext_decode(obj: Any) -> Any:
+    if b"_nd_" in obj:
+        arr = np.frombuffer(obj[b"data"], dtype=obj[b"dtype"])
+        if b"shape" in obj:
+            arr.shape = obj[b"shape"]
+
+        return arr
+
+    return obj
+
+
+def deserialize_msgpackext(value):
+    if value is None:
+        return None
+
+    v = msgpack.loads(value, object_hook=_msgpackext_decode, raw=False)
+
+    if isinstance(v, np.ndarray):
+        return v.tolist()
+
+    # awkward, but things like "fragments" might be a list of np arrays
+    if isinstance(v, list) and isinstance(v[0], np.ndarray):
+        return [v.tolist() for v in v]
+
+    return v
 
 
 def _get_colnames(columns):
