@@ -1865,6 +1865,46 @@ class BaseDatasetSocket:
 
             return new_dataset_id
 
+    def get_properties_py(
+        self,
+        dataset_id: int,
+        properties_list: Sequence[str],
+        entry_names: Iterable[str] | None = None,
+        specification_names: Iterable[str] | None = None,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[Tuple[str, str, Dict[str, Any]]]:
+
+        params = {"dataset_id": dataset_id, "properties_list": list(properties_list)}
+
+        where_entries = ""
+        where_specifications = ""
+
+        if entry_names:
+            params["entry_names"] = entry_names
+            where_entries = "AND ri.entry_name = ANY(:entry_names)"
+
+        if specification_names:
+            params["specification_names"] = specification_names
+            where_specifications = "AND ri.specification_name = ANY(:specification_names)"
+
+        stmt = text(
+            f"""
+            SELECT ri.entry_name, ri.specification_name, jsonb_object_agg(key, value) AS properties
+            FROM {self.record_item_orm.__tablename__} ri, base_record br, jsonb_each(br.properties)
+            WHERE ri.dataset_id = :dataset_id
+            AND br.id = ri.record_id
+            AND key = ANY(:properties_list)
+            {where_entries}
+            {where_specifications}
+            GROUP BY ri.entry_name, ri.specification_name
+        """
+        )
+
+        with self.root_socket.optional_session(session) as session:
+            r = session.execute(stmt, params=params).all()
+            return [tuple(r) for r in r]
+
 
 class DatasetSocket:
     """

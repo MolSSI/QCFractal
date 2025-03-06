@@ -25,6 +25,7 @@ from qcportal.dataset_models import (
     DatasetGetInternalJobParams,
     DatasetCloneBody,
     DatasetCopyFromBody,
+    DatasetGetPropertiesBody,
 )
 from qcportal.exceptions import LimitExceededError
 
@@ -453,5 +454,25 @@ def copy_from_dataset_v1(dataset_type: str, dataset_id: int, body_data: DatasetC
             body_data.copy_entries,
             body_data.copy_specifications,
             body_data.copy_records,
+            session=session,
+        )
+
+
+#################################
+# Getting aggregate info
+#################################
+@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/aggregate_properties", methods=["GET"])
+@wrap_route("READ")
+def dataset_get_properties_v1(dataset_type: str, dataset_id: int, body_data: DatasetGetPropertiesBody):
+    # the dataset_id in the URI is the destination dataset
+    # (ie, the user has a dataset, then copies FROM another dataset
+    with storage_socket.session_scope(True) as session:
+        ds_socket = storage_socket.datasets.get_socket(dataset_type)
+
+        return ds_socket.get_properties_py(
+            dataset_id,
+            properties_list=body_data.properties_list,
+            entry_names=body_data.entry_names,
+            specification_names=body_data.specification_names,
             session=session,
         )
