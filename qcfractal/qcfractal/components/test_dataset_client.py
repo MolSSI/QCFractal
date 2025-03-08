@@ -55,6 +55,30 @@ def test_dataset_client_add_get(submitter_client: PortalClient, dataset_type: st
     assert ds2.id == ds.id
 
 
+def test_dataset_client_status(snowflake: QCATestingSnowflake):
+    snowflake_client = snowflake.client()
+    storage_socket = snowflake.get_storage_socket()
+    manager_name, _ = snowflake.activate_manager()
+
+    ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
+    assert ds.status() == {}
+
+    input_spec, molecule, _ = load_test_data("sp_psi4_peroxide_energy_wfn")
+    run_test_data(storage_socket, manager_name, "sp_psi4_peroxide_energy_wfn")
+
+    molecule_2 = Molecule(symbols=["b"], geometry=[0, 0, 0])
+
+    # Add this as a part of the dataset
+    ds.add_specification("spec_1", input_spec)
+    ds.add_entry(name="test_molecule", molecule=molecule)
+    ds.add_entry(name="test_molecule_2", molecule=molecule_2)
+    ds.submit()
+
+    stat1 = ds.status()
+    stat2 = snowflake_client.get_dataset_status_by_id(ds.id)
+    assert stat1 == stat2
+
+
 def test_dataset_client_add_same_name(snowflake_client: PortalClient):
     ds1 = snowflake_client.add_dataset("singlepoint", "Test dataset")
     ds2 = snowflake_client.add_dataset("optimization", "Test dataset")

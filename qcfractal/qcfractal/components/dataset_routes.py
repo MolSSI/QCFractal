@@ -141,6 +141,15 @@ def get_dataset_status_v1(dataset_type: str, dataset_id: int):
     return ds_socket.status(dataset_id)
 
 
+@api_v1.route("/datasets/<int:dataset_id>/status", methods=["GET"])
+@wrap_route("READ")
+def get_base_dataset_status_v1(dataset_id: int):
+    with storage_socket.session_scope(True) as session:
+        ds_type = storage_socket.datasets.lookup_type(dataset_id, session=session)
+        ds_socket = storage_socket.datasets.get_socket(ds_type)
+        return ds_socket.status(dataset_id, session=session)
+
+
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/detailed_status", methods=["GET"])
 @wrap_route("READ")
 def get_dataset_detailed_status_v1(dataset_type: str, dataset_id: int):
