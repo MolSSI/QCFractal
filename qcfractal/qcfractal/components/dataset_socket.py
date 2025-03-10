@@ -397,7 +397,7 @@ class BaseDatasetSocket:
         """
         Create a new dataset in the database
 
-        If a dataset already exists with the same name and type, an exception is raised
+        If a dataset already exists with the same name and type, an exception is raised if existing_ok is False
 
         Returns
         -------

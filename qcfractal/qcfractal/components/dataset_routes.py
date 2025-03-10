@@ -113,16 +113,6 @@ def add_dataset_v1(dataset_type: str, body_data: DatasetAddBody):
 #########################
 # Getting info
 #########################
-@api_v1.route("/datasets/<int:dataset_id>", methods=["GET"])
-@wrap_route("READ")
-def get_dataset_general_v1(dataset_id: int, url_params: ProjURLParameters):
-    return storage_socket.datasets.get(
-        dataset_id,
-        url_params.include,
-        url_params.exclude,
-    )
-
-
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>", methods=["GET"])
 @wrap_route("READ")
 def get_dataset_v1(dataset_type: str, dataset_id: int, url_params: ProjURLParameters):
@@ -182,7 +172,7 @@ def modify_dataset_metadata_v1(dataset_type: str, dataset_id: int, body_data: Da
 
 
 #########################
-# Views & Attachments
+# Views
 #########################
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/create_view", methods=["POST"])
 @wrap_route("WRITE")
