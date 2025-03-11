@@ -27,6 +27,8 @@ from qcportal.molecules import Molecule
 from qcportal.neb import (
     NEBSpecification,
     NEBQueryFilters,
+    NEBInput,
+    NEBMultiInput,
 )
 from qcportal.optimization import OptimizationSpecification
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
@@ -85,6 +87,8 @@ class NEBServiceState(BaseModel):
 class NEBRecordSocket(BaseRecordSocket):
     # Used by the base class
     record_orm = NEBRecordORM
+    record_input_type = NEBInput
+    record_multi_input_type = NEBMultiInput
 
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseRecordSocket.__init__(self, root_socket)

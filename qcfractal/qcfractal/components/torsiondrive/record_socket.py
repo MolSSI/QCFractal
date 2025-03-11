@@ -34,6 +34,8 @@ from qcportal.torsiondrive import (
     serialize_key,
     TorsiondriveSpecification,
     TorsiondriveQueryFilters,
+    TorsiondriveInput,
+    TorsiondriveMultiInput,
 )
 from qcportal.utils import hash_dict, is_included
 from .record_db_models import (
@@ -93,6 +95,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
 
     # Used by the base class
     record_orm = TorsiondriveRecordORM
+    record_input_type = TorsiondriveInput
+    record_multi_input_type = TorsiondriveMultiInput
 
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseRecordSocket.__init__(self, root_socket)

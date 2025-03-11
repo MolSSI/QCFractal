@@ -10,5 +10,7 @@ from .record_models import (
     OptimizationProtocols,
     OptimizationSpecification,
     OptimizationQueryFilters,
+    OptimizationInput,
+    OptimizationMultiInput,
     OptimizationAddBody,
 )

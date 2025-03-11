@@ -18,6 +18,8 @@ from qcportal.singlepoint import (
     QCSpecification,
     WavefunctionProperties,
     SinglepointQueryFilters,
+    SinglepointInput,
+    SinglepointMultiInput,
 )
 from qcportal.utils import hash_dict, is_included
 from .record_db_models import QCSpecificationORM, SinglepointRecordORM, WavefunctionORM
@@ -40,6 +42,8 @@ class SinglepointRecordSocket(BaseRecordSocket):
 
     # Used by the base class
     record_orm = SinglepointRecordORM
+    record_input_type = SinglepointInput
+    record_multi_input_type = SinglepointMultiInput
 
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseRecordSocket.__init__(self, root_socket)

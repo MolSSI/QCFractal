@@ -28,6 +28,8 @@ from qcportal.gridoptimization import (
     StepTypeEnum,
     GridoptimizationSpecification,
     GridoptimizationQueryFilters,
+    GridoptimizationInput,
+    GridoptimizationMultiInput,
 )
 from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
@@ -153,6 +155,8 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
 
     # Used by the base class
     record_orm = GridoptimizationRecordORM
+    record_input_type = GridoptimizationInput
+    record_multi_input_type = GridoptimizationMultiInput
 
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseRecordSocket.__init__(self, root_socket)

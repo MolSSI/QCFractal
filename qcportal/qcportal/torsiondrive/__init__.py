@@ -9,6 +9,8 @@ from .record_models import (
     deserialize_key,
     TorsiondriveKeywords,
     TorsiondriveSpecification,
+    TorsiondriveInput,
+    TorsiondriveMultiInput,
     TorsiondriveAddBody,
     TorsiondriveQueryFilters,
     TorsiondriveRecord,

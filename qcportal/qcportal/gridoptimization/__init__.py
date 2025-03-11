@@ -13,6 +13,8 @@ from .record_models import (
     GridoptimizationKeywords,
     GridoptimizationSpecification,
     GridoptimizationRecord,
+    GridoptimizationInput,
+    GridoptimizationMultiInput,
     GridoptimizationAddBody,
     GridoptimizationQueryFilters,
 )

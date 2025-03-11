@@ -17,6 +17,8 @@ from qcportal.molecules import Molecule
 from qcportal.optimization import (
     OptimizationSpecification,
     OptimizationQueryFilters,
+    OptimizationInput,
+    OptimizationMultiInput,
 )
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.serialization import convert_numpy_recursive
@@ -45,6 +47,8 @@ class OptimizationRecordSocket(BaseRecordSocket):
 
     # Used by the base class
     record_orm = OptimizationRecordORM
+    record_input_type = OptimizationInput
+    record_multi_input_type = OptimizationMultiInput
 
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseRecordSocket.__init__(self, root_socket)

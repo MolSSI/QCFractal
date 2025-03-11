@@ -18,6 +18,8 @@ from qcportal.molecules import Molecule
 from qcportal.reaction import (
     ReactionSpecification,
     ReactionQueryFilters,
+    ReactionInput,
+    ReactionMultiInput,
 )
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
 from qcportal.utils import hash_dict, is_included
@@ -40,6 +42,8 @@ class ReactionRecordSocket(BaseRecordSocket):
 
     # Used by the base class
     record_orm = ReactionRecordORM
+    record_input_type = ReactionInput
+    record_multi_input_type = ReactionMultiInput
 
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseRecordSocket.__init__(self, root_socket)
