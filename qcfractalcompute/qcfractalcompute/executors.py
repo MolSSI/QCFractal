@@ -81,7 +81,7 @@ def build_executor(executor_label: str, executor_config: ExecutorConfig) -> Pars
             mem_per_worker=executor_config.memory_per_worker,
             address=executor_config.bind_address,
             provider=SlurmProvider(
-                init_blocks=1,
+                init_blocks=0,
                 min_blocks=0,
                 max_blocks=executor_config.max_nodes,
                 nodes_per_block=1,
@@ -113,7 +113,7 @@ def build_executor(executor_label: str, executor_config: ExecutorConfig) -> Pars
             mem_per_worker=executor_config.memory_per_worker,
             address=executor_config.bind_address,
             provider=TorqueProvider(
-                init_blocks=1,
+                init_blocks=0,
                 min_blocks=0,
                 max_blocks=executor_config.max_nodes,
                 nodes_per_block=1,
@@ -148,7 +148,7 @@ def build_executor(executor_label: str, executor_config: ExecutorConfig) -> Pars
             mem_per_worker=executor_config.memory_per_worker,
             address=executor_config.bind_address,
             provider=LSFProvider(
-                init_blocks=1,
+                init_blocks=0,
                 min_blocks=0,
                 max_blocks=executor_config.max_nodes,
                 cores_per_block=cores_per_block,
