@@ -85,6 +85,10 @@ class BaseRecordSocket:
     # Must be overridden by derived classes
     record_orm: Optional[Type[BaseRecordORM]] = None
 
+    # Overridden for most classes, but not all
+    record_input_type = None
+    record_multi_input_type = None
+
     def __init__(self, root_socket: SQLAlchemySocket):
         self.root_socket = root_socket
 

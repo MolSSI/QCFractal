@@ -9,6 +9,7 @@ except ImportError:
     from pydantic import BaseModel, Extra, validator, constr, PrivateAttr, Field
 from typing_extensions import Literal
 
+from qcportal.base_models import RestModelBase
 from qcportal.cache import get_records_with_cache
 from qcportal.molecules import Molecule
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
@@ -42,9 +43,19 @@ class ManybodySpecification(BaseModel):
     protocols: Dict[str, Any] = Field(default_factory=dict)
 
 
-class ManybodyAddBody(RecordAddBodyBase):
+class ManybodyInput(RestModelBase):
+    record_type: Literal["manybody"] = "manybody"
+    specification: ManybodySpecification
+    initial_molecule: Union[int, Molecule]
+
+
+class ManybodyMultiInput(RestModelBase):
     specification: ManybodySpecification
     initial_molecules: List[Union[int, Molecule]]
+
+
+class ManybodyAddBody(RecordAddBodyBase, ManybodyMultiInput):
+    pass
 
 
 class ManybodyQueryFilters(RecordQueryFilters):

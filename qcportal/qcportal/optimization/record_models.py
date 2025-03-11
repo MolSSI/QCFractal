@@ -17,6 +17,7 @@ from qcelemental.models.procedures import (
 from typing_extensions import Literal
 from typing import Iterable
 
+from qcportal.base_models import RestModelBase
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters, RecordStatusEnum
 from qcportal.utils import is_included
 from qcportal.cache import get_records_with_cache
@@ -222,6 +223,16 @@ class OptimizationQueryFilters(RecordQueryFilters):
             return None
 
 
-class OptimizationAddBody(RecordAddBodyBase):
+class OptimizationInput(RestModelBase):
+    record_type: Literal["optimization"] = "optimization"
+    specification: OptimizationSpecification
+    initial_molecule: Union[int, Molecule]
+
+
+class OptimizationMultiInput(RestModelBase):
     specification: OptimizationSpecification
     initial_molecules: List[Union[int, Molecule]]
+
+
+class OptimizationAddBody(RecordAddBodyBase, OptimizationMultiInput):
+    pass

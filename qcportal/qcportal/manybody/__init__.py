@@ -9,6 +9,8 @@ from .record_models import (
     ManybodySpecification,
     ManybodyKeywords,
     ManybodyClusterMeta,
+    ManybodyInput,
+    ManybodyMultiInput,
     ManybodyAddBody,
     ManybodyRecord,
     ManybodyQueryFilters,

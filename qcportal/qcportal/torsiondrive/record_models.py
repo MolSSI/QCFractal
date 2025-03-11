@@ -9,6 +9,7 @@ except ImportError:
     from pydantic import BaseModel, Field, Extra, root_validator, constr, validator, PrivateAttr
 from typing_extensions import Literal
 
+from qcportal.base_models import RestModelBase
 from qcportal.molecules import Molecule
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
 from qcportal.cache import get_records_with_cache
@@ -104,10 +105,21 @@ class TorsiondriveOptimization(BaseModel):
     energy: Optional[float] = None
 
 
-class TorsiondriveAddBody(RecordAddBodyBase):
+class TorsiondriveInput(RestModelBase):
+    record_type: Literal["torsiondrive"] = "torsiondrive"
+    specification: TorsiondriveSpecification
+    initial_molecules: List[Union[int, Molecule]]
+    as_service: bool
+
+
+class TorsiondriveMultiInput(RestModelBase):
     specification: TorsiondriveSpecification
     initial_molecules: List[List[Union[int, Molecule]]]
     as_service: bool
+
+
+class TorsiondriveAddBody(RecordAddBodyBase, TorsiondriveMultiInput):
+    pass
 
 
 class TorsiondriveQueryFilters(RecordQueryFilters):

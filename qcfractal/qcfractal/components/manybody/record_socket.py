@@ -19,6 +19,8 @@ from qcportal.exceptions import MissingDataError
 from qcportal.manybody import (
     ManybodySpecification,
     ManybodyQueryFilters,
+    ManybodyInput,
+    ManybodyMultiInput,
 )
 from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
@@ -98,6 +100,8 @@ class ManybodyRecordSocket(BaseRecordSocket):
 
     # Used by the base class
     record_orm = ManybodyRecordORM
+    record_input_type = ManybodyInput
+    record_multi_input_type = ManybodyMultiInput
 
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseRecordSocket.__init__(self, root_socket)
