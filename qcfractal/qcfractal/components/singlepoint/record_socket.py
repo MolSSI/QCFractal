@@ -10,7 +10,7 @@ from sqlalchemy.orm import lazyload, joinedload, defer, undefer, defaultload, lo
 from qcfractal.db_socket.helpers import insert_general
 from qcportal.compression import CompressionEnum, compress
 from qcportal.exceptions import MissingDataError
-from qcportal.metadata_models import InsertMetadata
+from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.molecules import Molecule
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.serialization import convert_numpy_recursive
@@ -500,6 +500,32 @@ class SinglepointRecordSocket(BaseRecordSocket):
                 find_existing,
                 session=session,
             )
+
+    def add_from_input(
+        self,
+        record_input: SinglepointInput,
+        compute_tag: str,
+        compute_priority: PriorityEnum,
+        owner_user: Optional[Union[int, str]],
+        owner_group: Optional[Union[int, str]],
+        find_existing: bool,
+        *,
+        session: Optional[Session] = None,
+    ) -> Tuple[InsertCountsMetadata, int]:
+
+        assert isinstance(record_input, SinglepointInput)
+
+        meta, ids = self.add(
+            [record_input.molecule],
+            record_input.specification,
+            compute_tag,
+            compute_priority,
+            owner_user,
+            owner_group,
+            find_existing,
+        )
+
+        return InsertCountsMetadata.from_insert_metadata(meta), ids[0]
 
     ####################################################
     # Some stuff to be retrieved for singlepoints

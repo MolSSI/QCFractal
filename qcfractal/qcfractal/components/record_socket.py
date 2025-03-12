@@ -29,7 +29,7 @@ from qcfractal.db_socket.helpers import (
 from qcportal.compression import CompressionEnum, compress, decompress
 from qcportal.exceptions import UserReportableError, MissingDataError
 from qcportal.managers.models import ManagerStatusEnum
-from qcportal.metadata_models import DeleteMetadata, UpdateMetadata
+from qcportal.metadata_models import DeleteMetadata, UpdateMetadata, InsertCountsMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
 from qcportal.utils import chunk_iterable, now_at_utc, is_included
 from .record_db_models import (
@@ -47,7 +47,8 @@ if TYPE_CHECKING:
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from qcportal.all_results import AllResultTypes
     from qcportal.record_models import RecordQueryFilters
-    from typing import List, Dict, Tuple, Optional, Sequence, Any, Iterable, Type
+    from qcportal.all_inputs import AllInputTypes
+    from typing import List, Dict, Tuple, Optional, Sequence, Any, Iterable, Type, Union
 
 
 _default_error = {"error_type": "not_supplied", "error_message": "No error message found on task."}
@@ -129,6 +130,48 @@ class BaseRecordSocket:
 
         record_orm.service = ServiceQueueORM(
             service_state={}, compute_tag=compute_tag, compute_priority=compute_priority, find_existing=find_existing
+        )
+
+    def add_from_input(
+        self,
+        record_input,
+        compute_tag: str,
+        compute_priority: PriorityEnum,
+        owner_user: Optional[Union[int, str]],
+        owner_group: Optional[Union[int, str]],
+        find_existing: bool,
+        *,
+        session: Optional[Session] = None,
+    ) -> Tuple[InsertCountsMetadata, int]:
+        """
+        Adds a record given an object of the record's input type
+
+        Parameters
+        ----------
+        record_input
+            The input specifying the calculation. Dependent on the type of record
+        compute_tag
+            The tag for the task. This will assist in routing to appropriate compute managers.
+        compute_priority
+            The priority for the computation
+        owner_user
+            Name or ID of the user who owns the record
+        owner_group
+            Group with additional permission for these records
+        find_existing
+            If True, search for existing records and return those. If False, always add new records
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the insertion, and the ID of the record
+        """
+
+        raise NotImplementedError(
+            f"add_from_input function not implemented for {type(self)}! This is a developer error"
         )
 
     def get(
@@ -555,6 +598,16 @@ class RecordSocket:
         self._handler_map_by_schema: Dict[str, BaseRecordSocket] = {
             "qcschema_output": self.singlepoint,
             "qcschema_optimization_output": self.optimization,
+        }
+
+        self._handler_map_by_input: Dict[Any, BaseRecordSocket] = {
+            self.singlepoint.record_input_type: self.singlepoint,
+            self.optimization.record_input_type: self.optimization,
+            self.torsiondrive.record_input_type: self.torsiondrive,
+            self.gridoptimization.record_input_type: self.gridoptimization,
+            self.reaction.record_input_type: self.reaction,
+            self.manybody.record_input_type: self.manybody,
+            self.neb.record_input_type: self.neb,
         }
 
         ###############################################################################
@@ -1250,6 +1303,22 @@ class RecordSocket:
 
         record_orm.status = RecordStatusEnum.error
         record_orm.modified_on = now_at_utc()
+
+    def add_from_input(
+        self,
+        record_input: AllInputTypes,
+        compute_tag: str,
+        compute_priority: PriorityEnum,
+        owner_user: Optional[Union[int, str]],
+        owner_group: Optional[Union[int, str]],
+        find_existing: bool,
+        *,
+        session: Optional[Session] = None,
+    ):
+        record_socket = self._handler_map_by_input[type(record_input)]
+        return record_socket.add_from_input(
+            record_input, compute_tag, compute_priority, owner_user, owner_group, find_existing, session=session
+        )
 
     def insert_complete_schema_v1(self, session: Session, results: Sequence[AllResultTypes]) -> List[int]:
         """
