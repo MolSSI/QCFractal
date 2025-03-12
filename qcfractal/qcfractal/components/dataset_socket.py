@@ -2015,6 +2015,8 @@ class DatasetSocket:
                 BaseDatasetORM.id,
                 BaseDatasetORM.dataset_type,
                 BaseDatasetORM.name,
+                BaseDatasetORM.tagline,
+                BaseDatasetORM.description,
                 func.coalesce(self._record_count_cte.c.record_count, 0),
             )
             stmt = stmt.join(
@@ -2023,7 +2025,17 @@ class DatasetSocket:
             stmt = stmt.order_by(BaseDatasetORM.id.asc())
             r = session.execute(stmt).all()
 
-            return [{"id": x[0], "dataset_type": x[1], "dataset_name": x[2], "record_count": x[3]} for x in r]
+            return [
+                {
+                    "id": x[0],
+                    "dataset_type": x[1],
+                    "dataset_name": x[2],
+                    "tagline": x[3],
+                    "description": x[4],
+                    "record_count": x[5],
+                }
+                for x in r
+            ]
 
     def query_dataset_records(
         self,
