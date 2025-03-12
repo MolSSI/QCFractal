@@ -89,11 +89,7 @@ class BaseRecordSocket:
         self.root_socket = root_socket
 
         # Make sure these were set by the derived classes
-        # But we do instantiate the base class
-        if self.__class__ is BaseRecordSocket:
-            self.record_orm = BaseRecordORM
-        else:
-            assert self.record_orm is not None
+        assert self.record_orm is not None
 
     @staticmethod
     def get_children_select() -> List[Any]:
@@ -532,7 +528,6 @@ class RecordSocket:
         from .manybody.record_socket import ManybodyRecordSocket
         from .neb.record_socket import NEBRecordSocket
 
-        self.base = BaseRecordSocket(root_socket)
         self.service_subtask = ServiceSubtaskRecordSocket(root_socket)
         self.singlepoint = SinglepointRecordSocket(root_socket)
         self.optimization = OptimizationRecordSocket(root_socket)
@@ -543,8 +538,6 @@ class RecordSocket:
         self.neb = NEBRecordSocket(root_socket)
 
         self._handler_map: Dict[str, BaseRecordSocket] = {
-            None: self.base,
-            "base": self.base,
             "servicesubtask": self.service_subtask,
             "singlepoint": self.singlepoint,
             "optimization": self.optimization,
