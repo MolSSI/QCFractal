@@ -159,6 +159,15 @@ class InsertCountsMetadata:
 
         return dataclasses.asdict(self)
 
+    @staticmethod
+    def from_insert_metadata(insert_meta: InsertMetadata) -> InsertCountsMetadata:
+        return InsertCountsMetadata(
+            n_inserted=insert_meta.n_inserted,
+            n_existing=insert_meta.n_existing,
+            error_description=insert_meta.error_description,
+            errors=[e for _, e in insert_meta.errors],
+        )
+
 
 @dataclass
 class DeleteMetadata:
