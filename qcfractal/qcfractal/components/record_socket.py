@@ -106,23 +106,30 @@ class BaseRecordSocket:
         return []
 
     @staticmethod
-    def create_task(record_orm: BaseRecordORM, tag: str, priority: PriorityEnum) -> None:
+    def create_task(record_orm: BaseRecordORM, compute_tag: str, compute_priority: PriorityEnum) -> None:
         """
         Create an entry in the task queue, and attach it to the given record ORM
         """
 
         available = record_orm.status == RecordStatusEnum.waiting
         record_orm.task = TaskQueueORM(
-            tag=tag, priority=priority, required_programs=record_orm.required_programs, available=available
+            compute_tag=compute_tag,
+            compute_priority=compute_priority,
+            required_programs=record_orm.required_programs,
+            available=available,
         )
 
     @staticmethod
-    def create_service(record_orm: BaseRecordORM, tag: str, priority: PriorityEnum, find_existing: bool) -> None:
+    def create_service(
+        record_orm: BaseRecordORM, compute_tag: str, compute_priority: PriorityEnum, find_existing: bool
+    ) -> None:
         """
         Create an entry in the service queue, and attach it to the given record ORM
         """
 
-        record_orm.service = ServiceQueueORM(service_state={}, tag=tag, priority=priority, find_existing=find_existing)
+        record_orm.service = ServiceQueueORM(
+            service_state={}, compute_tag=compute_tag, compute_priority=compute_priority, find_existing=find_existing
+        )
 
     def get(
         self,
@@ -1473,7 +1480,9 @@ class RecordSocket:
 
                             # we leave service queue entries alone
                             if not r_orm.is_service:
-                                BaseRecordSocket.create_task(r_orm, last_info.old_tag, last_info.old_priority)
+                                BaseRecordSocket.create_task(
+                                    r_orm, last_info.old_compute_tag, last_info.old_compute_priority
+                                )
 
                     elif r_orm.status in [RecordStatusEnum.running, RecordStatusEnum.error] and not r_orm.info_backup:
                         if not r_orm.is_service and r_orm.task is None:
@@ -1585,8 +1594,8 @@ class RecordSocket:
                     old_tag = None
                     old_priority = None
                     if r.task is not None:
-                        old_tag = r.task.tag
-                        old_priority = r.task.priority
+                        old_tag = r.task.compute_tag
+                        old_priority = r.task.compute_priority
                         session.delete(r.task)
 
                     # If this is a service, we leave the
@@ -1597,8 +1606,8 @@ class RecordSocket:
                     backup_info = RecordInfoBackupORM(
                         record_id=r.id,
                         old_status=r.status,
-                        old_tag=old_tag,
-                        old_priority=old_priority,
+                        old_compute_tag=old_tag,
+                        old_compute_priority=old_priority,
                         modified_on=now_at_utc(),
                     )
                     session.add(backup_info)
@@ -1894,9 +1903,9 @@ class RecordSocket:
             all_orm = task_orms + svc_orms
             for o in all_orm:
                 if new_tag is not None:
-                    o.tag = new_tag
+                    o.compute_tag = new_tag
                 if new_priority is not None:
-                    o.priority = new_priority
+                    o.compute_priority = new_priority
 
             # put in order of the input parameter
             # only pay attention to the records requested (ie, not subtasks)
@@ -2010,7 +2019,7 @@ class RecordSocket:
 
         # For getting the record and task info
         rec_stmt = select(
-            BaseRecordORM.status, BaseRecordORM.is_service, TaskQueueORM.tag, TaskQueueORM.required_programs
+            BaseRecordORM.status, BaseRecordORM.is_service, TaskQueueORM.compute_tag, TaskQueueORM.required_programs
         )
         rec_stmt = rec_stmt.join(TaskQueueORM, TaskQueueORM.record_id == BaseRecordORM.id, isouter=True)
         rec_stmt = rec_stmt.where(BaseRecordORM.id == record_id)

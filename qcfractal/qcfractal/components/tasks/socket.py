@@ -329,12 +329,14 @@ class TaskSocket:
 
                 # Order by priority, then date (earliest first)
                 # The sort_date usually comes from the created_on of the record, or the created_on of the record's parent service
-                stmt = stmt.order_by(TaskQueueORM.priority.desc(), TaskQueueORM.sort_date.asc(), TaskQueueORM.id.asc())
+                stmt = stmt.order_by(
+                    TaskQueueORM.compute_priority.desc(), TaskQueueORM.sort_date.asc(), TaskQueueORM.id.asc()
+                )
 
                 # If tag is "*" (and strict_queue_tags is False), then the manager can pull anything
                 # If tag is "*" and strict_queue_tags is enabled, only pull tasks with tag == '*'
                 if tag != "*" or self._strict_queue_tags:
-                    stmt = stmt.filter(TaskQueueORM.tag == tag)
+                    stmt = stmt.filter(TaskQueueORM.compute_tag == tag)
 
                 # Skip locked rows - They may be in the process of being claimed by someone else
                 stmt = stmt.limit(new_limit).with_for_update(of=[BaseRecordORM, TaskQueueORM], skip_locked=True)

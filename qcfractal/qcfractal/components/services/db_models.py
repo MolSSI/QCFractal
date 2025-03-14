@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from sqlalchemy import (
     Column,
     Integer,
@@ -16,6 +18,9 @@ from sqlalchemy.orm import relationship
 
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.db_socket import BaseORM, PlainMsgpackExt
+
+if TYPE_CHECKING:
+    from typing import Dict, Any, Optional, Iterable
 
 
 class ServiceDependencyORM(BaseORM):
@@ -55,8 +60,8 @@ class ServiceQueueORM(BaseORM):
     record_id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="cascade"), nullable=False)
     record = relationship(BaseRecordORM, back_populates="service", uselist=False)
 
-    tag = Column(String, nullable=False)
-    priority = Column(Integer, nullable=False)
+    compute_tag = Column(String, nullable=False)
+    compute_priority = Column(Integer, nullable=False)
     find_existing = Column(Boolean, nullable=False)
 
     service_state = Column(PlainMsgpackExt)
@@ -67,9 +72,18 @@ class ServiceQueueORM(BaseORM):
 
     __table_args__ = (
         UniqueConstraint("record_id", name="ux_service_queue_record_id"),
-        Index("ix_service_queue_tag", "tag"),
-        CheckConstraint("tag = LOWER(tag)", name="ck_service_queue_tag_lower"),
+        Index("ix_service_queue_compute_tag", "compute_tag"),
+        CheckConstraint("compute_tag = LOWER(compute_tag)", name="ck_service_queue_compute_tag_lower"),
     )
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        d = BaseORM.model_dict(self, exclude)
+
+        # TODO - DEPRECATED - remove
+        d["tag"] = d.pop("compute_tag")
+        d["priority"] = d.pop("compute_priority")
+
+        return d
 
 
 class ServiceSubtaskRecordORM(BaseRecordORM):

@@ -278,8 +278,8 @@ def test_record_client_modify_service(snowflake: QCATestingSnowflake):
         tasks = [x.record.task for x in rec.service.dependencies]
 
         assert len(tasks) > 0
-        assert all(x.tag == "test_tag" for x in tasks)
-        assert all(x.priority == PriorityEnum.high for x in tasks)
+        assert all(x.compute_tag == "test_tag" for x in tasks)
+        assert all(x.compute_priority == PriorityEnum.high for x in tasks)
 
     # Modify service priority and tag
     meta = snowflake_client.modify_records(rec_id, new_tag="new_tag", new_priority=PriorityEnum.low)

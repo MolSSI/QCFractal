@@ -146,8 +146,8 @@ class ReactionRecordSocket(BaseRecordSocket):
             meta, opt_ids = self.root_socket.records.optimization.add_internal(
                 opt_mols_to_compute,
                 opt_spec_id,
-                service_orm.tag,
-                service_orm.priority,
+                service_orm.compute_tag,
+                service_orm.compute_priority,
                 rxn_orm.owner_user_id,
                 rxn_orm.owner_group_id,
                 service_orm.find_existing,
@@ -182,8 +182,8 @@ class ReactionRecordSocket(BaseRecordSocket):
             meta, sp_ids = self.root_socket.records.singlepoint.add_internal(
                 real_mols_to_compute,
                 qc_spec_id,
-                service_orm.tag,
-                service_orm.priority,
+                service_orm.compute_tag,
+                service_orm.compute_priority,
                 rxn_orm.owner_user_id,
                 rxn_orm.owner_group_id,
                 service_orm.find_existing,
