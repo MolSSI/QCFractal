@@ -52,6 +52,9 @@ def upgrade():
         "service_queue",
         sa.column("compute_tag").cast(sa.TEXT) == sa.func.lower(sa.column("compute_tag").cast(sa.TEXT)),
     )
+
+    op.alter_column("base_dataset", "default_tag", new_column_name="default_compute_tag")
+    op.alter_column("base_dataset", "default_priority", new_column_name="default_compute_priority")
     # ### end Alembic commands ###
 
 
@@ -92,4 +95,6 @@ def downgrade():
         sa.column("tag").cast(sa.TEXT) == sa.func.lower(sa.column("tag").cast(sa.TEXT)),
     )
 
+    op.alter_column("base_dataset", "default_compute_tag", new_column_name="default_tag")
+    op.alter_column("base_dataset", "default_compute_priority", new_column_name="default_priority")
     # ### end Alembic commands ###

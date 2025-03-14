@@ -197,7 +197,9 @@ class BaseDatasetSocket:
             is used, it will be flushed (but not committed) before returning from this function.
         """
 
-        stmt = select(BaseDatasetORM.default_tag, BaseDatasetORM.default_priority, BaseDatasetORM.owner_group_id)
+        stmt = select(
+            BaseDatasetORM.default_compute_tag, BaseDatasetORM.default_compute_priority, BaseDatasetORM.owner_group_id
+        )
         stmt = stmt.where(BaseDatasetORM.id == dataset_id)
 
         with self.root_socket.optional_session(session, True) as session:
@@ -385,7 +387,7 @@ class BaseDatasetSocket:
         provenance: Dict[str, Any],
         default_tag: str,
         default_priority: PriorityEnum,
-        extras: Dict[str, Any],
+        metadata: Dict[str, Any],
         owner_user: Optional[Union[int, str]],
         owner_group: Optional[Union[int, str]],
         existing_ok: bool,
@@ -410,8 +412,8 @@ class BaseDatasetSocket:
             description=description,
             tags=tags,
             provenance=provenance,
-            default_tag=default_tag.lower(),
-            default_priority=default_priority,
+            default_compute_tag=default_tag.lower(),
+            default_compute_priority=default_priority,
             extras=extras,
         )
 
@@ -487,8 +489,8 @@ class BaseDatasetSocket:
             ds.provenance = new_metadata.provenance
             ds.extras = new_metadata.extras
 
-            ds.default_tag = new_metadata.default_tag
-            ds.default_priority = new_metadata.default_priority
+            ds.default_compute_tag = new_metadata.default_tag
+            ds.default_compute_priority = new_metadata.default_priority
 
     def add_specifications(
         self,
@@ -1815,8 +1817,8 @@ class BaseDatasetSocket:
                 tagline=source_orm.tagline,
                 tags=source_orm.tags,
                 provenance=source_orm.provenance,
-                default_tag=source_orm.default_tag,
-                default_priority=source_orm.default_priority,
+                default_tag=source_orm.default_compute_tag,
+                default_priority=source_orm.default_compute_priority,
                 extras=source_orm.extras,
                 owner_user=source_orm.owner_user,
                 owner_group=source_orm.owner_group,

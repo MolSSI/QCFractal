@@ -62,8 +62,8 @@ class BaseDatasetORM(BaseORM):
         viewonly=True,
     )
 
-    default_tag = Column(String, nullable=False)
-    default_priority = Column(Integer, nullable=False)
+    default_compute_tag = Column(String, nullable=False)
+    default_compute_priority = Column(Integer, nullable=False)
 
     provenance = Column(JSON, nullable=False)
     extras = Column("extras", JSON, nullable=False)
@@ -109,6 +109,8 @@ class BaseDatasetORM(BaseORM):
         if "extras" in d:
             d["metadata"] = d.pop("extras")
             d["extras"] = {}
+        d["default_tag"] = d.pop("default_compute_tag")
+        d["default_priority"] = d.pop("default_compute_priority")
 
         return d
 
