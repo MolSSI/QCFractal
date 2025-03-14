@@ -352,8 +352,8 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                 meta, opt_ids = self.root_socket.records.optimization.add(
                     [molecule],
                     OptimizationSpecification(**opt_spec2),
-                    service_orm.tag,
-                    service_orm.priority,
+                    service_orm.compute_tag,
+                    service_orm.compute_priority,
                     go_orm.owner_user_id,
                     go_orm.owner_group_id,
                     service_orm.find_existing,
@@ -386,8 +386,8 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                 meta, opt_ids = self.root_socket.records.optimization.add(
                     [molecule],
                     OptimizationSpecification(**opt_spec2),
-                    service_orm.tag,
-                    service_orm.priority,
+                    service_orm.compute_tag,
+                    service_orm.compute_priority,
                     go_orm.owner_user_id,
                     go_orm.owner_group_id,
                     service_orm.find_existing,

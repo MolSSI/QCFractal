@@ -225,8 +225,8 @@ class ManybodyRecordSocket(BaseRecordSocket):
             meta, sp_ids = self.root_socket.records.singlepoint.add_internal(
                 mol_ids,
                 spec_map[mc_level].singlepoint_specification_id,
-                service_orm.tag,
-                service_orm.priority,
+                service_orm.compute_tag,
+                service_orm.compute_priority,
                 mb_orm.owner_user_id,
                 mb_orm.owner_group_id,
                 service_orm.find_existing,
