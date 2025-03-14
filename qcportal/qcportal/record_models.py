@@ -292,16 +292,6 @@ class NativeFile(BaseModel):
                 raise RuntimeError(f"Cannot write data of type {type(d)} to a file")
 
 
-class RecordInfoBackup(BaseModel):
-    class Config:
-        extra = Extra.forbid
-
-    old_status: RecordStatusEnum
-    old_tag: Optional[str]
-    old_priority: Optional[PriorityEnum]
-    modified_on: datetime
-
-
 class RecordComment(BaseModel):
     class Config:
         extra = Extra.forbid
