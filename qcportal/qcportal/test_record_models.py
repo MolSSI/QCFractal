@@ -107,7 +107,7 @@ def test_base_record_model_task(snowflake: QCATestingSnowflake, includes: Option
     activated_manager_name, _ = snowflake.activate_manager()
 
     rec_id, _ = submit_sp_test_data(
-        storage_socket, "sp_psi4_benzene_energy_1", tag="test_tag_123", priority=PriorityEnum.low
+        storage_socket, "sp_psi4_benzene_energy_1", compute_tag="test_tag_123", compute_priority=PriorityEnum.low
     )
 
     record = snowflake_client.get_records(rec_id, include=includes)
@@ -133,7 +133,9 @@ def test_base_record_model_service(snowflake: QCATestingSnowflake, includes: Opt
     snowflake_client = snowflake.client()
     activated_manager_name, _ = snowflake.activate_manager()
 
-    rec_id, _ = submit_td_test_data(storage_socket, "td_H2O2_mopac_pm6", tag="test_tag_123", priority=PriorityEnum.low)
+    rec_id, _ = submit_td_test_data(
+        storage_socket, "td_H2O2_mopac_pm6", compute_tag="test_tag_123", compute_priority=PriorityEnum.low
+    )
 
     record = snowflake_client.get_records(rec_id, include=includes)
 

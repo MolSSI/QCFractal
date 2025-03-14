@@ -404,8 +404,8 @@ class ServiceSubtaskRecordSocket(BaseRecordSocket):
         required_programs: Dict[str, Any],
         function: str,
         function_kwargs: List[Dict[str, Any]],
-        tag: str,
-        priority: PriorityEnum,
+        compute_tag: str,
+        compute_priority: PriorityEnum,
         owner_user: Optional[Union[int, str]],
         owner_group: Optional[Union[int, str]],
         *,
@@ -425,9 +425,9 @@ class ServiceSubtaskRecordSocket(BaseRecordSocket):
         function_kwargs
             Keyword arguments passed to the compute function. One record will be added for
             each dictionary in the list.
-        tag
+        compute_tag
             The tag for the task. This will assist in routing to appropriate compute managers.
-        priority
+        compute_priority
             The priority for the computation
         owner_user
             Name or ID of the user who owns the record
@@ -463,7 +463,7 @@ class ServiceSubtaskRecordSocket(BaseRecordSocket):
                     owner_group_id=owner_group_id,
                 )
 
-                self.create_task(rec_orm, tag, priority)
+                self.create_task(rec_orm, compute_tag, compute_priority)
 
                 all_orm.append(rec_orm)
                 session.add(rec_orm)

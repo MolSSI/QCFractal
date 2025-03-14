@@ -1841,8 +1841,8 @@ class RecordSocket:
     def modify(
         self,
         record_ids: Sequence[int],
-        new_tag: Optional[str] = None,
-        new_priority: Optional[RecordStatusEnum] = None,
+        new_compute_tag: Optional[str] = None,
+        new_compute_priority: Optional[RecordStatusEnum] = None,
         *,
         session: Optional[Session] = None,
     ) -> UpdateMetadata:
@@ -1852,15 +1852,15 @@ class RecordSocket:
         Records without a corresponding task (completed, etc) will not be modified. Running tasks
         will also not be modified.
 
-        An empty string for new_tag will be treated the same as if you had passed it None
+        An empty string for new_compute_tag will be treated the same as if you had passed it None
 
         Parameters
         ----------
         record_ids
             Modify the tasks corresponding to these record ids
-        new_tag
+        new_compute_tag
             New tag for the task. If None, keep the existing tag
-        new_priority
+        new_compute_priority
             New priority for the task. If None, then keep the existing priority
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
@@ -1872,11 +1872,11 @@ class RecordSocket:
             Metadata about what was updated
         """
 
-        if new_tag == "":
-            new_tag = None
+        if new_compute_tag == "":
+            new_compute_tag = None
 
         # Do we have anything to do?
-        if new_tag is None and new_priority is None:
+        if new_compute_tag is None and new_compute_priority is None:
             return UpdateMetadata()
 
         all_id = set(record_ids)
@@ -1902,10 +1902,10 @@ class RecordSocket:
 
             all_orm = task_orms + svc_orms
             for o in all_orm:
-                if new_tag is not None:
-                    o.compute_tag = new_tag
-                if new_priority is not None:
-                    o.compute_priority = new_priority
+                if new_compute_tag is not None:
+                    o.compute_tag = new_compute_tag
+                if new_compute_priority is not None:
+                    o.compute_priority = new_compute_priority
 
             # put in order of the input parameter
             # only pay attention to the records requested (ie, not subtasks)
@@ -1923,8 +1923,8 @@ class RecordSocket:
         record_ids: Sequence[int],
         user_id: Optional[int],
         status: Optional[RecordStatusEnum] = None,
-        priority: Optional[PriorityEnum] = None,
-        tag: Optional[str] = None,
+        compute_priority: Optional[PriorityEnum] = None,
+        compute_tag: Optional[str] = None,
         comment: Optional[str] = None,
         *,
         session: Optional[Session] = None,
@@ -1942,9 +1942,9 @@ class RecordSocket:
             ID of the user modifying the records
         status
             New status for the records. Only certain status transitions will be allowed.
-        priority
+        compute_priority
             New priority for these records
-        tag
+        compute_tag
             New tag for these records
         comment
             Adds a new comment to these records
@@ -1973,11 +1973,11 @@ class RecordSocket:
 
                 # ignore all other statuses
 
-            if tag is not None or priority is not None:
+            if compute_tag is not None or compute_priority is not None:
                 ret = self.root_socket.records.modify(
                     record_ids,
-                    new_tag=tag,
-                    new_priority=priority,
+                    new_compute_tag=compute_tag,
+                    new_compute_priority=compute_priority,
                     session=session,
                 )
 

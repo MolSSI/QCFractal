@@ -89,11 +89,13 @@ def load_test_data(name: str) -> Tuple[OptimizationSpecification, Molecule, QCEl
 def submit_test_data(
     storage_socket: SQLAlchemySocket,
     name: str,
-    tag: Optional[str] = "*",
-    priority: PriorityEnum = PriorityEnum.normal,
+    compute_tag: Optional[str] = "*",
+    compute_priority: PriorityEnum = PriorityEnum.normal,
 ) -> Tuple[int, QCEl_OptimizationResult]:
     input_spec, molecule, result = load_test_data(name)
-    meta, record_ids = storage_socket.records.optimization.add([molecule], input_spec, tag, priority, None, None, True)
+    meta, record_ids = storage_socket.records.optimization.add(
+        [molecule], input_spec, compute_tag, compute_priority, None, None, True
+    )
     assert meta.success
     assert len(record_ids) == 1
     assert meta.n_inserted == 1
@@ -105,12 +107,12 @@ def run_test_data(
     storage_socket: SQLAlchemySocket,
     manager_name: ManagerName,
     name: str,
-    tag: Optional[str] = "*",
-    priority: PriorityEnum = PriorityEnum.normal,
+    compute_tag: Optional[str] = "*",
+    compute_priority: PriorityEnum = PriorityEnum.normal,
     end_status: RecordStatusEnum = RecordStatusEnum.complete,
 ):
     time_0 = now_at_utc()
-    record_id, result = submit_test_data(storage_socket, name, tag, priority)
+    record_id, result = submit_test_data(storage_socket, name, compute_tag, compute_priority)
     time_1 = now_at_utc()
 
     with storage_socket.session_scope() as session:
@@ -123,7 +125,7 @@ def run_test_data(
         )
 
     manager_programs = storage_socket.managers.get([manager_name.fullname])[0]["programs"]
-    tasks = storage_socket.tasks.claim_tasks(manager_name.fullname, manager_programs, [tag], limit=100)
+    tasks = storage_socket.tasks.claim_tasks(manager_name.fullname, manager_programs, [compute_tag], limit=100)
     assert len(tasks) == 1
 
     result_compressed = compress_result(result.dict())
