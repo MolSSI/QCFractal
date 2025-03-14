@@ -120,8 +120,8 @@ class BaseDatasetSocket:
         entry_orm: Iterable[Any],
         specification_orm: Iterable[Any],
         existing_records: Iterable[Tuple[str, str]],
-        tag: str,
-        priority: PriorityEnum,
+        compute_tag: str,
+        compute_priority: PriorityEnum,
         owner_user_id: Optional[int],
         owner_group_id: Optional[int],
         find_existing: bool,
@@ -131,8 +131,8 @@ class BaseDatasetSocket:
     def get_submit_info(
         self,
         dataset_id: int,
-        tag: Optional[str],
-        priority: Optional[str],
+        compute_tag: Optional[str],
+        compute_priority: Optional[str],
         owner_user: Optional[Union[int, str]],
         owner_group: Optional[Union[int, str]],
         *,
@@ -148,9 +148,9 @@ class BaseDatasetSocket:
         ----------
         dataset_id
             ID of a dataset
-        tag
+        compute_tag
             Specified tag to use. If None, then the default tag will be used instead
-        priority
+        compute_priority
             Specified priority to use. If None, then the default priority will be used instead
         owner_group
             Specified owner_group to use. If None, then the datasets owner_group will be used instead
@@ -167,20 +167,20 @@ class BaseDatasetSocket:
         with self.root_socket.optional_session(session, True) as session:
             default_tag, default_priority, default_group_id = self.get_submit_defaults(dataset_id, session=session)
 
-            if tag is None:
-                tag = default_tag
+            if compute_tag is None:
+                compute_tag = default_tag
             else:
-                tag = tag.lower()
+                compute_tag = compute_tag.lower()
 
-            if priority is None:
-                priority = default_priority
+            if compute_priority is None:
+                compute_priority = default_priority
 
             if owner_group is None:
                 owner_group = default_group_id
 
             user_id, group_id = self.root_socket.users.get_owner_ids(owner_user, owner_group, session=session)
 
-        return tag, priority, user_id, group_id
+        return compute_tag, compute_priority, user_id, group_id
 
     def get_submit_defaults(
         self, dataset_id: int, *, session: Optional[Session] = None
@@ -1195,8 +1195,8 @@ class BaseDatasetSocket:
         dataset_id: int,
         entry_names: Optional[Iterable[str]],
         specification_names: Optional[Iterable[str]],
-        tag: Optional[str],
-        priority: Optional[PriorityEnum],
+        compute_tag: Optional[str],
+        compute_priority: Optional[PriorityEnum],
         owner_user: Optional[Union[int, str]],
         owner_group: Optional[Union[int, str]],
         find_existing: bool,
@@ -1218,10 +1218,10 @@ class BaseDatasetSocket:
             Submit records belonging to these entries. If None, submit for all entries
         specification_names
             Submit records belonging to these specifications. If None, submit for all specifications
-        tag
+        compute_tag
             Computational tag for new records. If None, use the dataset's default. Existing records
             will not be modified.
-        priority
+        compute_priority
             Priority for new records. If None, use the dataset's default. Existing records
             will not be modified.
         owner_group
@@ -1246,8 +1246,8 @@ class BaseDatasetSocket:
         n_existing = 0
 
         with self.root_socket.optional_session(session) as session:
-            tag, priority, owner_user_id, owner_group_id = self.get_submit_info(
-                dataset_id, tag, priority, owner_user, owner_group, session=session
+            compute_tag, compute_priority, owner_user_id, owner_group_id = self.get_submit_info(
+                dataset_id, compute_tag, compute_priority, owner_user, owner_group, session=session
             )
 
             ################################
@@ -1304,8 +1304,8 @@ class BaseDatasetSocket:
                         entries_batch,
                         ds_specs,
                         existing_records,
-                        tag,
-                        priority,
+                        compute_tag,
+                        compute_priority,
                         owner_user_id,
                         owner_group_id,
                         find_existing,
@@ -1356,8 +1356,8 @@ class BaseDatasetSocket:
                         entries_batch,
                         ds_specs,
                         existing_records,
-                        tag,
-                        priority,
+                        compute_tag,
+                        compute_priority,
                         owner_user_id,
                         owner_group_id,
                         find_existing,
@@ -1383,8 +1383,8 @@ class BaseDatasetSocket:
         dataset_id: int,
         entry_names: Optional[Iterable[str]],
         specification_names: Optional[Iterable[str]],
-        tag: Optional[str],
-        priority: Optional[PriorityEnum],
+        compute_tag: Optional[str],
+        compute_priority: Optional[PriorityEnum],
         owner_user: Optional[Union[int, str]],
         owner_group: Optional[Union[int, str]],
         find_existing: bool,
@@ -1413,8 +1413,8 @@ class BaseDatasetSocket:
                     "dataset_id": dataset_id,
                     "entry_names": entry_names,
                     "specification_names": specification_names,
-                    "tag": tag,
-                    "priority": priority,
+                    "compute_tag": compute_tag,
+                    "compute_priority": compute_priority,
                     "owner_user": owner_user,
                     "owner_group": owner_group,
                     "find_existing": find_existing,
@@ -1495,8 +1495,8 @@ class BaseDatasetSocket:
         entry_names: Optional[Iterable[str]] = None,
         specification_names: Optional[List[str]] = None,
         status: Optional[RecordStatusEnum] = None,
-        priority: Optional[PriorityEnum] = None,
-        tag: Optional[str] = None,
+        compute_priority: Optional[PriorityEnum] = None,
+        compute_tag: Optional[str] = None,
         comment: Optional[str] = None,
         *,
         session: Optional[Session] = None,
@@ -1518,9 +1518,9 @@ class BaseDatasetSocket:
             Username of the user modifying the records
         status
             New status for the records. Only certain status transitions will be allowed.
-        priority
+        compute_priority
             New priority for these records
-        tag
+        compute_tag
             New tag for these records
         comment
             Adds a new comment to these records
@@ -1544,7 +1544,13 @@ class BaseDatasetSocket:
             )
 
             return self.root_socket.records.modify_generic(
-                record_ids, username, status=status, priority=priority, tag=tag, comment=comment, session=session
+                record_ids,
+                username,
+                status=status,
+                compute_priority=compute_priority,
+                compute_tag=compute_tag,
+                comment=comment,
+                session=session,
             )
 
     def revert_records(
@@ -2361,8 +2367,8 @@ class DatasetSocket:
         dataset_id: int,
         entry_names: Optional[Iterable[str]],
         specification_names: Optional[Iterable[str]],
-        tag: Optional[str],
-        priority: Optional[PriorityEnum],
+        compute_tag: Optional[str],
+        compute_priority: Optional[PriorityEnum],
         owner_user: Optional[Union[int, str]],
         owner_group: Optional[Union[int, str]],
         find_existing: bool,
@@ -2383,8 +2389,8 @@ class DatasetSocket:
                 dataset_id=dataset_id,
                 entry_names=entry_names,
                 specification_names=specification_names,
-                tag=tag,
-                priority=priority,
+                compute_tag=compute_tag,
+                compute_priority=compute_priority,
                 owner_user=owner_user,
                 owner_group=owner_group,
                 find_existing=find_existing,
