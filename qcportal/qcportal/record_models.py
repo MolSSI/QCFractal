@@ -11,7 +11,7 @@ from dateutil.parser import parse as date_parser
 try:
     from pydantic.v1 import BaseModel, Extra, constr, validator, PrivateAttr, Field, parse_obj_as
 except ImportError:
-    from pydantic import BaseModel, Extra, constr, validator, PrivateAttr, Field, parse_obj_as
+    from pydantic import BaseModel, Extra, constr, validator, PrivateAttr, Field, parse_obj_as, root_validator
 from qcelemental.models.results import Provenance
 
 from qcportal.base_models import (
@@ -313,8 +313,8 @@ class RecordTask(BaseModel):
     function: Optional[str]
     function_kwargs_compressed: Optional[bytes]
 
-    tag: str
-    priority: PriorityEnum
+    compute_tag: str
+    compute_priority: PriorityEnum
     required_programs: List[str]
 
     @property
@@ -323,6 +323,15 @@ class RecordTask(BaseModel):
             return None
         else:
             return decompress(self.function_kwargs_compressed, CompressionEnum.zstd)
+
+    @root_validator(pre=True)
+    def _old_tag_priority(cls, values):
+        if "tag" in values:
+            values["compute_tag"] = values.pop("tag")
+        if "priority" in values:
+            values["compute_priority"] = values.pop("priority")
+
+        return values
 
 
 class ServiceDependency(BaseModel):
@@ -340,12 +349,21 @@ class RecordService(BaseModel):
     id: int
     record_id: int
 
-    tag: str
-    priority: PriorityEnum
+    compute_tag: str
+    compute_priority: PriorityEnum
     find_existing: bool
 
     service_state: Optional[Dict[str, Any]] = None
     dependencies: List[ServiceDependency]
+
+    @root_validator(pre=True)
+    def _old_tag_priority(cls, values):
+        if "tag" in values:
+            values["compute_tag"] = values.pop("tag")
+        if "priority" in values:
+            values["compute_priority"] = values.pop("priority")
+
+        return values
 
 
 class BaseRecord(BaseModel):

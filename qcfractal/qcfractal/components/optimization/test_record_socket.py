@@ -112,8 +112,8 @@ def test_optimization_socket_task_spec(
 
         assert task_input["input_specification"]["keywords"] == spec.qc_specification.keywords
 
-        assert t.tag == "tag1"
-        assert t.priority == PriorityEnum.low
+        assert t.compute_tag == "tag1"
+        assert t.compute_priority == PriorityEnum.low
 
     rec_id_mol_map = {
         id[0]: all_mols[0],

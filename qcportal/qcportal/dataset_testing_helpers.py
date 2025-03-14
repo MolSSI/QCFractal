@@ -459,11 +459,11 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare, backgr
 
     # Used default tag/priority
     if rec.is_service:
-        assert rec.service.tag == "default_tag"
-        assert rec.service.priority == PriorityEnum.low
+        assert rec.service.compute_tag == "default_tag"
+        assert rec.service.compute_priority == PriorityEnum.low
     else:
-        assert rec.task.tag == "default_tag"
-        assert rec.task.priority == PriorityEnum.low
+        assert rec.task.compute_tag == "default_tag"
+        assert rec.task.compute_priority == PriorityEnum.low
 
     # Now additional keywords
     ds.add_entries(test_entries[2])
@@ -499,21 +499,21 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare, backgr
     rec = ds.get_record(test_entries[1].name, "spec_1")
 
     if rec.is_service:
-        assert rec.service.tag == "new_tag"
-        assert rec.service.priority == PriorityEnum.high
+        assert rec.service.compute_tag == "new_tag"
+        assert rec.service.compute_priority == PriorityEnum.high
     else:
-        assert rec.task.tag == "new_tag"
-        assert rec.task.priority == PriorityEnum.high
+        assert rec.task.compute_tag == "new_tag"
+        assert rec.task.compute_priority == PriorityEnum.high
 
     # But didn't change others
     rec = ds.get_record(test_entries[2].name, "spec_1")
 
     if rec.is_service:
-        assert rec.service.tag == "default_tag"
-        assert rec.service.priority == PriorityEnum.low
+        assert rec.service.compute_tag == "default_tag"
+        assert rec.service.compute_priority == PriorityEnum.low
     else:
-        assert rec.task.tag == "default_tag"
-        assert rec.task.priority == PriorityEnum.low
+        assert rec.task.compute_tag == "default_tag"
+        assert rec.task.compute_priority == PriorityEnum.low
 
     # Find existing, but not already attached
     old_rec_id = rec.id
@@ -811,10 +811,10 @@ def run_dataset_model_modify_records(ds, test_entries, test_spec):
     assert rec.status == RecordStatusEnum.waiting
 
     if rec.is_service:
-        assert rec.service.tag == "new_tag"
-        assert rec.service.priority == PriorityEnum.low
+        assert rec.service.compute_tag == "new_tag"
+        assert rec.service.compute_priority == PriorityEnum.low
     else:
-        assert rec.task.tag == "new_tag"
-        assert rec.task.priority == PriorityEnum.low
+        assert rec.task.compute_tag == "new_tag"
+        assert rec.task.compute_priority == PriorityEnum.low
 
     assert rec.comments[0].comment == "a new comment"
