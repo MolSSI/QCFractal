@@ -50,8 +50,8 @@ def test_gridoptimization_client_tag_priority(snowflake_client: PortalClient):
 
         assert meta1.n_inserted == 1
         rec = snowflake_client.get_records(id1, include=["service"])
-        assert rec[0].service.tag == tag
-        assert rec[0].service.priority == priority
+        assert rec[0].service.compute_tag == tag
+        assert rec[0].service.compute_priority == priority
 
 
 @pytest.mark.parametrize("spec", test_specs)
@@ -86,8 +86,8 @@ def test_gridoptimization_client_add_get(
         assert r.status == RecordStatusEnum.waiting
         assert r.children_status == {}
 
-        assert r.service.tag == "tag1"
-        assert r.service.priority == PriorityEnum.low
+        assert r.service.compute_tag == "tag1"
+        assert r.service.compute_priority == PriorityEnum.low
 
         assert r.owner_user == submitter_client.username
         assert r.owner_group == owner_group

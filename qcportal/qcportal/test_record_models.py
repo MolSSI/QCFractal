@@ -120,8 +120,8 @@ def test_base_record_model_task(snowflake: QCATestingSnowflake, includes: Option
         assert record.task_ is None
 
     assert record.manager_name is None
-    assert record.task.tag == "test_tag_123"
-    assert record.task.priority == PriorityEnum.low
+    assert record.task.compute_tag == "test_tag_123"
+    assert record.task.compute_priority == PriorityEnum.low
     assert "psi4" in record.task.required_programs
 
     assert record.service is None
@@ -149,7 +149,7 @@ def test_base_record_model_service(snowflake: QCATestingSnowflake, includes: Opt
     assert record.is_service is True
     assert record.service.dependencies is not None
     assert record.manager_name is None
-    assert record.service.tag == "test_tag_123"
-    assert record.service.priority == PriorityEnum.low
+    assert record.service.compute_tag == "test_tag_123"
+    assert record.service.compute_priority == PriorityEnum.low
 
     assert record.task is None

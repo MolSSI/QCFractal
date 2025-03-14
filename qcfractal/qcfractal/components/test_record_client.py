@@ -228,19 +228,19 @@ def test_record_client_modify(snowflake: QCATestingSnowflake):
         assert r.modified_on < time_0
 
     # 0 - waiting
-    assert rec[0].task.tag == "new_tag"
-    assert rec[0].task.priority == PriorityEnum.normal
+    assert rec[0].task.compute_tag == "new_tag"
+    assert rec[0].task.compute_priority == PriorityEnum.normal
 
     # 1 - completed
     assert rec[1].task is None
 
     # 2 - running - not changed
-    assert rec[2].task.tag == "tag2"
-    assert rec[2].task.priority == PriorityEnum.high
+    assert rec[2].task.compute_tag == "tag2"
+    assert rec[2].task.compute_priority == PriorityEnum.high
 
     # 3 - error
-    assert rec[3].task.tag == "tag3"
-    assert rec[3].task.priority == PriorityEnum.low
+    assert rec[3].task.compute_tag == "tag3"
+    assert rec[3].task.compute_priority == PriorityEnum.low
 
     # 4/5/6 - cancelled/deleted/invalid
     assert rec[4].task is None
@@ -255,7 +255,7 @@ def test_record_client_modify(snowflake: QCATestingSnowflake):
         assert r.modified_on < time_0
 
     assert rec[1].task is None
-    assert rec[2].task.priority == PriorityEnum.high
+    assert rec[2].task.compute_priority == PriorityEnum.high
     assert rec[4].task is None
     assert rec[5].task is None
     assert rec[6].task is None
@@ -287,15 +287,15 @@ def test_record_client_modify_service(snowflake: QCATestingSnowflake):
     assert meta.n_children_updated > 0
 
     rec = snowflake_client.get_records(rec_id)
-    assert rec.service.tag == "new_tag"
-    assert rec.service.priority == PriorityEnum.low
+    assert rec.service.compute_tag == "new_tag"
+    assert rec.service.compute_priority == PriorityEnum.low
 
     # Also changed all the dependencies
     assert len(rec.service.dependencies) > 0
     for opt in rec.service.dependencies:
         r = snowflake_client.get_records(opt.record_id, include=["task"])
-        assert r.task.tag == "new_tag"
-        assert r.task.priority == PriorityEnum.low
+        assert r.task.compute_tag == "new_tag"
+        assert r.task.compute_priority == PriorityEnum.low
 
 
 def test_record_client_query_owner(secure_snowflake: QCATestingSnowflake):
