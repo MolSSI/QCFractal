@@ -12,8 +12,6 @@ See the following functions:
 
 * :meth:`~qcportal.dataset_models.BaseDataset.set_name`
 * :meth:`~qcportal.dataset_models.BaseDataset.set_description`
-* :meth:`~qcportal.dataset_models.BaseDataset.set_visibility`
-* :meth:`~qcportal.dataset_models.BaseDataset.set_group`
 * :meth:`~qcportal.dataset_models.BaseDataset.set_tags`
 * :meth:`~qcportal.dataset_models.BaseDataset.set_tagline`
 * :meth:`~qcportal.dataset_models.BaseDataset.set_provenance`

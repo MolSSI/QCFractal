@@ -40,9 +40,7 @@ def test_dataset_client_add_get(submitter_client: PortalClient, dataset_type: st
     assert ds.description == "Test Description"
     assert ds.tagline == "a Tagline"
     assert ds.tags == ["tag1", "tag2"]
-    assert ds.group == "new_group"
     assert ds.provenance == {"prov_key_1": "prov_value_1"}
-    assert ds.visibility is True
     assert ds.default_tag == "def_tag"
     assert ds.default_priority == PriorityEnum.low
     assert ds.metadata == {"meta_key_1": "meta_value_1"}

@@ -286,21 +286,26 @@ class PortalClient(PortalClientBase):
         tags: Optional[List[str]] = None,
         group: Optional[str] = None,
         provenance: Optional[Dict[str, Any]] = None,
-        visibility: bool = True,
+        visibility: bool = None,
         default_tag: str = "*",
         default_priority: PriorityEnum = PriorityEnum.normal,
         metadata: Optional[Dict[str, Any]] = None,
         owner_group: Optional[str] = None,
         existing_ok: bool = False,
     ) -> BaseDataset:
+
+        # TODO - DEPRECATED - Remove eventually
+        if group is not None:
+            self._logger.warning(f"'group' parameter has been deprecated and will be removed in a future version")
+        if visibility is not None:
+            self._logger.warning(f"'visibility' parameter has been deprecated and will be removed in a future version")
+
         if description is None:
             description = ""
         if tagline is None:
             tagline = ""
         if tags is None:
             tags = []
-        if group is None:
-            group = "default"
         if provenance is None:
             provenance = {}
         if metadata is None:
@@ -311,9 +316,7 @@ class PortalClient(PortalClientBase):
             description=description,
             tagline=tagline,
             tags=tags,
-            group=group,
             provenance=provenance,
-            visibility=visibility,
             default_tag=default_tag,
             default_priority=default_priority,
             metadata=metadata,

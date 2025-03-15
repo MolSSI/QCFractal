@@ -22,10 +22,10 @@ from typing import (
 
 try:
     import pydantic.v1 as pydantic
-    from pydantic.v1 import BaseModel, Extra, validator, PrivateAttr, Field
+    from pydantic.v1 import BaseModel, Extra, validator, PrivateAttr, Field, root_validator
 except ImportError:
     import pydantic
-    from pydantic import BaseModel, Extra, validator, PrivateAttr, Field
+    from pydantic import BaseModel, Extra, validator, PrivateAttr, Field, root_validator
 from qcelemental.models.types import Array
 from tabulate import tabulate
 from tqdm import tqdm
@@ -106,8 +106,6 @@ class BaseDataset(BaseModel):
     description: str
     tagline: str
     tags: List[str]
-    group: str
-    visibility: bool
     provenance: Dict[str, Any]
 
     default_tag: str
@@ -117,7 +115,6 @@ class BaseDataset(BaseModel):
     owner_group: Optional[str]
 
     metadata: Dict[str, Any]
-    extras: Dict[str, Any]
 
     ########################################
     # Caches of information
@@ -153,6 +150,16 @@ class BaseDataset(BaseModel):
     auto_fetch_missing: bool = True  # Automatically fetch missing records from the server
 
     def __init__(self, client: Optional[PortalClient] = None, cache_data: Optional[DatasetCache] = None, **kwargs):
+
+        # TODO - DEPRECATED - remove eventually
+        # These are sometimes returned from older servers
+        if "extras" in kwargs:
+            del kwargs["extras"]
+        if "group" in kwargs:
+            del kwargs["group"]
+        if "visibility" in kwargs:
+            del kwargs["visibility"]
+
         BaseModel.__init__(self, **kwargs)
 
         # Calls derived class propagate_client
@@ -273,8 +280,6 @@ class BaseDataset(BaseModel):
             "description": self.description,
             "tagline": self.tagline,
             "tags": self.tags,
-            "group": self.group,
-            "visibility": self.visibility,
             "provenance": self.provenance,
             "default_tag": self.default_tag,
             "default_priority": self.default_priority,
@@ -289,8 +294,6 @@ class BaseDataset(BaseModel):
         self.description = body.description
         self.tagline = body.tagline
         self.tags = body.tags
-        self.group = body.group
-        self.visibility = body.visibility
         self.provenance = body.provenance
         self.default_tag = body.default_tag
         self.default_priority = body.default_priority
@@ -750,12 +753,6 @@ class BaseDataset(BaseModel):
 
     def set_description(self, new_description: str):
         self._update_metadata(description=new_description)
-
-    def set_visibility(self, new_visibility: bool):
-        self._update_metadata(visibility=new_visibility)
-
-    def set_group(self, new_group: str):
-        self._update_metadata(group=new_group)
 
     def set_tags(self, new_tags: List[str]):
         self._update_metadata(tags=new_tags)
@@ -2191,14 +2188,22 @@ class DatasetAddBody(RestModelBase):
     description: str
     tagline: str
     tags: List[str]
-    group: str
     provenance: Dict[str, Any]
-    visibility: bool
     default_tag: str
     default_priority: PriorityEnum
     metadata: Dict[str, Any]
     owner_group: Optional[str]
     existing_ok: bool = False
+
+    # TODO - DEPRECATED - Remove eventually
+    @root_validator(pre=True)
+    def _rm_deprecated(cls, values):
+        if "group" in values:
+            del values["group"]
+        if "visibility" in values:
+            del values["visibility"]
+
+        return values
 
 
 class DatasetModifyMetadata(RestModelBase):
@@ -2206,13 +2211,21 @@ class DatasetModifyMetadata(RestModelBase):
     description: str
     tags: List[str]
     tagline: str
-    group: str
-    visibility: bool
     provenance: Optional[Dict[str, Any]]
     metadata: Optional[Dict[str, Any]]
 
     default_tag: str
     default_priority: PriorityEnum
+
+    # TODO - DEPRECATED - Remove eventually
+    @root_validator(pre=True)
+    def _rm_deprecated(cls, values):
+        if "group" in values:
+            del values["group"]
+        if "visibility" in values:
+            del values["visibility"]
+
+        return values
 
 
 class DatasetQueryModel(RestModelBase):
