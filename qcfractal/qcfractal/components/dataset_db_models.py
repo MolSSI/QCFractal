@@ -103,14 +103,15 @@ class BaseDatasetORM(BaseORM):
         d["owner_group"] = self.owner_group.groupname if self.owner_group is not None else None
 
         # TODO - DEPRECATED - REMOVE EVENTUALLY
-        # Keep API the same for v1
         d["group"] = "default"
         d["visibility"] = True
         if "extras" in d:
             d["metadata"] = d.pop("extras")
             d["extras"] = {}
-        d["default_tag"] = d.pop("default_compute_tag")
-        d["default_priority"] = d.pop("default_compute_priority")
+        if "default_compute_tag" in d:
+            d["default_tag"] = d.pop("default_compute_tag")
+        if "default_compute_priority" in d:
+            d["default_priority"] = d.pop("default_compute_priority")
 
         return d
 

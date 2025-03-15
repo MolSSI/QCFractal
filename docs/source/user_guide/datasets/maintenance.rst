@@ -26,6 +26,24 @@ See the following functions:
 
     .. code-block:: py3
 
+          >>> ds = get_dataset_by_id(123)
+          >>> ds.set_default_compute_priority("low")
+          >>> ds.set_name("New Dataset Name")
+          >>> print(ds.name)
+          New Dataset Name
+
+          >>> print(ds.default_priority)
+          PriorityEnum.low
+
+          >>> ds = get_dataset_by_id(123)
+          >>> ds.set_default_compute_priority("low")
+          >>> ds.set_name("New Dataset Name")
+          >>> print(ds.name)
+          New Dataset Name
+
+          >>> print(ds.default_priority)
+          PriorityEnum.low
+
       >>> ds = get_dataset_by_id(123)
       >>> ds.set_default_priority("low")
       >>> ds.set_name("New Dataset Name")

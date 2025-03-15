@@ -385,9 +385,9 @@ class BaseDatasetSocket:
         tagline: str,
         tags: List[str],
         provenance: Dict[str, Any],
-        default_tag: str,
-        default_priority: PriorityEnum,
-        metadata: Dict[str, Any],
+        default_compute_tag: str,
+        default_compute_priority: PriorityEnum,
+        extras: Dict[str, Any],
         owner_user: Optional[Union[int, str]],
         owner_group: Optional[Union[int, str]],
         existing_ok: bool,
@@ -412,8 +412,8 @@ class BaseDatasetSocket:
             description=description,
             tags=tags,
             provenance=provenance,
-            default_compute_tag=default_tag.lower(),
-            default_compute_priority=default_priority,
+            default_compute_tag=default_compute_tag.lower(),
+            default_compute_priority=default_compute_priority,
             extras=extras,
         )
 
@@ -489,8 +489,8 @@ class BaseDatasetSocket:
             ds.provenance = new_metadata.provenance
             ds.extras = new_metadata.extras
 
-            ds.default_compute_tag = new_metadata.default_tag
-            ds.default_compute_priority = new_metadata.default_priority
+            ds.default_compute_tag = new_metadata.default_compute_tag
+            ds.default_compute_priority = new_metadata.default_compute_priority
 
     def add_specifications(
         self,
@@ -1823,8 +1823,8 @@ class BaseDatasetSocket:
                 tagline=source_orm.tagline,
                 tags=source_orm.tags,
                 provenance=source_orm.provenance,
-                default_tag=source_orm.default_compute_tag,
-                default_priority=source_orm.default_compute_priority,
+                default_compute_tag=source_orm.default_compute_tag,
+                default_compute_priority=source_orm.default_compute_priority,
                 extras=source_orm.extras,
                 owner_user=source_orm.owner_user,
                 owner_group=source_orm.owner_group,
