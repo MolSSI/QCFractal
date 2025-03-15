@@ -39,8 +39,8 @@ def test_optimization_client_tag_priority(snowflake_client: PortalClient):
                 driver="deferred",
                 keywords={"tag_priority": [tag, priority]},
             ),
-            priority=priority,
-            tag=tag,
+            compute_priority=priority,
+            compute_tag=tag,
         )
 
         assert meta1.n_inserted == 1
@@ -66,8 +66,8 @@ def test_optimization_client_add_get(
         keywords=spec.keywords,
         protocols=spec.protocols,
         qc_specification=spec.qc_specification,
-        tag="tag1",
-        priority=PriorityEnum.low,
+        compute_tag="tag1",
+        compute_priority=PriorityEnum.low,
         owner_group=owner_group,
     )
 
@@ -125,8 +125,8 @@ def test_optimization_client_add_duplicate(
         keywords=spec.keywords,
         protocols=spec.protocols,
         qc_specification=spec.qc_specification,
-        tag="tag1",
-        priority=PriorityEnum.low,
+        compute_tag="tag1",
+        compute_priority=PriorityEnum.low,
         owner_group=None,
         find_existing=True,
     )
@@ -140,8 +140,8 @@ def test_optimization_client_add_duplicate(
         keywords=spec.keywords,
         protocols=spec.protocols,
         qc_specification=spec.qc_specification,
-        tag="tag1",
-        priority=PriorityEnum.low,
+        compute_tag="tag1",
+        compute_priority=PriorityEnum.low,
         owner_group=None,
         find_existing=find_existing,
     )
@@ -174,8 +174,8 @@ def test_optimization_client_add_existing_molecule(snowflake_client: PortalClien
         keywords=spec.keywords,
         protocols=spec.protocols,
         qc_specification=spec.qc_specification,
-        tag="tag1",
-        priority=PriorityEnum.low,
+        compute_tag="tag1",
+        compute_priority=PriorityEnum.low,
     )
     recs = snowflake_client.get_optimizations(id)
 

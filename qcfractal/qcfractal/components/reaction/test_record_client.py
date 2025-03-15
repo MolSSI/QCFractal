@@ -35,8 +35,8 @@ def test_reaction_client_tag_priority(snowflake_client: PortalClient):
             ),
             None,
             ReactionKeywords(),
-            tag=tag,
-            priority=priority,
+            compute_tag=tag,
+            compute_priority=priority,
         )
 
         assert meta1.n_inserted == 1
@@ -62,8 +62,8 @@ def test_reaction_client_add_get(
         spec.singlepoint_specification,
         spec.optimization_specification,
         spec.keywords,
-        tag="tag1",
-        priority=PriorityEnum.low,
+        compute_tag="tag1",
+        compute_priority=PriorityEnum.low,
         owner_group=owner_group,
     )
     time_1 = now_at_utc()
@@ -120,8 +120,8 @@ def test_reaction_client_add_duplicate(
         spec.singlepoint_specification,
         spec.optimization_specification,
         spec.keywords,
-        tag="tag1",
-        priority=PriorityEnum.low,
+        compute_tag="tag1",
+        compute_priority=PriorityEnum.low,
         owner_group=None,
         find_existing=True,
     )
@@ -134,8 +134,8 @@ def test_reaction_client_add_duplicate(
         spec.singlepoint_specification,
         spec.optimization_specification,
         spec.keywords,
-        tag="tag1",
-        priority=PriorityEnum.low,
+        compute_tag="tag1",
+        compute_priority=PriorityEnum.low,
         owner_group=None,
         find_existing=find_existing,
     )
@@ -167,8 +167,8 @@ def test_reaction_client_add_existing_molecule(snowflake_client: PortalClient):
         spec.singlepoint_specification,
         spec.optimization_specification,
         spec.keywords,
-        tag="tag1",
-        priority=PriorityEnum.low,
+        compute_tag="tag1",
+        compute_priority=PriorityEnum.low,
     )
 
     assert meta1.success

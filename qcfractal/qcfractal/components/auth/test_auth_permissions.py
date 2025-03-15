@@ -241,7 +241,7 @@ def test_auth_default_role_read(secure_snowflake):
         client.modify_molecule(0, name="new name")
 
     with pytest.raises(PortalRequestError, match="Forbidden"):
-        client.modify_records([0], new_tag="new tag")
+        client.modify_records([0], new_compute_tag="new tag")
 
     with pytest.raises(PortalRequestError, match="Forbidden"):
         client.reset_records([0])
@@ -309,7 +309,7 @@ def test_auth_default_role_submit(secure_snowflake):
 
     # and modify things
     client.modify_molecule(mol_ids[0], name="new name")
-    client.modify_records(rec_ids[0], new_tag="new tag")
+    client.modify_records(rec_ids[0], new_compute_tag="new tag")
     client.reset_records(rec_ids)
 
     # and delete things
@@ -378,7 +378,7 @@ def test_auth_default_role_monitor(secure_snowflake):
         client.modify_molecule(0, name="new name")
 
     with pytest.raises(PortalRequestError, match="Forbidden"):
-        client.modify_records([0], new_tag="new tag")
+        client.modify_records([0], new_compute_tag="new tag")
 
     with pytest.raises(PortalRequestError, match="Forbidden"):
         client.reset_records([0])
@@ -450,7 +450,7 @@ def test_auth_default_role_compute(secure_snowflake):
         client.modify_molecule(0, name="new name")
 
     with pytest.raises(PortalRequestError, match="Forbidden"):
-        client.modify_records([0], new_tag="new tag")
+        client.modify_records([0], new_compute_tag="new tag")
 
     with pytest.raises(PortalRequestError, match="Forbidden"):
         client.reset_records([0])
