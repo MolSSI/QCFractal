@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import math
 import os
 from datetime import datetime
@@ -108,8 +109,8 @@ class BaseDataset(BaseModel):
     tags: List[str]
     provenance: Dict[str, Any]
 
-    default_tag: str
-    default_priority: PriorityEnum
+    default_compute_tag: str
+    default_compute_priority: PriorityEnum
 
     owner_user: Optional[str]
     owner_group: Optional[str]
@@ -159,6 +160,10 @@ class BaseDataset(BaseModel):
             del kwargs["group"]
         if "visibility" in kwargs:
             del kwargs["visibility"]
+        if "default_tag" in kwargs:
+            kwargs["default_compute_tag"] = kwargs.pop("default_tag")
+        if "default_priority" in kwargs:
+            kwargs["default_compute_priority"] = kwargs.pop("default_priority")
 
         BaseModel.__init__(self, **kwargs)
 
@@ -281,8 +286,8 @@ class BaseDataset(BaseModel):
             "tagline": self.tagline,
             "tags": self.tags,
             "provenance": self.provenance,
-            "default_tag": self.default_tag,
-            "default_priority": self.default_priority,
+            "default_compute_tag": self.default_compute_tag,
+            "default_compute_priority": self.default_compute_priority,
             "metadata": self.metadata,
         }
 
@@ -295,8 +300,8 @@ class BaseDataset(BaseModel):
         self.tagline = body.tagline
         self.tags = body.tags
         self.provenance = body.provenance
-        self.default_tag = body.default_tag
-        self.default_priority = body.default_priority
+        self.default_compute_tag = body.default_compute_tag
+        self.default_compute_priority = body.default_compute_priority
         self.metadata = body.metadata
 
         self._cache_data.update_metadata("dataset_metadata", self)
@@ -305,9 +310,10 @@ class BaseDataset(BaseModel):
         self,
         entry_names: Optional[Union[str, Iterable[str]]] = None,
         specification_names: Optional[Union[str, Iterable[str]]] = None,
-        tag: Optional[str] = None,
-        priority: PriorityEnum = None,
+        compute_tag: Optional[str] = None,
+        compute_priority: Optional[PriorityEnum] = None,
         find_existing: bool = True,
+        **kwargs,  # For deprecated parameters
     ) -> InsertCountsMetadata:
         """
         Create records for this dataset
@@ -321,14 +327,21 @@ class BaseDataset(BaseModel):
             Submit only records for these entries
         specification_names
             Submit only records for these specifications
-        tag
-            Use this tag for submissions (overrides the dataset default tag)
-        priority
-            Use this tag for submissions (overrides the dataset default priority)
+        compute_tag
+            Use this compute tag for submissions (overrides the dataset default tag)
+        compute_priority
+            Use this compute priority for submissions (overrides the dataset default priority)
         find_existing
             If True, the database will be searched for existing records that match the requested calculations, and new
             records created for those that don't match. If False, new records will always be created.
         """
+
+        if "tag" in kwargs:
+            logging.warning("'tag' is deprecated; use 'compute_tag' instead")
+            compute_tag = kwargs["tag"]
+        if "priority" in kwargs:
+            logging.warning("'priority' is deprecated; use 'compute_priority' instead")
+            compute_priority = kwargs["priority"]
 
         self.assert_is_not_view()
         self.assert_online()
@@ -354,8 +367,8 @@ class BaseDataset(BaseModel):
                 body_data = DatasetSubmitBody(
                     entry_names=entry_batch,
                     specification_names=[spec],
-                    tag=tag,
-                    priority=priority,
+                    compute_tag=compute_tag,
+                    compute_priority=compute_priority,
                     find_existing=find_existing,
                 )
 
@@ -375,9 +388,10 @@ class BaseDataset(BaseModel):
         self,
         entry_names: Optional[Union[str, Iterable[str]]] = None,
         specification_names: Optional[Union[str, Iterable[str]]] = None,
-        tag: Optional[str] = None,
-        priority: PriorityEnum = None,
+        compute_tag: Optional[str] = None,
+        compute_priority: PriorityEnum = None,
         find_existing: bool = True,
+        **kwargs,  # For deprecated parameters
     ) -> InternalJob:
         """
         Adds a dataset submission internal job to the server
@@ -393,6 +407,13 @@ class BaseDataset(BaseModel):
         :
             An internal job object that can be watch or used to determine the progress of the job.
         """
+
+        if "tag" in kwargs:
+            logging.warning("'tag' is deprecated; use 'compute_tag' instead")
+            compute_tag = kwargs["tag"]
+        if "priority" in kwargs:
+            logging.warning("'priority' is deprecated; use 'compute_priority' instead")
+            compute_priority = kwargs["priority"]
 
         self.assert_is_not_view()
         self.assert_online()
@@ -410,8 +431,8 @@ class BaseDataset(BaseModel):
         body_data = DatasetSubmitBody(
             entry_names=entry_names,
             specification_names=specification_names,
-            tag=tag,
-            priority=priority,
+            compute_tag=compute_tag,
+            compute_priority=compute_priority,
             find_existing=find_existing,
         )
 
@@ -766,11 +787,11 @@ class BaseDataset(BaseModel):
     def set_metadata(self, new_metadata: Dict[str, Any]):
         self._update_metadata(metadata=new_metadata)
 
-    def set_default_tag(self, new_default_tag: str):
-        self._update_metadata(default_tag=new_default_tag)
+    def set_default_compute_tag(self, new_default_compute_tag: str):
+        self._update_metadata(default_compute_tag=new_default_compute_tag)
 
-    def set_default_priority(self, new_default_priority: PriorityEnum):
-        self._update_metadata(default_priority=new_default_priority)
+    def set_default_compute_priority(self, new_default_compute_priority: PriorityEnum):
+        self._update_metadata(default_compute_priority=new_default_compute_priority)
 
     ###################################
     # Specifications
@@ -1601,12 +1622,21 @@ class BaseDataset(BaseModel):
         self,
         entry_names: Optional[Union[str, Iterable[str]]] = None,
         specification_names: Optional[Union[str, Iterable[str]]] = None,
-        new_tag: Optional[str] = None,
-        new_priority: Optional[PriorityEnum] = None,
+        new_compute_tag: Optional[str] = None,
+        new_compute_priority: Optional[PriorityEnum] = None,
         new_comment: Optional[str] = None,
         *,
         refetch_records: bool = False,
+        **kwargs,  # For deprecated parameters
     ):
+
+        if "new_tag" in kwargs:
+            logging.warning("'new_tag' is deprecated; use 'new_compute_tag' instead")
+            new_compute_tag = kwargs["new_tag"]
+        if "new_priority" in kwargs:
+            logging.warning("'new_priority' is deprecated; use 'new_compute_priority' instead")
+            new_compute_priority = kwargs["new_priority"]
+
         self.assert_is_not_view()
         self.assert_online()
 
@@ -1616,8 +1646,8 @@ class BaseDataset(BaseModel):
         body = DatasetRecordModifyBody(
             entry_names=entry_names,
             specification_names=specification_names,
-            tag=new_tag,
-            priority=new_priority,
+            compute_tag=new_compute_tag,
+            compute_priority=new_compute_priority,
             comment=new_comment,
         )
 
@@ -2189,8 +2219,8 @@ class DatasetAddBody(RestModelBase):
     tagline: str
     tags: List[str]
     provenance: Dict[str, Any]
-    default_tag: str
-    default_priority: PriorityEnum
+    default_compute_tag: str
+    default_compute_priority: PriorityEnum
     metadata: Dict[str, Any]
     owner_group: Optional[str]
     existing_ok: bool = False
@@ -2203,6 +2233,11 @@ class DatasetAddBody(RestModelBase):
         if "visibility" in values:
             del values["visibility"]
 
+        if "default_tag" in values:
+            values["default_compute_tag"] = values.pop("default_tag")
+        if "default_priority" in values:
+            values["default_compute_priority"] = values.pop("default_priority")
+
         return values
 
 
@@ -2214,8 +2249,8 @@ class DatasetModifyMetadata(RestModelBase):
     provenance: Optional[Dict[str, Any]]
     metadata: Optional[Dict[str, Any]]
 
-    default_tag: str
-    default_priority: PriorityEnum
+    default_compute_tag: str
+    default_compute_priority: PriorityEnum
 
     # TODO - DEPRECATED - Remove eventually
     @root_validator(pre=True)
@@ -2224,6 +2259,11 @@ class DatasetModifyMetadata(RestModelBase):
             del values["group"]
         if "visibility" in values:
             del values["visibility"]
+
+        if "default_tag" in values:
+            values["default_compute_tag"] = values.pop("default_tag")
+        if "default_priority" in values:
+            values["default_compute_priority"] = values.pop("default_priority")
 
         return values
 
@@ -2296,19 +2336,39 @@ class DatasetCreateViewBody(RestModelBase):
 class DatasetSubmitBody(RestModelBase):
     entry_names: Optional[List[str]] = None
     specification_names: Optional[List[str]] = None
-    tag: Optional[str] = None
-    priority: Optional[PriorityEnum] = None
+    compute_tag: Optional[str] = None
+    compute_priority: Optional[PriorityEnum] = None
     owner_group: Optional[str] = None
     find_existing: bool = True
+
+    @root_validator(pre=True)
+    def _rm_deprecated(cls, values):
+        # TODO - DEPRECATED - Remove eventually
+        if "tag" in values:
+            values["compute_tag"] = values.pop("tag")
+        if "priority" in values:
+            values["compute_priority"] = values.pop("priority")
+
+        return values
 
 
 class DatasetRecordModifyBody(RestModelBase):
     entry_names: Optional[List[str]] = None
     specification_names: Optional[List[str]] = None
     status: Optional[RecordStatusEnum] = None
-    priority: Optional[PriorityEnum] = None
-    tag: Optional[str] = None
+    compute_priority: Optional[PriorityEnum] = None
+    compute_tag: Optional[str] = None
     comment: Optional[str] = None
+
+    @root_validator(pre=True)
+    def _rm_deprecated(cls, values):
+        # TODO - DEPRECATED - Remove eventually
+        if "tag" in values:
+            values["compute_tag"] = values.pop("tag")
+        if "priority" in values:
+            values["compute_priority"] = values.pop("priority")
+
+        return values
 
 
 class DatasetRecordRevertBody(RestModelBase):

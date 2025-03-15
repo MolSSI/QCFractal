@@ -112,8 +112,10 @@ class BaseDatasetORM(BaseORM):
         d["group"] = "default"
         d["visibility"] = True
         d["extras"] = {}
-        d["default_tag"] = d.pop("default_compute_tag")
-        d["default_priority"] = d.pop("default_compute_priority")
+        if "default_compute_tag" in d:
+            d["default_tag"] = d.pop("default_compute_tag")
+        if "default_compute_priority" in d:
+            d["default_priority"] = d.pop("default_compute_priority")
 
         return d
 
