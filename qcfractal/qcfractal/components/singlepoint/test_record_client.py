@@ -28,8 +28,8 @@ def test_singlepoint_client_tag_priority(snowflake_client: PortalClient):
             "sto-3g",
             {"tag_priority": [tag, priority]},
             None,
-            priority=priority,
-            tag=tag,
+            compute_priority=priority,
+            compute_tag=tag,
         )
         assert meta1.n_inserted == 1
 

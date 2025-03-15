@@ -42,8 +42,8 @@ def test_neb_client_tag_priority(snowflake_client: PortalClient):
             ),
             None,
             NEBKeywords(),
-            priority=priority,
-            tag=tag,
+            compute_priority=priority,
+            compute_tag=tag,
         )
         assert meta1.n_inserted == 1
         rec = snowflake_client.get_records(id1, include=["service"])
@@ -64,8 +64,8 @@ def test_neb_client_add_get(submitter_client: PortalClient, spec: NEBSpecificati
         singlepoint_specification=spec.singlepoint_specification,
         optimization_specification=None,
         keywords=spec.keywords,
-        tag="tag1",
-        priority=PriorityEnum.low,
+        compute_tag="tag1",
+        compute_priority=PriorityEnum.low,
         owner_group=owner_group,
     )
 
@@ -116,8 +116,8 @@ def test_neb_client_add_duplicate(submitter_client: PortalClient, spec: NEBSpeci
         singlepoint_specification=spec.singlepoint_specification,
         optimization_specification=None,
         keywords=spec.keywords,
-        tag="tag1",
-        priority=PriorityEnum.low,
+        compute_tag="tag1",
+        compute_priority=PriorityEnum.low,
         owner_group=None,
         find_existing=True,
     )
@@ -132,8 +132,8 @@ def test_neb_client_add_duplicate(submitter_client: PortalClient, spec: NEBSpeci
         singlepoint_specification=spec.singlepoint_specification,
         optimization_specification=None,
         keywords=spec.keywords,
-        tag="tag1",
-        priority=PriorityEnum.low,
+        compute_tag="tag1",
+        compute_priority=PriorityEnum.low,
         owner_group=None,
         find_existing=find_existing,
     )
@@ -163,8 +163,8 @@ def test_neb_client_add_existing_chain(snowflake_client: PortalClient):
         keywords=spec.keywords,
         singlepoint_specification=spec.singlepoint_specification,
         optimization_specification=None,
-        tag="tag1",
-        priority=PriorityEnum.low,
+        compute_tag="tag1",
+        compute_priority=PriorityEnum.low,
     )
     recs = snowflake_client.get_nebs(id)
 

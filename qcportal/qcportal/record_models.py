@@ -9,7 +9,7 @@ from typing import Optional, Dict, Any, List, Union, Iterable, Tuple, Type, Sequ
 from dateutil.parser import parse as date_parser
 
 try:
-    from pydantic.v1 import BaseModel, Extra, constr, validator, PrivateAttr, Field, parse_obj_as
+    from pydantic.v1 import BaseModel, Extra, constr, validator, PrivateAttr, Field, parse_obj_as, root_validator
 except ImportError:
     from pydantic import BaseModel, Extra, constr, validator, PrivateAttr, Field, parse_obj_as, root_validator
 from qcelemental.models.results import Provenance
@@ -712,18 +712,38 @@ _Record_T = TypeVar("_Record_T", bound=BaseRecord)
 
 
 class RecordAddBodyBase(RestModelBase):
-    tag: constr(to_lower=True)
-    priority: PriorityEnum
+    compute_tag: constr(to_lower=True)
+    compute_priority: PriorityEnum
     owner_group: Optional[str]
     find_existing: bool = True
+
+    @root_validator(pre=True)
+    def _rm_deprecated(cls, values):
+        # TODO - DEPRECATED - Remove eventually
+        if "tag" in values:
+            values["compute_tag"] = values.pop("tag")
+        if "priority" in values:
+            values["compute_priority"] = values.pop("priority")
+
+        return values
 
 
 class RecordModifyBody(RestModelBase):
     record_ids: List[int]
     status: Optional[RecordStatusEnum] = None
-    priority: Optional[PriorityEnum] = None
-    tag: Optional[str] = None
+    compute_priority: Optional[PriorityEnum] = None
+    compute_tag: Optional[str] = None
     comment: Optional[str] = None
+
+    @root_validator(pre=True)
+    def _rm_deprecated(cls, values):
+        # TODO - DEPRECATED - Remove eventually
+        if "tag" in values:
+            values["compute_tag"] = values.pop("tag")
+        if "priority" in values:
+            values["compute_priority"] = values.pop("priority")
+
+        return values
 
 
 class RecordDeleteBody(RestModelBase):

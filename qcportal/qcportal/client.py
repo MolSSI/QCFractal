@@ -936,20 +936,23 @@ class PortalClient(PortalClientBase):
     def modify_records(
         self,
         record_ids: Union[int, Sequence[int]],
-        new_tag: Optional[str] = None,
-        new_priority: Optional[PriorityEnum] = None,
+        new_compute_tag: Optional[str] = None,
+        new_compute_priority: Optional[PriorityEnum] = None,
+        **kwargs,  # For deprecated parameters
     ) -> UpdateMetadata:
         """
-        Modify the tag or priority of a record
+        Modify the compute tag or compute priority of a record
         """
 
         record_ids = make_list(record_ids)
         if not record_ids:
             return UpdateMetadata()
-        if new_tag is None and new_priority is None:
+        if new_compute_tag is None and new_compute_priority is None:
             return UpdateMetadata()
 
-        body = RecordModifyBody(record_ids=record_ids, tag=new_tag, priority=new_priority)
+        body = RecordModifyBody(
+            record_ids=record_ids, compute_tag=new_compute_tag, compute_priority=new_compute_priority
+        )
         return self.make_request("patch", "api/v1/records", UpdateMetadata, body=body)
 
     def add_comment(self, record_ids: Union[int, Sequence[int]], comment: str) -> UpdateMetadata:
@@ -1009,10 +1012,11 @@ class PortalClient(PortalClientBase):
         basis: Optional[str],
         keywords: Optional[Dict[str, Any]] = None,
         protocols: Optional[Union[SinglepointProtocols, Dict[str, Any]]] = None,
-        tag: str = "*",
-        priority: PriorityEnum = PriorityEnum.normal,
+        compute_tag: str = "*",
+        compute_priority: PriorityEnum = PriorityEnum.normal,
         owner_group: Optional[str] = None,
         find_existing: bool = True,
+        **kwargs,  # For deprecated parameters
     ) -> Tuple[InsertMetadata, List[int]]:
         """
         Adds new singlepoint computations to the server
@@ -1038,9 +1042,9 @@ class PortalClient(PortalClientBase):
             The program-specific keywords for the computation
         protocols
             Protocols for storing more/less data for each computation
-        tag
+        compute_tag
             The tag for the task. This will assist in routing to appropriate compute managers.
-        priority
+        compute_priority
             The priority of the job (high, normal, low). Default is normal.
         owner_group
             Group with additional permission for these records
@@ -1053,6 +1057,13 @@ class PortalClient(PortalClientBase):
             Metadata about the insertion, and a list of record ids. The ids will be in the
             order of the input molecules
         """
+
+        if "tag" in kwargs:
+            self._logger.warning("'tag' is deprecated; use 'compute_tag' instead")
+            compute_tag = kwargs["tag"]
+        if "priority" in kwargs:
+            self._logger.warning("'priority' is deprecated; use 'compute_priority' instead")
+            compute_priority = kwargs["priority"]
 
         molecules = make_list(molecules)
         if not molecules:
@@ -1071,8 +1082,8 @@ class PortalClient(PortalClientBase):
                 "method": method,
                 "basis": basis,
             },
-            "tag": tag,
-            "priority": priority,
+            "compute_tag": compute_tag,
+            "compute_priority": compute_priority,
             "owner_group": owner_group,
             "find_existing": find_existing,
         }
@@ -1231,10 +1242,11 @@ class PortalClient(PortalClientBase):
         qc_specification: QCSpecification,
         keywords: Optional[Dict[str, Any]] = None,
         protocols: Optional[OptimizationProtocols] = None,
-        tag: str = "*",
-        priority: PriorityEnum = PriorityEnum.normal,
+        compute_tag: str = "*",
+        compute_priority: PriorityEnum = PriorityEnum.normal,
         owner_group: Optional[str] = None,
         find_existing: bool = True,
+        **kwargs,  # For deprecated parameters
     ) -> Tuple[InsertMetadata, List[int]]:
         """
         Adds new geometry optimization calculations to the server
@@ -1256,9 +1268,9 @@ class PortalClient(PortalClientBase):
             Program-specific keywords for the optimization program (not the qc program)
         protocols
             Protocols for storing more/less data for each computation (for the optimization)
-        tag
+        compute_tag
             The tag for the task. This will assist in routing to appropriate compute managers.
-        priority
+        compute_priority
             The priority of the job (high, normal, low). Default is normal.
         owner_group
             Group with additional permission for these records
@@ -1271,6 +1283,13 @@ class PortalClient(PortalClientBase):
             Metadata about the insertion, and a list of record ids. The ids will be in the
             order of the input molecules
         """
+
+        if "tag" in kwargs:
+            self._logger.warning("'tag' is deprecated; use 'compute_tag' instead")
+            compute_tag = kwargs["tag"]
+        if "priority" in kwargs:
+            self._logger.warning("'priority' is deprecated; use 'compute_priority' instead")
+            compute_priority = kwargs["priority"]
 
         initial_molecules = make_list(initial_molecules)
         if not initial_molecules:
@@ -1287,8 +1306,8 @@ class PortalClient(PortalClientBase):
                 "program": program,
                 "qc_specification": qc_specification,
             },
-            "tag": tag,
-            "priority": priority,
+            "compute_tag": compute_tag,
+            "compute_priority": compute_priority,
             "owner_group": owner_group,
             "find_existing": find_existing,
         }
@@ -1453,10 +1472,11 @@ class PortalClient(PortalClientBase):
         program: str,
         optimization_specification: OptimizationSpecification,
         keywords: Union[TorsiondriveKeywords, Dict[str, Any]],
-        tag: str = "*",
-        priority: PriorityEnum = PriorityEnum.normal,
+        compute_tag: str = "*",
+        compute_priority: PriorityEnum = PriorityEnum.normal,
         owner_group: Optional[str] = None,
         find_existing: bool = True,
+        **kwargs,  # For deprecated parameters
     ) -> Tuple[InsertMetadata, List[int]]:
         """
         Adds new torsiondrive computations to the server
@@ -1477,9 +1497,9 @@ class PortalClient(PortalClientBase):
             Specification of how each optimization of the torsiondrive should be run
         keywords
             The torsiondrive keywords for the computation
-        tag
+        compute_tag
             The tag for the task. This will assist in routing to appropriate compute managers.
-        priority
+        compute_priority
             The priority of the job (high, normal, low). Default is normal.
         owner_group
             Group with additional permission for these records
@@ -1492,6 +1512,13 @@ class PortalClient(PortalClientBase):
             Metadata about the insertion, and a list of record ids. The ids will be in the
             order of the input molecules
         """
+
+        if "tag" in kwargs:
+            self._logger.warning("'tag' is deprecated; use 'compute_tag' instead")
+            compute_tag = kwargs["tag"]
+        if "priority" in kwargs:
+            self._logger.warning("'priority' is deprecated; use 'compute_priority' instead")
+            compute_priority = kwargs["priority"]
 
         if not initial_molecules:
             return InsertMetadata(), []
@@ -1509,8 +1536,8 @@ class PortalClient(PortalClientBase):
                 "keywords": keywords,
             },
             "as_service": True,
-            "tag": tag,
-            "priority": priority,
+            "compute_tag": compute_tag,
+            "compute_priority": compute_priority,
             "owner_group": owner_group,
             "find_existing": find_existing,
         }
@@ -1666,10 +1693,11 @@ class PortalClient(PortalClientBase):
         program: str,
         optimization_specification: OptimizationSpecification,
         keywords: Union[GridoptimizationKeywords, Dict[str, Any]],
-        tag: str = "*",
-        priority: PriorityEnum = PriorityEnum.normal,
+        compute_tag: str = "*",
+        compute_priority: PriorityEnum = PriorityEnum.normal,
         owner_group: Optional[str] = None,
         find_existing: bool = True,
+        **kwargs,  # For deprecated parameters
     ) -> Tuple[InsertMetadata, List[int]]:
         """
         Adds new gridoptimization computations to the server
@@ -1690,9 +1718,9 @@ class PortalClient(PortalClientBase):
             Specification of how each optimization of the gridoptimization should be run
         keywords
             The gridoptimization keywords for the computation
-        tag
+        compute_tag
             The tag for the task. This will assist in routing to appropriate compute managers.
-        priority
+        compute_priority
             The priority of the job (high, normal, low). Default is normal.
         owner_group
             Group with additional permission for these records
@@ -1705,6 +1733,13 @@ class PortalClient(PortalClientBase):
             Metadata about the insertion, and a list of record ids. The ids will be in the
             order of the input molecules
         """
+
+        if "tag" in kwargs:
+            self._logger.warning("'tag' is deprecated; use 'compute_tag' instead")
+            compute_tag = kwargs["tag"]
+        if "priority" in kwargs:
+            self._logger.warning("'priority' is deprecated; use 'compute_priority' instead")
+            compute_priority = kwargs["priority"]
 
         initial_molecules = make_list(initial_molecules)
         if not initial_molecules:
@@ -1722,8 +1757,8 @@ class PortalClient(PortalClientBase):
                 "optimization_specification": optimization_specification,
                 "keywords": keywords,
             },
-            "tag": tag,
-            "priority": priority,
+            "compute_tag": compute_tag,
+            "compute_priority": compute_priority,
             "owner_group": owner_group,
             "find_existing": find_existing,
         }
@@ -1880,10 +1915,11 @@ class PortalClient(PortalClientBase):
         singlepoint_specification: Optional[QCSpecification],
         optimization_specification: Optional[OptimizationSpecification],
         keywords: ReactionKeywords,
-        tag: str = "*",
-        priority: PriorityEnum = PriorityEnum.normal,
+        compute_tag: str = "*",
+        compute_priority: PriorityEnum = PriorityEnum.normal,
         owner_group: Optional[str] = None,
         find_existing: bool = True,
+        **kwargs,  # For deprecated parameters
     ) -> Tuple[InsertMetadata, List[int]]:
         """
         Adds new reaction computations to the server
@@ -1911,9 +1947,9 @@ class PortalClient(PortalClientBase):
             The specification for optimization calculations
         keywords
             The keywords for the reaction calculation/service
-        tag
+        compute_tag
             The tag for the task. This will assist in routing to appropriate compute managers.
-        priority
+        compute_priority
             The priority of the job (high, normal, low). Default is normal.
         owner_group
             Group with additional permission for these records
@@ -1926,6 +1962,13 @@ class PortalClient(PortalClientBase):
             Metadata about the insertion, and a list of record ids. The ids will be in the
             order of the input molecules
         """
+
+        if "tag" in kwargs:
+            self._logger.warning("'tag' is deprecated; use 'compute_tag' instead")
+            compute_tag = kwargs["tag"]
+        if "priority" in kwargs:
+            self._logger.warning("'priority' is deprecated; use 'compute_priority' instead")
+            compute_priority = kwargs["priority"]
 
         if not stoichiometries:
             return InsertMetadata(), []
@@ -1943,8 +1986,8 @@ class PortalClient(PortalClientBase):
                 "optimization_specification": optimization_specification,
                 "keywords": keywords,
             },
-            "tag": tag,
-            "priority": priority,
+            "compute_tag": compute_tag,
+            "compute_priority": compute_priority,
             "owner_group": owner_group,
             "find_existing": find_existing,
         }
@@ -2101,10 +2144,11 @@ class PortalClient(PortalClientBase):
         levels: Dict[Union[int, Literal["supersystem"]], QCSpecification],
         bsse_correction: Union[BSSECorrectionEnum, Sequence[BSSECorrectionEnum]],
         keywords: Union[ManybodyKeywords, Dict[str, Any]],
-        tag: str = "*",
-        priority: PriorityEnum = PriorityEnum.normal,
+        compute_tag: str = "*",
+        compute_priority: PriorityEnum = PriorityEnum.normal,
         owner_group: Optional[str] = None,
         find_existing: bool = True,
+        **kwargs,  # For deprecated parameters
     ) -> Tuple[InsertMetadata, List[int]]:
         """
         Adds new manybody expansion computations to the server
@@ -2124,9 +2168,9 @@ class PortalClient(PortalClientBase):
             Specification for the singlepoint calculations done in the expansion
         keywords
             The keywords for the manybody program
-        tag
+        compute_tag
             The tag for the task. This will assist in routing to appropriate compute managers.
-        priority
+        compute_priority
             The priority of the job (high, normal, low). Default is normal.
         owner_group
             Group with additional permission for these records
@@ -2139,6 +2183,13 @@ class PortalClient(PortalClientBase):
             Metadata about the insertion, and a list of record ids. The ids will be in the
             order of the input molecules
         """
+
+        if "tag" in kwargs:
+            self._logger.warning("'tag' is deprecated; use 'compute_tag' instead")
+            compute_tag = kwargs["tag"]
+        if "priority" in kwargs:
+            self._logger.warning("'priority' is deprecated; use 'compute_priority' instead")
+            compute_priority = kwargs["priority"]
 
         initial_molecules = make_list(initial_molecules)
         if not initial_molecules:
@@ -2157,8 +2208,8 @@ class PortalClient(PortalClientBase):
                 "bsse_correction": make_list(bsse_correction),
                 "keywords": keywords,
             },
-            "tag": tag,
-            "priority": priority,
+            "compute_tag": compute_tag,
+            "compute_priority": compute_priority,
             "owner_group": owner_group,
             "find_existing": find_existing,
         }
@@ -2311,10 +2362,11 @@ class PortalClient(PortalClientBase):
         singlepoint_specification: QCSpecification,
         optimization_specification: Optional[OptimizationSpecification],
         keywords: Union[NEBKeywords, Dict[str, Any]],
-        tag: str = "*",
-        priority: PriorityEnum = PriorityEnum.normal,
+        compute_tag: str = "*",
+        compute_priority: PriorityEnum = PriorityEnum.normal,
         owner_group: Optional[str] = None,
         find_existing: bool = True,
+        **kwargs,  # For deprecated parameters
     ) -> Tuple[InsertMetadata, List[int]]:
         """
         Adds neb calculations to the server
@@ -2337,9 +2389,9 @@ class PortalClient(PortalClientBase):
             Specification of how any optimizations of the torsiondrive should be run
         keywords
             The torsiondrive keywords for the computation
-        tag
+        compute_tag
             The tag for the task. This will assist in routing to appropriate compute managers.
-        priority
+        compute_priority
             The priority of the job (high, normal, low). Default is normal.
         owner_group
             Group with additional permission for these records
@@ -2352,6 +2404,14 @@ class PortalClient(PortalClientBase):
             Metadata about the insertion, and a list of record ids. The ids will be in the
             order of the input molecules
         """
+
+        if "tag" in kwargs:
+            self._logger.warning("'tag' is deprecated; use 'compute_tag' instead")
+            compute_tag = kwargs["tag"]
+        if "priority" in kwargs:
+            self._logger.warning("'priority' is deprecated; use 'compute_priority' instead")
+            compute_priority = kwargs["priority"]
+
         if not initial_chains:
             return InsertMetadata(), []
 
@@ -2363,8 +2423,8 @@ class PortalClient(PortalClientBase):
                 "optimization_specification": optimization_specification,
                 "keywords": keywords,
             },
-            "tag": tag,
-            "priority": priority,
+            "compute_tag": compute_tag,
+            "compute_priority": compute_priority,
             "owner_group": owner_group,
             "find_existing": find_existing,
         }

@@ -211,13 +211,13 @@ def test_record_client_modify(snowflake: QCATestingSnowflake):
     time_0 = now_at_utc()
 
     # record 2 is complete - can't change
-    meta = snowflake_client.modify_records([all_id[0], all_id[1]], new_tag="new_tag")
+    meta = snowflake_client.modify_records([all_id[0], all_id[1]], new_compute_tag="new_tag")
     assert meta.n_updated == 1
     assert meta.updated_idx == [0]
     assert meta.error_idx == [1]
 
     # one of these records in cancelled
-    meta = snowflake_client.modify_records([all_id[3], all_id[4]], new_priority=PriorityEnum.low)
+    meta = snowflake_client.modify_records([all_id[3], all_id[4]], new_compute_priority=PriorityEnum.low)
     assert meta.n_updated == 1
 
     rec = snowflake_client.get_records(all_id, include=["task"])
@@ -282,7 +282,7 @@ def test_record_client_modify_service(snowflake: QCATestingSnowflake):
         assert all(x.compute_priority == PriorityEnum.high for x in tasks)
 
     # Modify service priority and tag
-    meta = snowflake_client.modify_records(rec_id, new_tag="new_tag", new_priority=PriorityEnum.low)
+    meta = snowflake_client.modify_records(rec_id, new_compute_tag="new_tag", new_compute_priority=PriorityEnum.low)
     assert meta.n_updated == 1
     assert meta.n_children_updated > 0
 
