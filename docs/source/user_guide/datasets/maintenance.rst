@@ -16,8 +16,8 @@ See the following functions:
 * :meth:`~qcportal.dataset_models.BaseDataset.set_tagline`
 * :meth:`~qcportal.dataset_models.BaseDataset.set_provenance`
 * :meth:`~qcportal.dataset_models.BaseDataset.set_metadata`
-* :meth:`~qcportal.dataset_models.BaseDataset.set_default_tag`
-* :meth:`~qcportal.dataset_models.BaseDataset.set_default_priority`
+* :meth:`~qcportal.dataset_models.BaseDataset.set_default_compute_tag`
+* :meth:`~qcportal.dataset_models.BaseDataset.set_default_compute_priority`
 
 
 .. tab-set::
