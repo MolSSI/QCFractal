@@ -28,7 +28,7 @@ These records have a :attr:`~qcportal.record_models.BaseRecord.task` property, w
 necessary for computation. This data is what is actually sent to the compute manager. Typically, a user does not
 need to access this object, but it can be useful for developers and for debugging purposes.
 
-This :class:`~qcportal.record_models.RecordTask` also contains the routing tag and priority.
+This :class:`~qcportal.record_models.RecordTask` also contains the compute tag and priority.
 After successful completion, the associated task is removed from the database.
 
 .. image:: ../graphics/tasks_diagram.svg
@@ -45,8 +45,8 @@ The server is responsible for selecting which services are due for iterating, an
 does the iteration itself. There is typically a limit on the number of running services on a server
 (which is configurable).
 
-Like tasks, services are assigned a tag and priority - the priority determines the order that the services start
-on the server. Dependencies (new records) created by the services inherit both the tag and priority.
+Like tasks, services are assigned a compute tag and priority - the priority determines the order that the services start
+on the server. Dependencies (new records) created by the services inherit both the compute tag and priority.
 
 Records that are based on services have a :attr:`~qcportal.record_models.BaseRecord.service` property
 (a :class:`~qcportal.record_models.RecordService`), which contains
@@ -60,18 +60,18 @@ be viewed with the :attr:`~qcportal.record_models.BaseRecord.stdout` property.
   :align: center
 
 
-.. _routing_tags:
+.. _compute_tags:
 
-Routing tags
+Compute tags
 ------------
 
-Routing tags are user-specified strings that assist in routing tasks to particular managers.
+Compute tags are user-specified strings that assist in routing tasks to particular managers.
 Every task is given a single tag when the record is submitted, and managers
 are configured with multiple tags.
 
 Managers are configured to claim tasks whose tag matches one given in their configuration.
 
-.. image:: ../graphics/routing_tags.svg
+.. image:: ../graphics/compute_tags.svg
   :align: center
 
 Tags are matched with the following considerations:

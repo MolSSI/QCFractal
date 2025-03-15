@@ -274,10 +274,10 @@ See: :doc:`../../overview/tasks_services`
       >>> print(r.task)
       RecordTask(id=13, ...)
 
-      >>> print(r.task.tag)
+      >>> print(r.task.compute_tag)
       tag1
 
-      >>> print(r.task.priority)
+      >>> print(r.task.compute_priority)
       PriorityEnum.normal
 
       >>> print(r.task.function)

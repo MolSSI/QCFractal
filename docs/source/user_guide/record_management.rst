@@ -280,10 +280,10 @@ Invalidation can be undone with :meth:`~qcportal.client.PortalClient.uninvalidat
   Invalidating a record will also cancel any parent records (for example, if this record was part of a service).
 
 
-Changing tag and priority
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Changing compute tag and priority
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A record's tag and priority can be changed if it has not yet been successfully completed (ie, the task or service
+A record's compute tag and priority can be changed if it has not yet been successfully completed (ie, the task or service
 still exists - see :doc:`../overview/tasks_services`).
 
 .. tab-set::
@@ -293,15 +293,15 @@ still exists - see :doc:`../overview/tasks_services`).
     .. code-block:: py3
 
       >>> r = client.get_records(941)
-      >>> print(r.task.tag, r.task.priority)
+      >>> print(r.task.compute_tag, r.task.compute_priority)
       * PriorityEnum.normal
 
-      >>> meta = client.modify_records(941, new_tag='a_new_tag', new_priority='low')
+      >>> meta = client.modify_records(941, new_compute_tag='a_new_tag', new_compute_priority='low')
       >>> print(meta)
       UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)
 
       >>> r = client.get_records(941)
-      >>> print(r.task.tag, r.task.priority)
+      >>> print(r.task.compute_tag, r.task.compute_priority)
       a_new_tag PriorityEnum.low
 
 
