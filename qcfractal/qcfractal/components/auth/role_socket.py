@@ -83,7 +83,13 @@ default_roles: Dict[str, Any] = {
             {
                 "Effect": "Allow",
                 "Action": "*",
-                "Resource": ["/api/v1/records", "/api/v1/molecules", "/api/v1/keywords", "/api/v1/datasets"],
+                "Resource": [
+                    "/api/v1/records",
+                    "/api/v1/molecules",
+                    "/api/v1/keywords",
+                    "/api/v1/datasets",
+                    "/api/v1/projects",
+                ],
             },
         ]
     },
