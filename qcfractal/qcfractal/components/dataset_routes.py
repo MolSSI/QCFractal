@@ -72,10 +72,7 @@ def query_dataset_records_v1(body_data: DatasetQueryRecords):
 @api_v1.route("/datasets/<int:dataset_id>", methods=["DELETE"])
 @wrap_route("DELETE")
 def delete_dataset_v1(dataset_id: int, url_params: DatasetDeleteParams):
-    with storage_socket.session_scope(True) as session:
-        ds_type = storage_socket.datasets.lookup_type(dataset_id, session=session)
-        ds_socket = storage_socket.datasets.get_socket(ds_type)
-        return ds_socket.delete_dataset(dataset_id, url_params.delete_records)
+    storage_socket.datasets.delete(dataset_id, url_params.delete_records)
 
 
 #################################################################
