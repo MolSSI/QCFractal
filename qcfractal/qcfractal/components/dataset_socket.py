@@ -2077,6 +2077,32 @@ class DatasetSocket:
                 for x in r
             ]
 
+    def delete(
+        self,
+        dataset_id: int,
+        delete_records: bool,
+        *,
+        session: Optional[Session] = None,
+    ):
+        """
+        Deletes an entire dataset from the database
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        delete_records
+            If true, delete all the individual records as well
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+        """
+
+        with self.root_socket.optional_session(session) as session:
+            ds_type = self.root_socket.datasets.lookup_type(dataset_id, session=session)
+            ds_socket = self.root_socket.datasets.get_socket(ds_type)
+            return ds_socket.delete_dataset(dataset_id, delete_records, session=session)
+
     def query_dataset_records(
         self,
         record_id: Iterable[int],
