@@ -11,7 +11,7 @@ from .services import db_models
 from .internal_jobs import db_models, routes
 from .external_files import db_models, routes
 
-from . import record_db_models, dataset_db_models, project_db_models, record_routes, dataset_routes
+from . import record_db_models, dataset_db_models, project_db_models, record_routes, dataset_routes, project_routes
 from .singlepoint import record_db_models, dataset_db_models, routes
 from .optimization import record_db_models, dataset_db_models, routes
 from .torsiondrive import record_db_models, dataset_db_models, routes

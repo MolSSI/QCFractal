@@ -102,6 +102,7 @@ class SQLAlchemySocket:
         from ..components.external_files import ExternalFileSocket
         from ..components.record_socket import RecordSocket
         from ..components.dataset_socket import DatasetSocket
+        from ..components.project_socket import ProjectSocket
 
         # Internal job socket goes first - others may depend on this
         self.internal_jobs = InternalJobSocket(self)
@@ -110,6 +111,7 @@ class SQLAlchemySocket:
         self.serverinfo = ServerInfoSocket(self)
         self.molecules = MoleculeSocket(self)
         self.datasets = DatasetSocket(self)
+        self.projects = ProjectSocket(self)
         self.records = RecordSocket(self)
         self.external_files = ExternalFileSocket(self)
         self.tasks = TaskSocket(self)
