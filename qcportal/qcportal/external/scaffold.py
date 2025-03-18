@@ -85,10 +85,14 @@ def from_json(filename, client):
 
     ds = client.add_dataset(**ds_dict["metadata"])
 
-    for _, entry in ds_dict["entries"].items():
-        ds.add_entry(**entry)
-
     for _, spec in ds_dict["specifications"].items():
         ds.add_specification(**spec)
 
+    entries = []
+    entry_type = ds._entry_type
+    for _, entry in ds_dict["entries"].items():
+        del entry["local_results"]
+        entries.append(entry_type(**entry))
+    ds.add_entries(entries)
+    
     return ds
