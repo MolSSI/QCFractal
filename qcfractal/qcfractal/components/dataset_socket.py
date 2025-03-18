@@ -385,7 +385,7 @@ class BaseDatasetSocket:
         provenance: Dict[str, Any],
         default_tag: str,
         default_priority: PriorityEnum,
-        metadata: Dict[str, Any],
+        extras: Dict[str, Any],
         owner_user: Optional[Union[int, str]],
         owner_group: Optional[Union[int, str]],
         existing_ok: bool,
@@ -412,7 +412,7 @@ class BaseDatasetSocket:
             provenance=provenance,
             default_tag=default_tag.lower(),
             default_priority=default_priority,
-            meta=metadata,
+            extras=extras,
         )
 
         with self.root_socket.optional_session(session) as session:
@@ -485,9 +485,7 @@ class BaseDatasetSocket:
             ds.tagline = new_metadata.tagline
             ds.tags = new_metadata.tags
             ds.provenance = new_metadata.provenance
-
-            # "metadata" is reserved. The field is 'metadata' but accessed via 'meta'
-            ds.meta = new_metadata.metadata
+            ds.extras = new_metadata.extras
 
             ds.default_tag = new_metadata.default_tag
             ds.default_priority = new_metadata.default_priority
@@ -1819,7 +1817,7 @@ class BaseDatasetSocket:
                 provenance=source_orm.provenance,
                 default_tag=source_orm.default_tag,
                 default_priority=source_orm.default_priority,
-                metadata=source_orm.meta,
+                extras=source_orm.extras,
                 owner_user=source_orm.owner_user,
                 owner_group=source_orm.owner_group,
                 existing_ok=False,

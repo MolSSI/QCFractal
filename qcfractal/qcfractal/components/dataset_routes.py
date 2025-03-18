@@ -101,7 +101,7 @@ def add_dataset_v1(dataset_type: str, body_data: DatasetAddBody):
         provenance=body_data.provenance,
         default_tag=body_data.default_tag,
         default_priority=body_data.default_priority,
-        metadata=body_data.metadata,
+        extras=body_data.extras,
         owner_user=g.username,
         owner_group=body_data.owner_group,
         existing_ok=body_data.existing_ok,

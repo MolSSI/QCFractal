@@ -25,7 +25,7 @@ def test_dataset_model_basic(submitter_client: PortalClient):
         provenance={"prov_key_1": "prov_value_1"},
         default_tag="def_tag",
         default_priority=PriorityEnum.low,
-        metadata={"meta_key_1": "meta_value_1"},
+        extras={"meta_key_1": "meta_value_1"},
         owner_group="group1",
     )
 
@@ -89,9 +89,9 @@ def test_dataset_model_metadata(snowflake_client: PortalClient):
     assert ds.provenance == {"1": "hi"}
     assert snowflake_client.get_dataset_by_id(ds_id).provenance == {"1": "hi"}
 
-    ds.set_metadata({"2": "hello"})
-    assert ds.metadata == {"2": "hello"}
-    assert snowflake_client.get_dataset_by_id(ds_id).metadata == {"2": "hello"}
+    ds.set_extras({"2": "hello"})
+    assert ds.extras == {"2": "hello"}
+    assert snowflake_client.get_dataset_by_id(ds_id).extras == {"2": "hello"}
 
     ds.set_default_tag("new_def_tag")
     assert ds.default_tag == "new_def_tag"

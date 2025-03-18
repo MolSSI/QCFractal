@@ -66,9 +66,7 @@ class BaseDatasetORM(BaseORM):
     default_priority = Column(Integer, nullable=False)
 
     provenance = Column(JSON, nullable=False)
-
-    # metadata is reserved in sqlalchemy
-    meta = Column("metadata", JSON, nullable=False)
+    extras = Column("extras", JSON, nullable=False)
 
     contributed_values = relationship(
         "ContributedValuesORM",
@@ -101,17 +99,13 @@ class BaseDatasetORM(BaseORM):
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         d = BaseORM.model_dict(self, exclude)
 
-        # meta -> metadata
-        if "meta" in d:
-            d["metadata"] = d.pop("meta")
-
         d["owner_user"] = self.owner_user.username if self.owner_user is not None else None
         d["owner_group"] = self.owner_group.groupname if self.owner_group is not None else None
 
         # TODO - DEPRECATED - REMOVE EVENTUALLY
         d["group"] = "default"
         d["visibility"] = True
-        d["extras"] = {}
+        d["metadata"] = {}
 
         return d
 

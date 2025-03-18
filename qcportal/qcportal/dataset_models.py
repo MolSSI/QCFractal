@@ -107,14 +107,13 @@ class BaseDataset(BaseModel):
     tagline: str
     tags: List[str]
     provenance: Dict[str, Any]
+    extras: Dict[str, Any]
 
     default_tag: str
     default_priority: PriorityEnum
 
     owner_user: Optional[str]
     owner_group: Optional[str]
-
-    metadata: Dict[str, Any]
 
     ########################################
     # Caches of information
@@ -153,8 +152,12 @@ class BaseDataset(BaseModel):
 
         # TODO - DEPRECATED - remove eventually
         # These are sometimes returned from older servers
-        if "extras" in kwargs:
-            del kwargs["extras"]
+        if "metadata" in kwargs:
+            # Overwrite extras if there actually is something in metadata
+            if kwargs["metadata"]:
+                kwargs["extras"] = kwargs.pop("metadata")
+            else:
+                del kwargs["metadata"]
         if "group" in kwargs:
             del kwargs["group"]
         if "visibility" in kwargs:
@@ -283,7 +286,7 @@ class BaseDataset(BaseModel):
             "provenance": self.provenance,
             "default_tag": self.default_tag,
             "default_priority": self.default_priority,
-            "metadata": self.metadata,
+            "extras": self.extras,
         }
 
         new_body.update(**kwargs)
@@ -297,7 +300,7 @@ class BaseDataset(BaseModel):
         self.provenance = body.provenance
         self.default_tag = body.default_tag
         self.default_priority = body.default_priority
-        self.metadata = body.metadata
+        self.extras = body.extras
 
         self._cache_data.update_metadata("dataset_metadata", self)
 
@@ -763,8 +766,8 @@ class BaseDataset(BaseModel):
     def set_provenance(self, new_provenance: Dict[str, Any]):
         self._update_metadata(provenance=new_provenance)
 
-    def set_metadata(self, new_metadata: Dict[str, Any]):
-        self._update_metadata(metadata=new_metadata)
+    def set_extras(self, new_extras: Dict[str, Any]):
+        self._update_metadata(extras=new_extras)
 
     def set_default_tag(self, new_default_tag: str):
         self._update_metadata(default_tag=new_default_tag)
@@ -2191,7 +2194,7 @@ class DatasetAddBody(RestModelBase):
     provenance: Dict[str, Any]
     default_tag: str
     default_priority: PriorityEnum
-    metadata: Dict[str, Any]
+    extras: Dict[str, Any]
     owner_group: Optional[str]
     existing_ok: bool = False
 
@@ -2202,6 +2205,8 @@ class DatasetAddBody(RestModelBase):
             del values["group"]
         if "visibility" in values:
             del values["visibility"]
+        if "metadata" in values:
+            values["extras"] = values.pop("metadata")
 
         return values
 
@@ -2212,7 +2217,7 @@ class DatasetModifyMetadata(RestModelBase):
     tags: List[str]
     tagline: str
     provenance: Optional[Dict[str, Any]]
-    metadata: Optional[Dict[str, Any]]
+    extras: Optional[Dict[str, Any]]
 
     default_tag: str
     default_priority: PriorityEnum
@@ -2224,6 +2229,8 @@ class DatasetModifyMetadata(RestModelBase):
             del values["group"]
         if "visibility" in values:
             del values["visibility"]
+        if "metadata" in values:
+            values["extras"] = values.pop("metadata")
 
         return values
 

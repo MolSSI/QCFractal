@@ -38,7 +38,7 @@ def test_dataset_socket_submit_defaults(
         provenance={},
         default_tag=default_tag,
         default_priority=default_priority,
-        metadata={},
+        extras={},
         owner_user=default_user,
         owner_group=default_group,
         existing_ok=False,

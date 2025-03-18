@@ -43,7 +43,7 @@ def test_dataset_client_add_get(submitter_client: PortalClient, dataset_type: st
     assert ds.provenance == {"prov_key_1": "prov_value_1"}
     assert ds.default_tag == "def_tag"
     assert ds.default_priority == PriorityEnum.low
-    assert ds.metadata == {"meta_key_1": "meta_value_1"}
+    assert ds.extras == {"meta_key_1": "meta_value_1"}
 
     assert ds.owner_user == submitter_client.username
     assert ds.owner_group == owner_group
