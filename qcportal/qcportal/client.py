@@ -951,6 +951,13 @@ class PortalClient(PortalClientBase):
         Modify the compute tag or compute priority of a record
         """
 
+        if "new_tag" in kwargs:
+            self._logger.warning("'new_tag' is deprecated; use 'new_compute_tag' instead")
+            new_compute_tag = kwargs["new_tag"]
+        if "new_priority" in kwargs:
+            self._logger.warning("'new_priority' is deprecated; use 'new_compute_priority' instead")
+            new_compute_priority = kwargs["new_priority"]
+
         record_ids = make_list(record_ids)
         if not record_ids:
             return UpdateMetadata()

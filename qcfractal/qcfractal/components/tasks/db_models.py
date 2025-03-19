@@ -78,8 +78,10 @@ class TaskQueueORM(BaseORM):
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         d = BaseORM.model_dict(self, exclude)
 
-        # TODO - DEPRECATED - remove
-        d["tag"] = d.pop("compute_tag")
-        d["priority"] = d.pop("compute_priority")
+        # TODO - DEPRECATED - remove eventually
+        if "compute_tag" in d:
+            d["tag"] = d.pop("compute_tag")
+        if "compute_priority" in d:
+            d["priority"] = d.pop("compute_priority")
 
         return d

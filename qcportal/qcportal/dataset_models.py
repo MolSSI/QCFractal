@@ -334,11 +334,12 @@ class BaseDataset(BaseModel):
             records created for those that don't match. If False, new records will always be created.
         """
 
+        logger = logging.getLogger(self.__class__.__name__)
         if "tag" in kwargs:
-            logging.warning("'tag' is deprecated; use 'compute_tag' instead")
+            logger.warning("'tag' is deprecated; use 'compute_tag' instead")
             compute_tag = kwargs["tag"]
         if "priority" in kwargs:
-            logging.warning("'priority' is deprecated; use 'compute_priority' instead")
+            logger.warning("'priority' is deprecated; use 'compute_priority' instead")
             compute_priority = kwargs["priority"]
 
         self.assert_is_not_view()
@@ -406,11 +407,12 @@ class BaseDataset(BaseModel):
             An internal job object that can be watch or used to determine the progress of the job.
         """
 
+        logger = logging.getLogger(self.__class__.__name__)
         if "tag" in kwargs:
-            logging.warning("'tag' is deprecated; use 'compute_tag' instead")
+            logger.warning("'tag' is deprecated; use 'compute_tag' instead")
             compute_tag = kwargs["tag"]
         if "priority" in kwargs:
-            logging.warning("'priority' is deprecated; use 'compute_priority' instead")
+            logger.warning("'priority' is deprecated; use 'compute_priority' instead")
             compute_priority = kwargs["priority"]
 
         self.assert_is_not_view()
@@ -804,6 +806,54 @@ class BaseDataset(BaseModel):
         logger = logging.getLogger(self.__class__.__name__)
         logger.warning("set_metadata is deprecated and will be removed in a future release. Use set_extras instead")
         self.set_extras(new_metadata)
+
+    @property
+    def default_tag(self) -> str:
+        logger = logging.getLogger(self.__class__.__name__)
+        logger.warning(
+            "'default_tag' is deprecated and will be removed in a future release. Use 'default_compute_tag' instead"
+        )
+        return self.default_compute_tag
+
+    def set_default_tag(self, new_default_tag: str):
+        logger = logging.getLogger(self.__class__.__name__)
+        logger.warning("set_default_tag is deprecated and will be removed in a future release. Use set_extras instead")
+        self.set_default_compute_tag(new_default_tag)
+
+    @property
+    def default_priority(self) -> PriorityEnum:
+        logger = logging.getLogger(self.__class__.__name__)
+        logger.warning(
+            "'default_priority' is deprecated and will be removed in a future release. Use 'default_compute_priority' instead"
+        )
+        return self.default_compute_priority
+
+    def set_default_priority(self, new_default_priority: PriorityEnum):
+        logger = logging.getLogger(self.__class__.__name__)
+        logger.warning(
+            "set_default_priority is deprecated and will be removed in a future release. Use set_extras instead"
+        )
+        self.set_default_compute_priority(new_default_priority)
+
+    @property
+    def visibility(self) -> bool:
+        logger = logging.getLogger(self.__class__.__name__)
+        logger.warning("'visibility' is deprecated and will be removed in a future release")
+        return True
+
+    def set_visibility(self, new_visibility: bool):
+        logger = logging.getLogger(self.__class__.__name__)
+        logger.warning("set_visibility is deprecated and will be removed in a future release")
+
+    @property
+    def group(self) -> str:
+        logger = logging.getLogger(self.__class__.__name__)
+        logger.warning("'group' is deprecated and will be removed in a future release")
+        return "default"
+
+    def set_group(self, new_group: str):
+        logger = logging.getLogger(self.__class__.__name__)
+        logger.warning("set_group is deprecated and will be removed in a future release")
 
     ###################################
     # Specifications
@@ -1642,11 +1692,13 @@ class BaseDataset(BaseModel):
         **kwargs,  # For deprecated parameters
     ):
 
+        # TODO - DEPRECATED - remove eventually
+        logger = logging.getLogger(self.__class__.__name__)
         if "new_tag" in kwargs:
-            logging.warning("'new_tag' is deprecated; use 'new_compute_tag' instead")
+            logger.warning("'new_tag' is deprecated; use 'new_compute_tag' instead")
             new_compute_tag = kwargs["new_tag"]
         if "new_priority" in kwargs:
-            logging.warning("'new_priority' is deprecated; use 'new_compute_priority' instead")
+            logger.warning("'new_priority' is deprecated; use 'new_compute_priority' instead")
             new_compute_priority = kwargs["new_priority"]
 
         self.assert_is_not_view()

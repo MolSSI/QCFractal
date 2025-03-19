@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 import sys
 from datetime import datetime
@@ -317,6 +318,21 @@ class RecordTask(BaseModel):
     compute_priority: PriorityEnum
     required_programs: List[str]
 
+    # TODO - DEPRECATED - remove at some point
+    @property
+    def tag(self) -> str:
+        logger = logging.getLogger(self.__class__.__name__)
+        logger.warning("'tag' is deprecated and will be removed in a future release. Use 'compute_tag' instead")
+        return self.compute_tag
+
+    @property
+    def priority(self) -> PriorityEnum:
+        logger = logging.getLogger(self.__class__.__name__)
+        logger.warning(
+            "'priority' is deprecated and will be removed in a future release. Use 'compute_priority' instead"
+        )
+        return self.compute_priority
+
     @property
     def function_kwargs(self) -> Optional[Dict[str, Any]]:
         if self.function_kwargs_compressed is None:
@@ -324,6 +340,7 @@ class RecordTask(BaseModel):
         else:
             return decompress(self.function_kwargs_compressed, CompressionEnum.zstd)
 
+    # TODO - DEPRECATED - remove at some point
     @root_validator(pre=True)
     def _old_tag_priority(cls, values):
         if "tag" in values:
