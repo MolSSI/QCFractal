@@ -103,9 +103,12 @@ class BaseDatasetORM(BaseORM):
         d["owner_group"] = self.owner_group.groupname if self.owner_group is not None else None
 
         # TODO - DEPRECATED - REMOVE EVENTUALLY
+        # Keep API the same for v1
         d["group"] = "default"
         d["visibility"] = True
-        d["metadata"] = {}
+        if "extras" in d:
+            d["metadata"] = d.pop("extras")
+            d["extras"] = {}
 
         return d
 

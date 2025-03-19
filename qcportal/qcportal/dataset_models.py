@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import math
 import os
 from datetime import datetime
@@ -151,17 +152,12 @@ class BaseDataset(BaseModel):
     def __init__(self, client: Optional[PortalClient] = None, cache_data: Optional[DatasetCache] = None, **kwargs):
 
         # TODO - DEPRECATED - remove eventually
-        # These are sometimes returned from older servers
-        if "metadata" in kwargs:
-            # Overwrite extras if there actually is something in metadata
-            if kwargs["metadata"]:
-                kwargs["extras"] = kwargs.pop("metadata")
-            else:
-                del kwargs["metadata"]
         if "group" in kwargs:
             del kwargs["group"]
         if "visibility" in kwargs:
             del kwargs["visibility"]
+        if "metadata" in kwargs:
+            kwargs["extras"] = kwargs.pop("metadata")
 
         BaseModel.__init__(self, **kwargs)
 
@@ -774,6 +770,20 @@ class BaseDataset(BaseModel):
 
     def set_default_priority(self, new_default_priority: PriorityEnum):
         self._update_metadata(default_priority=new_default_priority)
+
+    ##########################################
+    # DEPRECATED - for backwards compatibility
+    ##########################################
+    @property
+    def metadata(self) -> Dict[str, Any]:
+        logger = logging.getLogger(self.__class__.__name__)
+        logger.warning("'metadata' is deprecated and will be removed in a future release. Use 'extras' instead")
+        return self.extras
+
+    def set_metadata(self, new_metadata: Dict[str, Any]):
+        logger = logging.getLogger(self.__class__.__name__)
+        logger.warning("set_metadata is deprecated and will be removed in a future release. Use set_extras instead")
+        self.set_extras(new_metadata)
 
     ###################################
     # Specifications
