@@ -33,6 +33,7 @@ from .record_db_models import (
     ManybodySpecificationLevelsORM,
 )
 from ..record_socket import BaseRecordSocket
+from ..record_utils import append_output
 
 _qcm_spec = importlib.util.find_spec("qcmanybody")
 
@@ -192,7 +193,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
             table_rows, headers=["model chemistry", "fragments", "basis", "molecule_id", "formula", "hash"]
         )
 
-        self.root_socket.records.append_output(session, mb_orm, OutputTypeEnum.stdout, output)
+        append_output(session, mb_orm, OutputTypeEnum.stdout, output)
 
     def iterate_service(
         self,
@@ -249,7 +250,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
 
         if len(submitted) != 0:
             output = f"\nSubmitted {len(submitted)} singlepoint calculations "
-            self.root_socket.records.append_output(session, mb_orm, OutputTypeEnum.stdout, output)
+            append_output(session, mb_orm, OutputTypeEnum.stdout, output)
             return False
 
         output = "\n\n" + "*" * 80 + "\n"
@@ -290,7 +291,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
 
         output += "\n\n" + "=" * 40 + "\nManybody expansion results\n" + "=" * 40 + "\n"
         output += mb_orm.properties.pop("stdout")
-        self.root_socket.records.append_output(session, mb_orm, OutputTypeEnum.stdout, output)
+        append_output(session, mb_orm, OutputTypeEnum.stdout, output)
 
         # We are done!
         return True

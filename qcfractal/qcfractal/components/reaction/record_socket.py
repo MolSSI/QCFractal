@@ -25,6 +25,7 @@ from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnu
 from qcportal.utils import hash_dict, is_included
 from .record_db_models import ReactionComponentORM, ReactionSpecificationORM, ReactionRecordORM
 from ..record_socket import BaseRecordSocket
+from ..record_utils import append_output
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -93,7 +94,7 @@ class ReactionRecordSocket(BaseRecordSocket):
         output += tabulate.tabulate(table_rows, headers=["coefficient", "molecule", "molecule id"])
         output += "\n\n"
 
-        self.root_socket.records.append_output(session, rxn_orm, OutputTypeEnum.stdout, output)
+        append_output(session, rxn_orm, OutputTypeEnum.stdout, output)
 
         # Reactions are simple and don't require a service state
 
@@ -288,7 +289,7 @@ class ReactionRecordSocket(BaseRecordSocket):
 
             rxn_orm.total_energy = total_energy
 
-        self.root_socket.records.append_output(session, rxn_orm, OutputTypeEnum.stdout, output)
+        append_output(session, rxn_orm, OutputTypeEnum.stdout, output)
 
         return not (opt_mols_to_compute or sp_mols_to_compute)
 

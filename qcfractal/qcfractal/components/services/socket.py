@@ -17,7 +17,9 @@ from qcportal.metadata_models import InsertMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
 from qcportal.utils import now_at_utc
 from .db_models import ServiceQueueORM, ServiceDependencyORM, ServiceSubtaskRecordORM
+from ..outputstore.utils import create_output_orm
 from ..record_socket import BaseRecordSocket
+from ..record_utils import append_output
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -298,13 +300,13 @@ class ServiceSocket:
                     hist.modified_on = now
 
                     stdout_str = f"Starting service: {service_orm.record.record_type} at {now}"
-                    stdout = self.root_socket.records.create_output_orm(OutputTypeEnum.stdout, stdout_str)
+                    stdout = create_output_orm(OutputTypeEnum.stdout, stdout_str)
                     hist.outputs[OutputTypeEnum.stdout] = stdout
 
                     service_orm.record.compute_history.append(hist)
 
                 else:  # this was (probably) a restart
-                    self.root_socket.records.append_output(
+                    append_output(
                         session,
                         service_orm.record,
                         OutputTypeEnum.stdout,

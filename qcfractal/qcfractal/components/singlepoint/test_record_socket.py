@@ -13,7 +13,7 @@ from qcportal.singlepoint import QCSpecification, SinglepointDriver, Singlepoint
 from qcportal.utils import now_at_utc
 from .record_db_models import SinglepointRecordORM
 from .testing_helpers import test_specs, load_test_data, run_test_data
-from ..record_socket import build_extras_properties
+from ..record_utils import build_extras_properties
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

@@ -43,6 +43,7 @@ from .record_db_models import (
     NEBRecordORM,
 )
 from ..record_socket import BaseRecordSocket
+from ..record_utils import append_output
 
 # geometric package is optional
 _geo_spec = importlib.util.find_spec("geometric")
@@ -140,7 +141,7 @@ class NEBRecordSocket(BaseRecordSocket):
         molecule_template.pop("identifiers", None)
         molecule_template.pop("id", None)
 
-        self.root_socket.records.append_output(session, neb_orm, OutputTypeEnum.stdout, output)
+        append_output(session, neb_orm, OutputTypeEnum.stdout, output)
 
         molecule_template_str = json.dumps(molecule_template)
         service_state = NEBServiceState(
@@ -313,7 +314,7 @@ class NEBRecordSocket(BaseRecordSocket):
                 finished = True
                 output += "\nNEB calculation is completed with %i iterations" % service_state.iteration
 
-        self.root_socket.records.append_output(session, neb_orm, OutputTypeEnum.stdout, output)
+        append_output(session, neb_orm, OutputTypeEnum.stdout, output)
         service_orm.service_state = service_state.dict()
         sqlalchemy.orm.attributes.flag_modified(service_orm, "service_state")
         return finished
