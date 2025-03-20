@@ -964,7 +964,7 @@ class RecordSocket:
 
         return self.get_base(wp, record_ids, include, exclude, missing_ok, session=session)
 
-    def create_compute_history_entry(
+    def create_compute_history_orms_from_schema_v1(
         self,
         result: AllResultTypes,
     ) -> RecordComputeHistoryORM:
@@ -1004,7 +1004,7 @@ class RecordSocket:
 
         return history_orm
 
-    def create_native_files_orms(self, result: AllResultTypes) -> Dict[str, NativeFileORM]:
+    def create_native_files_orms_from_schema_v1(self, result: AllResultTypes) -> Dict[str, NativeFileORM]:
         """
         Convert the native files stored in a QCElemental result to an ORM
         """
@@ -1118,12 +1118,12 @@ class RecordSocket:
 
         # Do these before calling the record-specific handler
         # (these may pull stuff out of extras)
-        history_orm = self.create_compute_history_entry(result)
+        history_orm = self.create_compute_history_orms_from_schema_v1(result)
         history_orm.record_id = record_id
         history_orm.manager_name = manager_name
         session.add(history_orm)
 
-        native_files_orms = self.create_native_files_orms(result)
+        native_files_orms = self.create_native_files_orms_from_schema_v1(result)
         for v in native_files_orms.values():
             v.record_id = record_id
             session.add(v)
@@ -1350,8 +1350,8 @@ class RecordSocket:
             # idx_results is a list of tuple (idx, result). idx is the index in the
             # original results (function parameter)
             type_results = [r for _, r in idx_results]
-            history_orms = [self.create_compute_history_entry(r) for r in type_results]
-            native_files_orms = [self.create_native_files_orms(r) for r in type_results]
+            history_orms = [self.create_compute_history_orms_from_schema_v1(r) for r in type_results]
+            native_files_orms = [self.create_native_files_orms_from_schema_v1(r) for r in type_results]
 
             # Now the record-specific stuff
             handler = self._handler_map_by_schema[schema_name]
