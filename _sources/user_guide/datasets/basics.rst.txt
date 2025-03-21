@@ -130,13 +130,13 @@ Datasets have some useful metadata and properties
 * **default_tag** and **default_priority** are the defaults used when submitting new computations (can be overridden
   in :meth:`~qcportal.dataset_models.BaseDataset.submit`, see :ref:`dataset_submission`).
 * **provenance** is a user-defined dictionary with any provenance or source information
-* **metadata** is a user-defined dictionary with any other metadata the user wants to attach to the dataset
+* **extras** is a user-defined dictionary with any other metadata the user wants to attach to the dataset
 
 
 This metadata is created when the dataset is constructed on the server, but can be changed
 with :meth:`~qcportal.dataset_models.BaseDataset.set_name`,
 :meth:`~qcportal.dataset_models.BaseDataset.set_description`,
-:meth:`~qcportal.dataset_models.BaseDataset.set_metadata`, and so on.
+:meth:`~qcportal.dataset_models.BaseDataset.set_extras`, and so on.
 
 .. tab-set::
 

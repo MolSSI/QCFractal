@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=5b68c0f2"></script>
+    <script src="../../_static/documentation_options.js?v=64c69d60"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Datasets" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.59.post22+g85b51789e" />
+  <meta name="docsearch:version" content="0.59.post27+gf1466641c" />
   </head>
   
   
@@ -639,12 +639,12 @@ among the other datasets</p></li>
 <li><p><strong>default_tag</strong> and <strong>default_priority</strong> are the defaults used when submitting new computations (can be overridden
 in <a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.submit" title="qcportal.dataset_models.BaseDataset.submit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">submit()</span></code></a>, see <a class="reference internal" href="creating.html#dataset-submission"><span class="std std-ref">Submitting Computations</span></a>).</p></li>
 <li><p><strong>provenance</strong> is a user-defined dictionary with any provenance or source information</p></li>
-<li><p><strong>metadata</strong> is a user-defined dictionary with any other metadata the user wants to attach to the dataset</p></li>
+<li><p><strong>extras</strong> is a user-defined dictionary with any other metadata the user wants to attach to the dataset</p></li>
 </ul>
 <p>This metadata is created when the dataset is constructed on the server, but can be changed
 with <a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_name" title="qcportal.dataset_models.BaseDataset.set_name"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_name()</span></code></a>,
 <a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_description" title="qcportal.dataset_models.BaseDataset.set_description"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_description()</span></code></a>,
-<a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_metadata" title="qcportal.dataset_models.BaseDataset.set_metadata"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_metadata()</span></code></a>, and so on.</p>
+<a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_extras" title="qcportal.dataset_models.BaseDataset.set_extras"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_extras()</span></code></a>, and so on.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-3" name="sd-tab-set-3" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-3">

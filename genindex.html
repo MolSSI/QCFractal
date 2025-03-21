@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=5b68c0f2"></script>
+    <script src="_static/documentation_options.js?v=64c69d60"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.59.post22+g85b51789e" />
+  <meta name="docsearch:version" content="0.59.post27+gf1466641c" />
   </head>
   
   
@@ -2120,6 +2120,10 @@
       <ul>
         <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord.extras">(BaseRecord attribute)</a>
 </li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetAddBody.extras">(DatasetAddBody attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetModifyMetadata.extras">(DatasetModifyMetadata attribute)</a>
+</li>
         <li><a href="user_guide/qcportal_reference/tasks_services.html#qcportal.generic_result.GenericTaskResult.extras">(GenericTaskResult attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDataset.extras">(GridoptimizationDataset attribute)</a>
@@ -2557,6 +2561,8 @@
       </ul></li>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.get_reactions">get_reactions() (PortalClient method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.get_record">get_record() (BaseDataset method)</a>
 
       <ul>
@@ -2579,8 +2585,6 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.get_record">(TorsiondriveDataset method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.get_records">get_records() (DatasetCache method)</a>
 
       <ul>
@@ -2673,28 +2677,6 @@
 </li>
       <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveKeywords.grid_spacing">grid_spacing (TorsiondriveKeywords attribute)</a>
 </li>
-      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.group">group (BaseDataset attribute)</a>
-
-      <ul>
-        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetAddBody.group">(DatasetAddBody attribute)</a>
-</li>
-        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetModifyMetadata.group">(DatasetModifyMetadata attribute)</a>
-</li>
-        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDataset.group">(GridoptimizationDataset attribute)</a>
-</li>
-        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.dataset_models.ManybodyDataset.group">(ManybodyDataset attribute)</a>
-</li>
-        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDataset.group">(NEBDataset attribute)</a>
-</li>
-        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDataset.group">(OptimizationDataset attribute)</a>
-</li>
-        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDataset.group">(ReactionDataset attribute)</a>
-</li>
-        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDataset.group">(SinglepointDataset attribute)</a>
-</li>
-        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.group">(TorsiondriveDataset attribute)</a>
-</li>
-      </ul></li>
       <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogSummaryFilters.group_by">group_by (AccessLogSummaryFilters attribute)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.GroupByEnum">GroupByEnum (class in qcportal.serverinfo.models)</a>
@@ -3303,26 +3285,22 @@
       </ul></li>
       <li><a href="user_guide/qcportal_reference/metadata_models.html#qcportal.metadata_models.InsertMetadata.merge">merge() (InsertMetadata static method)</a>
 </li>
-      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.metadata">metadata (BaseDataset attribute)</a>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.metadata">metadata (BaseDataset property)</a>
 
       <ul>
-        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetAddBody.metadata">(DatasetAddBody attribute)</a>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDataset.metadata">(GridoptimizationDataset property)</a>
 </li>
-        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetModifyMetadata.metadata">(DatasetModifyMetadata attribute)</a>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.dataset_models.ManybodyDataset.metadata">(ManybodyDataset property)</a>
 </li>
-        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDataset.metadata">(GridoptimizationDataset attribute)</a>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDataset.metadata">(NEBDataset property)</a>
 </li>
-        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.dataset_models.ManybodyDataset.metadata">(ManybodyDataset attribute)</a>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDataset.metadata">(OptimizationDataset property)</a>
 </li>
-        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDataset.metadata">(NEBDataset attribute)</a>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDataset.metadata">(ReactionDataset property)</a>
 </li>
-        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDataset.metadata">(OptimizationDataset attribute)</a>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDataset.metadata">(SinglepointDataset property)</a>
 </li>
-        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDataset.metadata">(ReactionDataset attribute)</a>
-</li>
-        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDataset.metadata">(SinglepointDataset attribute)</a>
-</li>
-        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.metadata">(TorsiondriveDataset attribute)</a>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.metadata">(TorsiondriveDataset property)</a>
 </li>
       </ul></li>
       <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogEntry.method">method (AccessLogEntry attribute)</a>
@@ -5161,22 +5139,22 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.set_description">(TorsiondriveDataset method)</a>
 </li>
       </ul></li>
-      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_group">set_group() (BaseDataset method)</a>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_extras">set_extras() (BaseDataset method)</a>
 
       <ul>
-        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDataset.set_group">(GridoptimizationDataset method)</a>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDataset.set_extras">(GridoptimizationDataset method)</a>
 </li>
-        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.dataset_models.ManybodyDataset.set_group">(ManybodyDataset method)</a>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.dataset_models.ManybodyDataset.set_extras">(ManybodyDataset method)</a>
 </li>
-        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDataset.set_group">(NEBDataset method)</a>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDataset.set_extras">(NEBDataset method)</a>
 </li>
-        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDataset.set_group">(OptimizationDataset method)</a>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDataset.set_extras">(OptimizationDataset method)</a>
 </li>
-        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDataset.set_group">(ReactionDataset method)</a>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDataset.set_extras">(ReactionDataset method)</a>
 </li>
-        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDataset.set_group">(SinglepointDataset method)</a>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDataset.set_extras">(SinglepointDataset method)</a>
 </li>
-        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.set_group">(TorsiondriveDataset method)</a>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.set_extras">(TorsiondriveDataset method)</a>
 </li>
       </ul></li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_metadata">set_metadata() (BaseDataset method)</a>
@@ -5269,24 +5247,6 @@
         <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDataset.set_tags">(SinglepointDataset method)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.set_tags">(TorsiondriveDataset method)</a>
-</li>
-      </ul></li>
-      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_visibility">set_visibility() (BaseDataset method)</a>
-
-      <ul>
-        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDataset.set_visibility">(GridoptimizationDataset method)</a>
-</li>
-        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.dataset_models.ManybodyDataset.set_visibility">(ManybodyDataset method)</a>
-</li>
-        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDataset.set_visibility">(NEBDataset method)</a>
-</li>
-        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDataset.set_visibility">(OptimizationDataset method)</a>
-</li>
-        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDataset.set_visibility">(ReactionDataset method)</a>
-</li>
-        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDataset.set_visibility">(SinglepointDataset method)</a>
-</li>
-        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.set_visibility">(TorsiondriveDataset method)</a>
 </li>
       </ul></li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetAttachment.sha256sum">sha256sum (DatasetAttachment attribute)</a>
@@ -6059,28 +6019,6 @@
 </li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetAttachmentType.view">view (DatasetAttachmentType attribute)</a>
 </li>
-      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.visibility">visibility (BaseDataset attribute)</a>
-
-      <ul>
-        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetAddBody.visibility">(DatasetAddBody attribute)</a>
-</li>
-        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetModifyMetadata.visibility">(DatasetModifyMetadata attribute)</a>
-</li>
-        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDataset.visibility">(GridoptimizationDataset attribute)</a>
-</li>
-        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.dataset_models.ManybodyDataset.visibility">(ManybodyDataset attribute)</a>
-</li>
-        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDataset.visibility">(NEBDataset attribute)</a>
-</li>
-        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDataset.visibility">(OptimizationDataset attribute)</a>
-</li>
-        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDataset.visibility">(ReactionDataset attribute)</a>
-</li>
-        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDataset.visibility">(SinglepointDataset attribute)</a>
-</li>
-        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.visibility">(TorsiondriveDataset attribute)</a>
-</li>
-      </ul></li>
       <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.BSSECorrectionEnum.vmfc">vmfc (BSSECorrectionEnum attribute)</a>
 </li>
   </ul></td>
