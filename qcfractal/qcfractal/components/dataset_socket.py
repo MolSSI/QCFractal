@@ -789,17 +789,20 @@ class BaseDatasetSocket:
                     )
                 )
 
-                existing_entries = session.execute(stmt).scalars().all()
+                existing_entries = set(session.execute(stmt).scalars().all())
+                entries_to_add = []
 
                 for entry in entry_orm_batch:
                     # Only add if the entry does not exist
                     if entry.name in existing_entries:
                         existing_idx.append(idx)
                     else:
-                        session.add(entry)
+                        entries_to_add.append(entry)
                         inserted_idx.append(idx)
 
                     idx += 1
+
+                session.add_all(entries_to_add)
 
         return InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx)
 
