@@ -238,7 +238,7 @@ class TaskSocket:
         self,
         manager_name: str,
         programs: Dict[str, List[str]],
-        tags: List[str],
+        compute_tags: List[str],
         limit: Optional[int] = None,
         *,
         session: Optional[Session] = None,
@@ -252,7 +252,7 @@ class TaskSocket:
         ----------
         manager_name
             Name of the manager requesting tasks
-        tags
+        compute_tags
             Subset of tags to claim tasks for
         limit
             Maximum number of tasks that the manager can claim
@@ -266,7 +266,7 @@ class TaskSocket:
         limit = calculate_limit(self._tasks_claim_limit, limit)
 
         # Force given tags and programs to be lower case
-        tags = [tag.lower() for tag in tags]
+        compute_tags = [tag.lower() for tag in compute_tags]
         programs = {key.lower(): [x.lower() for x in value] for key, value in programs.items()}
 
         with self.root_socket.optional_session(session) as session:
@@ -284,7 +284,7 @@ class TaskSocket:
             # Remove tags & programs that we didn't say we handled
             # (order is important for tags)
             search_programs = array(p for p in programs.keys() if p in manager.programs.keys())
-            search_tags = [x for x in tags if x in manager.tags]
+            search_tags = [x for x in compute_tags if x in manager.compute_tags]
 
             if len(search_programs) == 0:
                 self._logger.warning(f"Manager {manager_name} did not send any valid programs to claim")

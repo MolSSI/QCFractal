@@ -2025,7 +2025,7 @@ class RecordSocket:
         rec_stmt = rec_stmt.where(BaseRecordORM.id == record_id)
 
         # All active managers
-        manager_stmt = select(ComputeManagerORM.name, ComputeManagerORM.tags, ComputeManagerORM.programs)
+        manager_stmt = select(ComputeManagerORM.name, ComputeManagerORM.compute_tags, ComputeManagerORM.programs)
         manager_stmt = manager_stmt.where(ComputeManagerORM.status == ManagerStatusEnum.active)
 
         with self.root_socket.optional_session(session, True) as session:

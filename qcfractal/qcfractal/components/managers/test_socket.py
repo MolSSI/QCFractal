@@ -27,7 +27,7 @@ def test_manager_socket_deactivate_before_notasks(storage_socket: SQLAlchemySock
         manager_version="v2.0",
         username="bill",
         programs={"qcengine": ["unknown"], "qcprog": ["unknown"], "qcprog2": ["v3.0"]},
-        tags=["tag1", "tag2"],
+        compute_tags=["tag1", "tag2"],
     )
 
     time_1 = now_at_utc()
@@ -36,7 +36,7 @@ def test_manager_socket_deactivate_before_notasks(storage_socket: SQLAlchemySock
         manager_version="v2.0",
         username="bill",
         programs={"qcengine": ["unknown"], "qcprog": ["unknown"], "qcprog2": ["v3.0"]},
-        tags=["tag1", "tag2"],
+        compute_tags=["tag1", "tag2"],
     )
 
     name1 = mname1.fullname
@@ -74,7 +74,7 @@ def test_manager_socket_get_proj(storage_socket: SQLAlchemySocket):
         manager_version="v2.0",
         username="bill",
         programs={"qcengine": ["unknown"], "qcprog": ["unknown"], "qcprog2": ["v3.0"]},
-        tags=["tag1", "tag2"],
+        compute_tags=["tag1", "tag2"],
     )
 
     storage_socket.managers.activate(
@@ -82,7 +82,7 @@ def test_manager_socket_get_proj(storage_socket: SQLAlchemySocket):
         manager_version="v2.0",
         username="bill",
         programs={"qcengine": ["unknown"], "qcprog": ["unknown"], "qcprog2": ["v3.0"]},
-        tags=["tag1", "tag2"],
+        compute_tags=["tag1", "tag2"],
     )
 
     name1 = mname1.fullname

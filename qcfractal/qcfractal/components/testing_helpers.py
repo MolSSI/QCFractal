@@ -39,7 +39,7 @@ def populate_records_status(storage_socket: SQLAlchemySocket):
         manager_version="v2.0",
         username="bill",
         programs=manager_programs,
-        tags=["tag1", "tag2", "tag3", "tag6"],
+        compute_tags=["tag1", "tag2", "tag3", "tag6"],
     )
 
     input_spec_0, molecule_0, result_data_0 = load_opt_test_data("opt_psi4_methane_sometraj")
