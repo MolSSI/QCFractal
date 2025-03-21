@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import math
 import os
 from datetime import datetime
@@ -22,10 +23,10 @@ from typing import (
 
 try:
     import pydantic.v1 as pydantic
-    from pydantic.v1 import BaseModel, Extra, validator, PrivateAttr, Field
+    from pydantic.v1 import BaseModel, Extra, validator, PrivateAttr, Field, root_validator
 except ImportError:
     import pydantic
-    from pydantic import BaseModel, Extra, validator, PrivateAttr, Field
+    from pydantic import BaseModel, Extra, validator, PrivateAttr, Field, root_validator
 from qcelemental.models.types import Array
 from tabulate import tabulate
 from tqdm import tqdm
@@ -106,18 +107,14 @@ class BaseDataset(BaseModel):
     description: str
     tagline: str
     tags: List[str]
-    group: str
-    visibility: bool
     provenance: Dict[str, Any]
+    extras: Dict[str, Any]
 
     default_tag: str
     default_priority: PriorityEnum
 
     owner_user: Optional[str]
     owner_group: Optional[str]
-
-    metadata: Dict[str, Any]
-    extras: Dict[str, Any]
 
     ########################################
     # Caches of information
@@ -153,6 +150,15 @@ class BaseDataset(BaseModel):
     auto_fetch_missing: bool = True  # Automatically fetch missing records from the server
 
     def __init__(self, client: Optional[PortalClient] = None, cache_data: Optional[DatasetCache] = None, **kwargs):
+
+        # TODO - DEPRECATED - remove eventually
+        if "group" in kwargs:
+            del kwargs["group"]
+        if "visibility" in kwargs:
+            del kwargs["visibility"]
+        if "metadata" in kwargs:
+            kwargs["extras"] = kwargs.pop("metadata")
+
         BaseModel.__init__(self, **kwargs)
 
         # Calls derived class propagate_client
@@ -273,12 +279,10 @@ class BaseDataset(BaseModel):
             "description": self.description,
             "tagline": self.tagline,
             "tags": self.tags,
-            "group": self.group,
-            "visibility": self.visibility,
             "provenance": self.provenance,
             "default_tag": self.default_tag,
             "default_priority": self.default_priority,
-            "metadata": self.metadata,
+            "extras": self.extras,
         }
 
         new_body.update(**kwargs)
@@ -289,12 +293,10 @@ class BaseDataset(BaseModel):
         self.description = body.description
         self.tagline = body.tagline
         self.tags = body.tags
-        self.group = body.group
-        self.visibility = body.visibility
         self.provenance = body.provenance
         self.default_tag = body.default_tag
         self.default_priority = body.default_priority
-        self.metadata = body.metadata
+        self.extras = body.extras
 
         self._cache_data.update_metadata("dataset_metadata", self)
 
@@ -751,12 +753,6 @@ class BaseDataset(BaseModel):
     def set_description(self, new_description: str):
         self._update_metadata(description=new_description)
 
-    def set_visibility(self, new_visibility: bool):
-        self._update_metadata(visibility=new_visibility)
-
-    def set_group(self, new_group: str):
-        self._update_metadata(group=new_group)
-
     def set_tags(self, new_tags: List[str]):
         self._update_metadata(tags=new_tags)
 
@@ -766,14 +762,28 @@ class BaseDataset(BaseModel):
     def set_provenance(self, new_provenance: Dict[str, Any]):
         self._update_metadata(provenance=new_provenance)
 
-    def set_metadata(self, new_metadata: Dict[str, Any]):
-        self._update_metadata(metadata=new_metadata)
+    def set_extras(self, new_extras: Dict[str, Any]):
+        self._update_metadata(extras=new_extras)
 
     def set_default_tag(self, new_default_tag: str):
         self._update_metadata(default_tag=new_default_tag)
 
     def set_default_priority(self, new_default_priority: PriorityEnum):
         self._update_metadata(default_priority=new_default_priority)
+
+    ##########################################
+    # DEPRECATED - for backwards compatibility
+    ##########################################
+    @property
+    def metadata(self) -> Dict[str, Any]:
+        logger = logging.getLogger(self.__class__.__name__)
+        logger.warning("'metadata' is deprecated and will be removed in a future release. Use 'extras' instead")
+        return self.extras
+
+    def set_metadata(self, new_metadata: Dict[str, Any]):
+        logger = logging.getLogger(self.__class__.__name__)
+        logger.warning("set_metadata is deprecated and will be removed in a future release. Use set_extras instead")
+        self.set_extras(new_metadata)
 
     ###################################
     # Specifications
@@ -2191,14 +2201,24 @@ class DatasetAddBody(RestModelBase):
     description: str
     tagline: str
     tags: List[str]
-    group: str
     provenance: Dict[str, Any]
-    visibility: bool
     default_tag: str
     default_priority: PriorityEnum
-    metadata: Dict[str, Any]
+    extras: Dict[str, Any]
     owner_group: Optional[str]
     existing_ok: bool = False
+
+    # TODO - DEPRECATED - Remove eventually
+    @root_validator(pre=True)
+    def _rm_deprecated(cls, values):
+        if "group" in values:
+            del values["group"]
+        if "visibility" in values:
+            del values["visibility"]
+        if "metadata" in values:
+            values["extras"] = values.pop("metadata")
+
+        return values
 
 
 class DatasetModifyMetadata(RestModelBase):
@@ -2206,13 +2226,23 @@ class DatasetModifyMetadata(RestModelBase):
     description: str
     tags: List[str]
     tagline: str
-    group: str
-    visibility: bool
     provenance: Optional[Dict[str, Any]]
-    metadata: Optional[Dict[str, Any]]
+    extras: Optional[Dict[str, Any]]
 
     default_tag: str
     default_priority: PriorityEnum
+
+    # TODO - DEPRECATED - Remove eventually
+    @root_validator(pre=True)
+    def _rm_deprecated(cls, values):
+        if "group" in values:
+            del values["group"]
+        if "visibility" in values:
+            del values["visibility"]
+        if "metadata" in values:
+            values["extras"] = values.pop("metadata")
+
+        return values
 
 
 class DatasetQueryModel(RestModelBase):

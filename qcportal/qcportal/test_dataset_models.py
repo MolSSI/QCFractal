@@ -17,18 +17,16 @@ if TYPE_CHECKING:
 
 def test_dataset_model_basic(submitter_client: PortalClient):
     ds = submitter_client.add_dataset(
-        "optimization",
-        "Test dataset",
-        "Test Description",
-        "a Tagline",
-        ["tag1", "tag2"],
-        "new_group",
-        {"prov_key_1": "prov_value_1"},
-        True,
-        "def_tag",
-        PriorityEnum.low,
-        {"meta_key_1": "meta_value_1"},
-        "group1",
+        dataset_type="optimization",
+        name="Test dataset",
+        description="Test Description",
+        tagline="a Tagline",
+        tags=["tag1", "tag2"],
+        provenance={"prov_key_1": "prov_value_1"},
+        default_tag="def_tag",
+        default_priority=PriorityEnum.low,
+        extras={"meta_key_1": "meta_value_1"},
+        owner_group="group1",
     )
 
     assert ds.dataset_type == "optimization"
@@ -36,9 +34,7 @@ def test_dataset_model_basic(submitter_client: PortalClient):
     assert ds.description == "Test Description"
     assert ds.tagline == "a Tagline"
     assert ds.tags == ["tag1", "tag2"]
-    assert ds.group == "new_group"
     assert ds.provenance == {"prov_key_1": "prov_value_1"}
-    assert ds.visibility is True
     assert ds.default_tag == "def_tag"
     assert ds.default_priority == PriorityEnum.low
 
@@ -77,20 +73,9 @@ def test_dataset_model_metadata(snowflake_client: PortalClient):
         ds.set_name("name cOLLision")
     assert ds.name == "New dataset name"
 
-    ds.set_visibility(False)
-    assert ds.visibility is False
-    assert snowflake_client.get_dataset_by_id(ds_id).visibility is False
-    ds.set_visibility(True)
-    assert ds.visibility is True
-    assert snowflake_client.get_dataset_by_id(ds_id).visibility is True
-
     ds.set_description("This is a new description")
     assert ds.description == "This is a new description"
     assert snowflake_client.get_dataset_by_id(ds_id).description == "This is a new description"
-
-    ds.set_group("new_group")
-    assert ds.group == "new_group"
-    assert snowflake_client.get_dataset_by_id(ds_id).group == "new_group"
 
     ds.set_tags(["a_tag", "b_tag"])
     assert ds.tags == ["a_tag", "b_tag"]
@@ -104,9 +89,9 @@ def test_dataset_model_metadata(snowflake_client: PortalClient):
     assert ds.provenance == {"1": "hi"}
     assert snowflake_client.get_dataset_by_id(ds_id).provenance == {"1": "hi"}
 
-    ds.set_metadata({"2": "hello"})
-    assert ds.metadata == {"2": "hello"}
-    assert snowflake_client.get_dataset_by_id(ds_id).metadata == {"2": "hello"}
+    ds.set_extras({"2": "hello"})
+    assert ds.extras == {"2": "hello"}
+    assert snowflake_client.get_dataset_by_id(ds_id).extras == {"2": "hello"}
 
     ds.set_default_tag("new_def_tag")
     assert ds.default_tag == "new_def_tag"

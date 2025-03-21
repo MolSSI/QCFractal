@@ -286,37 +286,47 @@ class PortalClient(PortalClientBase):
         tags: Optional[List[str]] = None,
         group: Optional[str] = None,
         provenance: Optional[Dict[str, Any]] = None,
-        visibility: bool = True,
+        visibility: bool = None,
         default_tag: str = "*",
         default_priority: PriorityEnum = PriorityEnum.normal,
-        metadata: Optional[Dict[str, Any]] = None,
+        extras: Optional[Dict[str, Any]] = None,
         owner_group: Optional[str] = None,
         existing_ok: bool = False,
+        **kwargs,  # For deprecated parameters
     ) -> BaseDataset:
+
+        # TODO - DEPRECATED - Remove eventually
+        if group is not None:
+            self._logger.warning(f"'group' parameter has been deprecated and will be removed in a future version")
+        if visibility is not None:
+            self._logger.warning(f"'visibility' parameter has been deprecated and will be removed in a future version")
+
         if description is None:
             description = ""
         if tagline is None:
             tagline = ""
         if tags is None:
             tags = []
-        if group is None:
-            group = "default"
         if provenance is None:
             provenance = {}
-        if metadata is None:
-            metadata = {}
+        if extras is None:
+            extras = {}
+
+        if "metadata" in kwargs:
+            self._logger.warning(
+                f"'metadata' parameter has been deprecated and will be removed in a future version. Use 'extras' instead"
+            )
+            extras.update(kwargs["metadata"])
 
         body = DatasetAddBody(
             name=name,
             description=description,
             tagline=tagline,
             tags=tags,
-            group=group,
             provenance=provenance,
-            visibility=visibility,
             default_tag=default_tag,
             default_priority=default_priority,
-            metadata=metadata,
+            extras=extras,
             owner_group=owner_group,
             existing_ok=existing_ok,
         )
