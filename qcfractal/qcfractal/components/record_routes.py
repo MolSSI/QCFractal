@@ -38,7 +38,12 @@ def revert_records_v1(body_data: RecordRevertBody):
 @wrap_route("WRITE")
 def modify_records_v1(body_data: RecordModifyBody):
     return storage_socket.records.modify_generic(
-        body_data.record_ids, g.user_id, body_data.status, body_data.priority, body_data.tag, body_data.comment
+        body_data.record_ids,
+        g.user_id,
+        body_data.status,
+        body_data.compute_priority,
+        body_data.compute_tag,
+        body_data.comment,
     )
 
 

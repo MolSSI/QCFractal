@@ -31,14 +31,14 @@ def test_manager_mclient_activate(snowflake: QCATestingSnowflake):
     mclient1.activate(
         manager_version="v2.0",
         programs={"qcengine": ["unknown"], "program1": ["v3.0"]},
-        tags=["tag1", "tag2"],
+        compute_tags=["tag1", "tag2"],
     )
 
     time_1 = now_at_utc()
     mclient2.activate(
         manager_version="v2.0",
         programs={"qcengine": ["unknown"], "program1": ["v3.0"]},
-        tags=["tag1"],
+        compute_tags=["tag1"],
     )
     time_2 = now_at_utc()
 
@@ -50,7 +50,7 @@ def test_manager_mclient_activate(snowflake: QCATestingSnowflake):
     assert len(manager) == 2
 
     assert manager[0].name == name2
-    assert manager[0].tags == ["tag1"]
+    assert manager[0].compute_tags == ["tag1"]
     assert manager[0].status == ManagerStatusEnum.active
     assert manager[0].created_on > time_1
     assert manager[0].modified_on > time_1
@@ -60,7 +60,7 @@ def test_manager_mclient_activate(snowflake: QCATestingSnowflake):
     assert manager[1].name == name1
     assert manager[1].cluster == "test_cluster"
     assert manager[1].hostname == "a_host"
-    assert manager[1].tags == ["tag1", "tag2"]
+    assert manager[1].compute_tags == ["tag1", "tag2"]
     assert manager[1].status == ManagerStatusEnum.active
     assert manager[1].created_on > time_0
     assert manager[1].modified_on > time_0
@@ -78,11 +78,11 @@ def test_manager_mclient_activate_normalize(snowflake: QCATestingSnowflake):
     mclient1.activate(
         manager_version="v2.0",
         programs={"qcengine": ["unknown"], "program1": ["v3.0"], "PROgRam2": ["v4.0"], "PROGRAM4": ["v5.0-AB"]},
-        tags=["tag1", "taG3", "tAg2", "TAG3", "TAG1"],
+        compute_tags=["tag1", "taG3", "tAg2", "TAG3", "TAG1"],
     )
 
     manager = client.get_managers(mname1.fullname)
-    assert manager.tags == ["tag1", "tag3", "tag2"]
+    assert manager.compute_tags == ["tag1", "tag3", "tag2"]
     assert manager.programs == {
         "qcengine": ["unknown"],
         "program1": ["v3.0"],
@@ -100,14 +100,14 @@ def test_manager_mclient_activate_notags(snowflake: QCATestingSnowflake):
         mclient1.activate(
             manager_version="v2.0",
             programs={"qcengine": ["unknown"], "program1": ["v3.0"]},
-            tags=[],
+            compute_tags=[],
         )
 
     with pytest.raises(ValidationError, match=r"field contains no non-zero-length tags") as err:
         mclient1.activate(
             manager_version="v2.0",
             programs={"qcengine": ["unknown"], "program1": ["v3.0"]},
-            tags=[""],
+            compute_tags=[""],
         )
 
 
@@ -120,14 +120,14 @@ def test_manager_mclient_activate_noprogs(snowflake: QCATestingSnowflake):
         mclient1.activate(
             manager_version="v2.0",
             programs={},
-            tags=["tag1"],
+            compute_tags=["tag1"],
         )
 
     with pytest.raises(ValidationError, match=r"field contains no non-zero-length programs") as err:
         mclient1.activate(
             manager_version="v2.0",
             programs={"": ["unknown"]},
-            tags=["tag1"],
+            compute_tags=["tag1"],
         )
 
 
@@ -138,14 +138,14 @@ def test_manager_mclient_activate_duplicate(snowflake: QCATestingSnowflake):
     mclient1.activate(
         manager_version="v2.0",
         programs={"qcengine": ["unknown"], "program1": ["v3.0"]},
-        tags=["tag1"],
+        compute_tags=["tag1"],
     )
 
     with pytest.raises(PortalRequestError, match=r"already exists") as err:
         mclient1.activate(
             manager_version="v2.0",
             programs={"qcengine": ["unknown"], "program1": ["v3.0"]},
-            tags=["tag1"],
+            compute_tags=["tag1"],
         )
 
 
@@ -167,13 +167,13 @@ def test_manager_mclient_deactivate(snowflake: QCATestingSnowflake):
     mclient1.activate(
         manager_version="v2.0",
         programs=mprog1,
-        tags=["tag1", "tag2"],
+        compute_tags=["tag1", "tag2"],
     )
 
     mclient2.activate(
         manager_version="v2.0",
         programs=mprog2,
-        tags=["tag1"],
+        compute_tags=["tag1"],
     )
 
     name1 = mname1.fullname
@@ -208,7 +208,7 @@ def test_manager_mclient_deactivate_deactivated(snowflake: QCATestingSnowflake):
     mclient1.activate(
         manager_version="v2.0",
         programs={"qcengine": ["unkonwn"], "program1": ["v3.0"]},
-        tags=["tag1", "tag2"],
+        compute_tags=["tag1", "tag2"],
     )
 
     mclient1.deactivate(total_cpu_hours=2.0, active_tasks=1, active_cores=2, active_memory=7.0)
@@ -226,7 +226,7 @@ def test_manager_mclient_heartbeat(snowflake: QCATestingSnowflake):
     mclient1.activate(
         manager_version="v2.0",
         programs={"qcengine": ["unknown"], "program1": ["v3.0"]},
-        tags=["tag1", "tag2"],
+        compute_tags=["tag1", "tag2"],
     )
 
     time_1 = now_at_utc()
@@ -280,7 +280,7 @@ def test_manager_mclient_heartbeat_deactivated(snowflake: QCATestingSnowflake):
     mclient1.activate(
         manager_version="v2.0",
         programs={"qcengine": ["unknown"], "program1": ["v3.0"]},
-        tags=["tag1", "tag2"],
+        compute_tags=["tag1", "tag2"],
     )
 
     mclient1.deactivate(total_cpu_hours=2.0, active_tasks=1, active_cores=2, active_memory=7.0)

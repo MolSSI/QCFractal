@@ -28,7 +28,7 @@ def activate_manager_v1(body_data: ManagerActivationBody):
         manager_version=body_data.manager_version,
         username=body_data.username,
         programs=body_data.programs,
-        tags=body_data.tags,
+        compute_tags=body_data.compute_tags,
     )
 
 

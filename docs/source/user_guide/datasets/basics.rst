@@ -127,7 +127,7 @@ Datasets have some useful metadata and properties
 
 * **name**, **description**, **tagline**, **group**, and **tags** are user-defined metadata that categorize this dataset
   among the other datasets
-* **default_tag** and **default_priority** are the defaults used when submitting new computations (can be overridden
+* **default_compute_tag** and **default_compute_priority** are the defaults used when submitting new computations (can be overridden
   in :meth:`~qcportal.dataset_models.BaseDataset.submit`, see :ref:`dataset_submission`).
 * **provenance** is a user-defined dictionary with any provenance or source information
 * **extras** is a user-defined dictionary with any other metadata the user wants to attach to the dataset

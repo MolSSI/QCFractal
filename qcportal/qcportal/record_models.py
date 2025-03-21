@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 import sys
 from datetime import datetime
@@ -9,9 +10,9 @@ from typing import Optional, Dict, Any, List, Union, Iterable, Tuple, Type, Sequ
 from dateutil.parser import parse as date_parser
 
 try:
-    from pydantic.v1 import BaseModel, Extra, constr, validator, PrivateAttr, Field, parse_obj_as
+    from pydantic.v1 import BaseModel, Extra, constr, validator, PrivateAttr, Field, parse_obj_as, root_validator
 except ImportError:
-    from pydantic import BaseModel, Extra, constr, validator, PrivateAttr, Field, parse_obj_as
+    from pydantic import BaseModel, Extra, constr, validator, PrivateAttr, Field, parse_obj_as, root_validator
 from qcelemental.models.results import Provenance
 
 from qcportal.base_models import (
@@ -292,16 +293,6 @@ class NativeFile(BaseModel):
                 raise RuntimeError(f"Cannot write data of type {type(d)} to a file")
 
 
-class RecordInfoBackup(BaseModel):
-    class Config:
-        extra = Extra.forbid
-
-    old_status: RecordStatusEnum
-    old_tag: Optional[str]
-    old_priority: Optional[PriorityEnum]
-    modified_on: datetime
-
-
 class RecordComment(BaseModel):
     class Config:
         extra = Extra.forbid
@@ -323,9 +314,24 @@ class RecordTask(BaseModel):
     function: Optional[str]
     function_kwargs_compressed: Optional[bytes]
 
-    tag: str
-    priority: PriorityEnum
+    compute_tag: str
+    compute_priority: PriorityEnum
     required_programs: List[str]
+
+    # TODO - DEPRECATED - remove at some point
+    @property
+    def tag(self) -> str:
+        logger = logging.getLogger(self.__class__.__name__)
+        logger.warning("'tag' is deprecated and will be removed in a future release. Use 'compute_tag' instead")
+        return self.compute_tag
+
+    @property
+    def priority(self) -> PriorityEnum:
+        logger = logging.getLogger(self.__class__.__name__)
+        logger.warning(
+            "'priority' is deprecated and will be removed in a future release. Use 'compute_priority' instead"
+        )
+        return self.compute_priority
 
     @property
     def function_kwargs(self) -> Optional[Dict[str, Any]]:
@@ -333,6 +339,16 @@ class RecordTask(BaseModel):
             return None
         else:
             return decompress(self.function_kwargs_compressed, CompressionEnum.zstd)
+
+    # TODO - DEPRECATED - remove at some point
+    @root_validator(pre=True)
+    def _old_tag_priority(cls, values):
+        if "tag" in values:
+            values["compute_tag"] = values.pop("tag")
+        if "priority" in values:
+            values["compute_priority"] = values.pop("priority")
+
+        return values
 
 
 class ServiceDependency(BaseModel):
@@ -350,12 +366,21 @@ class RecordService(BaseModel):
     id: int
     record_id: int
 
-    tag: str
-    priority: PriorityEnum
+    compute_tag: str
+    compute_priority: PriorityEnum
     find_existing: bool
 
     service_state: Optional[Dict[str, Any]] = None
     dependencies: List[ServiceDependency]
+
+    @root_validator(pre=True)
+    def _old_tag_priority(cls, values):
+        if "tag" in values:
+            values["compute_tag"] = values.pop("tag")
+        if "priority" in values:
+            values["compute_priority"] = values.pop("priority")
+
+        return values
 
 
 class BaseRecord(BaseModel):
@@ -704,18 +729,38 @@ _Record_T = TypeVar("_Record_T", bound=BaseRecord)
 
 
 class RecordAddBodyBase(RestModelBase):
-    tag: constr(to_lower=True)
-    priority: PriorityEnum
+    compute_tag: constr(to_lower=True)
+    compute_priority: PriorityEnum
     owner_group: Optional[str]
     find_existing: bool = True
+
+    @root_validator(pre=True)
+    def _rm_deprecated(cls, values):
+        # TODO - DEPRECATED - Remove eventually
+        if "tag" in values:
+            values["compute_tag"] = values.pop("tag")
+        if "priority" in values:
+            values["compute_priority"] = values.pop("priority")
+
+        return values
 
 
 class RecordModifyBody(RestModelBase):
     record_ids: List[int]
     status: Optional[RecordStatusEnum] = None
-    priority: Optional[PriorityEnum] = None
-    tag: Optional[str] = None
+    compute_priority: Optional[PriorityEnum] = None
+    compute_tag: Optional[str] = None
     comment: Optional[str] = None
+
+    @root_validator(pre=True)
+    def _rm_deprecated(cls, values):
+        # TODO - DEPRECATED - Remove eventually
+        if "tag" in values:
+            values["compute_tag"] = values.pop("tag")
+        if "priority" in values:
+            values["compute_priority"] = values.pop("priority")
+
+        return values
 
 
 class RecordDeleteBody(RestModelBase):

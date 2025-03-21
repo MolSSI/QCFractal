@@ -37,14 +37,14 @@ def test_torsiondrive_client_tag_priority_as_service(snowflake_client: PortalCli
                 ),
             ),
             keywords=TorsiondriveKeywords(dihedrals=[(1, 2, 3, 4)], grid_spacing=[15], energy_upper_limit=0.04),
-            priority=priority,
-            tag=tag,
+            compute_priority=priority,
+            compute_tag=tag,
         )
 
         assert meta1.n_inserted == 1
         rec = snowflake_client.get_records(id1, include=["service"])
-        assert rec[0].service.tag == tag
-        assert rec[0].service.priority == priority
+        assert rec[0].service.compute_tag == tag
+        assert rec[0].service.compute_priority == priority
 
 
 @pytest.mark.parametrize("spec", test_specs)
@@ -62,8 +62,8 @@ def test_torsiondrive_client_add_get(
         "torsiondrive",
         keywords=spec.keywords,
         optimization_specification=spec.optimization_specification,
-        tag="tag1",
-        priority=PriorityEnum.low,
+        compute_tag="tag1",
+        compute_priority=PriorityEnum.low,
         owner_group=owner_group,
     )
     time_1 = now_at_utc()
@@ -80,8 +80,8 @@ def test_torsiondrive_client_add_get(
         assert r.status == RecordStatusEnum.waiting
         assert r.children_status == {}
 
-        assert r.service.tag == "tag1"
-        assert r.service.priority == PriorityEnum.low
+        assert r.service.compute_tag == "tag1"
+        assert r.service.compute_priority == PriorityEnum.low
 
         assert r.owner_user == submitter_client.username
         assert r.owner_group == owner_group
@@ -118,8 +118,8 @@ def test_torsiondrive_client_add_duplicate(
         "torsiondrive",
         keywords=spec.keywords,
         optimization_specification=spec.optimization_specification,
-        tag="tag1",
-        priority=PriorityEnum.low,
+        compute_tag="tag1",
+        compute_priority=PriorityEnum.low,
         owner_group=None,
         find_existing=True,
     )
@@ -132,8 +132,8 @@ def test_torsiondrive_client_add_duplicate(
         "torsiondrive",
         keywords=spec.keywords,
         optimization_specification=spec.optimization_specification,
-        tag="tag1",
-        priority=PriorityEnum.low,
+        compute_tag="tag1",
+        compute_priority=PriorityEnum.low,
         owner_group=None,
         find_existing=find_existing,
     )
@@ -163,8 +163,8 @@ def test_torsiondrive_client_add_existing_molecule(snowflake_client: PortalClien
         "torsiondrive",
         keywords=spec.keywords,
         optimization_specification=spec.optimization_specification,
-        tag="tag1",
-        priority=PriorityEnum.low,
+        compute_tag="tag1",
+        compute_priority=PriorityEnum.low,
     )
 
     assert meta.success

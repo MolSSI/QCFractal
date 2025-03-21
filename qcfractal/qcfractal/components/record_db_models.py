@@ -77,8 +77,8 @@ class RecordInfoBackupORM(BaseORM):
     id = Column(Integer, primary_key=True)
     record_id = Column(Integer, ForeignKey("base_record.id", ondelete="cascade"), nullable=False)
     old_status = Column(Enum(RecordStatusEnum), nullable=False)
-    old_tag = Column(String, nullable=True)
-    old_priority = Column(Integer, nullable=True)
+    old_compute_tag = Column(String, nullable=True)
+    old_compute_priority = Column(Integer, nullable=True)
     modified_on = Column(TIMESTAMP(timezone=True), default=now_at_utc, nullable=False)
 
     __table_args__ = (Index("ix_record_info_backup_record_id", "record_id"),)

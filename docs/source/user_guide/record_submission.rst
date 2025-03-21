@@ -55,10 +55,10 @@ for different records <records/index>`.
 
 .. _record_submit_tags_owners:
 
-Tag & Priority
---------------
+Compute Tag & Priority
+----------------------
 
-The :ref:`routing tag <routing_tags>` and/or priority of a record/task can be specified with the ``add_`` functions as
+The :ref:`compute tag <compute_tags>` and/or priority of a record/task can be specified with the ``add_`` functions as
 well. Tasks with a higher priority will be claimed before lower priorities. Priorities can be
 specified either as a string or integer (0 = 'low', 1 = 'normal', 2 = 'high'),
 or as an enum member (like ``PriorityEnum.high``).
@@ -73,12 +73,13 @@ See :class:`~qcportal.record_models.PriorityEnum`.
 
       # Add a single computation
       >>> mol = Molecule(symbols=['H', 'H'], geometry=[0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
-      >>> meta, ids = client.add_singlepoints(mol, 'psi4', 'energy', 'b3lyp', 'def2-tzvp', tag='small_mem', priority='high')
+      >>> meta, ids = client.add_singlepoints(mol, 'psi4', 'energy', 'b3lyp', 'def2-tzvp',
+      ...                                     compute_tag='small_mem', compute_priority='high')
       >>> print(meta)
       InsertMetadata(error_description=None, errors=[], inserted_idx=[0], existing_idx=[])
 
       >>> record = client.get_records(ids[0])
-      >>> print(record.task.tag)
+      >>> print(record.task.compute_tag)
       'small_mem'
 
 
@@ -103,8 +104,8 @@ Some features that are usually considered are:
 Some things that are **not** considered when finding duplicate calculations:
 
 * status
-* tags
-* priority
+* compute tag
+* compute priority
 
 This default behavior can be overridden using the ``find_existing`` argument to the ``add_`` functions.
 

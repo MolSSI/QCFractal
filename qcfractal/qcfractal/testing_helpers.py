@@ -57,8 +57,8 @@ def run_service(
         owner_user = rec.owner_user.username if rec.owner_user is not None else None
         owner_group = rec.owner_group.groupname if rec.owner_group is not None else None
 
-        tag = rec.service.tag
-        priority = rec.service.priority
+        tag = rec.service.compute_tag
+        priority = rec.service.compute_priority
         service_id = rec.service.id
 
     n_records = 0
@@ -120,8 +120,8 @@ def run_service(
             all_groupnames = [x.owner_group.groupname if x.owner_group is not None else None for x in recs]
             assert all(x == owner_user for x in all_usernames)
             assert all(x == owner_group for x in all_groupnames)
-            assert all(x.task.priority == priority for x in recs)
-            assert all(x.task.tag == tag for x in recs)
+            assert all(x.task.compute_priority == priority for x in recs)
+            assert all(x.task.compute_tag == tag for x in recs)
 
         manager_ret = {}
         for t in manager_tasks:

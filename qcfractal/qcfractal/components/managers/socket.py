@@ -49,7 +49,7 @@ class ManagerSocket:
         manager_version: str,
         username: Optional[str],
         programs: Dict[str, List[str]],
-        tags: List[str],
+        compute_tags: List[str],
         *,
         session: Optional[Session] = None,
     ) -> int:
@@ -58,24 +58,24 @@ class ManagerSocket:
         """
 
         # Strip out empty tags and programs
-        tags = [x.lower() for x in tags if len(x) > 0]
+        compute_tags = [x.lower() for x in compute_tags if len(x) > 0]
 
         # Some version strings can contain uppercase characters
         programs = {k.lower(): [v.lower() for v in vlst] for k, vlst in programs.items() if len(k) > 0}
 
-        if len(tags) == 0:
+        if len(compute_tags) == 0:
             raise ComputeManagerError("Manager does not have any tags assigned. Use '*' to match all tags")
         if len(programs) == 0:
             raise ComputeManagerError("Manager does not have any programs available")
 
-        tags = list(dict.fromkeys(tags))  # remove duplicates, maintaining order (in python 3.6+)
+        compute_tags = list(dict.fromkeys(compute_tags))  # remove duplicates, maintaining order (in python 3.6+)
 
         manager_orm = ComputeManagerORM(
             name=name_data.fullname,
             cluster=name_data.cluster,
             hostname=name_data.hostname,
             username=username,
-            tags=tags,
+            compute_tags=compute_tags,
             status=ManagerStatusEnum.active,
             manager_version=manager_version,
             programs=programs,

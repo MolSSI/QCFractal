@@ -130,15 +130,15 @@ class ComputeManager:
         # Mapping of task_id to record_id
         self._record_id_map: Dict[int, int] = {}
 
-        self.all_queue_tags = []
+        self.all_compute_tags = []
         for ex_label, ex_config in config.executors.items():
-            if len(ex_config.queue_tags) == 0:
-                raise ValueError(f"Executor {ex_label} has no queue tags")
+            if len(ex_config.compute_tags) == 0:
+                raise ValueError(f"Executor {ex_label} has no compute tags")
 
-            self.all_queue_tags.extend(ex_config.queue_tags)
+            self.all_compute_tags.extend(ex_config.compute_tags)
 
-        # Merge queue tags, preserving order
-        self.all_queue_tags = list(dict.fromkeys(self.all_queue_tags))
+        # Merge compute tags, preserving order
+        self.all_compute_tags = list(dict.fromkeys(self.all_compute_tags))
 
         # These are more properly set up in the start() method
         self.parsl_config = None
@@ -174,7 +174,7 @@ class ComputeManager:
         for label, ex_config in config.executors.items():
             self.logger.info("    {}:".format(label))
             self.logger.info("                    Type: {}".format(ex_config.type))
-            self.logger.info("              Queue Tags: {}".format(ex_config.queue_tags))
+            self.logger.info("            Compute Tags: {}".format(ex_config.compute_tags))
             self.logger.info("                Programs:")
             executor_programs = self.app_manager.all_program_info(label)
             for program, info in executor_programs.items():
@@ -187,7 +187,7 @@ class ComputeManager:
         self.heartbeat_frequency = self.server_info["manager_heartbeat_frequency"]
         self.heartbeat_frequency_jitter = self.server_info.get("manager_heartbeat_frequency_jitter", 0.0)
 
-        self.client.activate(__version__, self.all_program_info, tags=self.all_queue_tags)
+        self.client.activate(__version__, self.all_program_info, self.all_compute_tags)
 
         self.logger.info("    Connected to:")
         self.logger.info("        Address:     {}".format(self.client.address))
@@ -650,7 +650,7 @@ class ComputeManager:
                 if open_slots > 0:
                     try:
                         executor_programs = self.executor_programs[executor_label]
-                        new_task_info = self.client.claim(executor_programs, executor_config.queue_tags, open_slots)
+                        new_task_info = self.client.claim(executor_programs, executor_config.compute_tags, open_slots)
                     except (Timeout, ConnectionError) as ex:
                         self.logger.warning(f"Acquisition of new tasks failed: {str(ex).strip()}")
                         return

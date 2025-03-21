@@ -49,7 +49,7 @@ def test_record_client_waiting_reason(snowflake: QCATestingSnowflake):
         manager_version="v2.0",
         username="bill",
         programs={"qcengine": ["unknown"], "other_prog": ["unknown"]},
-        tags=["tag1"],
+        compute_tags=["tag1"],
     )
 
     mname2 = ManagerName(cluster="test_cluster", hostname="a_host1", uuid="1234-5678-1234-7890")
@@ -58,7 +58,7 @@ def test_record_client_waiting_reason(snowflake: QCATestingSnowflake):
         manager_version="v2.0",
         username="bill",
         programs={"qcengine": ["unknown"], "geometric": ["unknown"]},
-        tags=["tag2"],
+        compute_tags=["tag2"],
     )
 
     mname3 = ManagerName(cluster="test_cluster", hostname="a_host1", uuid="1234-5678-1234-8888")
@@ -67,7 +67,7 @@ def test_record_client_waiting_reason(snowflake: QCATestingSnowflake):
         manager_version="v2.0",
         username="bill",
         programs={"qcengine": ["unknown"], "psi4": ["unknown"]},
-        tags=["tag999"],
+        compute_tags=["tag999"],
     )
 
     mname4 = ManagerName(cluster="test_cluster", hostname="a_host1", uuid="1234-5678-1234-0123")
@@ -76,7 +76,7 @@ def test_record_client_waiting_reason(snowflake: QCATestingSnowflake):
         manager_version="v2.0",
         username="bill",
         programs={"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["unknown"]},
-        tags=["tag999"],
+        compute_tags=["tag999"],
     )
 
     reason = snowflake_client.get_waiting_reason(id_1)
@@ -101,7 +101,7 @@ def test_record_client_waiting_reason(snowflake: QCATestingSnowflake):
         manager_version="v2.0",
         username="bill",
         programs={"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["unknown"]},
-        tags=["tag1", "tag2"],
+        compute_tags=["tag1", "tag2"],
     )
 
     reason = snowflake_client.get_waiting_reason(id_1)
@@ -132,7 +132,7 @@ def test_record_client_waiting_reason(snowflake: QCATestingSnowflake):
         manager_version="v2.0",
         username="bill",
         programs={"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["unknown"], "rdkit": ["unknown"]},
-        tags=["tag1", "*"],
+        compute_tags=["tag1", "*"],
     )
 
     reason = snowflake_client.get_waiting_reason(id_3)
@@ -168,7 +168,7 @@ def test_record_client_waiting_reason_2(snowflake: QCATestingSnowflake):
         manager_version="v2.0",
         username="bill",
         programs={"qcengine": ["unknown"], "psi4": ["unknown"], "geometric": ["unknown"], "rdkit": ["unknown"]},
-        tags=["tag1", "*"],
+        compute_tags=["tag1", "*"],
     )
 
     # Should be able to be picked up

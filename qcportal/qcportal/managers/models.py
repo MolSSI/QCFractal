@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from enum import Enum
 from typing import Optional, Dict, Any, List
@@ -7,9 +8,9 @@ from typing import Optional, Dict, Any, List
 from dateutil.parser import parse as date_parser
 
 try:
-    from pydantic.v1 import BaseModel, Field, constr, validator, Extra, PrivateAttr
+    from pydantic.v1 import BaseModel, Field, constr, validator, Extra, PrivateAttr, root_validator
 except ImportError:
-    from pydantic import BaseModel, Field, constr, validator, Extra, PrivateAttr
+    from pydantic import BaseModel, Field, constr, validator, Extra, PrivateAttr, root_validator
 
 from qcportal.base_models import RestModelBase, QueryProjModelBase
 from ..base_models import QueryIteratorBase
@@ -64,7 +65,7 @@ class ComputeManager(BaseModel):
     cluster: str = Field(...)
     hostname: str
     username: Optional[str]
-    tags: List[str]
+    compute_tags: List[str]
 
     claimed: int
     successes: int
@@ -90,15 +91,30 @@ class ComputeManager(BaseModel):
         self._client = client
         self._base_url = f"api/v1/managers/{self.name}"
 
+    # TODO - DEPRECATED - remove at some point
+    @property
+    def tags(self) -> List[str]:
+        logger = logging.getLogger(self.__class__.__name__)
+        logger.warning("'tags' is deprecated and will be removed in a future release. Use 'compute_tags' instead")
+        return self.compute_tags
+
+    # TODO - DEPRECATED - remove at some point
+    @root_validator(pre=True)
+    def _old_tags(cls, values):
+        if "tags" in values:
+            values["compute_tags"] = values.pop("tags")
+
+        return values
+
 
 class ManagerActivationBody(RestModelBase):
     name_data: ManagerName = Field(..., description="Name information about this manager")
     manager_version: str = Field(..., description="Version of the manager itself")
     username: Optional[str] = Field(..., description="Username this manager is connected with")
     programs: Dict[constr(to_lower=True), List[str]] = Field(..., description="Programs available on this manager")
-    tags: List[constr(to_lower=True)] = Field(..., description="Tags this manager will compute for")
+    compute_tags: List[constr(to_lower=True)] = Field(..., description="Tags this manager will compute for")
 
-    @validator("tags")
+    @validator("compute_tags")
     def validate_tags(cls, v):
         v = [x for x in v if len(x) > 0]
 
@@ -114,6 +130,14 @@ class ManagerActivationBody(RestModelBase):
         if len(v) == 0:
             raise ValueError("'programs' field contains no non-zero-length programs")
         return v
+
+    # TODO - DEPRECATED - remove at some point
+    @root_validator(pre=True)
+    def _old_tags(cls, values):
+        if "tags" in values:
+            values["compute_tags"] = values.pop("tags")
+
+        return values
 
 
 class ManagerUpdateBody(RestModelBase):

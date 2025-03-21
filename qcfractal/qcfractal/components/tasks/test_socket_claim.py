@@ -48,7 +48,7 @@ def test_task_socket_update_manager_time(storage_socket: SQLAlchemySocket, sessi
         manager_version="v2.0",
         username="bill",
         programs=mprog1,
-        tags=["tag1"],
+        compute_tags=["tag1"],
     )
 
     meta, id_1 = storage_socket.records.singlepoint.add(
@@ -111,28 +111,28 @@ def test_task_socket_claim_mixed(storage_socket: SQLAlchemySocket, session: Sess
         manager_version="v2.0",
         username="bill",
         programs=mprog1,
-        tags=["tag1"],
+        compute_tags=["tag1"],
     )
     mid_2 = storage_socket.managers.activate(
         name_data=mname2,
         manager_version="v2.0",
         username="bill",
         programs=mprog2,
-        tags=["*"],
+        compute_tags=["*"],
     )
     mid_3 = storage_socket.managers.activate(
         name_data=mname3,
         manager_version="v2.0",
         username="bill",
         programs=mprog3,
-        tags=["tag3", "tag1"],
+        compute_tags=["tag3", "tag1"],
     )
     mid_4 = storage_socket.managers.activate(
         name_data=mname4,
         manager_version="v2.0",
         username="bill",
         programs=mprog4,
-        tags=["tag3", "*"],
+        compute_tags=["tag3", "*"],
     )
 
     meta, id_1 = storage_socket.records.singlepoint.add(
@@ -221,7 +221,7 @@ def test_task_socket_claim_priority(storage_socket: SQLAlchemySocket, session: S
         manager_version="v2.0",
         username="bill",
         programs=mprog1,
-        tags=["tag1"],
+        compute_tags=["tag1"],
     )
 
     meta, id_1 = storage_socket.records.singlepoint.add(
@@ -278,7 +278,7 @@ def test_task_socket_claim_tag(storage_socket: SQLAlchemySocket, session: Sessio
         manager_version="v2.0",
         username="bill",
         programs=mprog1,
-        tags=["tag3", "tag1"],
+        compute_tags=["tag3", "tag1"],
     )
 
     meta, id_1 = storage_socket.records.singlepoint.add(
@@ -323,7 +323,7 @@ def test_task_socket_claim_tag_wildcard(storage_socket: SQLAlchemySocket, sessio
         manager_version="v2.0",
         username="bill",
         programs=mprog1,
-        tags=["TAG3", "*"],
+        compute_tags=["TAG3", "*"],
     )
 
     meta, id_1 = storage_socket.records.singlepoint.add(
@@ -375,7 +375,7 @@ def test_task_socket_claim_tag_wildcard_strict(postgres_server, pytestconfig):
             manager_version="v2.0",
             username="bill",
             programs=mprog1,
-            tags=["TAG3", "*"],
+            compute_tags=["TAG3", "*"],
         )
 
         meta, id_1 = storage_socket.records.singlepoint.add(
@@ -419,7 +419,7 @@ def test_task_socket_claim_program(storage_socket: SQLAlchemySocket, session: Se
         manager_version="v2.0",
         username="bill",
         programs=mprog1,
-        tags=["*"],
+        compute_tags=["*"],
     )
 
     meta, id_7 = storage_socket.records.singlepoint.add(
@@ -453,7 +453,7 @@ def test_task_socket_claim_program_subset(storage_socket: SQLAlchemySocket, sess
         manager_version="v2.0",
         username="bill",
         programs=mprog1,
-        tags=["*"],
+        compute_tags=["*"],
     )
 
     meta, id_7 = storage_socket.records.singlepoint.add(
@@ -494,7 +494,7 @@ def test_task_socket_claim_program_missing(storage_socket: SQLAlchemySocket):
         manager_version="v2.0",
         username="bill",
         programs=mprog1,
-        tags=["*"],
+        compute_tags=["*"],
     )
 
     claim_prog = {}
@@ -511,7 +511,7 @@ def test_task_socket_claim_tags_missing(storage_socket: SQLAlchemySocket):
         manager_version="v2.0",
         username="bill",
         programs=mprog1,
-        tags=["*"],
+        compute_tags=["*"],
     )
 
     claim_prog = {"qcengine": ["unknown"], "rdkit": ["unknown"]}
@@ -533,7 +533,7 @@ def test_task_socket_claim_service_order(storage_socket: SQLAlchemySocket, sessi
         manager_version="v2.0",
         username="bill",
         programs=mprog1,
-        tags=["*"],
+        compute_tags=["*"],
     )
 
     meta_1, id_1 = storage_socket.records.torsiondrive.add(

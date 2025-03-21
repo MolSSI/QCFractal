@@ -25,14 +25,14 @@ def test_manager_client_get(snowflake: QCATestingSnowflake):
     mclient1.activate(
         manager_version="v2.0",
         programs={"qcengine": ["unknown"], "qcprog": ["unknown"], "qcprog2": ["v3.0"]},
-        tags=["tag1", "tag2"],
+        compute_tags=["tag1", "tag2"],
     )
 
     time_1 = now_at_utc()
     mclient2.activate(
         manager_version="v2.0",
         programs={"qcengine": ["unknown"], "qcprog": ["unknown"], "qcprog2": ["v3.0"]},
-        tags=["tag1"],
+        compute_tags=["tag1"],
     )
     time_2 = now_at_utc()
 
@@ -46,7 +46,7 @@ def test_manager_client_get(snowflake: QCATestingSnowflake):
     assert manager[1].cluster == "test_cluster"
     assert manager[1].hostname == "a_host"
     assert manager[1].username == "bill"
-    assert manager[1].tags == ["tag1", "tag2"]
+    assert manager[1].compute_tags == ["tag1", "tag2"]
     assert manager[1].status == ManagerStatusEnum.active
     assert manager[1].created_on > time_0
     assert manager[1].modified_on > time_0
@@ -54,7 +54,7 @@ def test_manager_client_get(snowflake: QCATestingSnowflake):
     assert manager[1].modified_on < time_1
 
     assert manager[0].name == name2
-    assert manager[0].tags == ["tag1"]
+    assert manager[0].compute_tags == ["tag1"]
     assert manager[0].status == ManagerStatusEnum.active
     assert manager[0].created_on > time_1
     assert manager[0].modified_on > time_1

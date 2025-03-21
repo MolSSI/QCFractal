@@ -69,7 +69,7 @@ class MockTestingComputeManager(ComputeManager):
                     cores_per_worker=1,
                     memory_per_worker=1,
                     max_workers=1,
-                    queue_tags=["*"],
+                    compute_tags=["*"],
                     scratch_directory=compute_scratch_dir,
                 )
             },

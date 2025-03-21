@@ -218,7 +218,7 @@ class QCATestingSnowflake(FractalSnowflake):
             manager_version="v2.0",
             username="bill",
             programs=_activated_manager_programs,
-            tags=["*"],
+            compute_tags=["*"],
         )
 
         return mname, mid

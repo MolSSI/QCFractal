@@ -1,7 +1,10 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from sqlalchemy import (
     Column,
     Integer,
-    ForeignKey,
     TIMESTAMP,
     Float,
     Index,
@@ -12,11 +15,13 @@ from sqlalchemy import (
     CheckConstraint,
 )
 from sqlalchemy.dialects.postgresql import ARRAY
-from sqlalchemy.orm import relationship
 
 from qcfractal.db_socket import BaseORM
 from qcportal.managers import ManagerStatusEnum
 from qcportal.utils import now_at_utc
+
+if TYPE_CHECKING:
+    from typing import Dict, Any, Optional, Iterable
 
 
 class ComputeManagerORM(BaseORM):
@@ -32,7 +37,7 @@ class ComputeManagerORM(BaseORM):
     cluster = Column(String, nullable=False)
     hostname = Column(String, nullable=False)
     username = Column(String)  # Can be null (ie, security not enabled, snowflake)
-    tags = Column(ARRAY(String), nullable=False)
+    compute_tags = Column(ARRAY(String), nullable=False)
 
     # Latest count
     claimed = Column(Integer, nullable=False, default=0)
@@ -58,5 +63,14 @@ class ComputeManagerORM(BaseORM):
         Index("ix_compute_manager_modified_on", "modified_on", postgresql_using="brin"),
         UniqueConstraint("name", name="ux_compute_manager_name"),
         CheckConstraint("programs::text = LOWER(programs::text)", name="ck_compute_manager_programs_lower"),
-        CheckConstraint("tags::text = LOWER(tags::text)", name="ck_compute_manager_tags_lower"),
+        CheckConstraint("compute_tags::text = LOWER(compute_tags::text)", name="ck_compute_manager_compute_tags_lower"),
     )
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        d = BaseORM.model_dict(self, exclude)
+
+        # TODO - DEPRECATED - remove eventually
+        if "compute_tags" in d:
+            d["tags"] = d.pop("compute_tags")
+
+        return d

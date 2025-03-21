@@ -298,8 +298,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             meta, opt_ids = self.root_socket.records.optimization.add(
                 constrained_mols,
                 OptimizationSpecification(**opt_spec2),
-                service_orm.tag,
-                service_orm.priority,
+                service_orm.compute_tag,
+                service_orm.compute_priority,
                 td_orm.owner_user_id,
                 td_orm.owner_group_id,
                 service_orm.find_existing,
@@ -528,8 +528,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         initial_molecule_ids: Sequence[Iterable[int]],
         td_spec_id: int,
         as_service: bool,
-        tag: str,
-        priority: PriorityEnum,
+        compute_tag: str,
+        compute_priority: PriorityEnum,
         owner_user_id: Optional[int],
         owner_group_id: Optional[int],
         find_existing: bool,
@@ -551,9 +551,9 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             IDs of the initial sets of molecules to start the torsiondrive. One record will be added per set.
         td_spec_id
             ID of the specification
-        tag
+        compute_tag
             The tag for the task. This will assist in routing to appropriate compute managers.
-        priority
+        compute_priority
             The priority for the computation
         owner_user_id
             ID of the user who owns the record
@@ -572,7 +572,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             order of the input molecules
         """
 
-        tag = tag.lower()
+        compute_tag = compute_tag.lower()
 
         with self.root_socket.optional_session(session, False) as session:
             self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
@@ -631,7 +631,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                             owner_group_id=owner_group_id,
                         )
 
-                        self.create_service(td_orm, tag, priority, find_existing)
+                        self.create_service(td_orm, compute_tag, compute_priority, find_existing)
 
                         session.add(td_orm)
                         session.flush()
@@ -660,7 +660,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                         owner_group_id=owner_group_id,
                     )
 
-                    self.create_service(td_orm, tag, priority, find_existing)
+                    self.create_service(td_orm, compute_tag, compute_priority, find_existing)
 
                     session.add(td_orm)
                     session.flush()
@@ -682,8 +682,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         initial_molecules: Sequence[Iterable[Union[int, Molecule]]],
         td_spec: TorsiondriveSpecification,
         as_service: bool,
-        tag: str,
-        priority: PriorityEnum,
+        compute_tag: str,
+        compute_priority: PriorityEnum,
         owner_user: Optional[str],
         owner_group: Optional[str],
         find_existing: bool,
@@ -704,9 +704,9 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             Specification for the calculations
         as_service
             Whether this record should be run as a service or as a regular calculation
-        tag
+        compute_tag
             The tag for the task. This will assist in routing to appropriate compute managers.
-        priority
+        compute_priority
             The priority for the computation
         owner_user
             Name of the user who owns the record
@@ -758,8 +758,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                 init_mol_ids,
                 spec_id,
                 as_service,
-                tag,
-                priority,
+                compute_tag,
+                compute_priority,
                 owner_user_id,
                 owner_group_id,
                 find_existing,

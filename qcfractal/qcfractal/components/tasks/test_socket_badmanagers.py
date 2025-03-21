@@ -45,7 +45,7 @@ def test_task_socket_claim_manager_inactive(storage_socket: SQLAlchemySocket):
         manager_version="v2.0",
         username="bill",
         programs=_manager_programs,
-        tags=["tag1"],
+        compute_tags=["tag1"],
     )
 
     storage_socket.managers.deactivate([mname1.fullname])
@@ -63,7 +63,7 @@ def test_task_socket_return_manager_noexist(storage_socket: SQLAlchemySocket, se
         manager_version="v2.0",
         username="bill",
         programs=_manager_programs,
-        tags=["tag1"],
+        compute_tags=["tag1"],
     )
 
     record_id, result_data = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
@@ -94,7 +94,7 @@ def test_task_socket_return_manager_inactive(storage_socket: SQLAlchemySocket):
         manager_version="v2.0",
         username="bill",
         programs=_manager_programs,
-        tags=["tag1"],
+        compute_tags=["tag1"],
     )
 
     record_id, result_data = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
@@ -121,7 +121,7 @@ def test_task_socket_return_wrongmanager(storage_socket: SQLAlchemySocket, sessi
         manager_version="v2.0",
         username="bill",
         programs={"qcengine": ["unknown"], "psi4": ["unknown"], "qchem": ["v3.0"]},
-        tags=["tag1"],
+        compute_tags=["tag1"],
     )
 
     mid_2 = storage_socket.managers.activate(
@@ -129,7 +129,7 @@ def test_task_socket_return_wrongmanager(storage_socket: SQLAlchemySocket, sessi
         manager_version="v2.0",
         username="bill",
         programs=_manager_programs,
-        tags=["tag1"],
+        compute_tags=["tag1"],
     )
 
     record_id, result_data = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
@@ -201,7 +201,7 @@ def test_task_socket_return_manager_badstatus_1(storage_socket: SQLAlchemySocket
         manager_version="v2.0",
         username="bill",
         programs=_manager_programs,
-        tags=["tag1"],
+        compute_tags=["tag1"],
     )
 
     record_id, result_data = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
@@ -243,7 +243,7 @@ def test_task_socket_return_manager_badstatus_2(storage_socket: SQLAlchemySocket
         manager_version="v2.0",
         username="bill",
         programs=_manager_programs,
-        tags=["tag1"],
+        compute_tags=["tag1"],
     )
 
     record_id, result_data = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
@@ -294,7 +294,7 @@ def test_task_socket_return_manager_badstatus_3(storage_socket: SQLAlchemySocket
         manager_version="v2.0",
         username="bill",
         programs=_manager_programs,
-        tags=["tag1"],
+        compute_tags=["tag1"],
     )
 
     record_id, result_data = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")

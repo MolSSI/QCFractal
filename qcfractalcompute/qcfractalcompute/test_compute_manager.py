@@ -64,10 +64,10 @@ def test_manager_tags(snowflake: QCATestingSnowflake, tmp_path):
                 cores_per_worker=1,
                 memory_per_worker=1,
                 max_workers=1,
-                queue_tags=["tag1", "tag2", "*"],
+                compute_tags=["tag1", "tag2", "*"],
             ),
             "local2": LocalExecutorConfig(
-                cores_per_worker=1, memory_per_worker=1, max_workers=1, queue_tags=["tag3", "tag4"]
+                cores_per_worker=1, memory_per_worker=1, max_workers=1, compute_tags=["tag3", "tag4"]
             ),
         },
     )
@@ -98,13 +98,13 @@ def test_manager_tags_missing(snowflake: QCATestingSnowflake, tmp_path):
                 cores_per_worker=1,
                 memory_per_worker=1,
                 max_workers=1,
-                queue_tags=["tag1", "tag2", "*"],
+                compute_tags=["tag1", "tag2", "*"],
             ),
-            "local2": LocalExecutorConfig(cores_per_worker=1, memory_per_worker=1, max_workers=1, queue_tags=[]),
+            "local2": LocalExecutorConfig(cores_per_worker=1, memory_per_worker=1, max_workers=1, compute_tags=[]),
         },
     )
 
-    with pytest.raises(ValueError, match="local2 has no queue tags"):
+    with pytest.raises(ValueError, match="local2 has no compute tags"):
         ComputeManager(compute_config)
 
 
@@ -122,16 +122,16 @@ def test_manager_tags_duplicate(snowflake: QCATestingSnowflake, tmp_path):
                 cores_per_worker=1,
                 memory_per_worker=1,
                 max_workers=1,
-                queue_tags=["tag1", "tag2", "*"],
+                compute_tags=["tag1", "tag2", "*"],
             ),
             "local2": LocalExecutorConfig(
-                cores_per_worker=1, memory_per_worker=1, max_workers=1, queue_tags=["tag2", "tag1"]
+                cores_per_worker=1, memory_per_worker=1, max_workers=1, compute_tags=["tag2", "tag1"]
             ),
         },
     )
 
     compute = ComputeManager(compute_config)
-    assert compute.all_queue_tags == ["tag1", "tag2", "*"]
+    assert compute.all_compute_tags == ["tag1", "tag2", "*"]
 
 
 @pytest.mark.filterwarnings("ignore:Exception in thread")

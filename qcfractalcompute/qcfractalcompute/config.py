@@ -5,9 +5,9 @@ from typing import List, Optional, Union, Dict, Any
 import yaml
 
 try:
-    from pydantic.v1 import BaseModel, Field, validator
+    from pydantic.v1 import BaseModel, Field, validator, root_validator
 except ImportError:
-    from pydantic import BaseModel, Field, validator
+    from pydantic import BaseModel, Field, validator, root_validator
 from typing_extensions import Literal
 
 from qcportal.utils import seconds_to_hms, duration_to_seconds, update_nested_dict
@@ -48,7 +48,7 @@ class PackageEnvironmentSettings(BaseModel):
 
 class ExecutorConfig(BaseModel):
     type: str
-    queue_tags: List[str]
+    compute_tags: List[str]
     worker_init: List[str] = []
 
     scratch_directory: Optional[str] = None
@@ -64,6 +64,14 @@ class ExecutorConfig(BaseModel):
     class Config(BaseModel.Config):
         case_insensitive = True
         extra = "forbid"
+
+    # TODO - DEPRECATED - REMOVE EVENTUALLY
+    @root_validator(pre=True)
+    def _old_queue_tag(cls, values):
+        if "queue_tags" in values:
+            values["compute_tags"] = values.pop("queue_tags")
+
+        return values
 
 
 class CustomExecutorConfig(ExecutorConfig):

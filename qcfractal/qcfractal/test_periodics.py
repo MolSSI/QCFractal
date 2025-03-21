@@ -31,7 +31,7 @@ def test_periodics_manager_heartbeats(snowflake: QCATestingSnowflake):
         manager_version="v2.0",
         username="bill",
         programs={"qcengine": ["unknown"], "psi4": ["unknown"], "qchem": ["v3.0"]},
-        tags=["tag1"],
+        compute_tags=["tag1"],
     )
 
     snowflake.start_job_runner()
