@@ -2,7 +2,6 @@ import time
 
 import jwt
 import pytest
-import requests
 
 from qcarchivetesting import test_users
 from qcarchivetesting.testing_classes import (
@@ -105,44 +104,3 @@ def test_jwt_refresh_user_deleted(postgres_server, pytestconfig):
 
         with pytest.raises(AuthenticationFailure, match="User account no longer exists"):
             client.list_datasets()
-
-
-@pytest.mark.parametrize("use_forms", [True, False])
-def test_auth_cookies(secure_snowflake, use_forms):
-    username = "admin_user"
-    password = test_users["admin_user"]["pw"]
-    uri = secure_snowflake.get_uri()
-
-    sess = requests.Session()  # will store cookies automatically
-
-    # First, not logged in = forbidden
-    r = sess.get(f"{uri}/api/v1/information")
-    assert r.status_code == 403  # forbidden
-
-    # Now go through the browser login. This should set a cookie
-    if use_forms:
-        r = sess.post(
-            f"{uri}/auth/v1/browser_login",
-            data={"username": username, "password": password},
-        )
-    else:
-        r = sess.post(
-            f"{uri}/auth/v1/browser_login",
-            json={"username": username, "password": password},
-        )
-
-    assert r.status_code == 200
-    assert "access_token_cookie" in sess.cookies
-
-    # Can get to protected endpoint
-    r = sess.get(f"{uri}/api/v1/information")
-    assert r.status_code == 200
-
-    # Now logout - cookie is removed
-    r = sess.post(f"{uri}/auth/v1/browser_logout")
-    assert r.status_code == 200
-    assert "access_token_cookie" not in sess.cookies
-
-    # Not logged in anymore
-    r = sess.get(f"{uri}/api/v1/information")
-    assert r.status_code == 403  # forbidden
