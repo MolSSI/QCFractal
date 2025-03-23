@@ -120,7 +120,10 @@ class QCATestingSnowflake(FractalSnowflake):
 
         # expire tokens in 5 seconds
         # Too short and this interferes with some other tests
-        api_config = {"jwt_access_token_expires": 5}
+        api_config = {
+            "jwt_access_token_expires": 5,
+            "user_session_max_age": 5,
+        }
 
         # Smaller api limits (so we can test chunking)
         api_limits = {

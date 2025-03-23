@@ -300,6 +300,12 @@ class WebAPIConfig(ConfigBase):
     jwt_refresh_token_expires: int = Field(
         60 * 60 * 24, description="The time (in seconds) a refresh token is valid for. Default is 1 day"
     )
+    user_session_max_age: int = Field(
+        60 * 60 * 24, description="The time (in seconds) that a user session can be idle (for browser-based sessions)"
+    )
+    user_session_cookie_name: str = Field(
+        "qcf_session", description="Name to use for a session cookie (for browser-based sessions)"
+    )
 
     extra_flask_options: Optional[Dict[str, Any]] = Field(
         None, description="Any additional options to pass directly to flask"
@@ -308,7 +314,12 @@ class WebAPIConfig(ConfigBase):
         None, description="Any additional options to pass directly to the waitress serve function"
     )
 
-    @validator("jwt_access_token_expires", "jwt_refresh_token_expires", pre=True)
+    @validator(
+        "jwt_access_token_expires",
+        "jwt_refresh_token_expires",
+        "user_session_max_age",
+        pre=True,
+    )
     def _convert_durations(cls, v):
         return duration_to_seconds(v)
 
