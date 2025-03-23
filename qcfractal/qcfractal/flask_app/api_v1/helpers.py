@@ -21,6 +21,8 @@ def wrap_route(
     This wrapper handles several things:
 
         1. Checks the JWT for permission to access this route (with the requested action)
+           OR
+           Checks the session cookie (for browser-based authentication)
         2. Parses the request body and URL params, and converts them to the appropriate model (see below)
         3. Serializes the response returned from the wrapped function into the appropriate
            type (taken from the accepted mimetypes)

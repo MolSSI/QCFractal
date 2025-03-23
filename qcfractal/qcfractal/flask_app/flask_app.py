@@ -15,6 +15,7 @@ from qcfractal.flask_app.auth_v1.blueprint import auth_v1
 from qcfractal.flask_app.dashboard_v1.blueprint import dashboard_v1
 from .api_v1.blueprint import api_v1
 from .compute_v1.blueprint import compute_v1
+from .flask_session import QCFFlaskSessionInterface
 from .home_v1 import home_v1
 
 if TYPE_CHECKING:
@@ -69,6 +70,8 @@ def create_flask_app(
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = qcfractal_config.api.jwt_access_token_expires
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = qcfractal_config.api.jwt_refresh_token_expires
     app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies"]
+    app.config["SESSION_COOKIE_NAME"] = qcfractal_config.api.user_session_cookie_name
+    app.config["PERMANENT_SESSION_LIFETIME"] = qcfractal_config.api.user_session_max_age
 
     # Any additional configuration
     if qcfractal_config.api.extra_flask_options:
@@ -88,6 +91,9 @@ def create_flask_app(
 
     if finished_queue:
         storage_socket.set_finished_watch(finished_queue)
+
+    # Initialize the session interface after the storage socket
+    app.session_interface = QCFFlaskSessionInterface(storage_socket)
 
     # Registers the various error and before/after request handlers
     importlib.import_module("qcfractal.flask_app.handlers")

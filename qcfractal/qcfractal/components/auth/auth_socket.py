@@ -3,13 +3,18 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Tuple, List, Dict, Any, Optional
 
-from sqlalchemy import select
+from sqlalchemy import select, delete
+from sqlalchemy.dialects.postgresql import insert
+
 from qcportal.auth import UserInfo, RoleInfo
 from qcportal.exceptions import AuthorizationFailure, AuthenticationFailure
-from .db_models import UserORM, RoleORM
+from qcportal.serialization import serialize, deserialize
+from qcportal.utils import now_at_utc
+from .db_models import UserORM, RoleORM, UserSessionORM
 from .policyuniverse import Policy
 
 if TYPE_CHECKING:
+    import datetime
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
 
@@ -179,3 +184,53 @@ class AuthSocket:
                         allowed.append((resource, action))
 
         return allowed
+
+    def save_user_session(
+        self,
+        user_session_id: str,
+        user_session_data: Any,
+        *,
+        session: Optional[Session] = None,
+    ) -> None:
+        """
+        Saves user/flask session data to the database
+        """
+        serialized_data = serialize(user_session_data, "msgpack")
+
+        with self.root_socket.optional_session(session, False) as session:
+            stmt = insert(UserSessionORM)
+            stmt = stmt.values(session_id=user_session_id, session_data=serialized_data)
+            stmt = stmt.on_conflict_do_update(
+                index_elements=[UserSessionORM.session_id],
+                set_={"session_data": serialized_data, "last_accessed": now_at_utc()},
+            )
+            session.execute(stmt)
+
+    def load_user_session(
+        self, user_session_id: str, *, session: Optional[Session] = None
+    ) -> Tuple[Any, datetime.datetime]:
+        """
+        Loads user/flask session data from the database
+
+        Will return None if the session_id does not exist
+
+        Returns a tuple of the session data and the last accessed time
+        """
+        with self.root_socket.optional_session(session, True) as session:
+            stmt = select(UserSessionORM).where(UserSessionORM.session_id == user_session_id)
+            flask_session_orm = session.execute(stmt).scalar_one_or_none()
+
+            if not flask_session_orm:
+                return None, now_at_utc()
+
+            session_data = deserialize(flask_session_orm.session_data, "msgpack")
+            return session_data, flask_session_orm.last_accessed
+
+    def delete_user_session(self, session_id: str, *, session: Optional[Session] = None) -> None:
+        """
+        Deletes user/flask session data from the database (if it exists)
+        """
+        with self.root_socket.optional_session(session, False) as session:
+            stmt = delete(UserSessionORM)
+            stmt = stmt.where(UserSessionORM.session_id == session_id)
+            session.execute(stmt)
