@@ -3,8 +3,10 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Tuple, List, Dict, Any, Optional
 
+from sqlalchemy import select
 from qcportal.auth import UserInfo, RoleInfo
-from qcportal.exceptions import AuthorizationFailure
+from qcportal.exceptions import AuthorizationFailure, AuthenticationFailure
+from .db_models import UserORM, RoleORM
 from .policyuniverse import Policy
 
 if TYPE_CHECKING:
@@ -78,10 +80,23 @@ class AuthSocket:
             All information about the user, and all information about the user's role
         """
 
+        stmt = select(UserORM, RoleORM)
+        stmt = stmt.join(RoleORM, RoleORM.id == UserORM.role_id)
+        stmt = stmt.where(UserORM.id == user_id)
+
         with self.root_socket.optional_session(session, True) as session:
-            user_info = self.root_socket.users.verify(user_id=user_id, session=session)
-            role_info_dict = self.root_socket.roles.get(user_info.role, session=session)
-            return user_info, RoleInfo(**role_info_dict)
+            orms: Optional[Tuple[UserORM, RoleORM]] = session.execute(stmt).one_or_none()
+
+            if orms is None:
+                raise AuthenticationFailure("User does not exist")
+
+            user_orm, role_orm = orms
+            if not user_orm.enabled:
+                raise AuthenticationFailure(f"User {user_id} is disabled.")
+
+            user_info = user_orm.to_model(UserInfo)
+            role_info = role_orm.to_model(RoleInfo)
+            return user_info, role_info
 
     def is_authorized(
         self, resource: Dict[str, Any], action: str, subject: Dict[str, Any], context: Dict[str, Any], policies: Any
@@ -136,36 +151,6 @@ class AuthSocket:
                 return False, f"User {subject} is not authorized to access '{resource}'"
 
         return True, "Allowed"
-
-    def assert_authorized(
-        self, resource: Dict[str, Any], action: str, subject: Dict[str, Any], context: Dict[str, Any], policies: Any
-    ) -> None:
-        """
-        Check for access to the given resource given permissions
-
-        1. If no security (enable_security is False), always allow
-        2. Check if allowed by the stored policies
-        3. If denied, and allow_unauthenticated_read==True, use the default read permissions.
-
-        If authorization fails, an exception is raised
-
-        Parameters
-        ----------
-        resource
-            Dictionary describing the resource being accessed
-        action
-            The action being requested on the resource
-        subject
-            Dictionary describing the entity wanting access to the resource
-        context
-            Additional context of the request
-        """
-
-        allowed, msg = self.is_authorized(
-            resource=resource, action=action, subject=subject, context=context, policies=policies
-        )
-        if not allowed:
-            raise AuthorizationFailure(msg)
 
     def allowed_actions(self, subject: Any, resources: Any, actions: Any, policies: Any) -> List[Tuple[str, str]]:
         allowed: List[Tuple[str, str]] = []

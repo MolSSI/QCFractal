@@ -8,7 +8,7 @@ except ImportError:
 from flask import request, Response
 from werkzeug.exceptions import BadRequest
 
-from qcfractal.flask_app.helpers import assert_role_permissions
+from qcfractal.flask_app.helpers import assert_is_authorized
 from qcportal.serialization import deserialize, serialize
 
 
@@ -43,7 +43,7 @@ def wrap_route(
     def decorate(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):
-            assert_role_permissions(requested_action)
+            assert_is_authorized(requested_action)
 
             ##################################################################
             # If we got here, then the user is allowed access to this endpoint
