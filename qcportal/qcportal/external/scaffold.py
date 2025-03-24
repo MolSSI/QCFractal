@@ -3,9 +3,6 @@
 This module will allow users to write and read a json file that can be reformed into an initial dataset
 **before** submission. This means that records are not present.
 
-Other functions are included for similar creation and importation from HDF5 files, although fewer fields
-are retained and transferred in this case.
-
 Organization: Open Molecular Software Foundation: Open Force Field
 Author: Jennifer A Clark
 Date: March 13 2025
