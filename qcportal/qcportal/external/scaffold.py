@@ -3,9 +3,9 @@
 This module will allow users to write and read a json file that can be reformed into an initial dataset
 **before** submission. This means that records are not present.
 
-Organization: Open Molecular Software Foundation: Open Force Field
-Author: Jennifer A Clark
-Date: March 13 2025
+| Organization: Open Molecular Software Foundation: Open Force Field
+| Author: Jennifer A Clark
+| Date: March 13 2025
 """
 
 import json
