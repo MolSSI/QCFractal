@@ -382,12 +382,10 @@ class BaseDatasetSocket:
         description: str,
         tagline: str,
         tags: List[str],
-        group: str,
         provenance: Dict[str, Any],
-        visibility: bool,
         default_tag: str,
         default_priority: PriorityEnum,
-        metadata: Dict[str, Any],
+        extras: Dict[str, Any],
         owner_user: Optional[Union[int, str]],
         owner_group: Optional[Union[int, str]],
         existing_ok: bool,
@@ -411,13 +409,10 @@ class BaseDatasetSocket:
             tagline=tagline,
             description=description,
             tags=tags,
-            group=group,
             provenance=provenance,
-            visibility=visibility,
             default_tag=default_tag.lower(),
             default_priority=default_priority,
-            meta=metadata,
-            extras={},
+            extras=extras,
         )
 
         with self.root_socket.optional_session(session) as session:
@@ -489,12 +484,8 @@ class BaseDatasetSocket:
             ds.description = new_metadata.description
             ds.tagline = new_metadata.tagline
             ds.tags = new_metadata.tags
-            ds.group = new_metadata.group
-            ds.visibility = new_metadata.visibility
             ds.provenance = new_metadata.provenance
-
-            # "metadata" is reserved. The field is 'metadata' but accessed via 'meta'
-            ds.meta = new_metadata.metadata
+            ds.extras = new_metadata.extras
 
             ds.default_tag = new_metadata.default_tag
             ds.default_priority = new_metadata.default_priority
@@ -1823,12 +1814,10 @@ class BaseDatasetSocket:
                 description=source_orm.description,
                 tagline=source_orm.tagline,
                 tags=source_orm.tags,
-                group=source_orm.group,
                 provenance=source_orm.provenance,
-                visibility=source_orm.visibility,
                 default_tag=source_orm.default_tag,
                 default_priority=source_orm.default_priority,
-                metadata=source_orm.meta,
+                extras=source_orm.extras,
                 owner_user=source_orm.owner_user,
                 owner_group=source_orm.owner_group,
                 existing_ok=False,

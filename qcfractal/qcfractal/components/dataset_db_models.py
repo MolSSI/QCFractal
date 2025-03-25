@@ -42,9 +42,6 @@ class BaseDatasetORM(BaseORM):
     tagline = Column(String, nullable=False)
     description = Column(String, nullable=False)
 
-    group = Column(String(100), nullable=False)
-    visibility = Column(Boolean, nullable=False)
-
     # Ownership of this dataset
     owner_user_id = Column(Integer, ForeignKey(UserORM.id), nullable=True)
     owner_group_id = Column(Integer, ForeignKey(GroupORM.id), nullable=True)
@@ -69,11 +66,7 @@ class BaseDatasetORM(BaseORM):
     default_priority = Column(Integer, nullable=False)
 
     provenance = Column(JSON, nullable=False)
-
-    # metadata is reserved in sqlalchemy
-    meta = Column("metadata", JSON, nullable=False)
-
-    extras = Column(JSON, nullable=False)
+    extras = Column("extras", JSON, nullable=False)
 
     contributed_values = relationship(
         "ContributedValuesORM",
@@ -106,12 +99,16 @@ class BaseDatasetORM(BaseORM):
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         d = BaseORM.model_dict(self, exclude)
 
-        # meta -> metadata
-        if "meta" in d:
-            d["metadata"] = d.pop("meta")
-
         d["owner_user"] = self.owner_user.username if self.owner_user is not None else None
         d["owner_group"] = self.owner_group.groupname if self.owner_group is not None else None
+
+        # TODO - DEPRECATED - REMOVE EVENTUALLY
+        # Keep API the same for v1
+        d["group"] = "default"
+        d["visibility"] = True
+        if "extras" in d:
+            d["metadata"] = d.pop("extras")
+            d["extras"] = {}
 
         return d
 
