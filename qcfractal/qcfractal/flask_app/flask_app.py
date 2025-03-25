@@ -100,18 +100,3 @@ def create_flask_app(
     app.register_blueprint(dashboard_v1)
 
     return app
-
-
-def create_flask_app_dummy():
-    from ..config import FractalConfig
-
-    cfg = {
-        "base_folder": "/tmp",
-        "api": {
-            "secret_key": "abcd",
-            "jwt_secret_key": "abcd",
-        },
-    }
-
-    qcf_cfg = FractalConfig(**cfg)
-    return create_flask_app(qcf_cfg, init_storage=False)
