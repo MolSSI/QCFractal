@@ -8,7 +8,7 @@ import logging
 import os
 import secrets
 import tempfile
-from typing import Optional, Dict, Union, Any
+from typing import Optional, Dict, Union, List, Any
 
 import yaml
 from psycopg2.extensions import make_dsn, parse_dsn
@@ -358,6 +358,18 @@ class S3Config(ConfigBase):
         return values
 
 
+class CORSconfig(ConfigBase):
+    """
+    Settings for using CORS
+    """
+
+    enabled: bool = False
+    origins: List[str] = Field([])
+    supports_credentials: bool = False
+    headers: List[str] = Field([])
+    methods: List[str] = Field([])
+
+
 class FractalConfig(ConfigBase):
     """
     Fractal Server settings
@@ -460,6 +472,7 @@ class FractalConfig(ConfigBase):
     api: WebAPIConfig = Field(..., description="Configuration of the REST interface")
     s3: S3Config = Field(S3Config(), description="Configuration of the S3 file storage (optional)")
     api_limits: APILimitConfig = Field(..., description="Configuration of the limits to the api")
+    cors: CORSconfig = Field(..., description="Configuration Cross Origin Resource sharing (advanced)")
     auto_reset: AutoResetConfig = Field(..., description="Configuration for automatic resetting of tasks")
 
     @root_validator(pre=True)
@@ -473,6 +486,7 @@ class FractalConfig(ConfigBase):
         values.setdefault("api_limits", dict())
         values.setdefault("api", dict())
         values.setdefault("auto_reset", dict())
+        values.setdefault("cors", dict())
 
         if "statistics_frequency" in values:
             values.pop("statistics_frequency")

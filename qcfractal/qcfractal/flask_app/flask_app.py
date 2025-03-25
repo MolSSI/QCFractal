@@ -6,6 +6,7 @@ import queue
 from typing import TYPE_CHECKING
 
 from flask import Flask
+from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from werkzeug.routing import IntegerConverter
 
@@ -74,6 +75,12 @@ def create_flask_app(
         app.config.update(**qcfractal_config.api.extra_flask_options)
 
     jwt.init_app(app)
+
+    if qcfractal_config.cors.enabled:
+        app.config["CORS_ORIGINS"] = qcfractal_config.cors.origins
+        app.config["CORS_SUPPORTS_CREDENTIALS"] = qcfractal_config.cors.supports_credentials
+        app.config["CORS_HEADERS"] = qcfractal_config.cors.headers
+        CORS(app)
 
     if init_storage:
         # Initialize the database socket, API logger, and view handler
