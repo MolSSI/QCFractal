@@ -88,7 +88,8 @@ def from_json(filename, client):
     entries = []
     entry_type = ds._entry_type
     for _, entry in ds_dict["entries"].items():
-        del entry["local_results"]
+        if "local_results" in entry:
+            del entry["local_results"]
         entries.append(entry_type(**entry))
     ds.add_entries(entries)
     
