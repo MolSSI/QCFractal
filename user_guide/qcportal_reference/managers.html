@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=64c69d60"></script>
+    <script src="../../_static/documentation_options.js?v=c4a8aa6c"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Server Information" href="serverinfo.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.59.post27+gf1466641c" />
+  <meta name="docsearch:version" content="0.59.post38+g7f99ae3bd" />
   </head>
   
   
@@ -586,6 +586,7 @@
 <li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.active_tasks" title="qcportal.managers.models.ComputeManager.active_tasks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">active_tasks</span> <span class="pre">(int)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.claimed" title="qcportal.managers.models.ComputeManager.claimed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">claimed</span> <span class="pre">(int)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.cluster" title="qcportal.managers.models.ComputeManager.cluster"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cluster</span> <span class="pre">(str)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.compute_tags" title="qcportal.managers.models.ComputeManager.compute_tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_tags</span> <span class="pre">(List[str])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.created_on" title="qcportal.managers.models.ComputeManager.created_on"><code class="xref py py-obj docutils literal notranslate"><span class="pre">created_on</span> <span class="pre">(datetime.datetime)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.failures" title="qcportal.managers.models.ComputeManager.failures"><code class="xref py py-obj docutils literal notranslate"><span class="pre">failures</span> <span class="pre">(int)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.hostname" title="qcportal.managers.models.ComputeManager.hostname"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hostname</span> <span class="pre">(str)</span></code></a></p></li>
@@ -597,7 +598,6 @@
 <li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.rejected" title="qcportal.managers.models.ComputeManager.rejected"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rejected</span> <span class="pre">(int)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.status" title="qcportal.managers.models.ComputeManager.status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">status</span> <span class="pre">(qcportal.managers.models.ManagerStatusEnum)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.successes" title="qcportal.managers.models.ComputeManager.successes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">successes</span> <span class="pre">(int)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.tags" title="qcportal.managers.models.ComputeManager.tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tags</span> <span class="pre">(List[str])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.total_cpu_hours" title="qcportal.managers.models.ComputeManager.total_cpu_hours"><code class="xref py py-obj docutils literal notranslate"><span class="pre">total_cpu_hours</span> <span class="pre">(float)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.username" title="qcportal.managers.models.ComputeManager.username"><code class="xref py py-obj docutils literal notranslate"><span class="pre">username</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 </ul>
@@ -606,101 +606,239 @@
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.id">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.id" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_old_tags</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.name">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.name" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_old_tags</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.cluster">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.cluster" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_old_tags</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.hostname">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">hostname</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.hostname" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_old_tags</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.username">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">username</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.username" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_old_tags</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.tags">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tags</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.tags" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.compute_tags">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_tags</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.compute_tags" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_old_tags</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.claimed">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">claimed</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.claimed" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_old_tags</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.successes">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">successes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.successes" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_old_tags</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.failures">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">failures</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.failures" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_old_tags</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.rejected">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rejected</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.rejected" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_old_tags</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.total_cpu_hours">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">total_cpu_hours</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.total_cpu_hours" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_old_tags</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.active_tasks">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">active_tasks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.active_tasks" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_old_tags</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.active_cores">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">active_cores</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.active_cores" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_old_tags</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.active_memory">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">active_memory</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.active_memory" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_old_tags</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.status">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.managers.models.ManagerStatusEnum" title="qcportal.managers.models.ManagerStatusEnum"><span class="pre">ManagerStatusEnum</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.status" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_old_tags</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.created_on">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">created_on</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.created_on" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_old_tags</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.modified_on">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">modified_on</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.modified_on" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_old_tags</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.manager_version">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">manager_version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.manager_version" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_old_tags</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.programs">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">programs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.programs" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_old_tags</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.propagate_client">
 <span class="sig-name descname"><span class="pre">propagate_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ComputeManager.propagate_client"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ComputeManager.propagate_client" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.tags">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tags</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.managers.models.ComputeManager.tags" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -720,17 +858,18 @@
 </dd>
 <dt class="field-even">Fields<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.compute_tags" title="qcportal.managers.models.ManagerActivationBody.compute_tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_tags</span> <span class="pre">(List[qcportal.managers.models.ConstrainedStrValue])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.manager_version" title="qcportal.managers.models.ManagerActivationBody.manager_version"><code class="xref py py-obj docutils literal notranslate"><span class="pre">manager_version</span> <span class="pre">(str)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.name_data" title="qcportal.managers.models.ManagerActivationBody.name_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name_data</span> <span class="pre">(qcportal.managers.models.ManagerName)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.programs" title="qcportal.managers.models.ManagerActivationBody.programs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">programs</span> <span class="pre">(Dict[qcportal.managers.models.ConstrainedStrValue,</span> <span class="pre">List[str]])</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.tags" title="qcportal.managers.models.ManagerActivationBody.tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tags</span> <span class="pre">(List[qcportal.managers.models.ConstrainedStrValue])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.username" title="qcportal.managers.models.ManagerActivationBody.username"><code class="xref py py-obj docutils literal notranslate"><span class="pre">username</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 </ul>
 </dd>
 <dt class="field-odd">Validators<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_old_tags</span></code> » <code class="xref py py-obj docutils literal notranslate"><span class="pre">all</span> <span class="pre">fields</span></code></p></li>
 <li><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.validate_programs" title="qcportal.managers.models.ManagerActivationBody.validate_programs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_programs</span></code></a> » <a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.programs" title="qcportal.managers.models.ManagerActivationBody.programs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">programs</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.validate_tags" title="qcportal.managers.models.ManagerActivationBody.validate_tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_tags</span></code></a> » <a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.tags" title="qcportal.managers.models.ManagerActivationBody.tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tags</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.validate_tags" title="qcportal.managers.models.ManagerActivationBody.validate_tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_tags</span></code></a> » <a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.compute_tags" title="qcportal.managers.models.ManagerActivationBody.compute_tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_tags</span></code></a></p></li>
 </ul>
 </dd>
 </dl>
@@ -738,18 +877,39 @@
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerActivationBody.name_data">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name_data</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.managers.models.ManagerName" title="qcportal.managers.models.ManagerName"><span class="pre">ManagerName</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody.name_data" title="Link to this definition">#</a></dt>
 <dd><p>Name information about this manager</p>
+<dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_old_tags</span></code></p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerActivationBody.manager_version">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">manager_version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody.manager_version" title="Link to this definition">#</a></dt>
 <dd><p>Version of the manager itself</p>
+<dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_old_tags</span></code></p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerActivationBody.username">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">username</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody.username" title="Link to this definition">#</a></dt>
 <dd><p>Username this manager is connected with</p>
+<dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_old_tags</span></code></p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -759,6 +919,7 @@
 <dl class="field-list simple">
 <dt class="field-odd">Validated by<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_old_tags</span></code></p></li>
 <li><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.validate_programs" title="qcportal.managers.models.ManagerActivationBody.validate_programs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_programs</span></code></a></p></li>
 </ul>
 </dd>
@@ -766,12 +927,13 @@
 </dd></dl>
 
 <dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.managers.models.ManagerActivationBody.tags">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tags</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ConstrainedStrValue</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody.tags" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerActivationBody.compute_tags">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_tags</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ConstrainedStrValue</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody.compute_tags" title="Link to this definition">#</a></dt>
 <dd><p>Tags this manager will compute for</p>
 <dl class="field-list simple">
 <dt class="field-odd">Validated by<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_old_tags</span></code></p></li>
 <li><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.validate_tags" title="qcportal.managers.models.ManagerActivationBody.validate_tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_tags</span></code></a></p></li>
 </ul>
 </dd>
@@ -780,7 +942,7 @@
 
 <dl class="py method pydantic_validator">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerActivationBody.validate_tags">
-<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_tags</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.tags" title="qcportal.managers.models.ManagerActivationBody.tags"><em class="xref py py-obj"><span class="pre">tags</span></em></a><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerActivationBody.validate_tags"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody.validate_tags" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_tags</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.compute_tags" title="qcportal.managers.models.ManagerActivationBody.compute_tags"><em class="xref py py-obj"><span class="pre">compute_tags</span></em></a><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerActivationBody.validate_tags"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody.validate_tags" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method pydantic_validator">
@@ -928,12 +1090,12 @@
 
 <dl class="py method pydantic_validator">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters.parse_dates">
-<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.modified_after" title="qcportal.managers.models.ManagerQueryFilters.modified_after"><em class="xref py py-obj"><span class="pre">modified_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.modified_before" title="qcportal.managers.models.ManagerQueryFilters.modified_before"><em class="xref py py-obj"><span class="pre">modified_before</span></em></a><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerQueryFilters.parse_dates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.modified_before" title="qcportal.managers.models.ManagerQueryFilters.modified_before"><em class="xref py py-obj"><span class="pre">modified_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.modified_after" title="qcportal.managers.models.ManagerQueryFilters.modified_after"><em class="xref py py-obj"><span class="pre">modified_after</span></em></a><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerQueryFilters.parse_dates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method pydantic_validator">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters.validate_lists">
-<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_lists</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.limit" title="qcportal.managers.models.ManagerQueryFilters.limit"><em class="xref py py-obj"><span class="pre">limit</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.cursor" title="qcportal.managers.models.ManagerQueryFilters.cursor"><em class="xref py py-obj"><span class="pre">cursor</span></em></a><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.validate_lists" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_lists</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.cursor" title="qcportal.managers.models.ManagerQueryFilters.cursor"><em class="xref py py-obj"><span class="pre">cursor</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.limit" title="qcportal.managers.models.ManagerQueryFilters.limit"><em class="xref py py-obj"><span class="pre">limit</span></em></a><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.validate_lists" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -1063,7 +1225,7 @@ of a manager query</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.cluster"><code class="docutils literal notranslate"><span class="pre">ComputeManager.cluster</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.hostname"><code class="docutils literal notranslate"><span class="pre">ComputeManager.hostname</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.username"><code class="docutils literal notranslate"><span class="pre">ComputeManager.username</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.tags"><code class="docutils literal notranslate"><span class="pre">ComputeManager.tags</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.compute_tags"><code class="docutils literal notranslate"><span class="pre">ComputeManager.compute_tags</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.claimed"><code class="docutils literal notranslate"><span class="pre">ComputeManager.claimed</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.successes"><code class="docutils literal notranslate"><span class="pre">ComputeManager.successes</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.failures"><code class="docutils literal notranslate"><span class="pre">ComputeManager.failures</span></code></a></li>
@@ -1078,6 +1240,7 @@ of a manager query</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.manager_version"><code class="docutils literal notranslate"><span class="pre">ComputeManager.manager_version</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.programs"><code class="docutils literal notranslate"><span class="pre">ComputeManager.programs</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.propagate_client"><code class="docutils literal notranslate"><span class="pre">ComputeManager.propagate_client()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.tags"><code class="docutils literal notranslate"><span class="pre">ComputeManager.tags</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerActivationBody"><code class="docutils literal notranslate"><span class="pre">ManagerActivationBody</span></code></a><ul class="visible nav section-nav flex-column">
@@ -1085,7 +1248,7 @@ of a manager query</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerActivationBody.manager_version"><code class="docutils literal notranslate"><span class="pre">ManagerActivationBody.manager_version</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerActivationBody.username"><code class="docutils literal notranslate"><span class="pre">ManagerActivationBody.username</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerActivationBody.programs"><code class="docutils literal notranslate"><span class="pre">ManagerActivationBody.programs</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerActivationBody.tags"><code class="docutils literal notranslate"><span class="pre">ManagerActivationBody.tags</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerActivationBody.compute_tags"><code class="docutils literal notranslate"><span class="pre">ManagerActivationBody.compute_tags</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerActivationBody.validate_tags"><code class="docutils literal notranslate"><span class="pre">ManagerActivationBody.validate_tags</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerActivationBody.validate_programs"><code class="docutils literal notranslate"><span class="pre">ManagerActivationBody.validate_programs</span></code></a></li>
 </ul>

@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=64c69d60"></script>
+    <script src="../../_static/documentation_options.js?v=c4a8aa6c"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.59.post27+gf1466641c" />
+  <meta name="docsearch:version" content="0.59.post38+g7f99ae3bd" />
   </head>
   
   
@@ -567,8 +567,8 @@
     <span class="n">provenance</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
     <span class="n">extras</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 
-    <span class="n">default_tag</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">default_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span>
+    <span class="n">default_compute_tag</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">default_compute_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span>
 
     <span class="n">owner_user</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">owner_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
@@ -615,6 +615,10 @@
             <span class="k">del</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;visibility&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="s2">&quot;metadata&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
             <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;extras&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;metadata&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;default_tag&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;default_compute_tag&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;default_tag&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;default_priority&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;default_compute_priority&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;default_priority&quot;</span><span class="p">)</span>
 
         <span class="n">BaseModel</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
@@ -743,8 +747,8 @@
             <span class="s2">&quot;tagline&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tagline</span><span class="p">,</span>
             <span class="s2">&quot;tags&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tags</span><span class="p">,</span>
             <span class="s2">&quot;provenance&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">provenance</span><span class="p">,</span>
-            <span class="s2">&quot;default_tag&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_tag</span><span class="p">,</span>
-            <span class="s2">&quot;default_priority&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_priority</span><span class="p">,</span>
+            <span class="s2">&quot;default_compute_tag&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_compute_tag</span><span class="p">,</span>
+            <span class="s2">&quot;default_compute_priority&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_compute_priority</span><span class="p">,</span>
             <span class="s2">&quot;extras&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">extras</span><span class="p">,</span>
         <span class="p">}</span>
 
@@ -757,8 +761,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">tagline</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">tagline</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tags</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">tags</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">provenance</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">provenance</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">default_tag</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">default_tag</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">default_priority</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">default_priority</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default_compute_tag</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">default_compute_tag</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default_compute_priority</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">default_compute_priority</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">extras</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">extras</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_cache_data</span><span class="o">.</span><span class="n">update_metadata</span><span class="p">(</span><span class="s2">&quot;dataset_metadata&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
@@ -769,9 +773,10 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">entry_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">specification_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">tag</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">priority</span><span class="p">:</span> <span class="n">PriorityEnum</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">compute_tag</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">compute_priority</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PriorityEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">find_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>  <span class="c1"># For deprecated parameters</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InsertCountsMetadata</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create records for this dataset</span>
@@ -785,14 +790,22 @@
 <span class="sd">            Submit only records for these entries</span>
 <span class="sd">        specification_names</span>
 <span class="sd">            Submit only records for these specifications</span>
-<span class="sd">        tag</span>
-<span class="sd">            Use this tag for submissions (overrides the dataset default tag)</span>
-<span class="sd">        priority</span>
-<span class="sd">            Use this tag for submissions (overrides the dataset default priority)</span>
+<span class="sd">        compute_tag</span>
+<span class="sd">            Use this compute tag for submissions (overrides the dataset default tag)</span>
+<span class="sd">        compute_priority</span>
+<span class="sd">            Use this compute priority for submissions (overrides the dataset default priority)</span>
 <span class="sd">        find_existing</span>
 <span class="sd">            If True, the database will be searched for existing records that match the requested calculations, and new</span>
 <span class="sd">            records created for those that don&#39;t match. If False, new records will always be created.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;tag&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;&#39;tag&#39; is deprecated; use &#39;compute_tag&#39; instead&quot;</span><span class="p">)</span>
+            <span class="n">compute_tag</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;tag&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">&quot;priority&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;&#39;priority&#39; is deprecated; use &#39;compute_priority&#39; instead&quot;</span><span class="p">)</span>
+            <span class="n">compute_priority</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;priority&quot;</span><span class="p">]</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
@@ -818,8 +831,8 @@
                 <span class="n">body_data</span> <span class="o">=</span> <span class="n">DatasetSubmitBody</span><span class="p">(</span>
                     <span class="n">entry_names</span><span class="o">=</span><span class="n">entry_batch</span><span class="p">,</span>
                     <span class="n">specification_names</span><span class="o">=</span><span class="p">[</span><span class="n">spec</span><span class="p">],</span>
-                    <span class="n">tag</span><span class="o">=</span><span class="n">tag</span><span class="p">,</span>
-                    <span class="n">priority</span><span class="o">=</span><span class="n">priority</span><span class="p">,</span>
+                    <span class="n">compute_tag</span><span class="o">=</span><span class="n">compute_tag</span><span class="p">,</span>
+                    <span class="n">compute_priority</span><span class="o">=</span><span class="n">compute_priority</span><span class="p">,</span>
                     <span class="n">find_existing</span><span class="o">=</span><span class="n">find_existing</span><span class="p">,</span>
                 <span class="p">)</span>
 
@@ -842,9 +855,10 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">entry_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">specification_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">tag</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">priority</span><span class="p">:</span> <span class="n">PriorityEnum</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">compute_tag</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">compute_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">find_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>  <span class="c1"># For deprecated parameters</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InternalJob</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Adds a dataset submission internal job to the server</span>
@@ -860,6 +874,14 @@
 <span class="sd">        :</span>
 <span class="sd">            An internal job object that can be watch or used to determine the progress of the job.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;tag&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;&#39;tag&#39; is deprecated; use &#39;compute_tag&#39; instead&quot;</span><span class="p">)</span>
+            <span class="n">compute_tag</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;tag&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">&quot;priority&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;&#39;priority&#39; is deprecated; use &#39;compute_priority&#39; instead&quot;</span><span class="p">)</span>
+            <span class="n">compute_priority</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;priority&quot;</span><span class="p">]</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
@@ -877,8 +899,8 @@
         <span class="n">body_data</span> <span class="o">=</span> <span class="n">DatasetSubmitBody</span><span class="p">(</span>
             <span class="n">entry_names</span><span class="o">=</span><span class="n">entry_names</span><span class="p">,</span>
             <span class="n">specification_names</span><span class="o">=</span><span class="n">specification_names</span><span class="p">,</span>
-            <span class="n">tag</span><span class="o">=</span><span class="n">tag</span><span class="p">,</span>
-            <span class="n">priority</span><span class="o">=</span><span class="n">priority</span><span class="p">,</span>
+            <span class="n">compute_tag</span><span class="o">=</span><span class="n">compute_tag</span><span class="p">,</span>
+            <span class="n">compute_priority</span><span class="o">=</span><span class="n">compute_priority</span><span class="p">,</span>
             <span class="n">find_existing</span><span class="o">=</span><span class="n">find_existing</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -1300,16 +1322,16 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_metadata</span><span class="p">(</span><span class="n">extras</span><span class="o">=</span><span class="n">new_extras</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="BaseDataset.set_default_tag">
-<a class="viewcode-back" href="../../user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_default_tag">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">set_default_tag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_default_tag</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_update_metadata</span><span class="p">(</span><span class="n">default_tag</span><span class="o">=</span><span class="n">new_default_tag</span><span class="p">)</span></div>
+<div class="viewcode-block" id="BaseDataset.set_default_compute_tag">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_default_compute_tag">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_default_compute_tag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_default_compute_tag</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_metadata</span><span class="p">(</span><span class="n">default_compute_tag</span><span class="o">=</span><span class="n">new_default_compute_tag</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="BaseDataset.set_default_priority">
-<a class="viewcode-back" href="../../user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_default_priority">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">set_default_priority</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_default_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_update_metadata</span><span class="p">(</span><span class="n">default_priority</span><span class="o">=</span><span class="n">new_default_priority</span><span class="p">)</span></div>
+<div class="viewcode-block" id="BaseDataset.set_default_compute_priority">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_default_compute_priority">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_default_compute_priority</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_default_compute_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_metadata</span><span class="p">(</span><span class="n">default_compute_priority</span><span class="o">=</span><span class="n">new_default_compute_priority</span><span class="p">)</span></div>
 
 
     <span class="c1">##########################################</span>
@@ -1327,6 +1349,66 @@
         <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;set_metadata is deprecated and will be removed in a future release. Use set_extras instead&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_extras</span><span class="p">(</span><span class="n">new_metadata</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">default_tag</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;&#39;default_tag&#39; is deprecated and will be removed in a future release. Use &#39;default_compute_tag&#39; instead&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_compute_tag</span>
+
+<div class="viewcode-block" id="BaseDataset.set_default_tag">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_default_tag">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_default_tag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_default_tag</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;set_default_tag is deprecated and will be removed in a future release. Use set_extras instead&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_default_compute_tag</span><span class="p">(</span><span class="n">new_default_tag</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">default_priority</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PriorityEnum</span><span class="p">:</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;&#39;default_priority&#39; is deprecated and will be removed in a future release. Use &#39;default_compute_priority&#39; instead&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_compute_priority</span>
+
+<div class="viewcode-block" id="BaseDataset.set_default_priority">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_default_priority">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_default_priority</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_default_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span><span class="p">):</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;set_default_priority is deprecated and will be removed in a future release. Use set_extras instead&quot;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_default_compute_priority</span><span class="p">(</span><span class="n">new_default_priority</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">visibility</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;&#39;visibility&#39; is deprecated and will be removed in a future release&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="BaseDataset.set_visibility">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_visibility">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_visibility</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_visibility</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;set_visibility is deprecated and will be removed in a future release&quot;</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">group</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;&#39;group&#39; is deprecated and will be removed in a future release&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;default&quot;</span>
+
+<div class="viewcode-block" id="BaseDataset.set_group">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_group">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_group</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;set_group is deprecated and will be removed in a future release&quot;</span><span class="p">)</span></div>
 
 
     <span class="c1">###################################</span>
@@ -2205,12 +2287,23 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">entry_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">specification_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">new_tag</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">new_priority</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PriorityEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">new_compute_tag</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">new_compute_priority</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PriorityEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">new_comment</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">refetch_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>  <span class="c1"># For deprecated parameters</span>
     <span class="p">):</span>
+
+        <span class="c1"># TODO - DEPRECATED - remove eventually</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;new_tag&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;&#39;new_tag&#39; is deprecated; use &#39;new_compute_tag&#39; instead&quot;</span><span class="p">)</span>
+            <span class="n">new_compute_tag</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;new_tag&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">&quot;new_priority&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;&#39;new_priority&#39; is deprecated; use &#39;new_compute_priority&#39; instead&quot;</span><span class="p">)</span>
+            <span class="n">new_compute_priority</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;new_priority&quot;</span><span class="p">]</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
 
@@ -2220,8 +2313,8 @@
         <span class="n">body</span> <span class="o">=</span> <span class="n">DatasetRecordModifyBody</span><span class="p">(</span>
             <span class="n">entry_names</span><span class="o">=</span><span class="n">entry_names</span><span class="p">,</span>
             <span class="n">specification_names</span><span class="o">=</span><span class="n">specification_names</span><span class="p">,</span>
-            <span class="n">tag</span><span class="o">=</span><span class="n">new_tag</span><span class="p">,</span>
-            <span class="n">priority</span><span class="o">=</span><span class="n">new_priority</span><span class="p">,</span>
+            <span class="n">compute_tag</span><span class="o">=</span><span class="n">new_compute_tag</span><span class="p">,</span>
+            <span class="n">compute_priority</span><span class="o">=</span><span class="n">new_compute_priority</span><span class="p">,</span>
             <span class="n">comment</span><span class="o">=</span><span class="n">new_comment</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -2833,8 +2926,8 @@
     <span class="n">tagline</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">tags</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">provenance</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
-    <span class="n">default_tag</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">default_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span>
+    <span class="n">default_compute_tag</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">default_compute_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span>
     <span class="n">extras</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
     <span class="n">owner_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">existing_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
@@ -2848,6 +2941,11 @@
             <span class="k">del</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;visibility&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="s2">&quot;metadata&quot;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
             <span class="n">values</span><span class="p">[</span><span class="s2">&quot;extras&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;metadata&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;default_tag&quot;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="n">values</span><span class="p">[</span><span class="s2">&quot;default_compute_tag&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;default_tag&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;default_priority&quot;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="n">values</span><span class="p">[</span><span class="s2">&quot;default_compute_priority&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;default_priority&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">values</span></div>
 
@@ -2863,8 +2961,8 @@
     <span class="n">provenance</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
     <span class="n">extras</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
 
-    <span class="n">default_tag</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">default_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span>
+    <span class="n">default_compute_tag</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">default_compute_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span>
 
     <span class="c1"># TODO - DEPRECATED - Remove eventually</span>
     <span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -2875,6 +2973,11 @@
             <span class="k">del</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;visibility&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="s2">&quot;metadata&quot;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
             <span class="n">values</span><span class="p">[</span><span class="s2">&quot;extras&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;metadata&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;default_tag&quot;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="n">values</span><span class="p">[</span><span class="s2">&quot;default_compute_tag&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;default_tag&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;default_priority&quot;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="n">values</span><span class="p">[</span><span class="s2">&quot;default_compute_priority&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;default_priority&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">values</span></div>
 
@@ -2983,10 +3086,20 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">DatasetSubmitBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
     <span class="n">entry_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">specification_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">tag</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">priority</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PriorityEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">compute_tag</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">compute_priority</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PriorityEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">owner_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">find_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span></div>
+    <span class="n">find_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rm_deprecated</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="c1"># TODO - DEPRECATED - Remove eventually</span>
+        <span class="k">if</span> <span class="s2">&quot;tag&quot;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="n">values</span><span class="p">[</span><span class="s2">&quot;compute_tag&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tag&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;priority&quot;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="n">values</span><span class="p">[</span><span class="s2">&quot;compute_priority&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;priority&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">values</span></div>
 
 
 
@@ -2996,9 +3109,19 @@
     <span class="n">entry_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">specification_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">priority</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PriorityEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">tag</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">comment</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+    <span class="n">compute_priority</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PriorityEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">compute_tag</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">comment</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rm_deprecated</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="c1"># TODO - DEPRECATED - Remove eventually</span>
+        <span class="k">if</span> <span class="s2">&quot;tag&quot;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="n">values</span><span class="p">[</span><span class="s2">&quot;compute_tag&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tag&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;priority&quot;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="n">values</span><span class="p">[</span><span class="s2">&quot;compute_priority&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;priority&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">values</span></div>
 
 
 

@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=64c69d60"></script>
+    <script src="../_static/documentation_options.js?v=c4a8aa6c"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Glossary of Common Concepts" href="glossary.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.59.post27+gf1466641c" />
+  <meta name="docsearch:version" content="0.59.post38+g7f99ae3bd" />
   </head>
   
   
@@ -480,7 +480,7 @@ this record is service-based.</p>
 These records have a <a class="reference internal" href="../user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord.task" title="qcportal.record_models.BaseRecord.task"><code class="xref py py-attr docutils literal notranslate"><span class="pre">task</span></code></a> property, which contains all the information
 necessary for computation. This data is what is actually sent to the compute manager. Typically, a user does not
 need to access this object, but it can be useful for developers and for debugging purposes.</p>
-<p>This <a class="reference internal" href="../user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordTask" title="qcportal.record_models.RecordTask"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordTask</span></code></a> also contains the routing tag and priority.
+<p>This <a class="reference internal" href="../user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordTask" title="qcportal.record_models.RecordTask"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordTask</span></code></a> also contains the compute tag and priority.
 After successful completion, the associated task is removed from the database.</p>
 <img alt="../_images/tasks_diagram.svg" class="align-center" src="../_images/tasks_diagram.svg" />
 </section>
@@ -490,8 +490,8 @@ After successful completion, the associated task is removed from the database.</
 The server is responsible for selecting which services are due for iterating, and code on the server
 does the iteration itself. There is typically a limit on the number of running services on a server
 (which is configurable).</p>
-<p>Like tasks, services are assigned a tag and priority - the priority determines the order that the services start
-on the server. Dependencies (new records) created by the services inherit both the tag and priority.</p>
+<p>Like tasks, services are assigned a compute tag and priority - the priority determines the order that the services start
+on the server. Dependencies (new records) created by the services inherit both the compute tag and priority.</p>
 <p>Records that are based on services have a <a class="reference internal" href="../user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord.service" title="qcportal.record_models.BaseRecord.service"><code class="xref py py-attr docutils literal notranslate"><span class="pre">service</span></code></a> property
 (a <a class="reference internal" href="../user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordService" title="qcportal.record_models.RecordService"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordService</span></code></a>), which contains
 all the information about the service. Like tasks, it is not commonly needed by users, except for debugging.</p>
@@ -499,13 +499,13 @@ all the information about the service. Like tasks, it is not commonly needed by 
 be viewed with the <a class="reference internal" href="../user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord.stdout" title="qcportal.record_models.BaseRecord.stdout"><code class="xref py py-attr docutils literal notranslate"><span class="pre">stdout</span></code></a> property.</p>
 <img alt="../_images/services_diagram.svg" class="align-center" src="../_images/services_diagram.svg" />
 </section>
-<section id="routing-tags">
-<span id="id3"></span><h2>Routing tags<a class="headerlink" href="#routing-tags" title="Link to this heading">#</a></h2>
-<p>Routing tags are user-specified strings that assist in routing tasks to particular managers.
+<section id="compute-tags">
+<span id="id3"></span><h2>Compute tags<a class="headerlink" href="#compute-tags" title="Link to this heading">#</a></h2>
+<p>Compute tags are user-specified strings that assist in routing tasks to particular managers.
 Every task is given a single tag when the record is submitted, and managers
 are configured with multiple tags.</p>
 <p>Managers are configured to claim tasks whose tag matches one given in their configuration.</p>
-<img alt="../_images/routing_tags.svg" class="align-center" src="../_images/routing_tags.svg" />
+<img alt="../_images/compute_tags.svg" class="align-center" src="../_images/compute_tags.svg" />
 <p>Tags are matched with the following considerations:</p>
 <ul class="simple">
 <li><p>Tasks are first come, first serve. If a manager is able to claim a task, it will do so, even if
@@ -585,7 +585,7 @@ server first.</p>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tasks">Tasks</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#services">Services</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#routing-tags">Routing tags</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compute-tags">Compute tags</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tasks-and-services-api">Tasks and Services API</a></li>
 </ul>
   </nav></div>

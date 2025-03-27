@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=64c69d60"></script>
+    <script src="../../../_static/documentation_options.js?v=c4a8aa6c"></script>
     <script src="../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Base Record Models" href="base_record_models.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.59.post27+gf1466641c" />
+  <meta name="docsearch:version" content="0.59.post38+g7f99ae3bd" />
   </head>
   
   
@@ -981,44 +981,86 @@ that can span multiple records</p>
 </dd>
 <dt class="field-even">Fields<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointAddBody.compute_priority" title="qcportal.singlepoint.record_models.SinglepointAddBody.compute_priority"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_priority</span> <span class="pre">(qcportal.record_models.PriorityEnum)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointAddBody.compute_tag" title="qcportal.singlepoint.record_models.SinglepointAddBody.compute_tag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_tag</span> <span class="pre">(qcportal.record_models.ConstrainedStrValue)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointAddBody.find_existing" title="qcportal.singlepoint.record_models.SinglepointAddBody.find_existing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_existing</span> <span class="pre">(bool)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointAddBody.molecules" title="qcportal.singlepoint.record_models.SinglepointAddBody.molecules"><code class="xref py py-obj docutils literal notranslate"><span class="pre">molecules</span> <span class="pre">(List[int</span> <span class="pre">|</span> <span class="pre">qcelemental.models.molecule.Molecule])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointAddBody.owner_group" title="qcportal.singlepoint.record_models.SinglepointAddBody.owner_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owner_group</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointAddBody.priority" title="qcportal.singlepoint.record_models.SinglepointAddBody.priority"><code class="xref py py-obj docutils literal notranslate"><span class="pre">priority</span> <span class="pre">(qcportal.record_models.PriorityEnum)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointAddBody.specification" title="qcportal.singlepoint.record_models.SinglepointAddBody.specification"><code class="xref py py-obj docutils literal notranslate"><span class="pre">specification</span> <span class="pre">(qcportal.singlepoint.record_models.QCSpecification)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointAddBody.tag" title="qcportal.singlepoint.record_models.SinglepointAddBody.tag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tag</span> <span class="pre">(qcportal.record_models.ConstrainedStrValue)</span></code></a></p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointAddBody.specification">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">specification</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.singlepoint.record_models.QCSpecification" title="qcportal.singlepoint.record_models.QCSpecification"><span class="pre">QCSpecification</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointAddBody.specification" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointAddBody.molecules">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">molecules</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Molecule</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointAddBody.molecules" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointAddBody.tag">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">constr</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">to_lower</span></span><span class="o"><span class="pre">=</span></span><span class="k"><span class="pre">True</span></span><span class="p"><span class="pre">)</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointAddBody.tag" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointAddBody.compute_tag">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">constr</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">to_lower</span></span><span class="o"><span class="pre">=</span></span><span class="k"><span class="pre">True</span></span><span class="p"><span class="pre">)</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointAddBody.compute_tag" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointAddBody.priority">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">priority</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="base_record_models.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><span class="pre">PriorityEnum</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointAddBody.priority" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointAddBody.compute_priority">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_priority</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="base_record_models.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><span class="pre">PriorityEnum</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointAddBody.compute_priority" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointAddBody.owner_group">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">owner_group</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointAddBody.owner_group" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointAddBody.find_existing">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">find_existing</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointAddBody.find_existing" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -1111,12 +1153,12 @@ that can span multiple records</p>
 
 <dl class="py method pydantic_validator">
 <dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointQueryFilters.parse_dates">
-<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.created_after" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.created_after"><em class="xref py py-obj"><span class="pre">created_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.modified_after" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.modified_after"><em class="xref py py-obj"><span class="pre">modified_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.created_before" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.created_before"><em class="xref py py-obj"><span class="pre">created_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.modified_before" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.modified_before"><em class="xref py py-obj"><span class="pre">modified_before</span></em></a><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.modified_before" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.modified_before"><em class="xref py py-obj"><span class="pre">modified_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.created_after" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.created_after"><em class="xref py py-obj"><span class="pre">created_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.modified_after" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.modified_after"><em class="xref py py-obj"><span class="pre">modified_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.created_before" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.created_before"><em class="xref py py-obj"><span class="pre">created_before</span></em></a><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method pydantic_validator">
 <dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointQueryFilters.validate_lists">
-<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_lists</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.cursor" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.cursor"><em class="xref py py-obj"><span class="pre">cursor</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.limit" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.limit"><em class="xref py py-obj"><span class="pre">limit</span></em></a><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.validate_lists" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_lists</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.limit" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.limit"><em class="xref py py-obj"><span class="pre">limit</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.cursor" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.cursor"><em class="xref py py-obj"><span class="pre">cursor</span></em></a><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.validate_lists" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -1519,8 +1561,8 @@ that can span multiple records</p>
 <li><p><a class="reference internal" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.auto_fetch_missing" title="qcportal.singlepoint.dataset_models.SinglepointDataset.auto_fetch_missing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">auto_fetch_missing</span> <span class="pre">(bool)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.contributed_values_" title="qcportal.singlepoint.dataset_models.SinglepointDataset.contributed_values_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">contributed_values_</span> <span class="pre">(Dict[str,</span> <span class="pre">qcportal.dataset_models.ContributedValues]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.dataset_type" title="qcportal.singlepoint.dataset_models.SinglepointDataset.dataset_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dataset_type</span> <span class="pre">(Literal['singlepoint'])</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.default_priority" title="qcportal.singlepoint.dataset_models.SinglepointDataset.default_priority"><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_priority</span> <span class="pre">(qcportal.record_models.PriorityEnum)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.default_tag" title="qcportal.singlepoint.dataset_models.SinglepointDataset.default_tag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_tag</span> <span class="pre">(str)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.default_compute_priority" title="qcportal.singlepoint.dataset_models.SinglepointDataset.default_compute_priority"><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_compute_priority</span> <span class="pre">(qcportal.record_models.PriorityEnum)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.default_compute_tag" title="qcportal.singlepoint.dataset_models.SinglepointDataset.default_compute_tag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_compute_tag</span> <span class="pre">(str)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.description" title="qcportal.singlepoint.dataset_models.SinglepointDataset.description"><code class="xref py py-obj docutils literal notranslate"><span class="pre">description</span> <span class="pre">(str)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.extras" title="qcportal.singlepoint.dataset_models.SinglepointDataset.extras"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extras</span> <span class="pre">(Dict[str,</span> <span class="pre">Any])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.id" title="qcportal.singlepoint.dataset_models.SinglepointDataset.id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id</span> <span class="pre">(int)</span></code></a></p></li>
@@ -1619,7 +1661,7 @@ that can span multiple records</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.singlepoint.dataset_models.SinglepointDataset.background_submit">
-<span class="sig-name descname"><span class="pre">background_submit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">find_existing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.background_submit" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">background_submit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_tag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_priority</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">find_existing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.background_submit" title="Link to this definition">#</a></dt>
 <dd><p>Adds a dataset submission internal job to the server</p>
 <p>This internal job is the one to actually do the submission, which can take a while.</p>
 <p>You can check the progress of the internal job using the return object.</p>
@@ -1632,8 +1674,8 @@ that can span multiple records</p>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
 <li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>tag</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>priority</strong> (<a class="reference internal" href="base_record_models.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a>)</p></li>
+<li><p><strong>compute_tag</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>compute_priority</strong> (<a class="reference internal" href="base_record_models.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a>)</p></li>
 <li><p><strong>find_existing</strong> (<em>bool</em>)</p></li>
 </ul>
 </dd>
@@ -1786,6 +1828,16 @@ in the view file.</p></li>
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.singlepoint.dataset_models.SinglepointDataset.default_priority">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">default_priority</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="base_record_models.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><span class="pre">PriorityEnum</span></a></em><a class="headerlink" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.default_priority" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.singlepoint.dataset_models.SinglepointDataset.default_tag">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">default_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.default_tag" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.singlepoint.dataset_models.SinglepointDataset.delete_attachment">
@@ -2073,6 +2125,11 @@ If a record does not exist for this entry and specification, None is returned</p
 </dl>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.singlepoint.dataset_models.SinglepointDataset.group">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">group</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.group" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.singlepoint.dataset_models.SinglepointDataset.invalidate_records">
 <span class="sig-name descname"><span class="pre">invalidate_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refetch_records</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.invalidate_records" title="Link to this definition">#</a></dt>
@@ -2163,14 +2220,14 @@ If a record does not exist for this entry and specification, None is returned</p
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.singlepoint.dataset_models.SinglepointDataset.modify_records">
-<span class="sig-name descname"><span class="pre">modify_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_tag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_priority</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_comment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refetch_records</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.modify_records" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">modify_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_compute_tag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_compute_priority</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_comment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refetch_records</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.modify_records" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
 <li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>new_tag</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>new_priority</strong> (<a class="reference internal" href="base_record_models.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>new_compute_tag</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>new_compute_priority</strong> (<a class="reference internal" href="base_record_models.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a><em> | </em><em>None</em>)</p></li>
 <li><p><strong>new_comment</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>refetch_records</strong> (<em>bool</em>)</p></li>
 </ul>
@@ -2290,6 +2347,26 @@ by a submit without duplicate checking.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="qcportal.singlepoint.dataset_models.SinglepointDataset.set_default_compute_priority">
+<span class="sig-name descname"><span class="pre">set_default_compute_priority</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_default_compute_priority</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.set_default_compute_priority" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_default_compute_priority</strong> (<a class="reference internal" href="base_record_models.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.singlepoint.dataset_models.SinglepointDataset.set_default_compute_tag">
+<span class="sig-name descname"><span class="pre">set_default_compute_tag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_default_compute_tag</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.set_default_compute_tag" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_default_compute_tag</strong> (<em>str</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="qcportal.singlepoint.dataset_models.SinglepointDataset.set_default_priority">
 <span class="sig-name descname"><span class="pre">set_default_priority</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_default_priority</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.set_default_priority" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
@@ -2325,6 +2402,16 @@ by a submit without duplicate checking.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>new_extras</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.singlepoint.dataset_models.SinglepointDataset.set_group">
+<span class="sig-name descname"><span class="pre">set_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.set_group" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_group</strong> (<em>str</em>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2379,6 +2466,16 @@ by a submit without duplicate checking.</p>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.singlepoint.dataset_models.SinglepointDataset.set_visibility">
+<span class="sig-name descname"><span class="pre">set_visibility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_visibility</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.set_visibility" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_visibility</strong> (<em>bool</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.singlepoint.dataset_models.SinglepointDataset.specification_names">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">specification_names</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.specification_names" title="Link to this definition">#</a></dt>
@@ -2412,7 +2509,7 @@ by a submit without duplicate checking.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.singlepoint.dataset_models.SinglepointDataset.submit">
-<span class="sig-name descname"><span class="pre">submit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">find_existing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.submit" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">submit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_tag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_priority</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">find_existing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.submit" title="Link to this definition">#</a></dt>
 <dd><p>Create records for this dataset</p>
 <p>This function actually populates the datasets records given the entry and
 specification information.</p>
@@ -2421,8 +2518,8 @@ specification information.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Submit only records for these entries</p></li>
 <li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Submit only records for these specifications</p></li>
-<li><p><strong>tag</strong> (<em>str</em><em> | </em><em>None</em>) – Use this tag for submissions (overrides the dataset default tag)</p></li>
-<li><p><strong>priority</strong> (<a class="reference internal" href="base_record_models.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a>) – Use this tag for submissions (overrides the dataset default priority)</p></li>
+<li><p><strong>compute_tag</strong> (<em>str</em><em> | </em><em>None</em>) – Use this compute tag for submissions (overrides the dataset default tag)</p></li>
+<li><p><strong>compute_priority</strong> (<a class="reference internal" href="base_record_models.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a><em> | </em><em>None</em>) – Use this compute priority for submissions (overrides the dataset default priority)</p></li>
 <li><p><strong>find_existing</strong> (<em>bool</em>) – If True, the database will be searched for existing records that match the requested calculations, and new
 records created for those that don’t match. If False, new records will always be created.</p></li>
 </ul>
@@ -2472,6 +2569,11 @@ records created for those that don’t match. If False, new records will always 
 </dl>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.singlepoint.dataset_models.SinglepointDataset.visibility">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">visibility</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.visibility" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.singlepoint.dataset_models.SinglepointDataset.id">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.id" title="Link to this definition">#</a></dt>
@@ -2508,13 +2610,13 @@ records created for those that don’t match. If False, new records will always 
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.singlepoint.dataset_models.SinglepointDataset.default_tag">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">default_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.default_tag" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="qcportal.singlepoint.dataset_models.SinglepointDataset.default_compute_tag">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">default_compute_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.default_compute_tag" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.singlepoint.dataset_models.SinglepointDataset.default_priority">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">default_priority</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="base_record_models.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><span class="pre">PriorityEnum</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.default_priority" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="qcportal.singlepoint.dataset_models.SinglepointDataset.default_compute_priority">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">default_compute_priority</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="base_record_models.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><span class="pre">PriorityEnum</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.default_compute_priority" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -2665,8 +2767,8 @@ records created for those that don’t match. If False, new records will always 
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointAddBody"><code class="docutils literal notranslate"><span class="pre">SinglepointAddBody</span></code></a><ul class="visible nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointAddBody.specification"><code class="docutils literal notranslate"><span class="pre">SinglepointAddBody.specification</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointAddBody.molecules"><code class="docutils literal notranslate"><span class="pre">SinglepointAddBody.molecules</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointAddBody.tag"><code class="docutils literal notranslate"><span class="pre">SinglepointAddBody.tag</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointAddBody.priority"><code class="docutils literal notranslate"><span class="pre">SinglepointAddBody.priority</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointAddBody.compute_tag"><code class="docutils literal notranslate"><span class="pre">SinglepointAddBody.compute_tag</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointAddBody.compute_priority"><code class="docutils literal notranslate"><span class="pre">SinglepointAddBody.compute_priority</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointAddBody.owner_group"><code class="docutils literal notranslate"><span class="pre">SinglepointAddBody.owner_group</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointAddBody.find_existing"><code class="docutils literal notranslate"><span class="pre">SinglepointAddBody.find_existing</span></code></a></li>
 </ul>
@@ -2754,6 +2856,8 @@ records created for those that don’t match. If False, new records will always 
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.copy_records_from"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.copy_records_from()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.copy_specifications_from"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.copy_specifications_from()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.create_view"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.create_view()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.default_priority"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.default_priority</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.default_tag"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.default_tag</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.delete_attachment"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.delete_attachment()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.delete_entries"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.delete_entries()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.delete_specification"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.delete_specification()</span></code></a></li>
@@ -2773,6 +2877,7 @@ records created for those that don’t match. If False, new records will always 
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.get_properties_df"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.get_properties_df()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.get_record"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.get_record()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.get_subclass"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.get_subclass()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.group"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.group</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.invalidate_records"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.invalidate_records()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.is_view"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.is_view</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.iterate_entries"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.iterate_entries()</span></code></a></li>
@@ -2792,15 +2897,19 @@ records created for those that don’t match. If False, new records will always 
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.rename_entries"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.rename_entries()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.rename_specification"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.rename_specification()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.reset_records"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.reset_records()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.set_default_compute_priority"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.set_default_compute_priority()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.set_default_compute_tag"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.set_default_compute_tag()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.set_default_priority"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.set_default_priority()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.set_default_tag"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.set_default_tag()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.set_description"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.set_description()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.set_extras"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.set_extras()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.set_group"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.set_group()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.set_metadata"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.set_metadata()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.set_name"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.set_name()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.set_provenance"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.set_provenance()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.set_tagline"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.set_tagline()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.set_tags"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.set_tags()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.set_visibility"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.set_visibility()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.specification_names"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.specification_names</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.specifications"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.specifications</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.status"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.status()</span></code></a></li>
@@ -2809,6 +2918,7 @@ records created for those that don’t match. If False, new records will always 
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.uncancel_records"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.uncancel_records()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.uninvalidate_records"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.uninvalidate_records()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.use_view_cache"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.use_view_cache()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.visibility"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.visibility</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.id"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.id</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.name"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.name</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.description"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.description</span></code></a></li>
@@ -2816,8 +2926,8 @@ records created for those that don’t match. If False, new records will always 
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.tags"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.tags</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.provenance"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.provenance</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.extras"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.extras</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.default_tag"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.default_tag</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.default_priority"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.default_priority</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.default_compute_tag"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.default_compute_tag</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.default_compute_priority"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.default_compute_priority</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.owner_user"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.owner_user</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.owner_group"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.owner_group</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.dataset_models.SinglepointDataset.contributed_values_"><code class="docutils literal notranslate"><span class="pre">SinglepointDataset.contributed_values_</span></code></a></li>

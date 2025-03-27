@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=64c69d60"></script>
+    <script src="../../_static/documentation_options.js?v=c4a8aa6c"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Using datasets" href="basics.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.59.post27+gf1466641c" />
+  <meta name="docsearch:version" content="0.59.post38+g7f99ae3bd" />
   </head>
   
   
@@ -525,13 +525,13 @@ PYTHON</label><div class="sd-tab-content docutils">
 </div>
 </div>
 <p>The <a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.add_dataset" title="qcportal.client.PortalClient.add_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_dataset()</span></code></a> takes several optional arguments, including
-some for descriptions of the dataset as well as default priority and <a class="reference internal" href="../../overview/tasks_services.html#routing-tags"><span class="std std-ref">tags</span></a>.</p>
+some for descriptions of the dataset as well as default compute priority and <a class="reference internal" href="../../overview/tasks_services.html#compute-tags"><span class="std std-ref">tags</span></a>.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-1">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;optimization&quot;</span><span class="p">,</span> <span class="s2">&quot;Optimization of large molecules&quot;</span><span class="p">,</span>
-<span class="go">..                          default_tag=&quot;large_mem&quot;, default_priority=&quot;low&quot;)</span>
+<span class="gp">... </span>                         <span class="n">default_compute_tag</span><span class="o">=</span><span class="s2">&quot;large_mem&quot;</span><span class="p">,</span> <span class="n">default_compute_priority</span><span class="o">=</span><span class="s2">&quot;low&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
 <span class="go">28</span>
 </pre></div>
@@ -629,8 +629,8 @@ we use <a class="reference internal" href="../qcportal_reference/records/base_re
 </li>
 </ol>
 <p>With no arguments, this will find/create and attach missing records for all entries and specifications, using the
-default tag and priority of the dataset (set when creating the dataset, or <a class="reference internal" href="maintenance.html#dataset-modify-meta"><span class="std std-ref">modified after</span></a>).</p>
-<p>You may also submit only certain entries and specifications, or change the tag and priority of any newly-created records.</p>
+default compute tag and priority of the dataset (set when creating the dataset, or <a class="reference internal" href="maintenance.html#dataset-modify-meta"><span class="std std-ref">modified after</span></a>).</p>
+<p>You may also submit only certain entries and specifications, or change the compute tag and priority of any newly-created records.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-5" name="sd-tab-set-5" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-5">
@@ -638,10 +638,10 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">submit</span><span class="p">()</span> <span class="c1"># Create everything</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Submit missing difluorine computations with a special tag</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">submit</span><span class="p">([</span><span class="s1">&#39;difluorine&#39;</span><span class="p">],</span> <span class="n">tag</span><span class="o">=</span><span class="s1">&#39;special_tag&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">submit</span><span class="p">([</span><span class="s1">&#39;difluorine&#39;</span><span class="p">],</span> <span class="n">compute_tag</span><span class="o">=</span><span class="s1">&#39;special_tag&#39;</span><span class="p">)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Submit dibromine hf/sto-3g computation at a high priority</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">submit</span><span class="p">([</span><span class="s1">&#39;dibromine&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;hf/sto-3g&#39;</span><span class="p">],</span> <span class="n">priority</span><span class="o">=</span><span class="s1">&#39;high&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">submit</span><span class="p">([</span><span class="s1">&#39;dibromine&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;hf/sto-3g&#39;</span><span class="p">],</span> <span class="n">compute_priority</span><span class="o">=</span><span class="s1">&#39;high&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>

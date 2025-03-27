@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=64c69d60"></script>
+    <script src="../../_static/documentation_options.js?v=c4a8aa6c"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Creating datasets" href="creating.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.59.post27+gf1466641c" />
+  <meta name="docsearch:version" content="0.59.post38+g7f99ae3bd" />
   </head>
   
   
@@ -520,21 +520,39 @@ See the following functions:</p>
 <li><p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_tagline" title="qcportal.dataset_models.BaseDataset.set_tagline"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_tagline()</span></code></a></p></li>
 <li><p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_provenance" title="qcportal.dataset_models.BaseDataset.set_provenance"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_provenance()</span></code></a></p></li>
 <li><p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_metadata" title="qcportal.dataset_models.BaseDataset.set_metadata"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_metadata()</span></code></a></p></li>
-<li><p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_default_tag" title="qcportal.dataset_models.BaseDataset.set_default_tag"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_default_tag()</span></code></a></p></li>
-<li><p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_default_priority" title="qcportal.dataset_models.BaseDataset.set_default_priority"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_default_priority()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_default_compute_tag" title="qcportal.dataset_models.BaseDataset.set_default_compute_tag"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_default_compute_tag()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_default_compute_priority" title="qcportal.dataset_models.BaseDataset.set_default_compute_priority"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_default_compute_priority()</span></code></a></p></li>
 </ul>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-0">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">get_dataset_by_id</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">set_default_priority</span><span class="p">(</span><span class="s2">&quot;low&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="s2">&quot;New Dataset Name&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-<span class="go">New Dataset Name</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span>    <span class="o">&gt;&gt;&gt;</span> <span class="n">ds</span> <span class="o">=</span> <span class="n">get_dataset_by_id</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="n">ds</span><span class="o">.</span><span class="n">set_default_compute_priority</span><span class="p">(</span><span class="s2">&quot;low&quot;</span><span class="p">)</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="n">ds</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="s2">&quot;New Dataset Name&quot;</span><span class="p">)</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">New</span> <span class="n">Dataset</span> <span class="n">Name</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">default_priority</span><span class="p">)</span>
-<span class="go">PriorityEnum.low</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">default_priority</span><span class="p">)</span>
+    <span class="n">PriorityEnum</span><span class="o">.</span><span class="n">low</span>
+
+    <span class="o">&gt;&gt;&gt;</span> <span class="n">ds</span> <span class="o">=</span> <span class="n">get_dataset_by_id</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="n">ds</span><span class="o">.</span><span class="n">set_default_compute_priority</span><span class="p">(</span><span class="s2">&quot;low&quot;</span><span class="p">)</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="n">ds</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="s2">&quot;New Dataset Name&quot;</span><span class="p">)</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">New</span> <span class="n">Dataset</span> <span class="n">Name</span>
+
+    <span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">default_priority</span><span class="p">)</span>
+    <span class="n">PriorityEnum</span><span class="o">.</span><span class="n">low</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">ds</span> <span class="o">=</span> <span class="n">get_dataset_by_id</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">ds</span><span class="o">.</span><span class="n">set_default_priority</span><span class="p">(</span><span class="s2">&quot;low&quot;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">ds</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="s2">&quot;New Dataset Name&quot;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<span class="n">New</span> <span class="n">Dataset</span> <span class="n">Name</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">default_priority</span><span class="p">)</span>
+<span class="n">PriorityEnum</span><span class="o">.</span><span class="n">low</span>
 </pre></div>
 </div>
 </div>

@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=64c69d60"></script>
+    <script src="../_static/documentation_options.js?v=c4a8aa6c"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Retrieving records" href="record_retrieval.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.59.post27+gf1466641c" />
+  <meta name="docsearch:version" content="0.59.post38+g7f99ae3bd" />
   </head>
   
   
@@ -551,9 +551,9 @@ QCPortal</label><div class="sd-tab-content docutils">
 </div>
 <p>The specifics of the <code class="docutils literal notranslate"><span class="pre">add_</span></code> functions depends on the type of computation. <a class="reference internal" href="records/index.html"><span class="doc">See the documentation
 for different records</span></a>.</p>
-<section id="tag-priority">
-<span id="record-submit-tags-owners"></span><h2>Tag &amp; Priority<a class="headerlink" href="#tag-priority" title="Link to this heading">#</a></h2>
-<p>The <a class="reference internal" href="../overview/tasks_services.html#routing-tags"><span class="std std-ref">routing tag</span></a> and/or priority of a record/task can be specified with the <code class="docutils literal notranslate"><span class="pre">add_</span></code> functions as
+<section id="compute-tag-priority">
+<span id="record-submit-tags-owners"></span><h2>Compute Tag &amp; Priority<a class="headerlink" href="#compute-tag-priority" title="Link to this heading">#</a></h2>
+<p>The <a class="reference internal" href="../overview/tasks_services.html#compute-tags"><span class="std std-ref">compute tag</span></a> and/or priority of a record/task can be specified with the <code class="docutils literal notranslate"><span class="pre">add_</span></code> functions as
 well. Tasks with a higher priority will be claimed before lower priorities. Priorities can be
 specified either as a string or integer (0 = ‘low’, 1 = ‘normal’, 2 = ‘high’),
 or as an enum member (like <code class="docutils literal notranslate"><span class="pre">PriorityEnum.high</span></code>).</p>
@@ -564,12 +564,13 @@ or as an enum member (like <code class="docutils literal notranslate"><span clas
 QCPortal</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Add a single computation</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_singlepoints</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="s1">&#39;energy&#39;</span><span class="p">,</span> <span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> <span class="s1">&#39;def2-tzvp&#39;</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s1">&#39;small_mem&#39;</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="s1">&#39;high&#39;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_singlepoints</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="s1">&#39;energy&#39;</span><span class="p">,</span> <span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> <span class="s1">&#39;def2-tzvp&#39;</span><span class="p">,</span>
+<span class="o">...</span>                                     <span class="n">compute_tag</span><span class="o">=</span><span class="s1">&#39;small_mem&#39;</span><span class="p">,</span> <span class="n">compute_priority</span><span class="o">=</span><span class="s1">&#39;high&#39;</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
 <span class="n">InsertMetadata</span><span class="p">(</span><span class="n">error_description</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="p">[],</span> <span class="n">inserted_idx</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">existing_idx</span><span class="o">=</span><span class="p">[])</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">record</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="n">ids</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">tag</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">compute_tag</span><span class="p">)</span>
 <span class="s1">&#39;small_mem&#39;</span>
 </pre></div>
 </div>
@@ -592,8 +593,8 @@ Some features that are usually considered are:</p>
 <p>Some things that are <strong>not</strong> considered when finding duplicate calculations:</p>
 <ul class="simple">
 <li><p>status</p></li>
-<li><p>tags</p></li>
-<li><p>priority</p></li>
+<li><p>compute tag</p></li>
+<li><p>compute priority</p></li>
 </ul>
 <p>This default behavior can be overridden using the <code class="docutils literal notranslate"><span class="pre">find_existing</span></code> argument to the <code class="docutils literal notranslate"><span class="pre">add_</span></code> functions.</p>
 <div class="sd-tab-set docutils">
@@ -683,7 +684,7 @@ records created by the service</strong>, will always be created.</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tag-priority">Tag &amp; Priority</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compute-tag-priority">Compute Tag &amp; Priority</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#record-deduplication">Record Deduplication</a></li>
 </ul>
   </nav></div>

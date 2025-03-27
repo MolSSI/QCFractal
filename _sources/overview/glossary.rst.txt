@@ -84,13 +84,13 @@ See :doc:`Compute Managers <../admin_guide/managers/index>` in the user guide.
 
 .. _glossary_tag:
 
-routing tag
+compute tag
 -----------
 
-A *routing tag* (or just *tag*) is a user-specified string to assist in the routing of :ref:`tasks <glossary_task>`.
+A *compute tag* is a user-specified string to assist in the routing of :ref:`tasks <glossary_task>`.
 :ref:`Managers <glossary_manager>` can be set up to only requests tasks that are
 assigned a specific tag. This can assist with directing certain tasks to special hardware, for example.
-See :ref:`routing_tags`.
+See :ref:`compute_tags`.
 
 
 .. _glossary_dataset:

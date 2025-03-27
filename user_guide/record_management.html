@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=64c69d60"></script>
+    <script src="../_static/documentation_options.js?v=c4a8aa6c"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Submitting computations" href="record_submission.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.59.post27+gf1466641c" />
+  <meta name="docsearch:version" content="0.59.post38+g7f99ae3bd" />
   </head>
   
   
@@ -749,24 +749,24 @@ PYTHON</label><div class="sd-tab-content docutils">
 <p>Invalidating a record will also cancel any parent records (for example, if this record was part of a service).</p>
 </div>
 </section>
-<section id="changing-tag-and-priority">
-<h3>Changing tag and priority<a class="headerlink" href="#changing-tag-and-priority" title="Link to this heading">#</a></h3>
-<p>A record’s tag and priority can be changed if it has not yet been successfully completed (ie, the task or service
+<section id="changing-compute-tag-and-priority">
+<h3>Changing compute tag and priority<a class="headerlink" href="#changing-compute-tag-and-priority" title="Link to this heading">#</a></h3>
+<p>A record’s compute tag and priority can be changed if it has not yet been successfully completed (ie, the task or service
 still exists - see <a class="reference internal" href="../overview/tasks_services.html"><span class="doc">Tasks and Services</span></a>).</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-7" name="sd-tab-set-7" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-7">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">941</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">tag</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">priority</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">compute_tag</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">compute_priority</span><span class="p">)</span>
 <span class="go">* PriorityEnum.normal</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">modify_records</span><span class="p">(</span><span class="mi">941</span><span class="p">,</span> <span class="n">new_tag</span><span class="o">=</span><span class="s1">&#39;a_new_tag&#39;</span><span class="p">,</span> <span class="n">new_priority</span><span class="o">=</span><span class="s1">&#39;low&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">modify_records</span><span class="p">(</span><span class="mi">941</span><span class="p">,</span> <span class="n">new_compute_tag</span><span class="o">=</span><span class="s1">&#39;a_new_tag&#39;</span><span class="p">,</span> <span class="n">new_compute_priority</span><span class="o">=</span><span class="s1">&#39;low&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
 <span class="go">UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">941</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">tag</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">priority</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">compute_tag</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">compute_priority</span><span class="p">)</span>
 <span class="go">a_new_tag PriorityEnum.low</span>
 </pre></div>
 </div>
@@ -860,7 +860,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#deleting-records">Deleting records</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cancelling-records">Cancelling records</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#invalidating-records">Invalidating records</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#changing-tag-and-priority">Changing tag and priority</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#changing-compute-tag-and-priority">Changing compute tag and priority</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-comments">Adding comments</a></li>
 </ul>
 </li>
