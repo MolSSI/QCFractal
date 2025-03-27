@@ -9,6 +9,7 @@ from typing_extensions import Literal
 from qcportal.dataset_models import BaseDataset
 from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.molecules import Molecule
+from qcportal.internal_jobs import InternalJob
 from qcportal.singlepoint.record_models import (
     SinglepointRecord,
     QCSpecification,
@@ -90,6 +91,11 @@ class SinglepointDataset(BaseDataset):
         self, entries: Union[SinglepointDatasetNewEntry, Iterable[SinglepointDatasetNewEntry]]
     ) -> InsertMetadata:
         return self._add_entries(entries)
+
+    def background_add_entries(
+        self, entries: Union[SinglepointDatasetNewEntry, Iterable[SinglepointDatasetNewEntry]]
+    ) -> InternalJob:
+        return self._background_add_entries(entries)
 
     def add_entry(
         self,

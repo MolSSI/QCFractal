@@ -4,7 +4,7 @@ import pytest
 
 from qcarchivetesting.helpers import test_users
 from qcportal import PortalRequestError
-from qcportal.metadata_models import InsertCountsMetadata
+from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.utils import now_at_utc
 
@@ -23,10 +23,17 @@ def _compare_entries(ent1, ent2, entry_extra_compare):
     entry_extra_compare(ent1, ent2)
 
 
-def run_dataset_model_add_get_entry(snowflake_client, ds, test_entries, entry_extra_compare):
+def run_dataset_model_add_get_entry(snowflake_client, ds, test_entries, entry_extra_compare, background):
     ent_map = {x.name: x for x in test_entries}
 
-    meta = ds.add_entries(test_entries)
+    if background:
+        ij = ds.background_add_entries(test_entries)
+        ij.watch(interval=0.1, timeout=10)
+        meta = InsertMetadata(**ij.result)
+        ds.fetch_entries()
+    else:
+        meta = ds.add_entries(test_entries)
+
     assert meta.success
     assert meta.n_inserted == len(test_entries)
 

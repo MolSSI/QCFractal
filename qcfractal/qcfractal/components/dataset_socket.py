@@ -25,11 +25,12 @@ from qcfractal.db_socket.helpers import (
     get_general,
     get_query_proj_options,
 )
-from qcportal.dataset_models import DatasetAttachmentType
+from qcportal.dataset_models import BaseDataset, DatasetAttachmentType
 from qcportal.exceptions import AlreadyExistsError, MissingDataError, UserReportableError
 from qcportal.internal_jobs import InternalJobStatusEnum
 from qcportal.metadata_models import InsertMetadata, DeleteMetadata, UpdateMetadata, InsertCountsMetadata
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
+from qcportal.serialization import encode_to_json
 from qcportal.utils import chunk_iterable, now_at_utc
 
 if TYPE_CHECKING:
@@ -805,6 +806,45 @@ class BaseDatasetSocket:
                 session.add_all(entries_to_add)
 
         return InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx)
+
+    def background_add_entries(
+        self, dataset_id: int, new_entries: Sequence[Any], *, session: Optional[Session] = None
+    ) -> int:
+        """
+        Adds entries to a dataset in the database as an internal job
+
+        This creates an internal job for the addition and returns the ID
+
+        See :meth:`add_entries` for details for the rest of the details on functionality and parameters.
+
+        Returns
+        -------
+        :
+            ID of the created internal job
+        """
+
+        with self.root_socket.optional_session(session) as session:
+            job_id = self.root_socket.internal_jobs.add(
+                f"dataset_add_entries_{dataset_id}",
+                now_at_utc(),
+                f"datasets.add_entry_dicts",
+                {
+                    "dataset_id": dataset_id,
+                    "entry_dicts": encode_to_json(new_entries),
+                },
+                user_id=None,
+                unique_name=False,
+                serial_group=f"ds_add_entries_{dataset_id}",  # only run one addition for this dataset at a time
+                session=session,
+            )
+
+            stmt = (
+                insert(DatasetInternalJobORM)
+                .values(dataset_id=dataset_id, internal_job_id=job_id)
+                .on_conflict_do_nothing()
+            )
+            session.execute(stmt)
+            return job_id
 
     def fetch_entry_names(
         self,
@@ -2397,5 +2437,29 @@ class DatasetSocket:
                 owner_user=owner_user,
                 owner_group=owner_group,
                 find_existing=find_existing,
+                session=session,
+            )
+
+    def add_entry_dicts(
+        self, dataset_id: int, entry_dicts: bytes, *, session: Optional[Session] = None
+    ) -> InsertMetadata:
+        """
+        Add entries to a dataset, where entries are dictionaries
+
+        This function looks up the dataset socket and then casts to the appropriate type,
+        calling the add_entries function of that socket
+        """
+
+        with self.root_socket.optional_session(session) as session:
+            ds_type = self.lookup_type(dataset_id)
+            ds_socket = self.get_socket(ds_type)
+
+            # entry types always derive from newentry types
+            entry_type = BaseDataset.get_subclass(ds_type)._new_entry_type
+            new_entries = [entry_type(**d) for d in entry_dicts]
+
+            return ds_socket.add_entries(
+                dataset_id=dataset_id,
+                new_entries=new_entries,
                 session=session,
             )
