@@ -204,7 +204,7 @@ def activated_manager(storage_socket: SQLAlchemySocket) -> Tuple[ManagerName, in
         manager_version="v2.0",
         username="bill",
         programs=_activated_manager_programs,
-        tags=["*"],
+        compute_tags=["*"],
     )
 
     yield mname, mid

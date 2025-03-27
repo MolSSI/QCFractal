@@ -110,8 +110,8 @@ def test_singlepoint_socket_task_spec(
         assert function_kwargs["input_data"]["protocols"] == spec.protocols.dict(exclude_defaults=True)
         assert function_kwargs["input_data"]["keywords"] == spec.keywords
         assert function_kwargs["program"] == spec.program
-        assert t.tag == "tag1"
-        assert t.priority == PriorityEnum.low
+        assert t.compute_tag == "tag1"
+        assert t.compute_priority == PriorityEnum.low
 
     rec_id_mol_map = {
         id[0]: all_mols[0],

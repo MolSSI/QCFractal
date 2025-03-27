@@ -146,8 +146,8 @@ class ReactionRecordSocket(BaseRecordSocket):
             meta, opt_ids = self.root_socket.records.optimization.add_internal(
                 opt_mols_to_compute,
                 opt_spec_id,
-                service_orm.tag,
-                service_orm.priority,
+                service_orm.compute_tag,
+                service_orm.compute_priority,
                 rxn_orm.owner_user_id,
                 rxn_orm.owner_group_id,
                 service_orm.find_existing,
@@ -182,8 +182,8 @@ class ReactionRecordSocket(BaseRecordSocket):
             meta, sp_ids = self.root_socket.records.singlepoint.add_internal(
                 real_mols_to_compute,
                 qc_spec_id,
-                service_orm.tag,
-                service_orm.priority,
+                service_orm.compute_tag,
+                service_orm.compute_priority,
                 rxn_orm.owner_user_id,
                 rxn_orm.owner_group_id,
                 service_orm.find_existing,
@@ -533,8 +533,8 @@ class ReactionRecordSocket(BaseRecordSocket):
         self,
         stoichiometries: Sequence[Iterable[Tuple[float, int]]],  # coefficient, molecule_id
         rxn_spec_id: int,
-        tag: str,
-        priority: PriorityEnum,
+        compute_tag: str,
+        compute_priority: PriorityEnum,
         owner_user_id: Optional[int],
         owner_group_id: Optional[int],
         find_existing: bool,
@@ -556,9 +556,9 @@ class ReactionRecordSocket(BaseRecordSocket):
             Coefficients and IDs of the molecules that form the reaction
         rxn_spec_id
             ID of the specification
-        tag
+        compute_tag
             The tag for the task. This will assist in routing to appropriate compute managers.
-        priority
+        compute_priority
             The priority for the computation
         owner_user_id
             ID of the user who owns the record
@@ -577,7 +577,7 @@ class ReactionRecordSocket(BaseRecordSocket):
             order of the input molecules
         """
 
-        tag = tag.lower()
+        compute_tag = compute_tag.lower()
 
         with self.root_socket.optional_session(session, False) as session:
             self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
@@ -637,7 +637,7 @@ class ReactionRecordSocket(BaseRecordSocket):
                             owner_group_id=owner_group_id,
                         )
 
-                        self.create_service(rxn_orm, tag, priority, find_existing)
+                        self.create_service(rxn_orm, compute_tag, compute_priority, find_existing)
 
                         session.add(rxn_orm)
                         session.flush()
@@ -666,7 +666,7 @@ class ReactionRecordSocket(BaseRecordSocket):
                         owner_group_id=owner_group_id,
                     )
 
-                    self.create_service(rxn_orm, tag, priority, find_existing)
+                    self.create_service(rxn_orm, compute_tag, compute_priority, find_existing)
 
                     session.add(rxn_orm)
                     session.flush()
@@ -681,8 +681,8 @@ class ReactionRecordSocket(BaseRecordSocket):
         self,
         stoichiometries: Sequence[Iterable[Tuple[float, Union[int, Molecule]]]],
         rxn_spec: ReactionSpecification,
-        tag: str,
-        priority: PriorityEnum,
+        compute_tag: str,
+        compute_priority: PriorityEnum,
         owner_user: Optional[Union[int, str]],
         owner_group: Optional[Union[int, str]],
         find_existing: bool,
@@ -701,9 +701,9 @@ class ReactionRecordSocket(BaseRecordSocket):
             Coefficient and molecules (objects or ids) to compute using the specification
         rxn_spec
             Specification for the reaction calculations
-        tag
+        compute_tag
             The tag for the task. This will assist in routing to appropriate compute managers.
-        priority
+        compute_priority
             The priority for the computation
         owner_user
             Name or ID of the user who owns the record
@@ -754,7 +754,14 @@ class ReactionRecordSocket(BaseRecordSocket):
                 new_mol.append([(x[0], y) for x, y in zip(single_stoic, mol_ids)])
 
             return self.add_internal(
-                new_mol, spec_id, tag, priority, owner_user_id, owner_group_id, find_existing, session=session
+                new_mol,
+                spec_id,
+                compute_tag,
+                compute_priority,
+                owner_user_id,
+                owner_group_id,
+                find_existing,
+                session=session,
             )
 
     ####################################################

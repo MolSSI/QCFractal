@@ -106,23 +106,30 @@ class BaseRecordSocket:
         return []
 
     @staticmethod
-    def create_task(record_orm: BaseRecordORM, tag: str, priority: PriorityEnum) -> None:
+    def create_task(record_orm: BaseRecordORM, compute_tag: str, compute_priority: PriorityEnum) -> None:
         """
         Create an entry in the task queue, and attach it to the given record ORM
         """
 
         available = record_orm.status == RecordStatusEnum.waiting
         record_orm.task = TaskQueueORM(
-            tag=tag, priority=priority, required_programs=record_orm.required_programs, available=available
+            compute_tag=compute_tag,
+            compute_priority=compute_priority,
+            required_programs=record_orm.required_programs,
+            available=available,
         )
 
     @staticmethod
-    def create_service(record_orm: BaseRecordORM, tag: str, priority: PriorityEnum, find_existing: bool) -> None:
+    def create_service(
+        record_orm: BaseRecordORM, compute_tag: str, compute_priority: PriorityEnum, find_existing: bool
+    ) -> None:
         """
         Create an entry in the service queue, and attach it to the given record ORM
         """
 
-        record_orm.service = ServiceQueueORM(service_state={}, tag=tag, priority=priority, find_existing=find_existing)
+        record_orm.service = ServiceQueueORM(
+            service_state={}, compute_tag=compute_tag, compute_priority=compute_priority, find_existing=find_existing
+        )
 
     def get(
         self,
@@ -1473,7 +1480,9 @@ class RecordSocket:
 
                             # we leave service queue entries alone
                             if not r_orm.is_service:
-                                BaseRecordSocket.create_task(r_orm, last_info.old_tag, last_info.old_priority)
+                                BaseRecordSocket.create_task(
+                                    r_orm, last_info.old_compute_tag, last_info.old_compute_priority
+                                )
 
                     elif r_orm.status in [RecordStatusEnum.running, RecordStatusEnum.error] and not r_orm.info_backup:
                         if not r_orm.is_service and r_orm.task is None:
@@ -1585,8 +1594,8 @@ class RecordSocket:
                     old_tag = None
                     old_priority = None
                     if r.task is not None:
-                        old_tag = r.task.tag
-                        old_priority = r.task.priority
+                        old_tag = r.task.compute_tag
+                        old_priority = r.task.compute_priority
                         session.delete(r.task)
 
                     # If this is a service, we leave the
@@ -1597,8 +1606,8 @@ class RecordSocket:
                     backup_info = RecordInfoBackupORM(
                         record_id=r.id,
                         old_status=r.status,
-                        old_tag=old_tag,
-                        old_priority=old_priority,
+                        old_compute_tag=old_tag,
+                        old_compute_priority=old_priority,
                         modified_on=now_at_utc(),
                     )
                     session.add(backup_info)
@@ -1832,8 +1841,8 @@ class RecordSocket:
     def modify(
         self,
         record_ids: Sequence[int],
-        new_tag: Optional[str] = None,
-        new_priority: Optional[RecordStatusEnum] = None,
+        new_compute_tag: Optional[str] = None,
+        new_compute_priority: Optional[RecordStatusEnum] = None,
         *,
         session: Optional[Session] = None,
     ) -> UpdateMetadata:
@@ -1843,15 +1852,15 @@ class RecordSocket:
         Records without a corresponding task (completed, etc) will not be modified. Running tasks
         will also not be modified.
 
-        An empty string for new_tag will be treated the same as if you had passed it None
+        An empty string for new_compute_tag will be treated the same as if you had passed it None
 
         Parameters
         ----------
         record_ids
             Modify the tasks corresponding to these record ids
-        new_tag
+        new_compute_tag
             New tag for the task. If None, keep the existing tag
-        new_priority
+        new_compute_priority
             New priority for the task. If None, then keep the existing priority
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
@@ -1863,11 +1872,11 @@ class RecordSocket:
             Metadata about what was updated
         """
 
-        if new_tag == "":
-            new_tag = None
+        if new_compute_tag == "":
+            new_compute_tag = None
 
         # Do we have anything to do?
-        if new_tag is None and new_priority is None:
+        if new_compute_tag is None and new_compute_priority is None:
             return UpdateMetadata()
 
         all_id = set(record_ids)
@@ -1893,10 +1902,10 @@ class RecordSocket:
 
             all_orm = task_orms + svc_orms
             for o in all_orm:
-                if new_tag is not None:
-                    o.tag = new_tag
-                if new_priority is not None:
-                    o.priority = new_priority
+                if new_compute_tag is not None:
+                    o.compute_tag = new_compute_tag
+                if new_compute_priority is not None:
+                    o.compute_priority = new_compute_priority
 
             # put in order of the input parameter
             # only pay attention to the records requested (ie, not subtasks)
@@ -1914,8 +1923,8 @@ class RecordSocket:
         record_ids: Sequence[int],
         user_id: Optional[int],
         status: Optional[RecordStatusEnum] = None,
-        priority: Optional[PriorityEnum] = None,
-        tag: Optional[str] = None,
+        compute_priority: Optional[PriorityEnum] = None,
+        compute_tag: Optional[str] = None,
         comment: Optional[str] = None,
         *,
         session: Optional[Session] = None,
@@ -1933,9 +1942,9 @@ class RecordSocket:
             ID of the user modifying the records
         status
             New status for the records. Only certain status transitions will be allowed.
-        priority
+        compute_priority
             New priority for these records
-        tag
+        compute_tag
             New tag for these records
         comment
             Adds a new comment to these records
@@ -1964,11 +1973,11 @@ class RecordSocket:
 
                 # ignore all other statuses
 
-            if tag is not None or priority is not None:
+            if compute_tag is not None or compute_priority is not None:
                 ret = self.root_socket.records.modify(
                     record_ids,
-                    new_tag=tag,
-                    new_priority=priority,
+                    new_compute_tag=compute_tag,
+                    new_compute_priority=compute_priority,
                     session=session,
                 )
 
@@ -2010,13 +2019,13 @@ class RecordSocket:
 
         # For getting the record and task info
         rec_stmt = select(
-            BaseRecordORM.status, BaseRecordORM.is_service, TaskQueueORM.tag, TaskQueueORM.required_programs
+            BaseRecordORM.status, BaseRecordORM.is_service, TaskQueueORM.compute_tag, TaskQueueORM.required_programs
         )
         rec_stmt = rec_stmt.join(TaskQueueORM, TaskQueueORM.record_id == BaseRecordORM.id, isouter=True)
         rec_stmt = rec_stmt.where(BaseRecordORM.id == record_id)
 
         # All active managers
-        manager_stmt = select(ComputeManagerORM.name, ComputeManagerORM.tags, ComputeManagerORM.programs)
+        manager_stmt = select(ComputeManagerORM.name, ComputeManagerORM.compute_tags, ComputeManagerORM.programs)
         manager_stmt = manager_stmt.where(ComputeManagerORM.status == ManagerStatusEnum.active)
 
         with self.root_socket.optional_session(session, True) as session:

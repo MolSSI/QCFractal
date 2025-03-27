@@ -114,11 +114,13 @@ def load_test_data(
 def submit_test_data(
     storage_socket: SQLAlchemySocket,
     name: str,
-    tag: Optional[str] = "*",
-    priority: PriorityEnum = PriorityEnum.normal,
+    compute_tag: Optional[str] = "*",
+    compute_priority: PriorityEnum = PriorityEnum.normal,
 ) -> Tuple[int, Dict[str, Any]]:
     input_spec, initial_chain, result = load_test_data(name)
-    meta, record_ids = storage_socket.records.neb.add([initial_chain], input_spec, tag, priority, None, None, True)
+    meta, record_ids = storage_socket.records.neb.add(
+        [initial_chain], input_spec, compute_tag, compute_priority, None, None, True
+    )
     assert meta.success
     assert len(record_ids) == 1
     assert meta.n_inserted == 1
@@ -130,11 +132,11 @@ def run_test_data(
     storage_socket: SQLAlchemySocket,
     manager_name: ManagerName,
     name: str,
-    tag: Optional[str] = "*",
-    priority: PriorityEnum = PriorityEnum.normal,
+    compute_tag: Optional[str] = "*",
+    compute_priority: PriorityEnum = PriorityEnum.normal,
     end_status: RecordStatusEnum = RecordStatusEnum.complete,
 ):
-    record_id, result = submit_test_data(storage_socket, name, tag, priority)
+    record_id, result = submit_test_data(storage_socket, name, compute_tag, compute_priority)
 
     with storage_socket.session_scope() as session:
         record = session.get(NEBRecordORM, record_id)

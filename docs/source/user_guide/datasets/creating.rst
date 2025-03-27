@@ -21,7 +21,7 @@ function of the :class:`~qcportal.client.PortalClient`. This function returns th
       27
 
 The :meth:`~qcportal.client.PortalClient.add_dataset` takes several optional arguments, including
-some for descriptions of the dataset as well as default priority and :ref:`tags <routing_tags>`.
+some for descriptions of the dataset as well as default compute priority and :ref:`tags <compute_tags>`.
 
 .. tab-set::
 
@@ -30,7 +30,7 @@ some for descriptions of the dataset as well as default priority and :ref:`tags 
     .. code-block:: py3
 
       >>> ds = client.add_dataset("optimization", "Optimization of large molecules",
-      ..                          default_tag="large_mem", default_priority="low")
+      ...                          default_compute_tag="large_mem", default_compute_priority="low")
       >>> print(ds.id)
       28
 
@@ -131,9 +131,9 @@ The process of submitting is generally as follows.
    b. If a record is not found, then a new record is created and attached to the dataset
 
 With no arguments, this will find/create and attach missing records for all entries and specifications, using the
-default tag and priority of the dataset (set when creating the dataset, or :ref:`modified after <dataset_modify_meta>`).
+default compute tag and priority of the dataset (set when creating the dataset, or :ref:`modified after <dataset_modify_meta>`).
 
-You may also submit only certain entries and specifications, or change the tag and priority of any newly-created records.
+You may also submit only certain entries and specifications, or change the compute tag and priority of any newly-created records.
 
 .. tab-set::
 
@@ -144,10 +144,10 @@ You may also submit only certain entries and specifications, or change the tag a
       >>> ds.submit() # Create everything
 
       >>> # Submit missing difluorine computations with a special tag
-      >>> ds.submit(['difluorine'], tag='special_tag')
+      >>> ds.submit(['difluorine'], compute_tag='special_tag')
 
       >>> # Submit dibromine hf/sto-3g computation at a high priority
-      >>> ds.submit(['dibromine'], ['hf/sto-3g'], priority='high')
+      >>> ds.submit(['dibromine'], ['hf/sto-3g'], compute_priority='high')
 
 
 If there are a lot of records to be created, you may instead submit them using

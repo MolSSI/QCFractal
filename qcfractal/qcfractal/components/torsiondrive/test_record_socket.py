@@ -46,8 +46,8 @@ def test_torsiondrive_socket_add_get(
         assert compare_torsiondrive_specs(spec, r.specification.model_dict())
 
         # Service queue entry should exist with the proper tag and priority
-        assert r.service.tag == "tag1"
-        assert r.service.priority == PriorityEnum.low
+        assert r.service.compute_tag == "tag1"
+        assert r.service.compute_priority == PriorityEnum.low
 
         assert time_0 < r.created_on < time_1
         assert time_0 < r.modified_on < time_1

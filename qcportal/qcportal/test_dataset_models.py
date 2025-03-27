@@ -35,8 +35,8 @@ def test_dataset_model_basic(submitter_client: PortalClient):
     assert ds.tagline == "a Tagline"
     assert ds.tags == ["tag1", "tag2"]
     assert ds.provenance == {"prov_key_1": "prov_value_1"}
-    assert ds.default_tag == "def_tag"
-    assert ds.default_priority == PriorityEnum.low
+    assert ds.default_compute_tag == "def_tag"
+    assert ds.default_compute_priority == PriorityEnum.low
 
     assert ds.owner_user == submitter_client.username
     assert ds.owner_group == "group1"
@@ -93,13 +93,13 @@ def test_dataset_model_metadata(snowflake_client: PortalClient):
     assert ds.extras == {"2": "hello"}
     assert snowflake_client.get_dataset_by_id(ds_id).extras == {"2": "hello"}
 
-    ds.set_default_tag("new_def_tag")
-    assert ds.default_tag == "new_def_tag"
-    assert snowflake_client.get_dataset_by_id(ds_id).default_tag == "new_def_tag"
+    ds.set_default_compute_tag("new_def_tag")
+    assert ds.default_compute_tag == "new_def_tag"
+    assert snowflake_client.get_dataset_by_id(ds_id).default_compute_tag == "new_def_tag"
 
-    ds.set_default_priority(PriorityEnum.high)
-    assert ds.default_priority == PriorityEnum.high
-    assert snowflake_client.get_dataset_by_id(ds_id).default_priority == PriorityEnum.high
+    ds.set_default_compute_priority(PriorityEnum.high)
+    assert ds.default_compute_priority == PriorityEnum.high
+    assert snowflake_client.get_dataset_by_id(ds_id).default_compute_priority == PriorityEnum.high
 
 
 def test_dataset_model_status(snowflake: QCATestingSnowflake):
