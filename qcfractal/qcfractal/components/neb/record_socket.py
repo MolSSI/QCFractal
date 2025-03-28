@@ -359,8 +359,8 @@ class NEBRecordSocket(BaseRecordSocket):
         meta, opt_ids = self.root_socket.records.optimization.add(
             molecules,
             opt_spec,
-            service_orm.tag,
-            service_orm.priority,
+            service_orm.compute_tag,
+            service_orm.compute_priority,
             neb_orm.owner_user_id,
             neb_orm.owner_group_id,
             service_orm.find_existing,
@@ -403,8 +403,8 @@ class NEBRecordSocket(BaseRecordSocket):
         meta, sp_ids = self.root_socket.records.singlepoint.add(
             chain,
             QCSpecification(**qc_spec),
-            service_orm.tag,
-            service_orm.priority,
+            service_orm.compute_tag,
+            service_orm.compute_priority,
             neb_orm.owner_user_id,
             neb_orm.owner_group_id,
             service_orm.find_existing,
@@ -444,8 +444,8 @@ class NEBRecordSocket(BaseRecordSocket):
             {"geometric": None},
             "geometric.qcf_neb.nextchain",
             [{"info_dict": service_state.nebinfo}],
-            service_orm.tag,
-            service_orm.priority,
+            service_orm.compute_tag,
+            service_orm.compute_priority,
             neb_orm.owner_user_id,
             neb_orm.owner_group_id,
             session=session,
@@ -691,8 +691,8 @@ class NEBRecordSocket(BaseRecordSocket):
         self,
         initial_chain_ids: Sequence[Sequence[int]],
         neb_spec_id: int,
-        tag: str,
-        priority: PriorityEnum,
+        compute_tag: str,
+        compute_priority: PriorityEnum,
         owner_user_id: Optional[int],
         owner_group_id: Optional[int],
         find_existing: bool,
@@ -714,9 +714,9 @@ class NEBRecordSocket(BaseRecordSocket):
             IDs of the chains to optimize. One record will be added per chain.
         neb_spec_id
             ID of the specification
-        tag
+        compute_tag
             The tag for the task. This will assist in routing to appropriate compute managers.
-        priority
+        compute_priority
             The priority for the computation
         owner_user_id
             ID of the user who owns the record
@@ -734,7 +734,7 @@ class NEBRecordSocket(BaseRecordSocket):
             Metadata about the insertion, and a list of record ids. The ids will be in the
             order of the input chains
         """
-        tag = tag.lower()
+        compute_tag = compute_tag.lower()
 
         with self.root_socket.optional_session(session, False) as session:
             self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
@@ -782,7 +782,7 @@ class NEBRecordSocket(BaseRecordSocket):
                             owner_group_id=owner_group_id,
                         )
 
-                        self.create_service(neb_orm, tag, priority, find_existing)
+                        self.create_service(neb_orm, compute_tag, compute_priority, find_existing)
 
                         session.add(neb_orm)
                         session.flush()
@@ -808,7 +808,7 @@ class NEBRecordSocket(BaseRecordSocket):
                         owner_group_id=owner_group_id,
                     )
 
-                    self.create_service(neb_orm, tag, priority, find_existing)
+                    self.create_service(neb_orm, compute_tag, compute_priority, find_existing)
 
                     session.add(neb_orm)
                     session.flush()
@@ -829,8 +829,8 @@ class NEBRecordSocket(BaseRecordSocket):
         self,
         initial_chains: Sequence[Sequence[Union[int, Molecule]]],
         neb_spec: NEBSpecification,
-        tag: str,
-        priority: PriorityEnum,
+        compute_tag: str,
+        compute_priority: PriorityEnum,
         owner_user: Optional[Union[int, str]],
         owner_group: Optional[Union[int, str]],
         find_existing: bool,
@@ -851,9 +851,9 @@ class NEBRecordSocket(BaseRecordSocket):
             Molecules to compute using the specification
         neb_spec
             Specification for the NEB calculations
-        tag
+        compute_tag
             The tag for the task. This will assist in routing to appropriate compute managers.
-        priority
+        compute_priority
             The priority for the computation
         owner_user
             Name or ID of the user who owns the record
@@ -914,7 +914,14 @@ class NEBRecordSocket(BaseRecordSocket):
                 init_molecule_ids.append(molecule_ids)
 
             return self.add_internal(
-                init_molecule_ids, spec_id, tag, priority, owner_user_id, owner_group_id, find_existing, session=session
+                init_molecule_ids,
+                spec_id,
+                compute_tag,
+                compute_priority,
+                owner_user_id,
+                owner_group_id,
+                find_existing,
+                session=session,
             )
 
     ####################################################

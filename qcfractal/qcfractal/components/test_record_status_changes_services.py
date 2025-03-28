@@ -125,8 +125,8 @@ def test_record_client_cancel_waiting_service(snowflake: QCATestingSnowflake, pr
         rec = session.get(BaseRecordORM, svc_id)
         assert rec.status == RecordStatusEnum.waiting
         assert rec.service is not None
-        assert rec.service.tag == "test_tag"
-        assert rec.service.priority == PriorityEnum.low
+        assert rec.service.compute_tag == "test_tag"
+        assert rec.service.compute_priority == PriorityEnum.low
 
         finished, n_optimizations = run_service(
             storage_socket, activated_manager_name, svc_id, keygen, result_data, 200

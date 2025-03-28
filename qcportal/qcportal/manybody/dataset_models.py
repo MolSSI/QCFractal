@@ -8,6 +8,7 @@ from typing_extensions import Literal
 
 from qcportal.dataset_models import BaseDataset
 from qcportal.manybody.record_models import ManybodyRecord, ManybodySpecification
+from qcportal.internal_jobs import InternalJob
 from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
 
@@ -61,6 +62,11 @@ class ManybodyDataset(BaseDataset):
 
     def add_entries(self, entries: Union[ManybodyDatasetNewEntry, Iterable[ManybodyDatasetNewEntry]]) -> InsertMetadata:
         return self._add_entries(entries)
+
+    def background_add_entries(
+        self, entries: Union[ManybodyDatasetNewEntry, Iterable[ManybodyDatasetNewEntry]]
+    ) -> InternalJob:
+        return self._background_add_entries(entries)
 
     def add_entry(
         self,

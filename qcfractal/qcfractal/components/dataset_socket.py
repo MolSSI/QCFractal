@@ -25,11 +25,12 @@ from qcfractal.db_socket.helpers import (
     get_general,
     get_query_proj_options,
 )
-from qcportal.dataset_models import DatasetAttachmentType
+from qcportal.dataset_models import BaseDataset, DatasetAttachmentType
 from qcportal.exceptions import AlreadyExistsError, MissingDataError, UserReportableError
 from qcportal.internal_jobs import InternalJobStatusEnum
 from qcportal.metadata_models import InsertMetadata, DeleteMetadata, UpdateMetadata, InsertCountsMetadata
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
+from qcportal.serialization import encode_to_json
 from qcportal.utils import chunk_iterable, now_at_utc
 
 if TYPE_CHECKING:
@@ -120,8 +121,8 @@ class BaseDatasetSocket:
         entry_orm: Iterable[Any],
         specification_orm: Iterable[Any],
         existing_records: Iterable[Tuple[str, str]],
-        tag: str,
-        priority: PriorityEnum,
+        compute_tag: str,
+        compute_priority: PriorityEnum,
         owner_user_id: Optional[int],
         owner_group_id: Optional[int],
         find_existing: bool,
@@ -131,8 +132,8 @@ class BaseDatasetSocket:
     def get_submit_info(
         self,
         dataset_id: int,
-        tag: Optional[str],
-        priority: Optional[str],
+        compute_tag: Optional[str],
+        compute_priority: Optional[str],
         owner_user: Optional[Union[int, str]],
         owner_group: Optional[Union[int, str]],
         *,
@@ -148,9 +149,9 @@ class BaseDatasetSocket:
         ----------
         dataset_id
             ID of a dataset
-        tag
+        compute_tag
             Specified tag to use. If None, then the default tag will be used instead
-        priority
+        compute_priority
             Specified priority to use. If None, then the default priority will be used instead
         owner_group
             Specified owner_group to use. If None, then the datasets owner_group will be used instead
@@ -167,20 +168,20 @@ class BaseDatasetSocket:
         with self.root_socket.optional_session(session, True) as session:
             default_tag, default_priority, default_group_id = self.get_submit_defaults(dataset_id, session=session)
 
-            if tag is None:
-                tag = default_tag
+            if compute_tag is None:
+                compute_tag = default_tag
             else:
-                tag = tag.lower()
+                compute_tag = compute_tag.lower()
 
-            if priority is None:
-                priority = default_priority
+            if compute_priority is None:
+                compute_priority = default_priority
 
             if owner_group is None:
                 owner_group = default_group_id
 
             user_id, group_id = self.root_socket.users.get_owner_ids(owner_user, owner_group, session=session)
 
-        return tag, priority, user_id, group_id
+        return compute_tag, compute_priority, user_id, group_id
 
     def get_submit_defaults(
         self, dataset_id: int, *, session: Optional[Session] = None
@@ -197,7 +198,9 @@ class BaseDatasetSocket:
             is used, it will be flushed (but not committed) before returning from this function.
         """
 
-        stmt = select(BaseDatasetORM.default_tag, BaseDatasetORM.default_priority, BaseDatasetORM.owner_group_id)
+        stmt = select(
+            BaseDatasetORM.default_compute_tag, BaseDatasetORM.default_compute_priority, BaseDatasetORM.owner_group_id
+        )
         stmt = stmt.where(BaseDatasetORM.id == dataset_id)
 
         with self.root_socket.optional_session(session, True) as session:
@@ -383,8 +386,8 @@ class BaseDatasetSocket:
         tagline: str,
         tags: List[str],
         provenance: Dict[str, Any],
-        default_tag: str,
-        default_priority: PriorityEnum,
+        default_compute_tag: str,
+        default_compute_priority: PriorityEnum,
         extras: Dict[str, Any],
         owner_user: Optional[Union[int, str]],
         owner_group: Optional[Union[int, str]],
@@ -410,8 +413,8 @@ class BaseDatasetSocket:
             description=description,
             tags=tags,
             provenance=provenance,
-            default_tag=default_tag.lower(),
-            default_priority=default_priority,
+            default_compute_tag=default_compute_tag.lower(),
+            default_compute_priority=default_compute_priority,
             extras=extras,
         )
 
@@ -487,8 +490,8 @@ class BaseDatasetSocket:
             ds.provenance = new_metadata.provenance
             ds.extras = new_metadata.extras
 
-            ds.default_tag = new_metadata.default_tag
-            ds.default_priority = new_metadata.default_priority
+            ds.default_compute_tag = new_metadata.default_compute_tag
+            ds.default_compute_priority = new_metadata.default_compute_priority
 
     def add_specifications(
         self,
@@ -787,19 +790,61 @@ class BaseDatasetSocket:
                     )
                 )
 
-                existing_entries = session.execute(stmt).scalars().all()
+                existing_entries = set(session.execute(stmt).scalars().all())
+                entries_to_add = []
 
                 for entry in entry_orm_batch:
                     # Only add if the entry does not exist
                     if entry.name in existing_entries:
                         existing_idx.append(idx)
                     else:
-                        session.add(entry)
+                        entries_to_add.append(entry)
                         inserted_idx.append(idx)
 
                     idx += 1
 
+                session.add_all(entries_to_add)
+
         return InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx)
+
+    def background_add_entries(
+        self, dataset_id: int, new_entries: Sequence[Any], *, session: Optional[Session] = None
+    ) -> int:
+        """
+        Adds entries to a dataset in the database as an internal job
+
+        This creates an internal job for the addition and returns the ID
+
+        See :meth:`add_entries` for details for the rest of the details on functionality and parameters.
+
+        Returns
+        -------
+        :
+            ID of the created internal job
+        """
+
+        with self.root_socket.optional_session(session) as session:
+            job_id = self.root_socket.internal_jobs.add(
+                f"dataset_add_entries_{dataset_id}",
+                now_at_utc(),
+                f"datasets.add_entry_dicts",
+                {
+                    "dataset_id": dataset_id,
+                    "entry_dicts": encode_to_json(new_entries),
+                },
+                user_id=None,
+                unique_name=False,
+                serial_group=f"ds_add_entries_{dataset_id}",  # only run one addition for this dataset at a time
+                session=session,
+            )
+
+            stmt = (
+                insert(DatasetInternalJobORM)
+                .values(dataset_id=dataset_id, internal_job_id=job_id)
+                .on_conflict_do_nothing()
+            )
+            session.execute(stmt)
+            return job_id
 
     def fetch_entry_names(
         self,
@@ -1193,8 +1238,8 @@ class BaseDatasetSocket:
         dataset_id: int,
         entry_names: Optional[Iterable[str]],
         specification_names: Optional[Iterable[str]],
-        tag: Optional[str],
-        priority: Optional[PriorityEnum],
+        compute_tag: Optional[str],
+        compute_priority: Optional[PriorityEnum],
         owner_user: Optional[Union[int, str]],
         owner_group: Optional[Union[int, str]],
         find_existing: bool,
@@ -1216,10 +1261,10 @@ class BaseDatasetSocket:
             Submit records belonging to these entries. If None, submit for all entries
         specification_names
             Submit records belonging to these specifications. If None, submit for all specifications
-        tag
+        compute_tag
             Computational tag for new records. If None, use the dataset's default. Existing records
             will not be modified.
-        priority
+        compute_priority
             Priority for new records. If None, use the dataset's default. Existing records
             will not be modified.
         owner_group
@@ -1244,8 +1289,8 @@ class BaseDatasetSocket:
         n_existing = 0
 
         with self.root_socket.optional_session(session) as session:
-            tag, priority, owner_user_id, owner_group_id = self.get_submit_info(
-                dataset_id, tag, priority, owner_user, owner_group, session=session
+            compute_tag, compute_priority, owner_user_id, owner_group_id = self.get_submit_info(
+                dataset_id, compute_tag, compute_priority, owner_user, owner_group, session=session
             )
 
             ################################
@@ -1302,8 +1347,8 @@ class BaseDatasetSocket:
                         entries_batch,
                         ds_specs,
                         existing_records,
-                        tag,
-                        priority,
+                        compute_tag,
+                        compute_priority,
                         owner_user_id,
                         owner_group_id,
                         find_existing,
@@ -1354,8 +1399,8 @@ class BaseDatasetSocket:
                         entries_batch,
                         ds_specs,
                         existing_records,
-                        tag,
-                        priority,
+                        compute_tag,
+                        compute_priority,
                         owner_user_id,
                         owner_group_id,
                         find_existing,
@@ -1381,8 +1426,8 @@ class BaseDatasetSocket:
         dataset_id: int,
         entry_names: Optional[Iterable[str]],
         specification_names: Optional[Iterable[str]],
-        tag: Optional[str],
-        priority: Optional[PriorityEnum],
+        compute_tag: Optional[str],
+        compute_priority: Optional[PriorityEnum],
         owner_user: Optional[Union[int, str]],
         owner_group: Optional[Union[int, str]],
         find_existing: bool,
@@ -1411,8 +1456,8 @@ class BaseDatasetSocket:
                     "dataset_id": dataset_id,
                     "entry_names": entry_names,
                     "specification_names": specification_names,
-                    "tag": tag,
-                    "priority": priority,
+                    "compute_tag": compute_tag,
+                    "compute_priority": compute_priority,
                     "owner_user": owner_user,
                     "owner_group": owner_group,
                     "find_existing": find_existing,
@@ -1493,8 +1538,8 @@ class BaseDatasetSocket:
         entry_names: Optional[Iterable[str]] = None,
         specification_names: Optional[List[str]] = None,
         status: Optional[RecordStatusEnum] = None,
-        priority: Optional[PriorityEnum] = None,
-        tag: Optional[str] = None,
+        compute_priority: Optional[PriorityEnum] = None,
+        compute_tag: Optional[str] = None,
         comment: Optional[str] = None,
         *,
         session: Optional[Session] = None,
@@ -1516,9 +1561,9 @@ class BaseDatasetSocket:
             Username of the user modifying the records
         status
             New status for the records. Only certain status transitions will be allowed.
-        priority
+        compute_priority
             New priority for these records
-        tag
+        compute_tag
             New tag for these records
         comment
             Adds a new comment to these records
@@ -1542,7 +1587,13 @@ class BaseDatasetSocket:
             )
 
             return self.root_socket.records.modify_generic(
-                record_ids, username, status=status, priority=priority, tag=tag, comment=comment, session=session
+                record_ids,
+                username,
+                status=status,
+                compute_priority=compute_priority,
+                compute_tag=compute_tag,
+                comment=comment,
+                session=session,
             )
 
     def revert_records(
@@ -1815,8 +1866,8 @@ class BaseDatasetSocket:
                 tagline=source_orm.tagline,
                 tags=source_orm.tags,
                 provenance=source_orm.provenance,
-                default_tag=source_orm.default_tag,
-                default_priority=source_orm.default_priority,
+                default_compute_tag=source_orm.default_compute_tag,
+                default_compute_priority=source_orm.default_compute_priority,
                 extras=source_orm.extras,
                 owner_user=source_orm.owner_user,
                 owner_group=source_orm.owner_group,
@@ -2359,8 +2410,8 @@ class DatasetSocket:
         dataset_id: int,
         entry_names: Optional[Iterable[str]],
         specification_names: Optional[Iterable[str]],
-        tag: Optional[str],
-        priority: Optional[PriorityEnum],
+        compute_tag: Optional[str],
+        compute_priority: Optional[PriorityEnum],
         owner_user: Optional[Union[int, str]],
         owner_group: Optional[Union[int, str]],
         find_existing: bool,
@@ -2381,10 +2432,34 @@ class DatasetSocket:
                 dataset_id=dataset_id,
                 entry_names=entry_names,
                 specification_names=specification_names,
-                tag=tag,
-                priority=priority,
+                compute_tag=compute_tag,
+                compute_priority=compute_priority,
                 owner_user=owner_user,
                 owner_group=owner_group,
                 find_existing=find_existing,
+                session=session,
+            )
+
+    def add_entry_dicts(
+        self, dataset_id: int, entry_dicts: bytes, *, session: Optional[Session] = None
+    ) -> InsertMetadata:
+        """
+        Add entries to a dataset, where entries are dictionaries
+
+        This function looks up the dataset socket and then casts to the appropriate type,
+        calling the add_entries function of that socket
+        """
+
+        with self.root_socket.optional_session(session) as session:
+            ds_type = self.lookup_type(dataset_id)
+            ds_socket = self.get_socket(ds_type)
+
+            # entry types always derive from newentry types
+            entry_type = BaseDataset.get_subclass(ds_type)._new_entry_type
+            new_entries = [entry_type(**d) for d in entry_dicts]
+
+            return ds_socket.add_entries(
+                dataset_id=dataset_id,
+                new_entries=new_entries,
                 session=session,
             )

@@ -99,8 +99,8 @@ def add_dataset_v1(dataset_type: str, body_data: DatasetAddBody):
         tagline=body_data.tagline,
         tags=body_data.tags,
         provenance=body_data.provenance,
-        default_tag=body_data.default_tag,
-        default_priority=body_data.default_priority,
+        default_compute_tag=body_data.default_compute_tag,
+        default_compute_priority=body_data.default_compute_priority,
         extras=body_data.extras,
         owner_user=g.username,
         owner_group=body_data.owner_group,
@@ -198,8 +198,8 @@ def submit_dataset_v1(dataset_type: str, dataset_id: int, body_data: DatasetSubm
         dataset_id,
         entry_names=body_data.entry_names,
         specification_names=body_data.specification_names,
-        tag=body_data.tag,
-        priority=body_data.priority,
+        compute_tag=body_data.compute_tag,
+        compute_priority=body_data.compute_priority,
         owner_user=g.username,
         owner_group=body_data.owner_group,
         find_existing=body_data.find_existing,
@@ -214,8 +214,8 @@ def background_submit_dataset_v1(dataset_type: str, dataset_id: int, body_data: 
         dataset_id,
         entry_names=body_data.entry_names,
         specification_names=body_data.specification_names,
-        tag=body_data.tag,
-        priority=body_data.priority,
+        compute_tag=body_data.compute_tag,
+        compute_priority=body_data.compute_priority,
         owner_user=g.username,
         owner_group=body_data.owner_group,
         find_existing=body_data.find_existing,
@@ -303,6 +303,22 @@ def fetch_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: Data
     )
 
 
+@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/background_add_entries", methods=["POST"])
+@wrap_route("WRITE")
+def background_add_entries_v1(dataset_type: str, dataset_id: int, body_data: DatasetSubmitBody):
+    ds_socket = storage_socket.datasets.get_socket(dataset_type)
+    return ds_socket.background_submit(
+        dataset_id,
+        entry_names=body_data.entry_names,
+        specification_names=body_data.specification_names,
+        compute_tag=body_data.compute_tag,
+        compute_priority=body_data.compute_priority,
+        owner_user=g.username,
+        owner_group=body_data.owner_group,
+        find_existing=body_data.find_existing,
+    )
+
+
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/entries", methods=["PATCH"])
 @wrap_route("WRITE")
 def rename_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: Dict[str, str]):
@@ -366,8 +382,8 @@ def modify_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: Dat
         body_data.entry_names,
         body_data.specification_names,
         body_data.status,
-        body_data.priority,
-        body_data.tag,
+        body_data.compute_priority,
+        body_data.compute_tag,
         body_data.comment,
     )
 

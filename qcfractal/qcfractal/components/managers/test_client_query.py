@@ -21,7 +21,7 @@ def queryable_managers_client(session_snowflake):
                 mclient.activate(
                     manager_version="v2.0",
                     programs={"qcengine": ["unknown"], "qcprog": ["unknown"], "qcprog2": ["v3.0"]},
-                    tags=[f"tag_{cluster_i}", "tag2"],
+                    compute_tags=[f"tag_{cluster_i}", "tag2"],
                 )
 
                 if uuid_i == 0:

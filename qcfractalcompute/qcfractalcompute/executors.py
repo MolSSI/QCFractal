@@ -172,7 +172,7 @@ def build_executor(executor_label: str, executor_config: ExecutorConfig) -> Pars
         m = importlib.import_module(executor_config.config_file)
         ex = m.get_executor()
 
-        for tag in executor_config.queue_tags:
+        for tag in executor_config.compute_tags:
             self.tag_executor_map[tag] = ex.label
 
         self.executor_config_map[ex.label] = executor_config

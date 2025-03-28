@@ -30,8 +30,8 @@ def add_manybody_records_v1(body_data: ManybodyAddBody):
     return storage_socket.records.manybody.add(
         initial_molecules=body_data.initial_molecules,
         mb_spec=body_data.specification,
-        tag=body_data.tag,
-        priority=body_data.priority,
+        compute_tag=body_data.compute_tag,
+        compute_priority=body_data.compute_priority,
         owner_user=g.username,
         owner_group=body_data.owner_group,
         find_existing=body_data.find_existing,
@@ -67,7 +67,10 @@ def add_manybody_dataset_specifications_v1(dataset_id: int, body_data: List[Many
 @api_v1.route("/datasets/manybody/<int:dataset_id>/entries/bulkCreate", methods=["POST"])
 @wrap_route("WRITE")
 def add_manybody_dataset_entries_v1(dataset_id: int, body_data: List[ManybodyDatasetNewEntry]):
-    return storage_socket.datasets.manybody.add_entries(
-        dataset_id,
-        new_entries=body_data,
-    )
+    return storage_socket.datasets.manybody.add_entries(dataset_id, new_entries=body_data)
+
+
+@api_v1.route("/datasets/manybody/<int:dataset_id>/background_add_entries", methods=["POST"])
+@wrap_route("WRITE")
+def background_add_manybody_dataset_entries_v1(dataset_id: int, body_data: List[ManybodyDatasetNewEntry]):
+    return storage_socket.datasets.manybody.background_add_entries(dataset_id, new_entries=body_data)

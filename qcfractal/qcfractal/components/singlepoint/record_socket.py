@@ -333,8 +333,8 @@ class SinglepointRecordSocket(BaseRecordSocket):
         self,
         molecule_ids: Sequence[int],
         qc_spec_id: int,
-        tag: str,
-        priority: PriorityEnum,
+        compute_tag: str,
+        compute_priority: PriorityEnum,
         owner_user_id: Optional[int],
         owner_group_id: Optional[int],
         find_existing: bool,
@@ -356,9 +356,9 @@ class SinglepointRecordSocket(BaseRecordSocket):
             IDs of the molecules to run the computation with. One record will be added per molecule.
         qc_spec_id
             ID of the specification
-        tag
+        compute_tag
             The tag for the task. This will assist in routing to appropriate compute managers.
-        priority
+        compute_priority
             The priority for the computation
         owner_user_id
             ID of the user who owns the record
@@ -377,7 +377,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
             order of the input molecules
         """
 
-        tag = tag.lower()
+        compute_tag = compute_tag.lower()
 
         with self.root_socket.optional_session(session, False) as session:
             self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
@@ -399,7 +399,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
                     owner_group_id=owner_group_id,
                 )
 
-                self.create_task(sp_orm, tag, priority)
+                self.create_task(sp_orm, compute_tag, compute_priority)
                 all_orm.append(sp_orm)
 
             if find_existing:
@@ -422,8 +422,8 @@ class SinglepointRecordSocket(BaseRecordSocket):
         self,
         molecules: Sequence[Union[int, Molecule]],
         qc_spec: QCSpecification,
-        tag: str,
-        priority: PriorityEnum,
+        compute_tag: str,
+        compute_priority: PriorityEnum,
         owner_user: Optional[Union[int, str]],
         owner_group: Optional[Union[int, str]],
         find_existing: bool,
@@ -442,9 +442,9 @@ class SinglepointRecordSocket(BaseRecordSocket):
             Molecules to compute using the specification
         qc_spec
             Specification for the calculations
-        tag
+        compute_tag
             The tag for the task. This will assist in routing to appropriate compute managers.
-        priority
+        compute_priority
             The priority for the computation
         owner_user
             Name or ID of the user who owns the record
@@ -487,7 +487,14 @@ class SinglepointRecordSocket(BaseRecordSocket):
                 )
 
             return self.add_internal(
-                mol_ids, spec_id, tag, priority, owner_user_id, owner_group_id, find_existing, session=session
+                mol_ids,
+                spec_id,
+                compute_tag,
+                compute_priority,
+                owner_user_id,
+                owner_group_id,
+                find_existing,
+                session=session,
             )
 
     ####################################################

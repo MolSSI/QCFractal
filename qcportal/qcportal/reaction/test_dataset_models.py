@@ -102,9 +102,12 @@ def record_compare(rec, ent, spec):
     assert rec.specification == ReactionSpecification(**merged_spec)
 
 
-def test_reaction_dataset_model_add_get_entry(snowflake_client: PortalClient):
-    ds = snowflake_client.add_dataset("reaction", "Test dataset")
-    ds_helpers.run_dataset_model_add_get_entry(snowflake_client, ds, test_entries, entry_extra_compare)
+@pytest.mark.parametrize("background", [True, False])
+def test_reaction_dataset_model_add_get_entry(dataset_submit_test_client: PortalClient, background: bool):
+    ds = dataset_submit_test_client.add_dataset("reaction", "Test dataset")
+    ds_helpers.run_dataset_model_add_get_entry(
+        dataset_submit_test_client, ds, test_entries, entry_extra_compare, background
+    )
 
 
 def test_reaction_dataset_model_add_entry_duplicate(snowflake_client: PortalClient):

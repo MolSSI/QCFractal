@@ -31,14 +31,14 @@ def test_record_socket_reset_assigned_manager(storage_socket: SQLAlchemySocket, 
         manager_version="v2.0",
         username="bill",
         programs=manager_programs,
-        tags=["tag1"],
+        compute_tags=["tag1"],
     )
     storage_socket.managers.activate(
         name_data=mname2,
         manager_version="v2.0",
         username="bill",
         programs=manager_programs,
-        tags=["tag2"],
+        compute_tags=["tag2"],
     )
 
     id_1, result_data_1 = submit_sp_test_data(storage_socket, "sp_psi4_water_energy", "tag1")
