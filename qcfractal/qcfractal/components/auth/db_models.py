@@ -2,8 +2,21 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, ForeignKey, String, LargeBinary, Boolean, JSON, UniqueConstraint, Enum, select
+from sqlalchemy import (
+    Column,
+    Integer,
+    ForeignKey,
+    String,
+    LargeBinary,
+    Boolean,
+    JSON,
+    UniqueConstraint,
+    Enum,
+    select,
+    TIMESTAMP,
+)
 from sqlalchemy.orm import relationship
+from qcportal.utils import now_at_utc
 
 from qcfractal.db_socket import BaseORM
 from qcportal.auth import AuthTypeEnum
@@ -87,6 +100,18 @@ class UserORM(BaseORM):
         d["role"] = self.role_orm.rolename
         d["groups"] = [x.groupname for x in self.groups_orm]
         return d
+
+
+class UserSessionORM(BaseORM):
+    """
+    Table for storing flask session information
+    """
+
+    __tablename__ = "user_session"
+
+    session_id = Column(String, nullable=False, primary_key=True)
+    session_data = Column(LargeBinary, nullable=False)
+    last_accessed = Column(TIMESTAMP(timezone=True), nullable=False, default=now_at_utc)
 
 
 _user_id_map_subq = select(UserORM.id.label("id"), UserORM.username.label("username")).subquery()

@@ -4,13 +4,17 @@ from flask_jwt_extended import (
     verify_jwt_in_request,
     get_jwt,
     get_jwt_identity,
-    set_access_cookies,
-    unset_jwt_cookies,
 )
 
 from qcfractal.flask_app import storage_socket
 from qcfractal.flask_app.auth_v1.blueprint import auth_v1
-from qcfractal.flask_app.helpers import get_all_endpoints, access_token_from_user, login_and_get_jwt
+from qcfractal.flask_app.helpers import (
+    get_all_endpoints,
+    access_token_from_user,
+    login_user_session,
+    login_and_get_jwt,
+    logout_user_session,
+)
 
 
 @auth_v1.route("/login", methods=["POST"])
@@ -19,19 +23,17 @@ def login():
     return jsonify(msg="Login succeeded!", access_token=access_token, refresh_token=refresh_token), 200
 
 
-@auth_v1.route("/browser_login", methods=["POST"])
-def browser_login():
-    # Browsers don't need the refresh token
-    access_token, _ = login_and_get_jwt(get_refresh_token=False)
+@auth_v1.route("/session_login", methods=["POST"])
+def user_session_login():
+    login_user_session()
     response = jsonify(msg="Login succeeded!")
-    set_access_cookies(response, access_token)
     return response, 200
 
 
-@auth_v1.route("/browser_logout", methods=["POST"])
-def browser_logout():
+@auth_v1.route("/session_logout", methods=["POST"])
+def user_session_logout():
+    logout_user_session()
     response = jsonify(msg="Logout successful!")
-    unset_jwt_cookies(response)
     return response, 200
 
 

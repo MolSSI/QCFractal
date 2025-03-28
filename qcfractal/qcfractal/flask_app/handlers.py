@@ -16,7 +16,7 @@ from werkzeug.exceptions import InternalServerError, HTTPException
 from qcfractal.flask_app import storage_socket
 from qcfractal.flask_app.helpers import access_token_from_user
 from qcportal.auth import UserInfo, RoleInfo
-from qcportal.exceptions import UserReportableError, AuthenticationFailure, ComputeManagerError
+from qcportal.exceptions import UserReportableError, AuthenticationFailure, ComputeManagerError, AuthorizationFailure
 from .home_v1 import home_v1
 
 
@@ -164,9 +164,30 @@ def handle_userreport_error(error):
 
 
 @home_v1.app_errorhandler(AuthenticationFailure)
-def handle_auth_error(error):
+def handle_authentication_error(error):
     # This handles Authentication errors (invalid user, password, etc)
-    return jsonify(msg=str(error)), 401
+    # Or if the user tries to request a resource without being logged in
+    return (
+        jsonify(
+            msg=str(error),
+            user_id=g.user_id if "user_id" in g else None,
+            user_name=g.user_name if "user_name" in g else None,
+        ),
+        401,
+    )
+
+
+@home_v1.app_errorhandler(AuthorizationFailure)
+def handle_authorization_error(error):
+    # This handles when a logged-in user does not have access to something
+    return (
+        jsonify(
+            msg=str(error),
+            user_id=g.user_id if "user_id" in g else None,
+            user_name=g.user_name if "user_name" in g else None,
+        ),
+        403,
+    )
 
 
 @home_v1.app_errorhandler(ComputeManagerError)

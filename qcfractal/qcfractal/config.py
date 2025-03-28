@@ -8,7 +8,7 @@ import logging
 import os
 import secrets
 import tempfile
-from typing import Optional, Dict, Union, Any
+from typing import Optional, Dict, Union, List, Any
 
 import yaml
 from psycopg2.extensions import make_dsn, parse_dsn
@@ -300,6 +300,12 @@ class WebAPIConfig(ConfigBase):
     jwt_refresh_token_expires: int = Field(
         60 * 60 * 24, description="The time (in seconds) a refresh token is valid for. Default is 1 day"
     )
+    user_session_max_age: int = Field(
+        60 * 60 * 24, description="The time (in seconds) that a user session can be idle (for browser-based sessions)"
+    )
+    user_session_cookie_name: str = Field(
+        "qcf_session", description="Name to use for a session cookie (for browser-based sessions)"
+    )
 
     extra_flask_options: Optional[Dict[str, Any]] = Field(
         None, description="Any additional options to pass directly to flask"
@@ -308,7 +314,12 @@ class WebAPIConfig(ConfigBase):
         None, description="Any additional options to pass directly to the waitress serve function"
     )
 
-    @validator("jwt_access_token_expires", "jwt_refresh_token_expires", pre=True)
+    @validator(
+        "jwt_access_token_expires",
+        "jwt_refresh_token_expires",
+        "user_session_max_age",
+        pre=True,
+    )
     def _convert_durations(cls, v):
         return duration_to_seconds(v)
 
@@ -345,6 +356,18 @@ class S3Config(ConfigBase):
                     raise ValueError(f"S3 enabled but {key} not set")
 
         return values
+
+
+class CORSconfig(ConfigBase):
+    """
+    Settings for using CORS
+    """
+
+    enabled: bool = False
+    origins: List[str] = Field([])
+    supports_credentials: bool = False
+    headers: List[str] = Field([])
+    methods: List[str] = Field([])
 
 
 class FractalConfig(ConfigBase):
@@ -449,6 +472,7 @@ class FractalConfig(ConfigBase):
     api: WebAPIConfig = Field(..., description="Configuration of the REST interface")
     s3: S3Config = Field(S3Config(), description="Configuration of the S3 file storage (optional)")
     api_limits: APILimitConfig = Field(..., description="Configuration of the limits to the api")
+    cors: CORSconfig = Field(..., description="Configuration Cross Origin Resource sharing (advanced)")
     auto_reset: AutoResetConfig = Field(..., description="Configuration for automatic resetting of tasks")
 
     @root_validator(pre=True)
@@ -462,6 +486,7 @@ class FractalConfig(ConfigBase):
         values.setdefault("api_limits", dict())
         values.setdefault("api", dict())
         values.setdefault("auto_reset", dict())
+        values.setdefault("cors", dict())
 
         if "statistics_frequency" in values:
             values.pop("statistics_frequency")

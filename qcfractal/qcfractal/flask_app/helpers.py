@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Tuple, Optional
 from urllib.parse import urlparse
-from qcfractal import __version__ as qcfractal_version
 
-from flask import request, g, current_app
+from flask import request, g, current_app, session
 from flask_jwt_extended import (
     verify_jwt_in_request,
     get_jwt,
@@ -12,9 +11,9 @@ from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
 )
-from jwt.exceptions import InvalidSubjectError
 from werkzeug.exceptions import BadRequest, Forbidden
 
+from qcfractal import __version__ as qcfractal_version
 from qcfractal.flask_app import storage_socket
 from qcportal.auth import UserInfo, RoleInfo
 from qcportal.exceptions import AuthorizationFailure, AuthenticationFailure
@@ -58,7 +57,7 @@ def get_url_major_component(url: str):
     return "/" + resource.lstrip("/")
 
 
-def assert_role_permissions(requested_action: str):
+def assert_is_authorized(requested_action: str):
     """
     Check for access to the URL given permissions in the JWT token in the request headers
 
@@ -67,31 +66,38 @@ def assert_role_permissions(requested_action: str):
        Otherwise, check against the logged-in user permissions from the headers' JWT token
     """
 
-    # Check for the JWT in the header
-    # don't raise exception if no JWT is found
-    verify_jwt_in_request(optional=True)
+    username = None
+    policies = {}
+    role = None
+    groups = []
 
     try:
-        # TODO - some of these may not be None in the future
-        claims = get_jwt()
-        user_id = get_jwt_identity()  # may be None
-        username = claims.get("username", None)
-        policies = claims.get("permissions", {})
-        role = claims.get("role", None)
-        groups = claims.get("groups", None)
+        # Is the info stored in the session?
+        if session and "user_id" in session:
+            user_id = int(session["user_id"])  # may be a string? Just to make sure
 
-        # user_id is stored in the JWT as a string
-        if user_id is not None:
-            user_id = int(user_id)
+            user_info, role_info = storage_socket.auth.verify(user_id=user_id)
+            username = user_info.username
+            policies = role_info.permissions.dict()
+            role = role_info.rolename
+            groups = user_info.groups
+        else:
+            # Check for the JWT in the header
+            # don't raise exception if no JWT is found
+            verify_jwt_in_request(optional=True)
+            user_id = get_jwt_identity()  # may be None
 
-        subject = {"user_id": user_id, "username": username}
+            if user_id is not None:
+                # user_id is stored in the JWT as a string
+                user_id = int(user_id)
 
-        # Pull the first part of the URL (ie, /api/v1/molecule/a/b/c -> /api/v1/molecule)
-        resource = {"type": get_url_major_component(request.url)}
-
-        storage_socket.auth.assert_authorized(
-            resource=resource, action=requested_action, subject=subject, context={}, policies=policies
-        )
+                # Get from JWT in header
+                # TODO - some of these may not be None in the future
+                claims = get_jwt()
+                username = claims.get("username", None)
+                policies = claims.get("permissions", {})
+                role = claims.get("role", None)
+                groups = claims.get("groups", [])
 
         # Store the user in the global app/request context
         g.user_id = user_id
@@ -99,29 +105,33 @@ def assert_role_permissions(requested_action: str):
         g.role = role
         g.groups = groups
 
+        subject = {"user_id": user_id, "username": username}
+
+        # Pull the first part of the URL (ie, /api/v1/molecule/a/b/c -> /api/v1/molecule)
+        resource = {"type": get_url_major_component(request.url)}
+
+        allowed, msg = storage_socket.auth.is_authorized(
+            resource=resource, action=requested_action, subject=subject, context={}, policies=policies
+        )
+
+        if not allowed:
+            if g.user_id is None:
+                # Authentication Error = not logged in, and resource requires it
+                raise AuthenticationFailure(msg)
+            else:
+                # Authorization error - logged in, but can't access
+                raise AuthorizationFailure(msg)
+
     except AuthorizationFailure as e:
         raise Forbidden(str(e))
+    except AuthenticationFailure as e:
+        raise AuthenticationFailure("Failed to authenticate user session or JWT: " + str(e))
     except Exception as e:
-        current_app.logger.info("Error in evaluating JWT permissions: \n" + str(e))
-        raise BadRequest("Error in evaluating JWT permissions")
+        current_app.logger.warning("Error in evaluating session or JWT permissions: \n" + str(e))
+        raise BadRequest("Error in evaluating session or JWT permissions")
 
 
-def access_token_from_user(user_info: UserInfo, role_info: RoleInfo):
-    """
-    Creates a JWT access token from user/role information
-    """
-    return create_access_token(
-        identity=str(user_info.id),
-        additional_claims={
-            "username": user_info.username,
-            "role": user_info.role,
-            "groups": user_info.groups,
-            "permissions": role_info.permissions.dict(),
-        },
-    )
-
-
-def login_and_get_jwt(get_refresh_token: bool) -> Tuple[str, Optional[str]]:
+def login_user() -> Tuple[UserInfo, RoleInfo]:
     """
     Handle a login from flask
 
@@ -160,10 +170,59 @@ def login_and_get_jwt(get_refresh_token: bool) -> Tuple[str, Optional[str]]:
         # Used for logging (in the after_request_func)
         g.user_id = user_info.id
 
+        return user_info, role_info
+
     except AuthenticationFailure as e:
         current_app.logger.info(f"Authentication failed for user {username}: {str(e)}")
         raise
 
+
+def login_user_session():
+    # Raises exception on invalid username, password, etc
+    # Submitted user/password are stored in the flask request object
+    session.clear()
+    user_info, role_info = login_user()
+    session["user_id"] = str(user_info.id)
+    session["username"] = user_info.username
+
+
+def logout_user_session():
+    session.clear()
+
+
+def access_token_from_user(user_info: UserInfo, role_info: RoleInfo):
+    """
+    Creates a JWT access token from user/role information
+    """
+    return create_access_token(
+        identity=str(user_info.id),
+        additional_claims={
+            "username": user_info.username,
+            "role": user_info.role,
+            "groups": user_info.groups,
+            "permissions": role_info.permissions.dict(),
+        },
+    )
+
+
+def login_and_get_jwt(get_refresh_token: bool) -> Tuple[str, Optional[str]]:
+    """
+    Handle a login from flask
+
+    This function authenticates the username/password sent to flask, and returns the JWT tokens.
+    It handles the username/password being stored in json as well as form data.
+
+    If get_refresh_token is True, then a refresh token is also return. Otherwise, None is returned
+    for the refresh token.
+
+    Returns
+    -------
+    :
+        The access token and optionally the refresh token
+    """
+
+    # Will raise exceptions on invalid username/password
+    user_info, role_info = login_user()
     access_token = access_token_from_user(user_info, role_info)
 
     if get_refresh_token:
@@ -171,7 +230,7 @@ def login_and_get_jwt(get_refresh_token: bool) -> Tuple[str, Optional[str]]:
     else:
         refresh_token = None
 
-    current_app.logger.info(f"Successful login for user {username}")
+    current_app.logger.info(f"Successful login for user {user_info.username}")
     return access_token, refresh_token
 
 

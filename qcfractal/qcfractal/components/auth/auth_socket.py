@@ -3,11 +3,18 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Tuple, List, Dict, Any, Optional
 
+from sqlalchemy import select, delete
+from sqlalchemy.dialects.postgresql import insert
+
 from qcportal.auth import UserInfo, RoleInfo
-from qcportal.exceptions import AuthorizationFailure
+from qcportal.exceptions import AuthorizationFailure, AuthenticationFailure
+from qcportal.serialization import serialize, deserialize
+from qcportal.utils import now_at_utc
+from .db_models import UserORM, RoleORM, UserSessionORM
 from .policyuniverse import Policy
 
 if TYPE_CHECKING:
+    import datetime
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
 
@@ -78,10 +85,23 @@ class AuthSocket:
             All information about the user, and all information about the user's role
         """
 
+        stmt = select(UserORM, RoleORM)
+        stmt = stmt.join(RoleORM, RoleORM.id == UserORM.role_id)
+        stmt = stmt.where(UserORM.id == user_id)
+
         with self.root_socket.optional_session(session, True) as session:
-            user_info = self.root_socket.users.verify(user_id=user_id, session=session)
-            role_info_dict = self.root_socket.roles.get(user_info.role, session=session)
-            return user_info, RoleInfo(**role_info_dict)
+            orms: Optional[Tuple[UserORM, RoleORM]] = session.execute(stmt).one_or_none()
+
+            if orms is None:
+                raise AuthenticationFailure("User does not exist")
+
+            user_orm, role_orm = orms
+            if not user_orm.enabled:
+                raise AuthenticationFailure(f"User {user_id} is disabled.")
+
+            user_info = user_orm.to_model(UserInfo)
+            role_info = role_orm.to_model(RoleInfo)
+            return user_info, role_info
 
     def is_authorized(
         self, resource: Dict[str, Any], action: str, subject: Dict[str, Any], context: Dict[str, Any], policies: Any
@@ -137,36 +157,6 @@ class AuthSocket:
 
         return True, "Allowed"
 
-    def assert_authorized(
-        self, resource: Dict[str, Any], action: str, subject: Dict[str, Any], context: Dict[str, Any], policies: Any
-    ) -> None:
-        """
-        Check for access to the given resource given permissions
-
-        1. If no security (enable_security is False), always allow
-        2. Check if allowed by the stored policies
-        3. If denied, and allow_unauthenticated_read==True, use the default read permissions.
-
-        If authorization fails, an exception is raised
-
-        Parameters
-        ----------
-        resource
-            Dictionary describing the resource being accessed
-        action
-            The action being requested on the resource
-        subject
-            Dictionary describing the entity wanting access to the resource
-        context
-            Additional context of the request
-        """
-
-        allowed, msg = self.is_authorized(
-            resource=resource, action=action, subject=subject, context=context, policies=policies
-        )
-        if not allowed:
-            raise AuthorizationFailure(msg)
-
     def allowed_actions(self, subject: Any, resources: Any, actions: Any, policies: Any) -> List[Tuple[str, str]]:
         allowed: List[Tuple[str, str]] = []
 
@@ -194,3 +184,53 @@ class AuthSocket:
                         allowed.append((resource, action))
 
         return allowed
+
+    def save_user_session(
+        self,
+        user_session_id: str,
+        user_session_data: Any,
+        *,
+        session: Optional[Session] = None,
+    ) -> None:
+        """
+        Saves user/flask session data to the database
+        """
+        serialized_data = serialize(user_session_data, "msgpack")
+
+        with self.root_socket.optional_session(session, False) as session:
+            stmt = insert(UserSessionORM)
+            stmt = stmt.values(session_id=user_session_id, session_data=serialized_data)
+            stmt = stmt.on_conflict_do_update(
+                index_elements=[UserSessionORM.session_id],
+                set_={"session_data": serialized_data, "last_accessed": now_at_utc()},
+            )
+            session.execute(stmt)
+
+    def load_user_session(
+        self, user_session_id: str, *, session: Optional[Session] = None
+    ) -> Tuple[Any, datetime.datetime]:
+        """
+        Loads user/flask session data from the database
+
+        Will return None if the session_id does not exist
+
+        Returns a tuple of the session data and the last accessed time
+        """
+        with self.root_socket.optional_session(session, True) as session:
+            stmt = select(UserSessionORM).where(UserSessionORM.session_id == user_session_id)
+            flask_session_orm = session.execute(stmt).scalar_one_or_none()
+
+            if not flask_session_orm:
+                return None, now_at_utc()
+
+            session_data = deserialize(flask_session_orm.session_data, "msgpack")
+            return session_data, flask_session_orm.last_accessed
+
+    def delete_user_session(self, session_id: str, *, session: Optional[Session] = None) -> None:
+        """
+        Deletes user/flask session data from the database (if it exists)
+        """
+        with self.root_socket.optional_session(session, False) as session:
+            stmt = delete(UserSessionORM)
+            stmt = stmt.where(UserSessionORM.session_id == session_id)
+            session.execute(stmt)
