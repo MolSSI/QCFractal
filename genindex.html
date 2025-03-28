@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=a10a4402"></script>
+    <script src="_static/documentation_options.js?v=aac9c10a"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.59.post52+g1fe59e856" />
+  <meta name="docsearch:version" content="0.59.post63+gd9c76fa87" />
   </head>
   
   
@@ -647,8 +647,6 @@
         <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDatasetNewEntry.additional_singlepoint_keywords">(NEBDatasetNewEntry attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogQueryFilters.after">after (AccessLogQueryFilters attribute)</a>
 
       <ul>
@@ -657,6 +655,8 @@
         <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.ErrorLogQueryFilters.after">(ErrorLogQueryFilters attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJob.after_function">after_function (InternalJob attribute)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJob.after_function_kwargs">after_function_kwargs (InternalJob attribute)</a>
@@ -708,7 +708,13 @@
 </li>
       </ul></li>
       <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveAddBody.as_service">as_service (TorsiondriveAddBody attribute)</a>
+
+      <ul>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveInput.as_service">(TorsiondriveInput attribute)</a>
 </li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveMultiInput.as_service">(TorsiondriveMultiInput attribute)</a>
+</li>
+      </ul></li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.assert_is_not_view">assert_is_not_view() (BaseDataset method)</a>
 
       <ul>
@@ -2541,6 +2547,8 @@
         <li><a href="user_guide/qcportal_reference/clients.html#qcportal.client_base.PortalClientBase.from_file">(PortalClientBase class method)</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/qcportal_reference/metadata_models.html#qcportal.metadata_models.InsertCountsMetadata.from_insert_metadata">from_insert_metadata() (InsertCountsMetadata static method)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogEntry.full_uri">full_uri (AccessLogEntry attribute)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ManagerName.fullname">fullname (ManagerName property)</a>
@@ -2962,6 +2970,8 @@
       <ul>
         <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDatasetNewEntry.initial_chain">(NEBDatasetNewEntry attribute)</a>
 </li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBInput.initial_chain">(NEBInput attribute)</a>
+</li>
         <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBRecord.initial_chain">(NEBRecord property)</a>
 </li>
       </ul></li>
@@ -2970,11 +2980,17 @@
       <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBRecord.initial_chain_molecule_ids_">initial_chain_molecule_ids_ (NEBRecord attribute)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBAddBody.initial_chains">initial_chains (NEBAddBody attribute)</a>
+
+      <ul>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBMultiInput.initial_chains">(NEBMultiInput attribute)</a>
 </li>
+      </ul></li>
       <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDatasetEntry.initial_molecule">initial_molecule (GridoptimizationDatasetEntry attribute)</a>
 
       <ul>
         <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDatasetNewEntry.initial_molecule">(GridoptimizationDatasetNewEntry attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationInput.initial_molecule">(GridoptimizationInput attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationRecord.initial_molecule">(GridoptimizationRecord property)</a>
 </li>
@@ -2982,11 +2998,15 @@
 </li>
         <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.dataset_models.ManybodyDatasetNewEntry.initial_molecule">(ManybodyDatasetNewEntry attribute)</a>
 </li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyInput.initial_molecule">(ManybodyInput attribute)</a>
+</li>
         <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyRecord.initial_molecule">(ManybodyRecord property)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDatasetEntry.initial_molecule">(OptimizationDatasetEntry attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDatasetNewEntry.initial_molecule">(OptimizationDatasetNewEntry attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationInput.initial_molecule">(OptimizationInput attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationRecord.initial_molecule">(OptimizationRecord property)</a>
 </li>
@@ -3020,15 +3040,25 @@
       <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationAddBody.initial_molecules">initial_molecules (GridoptimizationAddBody attribute)</a>
 
       <ul>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationMultiInput.initial_molecules">(GridoptimizationMultiInput attribute)</a>
+</li>
         <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyAddBody.initial_molecules">(ManybodyAddBody attribute)</a>
 </li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyMultiInput.initial_molecules">(ManybodyMultiInput attribute)</a>
+</li>
         <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationAddBody.initial_molecules">(OptimizationAddBody attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationMultiInput.initial_molecules">(OptimizationMultiInput attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveAddBody.initial_molecules">(TorsiondriveAddBody attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDatasetEntry.initial_molecules">(TorsiondriveDatasetEntry attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDatasetNewEntry.initial_molecules">(TorsiondriveDatasetNewEntry attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveInput.initial_molecules">(TorsiondriveInput attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveMultiInput.initial_molecules">(TorsiondriveMultiInput attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.initial_molecules">(TorsiondriveRecord property)</a>, <a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.initial_molecules">[1]</a>
 </li>
@@ -3675,6 +3705,8 @@
 </li>
         <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetNewEntry.molecule">(SinglepointDatasetNewEntry attribute)</a>
 </li>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointInput.molecule">(SinglepointInput attribute)</a>
+</li>
         <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointRecord.molecule">(SinglepointRecord property)</a>
 </li>
       </ul></li>
@@ -3705,7 +3737,11 @@
       <li><a href="user_guide/qcportal_reference/molecules.html#qcportal.molecules.models.MoleculeQueryIterator">MoleculeQueryIterator (class in qcportal.molecules.models)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointAddBody.molecules">molecules (SinglepointAddBody attribute)</a>
+
+      <ul>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointMultiInput.molecules">(SinglepointMultiInput attribute)</a>
 </li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -4858,21 +4894,31 @@
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord.record_type">record_type (BaseRecord attribute)</a>
 
       <ul>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationInput.record_type">(GridoptimizationInput attribute)</a>
+</li>
         <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationQueryFilters.record_type">(GridoptimizationQueryFilters attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationRecord.record_type">(GridoptimizationRecord attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyInput.record_type">(ManybodyInput attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyQueryFilters.record_type">(ManybodyQueryFilters attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyRecord.record_type">(ManybodyRecord attribute)</a>
 </li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBInput.record_type">(NEBInput attribute)</a>
+</li>
         <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBQueryFilters.record_type">(NEBQueryFilters attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBRecord.record_type">(NEBRecord attribute)</a>
 </li>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationInput.record_type">(OptimizationInput attribute)</a>
+</li>
         <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationQueryFilters.record_type">(OptimizationQueryFilters attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationRecord.record_type">(OptimizationRecord attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionInput.record_type">(ReactionInput attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionQueryFilters.record_type">(ReactionQueryFilters attribute)</a>
 </li>
@@ -4880,9 +4926,13 @@
 </li>
         <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordQueryFilters.record_type">(RecordQueryFilters attribute)</a>
 </li>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointInput.record_type">(SinglepointInput attribute)</a>
+</li>
         <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointQueryFilters.record_type">(SinglepointQueryFilters attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointRecord.record_type">(SinglepointRecord attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveInput.record_type">(TorsiondriveInput attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.record_type">(TorsiondriveQueryFilters attribute)</a>
 </li>
@@ -4919,10 +4969,10 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.refresh_cache">(TorsiondriveDataset method)</a>
 </li>
       </ul></li>
-      <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ComputeManager.rejected">rejected (ComputeManager attribute)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ComputeManager.rejected">rejected (ComputeManager attribute)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/metadata_models.html#qcportal.metadata_models.TaskReturnMetadata.rejected_ids">rejected_ids (TaskReturnMetadata property)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/metadata_models.html#qcportal.metadata_models.TaskReturnMetadata.rejected_info">rejected_info (TaskReturnMetadata attribute)</a>
@@ -5465,8 +5515,6 @@
         <li><a href="user_guide/qcportal_reference/metadata_models.html#qcportal.metadata_models.UpdateMetadata.sort_fields">(UpdateMetadata class method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetCloneBody.source_dataset_id">source_dataset_id (DatasetCloneBody attribute)</a>
 
       <ul>
@@ -5478,11 +5526,19 @@
       <ul>
         <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDatasetSpecification.specification">(GridoptimizationDatasetSpecification attribute)</a>
 </li>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationInput.specification">(GridoptimizationInput attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationMultiInput.specification">(GridoptimizationMultiInput attribute)</a>
+</li>
         <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationRecord.specification">(GridoptimizationRecord attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyAddBody.specification">(ManybodyAddBody attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.dataset_models.ManybodyDatasetSpecification.specification">(ManybodyDatasetSpecification attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyInput.specification">(ManybodyInput attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyMultiInput.specification">(ManybodyMultiInput attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyRecord.specification">(ManybodyRecord attribute)</a>
 </li>
@@ -5490,11 +5546,19 @@
 </li>
         <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDatasetSpecification.specification">(NEBDatasetSpecification attribute)</a>
 </li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBInput.specification">(NEBInput attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBMultiInput.specification">(NEBMultiInput attribute)</a>
+</li>
         <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBRecord.specification">(NEBRecord attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationAddBody.specification">(OptimizationAddBody attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDatasetSpecification.specification">(OptimizationDatasetSpecification attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationInput.specification">(OptimizationInput attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationMultiInput.specification">(OptimizationMultiInput attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationRecord.specification">(OptimizationRecord attribute)</a>
 </li>
@@ -5502,11 +5566,19 @@
 </li>
         <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDatasetSpecification.specification">(ReactionDatasetSpecification attribute)</a>
 </li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionInput.specification">(ReactionInput attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionMultiInput.specification">(ReactionMultiInput attribute)</a>
+</li>
         <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionRecord.specification">(ReactionRecord attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointAddBody.specification">(SinglepointAddBody attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetSpecification.specification">(SinglepointDatasetSpecification attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointInput.specification">(SinglepointInput attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointMultiInput.specification">(SinglepointMultiInput attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointRecord.specification">(SinglepointRecord attribute)</a>
 </li>
@@ -5514,9 +5586,15 @@
 </li>
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDatasetSpecification.specification">(TorsiondriveDatasetSpecification attribute)</a>
 </li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveInput.specification">(TorsiondriveInput attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveMultiInput.specification">(TorsiondriveMultiInput attribute)</a>
+</li>
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.specification">(TorsiondriveRecord attribute)</a>, <a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.specification">[1]</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.specification_exists">specification_exists() (DatasetCache method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDatasetRecordItem.specification_name">specification_name (GridoptimizationDatasetRecordItem attribute)</a>
@@ -5759,6 +5837,10 @@
         <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDatasetEntry.stoichiometries">(ReactionDatasetEntry attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDatasetNewEntry.stoichiometries">(ReactionDatasetNewEntry attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionInput.stoichiometries">(ReactionInput attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionMultiInput.stoichiometries">(ReactionMultiInput attribute)</a>
 </li>
       </ul></li>
       <li><a href="overview/snowflake.html#qcfractal.snowflake.FractalSnowflake.stop">stop() (FractalSnowflake method)</a>

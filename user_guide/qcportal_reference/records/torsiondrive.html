@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=a10a4402"></script>
+    <script src="../../../_static/documentation_options.js?v=aac9c10a"></script>
     <script src="../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Optimization Records" href="optimization.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.59.post52+g1fe59e856" />
+  <meta name="docsearch:version" content="0.59.post63+gd9c76fa87" />
   </head>
   
   
@@ -716,9 +716,91 @@
 </dd></dl>
 
 <dl class="py class pydantic_model">
+<dt class="sig sig-object py" id="qcportal.torsiondrive.record_models.TorsiondriveInput">
+<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TorsiondriveInput</span></span><a class="reference internal" href="../../../_modules/qcportal/torsiondrive/record_models.html#TorsiondriveInput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.torsiondrive.record_models.TorsiondriveInput" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../base_models.html#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Config<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extra</strong>: <em>Extra = Extra.forbid</em></p></li>
+<li><p><strong>validate_assignment</strong>: <em>bool = True</em></p></li>
+</ul>
+</dd>
+<dt class="field-even">Fields<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#qcportal.torsiondrive.record_models.TorsiondriveInput.as_service" title="qcportal.torsiondrive.record_models.TorsiondriveInput.as_service"><code class="xref py py-obj docutils literal notranslate"><span class="pre">as_service</span> <span class="pre">(bool)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.torsiondrive.record_models.TorsiondriveInput.initial_molecules" title="qcportal.torsiondrive.record_models.TorsiondriveInput.initial_molecules"><code class="xref py py-obj docutils literal notranslate"><span class="pre">initial_molecules</span> <span class="pre">(List[int</span> <span class="pre">|</span> <span class="pre">qcelemental.models.molecule.Molecule])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.torsiondrive.record_models.TorsiondriveInput.record_type" title="qcportal.torsiondrive.record_models.TorsiondriveInput.record_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_type</span> <span class="pre">(Literal['torsiondrive'])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.torsiondrive.record_models.TorsiondriveInput.specification" title="qcportal.torsiondrive.record_models.TorsiondriveInput.specification"><code class="xref py py-obj docutils literal notranslate"><span class="pre">specification</span> <span class="pre">(qcportal.torsiondrive.record_models.TorsiondriveSpecification)</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.torsiondrive.record_models.TorsiondriveInput.record_type">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">record_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'torsiondrive'</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'torsiondrive'</span></em><a class="headerlink" href="#qcportal.torsiondrive.record_models.TorsiondriveInput.record_type" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.torsiondrive.record_models.TorsiondriveInput.specification">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">specification</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.torsiondrive.record_models.TorsiondriveSpecification" title="qcportal.torsiondrive.record_models.TorsiondriveSpecification"><span class="pre">TorsiondriveSpecification</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.torsiondrive.record_models.TorsiondriveInput.specification" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.torsiondrive.record_models.TorsiondriveInput.initial_molecules">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">initial_molecules</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Molecule</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.torsiondrive.record_models.TorsiondriveInput.initial_molecules" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.torsiondrive.record_models.TorsiondriveInput.as_service">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">as_service</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.torsiondrive.record_models.TorsiondriveInput.as_service" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class pydantic_model">
+<dt class="sig sig-object py" id="qcportal.torsiondrive.record_models.TorsiondriveMultiInput">
+<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TorsiondriveMultiInput</span></span><a class="reference internal" href="../../../_modules/qcportal/torsiondrive/record_models.html#TorsiondriveMultiInput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.torsiondrive.record_models.TorsiondriveMultiInput" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../base_models.html#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Config<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extra</strong>: <em>Extra = Extra.forbid</em></p></li>
+<li><p><strong>validate_assignment</strong>: <em>bool = True</em></p></li>
+</ul>
+</dd>
+<dt class="field-even">Fields<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#qcportal.torsiondrive.record_models.TorsiondriveMultiInput.as_service" title="qcportal.torsiondrive.record_models.TorsiondriveMultiInput.as_service"><code class="xref py py-obj docutils literal notranslate"><span class="pre">as_service</span> <span class="pre">(bool)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.torsiondrive.record_models.TorsiondriveMultiInput.initial_molecules" title="qcportal.torsiondrive.record_models.TorsiondriveMultiInput.initial_molecules"><code class="xref py py-obj docutils literal notranslate"><span class="pre">initial_molecules</span> <span class="pre">(List[List[int</span> <span class="pre">|</span> <span class="pre">qcelemental.models.molecule.Molecule]])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.torsiondrive.record_models.TorsiondriveMultiInput.specification" title="qcportal.torsiondrive.record_models.TorsiondriveMultiInput.specification"><code class="xref py py-obj docutils literal notranslate"><span class="pre">specification</span> <span class="pre">(qcportal.torsiondrive.record_models.TorsiondriveSpecification)</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.torsiondrive.record_models.TorsiondriveMultiInput.specification">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">specification</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.torsiondrive.record_models.TorsiondriveSpecification" title="qcportal.torsiondrive.record_models.TorsiondriveSpecification"><span class="pre">TorsiondriveSpecification</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.torsiondrive.record_models.TorsiondriveMultiInput.specification" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.torsiondrive.record_models.TorsiondriveMultiInput.initial_molecules">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">initial_molecules</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Molecule</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.torsiondrive.record_models.TorsiondriveMultiInput.initial_molecules" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.torsiondrive.record_models.TorsiondriveMultiInput.as_service">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">as_service</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.torsiondrive.record_models.TorsiondriveMultiInput.as_service" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class pydantic_model">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.record_models.TorsiondriveAddBody">
 <em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TorsiondriveAddBody</span></span><a class="reference internal" href="../../../_modules/qcportal/torsiondrive/record_models.html#TorsiondriveAddBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.torsiondrive.record_models.TorsiondriveAddBody" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordAddBodyBase" title="qcportal.record_models.RecordAddBodyBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordAddBodyBase</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordAddBodyBase" title="qcportal.record_models.RecordAddBodyBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordAddBodyBase</span></code></a>, <a class="reference internal" href="#qcportal.torsiondrive.record_models.TorsiondriveMultiInput" title="qcportal.torsiondrive.record_models.TorsiondriveMultiInput"><code class="xref py py-class docutils literal notranslate"><span class="pre">TorsiondriveMultiInput</span></code></a></p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
 <dl class="field-list simple">
@@ -740,42 +822,6 @@
 </ul>
 </dd>
 </dl>
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.record_models.TorsiondriveAddBody.specification">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">specification</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.torsiondrive.record_models.TorsiondriveSpecification" title="qcportal.torsiondrive.record_models.TorsiondriveSpecification"><span class="pre">TorsiondriveSpecification</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.torsiondrive.record_models.TorsiondriveAddBody.specification" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Validated by<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.record_models.TorsiondriveAddBody.initial_molecules">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">initial_molecules</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Molecule</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.torsiondrive.record_models.TorsiondriveAddBody.initial_molecules" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Validated by<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.record_models.TorsiondriveAddBody.as_service">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">as_service</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.torsiondrive.record_models.TorsiondriveAddBody.as_service" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Validated by<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.record_models.TorsiondriveAddBody.compute_tag">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">constr</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">to_lower</span></span><span class="o"><span class="pre">=</span></span><span class="k"><span class="pre">True</span></span><span class="p"><span class="pre">)</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.torsiondrive.record_models.TorsiondriveAddBody.compute_tag" title="Link to this definition">#</a></dt>
@@ -815,6 +861,42 @@
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.record_models.TorsiondriveAddBody.find_existing">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">find_existing</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#qcportal.torsiondrive.record_models.TorsiondriveAddBody.find_existing" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.torsiondrive.record_models.TorsiondriveAddBody.specification">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">specification</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.torsiondrive.record_models.TorsiondriveSpecification" title="qcportal.torsiondrive.record_models.TorsiondriveSpecification"><span class="pre">TorsiondriveSpecification</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.torsiondrive.record_models.TorsiondriveAddBody.specification" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.torsiondrive.record_models.TorsiondriveAddBody.initial_molecules">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">initial_molecules</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Molecule</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.torsiondrive.record_models.TorsiondriveAddBody.initial_molecules" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.torsiondrive.record_models.TorsiondriveAddBody.as_service">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">as_service</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.torsiondrive.record_models.TorsiondriveAddBody.as_service" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Validated by<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -915,12 +997,12 @@
 
 <dl class="py method pydantic_validator">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.parse_dates">
-<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.created_after" title="qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.created_after"><em class="xref py py-obj"><span class="pre">created_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.modified_before" title="qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.modified_before"><em class="xref py py-obj"><span class="pre">modified_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.created_before" title="qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.created_before"><em class="xref py py-obj"><span class="pre">created_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.modified_after" title="qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.modified_after"><em class="xref py py-obj"><span class="pre">modified_after</span></em></a><a class="headerlink" href="#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.modified_after" title="qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.modified_after"><em class="xref py py-obj"><span class="pre">modified_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.created_after" title="qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.created_after"><em class="xref py py-obj"><span class="pre">created_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.modified_before" title="qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.modified_before"><em class="xref py py-obj"><span class="pre">modified_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.created_before" title="qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.created_before"><em class="xref py py-obj"><span class="pre">created_before</span></em></a><a class="headerlink" href="#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method pydantic_validator">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.validate_lists">
-<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_lists</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.limit" title="qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.limit"><em class="xref py py-obj"><span class="pre">limit</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.cursor" title="qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.cursor"><em class="xref py py-obj"><span class="pre">cursor</span></em></a><a class="headerlink" href="#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.validate_lists" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_lists</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.cursor" title="qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.cursor"><em class="xref py py-obj"><span class="pre">cursor</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.limit" title="qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.limit"><em class="xref py py-obj"><span class="pre">limit</span></em></a><a class="headerlink" href="#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.validate_lists" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -2721,14 +2803,27 @@ records created for those that don’t match. If False, new records will always 
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.record_models.TorsiondriveOptimization.energy"><code class="docutils literal notranslate"><span class="pre">TorsiondriveOptimization.energy</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.record_models.TorsiondriveInput"><code class="docutils literal notranslate"><span class="pre">TorsiondriveInput</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.record_models.TorsiondriveInput.record_type"><code class="docutils literal notranslate"><span class="pre">TorsiondriveInput.record_type</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.record_models.TorsiondriveInput.specification"><code class="docutils literal notranslate"><span class="pre">TorsiondriveInput.specification</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.record_models.TorsiondriveInput.initial_molecules"><code class="docutils literal notranslate"><span class="pre">TorsiondriveInput.initial_molecules</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.record_models.TorsiondriveInput.as_service"><code class="docutils literal notranslate"><span class="pre">TorsiondriveInput.as_service</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.record_models.TorsiondriveMultiInput"><code class="docutils literal notranslate"><span class="pre">TorsiondriveMultiInput</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.record_models.TorsiondriveMultiInput.specification"><code class="docutils literal notranslate"><span class="pre">TorsiondriveMultiInput.specification</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.record_models.TorsiondriveMultiInput.initial_molecules"><code class="docutils literal notranslate"><span class="pre">TorsiondriveMultiInput.initial_molecules</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.record_models.TorsiondriveMultiInput.as_service"><code class="docutils literal notranslate"><span class="pre">TorsiondriveMultiInput.as_service</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.record_models.TorsiondriveAddBody"><code class="docutils literal notranslate"><span class="pre">TorsiondriveAddBody</span></code></a><ul class="visible nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.record_models.TorsiondriveAddBody.specification"><code class="docutils literal notranslate"><span class="pre">TorsiondriveAddBody.specification</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.record_models.TorsiondriveAddBody.initial_molecules"><code class="docutils literal notranslate"><span class="pre">TorsiondriveAddBody.initial_molecules</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.record_models.TorsiondriveAddBody.as_service"><code class="docutils literal notranslate"><span class="pre">TorsiondriveAddBody.as_service</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.record_models.TorsiondriveAddBody.compute_tag"><code class="docutils literal notranslate"><span class="pre">TorsiondriveAddBody.compute_tag</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.record_models.TorsiondriveAddBody.compute_priority"><code class="docutils literal notranslate"><span class="pre">TorsiondriveAddBody.compute_priority</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.record_models.TorsiondriveAddBody.owner_group"><code class="docutils literal notranslate"><span class="pre">TorsiondriveAddBody.owner_group</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.record_models.TorsiondriveAddBody.find_existing"><code class="docutils literal notranslate"><span class="pre">TorsiondriveAddBody.find_existing</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.record_models.TorsiondriveAddBody.specification"><code class="docutils literal notranslate"><span class="pre">TorsiondriveAddBody.specification</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.record_models.TorsiondriveAddBody.initial_molecules"><code class="docutils literal notranslate"><span class="pre">TorsiondriveAddBody.initial_molecules</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.record_models.TorsiondriveAddBody.as_service"><code class="docutils literal notranslate"><span class="pre">TorsiondriveAddBody.as_service</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters"><code class="docutils literal notranslate"><span class="pre">TorsiondriveQueryFilters</span></code></a><ul class="visible nav section-nav flex-column">

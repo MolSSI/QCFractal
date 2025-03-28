@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=a10a4402"></script>
+    <script src="../../../_static/documentation_options.js?v=aac9c10a"></script>
     <script src="../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Base Record Models" href="base_record_models.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.59.post52+g1fe59e856" />
+  <meta name="docsearch:version" content="0.59.post63+gd9c76fa87" />
   </head>
   
   
@@ -967,9 +967,79 @@ that can span multiple records</p>
 </dd></dl>
 
 <dl class="py class pydantic_model">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointInput">
+<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SinglepointInput</span></span><a class="reference internal" href="../../../_modules/qcportal/singlepoint/record_models.html#SinglepointInput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointInput" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../base_models.html#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Config<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extra</strong>: <em>Extra = Extra.forbid</em></p></li>
+<li><p><strong>validate_assignment</strong>: <em>bool = True</em></p></li>
+</ul>
+</dd>
+<dt class="field-even">Fields<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointInput.molecule" title="qcportal.singlepoint.record_models.SinglepointInput.molecule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">molecule</span> <span class="pre">(int</span> <span class="pre">|</span> <span class="pre">qcelemental.models.molecule.Molecule)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointInput.record_type" title="qcportal.singlepoint.record_models.SinglepointInput.record_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_type</span> <span class="pre">(Literal['singlepoint'])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointInput.specification" title="qcportal.singlepoint.record_models.SinglepointInput.specification"><code class="xref py py-obj docutils literal notranslate"><span class="pre">specification</span> <span class="pre">(qcportal.singlepoint.record_models.QCSpecification)</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointInput.record_type">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">record_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'singlepoint'</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'singlepoint'</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointInput.record_type" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointInput.specification">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">specification</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.singlepoint.record_models.QCSpecification" title="qcportal.singlepoint.record_models.QCSpecification"><span class="pre">QCSpecification</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointInput.specification" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointInput.molecule">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">molecule</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Molecule</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointInput.molecule" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class pydantic_model">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointMultiInput">
+<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SinglepointMultiInput</span></span><a class="reference internal" href="../../../_modules/qcportal/singlepoint/record_models.html#SinglepointMultiInput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointMultiInput" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../base_models.html#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Config<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extra</strong>: <em>Extra = Extra.forbid</em></p></li>
+<li><p><strong>validate_assignment</strong>: <em>bool = True</em></p></li>
+</ul>
+</dd>
+<dt class="field-even">Fields<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointMultiInput.molecules" title="qcportal.singlepoint.record_models.SinglepointMultiInput.molecules"><code class="xref py py-obj docutils literal notranslate"><span class="pre">molecules</span> <span class="pre">(List[int</span> <span class="pre">|</span> <span class="pre">qcelemental.models.molecule.Molecule])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointMultiInput.specification" title="qcportal.singlepoint.record_models.SinglepointMultiInput.specification"><code class="xref py py-obj docutils literal notranslate"><span class="pre">specification</span> <span class="pre">(qcportal.singlepoint.record_models.QCSpecification)</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointMultiInput.specification">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">specification</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.singlepoint.record_models.QCSpecification" title="qcportal.singlepoint.record_models.QCSpecification"><span class="pre">QCSpecification</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointMultiInput.specification" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointMultiInput.molecules">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">molecules</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Molecule</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointMultiInput.molecules" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class pydantic_model">
 <dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointAddBody">
 <em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SinglepointAddBody</span></span><a class="reference internal" href="../../../_modules/qcportal/singlepoint/record_models.html#SinglepointAddBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointAddBody" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordAddBodyBase" title="qcportal.record_models.RecordAddBodyBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordAddBodyBase</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordAddBodyBase" title="qcportal.record_models.RecordAddBodyBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordAddBodyBase</span></code></a>, <a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointMultiInput" title="qcportal.singlepoint.record_models.SinglepointMultiInput"><code class="xref py py-class docutils literal notranslate"><span class="pre">SinglepointMultiInput</span></code></a></p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
 <dl class="field-list simple">
@@ -990,30 +1060,6 @@ that can span multiple records</p>
 </ul>
 </dd>
 </dl>
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointAddBody.specification">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">specification</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.singlepoint.record_models.QCSpecification" title="qcportal.singlepoint.record_models.QCSpecification"><span class="pre">QCSpecification</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointAddBody.specification" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Validated by<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointAddBody.molecules">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">molecules</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Molecule</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointAddBody.molecules" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Validated by<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointAddBody.compute_tag">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">constr</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">to_lower</span></span><span class="o"><span class="pre">=</span></span><span class="k"><span class="pre">True</span></span><span class="p"><span class="pre">)</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointAddBody.compute_tag" title="Link to this definition">#</a></dt>
@@ -1053,6 +1099,30 @@ that can span multiple records</p>
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointAddBody.find_existing">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">find_existing</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointAddBody.find_existing" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointAddBody.specification">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">specification</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.singlepoint.record_models.QCSpecification" title="qcportal.singlepoint.record_models.QCSpecification"><span class="pre">QCSpecification</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointAddBody.specification" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointAddBody.molecules">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">molecules</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Molecule</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointAddBody.molecules" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Validated by<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1153,12 +1223,12 @@ that can span multiple records</p>
 
 <dl class="py method pydantic_validator">
 <dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointQueryFilters.parse_dates">
-<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.modified_before" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.modified_before"><em class="xref py py-obj"><span class="pre">modified_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.modified_after" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.modified_after"><em class="xref py py-obj"><span class="pre">modified_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.created_before" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.created_before"><em class="xref py py-obj"><span class="pre">created_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.created_after" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.created_after"><em class="xref py py-obj"><span class="pre">created_after</span></em></a><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.modified_before" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.modified_before"><em class="xref py py-obj"><span class="pre">modified_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.modified_after" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.modified_after"><em class="xref py py-obj"><span class="pre">modified_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.created_after" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.created_after"><em class="xref py py-obj"><span class="pre">created_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.created_before" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.created_before"><em class="xref py py-obj"><span class="pre">created_before</span></em></a><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method pydantic_validator">
 <dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointQueryFilters.validate_lists">
-<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_lists</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.cursor" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.cursor"><em class="xref py py-obj"><span class="pre">cursor</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.limit" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.limit"><em class="xref py py-obj"><span class="pre">limit</span></em></a><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.validate_lists" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_lists</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.limit" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.limit"><em class="xref py py-obj"><span class="pre">limit</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.cursor" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.cursor"><em class="xref py py-obj"><span class="pre">cursor</span></em></a><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.validate_lists" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -2777,13 +2847,24 @@ records created for those that don’t match. If False, new records will always 
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointRecord.native_files_"><code class="docutils literal notranslate"><span class="pre">SinglepointRecord.native_files_</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointInput"><code class="docutils literal notranslate"><span class="pre">SinglepointInput</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointInput.record_type"><code class="docutils literal notranslate"><span class="pre">SinglepointInput.record_type</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointInput.specification"><code class="docutils literal notranslate"><span class="pre">SinglepointInput.specification</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointInput.molecule"><code class="docutils literal notranslate"><span class="pre">SinglepointInput.molecule</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointMultiInput"><code class="docutils literal notranslate"><span class="pre">SinglepointMultiInput</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointMultiInput.specification"><code class="docutils literal notranslate"><span class="pre">SinglepointMultiInput.specification</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointMultiInput.molecules"><code class="docutils literal notranslate"><span class="pre">SinglepointMultiInput.molecules</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointAddBody"><code class="docutils literal notranslate"><span class="pre">SinglepointAddBody</span></code></a><ul class="visible nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointAddBody.specification"><code class="docutils literal notranslate"><span class="pre">SinglepointAddBody.specification</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointAddBody.molecules"><code class="docutils literal notranslate"><span class="pre">SinglepointAddBody.molecules</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointAddBody.compute_tag"><code class="docutils literal notranslate"><span class="pre">SinglepointAddBody.compute_tag</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointAddBody.compute_priority"><code class="docutils literal notranslate"><span class="pre">SinglepointAddBody.compute_priority</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointAddBody.owner_group"><code class="docutils literal notranslate"><span class="pre">SinglepointAddBody.owner_group</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointAddBody.find_existing"><code class="docutils literal notranslate"><span class="pre">SinglepointAddBody.find_existing</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointAddBody.specification"><code class="docutils literal notranslate"><span class="pre">SinglepointAddBody.specification</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointAddBody.molecules"><code class="docutils literal notranslate"><span class="pre">SinglepointAddBody.molecules</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters"><code class="docutils literal notranslate"><span class="pre">SinglepointQueryFilters</span></code></a><ul class="visible nav section-nav flex-column">

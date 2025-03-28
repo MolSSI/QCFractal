@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=a10a4402"></script>
+    <script src="../../../_static/documentation_options.js?v=aac9c10a"></script>
     <script src="../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Reaction Records" href="reaction.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.59.post52+g1fe59e856" />
+  <meta name="docsearch:version" content="0.59.post63+gd9c76fa87" />
   </head>
   
   
@@ -804,9 +804,79 @@
 </dd></dl>
 
 <dl class="py class pydantic_model">
+<dt class="sig sig-object py" id="qcportal.neb.record_models.NEBInput">
+<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NEBInput</span></span><a class="reference internal" href="../../../_modules/qcportal/neb/record_models.html#NEBInput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.neb.record_models.NEBInput" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../base_models.html#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Config<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extra</strong>: <em>Extra = Extra.forbid</em></p></li>
+<li><p><strong>validate_assignment</strong>: <em>bool = True</em></p></li>
+</ul>
+</dd>
+<dt class="field-even">Fields<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#qcportal.neb.record_models.NEBInput.initial_chain" title="qcportal.neb.record_models.NEBInput.initial_chain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">initial_chain</span> <span class="pre">(List[int</span> <span class="pre">|</span> <span class="pre">qcelemental.models.molecule.Molecule])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.neb.record_models.NEBInput.record_type" title="qcportal.neb.record_models.NEBInput.record_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_type</span> <span class="pre">(Literal['neb'])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.neb.record_models.NEBInput.specification" title="qcportal.neb.record_models.NEBInput.specification"><code class="xref py py-obj docutils literal notranslate"><span class="pre">specification</span> <span class="pre">(qcportal.neb.record_models.NEBSpecification)</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.neb.record_models.NEBInput.record_type">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">record_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'neb'</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'neb'</span></em><a class="headerlink" href="#qcportal.neb.record_models.NEBInput.record_type" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.neb.record_models.NEBInput.specification">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">specification</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.neb.record_models.NEBSpecification" title="qcportal.neb.record_models.NEBSpecification"><span class="pre">NEBSpecification</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.neb.record_models.NEBInput.specification" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.neb.record_models.NEBInput.initial_chain">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">initial_chain</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Molecule</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.neb.record_models.NEBInput.initial_chain" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class pydantic_model">
+<dt class="sig sig-object py" id="qcportal.neb.record_models.NEBMultiInput">
+<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NEBMultiInput</span></span><a class="reference internal" href="../../../_modules/qcportal/neb/record_models.html#NEBMultiInput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.neb.record_models.NEBMultiInput" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../base_models.html#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Config<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extra</strong>: <em>Extra = Extra.forbid</em></p></li>
+<li><p><strong>validate_assignment</strong>: <em>bool = True</em></p></li>
+</ul>
+</dd>
+<dt class="field-even">Fields<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#qcportal.neb.record_models.NEBMultiInput.initial_chains" title="qcportal.neb.record_models.NEBMultiInput.initial_chains"><code class="xref py py-obj docutils literal notranslate"><span class="pre">initial_chains</span> <span class="pre">(List[List[int</span> <span class="pre">|</span> <span class="pre">qcelemental.models.molecule.Molecule]])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.neb.record_models.NEBMultiInput.specification" title="qcportal.neb.record_models.NEBMultiInput.specification"><code class="xref py py-obj docutils literal notranslate"><span class="pre">specification</span> <span class="pre">(qcportal.neb.record_models.NEBSpecification)</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.neb.record_models.NEBMultiInput.specification">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">specification</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.neb.record_models.NEBSpecification" title="qcportal.neb.record_models.NEBSpecification"><span class="pre">NEBSpecification</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.neb.record_models.NEBMultiInput.specification" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.neb.record_models.NEBMultiInput.initial_chains">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">initial_chains</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Molecule</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.neb.record_models.NEBMultiInput.initial_chains" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class pydantic_model">
 <dt class="sig sig-object py" id="qcportal.neb.record_models.NEBAddBody">
 <em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NEBAddBody</span></span><a class="reference internal" href="../../../_modules/qcportal/neb/record_models.html#NEBAddBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.neb.record_models.NEBAddBody" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordAddBodyBase" title="qcportal.record_models.RecordAddBodyBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordAddBodyBase</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordAddBodyBase" title="qcportal.record_models.RecordAddBodyBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordAddBodyBase</span></code></a>, <a class="reference internal" href="#qcportal.neb.record_models.NEBMultiInput" title="qcportal.neb.record_models.NEBMultiInput"><code class="xref py py-class docutils literal notranslate"><span class="pre">NEBMultiInput</span></code></a></p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
 <dl class="field-list simple">
@@ -827,30 +897,6 @@
 </ul>
 </dd>
 </dl>
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.neb.record_models.NEBAddBody.specification">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">specification</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.neb.record_models.NEBSpecification" title="qcportal.neb.record_models.NEBSpecification"><span class="pre">NEBSpecification</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.neb.record_models.NEBAddBody.specification" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Validated by<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.neb.record_models.NEBAddBody.initial_chains">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">initial_chains</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Molecule</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.neb.record_models.NEBAddBody.initial_chains" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Validated by<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.neb.record_models.NEBAddBody.compute_tag">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">constr</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">to_lower</span></span><span class="o"><span class="pre">=</span></span><span class="k"><span class="pre">True</span></span><span class="p"><span class="pre">)</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.neb.record_models.NEBAddBody.compute_tag" title="Link to this definition">#</a></dt>
@@ -890,6 +936,30 @@
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.neb.record_models.NEBAddBody.find_existing">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">find_existing</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#qcportal.neb.record_models.NEBAddBody.find_existing" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.neb.record_models.NEBAddBody.specification">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">specification</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.neb.record_models.NEBSpecification" title="qcportal.neb.record_models.NEBSpecification"><span class="pre">NEBSpecification</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.neb.record_models.NEBAddBody.specification" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.neb.record_models.NEBAddBody.initial_chains">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">initial_chains</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Molecule</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.neb.record_models.NEBAddBody.initial_chains" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Validated by<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -984,12 +1054,12 @@
 
 <dl class="py method pydantic_validator">
 <dt class="sig sig-object py" id="qcportal.neb.record_models.NEBQueryFilters.parse_dates">
-<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.neb.record_models.NEBQueryFilters.created_before" title="qcportal.neb.record_models.NEBQueryFilters.created_before"><em class="xref py py-obj"><span class="pre">created_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.neb.record_models.NEBQueryFilters.modified_before" title="qcportal.neb.record_models.NEBQueryFilters.modified_before"><em class="xref py py-obj"><span class="pre">modified_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.neb.record_models.NEBQueryFilters.created_after" title="qcportal.neb.record_models.NEBQueryFilters.created_after"><em class="xref py py-obj"><span class="pre">created_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.neb.record_models.NEBQueryFilters.modified_after" title="qcportal.neb.record_models.NEBQueryFilters.modified_after"><em class="xref py py-obj"><span class="pre">modified_after</span></em></a><a class="headerlink" href="#qcportal.neb.record_models.NEBQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.neb.record_models.NEBQueryFilters.created_before" title="qcportal.neb.record_models.NEBQueryFilters.created_before"><em class="xref py py-obj"><span class="pre">created_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.neb.record_models.NEBQueryFilters.created_after" title="qcportal.neb.record_models.NEBQueryFilters.created_after"><em class="xref py py-obj"><span class="pre">created_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.neb.record_models.NEBQueryFilters.modified_before" title="qcportal.neb.record_models.NEBQueryFilters.modified_before"><em class="xref py py-obj"><span class="pre">modified_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.neb.record_models.NEBQueryFilters.modified_after" title="qcportal.neb.record_models.NEBQueryFilters.modified_after"><em class="xref py py-obj"><span class="pre">modified_after</span></em></a><a class="headerlink" href="#qcportal.neb.record_models.NEBQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method pydantic_validator">
 <dt class="sig sig-object py" id="qcportal.neb.record_models.NEBQueryFilters.validate_lists">
-<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_lists</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.neb.record_models.NEBQueryFilters.limit" title="qcportal.neb.record_models.NEBQueryFilters.limit"><em class="xref py py-obj"><span class="pre">limit</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.neb.record_models.NEBQueryFilters.cursor" title="qcportal.neb.record_models.NEBQueryFilters.cursor"><em class="xref py py-obj"><span class="pre">cursor</span></em></a><a class="headerlink" href="#qcportal.neb.record_models.NEBQueryFilters.validate_lists" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_lists</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.neb.record_models.NEBQueryFilters.cursor" title="qcportal.neb.record_models.NEBQueryFilters.cursor"><em class="xref py py-obj"><span class="pre">cursor</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.neb.record_models.NEBQueryFilters.limit" title="qcportal.neb.record_models.NEBQueryFilters.limit"><em class="xref py py-obj"><span class="pre">limit</span></em></a><a class="headerlink" href="#qcportal.neb.record_models.NEBQueryFilters.validate_lists" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -2824,13 +2894,24 @@ records created for those that don’t match. If False, new records will always 
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.neb.record_models.NEBSinglepoint.position"><code class="docutils literal notranslate"><span class="pre">NEBSinglepoint.position</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.neb.record_models.NEBInput"><code class="docutils literal notranslate"><span class="pre">NEBInput</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.neb.record_models.NEBInput.record_type"><code class="docutils literal notranslate"><span class="pre">NEBInput.record_type</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.neb.record_models.NEBInput.specification"><code class="docutils literal notranslate"><span class="pre">NEBInput.specification</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.neb.record_models.NEBInput.initial_chain"><code class="docutils literal notranslate"><span class="pre">NEBInput.initial_chain</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.neb.record_models.NEBMultiInput"><code class="docutils literal notranslate"><span class="pre">NEBMultiInput</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.neb.record_models.NEBMultiInput.specification"><code class="docutils literal notranslate"><span class="pre">NEBMultiInput.specification</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.neb.record_models.NEBMultiInput.initial_chains"><code class="docutils literal notranslate"><span class="pre">NEBMultiInput.initial_chains</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.neb.record_models.NEBAddBody"><code class="docutils literal notranslate"><span class="pre">NEBAddBody</span></code></a><ul class="visible nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.neb.record_models.NEBAddBody.specification"><code class="docutils literal notranslate"><span class="pre">NEBAddBody.specification</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.neb.record_models.NEBAddBody.initial_chains"><code class="docutils literal notranslate"><span class="pre">NEBAddBody.initial_chains</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.neb.record_models.NEBAddBody.compute_tag"><code class="docutils literal notranslate"><span class="pre">NEBAddBody.compute_tag</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.neb.record_models.NEBAddBody.compute_priority"><code class="docutils literal notranslate"><span class="pre">NEBAddBody.compute_priority</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.neb.record_models.NEBAddBody.owner_group"><code class="docutils literal notranslate"><span class="pre">NEBAddBody.owner_group</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.neb.record_models.NEBAddBody.find_existing"><code class="docutils literal notranslate"><span class="pre">NEBAddBody.find_existing</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.neb.record_models.NEBAddBody.specification"><code class="docutils literal notranslate"><span class="pre">NEBAddBody.specification</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.neb.record_models.NEBAddBody.initial_chains"><code class="docutils literal notranslate"><span class="pre">NEBAddBody.initial_chains</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.neb.record_models.NEBQueryFilters"><code class="docutils literal notranslate"><span class="pre">NEBQueryFilters</span></code></a><ul class="visible nav section-nav flex-column">
