@@ -8,6 +8,7 @@ from typing_extensions import Literal
 
 from qcportal.dataset_models import BaseDataset
 from qcportal.metadata_models import InsertMetadata
+from qcportal.internal_jobs import InternalJob
 from qcportal.molecules import Molecule
 from qcportal.optimization.record_models import OptimizationRecord, OptimizationSpecification
 
@@ -66,6 +67,11 @@ class OptimizationDataset(BaseDataset):
         self, entries: Union[OptimizationDatasetNewEntry, Iterable[OptimizationDatasetNewEntry]]
     ) -> InsertMetadata:
         return self._add_entries(entries)
+
+    def background_add_entries(
+        self, entries: Union[OptimizationDatasetNewEntry, Iterable[OptimizationDatasetNewEntry]]
+    ) -> InternalJob:
+        return self._background_add_entries(entries)
 
     def add_entry(
         self,

@@ -251,6 +251,30 @@ class BaseDataset(BaseModel):
 
         return InsertMetadata.merge(all_meta)
 
+    def _background_add_entries(self, entries: Union[BaseModel, Sequence[BaseModel]]) -> InternalJob:
+        """
+        Internal function for adding entries to a dataset as an internal job
+
+        This function handles batching and some type checking
+
+        Parameters
+        ----------
+        entries
+            Entries to add. May be just a single entry or a sequence of entries
+        """
+
+        self.assert_is_not_view()
+        self.assert_online()
+
+        entries = make_list(entries)
+        assert all(isinstance(x, self._new_entry_type) for x in entries), "Incorrect entry type"
+
+        job_id = self._client.make_request(
+            "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/background_add_entries", int, body=entries
+        )
+
+        return self.get_internal_job(job_id)
+
     def _add_specifications(self, specifications: Union[BaseModel, Sequence[BaseModel]]) -> InsertMetadata:
         """
         Internal function for adding specifications to a dataset
@@ -437,7 +461,7 @@ class BaseDataset(BaseModel):
         )
 
         job_id = self._client.make_request(
-            "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/background_submit", Any, body=body_data
+            "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/background_submit", int, body=body_data
         )
 
         return self.get_internal_job(job_id)

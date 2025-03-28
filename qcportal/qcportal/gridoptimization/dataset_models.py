@@ -12,6 +12,7 @@ from qcportal.gridoptimization.record_models import (
     GridoptimizationSpecification,
 )
 from qcportal.metadata_models import InsertMetadata
+from qcportal.internal_jobs import InternalJob
 from qcportal.molecules import Molecule
 
 
@@ -70,6 +71,11 @@ class GridoptimizationDataset(BaseDataset):
         self, entries: Union[GridoptimizationDatasetNewEntry, Iterable[GridoptimizationDatasetNewEntry]]
     ) -> InsertMetadata:
         return self._add_entries(entries)
+
+    def background_add_entries(
+        self, entries: Union[GridoptimizationDatasetNewEntry, Iterable[GridoptimizationDatasetNewEntry]]
+    ) -> InternalJob:
+        return self._background_add_entries(entries)
 
     def add_entry(
         self,

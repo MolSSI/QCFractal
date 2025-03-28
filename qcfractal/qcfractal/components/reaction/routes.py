@@ -67,7 +67,10 @@ def add_reaction_dataset_specifications_v1(dataset_id: int, body_data: List[Reac
 @api_v1.route("/datasets/reaction/<int:dataset_id>/entries/bulkCreate", methods=["POST"])
 @wrap_route("WRITE")
 def add_reaction_dataset_entries_v1(dataset_id: int, body_data: List[ReactionDatasetNewEntry]):
-    return storage_socket.datasets.reaction.add_entries(
-        dataset_id,
-        new_entries=body_data,
-    )
+    return storage_socket.datasets.reaction.add_entries(dataset_id, new_entries=body_data)
+
+
+@api_v1.route("/datasets/reaction/<int:dataset_id>/background_add_entries", methods=["POST"])
+@wrap_route("WRITE")
+def background_add_reaction_dataset_entries_v1(dataset_id: int, body_data: List[ReactionDatasetNewEntry]):
+    return storage_socket.datasets.reaction.background_add_entries(dataset_id, new_entries=body_data)
