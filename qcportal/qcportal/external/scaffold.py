@@ -47,9 +47,9 @@ def to_json(ds, filename="scaffold.json", indent=4, compress=False):
         "specifications": ds.specifications,
     }
     d_serializable = encode_to_json(d)
-    
+
     if compress:
-        with bz2.open(filename+".bz2", "wt", encoding="utf-8") as f:
+        with bz2.open(filename + ".bz2", "wt", encoding="utf-8") as f:
             json.dump(d_serializable, f, ensure_ascii=False, indent=indent)
     else:
         with open(filename, "w") as f:
@@ -92,5 +92,5 @@ def from_json(filename, client):
             del entry["local_results"]
         entries.append(entry_type(**entry))
     ds.background_add_entries(entries)
-    
+
     return ds
