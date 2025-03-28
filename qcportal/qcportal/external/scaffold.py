@@ -91,6 +91,6 @@ def from_json(filename, client):
         if "local_results" in entry:
             del entry["local_results"]
         entries.append(entry_type(**entry))
-    ds.add_entries(entries)
+    ds.background_add_entries(entries)
     
     return ds
