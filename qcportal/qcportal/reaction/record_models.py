@@ -8,6 +8,7 @@ except ImportError:
     from pydantic import BaseModel, Extra, root_validator, constr, PrivateAttr, Field
 from typing_extensions import Literal
 
+from qcportal.base_models import RestModelBase
 from qcportal.molecules import Molecule
 from qcportal.utils import is_included
 from qcportal.cache import get_records_with_cache
@@ -48,9 +49,19 @@ class ReactionSpecification(BaseModel):
         return v
 
 
-class ReactionAddBody(RecordAddBodyBase):
+class ReactionInput(RestModelBase):
+    record_type: Literal["reaction"] = "reaction"
+    specification: ReactionSpecification
+    stoichiometries: List[Tuple[float, Union[int, Molecule]]]
+
+
+class ReactionMultiInput(RestModelBase):
     specification: ReactionSpecification
     stoichiometries: List[List[Tuple[float, Union[int, Molecule]]]]
+
+
+class ReactionAddBody(RecordAddBodyBase, ReactionMultiInput):
+    pass
 
 
 class ReactionQueryFilters(RecordQueryFilters):

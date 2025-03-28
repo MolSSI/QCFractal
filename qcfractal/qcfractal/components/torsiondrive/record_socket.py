@@ -26,7 +26,7 @@ from qcfractal.components.optimization.record_db_models import (
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
 from qcportal.exceptions import MissingDataError
-from qcportal.metadata_models import InsertMetadata
+from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.molecules import Molecule
 from qcportal.optimization import OptimizationSpecification
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
@@ -34,6 +34,8 @@ from qcportal.torsiondrive import (
     serialize_key,
     TorsiondriveSpecification,
     TorsiondriveQueryFilters,
+    TorsiondriveInput,
+    TorsiondriveMultiInput,
 )
 from qcportal.utils import hash_dict, is_included
 from .record_db_models import (
@@ -43,6 +45,7 @@ from .record_db_models import (
     TorsiondriveRecordORM,
 )
 from ..record_socket import BaseRecordSocket
+from ..record_utils import append_output
 
 # Torsiondrive package is optional
 _td_spec = importlib.util.find_spec("torsiondrive")
@@ -93,6 +96,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
 
     # Used by the base class
     record_orm = TorsiondriveRecordORM
+    record_input_type = TorsiondriveInput
+    record_multi_input_type = TorsiondriveMultiInput
 
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseRecordSocket.__init__(self, root_socket)
@@ -153,7 +158,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         dihedral_template_str = json.dumps(dihedral_template)
         molecule_template_str = json.dumps(molecule_template)
 
-        self.root_socket.records.append_output(session, td_orm, OutputTypeEnum.stdout, stdout)
+        append_output(session, td_orm, OutputTypeEnum.stdout, stdout)
 
         service_state = TorsiondriveServiceState(
             torsiondrive_state=td_state,
@@ -236,7 +241,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                 raise RuntimeError("Minimum energies reported by the torsiondrive package do not match ours!")
 
         # append to the existing stdout
-        self.root_socket.records.append_output(session, td_orm, OutputTypeEnum.stdout, stdout_append)
+        append_output(session, td_orm, OutputTypeEnum.stdout, stdout_append)
 
         # Set the new service state. We must then mark it as modified
         # so that SQLAlchemy can pick up changes. This is because SQLAlchemy
@@ -765,6 +770,32 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                 find_existing,
                 session=session,
             )
+
+    def add_from_input(
+        self,
+        record_input: TorsiondriveInput,
+        compute_tag: str,
+        compute_priority: PriorityEnum,
+        owner_user: Optional[Union[int, str]],
+        owner_group: Optional[Union[int, str]],
+        find_existing: bool,
+        *,
+        session: Optional[Session] = None,
+    ) -> Tuple[InsertCountsMetadata, int]:
+
+        assert isinstance(record_input, TorsiondriveInput)
+
+        meta, ids = self.add(
+            [record_input.initial_molecules],
+            record_input.specification,
+            compute_tag,
+            compute_priority,
+            owner_user,
+            owner_group,
+            find_existing,
+        )
+
+        return InsertCountsMetadata.from_insert_metadata(meta), ids[0]
 
     ####################################################
     # Some stuff to be retrieved for torsiondrives

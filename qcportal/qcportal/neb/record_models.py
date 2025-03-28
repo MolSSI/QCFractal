@@ -8,6 +8,7 @@ except ImportError:
     from pydantic import BaseModel, Field, Extra, root_validator, constr, validator, PrivateAttr
 from typing_extensions import Literal
 
+from qcportal.base_models import RestModelBase
 from qcportal.cache import get_records_with_cache
 from qcportal.molecules import Molecule
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
@@ -101,9 +102,19 @@ class NEBSinglepoint(BaseModel):
     position: int
 
 
-class NEBAddBody(RecordAddBodyBase):
+class NEBInput(RestModelBase):
+    record_type: Literal["neb"] = "neb"
+    specification: NEBSpecification
+    initial_chain: List[Union[int, Molecule]]
+
+
+class NEBMultiInput(RestModelBase):
     specification: NEBSpecification
     initial_chains: List[List[Union[int, Molecule]]]
+
+
+class NEBAddBody(RecordAddBodyBase, NEBMultiInput):
+    pass
 
 
 class NEBQueryFilters(RecordQueryFilters):

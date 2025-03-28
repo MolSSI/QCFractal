@@ -19,8 +19,10 @@ from qcportal.exceptions import MissingDataError
 from qcportal.manybody import (
     ManybodySpecification,
     ManybodyQueryFilters,
+    ManybodyInput,
+    ManybodyMultiInput,
 )
-from qcportal.metadata_models import InsertMetadata
+from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.molecules import Molecule
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
 from qcportal.utils import chunk_iterable, hash_dict
@@ -31,6 +33,7 @@ from .record_db_models import (
     ManybodySpecificationLevelsORM,
 )
 from ..record_socket import BaseRecordSocket
+from ..record_utils import append_output
 
 _qcm_spec = importlib.util.find_spec("qcmanybody")
 
@@ -98,6 +101,8 @@ class ManybodyRecordSocket(BaseRecordSocket):
 
     # Used by the base class
     record_orm = ManybodyRecordORM
+    record_input_type = ManybodyInput
+    record_multi_input_type = ManybodyMultiInput
 
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseRecordSocket.__init__(self, root_socket)
@@ -188,7 +193,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
             table_rows, headers=["model chemistry", "fragments", "basis", "molecule_id", "formula", "hash"]
         )
 
-        self.root_socket.records.append_output(session, mb_orm, OutputTypeEnum.stdout, output)
+        append_output(session, mb_orm, OutputTypeEnum.stdout, output)
 
     def iterate_service(
         self,
@@ -245,7 +250,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
 
         if len(submitted) != 0:
             output = f"\nSubmitted {len(submitted)} singlepoint calculations "
-            self.root_socket.records.append_output(session, mb_orm, OutputTypeEnum.stdout, output)
+            append_output(session, mb_orm, OutputTypeEnum.stdout, output)
             return False
 
         output = "\n\n" + "*" * 80 + "\n"
@@ -286,7 +291,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
 
         output += "\n\n" + "=" * 40 + "\nManybody expansion results\n" + "=" * 40 + "\n"
         output += mb_orm.properties.pop("stdout")
-        self.root_socket.records.append_output(session, mb_orm, OutputTypeEnum.stdout, output)
+        append_output(session, mb_orm, OutputTypeEnum.stdout, output)
 
         # We are done!
         return True
@@ -683,6 +688,32 @@ class ManybodyRecordSocket(BaseRecordSocket):
                 find_existing,
                 session=session,
             )
+
+    def add_from_input(
+        self,
+        record_input: ManybodyInput,
+        compute_tag: str,
+        compute_priority: PriorityEnum,
+        owner_user: Optional[Union[int, str]],
+        owner_group: Optional[Union[int, str]],
+        find_existing: bool,
+        *,
+        session: Optional[Session] = None,
+    ) -> Tuple[InsertCountsMetadata, int]:
+
+        assert isinstance(record_input, ManybodyInput)
+
+        meta, ids = self.add(
+            [record_input.initial_molecule],
+            record_input.specification,
+            compute_tag,
+            compute_priority,
+            owner_user,
+            owner_group,
+            find_existing,
+        )
+
+        return InsertCountsMetadata.from_insert_metadata(meta), ids[0]
 
     ####################################################
     # Some stuff to be retrieved for manybodys

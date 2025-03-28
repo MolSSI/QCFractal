@@ -13,16 +13,19 @@ from qcfractal.components.optimization.record_db_models import OptimizationSpeci
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
 from qcportal.exceptions import MissingDataError
-from qcportal.metadata_models import InsertMetadata
+from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.molecules import Molecule
 from qcportal.reaction import (
     ReactionSpecification,
     ReactionQueryFilters,
+    ReactionInput,
+    ReactionMultiInput,
 )
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
 from qcportal.utils import hash_dict, is_included
 from .record_db_models import ReactionComponentORM, ReactionSpecificationORM, ReactionRecordORM
 from ..record_socket import BaseRecordSocket
+from ..record_utils import append_output
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -40,6 +43,8 @@ class ReactionRecordSocket(BaseRecordSocket):
 
     # Used by the base class
     record_orm = ReactionRecordORM
+    record_input_type = ReactionInput
+    record_multi_input_type = ReactionMultiInput
 
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseRecordSocket.__init__(self, root_socket)
@@ -89,7 +94,7 @@ class ReactionRecordSocket(BaseRecordSocket):
         output += tabulate.tabulate(table_rows, headers=["coefficient", "molecule", "molecule id"])
         output += "\n\n"
 
-        self.root_socket.records.append_output(session, rxn_orm, OutputTypeEnum.stdout, output)
+        append_output(session, rxn_orm, OutputTypeEnum.stdout, output)
 
         # Reactions are simple and don't require a service state
 
@@ -284,7 +289,7 @@ class ReactionRecordSocket(BaseRecordSocket):
 
             rxn_orm.total_energy = total_energy
 
-        self.root_socket.records.append_output(session, rxn_orm, OutputTypeEnum.stdout, output)
+        append_output(session, rxn_orm, OutputTypeEnum.stdout, output)
 
         return not (opt_mols_to_compute or sp_mols_to_compute)
 
@@ -763,6 +768,32 @@ class ReactionRecordSocket(BaseRecordSocket):
                 find_existing,
                 session=session,
             )
+
+    def add_from_input(
+        self,
+        record_input: ReactionInput,
+        compute_tag: str,
+        compute_priority: PriorityEnum,
+        owner_user: Optional[Union[int, str]],
+        owner_group: Optional[Union[int, str]],
+        find_existing: bool,
+        *,
+        session: Optional[Session] = None,
+    ) -> Tuple[InsertCountsMetadata, int]:
+
+        assert isinstance(record_input, ReactionInput)
+
+        meta, ids = self.add(
+            [record_input.stoichiometries],
+            record_input.specification,
+            compute_tag,
+            compute_priority,
+            owner_user,
+            owner_group,
+            find_existing,
+        )
+
+        return InsertCountsMetadata.from_insert_metadata(meta), ids[0]
 
     ####################################################
     # Some stuff to be retrieved for reactions

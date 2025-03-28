@@ -2011,6 +2011,62 @@ class DatasetSocket:
         with self.root_socket.optional_session(session, True) as session:
             return get_general(session, wp, wp.id, [dataset_id], include, exclude, missing_ok)[0]
 
+    def status(self, dataset_id: int, *, session: Optional[Session] = None) -> Dict[str, Dict[RecordStatusEnum, int]]:
+        """
+        Compute the status of a dataset
+
+        This function will perform the lookup of the dataset type and the call the dataset-specific socket
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Dictionary with specifications as the keys, and record status/counts as values.
+        """
+
+        with self.root_socket.optional_session(session, True) as session:
+            ds_type = self.lookup_type(dataset_id, session=session)
+            ds_socket = self.get_socket(ds_type)
+            return ds_socket.status(dataset_id, session=session)
+
+    def overall_status(self, dataset_id: int, *, session: Optional[Session] = None) -> Dict[RecordStatusEnum, int]:
+        """
+        Compute the overall status of a dataset
+
+        Similar to the status() function, but is only a dictionary of status and the counts. That is, the status
+        is not broken out by specification
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Dictionary with record status as keys and counts as values.
+        """
+
+        stat = self.status(dataset_id, session=session)
+
+        overall_stat = {}
+        for spec_stats in stat.values():
+            for k, v in spec_stats.items():
+                overall_stat.setdefault(k, 0)
+                overall_stat[k] += v
+
+        return overall_stat
+
     def lookup_type(self, dataset_id: int, *, session: Optional[Session] = None) -> str:
         """
         Look up the type of dataset given its ID
@@ -2076,6 +2132,32 @@ class DatasetSocket:
                 }
                 for x in r
             ]
+
+    def delete(
+        self,
+        dataset_id: int,
+        delete_records: bool,
+        *,
+        session: Optional[Session] = None,
+    ):
+        """
+        Deletes an entire dataset from the database
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        delete_records
+            If true, delete all the individual records as well
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+        """
+
+        with self.root_socket.optional_session(session) as session:
+            ds_type = self.root_socket.datasets.lookup_type(dataset_id, session=session)
+            ds_socket = self.root_socket.datasets.get_socket(ds_type)
+            return ds_socket.delete_dataset(dataset_id, delete_records, session=session)
 
     def query_dataset_records(
         self,
