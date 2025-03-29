@@ -306,6 +306,21 @@ class WebAPIConfig(ConfigBase):
     user_session_cookie_name: str = Field(
         "qcf_session", description="Name to use for a session cookie (for browser-based sessions)"
     )
+    user_session_cookie_domain: Optional[str] = Field(
+        None, description="Domain to use for the user-session cookie (for browser-based sessions)"
+    )
+    user_session_cookie_samesite: Optional[str] = Field(
+        None, description="Set the SameSite flag for the user-session cookie (for browser-based sessions)"
+    )
+    user_session_cookie_partitioned: bool = Field(
+        False, description="Use the Partitioned flag for the user-session cookie (for browser-based sessions)"
+    )
+    user_session_cookie_secure: bool = Field(
+        False, description="Use Secure flag for the user-session cookie (for browser-based sessions)"
+    )
+    user_session_cookie_httponly: bool = Field(
+        False, description="Use Secure flag for the user-session cookie (for browser-based sessions)"
+    )
 
     extra_flask_options: Optional[Dict[str, Any]] = Field(
         None, description="Any additional options to pass directly to flask"
