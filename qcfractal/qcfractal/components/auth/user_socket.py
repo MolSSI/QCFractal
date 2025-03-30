@@ -228,38 +228,6 @@ class UserSocket:
 
             return user.to_model(UserInfo)
 
-    def verify(self, user_id: int, *, session: Optional[Session] = None) -> UserInfo:
-        """
-        Verifies that a given user id exists and is enabled, returning all info about the user
-
-        If the user id is not found, or is disabled, an exception is raised.
-
-        Parameters
-        ----------
-        user_id
-            The id of the user to check
-        session
-            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed (but not committed) before returning from this function.
-
-        Returns
-        --------
-        :
-            All information about the user
-        """
-
-        with self.root_socket.optional_session(session, True) as session:
-            try:
-                user = self._get_internal(session, user_id)
-            except UserManagementError as e:
-                # Turn missing user into an Authentication error
-                raise AuthenticationFailure("User does not exist")
-
-            if not user.enabled:
-                raise AuthenticationFailure(f"User {user_id} is disabled.")
-
-            return user.to_model(UserInfo)
-
     def modify(self, user_info: UserInfo, as_admin: bool, *, session: Optional[Session] = None) -> Dict[str, Any]:
         """
         Alters a user's information

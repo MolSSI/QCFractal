@@ -12,6 +12,8 @@ from .record_models import (
     SinglepointProtocols,
     SinglepointRecord,
     WavefunctionProperties,
+    SinglepointInput,
+    SinglepointMultiInput,
     SinglepointAddBody,
     SinglepointQueryFilters,
 )

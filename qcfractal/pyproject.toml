@@ -23,6 +23,7 @@ classifiers = [
 dependencies = [
     "flask",
     "flask-jwt-extended",
+    "flask-cors",
     "waitress",
     "bcrypt",
     "sqlalchemy >=2.0",

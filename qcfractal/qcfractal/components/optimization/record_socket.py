@@ -12,11 +12,13 @@ from sqlalchemy.orm import lazyload, joinedload, selectinload, defer, undefer, l
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
 from qcfractal.db_socket.helpers import insert_general
 from qcportal.exceptions import MissingDataError
-from qcportal.metadata_models import InsertMetadata
+from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.molecules import Molecule
 from qcportal.optimization import (
     OptimizationSpecification,
     OptimizationQueryFilters,
+    OptimizationInput,
+    OptimizationMultiInput,
 )
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.serialization import convert_numpy_recursive
@@ -45,6 +47,8 @@ class OptimizationRecordSocket(BaseRecordSocket):
 
     # Used by the base class
     record_orm = OptimizationRecordORM
+    record_input_type = OptimizationInput
+    record_multi_input_type = OptimizationMultiInput
 
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseRecordSocket.__init__(self, root_socket)
@@ -564,6 +568,32 @@ class OptimizationRecordSocket(BaseRecordSocket):
                 find_existing,
                 session=session,
             )
+
+    def add_from_input(
+        self,
+        record_input: OptimizationInput,
+        compute_tag: str,
+        compute_priority: PriorityEnum,
+        owner_user: Optional[Union[int, str]],
+        owner_group: Optional[Union[int, str]],
+        find_existing: bool,
+        *,
+        session: Optional[Session] = None,
+    ) -> Tuple[InsertCountsMetadata, int]:
+
+        assert isinstance(record_input, OptimizationInput)
+
+        meta, ids = self.add(
+            [record_input.initial_molecule],
+            record_input.specification,
+            compute_tag,
+            compute_priority,
+            owner_user,
+            owner_group,
+            find_existing,
+        )
+
+        return InsertCountsMetadata.from_insert_metadata(meta), ids[0]
 
     ####################################################
     # Some stuff to be retrieved for optimizations

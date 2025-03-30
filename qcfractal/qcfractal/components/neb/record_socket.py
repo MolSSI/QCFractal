@@ -22,11 +22,13 @@ from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM, SinglepointRecordORM
 from qcportal.exceptions import MissingDataError
-from qcportal.metadata_models import InsertMetadata
+from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.molecules import Molecule
 from qcportal.neb import (
     NEBSpecification,
     NEBQueryFilters,
+    NEBInput,
+    NEBMultiInput,
 )
 from qcportal.optimization import OptimizationSpecification
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
@@ -41,6 +43,7 @@ from .record_db_models import (
     NEBRecordORM,
 )
 from ..record_socket import BaseRecordSocket
+from ..record_utils import append_output
 
 # geometric package is optional
 _geo_spec = importlib.util.find_spec("geometric")
@@ -85,6 +88,8 @@ class NEBServiceState(BaseModel):
 class NEBRecordSocket(BaseRecordSocket):
     # Used by the base class
     record_orm = NEBRecordORM
+    record_input_type = NEBInput
+    record_multi_input_type = NEBMultiInput
 
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseRecordSocket.__init__(self, root_socket)
@@ -136,7 +141,7 @@ class NEBRecordSocket(BaseRecordSocket):
         molecule_template.pop("identifiers", None)
         molecule_template.pop("id", None)
 
-        self.root_socket.records.append_output(session, neb_orm, OutputTypeEnum.stdout, output)
+        append_output(session, neb_orm, OutputTypeEnum.stdout, output)
 
         molecule_template_str = json.dumps(molecule_template)
         service_state = NEBServiceState(
@@ -309,7 +314,7 @@ class NEBRecordSocket(BaseRecordSocket):
                 finished = True
                 output += "\nNEB calculation is completed with %i iterations" % service_state.iteration
 
-        self.root_socket.records.append_output(session, neb_orm, OutputTypeEnum.stdout, output)
+        append_output(session, neb_orm, OutputTypeEnum.stdout, output)
         service_orm.service_state = service_state.dict()
         sqlalchemy.orm.attributes.flag_modified(service_orm, "service_state")
         return finished
@@ -923,6 +928,32 @@ class NEBRecordSocket(BaseRecordSocket):
                 find_existing,
                 session=session,
             )
+
+    def add_from_input(
+        self,
+        record_input: NEBInput,
+        compute_tag: str,
+        compute_priority: PriorityEnum,
+        owner_user: Optional[Union[int, str]],
+        owner_group: Optional[Union[int, str]],
+        find_existing: bool,
+        *,
+        session: Optional[Session] = None,
+    ) -> Tuple[InsertCountsMetadata, int]:
+
+        assert isinstance(record_input, NEBInput)
+
+        meta, ids = self.add(
+            [record_input.initial_chain],
+            record_input.specification,
+            compute_tag,
+            compute_priority,
+            owner_user,
+            owner_group,
+            find_existing,
+        )
+
+        return InsertCountsMetadata.from_insert_metadata(meta), ids[0]
 
     ####################################################
     # Some stuff to be retrieved for NEB records

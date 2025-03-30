@@ -77,8 +77,11 @@ def get_record_waiting_reason_v1(record_id: int):
 @api_v1.route("/records/<int:record_id>", methods=["GET"])
 @wrap_route("READ")
 def get_records_v1(record_id: int, url_params: ProjURLParameters, record_type: Optional[str] = None):
-    record_socket = storage_socket.records.get_socket(record_type)
-    return record_socket.get([record_id], url_params.include, url_params.exclude)[0]
+    if record_type is None:
+        return storage_socket.records.get([record_id], url_params.include, url_params.exclude)[0]
+    else:
+        record_socket = storage_socket.records.get_socket(record_type)
+        return record_socket.get([record_id], url_params.include, url_params.exclude)[0]
 
 
 @api_v1.route("/records/<string:record_type>/bulkGet", methods=["POST"])
@@ -123,42 +126,42 @@ def get_general_records_v1(record_id: int, url_params: ProjURLParameters, record
 
 @api_v1.route("/records/<string:record_type>/<int:record_id>/comments", methods=["GET"])
 @wrap_route("READ")
-def get_record_comments_v1(record_id: int, record_type: Optional[str] = None):
+def get_record_comments_v1(record_id: int, record_type: str):
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_comments(record_id)
 
 
 @api_v1.route("/records/<string:record_type>/<int:record_id>/task", methods=["GET"])
 @wrap_route("READ")
-def get_record_task_v1(record_id: int, record_type: Optional[str] = None):
+def get_record_task_v1(record_id: int, record_type: str):
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_task(record_id)
 
 
 @api_v1.route("/records/<string:record_type>/<int:record_id>/service", methods=["GET"])
 @wrap_route("READ")
-def get_record_service_v1(record_id: int, record_type: Optional[str] = None):
+def get_record_service_v1(record_id: int, record_type: str):
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_service(record_id)
 
 
 @api_v1.route("/records/<string:record_type>/<int:record_id>/compute_history", methods=["GET"])
 @wrap_route("READ")
-def get_record_history_v1(record_id: int, record_type: Optional[str] = None):
+def get_record_history_v1(record_id: int, record_type: str):
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_all_compute_history(record_id)
 
 
 @api_v1.route("/records/<string:record_type>/<int:record_id>/compute_history/<int:history_id>", methods=["GET"])
 @wrap_route("READ")
-def get_record_history_single_v1(record_id: int, history_id: int, record_type: Optional[str] = None):
+def get_record_history_single_v1(record_id: int, history_id: int, record_type: str):
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_single_compute_history(record_id, history_id)
 
 
 @api_v1.route("/records/<string:record_type>/<int:record_id>/compute_history/<int:history_id>/outputs", methods=["GET"])
 @wrap_route("READ")
-def get_record_outputs_v1(record_id: int, history_id: int, record_type: Optional[str] = None):
+def get_record_outputs_v1(record_id: int, history_id: int, record_type: str):
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_all_output_metadata(record_id, history_id)
 
@@ -168,7 +171,7 @@ def get_record_outputs_v1(record_id: int, history_id: int, record_type: Optional
     methods=["GET"],
 )
 @wrap_route("READ")
-def get_record_outputs_single_v1(record_id: int, history_id: int, output_type: str, record_type: Optional[str] = None):
+def get_record_outputs_single_v1(record_id: int, history_id: int, output_type: str, record_type: str):
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_single_output_metadata(record_id, history_id, output_type)
 
@@ -178,41 +181,41 @@ def get_record_outputs_single_v1(record_id: int, history_id: int, output_type: s
     methods=["GET"],
 )
 @wrap_route("READ")
-def get_record_outputs_data_v1(record_id: int, history_id: int, output_type: str, record_type: Optional[str] = None):
+def get_record_outputs_data_v1(record_id: int, history_id: int, output_type: str, record_type: str):
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_single_output_rawdata(record_id, history_id, output_type)
 
 
 @api_v1.route("/records/<string:record_type>/<int:record_id>/native_files", methods=["GET"])
 @wrap_route("READ")
-def get_record_native_files_v1(record_id: int, record_type: Optional[str] = None):
+def get_record_native_files_v1(record_id: int, record_type: str):
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_all_native_files_metadata(record_id)
 
 
 @api_v1.route("/records/<string:record_type>/<int:record_id>/native_files/<string:name>", methods=["GET"])
 @wrap_route("READ")
-def get_record_native_file_single_v1(record_id: int, name: str, record_type: Optional[str] = None):
+def get_record_native_file_single_v1(record_id: int, name: str, record_type: str):
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_single_native_file_metadata(record_id, name)
 
 
 @api_v1.route("/records/<string:record_type>/<int:record_id>/native_files/<string:name>/data", methods=["GET"])
 @wrap_route("READ")
-def get_record_native_file_data_v1(record_id: int, name: str, record_type: Optional[str] = None):
+def get_record_native_file_data_v1(record_id: int, name: str, record_type: str):
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_single_native_file_rawdata(record_id, name)
 
 
 @api_v1.route("/records/<string:record_type>/<int:record_id>/children_status", methods=["GET"])
 @wrap_route("READ")
-def get_record_children_status_v1(record_id: int, record_type: Optional[str] = None):
+def get_record_children_status_v1(record_id: int, record_type: str):
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_children_status(record_id)
 
 
 @api_v1.route("/records/<string:record_type>/<int:record_id>/children_errors", methods=["GET"])
 @wrap_route("READ")
-def get_record_children_errors_v1(record_id: int, record_type: Optional[str] = None):
+def get_record_children_errors_v1(record_id: int, record_type: str):
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_children_errors(record_id)

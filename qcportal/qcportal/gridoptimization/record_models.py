@@ -10,6 +10,7 @@ except ImportError:
     from pydantic import BaseModel, Extra, Field, constr, validator, PrivateAttr
 from typing_extensions import Literal
 
+from qcportal.base_models import RestModelBase
 from qcportal.molecules import Molecule
 from qcportal.optimization.record_models import OptimizationSpecification, OptimizationRecord
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
@@ -153,9 +154,19 @@ class GridoptimizationSpecification(BaseModel):
     keywords: GridoptimizationKeywords
 
 
-class GridoptimizationAddBody(RecordAddBodyBase):
+class GridoptimizationInput(RestModelBase):
+    record_type: Literal["gridoptimization"] = "gridoptimization"
+    specification: GridoptimizationSpecification
+    initial_molecule: Union[int, Molecule]
+
+
+class GridoptimizationMultiInput(RestModelBase):
     specification: GridoptimizationSpecification
     initial_molecules: List[Union[int, Molecule]]
+
+
+class GridoptimizationAddBody(RecordAddBodyBase, GridoptimizationMultiInput):
+    pass
 
 
 class GridoptimizationQueryFilters(RecordQueryFilters):

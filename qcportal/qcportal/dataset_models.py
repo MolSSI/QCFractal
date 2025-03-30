@@ -1673,44 +1673,44 @@ class BaseDataset(BaseModel):
 
     def remove_records(
         self,
-        entry_names: Optional[Union[str, Iterable[str]]] = None,
-        specification_names: Optional[Union[str, Iterable[str]]] = None,
+        entry_names: Union[str, Iterable[str]],
+        specification_names: Union[str, Iterable[str]],
         delete_records: bool = False,
-    ) -> DeleteMetadata:
+    ) -> None:
         self.assert_is_not_view()
         self.assert_online()
 
         entry_names = make_list(entry_names)
         specification_names = make_list(specification_names)
 
-        body = DatasetRemoveRecordsBody(
-            entry_names=entry_names,
-            specification_names=specification_names,
-            delete_records=delete_records,
-        )
+        for entry_names_batch in chunk_iterable(entry_names, 200):
+            body = DatasetRemoveRecordsBody(
+                entry_names=entry_names_batch,
+                specification_names=specification_names,
+                delete_records=delete_records,
+            )
 
-        ret = self._client.make_request(
-            "post",
-            f"api/v1/datasets/{self.dataset_type}/{self.id}/records/bulkDelete",
-            None,
-            body=body,
-        )
+            self._client.make_request(
+                "post",
+                f"api/v1/datasets/{self.dataset_type}/{self.id}/records/bulkDelete",
+                None,
+                body=body,
+            )
 
-        if delete_records:
-            record_info = self._cache_data.get_dataset_records(entry_names, specification_names)
-            self._cache_data.delete_records([r.id for _, _, r in record_info])
+            if delete_records:
+                record_info = self._cache_data.get_dataset_records(entry_names_batch, specification_names)
+                self._cache_data.delete_records([r.id for _, _, r in record_info])
 
-        self._cache_data.delete_dataset_records(entry_names, specification_names)
+            self._cache_data.delete_dataset_records(entry_names_batch, specification_names)
 
-        return ret
-
-    def modify_records(
+    def _modify_records(
         self,
         entry_names: Optional[Union[str, Iterable[str]]] = None,
         specification_names: Optional[Union[str, Iterable[str]]] = None,
         new_compute_tag: Optional[str] = None,
         new_compute_priority: Optional[PriorityEnum] = None,
         new_comment: Optional[str] = None,
+        new_status: Optional[RecordStatusEnum] = None,
         *,
         refetch_records: bool = False,
         **kwargs,  # For deprecated parameters
@@ -1731,25 +1731,107 @@ class BaseDataset(BaseModel):
         entry_names = make_list(entry_names)
         specification_names = make_list(specification_names)
 
-        body = DatasetRecordModifyBody(
-            entry_names=entry_names,
-            specification_names=specification_names,
-            compute_tag=new_compute_tag,
-            compute_priority=new_compute_priority,
-            comment=new_comment,
-        )
+        if entry_names is None:
+            body = DatasetRecordModifyBody(
+                entry_names=None,
+                specification_names=specification_names,
+                compute_tag=new_compute_tag,
+                compute_priority=new_compute_priority,
+                comment=new_comment,
+                status=new_status,
+            )
 
-        ret = self._client.make_request(
-            "patch",
-            f"api/v1/datasets/{self.dataset_type}/{self.id}/records",
-            None,
-            body=body,
-        )
+            self._client.make_request(
+                "patch",
+                f"api/v1/datasets/{self.dataset_type}/{self.id}/records",
+                None,
+                body=body,
+            )
+        else:
+            for entry_names_batch in chunk_iterable(entry_names, 200):
+                body = DatasetRecordModifyBody(
+                    entry_names=entry_names_batch,
+                    specification_names=specification_names,
+                    compute_tag=new_compute_tag,
+                    compute_priority=new_compute_priority,
+                    comment=new_comment,
+                    status=new_status,
+                )
+
+                self._client.make_request(
+                    "patch",
+                    f"api/v1/datasets/{self.dataset_type}/{self.id}/records",
+                    None,
+                    body=body,
+                )
 
         if refetch_records:
             self.fetch_records(entry_names, specification_names, force_refetch=True)
 
-        return ret
+    def _revert_records(
+        self,
+        revert_status: RecordStatusEnum,
+        entry_names: Optional[Union[str, Iterable[str]]] = None,
+        specification_names: Optional[Union[str, Iterable[str]]] = None,
+        *,
+        refetch_records: bool = False,
+    ):
+        self.assert_is_not_view()
+        self.assert_online()
+
+        entry_names = make_list(entry_names)
+        specification_names = make_list(specification_names)
+
+        if entry_names is None:
+            body = DatasetRecordRevertBody(
+                entry_names=None,
+                specification_names=specification_names,
+                revert_status=revert_status,
+            )
+
+            self._client.make_request(
+                "post",
+                f"api/v1/datasets/{self.dataset_type}/{self.id}/records/revert",
+                None,
+                body=body,
+            )
+        else:
+            for entry_names_batch in chunk_iterable(entry_names, 200):
+                body = DatasetRecordRevertBody(
+                    entry_names=entry_names_batch,
+                    specification_names=specification_names,
+                    revert_status=revert_status,
+                )
+
+                self._client.make_request(
+                    "post",
+                    f"api/v1/datasets/{self.dataset_type}/{self.id}/records/revert",
+                    None,
+                    body=body,
+                )
+
+        if refetch_records:
+            self.fetch_records(entry_names, specification_names, force_refetch=True)
+
+    def modify_records(
+        self,
+        entry_names: Optional[Union[str, Iterable[str]]] = None,
+        specification_names: Optional[Union[str, Iterable[str]]] = None,
+        new_compute_tag: Optional[str] = None,
+        new_compute_priority: Optional[PriorityEnum] = None,
+        new_comment: Optional[str] = None,
+        *,
+        refetch_records: bool = False,
+    ):
+
+        self._modify_records(
+            entry_names=entry_names,
+            specification_names=specification_names,
+            new_compute_tag=new_compute_tag,
+            new_compute_priority=new_compute_priority,
+            new_comment=new_comment,
+            refetch_records=refetch_records,
+        )
 
     def reset_records(
         self,
@@ -1758,29 +1840,13 @@ class BaseDataset(BaseModel):
         *,
         refetch_records: bool = False,
     ):
-        self.assert_is_not_view()
-        self.assert_online()
 
-        entry_names = make_list(entry_names)
-        specification_names = make_list(specification_names)
-
-        body = DatasetRecordModifyBody(
+        self._modify_records(
             entry_names=entry_names,
             specification_names=specification_names,
-            status=RecordStatusEnum.waiting,
+            new_status=RecordStatusEnum.waiting,
+            refetch_records=refetch_records,
         )
-
-        ret = self._client.make_request(
-            "patch",
-            f"api/v1/datasets/{self.dataset_type}/{self.id}/records",
-            None,
-            body=body,
-        )
-
-        if refetch_records:
-            self.fetch_records(entry_names, specification_names, force_refetch=True)
-
-        return ret
 
     def cancel_records(
         self,
@@ -1789,29 +1855,13 @@ class BaseDataset(BaseModel):
         *,
         refetch_records: bool = False,
     ):
-        self.assert_is_not_view()
-        self.assert_online()
 
-        entry_names = make_list(entry_names)
-        specification_names = make_list(specification_names)
-
-        body = DatasetRecordModifyBody(
+        self._modify_records(
             entry_names=entry_names,
             specification_names=specification_names,
-            status=RecordStatusEnum.cancelled,
+            new_status=RecordStatusEnum.cancelled,
+            refetch_records=refetch_records,
         )
-
-        ret = self._client.make_request(
-            "patch",
-            f"api/v1/datasets/{self.dataset_type}/{self.id}/records",
-            None,
-            body=body,
-        )
-
-        if refetch_records:
-            self.fetch_records(entry_names, specification_names, force_refetch=True)
-
-        return ret
 
     def uncancel_records(
         self,
@@ -1820,29 +1870,12 @@ class BaseDataset(BaseModel):
         *,
         refetch_records: bool = False,
     ):
-        self.assert_is_not_view()
-        self.assert_online()
-
-        entry_names = make_list(entry_names)
-        specification_names = make_list(specification_names)
-
-        body = DatasetRecordRevertBody(
+        self._revert_records(
+            revert_status=RecordStatusEnum.cancelled,
             entry_names=entry_names,
             specification_names=specification_names,
-            revert_status=RecordStatusEnum.cancelled,
+            refetch_records=refetch_records,
         )
-
-        ret = self._client.make_request(
-            "post",
-            f"api/v1/datasets/{self.dataset_type}/{self.id}/records/revert",
-            None,
-            body=body,
-        )
-
-        if refetch_records:
-            self.fetch_records(entry_names, specification_names, force_refetch=True)
-
-        return ret
 
     def invalidate_records(
         self,
@@ -1851,29 +1884,13 @@ class BaseDataset(BaseModel):
         *,
         refetch_records: bool = False,
     ):
-        self.assert_is_not_view()
-        self.assert_online()
 
-        entry_names = make_list(entry_names)
-        specification_names = make_list(specification_names)
-
-        body = DatasetRecordModifyBody(
+        self._modify_records(
             entry_names=entry_names,
             specification_names=specification_names,
-            status=RecordStatusEnum.invalid,
+            new_status=RecordStatusEnum.invalid,
+            refetch_records=refetch_records,
         )
-
-        ret = self._client.make_request(
-            "patch",
-            f"api/v1/datasets/{self.dataset_type}/{self.id}/records",
-            None,
-            body=body,
-        )
-
-        if refetch_records:
-            self.fetch_records(entry_names, specification_names, force_refetch=True)
-
-        return ret
 
     def uninvalidate_records(
         self,
@@ -1882,29 +1899,12 @@ class BaseDataset(BaseModel):
         *,
         refetch_records: bool = False,
     ):
-        self.assert_is_not_view()
-        self.assert_online()
-
-        entry_names = make_list(entry_names)
-        specification_names = make_list(specification_names)
-
-        body = DatasetRecordRevertBody(
+        self._revert_records(
+            revert_status=RecordStatusEnum.invalid,
             entry_names=entry_names,
             specification_names=specification_names,
-            revert_status=RecordStatusEnum.invalid,
+            refetch_records=refetch_records,
         )
-
-        ret = self._client.make_request(
-            "post",
-            f"api/v1/datasets/{self.dataset_type}/{self.id}/records/revert",
-            None,
-            body=body,
-        )
-
-        if refetch_records:
-            self.fetch_records(entry_names, specification_names, force_refetch=True)
-
-        return ret
 
     def copy_entries_from(
         self,

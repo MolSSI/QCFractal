@@ -18,6 +18,7 @@ from qcelemental.models.results import (
 from typing_extensions import Literal
 
 from qcportal.compression import CompressionEnum, decompress
+from qcportal.base_models import RestModelBase
 from qcportal.record_models import RecordStatusEnum, BaseRecord, RecordAddBodyBase, RecordQueryFilters
 
 
@@ -188,9 +189,19 @@ class SinglepointRecord(BaseRecord):
         )
 
 
-class SinglepointAddBody(RecordAddBodyBase):
+class SinglepointInput(RestModelBase):
+    record_type: Literal["singlepoint"] = "singlepoint"
+    specification: QCSpecification
+    molecule: Union[int, Molecule]
+
+
+class SinglepointMultiInput(RestModelBase):
     specification: QCSpecification
     molecules: List[Union[int, Molecule]]
+
+
+class SinglepointAddBody(RecordAddBodyBase, SinglepointMultiInput):
+    pass
 
 
 class SinglepointQueryFilters(RecordQueryFilters):

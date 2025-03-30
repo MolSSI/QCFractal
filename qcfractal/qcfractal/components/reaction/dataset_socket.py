@@ -50,7 +50,7 @@ class ReactionDatasetSocket(BaseDatasetSocket):
         all_entries = []
         for entry in new_entries:
             # stoichiometries = list of tuples
-            molecules = [x[1] for x in entry.stoichiometries]
+            molecules = [x[1] if isinstance(x, tuple) else x.molecule for x in entry.stoichiometries]
 
             meta, mol_ids = self.root_socket.molecules.add_mixed(molecules, session=session)
 
@@ -59,7 +59,7 @@ class ReactionDatasetSocket(BaseDatasetSocket):
             for coeff, mid in zip(entry.stoichiometries, mol_ids):
                 new_stoich_orm.append(
                     ReactionDatasetStoichiometryORM(
-                        coefficient=coeff[0],
+                        coefficient=coeff[0] if isinstance(coeff, tuple) else coeff.coefficient,
                         molecule_id=mid,
                     )
                 )

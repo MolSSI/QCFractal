@@ -520,12 +520,23 @@ class PostgresHarness:
         # Some OSs/Linux distributions will use a directory not writeable by a normal user
         sock_dir = os.path.join(self.config.data_directory, "sock")
         os.makedirs(sock_dir, exist_ok=True)
-        psql_conf = re.sub(
-            r"#?unix_socket_directories =.*",
-            f"unix_socket_directories = '{sock_dir}'",
-            psql_conf,
-            re.M,
-        )
+
+        # Only use sockets if the sock_dir path would be less than 103 bytes
+        # More is put after the directory, so leave some margin there
+        if len(sock_dir) < 80:
+            psql_conf = re.sub(
+                r"#?unix_socket_directories =.*",
+                f"unix_socket_directories = '{sock_dir}'",
+                psql_conf,
+                re.M,
+            )
+        else:
+            psql_conf = re.sub(
+                r"#?unix_socket_directories =.*",
+                f"unix_socket_directories = ''",
+                psql_conf,
+                re.M,
+            )
 
         psql_conf_path.write_text(psql_conf)
 
@@ -608,8 +619,15 @@ def create_snowflake_postgres(host: str, data_dir: str) -> PostgresHarness:
         Path to the directory to store the database data
     """
 
-    data_dir = data_dir
     sock_dir = os.path.join(data_dir, "sock")
+
+    # There is a limit of 103 bytes for a path to a socket file
+    # There's extra put after sock_dir, so be conservative and if it's too long,
+    # use the regular host
+    if len(sock_dir) < 80:
+        db_host = sock_dir
+    else:
+        db_host = host
 
     port = find_open_port(host)
     db_config = {
@@ -617,7 +635,7 @@ def create_snowflake_postgres(host: str, data_dir: str) -> PostgresHarness:
         "data_directory": data_dir,
         "base_folder": data_dir,
         "own": True,
-        "host": sock_dir,
+        "host": db_host,
         "username": "qcfractal_snowflake",
         "password": secrets.token_urlsafe(32),
     }
