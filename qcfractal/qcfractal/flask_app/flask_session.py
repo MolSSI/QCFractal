@@ -107,5 +107,14 @@ class QCFFlaskSessionInterface(SessionInterface):
 
             # Set the cookie in the response
             # Same name & session id, but extend the lifetime
-            response.set_cookie(cookie_name, session_id, max_age=app.permanent_session_lifetime)
+            response.set_cookie(
+                cookie_name,
+                session_id,
+                domain=app.config["QCFRACTAL_CONFIG"].api.user_session_cookie_domain,
+                max_age=app.permanent_session_lifetime,
+                httponly=app.config["QCFRACTAL_CONFIG"].api.user_session_cookie_httponly,
+                samesite=app.config["QCFRACTAL_CONFIG"].api.user_session_cookie_samesite,
+                secure=app.config["QCFRACTAL_CONFIG"].api.user_session_cookie_secure,
+                partitioned=app.config["QCFRACTAL_CONFIG"].api.user_session_cookie_partitioned,
+            )
             response.vary.add("Cookie")
