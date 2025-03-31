@@ -177,13 +177,15 @@ def login_user() -> Tuple[UserInfo, RoleInfo]:
         raise
 
 
-def login_user_session():
+def login_user_session() -> Tuple[UserInfo, RoleInfo]:
     # Raises exception on invalid username, password, etc
     # Submitted user/password are stored in the flask request object
     session.clear()
     user_info, role_info = login_user()
     session["user_id"] = str(user_info.id)
     session["username"] = user_info.username
+
+    return user_info, role_info
 
 
 def logout_user_session():

@@ -25,8 +25,14 @@ def login():
 
 @auth_v1.route("/session_login", methods=["POST"])
 def user_session_login():
-    login_user_session()
-    response = jsonify(msg="Login succeeded!")
+    user_info, role_info = login_user_session()
+    response = jsonify(
+        msg="Login succeeded!",
+        user_id=user_info.id,
+        username=user_info.username,
+        groups=user_info.groups,
+        role=user_info.role,
+    )
     return response, 200
 
 
