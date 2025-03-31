@@ -164,11 +164,13 @@ class ProjectSocket:
             stmt = select(
                 ProjectORM.id,
                 ProjectORM.name,
+                ProjectORM.tagline,
+                ProjectORM.tags,
             )
             stmt = stmt.order_by(ProjectORM.id.asc())
             r = session.execute(stmt).all()
 
-            return [{"id": x[0], "project_name": x[1]} for x in r]
+            return [{"id": x[0], "project_name": x[1], "tagline": x[2], "tags": x[3]} for x in r]
 
     def delete_project(
         self,
