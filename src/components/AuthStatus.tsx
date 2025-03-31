@@ -1,23 +1,24 @@
-import { useClient } from '../ClientHook.tsx'
+import { usePortalClientAuth } from "../PortalClientContext";
 
 export default function AuthStatus() {
-    const { clientStatus, login, logout } = useClient();
+    const { connectionState, login, logout } = usePortalClientAuth();
 
     return (
         <div>
-            {clientStatus.connected ? (
+            {connectionState.connected ? (
                 <>
-                    <p>{clientStatus.serverInfo?.name}</p>
-                    <p>v{clientStatus.serverInfo?.version}</p>
-                    <p>User: {clientStatus.username ? clientStatus.username : 'anonymous'}</p>
+                    <p>User: {connectionState.userInfo?.username ? connectionState.userInfo?.username : 'anonymous'}</p>
                     <button onClick={logout}>Logout</button>
                 </>
             ) : (
                 <>
                     <p>Not logged in</p>
-                    <button onClick={() => login("ben", "ben1234")}>Login</button>
+                    <button onClick={() => login("guitest", "xxxxxxx")}>Login</button>
                 </>
             )}
         </div>
     );
 }
+
+//<p>{clientStatus.serverInfo?.name}</p>
+//<p>v{clientStatus.serverInfo?.version}</p>

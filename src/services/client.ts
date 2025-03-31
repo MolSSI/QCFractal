@@ -15,10 +15,8 @@ export class PortalClient {
     private readonly _baseUrl: string;
     private readonly _headers: Record<string, string>
 
-    private _connected: boolean = false;
-    private _username?: string
-
-    private _serverInfo?: qcpTypes.ServerInfo
+    private _serverInfo: qcpTypes.ServerInfo = { name: "(unknown)", version: "(unknown)" };
+    private _connectionState: qcpTypes.ConnectionState = { connected: false }
 
     constructor(baseUrl: string) {
         this._baseUrl = baseUrl;
@@ -52,6 +50,7 @@ export class PortalClient {
                 const message = ('msg' in rjson) ? rjson.msg as string : '(no message)';
 
                 if (response.status == 401) {
+                    // 401 will mean the user is no longer authenticated
                     await this.disconnect(true)
                     throw new qcpExceptions.AuthenticationError(`API request failed (401 ${response.statusText}) - ${message}`);
                 } else if (response.status == 403) {
@@ -86,14 +85,12 @@ export class PortalClient {
 
     async connect(username?: string, password?: string): Promise<void> {
 
-        this._connected = false;
-        this._username = undefined;
+        if (this._connectionState.connected) { await this.disconnect(false); }
 
-        if (password && !username) {
-            throw new Error("Username is required if password is specified");
-        } else if (username && !password) {
-            throw new Error("Password is required if username is specified");
-        } else if (username && password) {
+        if (password && !username) { throw new Error("Username is required if password is specified"); }
+        if (username && !password) { throw new Error("Password is required if username is specified"); }
+
+        if (username && password) {
             const login_url = `${this._baseUrl}/auth/v1/session_login`;
 
             const body = {
@@ -109,17 +106,17 @@ export class PortalClient {
             };
 
             // throws an exception on error
-            await this.rawRequest<object>(login_url, req_options);
+            const uinfo = await this.rawRequest<qcpTypes.UserInfo>(login_url, req_options);
 
-            this._username = username;
+            this._connectionState.connected = true;
+            this._connectionState.userInfo = uinfo;
         }
 
-        this._connected = true;
-        this._serverInfo = await this.fetchServerInfo()
+        this._serverInfo = await this.getServerInfo()
     }
 
     async disconnect(force: boolean): Promise<void> {
-        if (force || this._connected) {
+        if (force || this._connectionState.connected) {
             const logout_url: string = `${this._baseUrl}/auth/v1/session_logout`;
 
             const req_options: RequestInit = {
@@ -129,48 +126,61 @@ export class PortalClient {
             };
 
             try {
+                // TODO - better error handling
                 await this.rawRequest<void>(logout_url, req_options)
             } catch (err) {
                 console.error(err);
             }
 
-            this._connected = false;
-            this._username = undefined;
+            this._connectionState = { connected: false, userInfo: undefined };
+            this._serverInfo = { name: "(unknown)", version: "(unknown)" };
         }
     }
 
     // Some getters
     get isAnonymous(): boolean {
-        return this._username === undefined;
+        return this._connectionState.userInfo === undefined;
     }
 
     get isConnected(): boolean {
-        return this._connected;
+        return this._connectionState.connected;
     }
 
     get isAuthenticated(): boolean {
-        return this._connected && (this._username != undefined)
+        return this.isConnected && (! this.isAnonymous)
     }
 
     get username(): string {
-        return this._username ? this._username : "(anonymous)";
-    }
-
-    get serverInfo(): qcpTypes.ServerInfo {
-        if (this._serverInfo == undefined) {
-            return {name: "(unknown)", version: "(unknown)"} as qcpTypes.ServerInfo;
-        } else {
-            return this._serverInfo;
+        if (this.isAnonymous) {
+            return "(anonymous)";
+        }
+        else {
+            // userInfo is not null because of check above
+            return this._connectionState.userInfo!.username;
         }
     }
 
-    // Various functions for getting data from the server
+    get serverInfo(): qcpTypes.ServerInfo {
+        return this._serverInfo;
+    }
+
+    get connectionState(): qcpTypes.ConnectionState {
+        return this._connectionState;
+    }
+
+    /////////////////////////////////////////////////////////
+    // Wrappers for getting data from the server
     async ping(): Promise<qcpTypes.PingResults> {
         return await this.makeRequest<qcpTypes.PingResults>('GET', 'api/v1/ping');
     }
 
-    async fetchServerInfo(): Promise<qcpTypes.ServerInfo> {
-        return this.makeRequest('GET', 'api/v1/information');
+    async getServerInfo(): Promise<qcpTypes.ServerInfo> {
+        // Returns more than what we store, but that's ok
+        return await this.makeRequest<qcpTypes.ServerInfo>('GET', 'api/v1/information');
+    }
+
+    async getProjectsList(): Promise<qcpTypes.ProjectsList> {
+        return await this.makeRequest<qcpTypes.ProjectsList>('GET', 'api/v1/projects');
     }
 }
 
