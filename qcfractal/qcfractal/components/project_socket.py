@@ -164,6 +164,8 @@ class ProjectSocket:
             stmt = select(
                 ProjectORM.id,
                 ProjectORM.name,
+                ProjectORM.tagline,
+                ProjectORM.tags,
             )
             stmt = stmt.order_by(ProjectORM.id.asc())
             r = session.execute(stmt).all()
