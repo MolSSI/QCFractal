@@ -1,20 +1,29 @@
 import React, { useState } from "react";
 import { TextField, Button, Container, Box, Typography, Card, CardContent } from "@mui/material";
 import AuthStatus from "../components/AuthStatus.tsx";
+import { useNavigate } from "react-router-dom";
+import { usePortalClientAuth } from "../PortalClientContext.tsx";
 
 const LoginPage: React.FC = () => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    const {login} = usePortalClientAuth();
+    const navigate = useNavigate();
 
-    const handleSubmit = (event: React.FormEvent) => {
+    const handleLogin = async (event: React.FormEvent) => {
         event.preventDefault();
         setError("");
         if (!username || !password) {
             setError("Both fields are required");
             return;
         }
-        console.log("Logging in with", { email: username, password });
+        try {
+            await login(username, password);
+            navigate("/sandbox");
+        } catch (err) {
+            setError("Invalid credentials or login failed");
+        }
     };
 
     return (
@@ -26,11 +35,10 @@ const LoginPage: React.FC = () => {
                             Login
                         </Typography>
                         {error && <Typography color="error">{error}</Typography>}
-                        <form onSubmit={handleSubmit}>
+                        <form onSubmit={handleLogin}>
                             <TextField
                                 fullWidth
-                                label="Email"
-                                type="email"
+                                label="Username"
                                 margin="normal"
                                 variant="outlined"
                                 value={username}
