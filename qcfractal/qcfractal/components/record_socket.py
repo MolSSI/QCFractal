@@ -502,6 +502,16 @@ class BaseRecordSocket:
 
             return nf_data[0], nf_data[1]
 
+    def get_single_native_file_uncompressed(
+        self, record_id: int, name: str, *, session: Optional[Session] = None
+    ) -> Any:
+        """
+        Get an uncompressed output from a record
+        """
+
+        raw_data, ctype = self.get_single_native_file_rawdata(record_id, name, session=session)
+        return decompress(raw_data, ctype)
+
     def get_children_status(self, record_id: int, *, session: Optional[Session] = None) -> Dict[RecordStatusEnum, int]:
         # Get the SQL 'select' statements from the handlers
         select_stmts = self.get_children_select()
