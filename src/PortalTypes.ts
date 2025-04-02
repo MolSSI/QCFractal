@@ -33,6 +33,14 @@ export type WaitingReason = {
     details: Record<string, string>
 };
 
+export type Project = {
+    id: number,
+    name: string,
+    tagline: string,
+    description: string,
+    tags: string[],
+};
+
 export type CalculationRecord = {
     record_id: number,
     record_type: string,

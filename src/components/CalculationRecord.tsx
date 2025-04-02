@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useState} from "react"
-import {Button, Dialog, DialogContent, DialogTitle} from '@mui/material';
+import {Box, Chip, Stack, Button, Dialog, DialogContent, DialogTitle} from '@mui/material';
 import * as qcpTypes from "../PortalTypes.ts"
 import {usePortalClientRequest} from "../usePortalClient";
 
@@ -32,8 +32,21 @@ export default function CalculationRecord({ projectId, recordId }: CalculatedRec
 
     return (
         <>
+        {loading && <p>Loading...</p>}
+        {data &&
+        <Box>
+            <Box>
+                <Chip variant="outlined" label={data.record_type} />
+                Record {recordId}
+            </Box>
+            <Chip variant="outlined" label={data.status} />
+
+            <Box>
             {JSON.stringify(data, null, 2)}
             {error}
+            </Box>
+        </Box>
+        }
         </>
     );
 }
