@@ -19,7 +19,7 @@ const LoginPage: React.FC = () => {
         }
         try {
             await login(username, password);
-            navigate("/sandbox");
+            navigate("/");
         } catch (err) {
             setError("Invalid credentials or login failed");
         }

@@ -1,7 +1,7 @@
 // src/pages/Profile.tsx
-import MainLayout from '../layouts/MainLayout';
+import MainLayout from '../layouts/MainLayout.tsx';
 
-const HomePage = () => {
+const ProjectList = () => {
     return (
         <MainLayout>
             <h1>Profile</h1>
@@ -10,4 +10,4 @@ const HomePage = () => {
     );
 };
 
-export default HomePage;
+export default ProjectList;

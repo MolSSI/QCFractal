@@ -1,14 +1,10 @@
 // src/layouts/MainLayout.tsx
-import React, { ReactNode } from 'react';
+import {Outlet} from "react-router-dom";
 import NavDrawer from '../components/NavDrawer';
 
-import { Box, CssBaseline } from '@mui/material';
+import {Box, CssBaseline} from '@mui/material';
 
-interface MainLayoutProps {
-    children: ReactNode;
-}
-
-const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
+const MainLayout = () => {
     return (
         <Box sx={{ display: 'flex' }}>
             <CssBaseline />
@@ -21,7 +17,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                     p: 3,
                 }}
             >
-                {children}
+                <Outlet />
             </Box>
         </Box>
     );
