@@ -28,3 +28,13 @@ export type ProjectsList = {
     tags: string[],
 };
 
+export type WaitingReason = {
+    reason: string,
+    details: Record<string, string>
+};
+
+export type CalculationRecord = {
+    record_id: number,
+    record_type: string,
+    status: string,
+};

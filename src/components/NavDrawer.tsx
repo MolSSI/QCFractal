@@ -10,7 +10,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import InboxIcon from '@mui/icons-material/MoveToInbox';
 import MailIcon from '@mui/icons-material/Mail';
-import AuthStatus from "../components/AuthStatus.tsx";
+import ServerStatus from "./ServerStatus.tsx";
 
 const drawerWidth = 240;
 
@@ -31,6 +31,8 @@ export default function PermanentDrawerLeft() {
                 anchor="left"
             >
                 <Toolbar />
+                <Divider />
+                <ServerStatus />
                 <Divider />
                 <List>
                     {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
@@ -58,7 +60,6 @@ export default function PermanentDrawerLeft() {
                     ))}
                 </List>
                 <Divider />
-                <AuthStatus />
             </Drawer>
         </Box>
     );

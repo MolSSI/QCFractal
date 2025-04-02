@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { TextField, Button, Container, Box, Typography, Card, CardContent } from "@mui/material";
-import AuthStatus from "../components/AuthStatus.tsx";
 import { useNavigate } from "react-router-dom";
-import { usePortalClientAuth } from "../PortalClientContext.tsx";
+import { usePortalClientAuth } from "../usePortalClient";
 
 const LoginPage: React.FC = () => {
     const [username, setUsername] = useState("");
