@@ -12,13 +12,14 @@ export type UserInfo = {
 
 export type ConnectionState = {
     connected: boolean,
+    authorized: boolean,
     userInfo?: UserInfo,
 };
 
 export type PingResults = {
     success: boolean,
-    user_id: number,
-    username: string,
+    authorized: boolean,
+    user_info?: UserInfo,
 };
 
 export type ProjectsList = {

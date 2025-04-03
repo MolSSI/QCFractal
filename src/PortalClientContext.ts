@@ -6,7 +6,7 @@ export type RequestReturnType<T> = {
     error?: string
 }
 type ClientContextType = {
-    connectionState: qcpTypes.ConnectionState;
+    connectionState?: qcpTypes.ConnectionState;
     serverInfo: qcpTypes.ServerInfo;
 
     login: (username: string, password: string) => Promise<void>;
