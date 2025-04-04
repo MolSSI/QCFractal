@@ -24,6 +24,7 @@ dependencies = [
     "qcfractal",
     "qcengine<0.70a0",
     "pytest",
+    "deepdiff",
 ]
 
 
