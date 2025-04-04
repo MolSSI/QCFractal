@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import { TextField, Button, Container, Box, Typography, Card, CardContent } from "@mui/material";
-import { useNavigate } from "react-router-dom";
-import { usePortalClientAuth } from "../usePortalClient";
+import React, {useState} from "react";
+import {Box, Button, Card, CardContent, Container, TextField, Typography} from "@mui/material";
+import {useNavigate, useSearchParams} from "react-router-dom";
+import {usePortalClientAuth} from "../usePortalClient";
 
 const LoginPage: React.FC = () => {
     const [username, setUsername] = useState("");
@@ -9,6 +9,9 @@ const LoginPage: React.FC = () => {
     const [error, setError] = useState("");
     const {login} = usePortalClientAuth();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+
+    const redirectTo = searchParams.get("redirect") || "/";
 
     const handleLogin = async (event: React.FormEvent) => {
         event.preventDefault();
@@ -19,7 +22,7 @@ const LoginPage: React.FC = () => {
         }
         try {
             await login(username, password);
-            navigate("/");
+            navigate(redirectTo, { replace: true });
         } catch (err) {
             setError("Invalid credentials or login failed");
         }

@@ -12,7 +12,7 @@ function ProtectedRoute() {
         <>
             { loading ? (<p>Loading...</p>) :
                 not_connected ? (<p>Not connected...</p>) :
-                    not_authorized ? (<Navigate to={"/login"} />) :
+                    not_authorized ? (<Navigate to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`} />) :
                         <Outlet />
             }
         </>
