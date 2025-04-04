@@ -53,3 +53,4 @@ dependencies:
 
   # Testing packages
   - pytest
+  - deepdiff
