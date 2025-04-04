@@ -1,6 +1,40 @@
 Release Notes
 =============
 
+0.60 / 2025-04-05
+-----------------
+
+Some good bug fixes, and important features. Mainly, the ability to add entries in the background, and
+import/export of dataset scaffolds (Thanks to :contrib:`jaclark5`)!
+
+There some interfaces changes related to datasets and record submission. **These are intended to be
+backwards compatible, so if you have issues open an issue**. Those changes:
+
+- Dataset ``metadata`` has been moved to ``extras``. The ``extras`` field was never able to be set or otherwise
+  modified, and ``metadata`` was ambiguous (and also a little messy to handle since it is a reserved keyword in SQLAlchemy).
+- Dataset ``visibility`` and ``group`` have been removed. ``visibility`` was never really acted upon, and ``group`` is confusing.
+- ``tag`` and ``priority`` have been renamed to ``compute_tag`` and ``compute_priority`` everywhere.
+- Similarly, datasets now have a ``default_compute_tag`` and ``default_compute_priority``
+
+All these fields are still accessible via their old names, and functions that used them as keyword parameters should
+still work (if not, open an issue). For eample, ``ds.submit(tag='large-mem')`` should still work.
+
+Notable PRs for this release:
+
+- (:pr:`900`) Allow entry/specification names to be passed to get_properties_df (J. Nash :contrib:`janash`)
+- (:pr:`906`) Use 0 initial blocks in Parsl
+- (:pr:`907`) Add more info to list_datasets
+- (:pr:`910`) Add external dataset scaffold to/from JSON (J. Clark :contrib:`jaclark5`)
+- (:pr:`911`) Remove some fields from datasets
+- (:pr:`913`) Rename tag and priority to ``compute_tag`` and ``compute_priority``
+- (:pr:`915`) Fix bug when adding entries to a reaction dataset as a tuple (J. Clark :contrib:`jaclark5`)
+- (:pr:`916`) Ability to add entries in the background
+- (:pr:`917`) Batch of dataset record modification operations
+- (:pr:`918`, :pr:`921`) Properly implement browser sessions and session cookies
+- (:pr:`920`) Tolerate long paths for database sockets
+- (:pr:`923`, :pr:`924`) Better error handling in running conda commands in compute workers (J. Clark :contrib:`jaclark5`)
+
+
 0.59 / 2025-02-17
 -----------------
 
