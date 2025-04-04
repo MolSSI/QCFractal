@@ -6,15 +6,16 @@ import {Box, CssBaseline} from '@mui/material';
 
 const MainLayout = () => {
     return (
-        <Box sx={{ display: 'flex' }}>
+        <Box sx={{ display: 'flex', height: '100vh' }}>
             <CssBaseline />
             <NavDrawer />
             <Box
                 component="main"
+                display="flex"
                 sx={{
                     flexGrow: 1,
-                    bgcolor: 'background.default',
-                    p: 3,
+                    overflow: 'auto',
+                    p: 2
                 }}
             >
                 <Outlet />

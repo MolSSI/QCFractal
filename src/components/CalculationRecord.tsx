@@ -1,14 +1,12 @@
-import {useCallback, useEffect, useState} from "react"
-import {Box, Chip, Stack, Button, Dialog, DialogContent, DialogTitle} from '@mui/material';
+import {useEffect, useState} from "react"
+import {Box, Chip, Grid, Container, Typography} from '@mui/material';
 import * as qcpTypes from "../PortalTypes.ts"
 import {usePortalClientRequest} from "../usePortalClient";
+import {useParams} from "react-router-dom";
 
-interface CalculatedRecordProps {
-    projectId: number;
-    recordId: number;
-}
+export default function CalculationRecord() {
 
-export default function CalculationRecord({ projectId, recordId }: CalculatedRecordProps) {
+    const { projectId, recordId } = useParams();
 
     const { connectionState, makeRequest } = usePortalClientRequest(); // Get client instance here
 
@@ -21,32 +19,45 @@ export default function CalculationRecord({ projectId, recordId }: CalculatedRec
             setLoading(true);
             const {data, error} = await makeRequest<qcpTypes.CalculationRecord>(
                 "get",
-                `api/v1/records/${recordId}`,
+                `api/v1/projects/${projectId}/records/${recordId}`,
             );
             setData(data)
             setError(error)
             setLoading(false);
         }
         fetchData();
-    }, [recordId, connectionState, makeRequest]);
+    }, [projectId, recordId, connectionState, makeRequest]);
 
     return (
         <>
         {loading && <p>Loading...</p>}
         {data &&
-        <Box>
-            <Box>
-                <Chip variant="outlined" label={data.record_type} />
-                Record {recordId}
-            </Box>
+            <>
+            <Chip variant="outlined" label={data.record_type} />
+            <Typography>Record {recordId}</Typography>
+            <Typography>Record {recordId}</Typography>
+            <Typography>Record {recordId}</Typography>
+            <Typography>Something</Typography>
             <Chip variant="outlined" label={data.status} />
-
-            <Box>
-            {JSON.stringify(data, null, 2)}
-            {error}
-            </Box>
-        </Box>
+            </>
         }
         </>
     );
 }
+
+/*
+<Box sx={{ flexGrow: 1 }}>
+    <Grid container spacing={1}>
+        <Grid size={8}>
+            <Container maxWidth="lg">
+                <Chip variant="outlined" label={data.record_type} />
+                <Typography>Record {recordId}</Typography>
+                <Typography>Record {recordId}</Typography>
+                <Typography>Record {recordId}</Typography>
+            </Container>
+        </Grid>
+        <Grid size={6}>
+            <Typography>Something</Typography>
+        </Grid>
+    </Grid>
+*/
