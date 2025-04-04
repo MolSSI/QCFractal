@@ -75,7 +75,10 @@ def run_conda_subprocess(
 
     if proc_result.returncode == 0:
         try:
-            ret = json.loads(proc_result.stdout)
+            if proc_result.stdout == "":
+                ret = {}
+            else:
+                ret = json.loads(proc_result.stdout)
         except json.JSONDecodeError as e:
             raise RuntimeError(f"Failed to parse JSON from subprocess stdout: {proc_result.stdout}")
     else:
