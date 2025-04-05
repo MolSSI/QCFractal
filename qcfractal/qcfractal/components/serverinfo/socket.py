@@ -408,7 +408,7 @@ class ServerInfoSocket:
         if query_data.user:
             stmt = stmt.join(UserIDMapSubquery)
 
-            int_ids = {x for x in query_data.user if isinstance(x, int) or x.isnumeric()}
+            int_ids = {x for x in query_data.user if isinstance(x, int) or x.isdecimal()}
             str_names = set(query_data.user) - int_ids
 
             and_query.append(or_(UserIDMapSubquery.username.in_(str_names), UserIDMapSubquery.id.in_(int_ids)))
@@ -567,7 +567,7 @@ class ServerInfoSocket:
         if query_data.user:
             stmt = stmt.join(UserIDMapSubquery)
 
-            int_ids = {x for x in query_data.user if isinstance(x, int) or x.isnumeric()}
+            int_ids = {x for x in query_data.user if isinstance(x, int) or x.isdecimal()}
             str_names = set(query_data.user) - int_ids
 
             and_query.append(or_(UserIDMapSubquery.username.in_(str_names), UserIDMapSubquery.id.in_(int_ids)))

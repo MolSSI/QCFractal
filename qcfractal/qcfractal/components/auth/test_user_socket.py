@@ -362,6 +362,19 @@ def test_user_socket_use_invalid_username(storage_socket: SQLAlchemySocket):
         with pytest.raises(InvalidUsernameError):
             storage_socket.users.delete(username)
 
+    # Numeric usernames not allowed for some operations
+    uinfo2 = UserInfo.construct(
+        username="123456789",
+        role="read",
+        enabled=True,
+    )
+
+    with pytest.raises(InvalidUsernameError):
+        storage_socket.users.add(uinfo2, "password123")
+
+    with pytest.raises(InvalidUsernameError):
+        storage_socket.users.authenticate("123456789", "a_password")
+
 
 def test_user_socket_use_invalid_password(storage_socket: SQLAlchemySocket):
     for idx, password in enumerate(invalid_passwords):

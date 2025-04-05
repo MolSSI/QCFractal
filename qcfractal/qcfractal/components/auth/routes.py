@@ -33,6 +33,9 @@ from qcportal.exceptions import (
 def is_same_user(username_or_id: Union[int, str]) -> bool:
     assert isinstance(username_or_id, (int, str))
 
+    if isinstance(username_or_id, str) and username_or_id.isdecimal():
+        username_or_id = int(username_or_id)
+
     if "user_id" not in g:
         return False
     if "username" not in g:

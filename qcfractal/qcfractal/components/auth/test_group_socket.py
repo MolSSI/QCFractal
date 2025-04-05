@@ -130,3 +130,12 @@ def test_group_socket_use_invalid_groupname(storage_socket: SQLAlchemySocket):
 
         with pytest.raises(InvalidGroupnameError):
             storage_socket.groups.delete(groupname)
+
+    # numeric groupnames are not allowed for some actions
+    ginfo2 = GroupInfo.construct(
+        groupname="123456789",
+        description="Test group 1",
+    )
+
+    with pytest.raises(InvalidGroupnameError):
+        storage_socket.groups.add(ginfo2)

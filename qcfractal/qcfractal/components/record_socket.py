@@ -799,7 +799,7 @@ class RecordSocket:
         if query_data.owner_user is not None:
             stmt = stmt.join(UserIDMapSubquery)
 
-            int_ids = {x for x in query_data.owner_user if isinstance(x, int) or x.isnumeric()}
+            int_ids = {x for x in query_data.owner_user if isinstance(x, int) or x.isdecimal()}
             str_names = set(query_data.owner_user) - int_ids
 
             and_query.append(or_(UserIDMapSubquery.username.in_(str_names), UserIDMapSubquery.id.in_(int_ids)))
@@ -807,7 +807,7 @@ class RecordSocket:
         if query_data.owner_group is not None:
             stmt = stmt.join(GroupIDMapSubquery)
 
-            int_ids = {x for x in query_data.owner_group if isinstance(x, int) or x.isnumeric()}
+            int_ids = {x for x in query_data.owner_group if isinstance(x, int) or x.isdecimal()}
             str_names = set(query_data.owner_group) - int_ids
 
             and_query.append(or_(GroupIDMapSubquery.groupname.in_(str_names), GroupIDMapSubquery.id.in_(int_ids)))

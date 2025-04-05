@@ -41,7 +41,7 @@ def is_valid_username(username: str) -> None:
         raise InvalidUsernameError("Username contains spaces")
 
     # Username cannot be all numbers
-    if username.isnumeric():
+    if username.isdecimal():
         raise InvalidUsernameError("Username cannot be all numbers")
 
 
@@ -58,7 +58,7 @@ def is_valid_groupname(groupname: str) -> None:
         raise InvalidGroupnameError("Groupname contains spaces")
 
     # Groupname cannot be all numbers
-    if groupname.isnumeric():
+    if groupname.isdecimal():
         raise InvalidGroupnameError("Groupname cannot be all numbers")
 
 
@@ -75,7 +75,7 @@ def is_valid_rolename(rolename: str) -> None:
         raise InvalidRolenameError("Rolename contains spaces")
 
     # Rolename cannot be all numbers
-    if rolename.isnumeric():
+    if rolename.isdecimal():
         raise InvalidRolenameError("Rolename cannot be all numbers")
 
 
