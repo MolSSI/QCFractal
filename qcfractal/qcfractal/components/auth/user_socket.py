@@ -66,7 +66,7 @@ class UserSocket:
             ORM of the specified user
         """
 
-        if isinstance(username_or_id, int) or username_or_id.isnumeric():
+        if isinstance(username_or_id, int) or username_or_id.isdecimal():
             stmt = select(UserORM).where(UserORM.id == username_or_id)
         else:
             is_valid_username(username_or_id)

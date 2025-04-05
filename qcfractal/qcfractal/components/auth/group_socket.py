@@ -42,7 +42,7 @@ class GroupSocket:
             ORM of the specified group
         """
 
-        if isinstance(groupname_or_id, int) or groupname_or_id.isnumeric():
+        if isinstance(groupname_or_id, int) or groupname_or_id.isdecimal():
             stmt = select(GroupORM).where(GroupORM.id == groupname_or_id)
         else:
             is_valid_groupname(groupname_or_id)
