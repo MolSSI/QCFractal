@@ -16,6 +16,7 @@ from sqlalchemy import (
     select,
     TIMESTAMP,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from qcportal.utils import now_at_utc
 
@@ -116,6 +117,17 @@ class UserSessionORM(BaseORM):
     last_accessed = Column(TIMESTAMP(timezone=True), nullable=False, default=now_at_utc)
 
     __table_args__ = (Index("ix_user_session_user_id", "user_id"),)
+
+
+class UserPreferencesORM(BaseORM):
+    """
+    Table for storing user preference information
+    """
+
+    __tablename__ = "user_preferences"
+
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="cascade"), primary_key=True)
+    preferences = Column(JSONB, nullable=False)
 
 
 _user_id_map_subq = select(UserORM.id.label("id"), UserORM.username.label("username")).subquery()
