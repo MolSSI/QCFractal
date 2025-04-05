@@ -171,7 +171,7 @@ def handle_authentication_error(error):
         jsonify(
             msg=str(error),
             user_id=g.user_id if "user_id" in g else None,
-            user_name=g.user_name if "user_name" in g else None,
+            username=g.username if "username" in g else None,
         ),
         401,
     )
@@ -184,7 +184,7 @@ def handle_authorization_error(error):
         jsonify(
             msg=str(error),
             user_id=g.user_id if "user_id" in g else None,
-            user_name=g.user_name if "user_name" in g else None,
+            username=g.username if "username" in g else None,
         ),
         403,
     )
