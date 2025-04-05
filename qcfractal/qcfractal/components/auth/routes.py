@@ -240,8 +240,8 @@ def delete_user_v1(username_or_id: Union[int, str]):
 ###########################
 # User preferences management
 ###########################
-@wrap_route
 @api_v1.route("/users/<username_or_id>/preferences", methods=["GET"])
+@wrap_route("READ")
 def get_user_preferences_v1(username_or_id: Union[int, str]):
     if g.role == "admin" or is_same_user(username_or_id):
         return storage_socket.users.get_preferences(g.user_id)
@@ -249,8 +249,8 @@ def get_user_preferences_v1(username_or_id: Union[int, str]):
         raise AuthorizationFailure("Cannot get user preferences: Forbidden")
 
 
-@wrap_route
 @api_v1.route("/users/<username_or_id>/preferences", methods=["PUT"])
+@wrap_route("WRITE")
 def set_user_preferences_v1(username_or_id: Union[int, str], body_data: Dict[str, Any]):
     assert_security_enabled()
     assert_logged_in()
