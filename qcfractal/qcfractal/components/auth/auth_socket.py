@@ -187,6 +187,7 @@ class AuthSocket:
 
     def save_user_session(
         self,
+        user_id: int,
         user_session_id: str,
         user_session_data: Any,
         *,
@@ -199,7 +200,7 @@ class AuthSocket:
 
         with self.root_socket.optional_session(session, False) as session:
             stmt = insert(UserSessionORM)
-            stmt = stmt.values(session_id=user_session_id, session_data=serialized_data)
+            stmt = stmt.values(user_id=user_id, session_id=user_session_id, session_data=serialized_data)
             stmt = stmt.on_conflict_do_update(
                 index_elements=[UserSessionORM.session_id],
                 set_={"session_data": serialized_data, "last_accessed": now_at_utc()},
@@ -234,3 +235,31 @@ class AuthSocket:
             stmt = delete(UserSessionORM)
             stmt = stmt.where(UserSessionORM.session_id == session_id)
             session.execute(stmt)
+
+    def list_all_user_sessions(self, *, session: Optional[Session] = None) -> List[Tuple[str, datetime.datetime]]:
+        """
+        List all sessions currently in the database
+        """
+
+        with self.root_socket.optional_session(session, True) as session:
+            stmt = select(UserSessionORM.session_id, UserSessionORM.last_accessed)
+            return session.execute(stmt).scalars().all()
+
+    def list_user_sessions(self, user_id: int, *, session: Optional[Session] = None) -> List[str]:
+        """
+        List all sessions currently in the database for a single user
+        """
+
+        with self.root_socket.optional_session(session, True) as session:
+            stmt = select(UserSessionORM.session_id).where(UserSessionORM.user_id == user_id)
+            return session.execute(stmt).scalars().all()
+
+    def clear_user_sessions(self, user_id: int, *, session: Optional[Session] = None) -> List[str]:
+        """
+        Clear all sessions for a single user
+        """
+
+        with self.root_socket.optional_session(session) as session:
+            stmt = delete(UserSessionORM)
+            stmt = stmt.where(UserSessionORM.user_id == user_id)
+            return session.execute(stmt).scalars().all()

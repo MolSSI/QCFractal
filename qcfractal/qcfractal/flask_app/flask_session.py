@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import datetime
 import secrets
-import uuid
 from typing import TYPE_CHECKING, Optional
 
-from flask.sessions import SessionInterface, SessionMixin, SecureCookieSession
+from flask.sessions import SessionInterface, SecureCookieSession
 
 from qcportal.utils import now_at_utc
 
@@ -94,6 +92,8 @@ class QCFFlaskSessionInterface(SessionInterface):
             if session_id:
                 self._storage_socket.auth.delete_user_session(session_id)
         else:
+            user_id = int(session_data["user_id"])
+
             if not session_id:
                 # create a unique ID if needed
                 session_id = secrets.token_urlsafe(32)
@@ -103,7 +103,7 @@ class QCFFlaskSessionInterface(SessionInterface):
                 session_data.session_id = session_id
 
             # Update the session data in the database
-            self._storage_socket.auth.save_user_session(session_id, session_data)
+            self._storage_socket.auth.save_user_session(user_id, session_id, session_data)
 
             # Set the cookie in the response
             # Same name & session id, but extend the lifetime
