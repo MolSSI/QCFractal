@@ -11,6 +11,7 @@ from sqlalchemy import (
     Boolean,
     JSON,
     UniqueConstraint,
+    Index,
     Enum,
     select,
     TIMESTAMP,
@@ -110,8 +111,11 @@ class UserSessionORM(BaseORM):
     __tablename__ = "user_session"
 
     session_id = Column(String, nullable=False, primary_key=True)
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="cascade"), nullable=False)
     session_data = Column(LargeBinary, nullable=False)
     last_accessed = Column(TIMESTAMP(timezone=True), nullable=False, default=now_at_utc)
+
+    __table_args__ = (Index("ix_user_session_user_id", "user_id"),)
 
 
 _user_id_map_subq = select(UserORM.id.label("id"), UserORM.username.label("username")).subquery()

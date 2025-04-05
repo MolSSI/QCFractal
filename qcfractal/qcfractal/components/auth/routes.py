@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple, Union, Dict, Any
 
 from flask import current_app, g
 
@@ -235,3 +235,52 @@ def delete_user_v1(username_or_id: Union[int, str]):
         raise UserManagementError("Cannot delete your own user")
 
     return storage_socket.users.delete(username_or_id)
+
+
+###########################
+# User preferences management
+###########################
+@wrap_route
+@api_v1.route("/users/<username_or_id>/preferences", methods=["GET"])
+def get_user_preferences_v1(username_or_id: Union[int, str]):
+    if g.role == "admin" or is_same_user(username_or_id):
+        return storage_socket.users.get_preferences(g.user_id)
+    else:
+        raise AuthorizationFailure("Cannot get user preferences: Forbidden")
+
+
+@wrap_route
+@api_v1.route("/users/<username_or_id>/preferences", methods=["PUT"])
+def set_user_preferences_v1(username_or_id: Union[int, str], body_data: Dict[str, Any]):
+    assert_security_enabled()
+    assert_logged_in()
+
+    if g.role == "admin" or is_same_user(username_or_id):
+        return storage_socket.users.set_preferences(g.user_id, body_data)
+    else:
+        raise AuthorizationFailure("Cannot set user preferences: Forbidden")
+
+
+###########################
+# User session management
+###########################
+@api_v1.route("/sessions", methods=["GET"])
+@wrap_route("READ")
+def list_all_user_sessions_v1():
+    assert_security_enabled()
+    assert_logged_in()
+    assert_admin()
+
+    return storage_socket.auth.list_all_user_sessions()
+
+
+@api_v1.route("/users/<username_or_id>/sessions", methods=["GET"])
+@wrap_route("READ")
+def list_user_sessions_v1(username_or_id: Union[int, str]):
+    assert_security_enabled()
+    assert_logged_in()
+
+    if g.role == "admin" or is_same_user(username_or_id):
+        return storage_socket.auth.list_user_sessions(g.user_id)
+
+    raise AuthorizationFailure("Cannot list user sessions: Forbidden")
