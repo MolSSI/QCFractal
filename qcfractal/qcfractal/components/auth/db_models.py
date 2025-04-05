@@ -18,10 +18,10 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
-from qcportal.utils import now_at_utc
 
 from qcfractal.db_socket import BaseORM
 from qcportal.auth import AuthTypeEnum
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from typing import Optional, Iterable, Dict, Any
@@ -111,12 +111,16 @@ class UserSessionORM(BaseORM):
 
     __tablename__ = "user_session"
 
-    session_id = Column(String, nullable=False, primary_key=True)
+    public_id = Column(Integer, primary_key=True)
+    session_id = Column(String, nullable=False)
     user_id = Column(Integer, ForeignKey("user.id", ondelete="cascade"), nullable=False)
     session_data = Column(LargeBinary, nullable=False)
     last_accessed = Column(TIMESTAMP(timezone=True), nullable=False, default=now_at_utc)
 
-    __table_args__ = (Index("ix_user_session_user_id", "user_id"),)
+    __table_args__ = (
+        UniqueConstraint("session_id", name="ux_user_session_session_id"),
+        Index("ix_user_session_user_id", "user_id"),
+    )
 
 
 class UserPreferencesORM(BaseORM):

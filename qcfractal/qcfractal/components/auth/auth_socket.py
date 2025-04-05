@@ -236,25 +236,28 @@ class AuthSocket:
             stmt = stmt.where(UserSessionORM.session_id == session_id)
             session.execute(stmt)
 
-    def list_all_user_sessions(self, *, session: Optional[Session] = None) -> List[Tuple[str, datetime.datetime]]:
+    def list_all_user_sessions(self, *, session: Optional[Session] = None) -> List[Tuple[int, datetime.datetime]]:
         """
         List all sessions currently in the database
         """
 
         with self.root_socket.optional_session(session, True) as session:
-            stmt = select(UserSessionORM.session_id, UserSessionORM.last_accessed)
-            return session.execute(stmt).scalars().all()
+            stmt = select(UserSessionORM.public_id, UserSessionORM.last_accessed)
+            return [(x,y) for x,y in session.execute(stmt).all()]
 
-    def list_user_sessions(self, user_id: int, *, session: Optional[Session] = None) -> List[str]:
+    def list_user_sessions(
+        self, user_id: int, *, session: Optional[Session] = None
+    ) -> List[Tuple[int, datetime.datetime]]:
         """
         List all sessions currently in the database for a single user
         """
 
         with self.root_socket.optional_session(session, True) as session:
-            stmt = select(UserSessionORM.session_id).where(UserSessionORM.user_id == user_id)
-            return session.execute(stmt).scalars().all()
+            stmt = select(UserSessionORM.public_id, UserSessionORM.last_accessed)
+            stmt = stmt.where(UserSessionORM.user_id == user_id)
+            return [(x,y) for x,y in session.execute(stmt).all()]
 
-    def clear_user_sessions(self, user_id: int, *, session: Optional[Session] = None) -> List[str]:
+    def clear_user_sessions(self, user_id: int, *, session: Optional[Session] = None):
         """
         Clear all sessions for a single user
         """
@@ -262,4 +265,4 @@ class AuthSocket:
         with self.root_socket.optional_session(session) as session:
             stmt = delete(UserSessionORM)
             stmt = stmt.where(UserSessionORM.user_id == user_id)
-            return session.execute(stmt).scalars().all()
+            session.execute(stmt)
