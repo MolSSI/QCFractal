@@ -1,6 +1,6 @@
 import {BrowserRouter as Router, Route, Routes} from "react-router-dom";
 import {PortalClientProvider} from "./PortalClientProvider";
-import MainPage from "./pages/Main"
+import HomePage from "./pages/Home.tsx"
 import LoginPage from "./pages/Login";
 import MainLayout from "./layouts/MainLayout";
 import ProtectedRoute from "./ProtectedRoute";
@@ -8,6 +8,7 @@ import SandboxPage from "./components/Sandbox.tsx";
 import Project from "./components/Project.tsx";
 import CalculationRecord from "./components/CalculationRecord";
 import './App.css'
+import ProjectList from "./components/ProjectList.tsx";
 
 function App() {
     return (
@@ -17,8 +18,9 @@ function App() {
                     <Route path="/login" element={<LoginPage />} />
                     <Route element={<ProtectedRoute />}>
                         <Route element={<MainLayout />}>
-                            <Route path="/" element={<MainPage />} />
-                            <Route path="/sandbox" element={<SandboxPage />} />
+                            <Route path="/" element={<HomePage />} />
+                            {/* <Route path="/sandbox" element={<SandboxPage />} /> */}
+                            <Route path="/projects" element={<ProjectList />} />
                             <Route path="/projects/:projectId" element={<Project />}  />
                             <Route path="/projects/:projectId/records/:recordId" element={<CalculationRecord />}  />
                         </Route>
