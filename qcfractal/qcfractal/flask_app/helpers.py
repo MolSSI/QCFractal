@@ -16,6 +16,7 @@ from werkzeug.exceptions import BadRequest, Forbidden
 from qcfractal import __version__ as qcfractal_version
 from qcfractal.flask_app import storage_socket
 from qcportal.auth import UserInfo, RoleInfo
+from qcportal.utils import time_based_cache
 from qcportal.exceptions import AuthorizationFailure, AuthenticationFailure
 
 if TYPE_CHECKING:
@@ -57,6 +58,11 @@ def get_url_major_component(url: str):
     return "/" + resource.lstrip("/")
 
 
+@time_based_cache(seconds=5, maxsize=256)
+def _cached_verify(user_id: int):
+    return storage_socket.auth.verify(user_id=user_id)
+
+
 def assert_is_authorized(requested_action: str):
     """
     Check for access to the URL given permissions in the JWT token in the request headers
@@ -76,7 +82,7 @@ def assert_is_authorized(requested_action: str):
         if session and "user_id" in session:
             user_id = int(session["user_id"])  # may be a string? Just to make sure
 
-            user_info, role_info = storage_socket.auth.verify(user_id=user_id)
+            user_info, role_info = _cached_verify(user_id=user_id)
             username = user_info.username
             policies = role_info.permissions.dict()
             role = role_info.rolename

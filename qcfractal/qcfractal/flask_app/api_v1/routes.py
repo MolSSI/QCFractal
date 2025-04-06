@@ -7,6 +7,15 @@ from flask_jwt_extended import (
 
 from qcfractal.flask_app import storage_socket
 from qcfractal.flask_app.api_v1.blueprint import api_v1
+from qcportal.utils import time_based_cache
+
+
+# TODO - much of this is duplicated from flask_app/helpers.py
+
+
+@time_based_cache(seconds=5, maxsize=256)
+def _cached_verify(user_id: int):
+    return storage_socket.auth.verify(user_id=user_id)
 
 
 @api_v1.route("/ping", methods=["GET"])
@@ -20,7 +29,7 @@ def ping():
     if session and "user_id" in session:
         user_id = int(session["user_id"])  # may be a string? Just to make sure
 
-        user_info, role_info = storage_socket.auth.verify(user_id=user_id)
+        user_info, role_info = _cached_verify(user_id=user_id)
         username = user_info.username
         role = role_info.rolename
         groups = user_info.groups
