@@ -183,7 +183,6 @@ def login_user_session() -> Tuple[UserInfo, RoleInfo]:
     session.clear()
     user_info, role_info = login_user()
     session["user_id"] = str(user_info.id)
-    session["username"] = user_info.username
 
     return user_info, role_info
 

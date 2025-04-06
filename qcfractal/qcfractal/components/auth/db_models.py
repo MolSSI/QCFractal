@@ -112,15 +112,24 @@ class UserSessionORM(BaseORM):
     __tablename__ = "user_session"
 
     public_id = Column(Integer, primary_key=True)
-    session_id = Column(String, nullable=False)
+    session_key = Column(String, nullable=False)
     user_id = Column(Integer, ForeignKey("user.id", ondelete="cascade"), nullable=False)
-    session_data = Column(LargeBinary, nullable=False)
+    session_data = Column(JSONB, nullable=False)
     last_accessed = Column(TIMESTAMP(timezone=True), nullable=False, default=now_at_utc)
 
     __table_args__ = (
-        UniqueConstraint("session_id", name="ux_user_session_session_id"),
+        UniqueConstraint("session_key", name="ux_user_session_session_key"),
         Index("ix_user_session_user_id", "user_id"),
     )
+
+    def public_dict(self) -> Dict[str, Any]:
+        return {
+            "public_id": self.public_id,
+            "user_id": self.user_id,
+            "last_accessed": self.last_accessed,
+            "ip_address": self.session_data.get("ip_address", None),
+            "user_agent": self.session_data.get("user_agent", None),
+        }
 
 
 class UserPreferencesORM(BaseORM):
