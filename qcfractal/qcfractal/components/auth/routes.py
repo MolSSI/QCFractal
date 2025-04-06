@@ -180,13 +180,19 @@ def get_user_v1(username_or_id: Union[int, str]):
     assert_logged_in()
 
     # admin can do all
-    if g.role == "admin":
-        return storage_socket.users.get(username_or_id)
-
-    if is_same_user(username_or_id):
+    if g.role == "admin" or is_same_user(username_or_id):
         return storage_socket.users.get(username_or_id)
 
     raise AuthorizationFailure("Cannot get user information: Forbidden")
+
+
+@api_v1.route("/me", methods=["GET"])
+@wrap_route("READ")
+def get_my_user_v1():
+    assert_security_enabled()
+    assert_logged_in()
+
+    return storage_socket.users.get(g.user_id)
 
 
 @api_v1.route("/users", methods=["PATCH"])
@@ -209,6 +215,21 @@ def modify_user_v1(body_data: UserInfo):
     raise AuthorizationFailure("Cannot modify user: Forbidden")
 
 
+@api_v1.route("/me", methods=["PATCH"])
+@wrap_route("WRITE")
+def modify_my_user_v1(body_data: UserInfo):
+    assert_security_enabled()
+    assert_logged_in()
+
+    if body_data.id is None or body_data.username is None:
+        raise UserManagementError("Cannot modify user: id or username is missing")
+
+    if is_same_user(body_data.id) and is_same_user(body_data.username):
+        return storage_socket.users.modify(body_data)
+
+    raise AuthorizationFailure("Cannot modify user: Forbidden")
+
+
 @api_v1.route("/users/<username_or_id>/password", methods=["PUT"])
 @wrap_route("WRITE")
 def change_password_v1(username_or_id: Union[int, str], body_data: Optional[str]):
@@ -223,6 +244,15 @@ def change_password_v1(username_or_id: Union[int, str], body_data: Optional[str]
         return storage_socket.users.change_password(username_or_id, password=body_data)
 
     raise AuthorizationFailure("Cannot change password: Forbidden")
+
+
+@api_v1.route("/me/password", methods=["PUT"])
+@wrap_route("WRITE")
+def change_my_password_v1(body_data: Optional[str]):
+    assert_security_enabled()
+    assert_logged_in()
+
+    return storage_socket.users.change_password(g.user_id, password=body_data)
 
 
 @api_v1.route("/users/<username_or_id>", methods=["DELETE"])
@@ -249,6 +279,12 @@ def get_user_preferences_v1(username_or_id: Union[int, str]):
         raise AuthorizationFailure("Cannot get user preferences: Forbidden")
 
 
+@api_v1.route("/me/preferences", methods=["GET"])
+@wrap_route("READ")
+def get_my_preferences_v1():
+    return storage_socket.users.get_preferences(g.user_id)
+
+
 @api_v1.route("/users/<username_or_id>/preferences", methods=["PUT"])
 @wrap_route("WRITE")
 def set_user_preferences_v1(username_or_id: Union[int, str], body_data: Dict[str, Any]):
@@ -259,6 +295,14 @@ def set_user_preferences_v1(username_or_id: Union[int, str], body_data: Dict[str
         return storage_socket.users.set_preferences(g.user_id, body_data)
     else:
         raise AuthorizationFailure("Cannot set user preferences: Forbidden")
+
+
+@api_v1.route("/users/<username_or_id>/preferences", methods=["PUT"])
+@wrap_route("WRITE")
+def set_my_preferences_v1(body_data: Dict[str, Any]):
+    assert_security_enabled()
+    assert_logged_in()
+    return storage_socket.users.set_preferences(g.user_id, body_data)
 
 
 ###########################
@@ -284,3 +328,12 @@ def list_user_sessions_v1(username_or_id: Union[int, str]):
         return storage_socket.auth.list_user_sessions(g.user_id)
 
     raise AuthorizationFailure("Cannot list user sessions: Forbidden")
+
+
+@api_v1.route("/me/sessions", methods=["GET"])
+@wrap_route("READ")
+def list_my_sessions_v1():
+    assert_security_enabled()
+    assert_logged_in()
+
+    return storage_socket.auth.list_user_sessions(g.user_id)
