@@ -54,42 +54,6 @@ def get_url_major_component(url: str):
     return "/" + resource.lstrip("/")
 
 
-def assert_is_authorized(requested_action: str):
-    """
-    Check for access to the URL given permissions in the JWT token in the request headers
-
-    1. If no security (enable_security is False), always allow
-    2. If security is enabled, and if read allowed (allow_unauthenticated_read=True), use the default read permissions.
-       Otherwise, check against the logged-in user permissions from the headers' JWT token
-    """
-
-    try:
-        subject = {"user_id": g.user_id, "username": g.username}
-
-        # Pull the first part of the URL (ie, /api/v1/molecule/a/b/c -> /api/v1/molecule)
-        resource = {"type": get_url_major_component(request.url)}
-
-        allowed, msg = storage_socket.auth.is_authorized(
-            resource=resource, action=requested_action, subject=subject, context={}, policies=g.policies
-        )
-
-        if not allowed:
-            if g.user_id is None:
-                # Authentication Error = not logged in, and resource requires it
-                raise AuthenticationFailure(msg)
-            else:
-                # Authorization error - logged in, but can't access
-                raise AuthorizationFailure(msg)
-
-    except AuthorizationFailure as e:
-        raise Forbidden(str(e))
-    except AuthenticationFailure as e:
-        raise AuthenticationFailure("Failed to authenticate user session or JWT: " + str(e))
-    except Exception as e:
-        current_app.logger.warning("Error in evaluating session or JWT permissions: \n" + str(e))
-        raise BadRequest("Error in evaluating session or JWT permissions")
-
-
 def login_user() -> Tuple[UserInfo, RoleInfo]:
     """
     Handle a login from flask

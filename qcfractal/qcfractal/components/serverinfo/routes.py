@@ -2,8 +2,8 @@ from flask import current_app
 
 from qcfractal.flask_app import storage_socket
 from qcfractal.flask_app.api_v1.blueprint import api_v1
-from qcfractal.flask_app.api_v1.helpers import wrap_route
 from qcfractal.flask_app.helpers import get_public_server_information
+from qcfractal.flask_app.wrap_route import wrap_route
 from qcportal.serverinfo import (
     AccessLogSummaryFilters,
     AccessLogQueryFilters,

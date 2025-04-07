@@ -2,7 +2,7 @@ from flask import redirect, Response, stream_with_context, current_app
 
 from qcfractal.flask_app import storage_socket
 from qcfractal.flask_app.api_v1.blueprint import api_v1
-from qcfractal.flask_app.api_v1.helpers import wrap_route
+from qcfractal.flask_app.wrap_route import wrap_route
 
 
 @api_v1.route("/external_files/<int:file_id>", methods=["GET"])

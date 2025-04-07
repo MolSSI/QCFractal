@@ -1,8 +1,8 @@
 from flask import current_app
 
 from qcfractal.flask_app import storage_socket
-from qcfractal.flask_app.api_v1.helpers import wrap_route  # uses the same wrap_route as the user api
 from qcfractal.flask_app.compute_v1.blueprint import compute_v1
+from qcfractal.flask_app.wrap_route import wrap_route  # uses the same wrap_route as the user api
 from qcportal.exceptions import LimitExceededError
 from qcportal.tasks import TaskClaimBody, TaskReturnBody
 from qcportal.utils import calculate_limit
