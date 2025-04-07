@@ -75,6 +75,7 @@ def test_auth_session_user_disabled(secure_snowflake):
     assert not get_qcf_cookie(sess.cookies).is_expired()
 
     # Not logged in anymore
+    time.sleep(3.1)  # wait for server verification cache to expire
     r = sess.get(f"{uri}/api/v1/information")
     assert r.status_code == 401  # unauthorized
     assert "is disabled" in r.text
