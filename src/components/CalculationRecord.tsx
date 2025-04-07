@@ -1,48 +1,49 @@
-import {useEffect, useState} from "react"
-import {Box, Chip, Grid, Container, Typography} from '@mui/material';
-import * as qcpTypes from "../PortalTypes.ts"
-import {usePortalClientRequest} from "../usePortalClient";
-import {useParams} from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Box, Chip, Grid, Container, Typography } from "@mui/material";
+import * as qcpTypes from "../PortalTypes.ts";
+import { usePortalClientRequest } from "../usePortalClient";
+import { useParams } from "react-router-dom";
 
 export default function CalculationRecord() {
+  const { projectId, recordId } = useParams();
 
-    const { projectId, recordId } = useParams();
+  const { connectionState, makeRequest } = usePortalClientRequest(); // Get client instance here
 
-    const { connectionState, makeRequest } = usePortalClientRequest(); // Get client instance here
+  const [data, setData] = useState<qcpTypes.CalculationRecord | undefined>(
+    undefined,
+  );
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | undefined>(undefined);
 
-    const [data, setData] = useState<qcpTypes.CalculationRecord | undefined>(undefined);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      const { data, error } = await makeRequest<qcpTypes.CalculationRecord>(
+        "get",
+        `api/v1/projects/${projectId}/records/${recordId}`,
+      );
+      setData(data);
+      setError(error);
+      setLoading(false);
+    }
+    fetchData();
+  }, [projectId, recordId, connectionState, makeRequest]);
 
-    useEffect(() => {
-        async function fetchData() {
-            setLoading(true);
-            const {data, error} = await makeRequest<qcpTypes.CalculationRecord>(
-                "get",
-                `api/v1/projects/${projectId}/records/${recordId}`,
-            );
-            setData(data)
-            setError(error)
-            setLoading(false);
-        }
-        fetchData();
-    }, [projectId, recordId, connectionState, makeRequest]);
-
-    return (
+  return (
+    <>
+      {loading && <p>Loading...</p>}
+      {data && (
         <>
-        {loading && <p>Loading...</p>}
-        {data &&
-            <>
-            <Chip variant="outlined" label={data.record_type} />
-            <Typography>Record {recordId}</Typography>
-            <Typography>Record {recordId}</Typography>
-            <Typography>Record {recordId}</Typography>
-            <Typography>Something</Typography>
-            <Chip variant="outlined" label={data.status} />
-            </>
-        }
+          <Chip variant="outlined" label={data.record_type} />
+          <Typography>Record {recordId}</Typography>
+          <Typography>Record {recordId}</Typography>
+          <Typography>Record {recordId}</Typography>
+          <Typography>Something</Typography>
+          <Chip variant="outlined" label={data.status} />
         </>
-    );
+      )}
+    </>
+  );
 }
 
 /*
