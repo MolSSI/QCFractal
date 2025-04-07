@@ -4,13 +4,14 @@ from flask import current_app, g
 
 from qcfractal.flask_app import storage_socket
 from qcfractal.flask_app.api_v1.blueprint import api_v1
-from qcfractal.flask_app.wrap_route import wrap_route
+from qcfractal.flask_app.wrap_route import wrap_global_route
 from qcportal.auth import UserInfo, RoleInfo, GroupInfo
 from qcportal.exceptions import (
     InconsistentUpdateError,
     SecurityNotEnabledError,
     UserManagementError,
     AuthorizationFailure,
+    AuthenticationFailure,
 )
 
 
@@ -58,7 +59,7 @@ def assert_security_enabled():
 # can be removed after proper/more granular permissions are implemented
 def assert_logged_in():
     if g.get("user_id", None) is None:
-        raise AuthorizationFailure("Login is required")
+        raise AuthenticationFailure("Login is required")
 
 
 def assert_admin():
@@ -72,28 +73,28 @@ def assert_admin():
 
 
 @api_v1.route("/roles", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("roles", "read", True)
 def list_roles_v1():
     assert_security_enabled()
     return storage_socket.roles.list()
 
 
 @api_v1.route("/roles", methods=["POST"])
-@wrap_route("WRITE")
+@wrap_global_route("roles", "modify", True)
 def add_role_v1(body_data: RoleInfo):
     assert_security_enabled()
     return storage_socket.roles.add(body_data)
 
 
 @api_v1.route("/roles/<string:rolename>", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("roles", "read", True)
 def get_role_v1(rolename: str):
     assert_security_enabled()
     return storage_socket.roles.get(rolename)
 
 
 @api_v1.route("/roles/<string:rolename>", methods=["PUT"])
-@wrap_route("WRITE")
+@wrap_global_route("roles", "modify", True)
 def modify_role_v1(rolename: str, body_data: RoleInfo):
     assert_security_enabled()
     body_data = body_data
@@ -104,7 +105,7 @@ def modify_role_v1(rolename: str, body_data: RoleInfo):
 
 
 @api_v1.route("/roles/<string:rolename>", methods=["DELETE"])
-@wrap_route("DELETE")
+@wrap_global_route("roles", "delete", True)
 def delete_role_v1(rolename: str):
     assert_security_enabled()
     return storage_socket.roles.delete(rolename)
@@ -116,17 +117,15 @@ def delete_role_v1(rolename: str):
 
 
 @api_v1.route("/groups", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("groups", "read", True)
 def list_groups_v1():
     assert_security_enabled()
     assert_logged_in()
-    assert_admin()
-
     return storage_socket.groups.list()
 
 
 @api_v1.route("/groups", methods=["POST"])
-@wrap_route("WRITE")
+@wrap_global_route("groups", "add", True)
 def add_group_v1(body_data: GroupInfo):
     assert_security_enabled()
     assert_logged_in()
@@ -134,7 +133,7 @@ def add_group_v1(body_data: GroupInfo):
 
 
 @api_v1.route("/groups/<groupname_or_id>", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("groups", "read", True)
 def get_group_v1(groupname_or_id: Union[int, str]):
     assert_security_enabled()
     assert_logged_in()
@@ -142,7 +141,7 @@ def get_group_v1(groupname_or_id: Union[int, str]):
 
 
 @api_v1.route("/groups/<groupname_or_id>", methods=["DELETE"])
-@wrap_route("DELETE")
+@wrap_global_route("groups", "delete", True)
 def delete_group_v1(groupname_or_id: Union[int, str]):
     assert_security_enabled()
     assert_logged_in()
@@ -155,7 +154,7 @@ def delete_group_v1(groupname_or_id: Union[int, str]):
 
 
 @api_v1.route("/users", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("users", "read", True)
 def list_users_v1():
     assert_security_enabled()
     assert_logged_in()
@@ -164,7 +163,7 @@ def list_users_v1():
 
 
 @api_v1.route("/users", methods=["POST"])
-@wrap_route("WRITE")
+@wrap_global_route("users", "add", True)
 def add_user_v1(body_data: Tuple[UserInfo, Optional[str]]):
     assert_security_enabled()
     assert_logged_in()
@@ -174,7 +173,7 @@ def add_user_v1(body_data: Tuple[UserInfo, Optional[str]]):
 
 
 @api_v1.route("/users/<username_or_id>", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("users", "read", True)
 def get_user_v1(username_or_id: Union[int, str]):
     assert_security_enabled()
     assert_logged_in()
@@ -187,7 +186,7 @@ def get_user_v1(username_or_id: Union[int, str]):
 
 
 @api_v1.route("/me", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("me", "read", True)
 def get_my_user_v1():
     assert_security_enabled()
     assert_logged_in()
@@ -196,7 +195,7 @@ def get_my_user_v1():
 
 
 @api_v1.route("/users", methods=["PATCH"])
-@wrap_route("WRITE")
+@wrap_global_route("users", "modify", True)
 def modify_user_v1(body_data: UserInfo):
     assert_security_enabled()
     assert_logged_in()
@@ -216,7 +215,7 @@ def modify_user_v1(body_data: UserInfo):
 
 
 @api_v1.route("/me", methods=["PATCH"])
-@wrap_route("WRITE")
+@wrap_global_route("me", "modify", True)
 def modify_my_user_v1(body_data: UserInfo):
     assert_security_enabled()
     assert_logged_in()
@@ -231,7 +230,7 @@ def modify_my_user_v1(body_data: UserInfo):
 
 
 @api_v1.route("/users/<username_or_id>/password", methods=["PUT"])
-@wrap_route("WRITE")
+@wrap_global_route("users", "modify", True)
 def change_password_v1(username_or_id: Union[int, str], body_data: Optional[str]):
     assert_security_enabled()
     assert_logged_in()
@@ -247,7 +246,7 @@ def change_password_v1(username_or_id: Union[int, str], body_data: Optional[str]
 
 
 @api_v1.route("/me/password", methods=["PUT"])
-@wrap_route("WRITE")
+@wrap_global_route("me", "modify", True)
 def change_my_password_v1(body_data: Optional[str]):
     assert_security_enabled()
     assert_logged_in()
@@ -256,7 +255,7 @@ def change_my_password_v1(body_data: Optional[str]):
 
 
 @api_v1.route("/users/<username_or_id>", methods=["DELETE"])
-@wrap_route("DELETE")
+@wrap_global_route("users", "delete", True)
 def delete_user_v1(username_or_id: Union[int, str]):
     assert_security_enabled()
     assert_logged_in()
@@ -271,7 +270,7 @@ def delete_user_v1(username_or_id: Union[int, str]):
 # User preferences management
 ###########################
 @api_v1.route("/users/<username_or_id>/preferences", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("users", "read", True)
 def get_user_preferences_v1(username_or_id: Union[int, str]):
     if g.role == "admin" or is_same_user(username_or_id):
         return storage_socket.users.get_preferences(g.user_id)
@@ -280,13 +279,13 @@ def get_user_preferences_v1(username_or_id: Union[int, str]):
 
 
 @api_v1.route("/me/preferences", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("me", "read", True)
 def get_my_preferences_v1():
     return storage_socket.users.get_preferences(g.user_id)
 
 
 @api_v1.route("/users/<username_or_id>/preferences", methods=["PUT"])
-@wrap_route("WRITE")
+@wrap_global_route("users", "modify", True)
 def set_user_preferences_v1(username_or_id: Union[int, str], body_data: Dict[str, Any]):
     assert_security_enabled()
     assert_logged_in()
@@ -298,7 +297,7 @@ def set_user_preferences_v1(username_or_id: Union[int, str], body_data: Dict[str
 
 
 @api_v1.route("/users/<username_or_id>/preferences", methods=["PUT"])
-@wrap_route("WRITE")
+@wrap_global_route("me", "modify", True)
 def set_my_preferences_v1(body_data: Dict[str, Any]):
     assert_security_enabled()
     assert_logged_in()
@@ -309,7 +308,7 @@ def set_my_preferences_v1(body_data: Dict[str, Any]):
 # User session management
 ###########################
 @api_v1.route("/sessions", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("users", "read", True)
 def list_all_user_sessions_v1():
     assert_security_enabled()
     assert_logged_in()
@@ -319,7 +318,7 @@ def list_all_user_sessions_v1():
 
 
 @api_v1.route("/users/<username_or_id>/sessions", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("users", "read", True)
 def list_user_sessions_v1(username_or_id: Union[int, str]):
     assert_security_enabled()
     assert_logged_in()
@@ -331,7 +330,7 @@ def list_user_sessions_v1(username_or_id: Union[int, str]):
 
 
 @api_v1.route("/me/sessions", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("me", "read", True)
 def list_my_sessions_v1():
     assert_security_enabled()
     assert_logged_in()

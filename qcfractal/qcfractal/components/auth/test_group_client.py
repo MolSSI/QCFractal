@@ -14,7 +14,7 @@ def test_group_client_list(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
     groups = client.list_groups()
 
-    assert len(groups) == 3
+    assert len(groups) == 4
 
     for g in groups:
         assert g.groupname in test_groups
