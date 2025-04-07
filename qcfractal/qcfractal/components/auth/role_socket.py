@@ -31,6 +31,11 @@ default_roles: Dict[str, Any] = {
             {"Effect": "Allow", "Action": "*", "Resource": "*"},
         ]
     },
+    "maintain": {
+        "Statement": [
+            {"Effect": "Allow", "Action": "*", "Resource": "*"},
+        ]
+    },
     "read": {
         "Statement": [
             {"Effect": "Allow", "Action": "READ", "Resource": "*"},

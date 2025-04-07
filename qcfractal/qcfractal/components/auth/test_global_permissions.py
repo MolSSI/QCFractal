@@ -6,7 +6,7 @@ from qcportal import PortalRequestError
 from qcportal.molecules import Molecule
 
 
-def test_auth_default_role_read(secure_snowflake):
+def test_auth_global_role_read(secure_snowflake):
     client = secure_snowflake.client("read_user", password=test_users["read_user"]["pw"])
 
     test_mol = Molecule(symbols=["h"], geometry=[0, 0, 0])
@@ -80,7 +80,7 @@ def test_auth_default_role_read(secure_snowflake):
     client.change_user_password()
 
 
-def test_auth_default_role_submit(secure_snowflake):
+def test_auth_global_role_submit(secure_snowflake):
     client = secure_snowflake.client("submit_user", password=test_users["submit_user"]["pw"])
 
     test_mol = Molecule(symbols=["h"], geometry=[0, 0, 0])
@@ -143,7 +143,7 @@ def test_auth_default_role_submit(secure_snowflake):
     client.change_user_password()
 
 
-def test_auth_default_role_monitor(secure_snowflake):
+def test_auth_global_role_monitor(secure_snowflake):
     client = secure_snowflake.client("monitor_user", password=test_users["monitor_user"]["pw"])
 
     test_mol = Molecule(symbols=["h"], geometry=[0, 0, 0])
@@ -212,7 +212,7 @@ def test_auth_default_role_monitor(secure_snowflake):
     client.change_user_password()
 
 
-def test_auth_default_role_compute(secure_snowflake):
+def test_auth_global_role_compute(secure_snowflake):
     client = secure_snowflake.client("compute_user", password=test_users["compute_user"]["pw"])
 
     test_mol = Molecule(symbols=["h"], geometry=[0, 0, 0])
