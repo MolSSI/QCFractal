@@ -144,3 +144,70 @@ def wrap_route(
         return wrapper
 
     return decorate
+
+
+def wrap_global_route(requested_resource, requested_action, require_security: bool = False) -> Callable:
+    def decorate(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            storage_socket.auth.assert_global_permission(g.role, requested_resource, requested_action, require_security)
+
+            ##################################################################
+            # If we got here, then the user is allowed access to this endpoint
+            # Continue with parsing their request
+            ##################################################################
+
+            content_type = request.headers.get("Content-Type")
+
+            # Find an appropriate return type (from the "Accept" header)
+            # Flask helpfully parses this for us
+            # By default, use plain json
+            possible_types = ["text/html", "application/msgpack", "application/json"]
+            accept_type = request.accept_mimetypes.best_match(possible_types, "application/json")
+
+            # If text/html is first, then this is probably a browser. Send json, as most browsers
+            # will accept that
+            if accept_type == "text/html":
+                accept_type = "application/json"
+
+            # get the type annotations for body_model and url_params_model
+            # from the wrapped function
+            annotations = fn.__annotations__
+
+            body_model = annotations.get("body_data", None)
+            url_params_model = annotations.get("url_params", None)
+
+            # 1. The body is stored in request.data
+            if body_model is not None:
+                if content_type is None:
+                    raise BadRequest("No Content-Type specified")
+
+                if not request.data:
+                    raise BadRequest("Expected body, but it is empty")
+
+                try:
+                    deserialized_data = deserialize(request.data, content_type)
+                    kwargs["body_data"] = pydantic.parse_obj_as(body_model, deserialized_data)
+                except Exception as e:
+                    raise BadRequest("Invalid body: " + str(e))
+
+            # 2. Query parameters are in request.args
+            if url_params_model is not None:
+                try:
+                    kwargs["url_params"] = url_params_model(**request.args.to_dict(False))
+                except Exception as e:
+                    raise BadRequest("Invalid request arguments: " + str(e))
+
+            # Now call the function, and validate the output
+            ret = fn(*args, **kwargs)
+
+            # Serialize the output it it's not a normal flask response
+            if isinstance(ret, Response):
+                return ret
+
+            serialized = serialize(ret, accept_type)
+            return Response(serialized, content_type=accept_type)
+
+        return wrapper
+
+    return decorate

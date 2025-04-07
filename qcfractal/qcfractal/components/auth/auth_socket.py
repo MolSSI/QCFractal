@@ -7,9 +7,10 @@ from sqlalchemy import select, delete
 from sqlalchemy.dialects.postgresql import insert
 
 from qcportal.auth import UserInfo, RoleInfo
-from qcportal.exceptions import AuthenticationFailure
+from qcportal.exceptions import AuthenticationFailure, AuthorizationFailure
 from qcportal.utils import now_at_utc
 from .db_models import UserORM, RoleORM, UserSessionORM
+from .permission_evaluation import evaluate_global_permissions
 from .policyuniverse import Policy
 
 if TYPE_CHECKING:
@@ -31,7 +32,7 @@ class AuthSocket:
         self.allow_unauthenticated_read = self.root_socket.qcf_config.allow_unauthenticated_read
 
         self.unauth_read_permissions = self.root_socket.roles.get("read")["permissions"]
-        self.protected_resources = {"users", "roles", "me"}
+        self.protected_resources = {"users", "groups", "roles", "me"}
 
     def authenticate(
         self, username: str, password: str, *, session: Optional[Session] = None
@@ -133,7 +134,7 @@ class AuthSocket:
         # if no auth required, always allowed, except for protected resources
         if self.security_enabled is False:
             if resource["type"] in self.protected_resources:
-                return False, f"Cannot access {resource} with security disabled"
+                return False, f"Cannot access '{resource}' with security disabled"
             else:
                 return True, "Allowed"
 
@@ -155,6 +156,29 @@ class AuthSocket:
                 return False, f"User {subject} is not authorized to access '{resource}'"
 
         return True, "Allowed"
+
+    def assert_global_permission(self, role: Optional[str], resource: str, action: str, require_security: bool):
+        # Some endpoints require security to be enabled
+        if not self.security_enabled:
+            if require_security:
+                raise AuthorizationFailure(f"Cannot access '{resource}' with security disabled")
+            else:
+                return
+
+        # Use anonymous role if no role is given
+        if role is None:
+            role = "anonymous"
+
+        # Don't allow the anonymous role unless the server is set up to allow it
+        if role == "anonymous" and not self.allow_unauthenticated_read:
+            raise AuthenticationFailure("Server requires login")
+
+        allowed = evaluate_global_permissions(role, resource, action)
+
+        if not allowed:
+            raise AuthorizationFailure(
+                f"Role '{role}' is not authorized to use action '{action}' on resource '{resource}'"
+            )
 
     def allowed_actions(self, subject: Any, resources: Any, actions: Any, policies: Any) -> List[Tuple[str, str]]:
         allowed: List[Tuple[str, str]] = []
