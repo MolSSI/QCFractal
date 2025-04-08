@@ -5,9 +5,8 @@ from flask import current_app, g
 from qcfractal.flask_app import storage_socket
 from qcfractal.flask_app.api_v1.blueprint import api_v1
 from qcfractal.flask_app.wrap_route import wrap_global_route
-from qcportal.auth import UserInfo, RoleInfo, GroupInfo
+from qcportal.auth import UserInfo, GroupInfo
 from qcportal.exceptions import (
-    InconsistentUpdateError,
     SecurityNotEnabledError,
     UserManagementError,
     AuthorizationFailure,
@@ -65,50 +64,6 @@ def assert_logged_in():
 def assert_admin():
     if g.get("role", None) != "admin":
         raise AuthorizationFailure("Forbidden: Admin access is required")
-
-
-#################################
-# Roles
-#################################
-
-
-@api_v1.route("/roles", methods=["GET"])
-@wrap_global_route("roles", "read", True)
-def list_roles_v1():
-    assert_security_enabled()
-    return storage_socket.roles.list()
-
-
-@api_v1.route("/roles", methods=["POST"])
-@wrap_global_route("roles", "modify", True)
-def add_role_v1(body_data: RoleInfo):
-    assert_security_enabled()
-    return storage_socket.roles.add(body_data)
-
-
-@api_v1.route("/roles/<string:rolename>", methods=["GET"])
-@wrap_global_route("roles", "read", True)
-def get_role_v1(rolename: str):
-    assert_security_enabled()
-    return storage_socket.roles.get(rolename)
-
-
-@api_v1.route("/roles/<string:rolename>", methods=["PUT"])
-@wrap_global_route("roles", "modify", True)
-def modify_role_v1(rolename: str, body_data: RoleInfo):
-    assert_security_enabled()
-    body_data = body_data
-    if rolename != body_data.rolename:
-        raise InconsistentUpdateError(f"Cannot update role at {rolename} with role info for {body_data.rolename}")
-
-    return storage_socket.roles.modify(body_data)
-
-
-@api_v1.route("/roles/<string:rolename>", methods=["DELETE"])
-@wrap_global_route("roles", "delete", True)
-def delete_role_v1(rolename: str):
-    assert_security_enabled()
-    return storage_socket.roles.delete(rolename)
 
 
 #################################

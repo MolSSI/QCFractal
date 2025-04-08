@@ -9,13 +9,22 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import select
 
 from qcportal.auth import UserInfo, is_valid_password, is_valid_username, AuthTypeEnum
-from qcportal.exceptions import AuthenticationFailure, UserManagementError
+from qcportal.exceptions import AuthenticationFailure, UserManagementError, InvalidRolenameError
 from .db_models import UserORM, UserGroupORM, UserPreferencesORM
+from .role_permissions import GLOBAL_ROLE_PERMISSIONS
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from typing import Optional, List, Dict, Any, Union, Tuple
+    from typing import Optional, List, Dict, Any, Union, Tuple, Set
+
+
+valid_roles: Set[str] = set(GLOBAL_ROLE_PERMISSIONS.keys())
+
+
+def is_valid_role(role: str):
+    if role not in valid_roles:
+        raise InvalidRolenameError(f"Role with name '{role} does not exist")
 
 
 def _generate_password() -> str:
@@ -139,6 +148,7 @@ class UserSocket:
 
         # Should have been checked already, but defense in depth
         is_valid_username(user_info.username)
+        is_valid_role(user_info.role)
 
         # ID should not be set
         if user_info.id is not None:
@@ -151,16 +161,15 @@ class UserSocket:
 
         hashed_pw = _hash_password(password)
 
-        # Role is not directly a part of the ORM
-        user_dict = user_info.dict(exclude={"role", "groups"})
+        # Groups are not directly a part of the ORM
+        user_dict = user_info.dict(exclude={"groups"})
 
         try:
             with self.root_socket.optional_session(session) as session:
-                # Will raise exception if role or group does not exist or name is invalid
-                role = self.root_socket.roles._get_internal(session, user_info.role)
+                # Will raise exception if group does not exist or name is invalid
                 groups = [self.root_socket.groups._get_internal(session, g) for g in user_info.groups]
 
-                user = UserORM(**user_dict, role_id=role.id, groups_orm=groups, password=hashed_pw)
+                user = UserORM(**user_dict, groups_orm=groups, password=hashed_pw)
                 session.add(user)
         except IntegrityError:
             raise UserManagementError(f"User {user_info.username} already exists")
@@ -270,11 +279,11 @@ class UserSocket:
             user.email = user_info.email
 
             if as_admin is True:
-                role = self.root_socket.roles._get_internal(session, user_info.role)
+                is_valid_role(user_info.role)
                 groups = [self.root_socket.groups._get_internal(session, g) for g in user_info.groups]
 
                 user.enabled = user_info.enabled
-                user.role_id = role.id
+                user.role = user_info.role
                 user.groups_orm = groups
 
             session.commit()

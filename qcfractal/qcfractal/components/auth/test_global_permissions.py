@@ -47,12 +47,6 @@ def test_auth_global_role_read(secure_snowflake):
         client.get_user("admin_user")
 
     with pytest.raises(PortalRequestError, match="Forbidden"):
-        client.list_roles()
-
-    with pytest.raises(PortalRequestError, match="Forbidden"):
-        client.get_role("read")
-
-    with pytest.raises(PortalRequestError, match="Forbidden"):
         client.change_user_password("admin_user")
 
     with pytest.raises(PortalRequestError, match="Forbidden"):
@@ -111,12 +105,6 @@ def test_auth_global_role_submit(secure_snowflake):
 
     with pytest.raises(PortalRequestError, match="Forbidden"):
         client.get_user("admin_user")
-
-    with pytest.raises(PortalRequestError, match="Forbidden"):
-        client.list_roles()
-
-    with pytest.raises(PortalRequestError, match="Forbidden"):
-        client.get_role("read")
 
     with pytest.raises(PortalRequestError, match="Forbidden"):
         client.change_user_password("admin_user")
@@ -184,12 +172,6 @@ def test_auth_global_role_monitor(secure_snowflake):
         client.get_user("admin_user")
 
     with pytest.raises(PortalRequestError, match="Forbidden"):
-        client.list_roles()
-
-    with pytest.raises(PortalRequestError, match="Forbidden"):
-        client.get_role("read")
-
-    with pytest.raises(PortalRequestError, match="Forbidden"):
         client.change_user_password("admin_user")
 
     with pytest.raises(PortalRequestError, match="Forbidden"):
@@ -254,12 +236,6 @@ def test_auth_global_role_compute(secure_snowflake):
 
     with pytest.raises(PortalRequestError, match="Forbidden"):
         client.get_user("admin_user")
-
-    with pytest.raises(PortalRequestError, match="Forbidden"):
-        client.list_roles()
-
-    with pytest.raises(PortalRequestError, match="Forbidden"):
-        client.get_role("read")
 
     with pytest.raises(PortalRequestError, match="Forbidden"):
         client.change_user_password("admin_user")

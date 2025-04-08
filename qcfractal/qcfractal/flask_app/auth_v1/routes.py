@@ -25,7 +25,7 @@ def login():
 
 @auth_v1.route("/session_login", methods=["POST"])
 def user_session_login():
-    user_info, role_info = login_user_session()
+    user_info = login_user_session()
     response = jsonify(
         msg="Login succeeded!",
         user_id=user_info.id,
@@ -48,8 +48,8 @@ def user_session_logout():
 def refresh():
     user_id = get_jwt_identity()
 
-    user_info, role_info = storage_socket.auth.verify(user_id)
-    access_token = access_token_from_user(user_info, role_info)
+    user_info = storage_socket.auth.verify(user_id)
+    access_token = access_token_from_user(user_info)
 
     # For logging purposes (in the after_request_func)
     g.user_id = user_id

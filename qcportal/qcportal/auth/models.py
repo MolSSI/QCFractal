@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Optional, Union, List
+from typing import Optional, List
 
 try:
     from pydantic.v1 import BaseModel, Field, validator, constr, Extra
 except ImportError:
     from pydantic import BaseModel, Field, validator, constr, Extra
 
-from ..exceptions import InvalidPasswordError, InvalidUsernameError, InvalidRolenameError, InvalidGroupnameError
+from ..exceptions import InvalidPasswordError, InvalidUsernameError, InvalidGroupnameError
 
 
 class AuthTypeEnum(str, Enum):
@@ -62,72 +62,6 @@ def is_valid_groupname(groupname: str) -> None:
         raise InvalidGroupnameError("Groupname cannot be all numbers")
 
 
-def is_valid_rolename(rolename: str) -> None:
-    if len(rolename) == 0:
-        raise InvalidRolenameError("Rolename is empty")
-
-    # Null character not allowed
-    if "\x00" in rolename:
-        raise InvalidRolenameError("Rolename contains a NUL character")
-
-    # Spaces are not allowed
-    if " " in rolename:
-        raise InvalidRolenameError("Rolename contains spaces")
-
-    # Rolename cannot be all numbers
-    if rolename.isdecimal():
-        raise InvalidRolenameError("Rolename cannot be all numbers")
-
-
-class PolicyStatement(BaseModel):
-    """
-    A statment of permissions for a role
-    """
-
-    Effect: str = Field(..., description="The effect of the permission (Allow, Deny)")
-    Action: Union[str, List[str]] = Field(
-        ..., description="The actions this permission applies to (GET, POST, etc). May be '*' to apply to all."
-    )
-    Resource: Union[str, List[str]] = Field(
-        ...,
-        description="The resource this permission applies to. Usually the first part of the path (molecules, "
-        "keywords, etc). May be '*' to apply to all.",
-    )
-
-
-class PermissionsPolicy(BaseModel):
-    """
-    Permissions assigned to a role
-    """
-
-    class Config:
-        extra = Extra.forbid
-
-    Statement: List[PolicyStatement] = Field(..., description="Permission statements")
-
-
-class RoleInfo(BaseModel):
-    """
-    Information about a role
-    """
-
-    class Config:
-        extra = Extra.forbid
-
-    rolename: str = Field(..., description="The name of the role")
-    permissions: PermissionsPolicy = Field(..., description="The permissions associated with this role")
-
-    @validator("rolename", pre=True)
-    def _valid_rolename(cls, v):
-        """Makes sure the username is a valid string"""
-
-        try:
-            is_valid_rolename(v)
-            return v
-        except Exception as e:
-            raise ValueError(str(e))
-
-
 class GroupInfo(BaseModel):
     """
     Information about a group
@@ -179,16 +113,6 @@ class UserInfo(BaseModel):
 
         try:
             is_valid_username(v)
-            return v
-        except Exception as e:
-            raise ValueError(str(e))
-
-    @validator("role", pre=True)
-    def _valid_rolename(cls, v):
-        """Makes sure the rolename is a valid string"""
-
-        try:
-            is_valid_rolename(v)
             return v
         except Exception as e:
             raise ValueError(str(e))

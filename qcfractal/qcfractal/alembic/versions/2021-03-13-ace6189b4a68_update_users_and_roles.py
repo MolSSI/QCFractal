@@ -14,7 +14,7 @@ from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql import table, column
 
-from qcfractal.components.auth.role_socket import default_roles
+from migration_helpers.default_roles import default_roles
 
 # revision identifiers, used by Alembic.
 revision = "ace6189b4a68"

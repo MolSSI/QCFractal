@@ -15,7 +15,7 @@ from werkzeug.exceptions import InternalServerError, HTTPException
 
 from qcfractal.flask_app import storage_socket
 from qcfractal.flask_app.helpers import access_token_from_user
-from qcportal.auth import UserInfo, RoleInfo
+from qcportal.auth import UserInfo
 from qcportal.exceptions import (
     UserReportableError,
     AuthenticationFailure,
@@ -112,11 +112,9 @@ def after_request_func(response: Response):
                 user_id = get_jwt_identity()
 
                 user_dict = storage_socket.users.get(user_id)
-                role_dict = storage_socket.roles.get(user_dict["role"])
                 user_info = UserInfo(**user_dict)
-                role_info = RoleInfo(**role_dict)
 
-                access_token = access_token_from_user(user_info, role_info)
+                access_token = access_token_from_user(user_info)
                 set_access_cookies(response, access_token)
         return response
 

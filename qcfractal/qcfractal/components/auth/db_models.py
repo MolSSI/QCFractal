@@ -9,7 +9,6 @@ from sqlalchemy import (
     String,
     LargeBinary,
     Boolean,
-    JSON,
     UniqueConstraint,
     Index,
     Enum,
@@ -52,23 +51,6 @@ class GroupORM(BaseORM):
     __table_args__ = (UniqueConstraint("groupname", name="ux_group_groupname"),)
 
 
-class RoleORM(BaseORM):
-    """
-    Table for storing role information
-    """
-
-    __tablename__ = "role"
-
-    id = Column(Integer, primary_key=True)
-
-    rolename = Column(String, nullable=False)
-    permissions = Column(JSON, nullable=False)
-
-    __table_args__ = (UniqueConstraint("rolename", name="ux_role_rolename"),)
-
-    _qcportal_model_excludes = ["id"]
-
-
 class UserORM(BaseORM):
     """
     Table for storing user information
@@ -78,8 +60,7 @@ class UserORM(BaseORM):
 
     id = Column(Integer, primary_key=True)
 
-    role_id = Column(Integer, ForeignKey("role.id"), nullable=False)
-    role_orm = relationship(RoleORM)
+    role = Column(String, nullable=False)
 
     groups_orm = relationship(GroupORM, secondary=UserGroupORM.__tablename__)
 
@@ -94,12 +75,11 @@ class UserORM(BaseORM):
 
     __table_args__ = (UniqueConstraint("username", name="ux_user_username"),)
 
-    _qcportal_model_excludes = ["role_orm", "groups_orm", "role_id", "password"]
+    _qcportal_model_excludes = ["groups_orm", "password"]
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         d = BaseORM.model_dict(self, exclude)
 
-        d["role"] = self.role_orm.rolename
         d["groups"] = [x.groupname for x in self.groups_orm]
         return d
 

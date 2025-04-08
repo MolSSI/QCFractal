@@ -21,7 +21,6 @@ def load_logged_in_user():
     # via the typical flask session mechanism)
     ##############################################
     username = None
-    policies = {}
     role = None
     groups = []
 
@@ -30,10 +29,9 @@ def load_logged_in_user():
         if session and "user_id" in session:
             user_id = int(session["user_id"])  # may be a string? Just to make sure
 
-            user_info, role_info = _cached_verify(user_id=user_id)
+            user_info = _cached_verify(user_id=user_id)
             username = user_info.username
-            policies = role_info.permissions.dict()
-            role = role_info.rolename
+            role = user_info.role
             groups = user_info.groups
         else:
             # Check for the JWT in the header
@@ -49,7 +47,6 @@ def load_logged_in_user():
                 # TODO - some of these may not be None in the future
                 claims = get_jwt()
                 username = claims.get("username", None)
-                policies = claims.get("permissions", {})
                 role = claims.get("role", None)
                 groups = claims.get("groups", [])
     except (AuthorizationFailure, AuthenticationFailure):
@@ -62,4 +59,3 @@ def load_logged_in_user():
     g.username = username
     g.role = role
     g.groups = groups
-    g.policies = policies

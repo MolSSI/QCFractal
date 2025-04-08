@@ -61,11 +61,9 @@ from qcportal.torsiondrive import (
 )
 from .auth import (
     UserInfo,
-    RoleInfo,
     GroupInfo,
     is_valid_username,
     is_valid_password,
-    is_valid_rolename,
     is_valid_groupname,
 )
 from .base_models import CommonBulkGetNamesBody, CommonBulkGetBody
@@ -2934,65 +2932,8 @@ class PortalClient(PortalClientBase):
         return AccessLogSummary(entries=entries)
 
     ##############################################################
-    # User, group, & role management
+    # User & group management
     ##############################################################
-
-    def list_roles(self) -> List[RoleInfo]:
-        """
-        List all user roles on the server
-        """
-
-        return self.make_request("get", "api/v1/roles", List[RoleInfo])
-
-    def get_role(self, rolename: str) -> RoleInfo:
-        """
-        Get information about a role on the server
-        """
-
-        is_valid_rolename(rolename)
-        return self.make_request("get", f"api/v1/roles/{rolename}", RoleInfo)
-
-    def add_role(self, role_info: RoleInfo) -> None:
-        """
-        Adds a role with permissions to the server
-
-        If not successful, an exception is raised.
-        """
-
-        is_valid_rolename(role_info.rolename)
-        return self.make_request("post", "api/v1/roles", None, body=role_info)
-
-    def modify_role(self, role_info: RoleInfo) -> RoleInfo:
-        """
-        Modifies the permissions of a role on the server
-
-        If not successful, an exception is raised.
-
-        Returns
-        -------
-        :
-            A copy of the role as it now appears on the server
-        """
-
-        is_valid_rolename(role_info.rolename)
-        return self.make_request("put", f"api/v1/roles/{role_info.rolename}", RoleInfo, body=role_info)
-
-    def delete_role(self, rolename: str) -> None:
-        """
-        Deletes a role from the server
-
-        This will not delete any role to which a user is assigned
-
-        Will raise an exception on error
-
-        Parameters
-        ----------
-        rolename
-            Name of the role to delete
-
-        """
-        is_valid_rolename(rolename)
-        return self.make_request("delete", f"api/v1/roles/{rolename}", None)
 
     def list_groups(self) -> List[GroupInfo]:
         """
