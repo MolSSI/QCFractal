@@ -4,7 +4,7 @@ from flask import current_app, g
 
 from qcfractal.flask_app import storage_socket
 from qcfractal.flask_app.api_v1.blueprint import api_v1
-from qcfractal.flask_app.wrap_route import wrap_route
+from qcfractal.flask_app.wrap_route import wrap_global_route
 from qcportal.exceptions import LimitExceededError
 from qcportal.torsiondrive import (
     TorsiondriveDatasetSpecification,
@@ -21,7 +21,7 @@ from qcportal.utils import calculate_limit
 
 
 @api_v1.route("/records/torsiondrive/bulkCreate", methods=["POST"])
-@wrap_route("WRITE")
+@wrap_global_route("records", "add")
 def add_torsiondrive_records_v1(body_data: TorsiondriveAddBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.add_records
     if len(body_data.initial_molecules) > limit:
@@ -42,25 +42,25 @@ def add_torsiondrive_records_v1(body_data: TorsiondriveAddBody):
 
 
 @api_v1.route("/records/torsiondrive/<int:record_id>/optimizations", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("records", "read")
 def get_torsiondrive_optimizations_v1(record_id: int):
     return storage_socket.records.torsiondrive.get_optimizations(record_id)
 
 
 @api_v1.route("/records/torsiondrive/<int:record_id>/minimum_optimizations", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("records", "read")
 def get_torsiondrive_minimum_optimizations_v1(record_id: int):
     return storage_socket.records.torsiondrive.get_minimum_optimizations(record_id)
 
 
 @api_v1.route("/records/torsiondrive/<int:record_id>/initial_molecules", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("records", "read")
 def get_torsiondrive_initial_molecules_ids_v1(record_id: int):
     return storage_socket.records.torsiondrive.get_initial_molecules_ids(record_id)
 
 
 @api_v1.route("/records/torsiondrive/query", methods=["POST"])
-@wrap_route("READ")
+@wrap_global_route("datasets", "read")
 def query_torsiondrive_v1(body_data: TorsiondriveQueryFilters):
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records
     body_data.limit = calculate_limit(max_limit, body_data.limit)
@@ -74,18 +74,18 @@ def query_torsiondrive_v1(body_data: TorsiondriveQueryFilters):
 
 
 @api_v1.route("/datasets/torsiondrive/<int:dataset_id>/specifications", methods=["POST"])
-@wrap_route("WRITE")
+@wrap_global_route("datasets", "modify")
 def add_torsiondrive_dataset_specifications_v1(dataset_id: int, body_data: List[TorsiondriveDatasetSpecification]):
     return storage_socket.datasets.torsiondrive.add_specifications(dataset_id, body_data)
 
 
 @api_v1.route("/datasets/torsiondrive/<int:dataset_id>/entries/bulkCreate", methods=["POST"])
-@wrap_route("WRITE")
+@wrap_global_route("datasets", "modify")
 def add_torsiondrive_dataset_entries_v1(dataset_id: int, body_data: List[TorsiondriveDatasetNewEntry]):
     return storage_socket.datasets.torsiondrive.add_entries(dataset_id, new_entries=body_data)
 
 
 @api_v1.route("/datasets/torsiondrive/<int:dataset_id>/background_add_entries", methods=["POST"])
-@wrap_route("WRITE")
+@wrap_global_route("datasets", "modify")
 def background_add_torsiondrive_dataset_entries_v1(dataset_id: int, body_data: List[TorsiondriveDatasetNewEntry]):
     return storage_socket.datasets.torsiondrive.background_add_entries(dataset_id, new_entries=body_data)

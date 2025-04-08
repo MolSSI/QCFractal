@@ -4,7 +4,7 @@ from flask import current_app, g
 
 from qcfractal.flask_app import storage_socket
 from qcfractal.flask_app.api_v1.blueprint import api_v1
-from qcfractal.flask_app.wrap_route import wrap_route
+from qcfractal.flask_app.wrap_route import wrap_global_route
 from qcportal.base_models import ProjURLParameters
 from qcportal.dataset_models import (
     DatasetAddBody,
@@ -30,13 +30,13 @@ from qcportal.exceptions import LimitExceededError
 
 
 @api_v1.route("/datasets", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("datasets", "read")
 def list_dataset_v1():
     return storage_socket.datasets.list()
 
 
 @api_v1.route("/datasets/<int:dataset_id>", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("datasets", "read")
 def get_general_dataset_v1(dataset_id: int, url_params: ProjURLParameters):
     with storage_socket.session_scope(True) as session:
         ds_type = storage_socket.datasets.lookup_type(dataset_id, session=session)
@@ -52,7 +52,7 @@ def get_general_dataset_v1(dataset_id: int, url_params: ProjURLParameters):
 
 
 @api_v1.route("/datasets/query", methods=["POST"])
-@wrap_route("READ")
+@wrap_global_route("datasets", "read")
 def query_general_dataset_v1(body_data: DatasetQueryModel):
     with storage_socket.session_scope(True) as session:
         dataset_id = storage_socket.datasets.lookup_id(body_data.dataset_type, body_data.dataset_name, session=session)
@@ -62,7 +62,7 @@ def query_general_dataset_v1(body_data: DatasetQueryModel):
 
 
 @api_v1.route("/datasets/queryrecords", methods=["POST"])
-@wrap_route("READ")
+@wrap_global_route("datasets", "read")
 def query_dataset_records_v1(body_data: DatasetQueryRecords):
     return storage_socket.datasets.query_dataset_records(
         record_id=body_data.record_id, dataset_type=body_data.dataset_type
@@ -70,7 +70,7 @@ def query_dataset_records_v1(body_data: DatasetQueryRecords):
 
 
 @api_v1.route("/datasets/<int:dataset_id>", methods=["DELETE"])
-@wrap_route("DELETE")
+@wrap_global_route("datasets", "delete")
 def delete_dataset_v1(dataset_id: int, url_params: DatasetDeleteParams):
     storage_socket.datasets.delete(dataset_id, url_params.delete_records)
 
@@ -87,7 +87,7 @@ def delete_dataset_v1(dataset_id: int, url_params: DatasetDeleteParams):
 # Adding a dataset
 ########################
 @api_v1.route("/datasets/<string:dataset_type>", methods=["POST"])
-@wrap_route("WRITE")
+@wrap_global_route("datasets", "modify")
 def add_dataset_v1(dataset_type: str, body_data: DatasetAddBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.add(
@@ -109,7 +109,7 @@ def add_dataset_v1(dataset_type: str, body_data: DatasetAddBody):
 # Getting info
 #########################
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("datasets", "read")
 def get_dataset_v1(dataset_type: str, dataset_id: int, url_params: ProjURLParameters):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.get(
@@ -120,34 +120,34 @@ def get_dataset_v1(dataset_type: str, dataset_id: int, url_params: ProjURLParame
 
 
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/status", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("datasets", "read")
 def get_dataset_status_v1(dataset_type: str, dataset_id: int):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.status(dataset_id)
 
 
 @api_v1.route("/datasets/<int:dataset_id>/status", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("datasets", "read")
 def get_base_dataset_status_v1(dataset_id: int):
     return storage_socket.datasets.status(dataset_id)
 
 
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/detailed_status", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("datasets", "read")
 def get_dataset_detailed_status_v1(dataset_type: str, dataset_id: int):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.detailed_status(dataset_id)
 
 
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/record_count", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("datasets", "read")
 def get_dataset_record_count_v1(dataset_type: str, dataset_id: int):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.get_record_count(dataset_id)
 
 
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/computed_properties", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("datasets", "read")
 def get_dataset_computed_properties_v1(dataset_type: str, dataset_id: int):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.get_computed_properties(dataset_id)
@@ -157,7 +157,7 @@ def get_dataset_computed_properties_v1(dataset_type: str, dataset_id: int):
 # Modifying metadata
 #########################
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>", methods=["PATCH"])
-@wrap_route("WRITE")
+@wrap_global_route("datasets", "modify")
 def modify_dataset_metadata_v1(dataset_type: str, dataset_id: int, body_data: DatasetModifyMetadata):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.update_metadata(dataset_id, new_metadata=body_data)
@@ -167,7 +167,7 @@ def modify_dataset_metadata_v1(dataset_type: str, dataset_id: int, body_data: Da
 # Views
 #########################
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/create_view", methods=["POST"])
-@wrap_route("WRITE")
+@wrap_global_route("datasets", "modify")
 def create_dataset_view_v1(dataset_type: str, dataset_id: int, body_data: DatasetCreateViewBody):
     return storage_socket.datasets.add_create_view_attachment_job(
         dataset_id,
@@ -185,7 +185,7 @@ def create_dataset_view_v1(dataset_type: str, dataset_id: int, body_data: Datase
 # Computation submission
 #########################
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/submit", methods=["POST"])
-@wrap_route("WRITE")
+@wrap_global_route("datasets", "modify")
 def submit_dataset_v1(dataset_type: str, dataset_id: int, body_data: DatasetSubmitBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.submit(
@@ -201,7 +201,7 @@ def submit_dataset_v1(dataset_type: str, dataset_id: int, body_data: DatasetSubm
 
 
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/background_submit", methods=["POST"])
-@wrap_route("WRITE")
+@wrap_global_route("datasets", "modify")
 def background_submit_dataset_v1(dataset_type: str, dataset_id: int, body_data: DatasetSubmitBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.background_submit(
@@ -220,21 +220,21 @@ def background_submit_dataset_v1(dataset_type: str, dataset_id: int, body_data: 
 # Specifications
 ###################
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/specification_names", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("datasets", "read")
 def fetch_dataset_specification_names_v1(dataset_type: str, dataset_id: int):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.fetch_specification_names(dataset_id)
 
 
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/specifications", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("datasets", "read")
 def fetch_all_dataset_specifications_v1(dataset_type: str, dataset_id: int):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.fetch_specifications(dataset_id)
 
 
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/specifications/bulkFetch", methods=["POST"])
-@wrap_route("READ")
+@wrap_global_route("datasets", "read")
 def fetch_dataset_specifications_v1(dataset_type: str, dataset_id: int, body_data: DatasetFetchSpecificationBody):
     # use the entry limit I guess?
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_dataset_entries
@@ -251,14 +251,14 @@ def fetch_dataset_specifications_v1(dataset_type: str, dataset_id: int, body_dat
 
 
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/specifications/bulkDelete", methods=["POST"])
-@wrap_route("DELETE")
+@wrap_global_route("datasets", "modify")
 def delete_dataset_specifications_v1(dataset_type: str, dataset_id: int, body_data: DatasetDeleteStrBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.delete_specifications(dataset_id, body_data.names, body_data.delete_records)
 
 
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/specifications", methods=["PATCH"])
-@wrap_route("WRITE")
+@wrap_global_route("datasets", "modify")
 def rename_dataset_specifications_v1(dataset_type: str, dataset_id: int, body_data: Dict[str, str]):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.rename_specifications(dataset_id, body_data)
@@ -268,21 +268,21 @@ def rename_dataset_specifications_v1(dataset_type: str, dataset_id: int, body_da
 # Entries
 ###################
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/entry_names", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("datasets", "read")
 def fetch_dataset_entry_names_v1(dataset_type: str, dataset_id: int):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.fetch_entry_names(dataset_id)
 
 
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/entries/bulkDelete", methods=["POST"])
-@wrap_route("DELETE")
+@wrap_global_route("datasets", "modify")
 def delete_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: DatasetDeleteStrBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.delete_entries(dataset_id, body_data.names, body_data.delete_records)
 
 
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/entries/bulkFetch", methods=["POST"])
-@wrap_route("READ")
+@wrap_global_route("datasets", "read")
 def fetch_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: DatasetFetchEntryBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_dataset_entries
 
@@ -298,7 +298,7 @@ def fetch_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: Data
 
 
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/background_add_entries", methods=["POST"])
-@wrap_route("WRITE")
+@wrap_global_route("datasets", "modify")
 def background_add_entries_v1(dataset_type: str, dataset_id: int, body_data: DatasetSubmitBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.background_submit(
@@ -314,14 +314,14 @@ def background_add_entries_v1(dataset_type: str, dataset_id: int, body_data: Dat
 
 
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/entries", methods=["PATCH"])
-@wrap_route("WRITE")
+@wrap_global_route("datasets", "modify")
 def rename_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: Dict[str, str]):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.rename_entries(dataset_id, body_data)
 
 
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/entries/modify", methods=["PATCH"])
-@wrap_route("WRITE")
+@wrap_global_route("datasets", "modify")
 def modify_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: DatasetModifyEntryBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.modify_entries(
@@ -333,7 +333,7 @@ def modify_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: Dat
 # Records
 #########################
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/records/bulkFetch", methods=["POST"])
-@wrap_route("READ")
+@wrap_global_route("datasets", "read")
 def fetch_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetFetchRecordsBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records
 
@@ -352,7 +352,7 @@ def fetch_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: Data
 
 
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/records/bulkDelete", methods=["POST"])
-@wrap_route("DELETE")
+@wrap_global_route("datasets", "modify")
 def remove_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetRemoveRecordsBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.remove_records(
@@ -367,7 +367,7 @@ def remove_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: Dat
 # Record modification
 #########################
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/records", methods=["PATCH"])
-@wrap_route("WRITE")
+@wrap_global_route("datasets", "modify")
 def modify_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetRecordModifyBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.modify_records(
@@ -383,7 +383,7 @@ def modify_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: Dat
 
 
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/records/revert", methods=["POST"])
-@wrap_route("WRITE")
+@wrap_global_route("datasets", "modify")
 def revert_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetRecordRevertBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.revert_records(
@@ -398,13 +398,13 @@ def revert_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: Dat
 # Internal Jobs
 #################################
 @api_v1.route("/datasets/<int:dataset_id>/internal_jobs/<int:job_id>", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("datasets", "read")
 def get_dataset_internal_job_v1(dataset_id: int, job_id: int):
     return storage_socket.datasets.get_internal_job(dataset_id, job_id)
 
 
 @api_v1.route("/datasets/<int:dataset_id>/internal_jobs", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("datasets", "read")
 def list_dataset_internal_jobs_v1(dataset_id: int, url_params: DatasetGetInternalJobParams):
     return storage_socket.datasets.list_internal_jobs(dataset_id, status=url_params.status)
 
@@ -413,13 +413,13 @@ def list_dataset_internal_jobs_v1(dataset_id: int, url_params: DatasetGetInterna
 # Attachments
 #################################
 @api_v1.route("/datasets/<int:dataset_id>/attachments", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("datasets", "read")
 def fetch_dataset_attachments_v1(dataset_id: int):
     return storage_socket.datasets.get_attachments(dataset_id)
 
 
 @api_v1.route("/datasets/<int:dataset_id>/attachments/<int:attachment_id>", methods=["DELETE"])
-@wrap_route("DELETE")
+@wrap_global_route("datasets", "modify")
 def delete_dataset_attachment_v1(dataset_id: int, attachment_id: int):
     return storage_socket.datasets.delete_attachment(dataset_id, attachment_id)
 
@@ -428,7 +428,7 @@ def delete_dataset_attachment_v1(dataset_id: int, attachment_id: int):
 # Contributed Values
 #################################
 @api_v1.route("/datasets/<int:dataset_id>/contributed_values", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("datasets", "read")
 def fetch_dataset_contributed_values_v1(dataset_id: int):
     return storage_socket.datasets.get_contributed_values(dataset_id)
 
@@ -437,7 +437,7 @@ def fetch_dataset_contributed_values_v1(dataset_id: int):
 # Cloning and copying
 #################################
 @api_v1.route("/datasets/clone", methods=["POST"])
-@wrap_route("WRITE")
+@wrap_global_route("datasets", "modify")
 def clone_dataset_v1(body_data: DatasetCloneBody):
     with storage_socket.session_scope(True) as session:
         ds_type = storage_socket.datasets.lookup_type(body_data.source_dataset_id, session=session)
@@ -446,7 +446,7 @@ def clone_dataset_v1(body_data: DatasetCloneBody):
 
 
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/copy_from", methods=["POST"])
-@wrap_route("WRITE")
+@wrap_global_route("datasets", "modify")
 def copy_from_dataset_v1(dataset_type: str, dataset_id: int, body_data: DatasetCopyFromBody):
     # the dataset_id in the URI is the destination dataset
     # (ie, the user has a dataset, then copies FROM another dataset

@@ -4,7 +4,7 @@ from flask import current_app, g
 
 from qcfractal.flask_app import storage_socket
 from qcfractal.flask_app.api_v1.blueprint import api_v1
-from qcfractal.flask_app.wrap_route import wrap_route
+from qcfractal.flask_app.wrap_route import wrap_global_route
 from qcportal.exceptions import LimitExceededError
 from qcportal.gridoptimization import (
     GridoptimizationDatasetSpecification,
@@ -21,7 +21,7 @@ from qcportal.utils import calculate_limit
 
 
 @api_v1.route("/records/gridoptimization/bulkCreate", methods=["POST"])
-@wrap_route("WRITE")
+@wrap_global_route("records", "add")
 def add_gridoptimization_records_v1(body_data: GridoptimizationAddBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.add_records
     if len(body_data.initial_molecules) > limit:
@@ -41,13 +41,13 @@ def add_gridoptimization_records_v1(body_data: GridoptimizationAddBody):
 
 
 @api_v1.route("/records/gridoptimization/<int:record_id>/optimizations", methods=["GET"])
-@wrap_route("READ")
+@wrap_global_route("records", "read")
 def get_gridoptimization_optimizations_v1(record_id: int):
     return storage_socket.records.gridoptimization.get_optimizations(record_id)
 
 
 @api_v1.route("/records/gridoptimization/query", methods=["POST"])
-@wrap_route("READ")
+@wrap_global_route("records", "read")
 def query_gridoptimization_v1(body_data: GridoptimizationQueryFilters):
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records
     body_data.limit = calculate_limit(max_limit, body_data.limit)
@@ -61,7 +61,7 @@ def query_gridoptimization_v1(body_data: GridoptimizationQueryFilters):
 
 
 @api_v1.route("/datasets/gridoptimization/<int:dataset_id>/specifications", methods=["POST"])
-@wrap_route("WRITE")
+@wrap_global_route("datasets", "modify")
 def add_gridoptimization_dataset_specifications_v1(
     dataset_id: int, body_data: List[GridoptimizationDatasetSpecification]
 ):
@@ -69,13 +69,13 @@ def add_gridoptimization_dataset_specifications_v1(
 
 
 @api_v1.route("/datasets/gridoptimization/<int:dataset_id>/entries/bulkCreate", methods=["POST"])
-@wrap_route("WRITE")
+@wrap_global_route("datasets", "modify")
 def add_gridoptimization_dataset_entries_v1(dataset_id: int, body_data: List[GridoptimizationDatasetNewEntry]):
     return storage_socket.datasets.gridoptimization.add_entries(dataset_id, new_entries=body_data)
 
 
 @api_v1.route("/datasets/gridoptimization/<int:dataset_id>/background_add_entries", methods=["POST"])
-@wrap_route("WRITE")
+@wrap_global_route("datasets", "modify")
 def background_add_gridoptimization_dataset_entries_v1(
     dataset_id: int, body_data: List[GridoptimizationDatasetNewEntry]
 ):
