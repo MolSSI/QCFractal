@@ -103,60 +103,6 @@ class AuthSocket:
             role_info = role_orm.to_model(RoleInfo)
             return user_info, role_info
 
-    def is_authorized(
-        self, resource: Dict[str, Any], action: str, subject: Dict[str, Any], context: Dict[str, Any], policies: Any
-    ) -> Tuple[bool, str]:
-        """
-        Check for access to the given resource given permissions
-
-        1. If no security (enable_security is False), always allow
-        2. Check if allowed by the stored policies
-        3. If denied, and allow_unauthenticated_read==True, use the default read permissions.
-
-        Parameters
-        ----------
-        resource
-            Dictionary describing the resource being accessed
-        action
-            The action being requested on the resource
-        subject
-            Dictionary describing the entity wanting access to the resource
-        context
-            Additional context of the request
-
-        Returns
-        -------
-        :
-            True if the access is allowed, False otherwise. The second element of the tuple
-            is a string describing why the access was disallowed (if the first element is False)
-        """
-
-        # if no auth required, always allowed, except for protected resources
-        if self.security_enabled is False:
-            if resource["type"] in self.protected_resources:
-                return False, f"Cannot access '{resource}' with security disabled"
-            else:
-                return True, "Allowed"
-
-        if subject["username"] is None and not self.allow_unauthenticated_read:
-            return False, "Server requires login"
-
-        # uppercase by convention
-        action = action.upper()
-
-        context = {"Principal": subject["username"], "Action": action, "Resource": resource["type"]}
-
-        policy = Policy(policies)
-        if not policy.evaluate(context):
-            # If that doesn't work, but we allow unauthenticated read, then try that
-            if not self.allow_unauthenticated_read:
-                return False, f"User {subject} is not authorized to access '{resource}'"
-
-            if not Policy(self.unauth_read_permissions).evaluate(context):
-                return False, f"User {subject} is not authorized to access '{resource}'"
-
-        return True, "Allowed"
-
     def assert_global_permission(self, role: Optional[str], resource: str, action: str, require_security: bool):
         # Some endpoints require security to be enabled
         if not self.security_enabled:
