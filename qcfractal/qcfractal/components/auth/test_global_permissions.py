@@ -102,6 +102,9 @@ def test_auth_global_role_submit(secure_snowflake):
     client.delete_molecules(mol_ids)
     client.delete_records(rec_ids)
 
+    # And get/query managers
+    client.query_managers()
+
     # Can't access users and roles
     with pytest.raises(PortalRequestError, match="Forbidden"):
         client.list_users()
@@ -127,9 +130,6 @@ def test_auth_global_role_submit(secure_snowflake):
 
     with pytest.raises(PortalRequestError, match="Forbidden"):
         client.query_error_log()
-
-    with pytest.raises(PortalRequestError, match="Forbidden"):
-        client.query_managers()
 
     # Can't activate a manager
     mclient = secure_snowflake.manager_client(mname1, "submit_user", test_users["submit_user"]["pw"])
