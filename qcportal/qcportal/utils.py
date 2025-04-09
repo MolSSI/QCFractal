@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import collections
 import concurrent.futures
 import datetime
 import functools
@@ -455,3 +456,37 @@ def update_nested_dict(d: Dict[str, Any], u: Dict[str, Any]):
 def apply_jitter(t: Union[int, float], jitter_fraction: float) -> float:
     f = random.uniform(-jitter_fraction, jitter_fraction)
     return max(t * (1 + f), 0.0)
+
+
+def time_based_cache(seconds: int = 10, maxsize: Optional[int] = None):
+    def decorator(func):
+        cache = collections.OrderedDict()
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            key = (args, frozenset(kwargs.items()))
+            now = time.time()
+
+            # Clean up old items
+            expiration_time = now - seconds
+            keys_to_delete = [k for k, (timestamp, _) in cache.items() if timestamp < expiration_time]
+            for k in keys_to_delete:
+                del cache[k]
+
+            # Return from cache if valid
+            if key in cache:
+                return cache[key][1]
+
+            # Compute and store result
+            result = func(*args, **kwargs)
+            cache[key] = (now, result)
+
+            # Enforce max size
+            if len(cache) > maxsize:
+                cache.popitem(last=False)  # Remove oldest
+
+            return result
+
+        return wrapper
+
+    return decorator

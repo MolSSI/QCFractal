@@ -10,7 +10,7 @@ from sqlalchemy.sql import select
 
 from qcportal.auth import UserInfo, is_valid_password, is_valid_username, AuthTypeEnum
 from qcportal.exceptions import AuthenticationFailure, UserManagementError
-from .db_models import UserORM, UserGroupORM
+from .db_models import UserORM, UserGroupORM, UserPreferencesORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -66,7 +66,7 @@ class UserSocket:
             ORM of the specified user
         """
 
-        if isinstance(username_or_id, int) or username_or_id.isnumeric():
+        if isinstance(username_or_id, int) or username_or_id.isdecimal():
             stmt = select(UserORM).where(UserORM.id == username_or_id)
         else:
             is_valid_username(username_or_id)
@@ -78,6 +78,10 @@ class UserSocket:
             raise UserManagementError(f"User {username_or_id} not found.")
 
         return user
+
+    def _assert_user_exists(self, session: Session, username_or_id: Union[int, str]) -> None:
+        # Just call the existing function, swallowing the return
+        _ = self._get_internal(session, username_or_id)
 
     def list(self, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
         """
@@ -403,3 +407,37 @@ class UserSocket:
             r = session.execute(stmt).scalar_one_or_none()
             if r is None:
                 raise AuthenticationFailure(f"User (id={user_id}) does not belong to group (id={group_id})")
+
+    def get_preferences(self, user_id: int, *, session: Optional[Session] = None) -> Dict[str, Any]:
+        """
+        Get the user-set preferences for a given user
+
+        Raises an exception if the user is not found
+        """
+
+        stmt = select(UserPreferencesORM).where(UserPreferencesORM.user_id == user_id)
+
+        with self.root_socket.optional_session(session, True) as session:
+            self._assert_user_exists(session, user_id)
+
+            r = session.execute(stmt).scalar_one_or_none()
+            if r is None:
+                return {}
+
+            return r.preferences
+
+    def set_preferences(self, user_id: int, preferences: Dict[str, Any], *, session: Optional[Session] = None) -> None:
+        """
+        Sets a users preferences for a given user
+        """
+
+        with self.root_socket.optional_session(session) as session:
+            self._assert_user_exists(session, user_id)
+
+            stmt = select(UserPreferencesORM).where(UserPreferencesORM.user_id == user_id)
+            prefs_orm = session.execute(stmt).scalar_one_or_none()
+            if prefs_orm is None:
+                prefs_orm = UserPreferencesORM(user_id=user_id, preferences=preferences)
+                session.add(prefs_orm)
+            else:
+                prefs_orm.preferences = preferences

@@ -16,7 +16,13 @@ from werkzeug.exceptions import InternalServerError, HTTPException
 from qcfractal.flask_app import storage_socket
 from qcfractal.flask_app.helpers import access_token_from_user
 from qcportal.auth import UserInfo, RoleInfo
-from qcportal.exceptions import UserReportableError, AuthenticationFailure, ComputeManagerError, AuthorizationFailure
+from qcportal.exceptions import (
+    UserReportableError,
+    AuthenticationFailure,
+    ComputeManagerError,
+    AuthorizationFailure,
+    SecurityNotEnabledError,
+)
 from .home_v1 import home_v1
 
 
@@ -171,23 +177,29 @@ def handle_authentication_error(error):
         jsonify(
             msg=str(error),
             user_id=g.user_id if "user_id" in g else None,
-            user_name=g.user_name if "user_name" in g else None,
+            username=g.username if "username" in g else None,
         ),
         401,
     )
 
 
 @home_v1.app_errorhandler(AuthorizationFailure)
-def handle_authorization_error(error):
+def handle_authorization_error(error: AuthorizationFailure):
     # This handles when a logged-in user does not have access to something
     return (
         jsonify(
-            msg=str(error),
+            msg=f"Forbidden: {str(error)}",
             user_id=g.user_id if "user_id" in g else None,
-            user_name=g.user_name if "user_name" in g else None,
+            username=g.username if "username" in g else None,
         ),
         403,
     )
+
+
+@home_v1.app_errorhandler(SecurityNotEnabledError)
+def handle_compute_manager_error(error: SecurityNotEnabledError):
+    # Handle compute manager errors
+    return jsonify(msg=str(error)), 401
 
 
 @home_v1.app_errorhandler(ComputeManagerError)

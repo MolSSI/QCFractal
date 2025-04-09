@@ -186,6 +186,16 @@ def get_record_outputs_data_v1(record_id: int, history_id: int, output_type: str
     return record_socket.get_single_output_rawdata(record_id, history_id, output_type)
 
 
+@api_v1.route(
+    "/records/<string:record_type>/<int:record_id>/compute_history/<int:history_id>/outputs/<string:output_type>/uncompressed_data",
+    methods=["GET"],
+)
+@wrap_route("READ")
+def get_record_outputs_uncompressed_data_v1(record_id: int, history_id: int, output_type: str, record_type: str):
+    record_socket = storage_socket.records.get_socket(record_type)
+    return record_socket.get_single_output_uncompressed(record_id, history_id, output_type)
+
+
 @api_v1.route("/records/<string:record_type>/<int:record_id>/native_files", methods=["GET"])
 @wrap_route("READ")
 def get_record_native_files_v1(record_id: int, record_type: str):
@@ -205,6 +215,15 @@ def get_record_native_file_single_v1(record_id: int, name: str, record_type: str
 def get_record_native_file_data_v1(record_id: int, name: str, record_type: str):
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_single_native_file_rawdata(record_id, name)
+
+
+@api_v1.route(
+    "/records/<string:record_type>/<int:record_id>/native_files/<string:name>/uncompressed_data", methods=["GET"]
+)
+@wrap_route("READ")
+def get_record_native_file_uncompressed_data_v1(record_id: int, name: str, record_type: str):
+    record_socket = storage_socket.records.get_socket(record_type)
+    return record_socket.get_single_native_file_uncompressed(record_id, name)
 
 
 @api_v1.route("/records/<string:record_type>/<int:record_id>/children_status", methods=["GET"])

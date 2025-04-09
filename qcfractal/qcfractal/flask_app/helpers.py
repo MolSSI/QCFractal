@@ -5,9 +5,6 @@ from urllib.parse import urlparse
 
 from flask import request, g, current_app, session
 from flask_jwt_extended import (
-    verify_jwt_in_request,
-    get_jwt,
-    get_jwt_identity,
     create_access_token,
     create_refresh_token,
 )
@@ -66,52 +63,14 @@ def assert_is_authorized(requested_action: str):
        Otherwise, check against the logged-in user permissions from the headers' JWT token
     """
 
-    username = None
-    policies = {}
-    role = None
-    groups = []
-
     try:
-        # Is the info stored in the session?
-        if session and "user_id" in session:
-            user_id = int(session["user_id"])  # may be a string? Just to make sure
-
-            user_info, role_info = storage_socket.auth.verify(user_id=user_id)
-            username = user_info.username
-            policies = role_info.permissions.dict()
-            role = role_info.rolename
-            groups = user_info.groups
-        else:
-            # Check for the JWT in the header
-            # don't raise exception if no JWT is found
-            verify_jwt_in_request(optional=True)
-            user_id = get_jwt_identity()  # may be None
-
-            if user_id is not None:
-                # user_id is stored in the JWT as a string
-                user_id = int(user_id)
-
-                # Get from JWT in header
-                # TODO - some of these may not be None in the future
-                claims = get_jwt()
-                username = claims.get("username", None)
-                policies = claims.get("permissions", {})
-                role = claims.get("role", None)
-                groups = claims.get("groups", [])
-
-        # Store the user in the global app/request context
-        g.user_id = user_id
-        g.username = username
-        g.role = role
-        g.groups = groups
-
-        subject = {"user_id": user_id, "username": username}
+        subject = {"user_id": g.user_id, "username": g.username}
 
         # Pull the first part of the URL (ie, /api/v1/molecule/a/b/c -> /api/v1/molecule)
         resource = {"type": get_url_major_component(request.url)}
 
         allowed, msg = storage_socket.auth.is_authorized(
-            resource=resource, action=requested_action, subject=subject, context={}, policies=policies
+            resource=resource, action=requested_action, subject=subject, context={}, policies=g.policies
         )
 
         if not allowed:
@@ -177,13 +136,14 @@ def login_user() -> Tuple[UserInfo, RoleInfo]:
         raise
 
 
-def login_user_session():
+def login_user_session() -> Tuple[UserInfo, RoleInfo]:
     # Raises exception on invalid username, password, etc
     # Submitted user/password are stored in the flask request object
     session.clear()
     user_info, role_info = login_user()
     session["user_id"] = str(user_info.id)
-    session["username"] = user_info.username
+
+    return user_info, role_info
 
 
 def logout_user_session():

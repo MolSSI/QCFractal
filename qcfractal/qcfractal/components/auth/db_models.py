@@ -11,15 +11,17 @@ from sqlalchemy import (
     Boolean,
     JSON,
     UniqueConstraint,
+    Index,
     Enum,
     select,
     TIMESTAMP,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
-from qcportal.utils import now_at_utc
 
 from qcfractal.db_socket import BaseORM
 from qcportal.auth import AuthTypeEnum
+from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from typing import Optional, Iterable, Dict, Any
@@ -109,9 +111,36 @@ class UserSessionORM(BaseORM):
 
     __tablename__ = "user_session"
 
-    session_id = Column(String, nullable=False, primary_key=True)
-    session_data = Column(LargeBinary, nullable=False)
+    public_id = Column(Integer, primary_key=True)
+    session_key = Column(String, nullable=False)
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="cascade"), nullable=False)
+    session_data = Column(JSONB, nullable=False)
     last_accessed = Column(TIMESTAMP(timezone=True), nullable=False, default=now_at_utc)
+
+    __table_args__ = (
+        UniqueConstraint("session_key", name="ux_user_session_session_key"),
+        Index("ix_user_session_user_id", "user_id"),
+    )
+
+    def public_dict(self) -> Dict[str, Any]:
+        return {
+            "public_id": self.public_id,
+            "user_id": self.user_id,
+            "last_accessed": self.last_accessed,
+            "ip_address": self.session_data.get("ip_address", None),
+            "user_agent": self.session_data.get("user_agent", None),
+        }
+
+
+class UserPreferencesORM(BaseORM):
+    """
+    Table for storing user preference information
+    """
+
+    __tablename__ = "user_preferences"
+
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="cascade"), primary_key=True)
+    preferences = Column(JSONB, nullable=False)
 
 
 _user_id_map_subq = select(UserORM.id.label("id"), UserORM.username.label("username")).subquery()

@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple, Union, Dict, Any
 
 from flask import current_app, g
 
@@ -32,6 +32,9 @@ from qcportal.exceptions import (
 
 def is_same_user(username_or_id: Union[int, str]) -> bool:
     assert isinstance(username_or_id, (int, str))
+
+    if isinstance(username_or_id, str) and username_or_id.isdecimal():
+        username_or_id = int(username_or_id)
 
     if "user_id" not in g:
         return False
@@ -177,13 +180,19 @@ def get_user_v1(username_or_id: Union[int, str]):
     assert_logged_in()
 
     # admin can do all
-    if g.role == "admin":
-        return storage_socket.users.get(username_or_id)
-
-    if is_same_user(username_or_id):
+    if g.role == "admin" or is_same_user(username_or_id):
         return storage_socket.users.get(username_or_id)
 
     raise AuthorizationFailure("Cannot get user information: Forbidden")
+
+
+@api_v1.route("/me", methods=["GET"])
+@wrap_route("READ")
+def get_my_user_v1():
+    assert_security_enabled()
+    assert_logged_in()
+
+    return storage_socket.users.get(g.user_id)
 
 
 @api_v1.route("/users", methods=["PATCH"])
@@ -206,6 +215,21 @@ def modify_user_v1(body_data: UserInfo):
     raise AuthorizationFailure("Cannot modify user: Forbidden")
 
 
+@api_v1.route("/me", methods=["PATCH"])
+@wrap_route("WRITE")
+def modify_my_user_v1(body_data: UserInfo):
+    assert_security_enabled()
+    assert_logged_in()
+
+    if body_data.id is None or body_data.username is None:
+        raise UserManagementError("Cannot modify user: id or username is missing")
+
+    if is_same_user(body_data.id) and is_same_user(body_data.username):
+        return storage_socket.users.modify(body_data)
+
+    raise AuthorizationFailure("Cannot modify user: Forbidden")
+
+
 @api_v1.route("/users/<username_or_id>/password", methods=["PUT"])
 @wrap_route("WRITE")
 def change_password_v1(username_or_id: Union[int, str], body_data: Optional[str]):
@@ -222,6 +246,15 @@ def change_password_v1(username_or_id: Union[int, str], body_data: Optional[str]
     raise AuthorizationFailure("Cannot change password: Forbidden")
 
 
+@api_v1.route("/me/password", methods=["PUT"])
+@wrap_route("WRITE")
+def change_my_password_v1(body_data: Optional[str]):
+    assert_security_enabled()
+    assert_logged_in()
+
+    return storage_socket.users.change_password(g.user_id, password=body_data)
+
+
 @api_v1.route("/users/<username_or_id>", methods=["DELETE"])
 @wrap_route("DELETE")
 def delete_user_v1(username_or_id: Union[int, str]):
@@ -232,3 +265,75 @@ def delete_user_v1(username_or_id: Union[int, str]):
         raise UserManagementError("Cannot delete your own user")
 
     return storage_socket.users.delete(username_or_id)
+
+
+###########################
+# User preferences management
+###########################
+@api_v1.route("/users/<username_or_id>/preferences", methods=["GET"])
+@wrap_route("READ")
+def get_user_preferences_v1(username_or_id: Union[int, str]):
+    if g.role == "admin" or is_same_user(username_or_id):
+        return storage_socket.users.get_preferences(g.user_id)
+    else:
+        raise AuthorizationFailure("Cannot get user preferences: Forbidden")
+
+
+@api_v1.route("/me/preferences", methods=["GET"])
+@wrap_route("READ")
+def get_my_preferences_v1():
+    return storage_socket.users.get_preferences(g.user_id)
+
+
+@api_v1.route("/users/<username_or_id>/preferences", methods=["PUT"])
+@wrap_route("WRITE")
+def set_user_preferences_v1(username_or_id: Union[int, str], body_data: Dict[str, Any]):
+    assert_security_enabled()
+    assert_logged_in()
+
+    if g.role == "admin" or is_same_user(username_or_id):
+        return storage_socket.users.set_preferences(g.user_id, body_data)
+    else:
+        raise AuthorizationFailure("Cannot set user preferences: Forbidden")
+
+
+@api_v1.route("/users/<username_or_id>/preferences", methods=["PUT"])
+@wrap_route("WRITE")
+def set_my_preferences_v1(body_data: Dict[str, Any]):
+    assert_security_enabled()
+    assert_logged_in()
+    return storage_socket.users.set_preferences(g.user_id, body_data)
+
+
+###########################
+# User session management
+###########################
+@api_v1.route("/sessions", methods=["GET"])
+@wrap_route("READ")
+def list_all_user_sessions_v1():
+    assert_security_enabled()
+    assert_logged_in()
+    assert_admin()
+
+    return storage_socket.auth.list_all_user_sessions()
+
+
+@api_v1.route("/users/<username_or_id>/sessions", methods=["GET"])
+@wrap_route("READ")
+def list_user_sessions_v1(username_or_id: Union[int, str]):
+    assert_security_enabled()
+    assert_logged_in()
+
+    if g.role == "admin" or is_same_user(username_or_id):
+        return storage_socket.auth.list_user_sessions(g.user_id)
+
+    raise AuthorizationFailure("Cannot list user sessions: Forbidden")
+
+
+@api_v1.route("/me/sessions", methods=["GET"])
+@wrap_route("READ")
+def list_my_sessions_v1():
+    assert_security_enabled()
+    assert_logged_in()
+
+    return storage_socket.auth.list_user_sessions(g.user_id)

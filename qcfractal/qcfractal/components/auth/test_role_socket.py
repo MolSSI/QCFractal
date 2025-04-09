@@ -219,3 +219,22 @@ def test_role_socket_use_invalid_rolename(storage_socket: SQLAlchemySocket):
 
         with pytest.raises(InvalidRolenameError):
             storage_socket.roles.modify(new_role)
+
+    # Numeric role names not allowed for some operations
+    new_role2 = RoleInfo.construct(
+        rolename="123456789",
+        permissions={
+            "Statement": [
+                {"Effect": "Allow", "Action": "GET", "Resource": "something"},
+            ]
+        },
+    )
+
+    with pytest.raises(InvalidRolenameError):
+        storage_socket.roles.add(new_role2)
+
+    with pytest.raises(InvalidRolenameError):
+        storage_socket.roles.get("123456789")
+
+    with pytest.raises(InvalidRolenameError):
+        storage_socket.roles.modify(new_role2)

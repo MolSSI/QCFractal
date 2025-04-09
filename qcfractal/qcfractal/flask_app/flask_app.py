@@ -11,10 +11,6 @@ from flask_jwt_extended import JWTManager
 from werkzeug.routing import IntegerConverter
 
 from qcfractal.db_socket.socket import SQLAlchemySocket
-from qcfractal.flask_app.auth_v1.blueprint import auth_v1
-from qcfractal.flask_app.dashboard_v1.blueprint import dashboard_v1
-from .api_v1.blueprint import api_v1
-from .compute_v1.blueprint import compute_v1
 from .flask_session import QCFFlaskSessionInterface
 from .home_v1 import home_v1
 
@@ -103,13 +99,15 @@ def create_flask_app(
     importlib.import_module("qcfractal.flask_app.api_v1.routes")
     importlib.import_module("qcfractal.flask_app.auth_v1.routes")
     importlib.import_module("qcfractal.flask_app.compute_v1.routes")
-    importlib.import_module("qcfractal.flask_app.dashboard_v1.routes")
     importlib.import_module("qcfractal.components.register_all")
+
+    from .auth_v1.blueprint import auth_v1
+    from .api_v1.blueprint import api_v1
+    from .compute_v1.blueprint import compute_v1
 
     app.register_blueprint(home_v1)
     app.register_blueprint(api_v1)
     app.register_blueprint(auth_v1)
     app.register_blueprint(compute_v1)
-    app.register_blueprint(dashboard_v1)
 
     return app

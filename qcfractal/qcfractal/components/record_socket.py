@@ -502,6 +502,16 @@ class BaseRecordSocket:
 
             return nf_data[0], nf_data[1]
 
+    def get_single_native_file_uncompressed(
+        self, record_id: int, name: str, *, session: Optional[Session] = None
+    ) -> Any:
+        """
+        Get an uncompressed output from a record
+        """
+
+        raw_data, ctype = self.get_single_native_file_rawdata(record_id, name, session=session)
+        return decompress(raw_data, ctype)
+
     def get_children_status(self, record_id: int, *, session: Optional[Session] = None) -> Dict[RecordStatusEnum, int]:
         # Get the SQL 'select' statements from the handlers
         select_stmts = self.get_children_select()
@@ -789,7 +799,7 @@ class RecordSocket:
         if query_data.owner_user is not None:
             stmt = stmt.join(UserIDMapSubquery)
 
-            int_ids = {x for x in query_data.owner_user if isinstance(x, int) or x.isnumeric()}
+            int_ids = {x for x in query_data.owner_user if isinstance(x, int) or x.isdecimal()}
             str_names = set(query_data.owner_user) - int_ids
 
             and_query.append(or_(UserIDMapSubquery.username.in_(str_names), UserIDMapSubquery.id.in_(int_ids)))
@@ -797,7 +807,7 @@ class RecordSocket:
         if query_data.owner_group is not None:
             stmt = stmt.join(GroupIDMapSubquery)
 
-            int_ids = {x for x in query_data.owner_group if isinstance(x, int) or x.isnumeric()}
+            int_ids = {x for x in query_data.owner_group if isinstance(x, int) or x.isdecimal()}
             str_names = set(query_data.owner_group) - int_ids
 
             and_query.append(or_(GroupIDMapSubquery.groupname.in_(str_names), GroupIDMapSubquery.id.in_(int_ids)))
