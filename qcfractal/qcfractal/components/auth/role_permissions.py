@@ -15,6 +15,7 @@ GLOBAL_ROLE_PERMISSIONS: Dict[str, Dict[str, Set[str]]] = {
         "managers": {"read"},
         "records": {"*"},
         "datasets": {"*"},
+        "projects": {"*"},
     },
     "monitor": {
         "information": {"read"},
@@ -23,6 +24,7 @@ GLOBAL_ROLE_PERMISSIONS: Dict[str, Dict[str, Set[str]]] = {
         "managers": {"read"},
         "records": {"read"},
         "datasets": {"read"},
+        "projects": {"read"},
         "access_log": {"read"},
         "server_errors": {"read"},
         "internal_jobs": {"read"},
@@ -34,6 +36,7 @@ GLOBAL_ROLE_PERMISSIONS: Dict[str, Dict[str, Set[str]]] = {
         "managers": {"read"},
         "records": {"read", "add", "modify", "delete"},
         "datasets": {"read", "add", "modify", "delete", "create_view"},
+        "projects": {"read", "add", "modify", "delete"},
     },
     "read": {
         "information": {"read"},
@@ -42,12 +45,14 @@ GLOBAL_ROLE_PERMISSIONS: Dict[str, Dict[str, Set[str]]] = {
         "managers": {"read"},
         "records": {"read"},
         "datasets": {"read"},
+        "projects": {"read"},
     },
     "anonymous": {
         "information": {"read"},
         "managers": {"read"},
         "records": {"read"},
         "datasets": {"read"},
+        "projects": {"read"},
     },
     "compute": {
         "information": {"read"},
