@@ -4,10 +4,8 @@ import HomePage from "./pages/Home.tsx";
 import LoginPage from "./pages/Login";
 import MainLayout from "./layouts/MainLayout";
 import ProtectedRoute from "./ProtectedRoute";
-import SandboxPage from "./components/Sandbox.tsx";
 import Project from "./components/Project.tsx";
 import CalculationRecord from "./components/CalculationRecord";
-import "./App.css";
 import ProjectList from "./components/ProjectList.tsx";
 
 function App() {
@@ -19,7 +17,6 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route element={<MainLayout />}>
               <Route path="/" element={<HomePage />} />
-              {/* <Route path="/sandbox" element={<SandboxPage />} /> */}
               <Route path="/projects" element={<ProjectList />} />
               <Route path="/projects/:projectId" element={<Project />} />
               <Route

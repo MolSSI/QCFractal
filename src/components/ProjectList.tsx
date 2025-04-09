@@ -2,17 +2,24 @@ import React, { useEffect, useState } from "react";
 import { usePortalClientRequest } from "../usePortalClient";
 import { useNavigate } from "react-router-dom";
 import {
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  CircularProgress,
-  Alert,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  Link,
+  TableContainer,
+  Typography,
+  Paper,
+  Box,
+  Chip
 } from "@mui/material";
 
 interface Project {
   id: string;
   project_name: string;
+  tagline: string;
+  tags: string[];
 }
 
 const ProjectList: React.FC = () => {
@@ -27,7 +34,7 @@ const ProjectList: React.FC = () => {
       setLoading(true);
       const { data, error } = await makeRequest<Project[]>(
         "GET",
-        "/api/v1/projects",
+        "/api/v1/projects"
       );
       if (error) {
         setError(error);
@@ -43,26 +50,70 @@ const ProjectList: React.FC = () => {
     navigate(`/projects/${projectId}`);
   };
 
-  if (loading) {
-    return <CircularProgress />;
-  }
-
-  if (error) {
-    return <Alert severity="error">{error}</Alert>;
-  }
 
   return (
     <>
-      <h1>Projects</h1>
-      <List>
-        {projects.map((project) => (
-          <ListItem key={project.id} disablePadding>
-            <ListItemButton onClick={() => handleClick(project.id)}>
-              <ListItemText primary={project.project_name} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
+    {loading && <Typography>Loading...</Typography>}
+    {error && <Typography color="error">{error}</Typography>}
+
+      {/* Title / Heading */}
+      <Box sx={{ mt: 4, mb: 2 }}>
+        <Typography variant="h4" gutterBottom>
+          Projects
+        </Typography>
+      </Box>
+
+      {/* Table wrapped in Paper for typical MUI look */}
+      <Paper sx={{ mb: 4 }}>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>ID</TableCell>
+                <TableCell>Project Name</TableCell>
+                <TableCell>Tagline</TableCell>
+                <TableCell>Tags</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {projects.map((project) => (
+                <TableRow
+                  key={project.id}
+                  hover
+                  sx={{ cursor: "pointer" }}
+                  onClick={() => handleClick(project.id)}
+                >
+                  <TableCell>
+                    <Link
+                      component="button"
+                      variant="body2"
+                      underline="none"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleClick(project.id);
+                      }}
+                    >
+                      {project.id}
+                    </Link>
+                  </TableCell>
+                  <TableCell>{project.project_name}</TableCell>
+                  <TableCell>{project.tagline}</TableCell>
+                  <TableCell>
+                    {project.tags.map((tag) => (
+                      <Chip
+                        key={tag}
+                        label={tag}
+                        size="small"
+                        sx={{ backgroundColor: "grey.300", mr: 1 }}
+                      />
+                    ))}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
     </>
   );
 };

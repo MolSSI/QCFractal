@@ -1,26 +1,60 @@
-// src/layouts/MainLayout.tsx
 import { Outlet } from "react-router-dom";
-import NavDrawer from "../components/NavDrawer";
+import { alpha } from "@mui/material/styles";
+import SideMenu from "../components/SideMenu"
+import { Box, CssBaseline, Stack } from "@mui/material";
+import AppTheme from "../shared-theme/AppTheme";
+import Header from "../components/Header";
+import {
+  chartsCustomizations,
+  dataGridCustomizations,
+  datePickersCustomizations,
+  treeViewCustomizations,
+} from "../theme/customizations";
 
-import { Box, CssBaseline } from "@mui/material";
+const xThemeComponents = {
+  ...chartsCustomizations,
+  ...dataGridCustomizations,
+  ...datePickersCustomizations,
+  ...treeViewCustomizations,
+};
 
-const MainLayout = () => {
+function MainLayout(props: { disableCustomTheme?: boolean }) {
   return (
-    <Box sx={{ display: "flex", height: "100vh" }}>
-      <CssBaseline />
-      <NavDrawer />
-      <Box
-        component="main"
-        display="flex"
-        sx={{
-          flexGrow: 1,
-          overflow: "auto",
-          p: 2,
-        }}
-      >
-        <Outlet />
+    <AppTheme {...props} themeComponents={xThemeComponents}>
+      <CssBaseline enableColorScheme />
+      <Box sx={{ display: "flex", height: "100vh" }}>
+        <SideMenu />
+        <Box
+          component="main"
+          sx={(theme) => ({
+            flexGrow: 1,
+            display: "flex",
+            justifyContent: "center",
+            maxWidth: "70%",
+            mx: "auto",
+            backgroundColor: theme.vars
+              ? `rgba(${theme.vars.palette.background.defaultChannel} / 1)`
+              : alpha(theme.palette.background.default, 1),
+            overflow: "auto",
+          })}
+        >
+
+            <Stack
+                spacing={2}
+                sx={{
+                alignItems: "center",
+                pb: 5,
+                mt: { xs: 8, md: 0 },
+                mx: 3
+                }}
+            >
+                <Header />
+                <Outlet />
+            </Stack>
+
+        </Box>
       </Box>
-    </Box>
+    </AppTheme>
   );
 };
 
