@@ -36,7 +36,10 @@ testing_helper = {
 @pytest.mark.parametrize(
     "dataset_type", ["singlepoint", "optimization", "torsiondrive", "gridoptimization", "manybody", "reaction", "neb"]
 )
-def test_dataset_client_query_dataset_records(snowflake: QCATestingSnowflake, dataset_type: str):
+def test_dataset_scaffold(snowflake: QCATestingSnowflake, dataset_type: str):
+    # We add entries using background jobs
+    snowflake.start_job_runner()
+
     snowflake_client = snowflake.client()
     storage_socket = snowflake.get_storage_socket()
     manager_name, _ = snowflake.activate_manager()
@@ -119,6 +122,15 @@ def test_dataset_client_query_dataset_records(snowflake: QCATestingSnowflake, da
     tmp_dict["metadata"]["name"] += "_test"
     json.dump(tmp_dict, open(filename, "w"))
     ds2 = from_json(filename, snowflake_client)
+
+    # need to wait for background jobs
+    for ij in ds2.list_internal_jobs():
+        ij.watch()
+
+    # Now refetch all the entry and spec info
+    ds2.fetch_entry_names()
+    ds2.fetch_specifications()
+
     os.remove(filename)
 
     diff = DeepDiff(ds, ds2)
