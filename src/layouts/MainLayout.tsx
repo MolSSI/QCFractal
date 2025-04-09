@@ -30,7 +30,6 @@ function MainLayout(props: { disableCustomTheme?: boolean }) {
             flexGrow: 1,
             display: "flex",
             justifyContent: "center",
-            maxWidth: "70%",
             mx: "auto",
             backgroundColor: theme.vars
               ? `rgba(${theme.vars.palette.background.defaultChannel} / 1)`
@@ -38,20 +37,26 @@ function MainLayout(props: { disableCustomTheme?: boolean }) {
             overflow: "auto",
           })}
         >
-
+          <Box
+            sx={{
+              width: "80%", // Ensures all content takes 70% of the right side
+              maxWidth: "1400px", // Optional: Add a max width for large screens
+              mx: "auto", // Centers horizontally
+            }}
+          >
             <Stack
                 spacing={2}
                 sx={{
-                alignItems: "center",
-                pb: 5,
-                mt: { xs: 8, md: 0 },
-                mx: 3
+                    alignItems: "center",
+                    pb: 5,
+                    mt: { xs: 8, md: 0 },
+                    mx: 3
                 }}
-            >
+                >
                 <Header />
                 <Outlet />
             </Stack>
-
+          </Box>
         </Box>
       </Box>
     </AppTheme>
