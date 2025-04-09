@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=9aa42301"></script>
+    <script src="../../../_static/documentation_options.js?v=b6ca5a57"></script>
     <script src="../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.60.post2+g31041d270" />
+  <meta name="docsearch:version" content="0.60.post19+gb002d0d2c" />
   </head>
   
   
@@ -489,7 +489,7 @@
         <span class="k">raise</span> <span class="n">InvalidUsernameError</span><span class="p">(</span><span class="s2">&quot;Username contains spaces&quot;</span><span class="p">)</span>
 
     <span class="c1"># Username cannot be all numbers</span>
-    <span class="k">if</span> <span class="n">username</span><span class="o">.</span><span class="n">isnumeric</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">username</span><span class="o">.</span><span class="n">isdecimal</span><span class="p">():</span>
         <span class="k">raise</span> <span class="n">InvalidUsernameError</span><span class="p">(</span><span class="s2">&quot;Username cannot be all numbers&quot;</span><span class="p">)</span></div>
 
 
@@ -509,7 +509,7 @@
         <span class="k">raise</span> <span class="n">InvalidGroupnameError</span><span class="p">(</span><span class="s2">&quot;Groupname contains spaces&quot;</span><span class="p">)</span>
 
     <span class="c1"># Groupname cannot be all numbers</span>
-    <span class="k">if</span> <span class="n">groupname</span><span class="o">.</span><span class="n">isnumeric</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">groupname</span><span class="o">.</span><span class="n">isdecimal</span><span class="p">():</span>
         <span class="k">raise</span> <span class="n">InvalidGroupnameError</span><span class="p">(</span><span class="s2">&quot;Groupname cannot be all numbers&quot;</span><span class="p">)</span></div>
 
 
@@ -529,7 +529,7 @@
         <span class="k">raise</span> <span class="n">InvalidRolenameError</span><span class="p">(</span><span class="s2">&quot;Rolename contains spaces&quot;</span><span class="p">)</span>
 
     <span class="c1"># Rolename cannot be all numbers</span>
-    <span class="k">if</span> <span class="n">rolename</span><span class="o">.</span><span class="n">isnumeric</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">rolename</span><span class="o">.</span><span class="n">isdecimal</span><span class="p">():</span>
         <span class="k">raise</span> <span class="n">InvalidRolenameError</span><span class="p">(</span><span class="s2">&quot;Rolename cannot be all numbers&quot;</span><span class="p">)</span></div>
 
 
