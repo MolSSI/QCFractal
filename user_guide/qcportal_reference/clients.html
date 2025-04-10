@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=b6ca5a57"></script>
+    <script src="../../_static/documentation_options.js?v=714c8363"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="QCPortal API Reference" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.60.post19+gb002d0d2c" />
+  <meta name="docsearch:version" content="0.60.post21+g09f58c865" />
   </head>
   
   
@@ -633,13 +633,16 @@ are searched for “qcportal_config.yaml”</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.client_base.PortalClientBase.download_file">
-<span class="sig-name descname"><span class="pre">download_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/client_base.html#PortalClientBase.download_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.client_base.PortalClientBase.download_file" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<span class="sig-name descname"><span class="pre">download_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expected_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/client_base.html#PortalClientBase.download_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.client_base.PortalClientBase.download_file" title="Link to this definition">#</a></dt>
+<dd><p>Download a file with optional progress bar</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>endpoint</strong> (<em>str</em>)</p></li>
-<li><p><strong>destination_path</strong> (<em>str</em>)</p></li>
-<li><p><strong>overwrite</strong> (<em>bool</em>)</p></li>
+<li><p><strong>endpoint</strong> (<em>str</em>) – API endpoint to download from</p></li>
+<li><p><strong>destination_path</strong> (<em>str</em>) – Where to save the file</p></li>
+<li><p><strong>overwrite</strong> (<em>bool</em>) – Whether to overwrite existing files</p></li>
+<li><p><strong>expected_size</strong> (<em>int</em><em> | </em><em>None</em>) – Expected size of the file in bytes (used for progress bar if enabled)</p></li>
+<li><p><strong>show_progress</strong> (<em>bool</em>) – Whether to show a progress bar during download</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -2383,13 +2386,16 @@ and username are checked for consistency.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.client.PortalClient.download_file">
-<span class="sig-name descname"><span class="pre">download_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.client.PortalClient.download_file" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<span class="sig-name descname"><span class="pre">download_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expected_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.client.PortalClient.download_file" title="Link to this definition">#</a></dt>
+<dd><p>Download a file with optional progress bar</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>endpoint</strong> (<em>str</em>)</p></li>
-<li><p><strong>destination_path</strong> (<em>str</em>)</p></li>
-<li><p><strong>overwrite</strong> (<em>bool</em>)</p></li>
+<li><p><strong>endpoint</strong> (<em>str</em>) – API endpoint to download from</p></li>
+<li><p><strong>destination_path</strong> (<em>str</em>) – Where to save the file</p></li>
+<li><p><strong>overwrite</strong> (<em>bool</em>) – Whether to overwrite existing files</p></li>
+<li><p><strong>expected_size</strong> (<em>int</em><em> | </em><em>None</em>) – Expected size of the file in bytes (used for progress bar if enabled)</p></li>
+<li><p><strong>show_progress</strong> (<em>bool</em>) – Whether to show a progress bar during download</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -2580,13 +2586,16 @@ SSL keys.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.manager_client.ManagerClient.download_file">
-<span class="sig-name descname"><span class="pre">download_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.manager_client.ManagerClient.download_file" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<span class="sig-name descname"><span class="pre">download_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expected_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.manager_client.ManagerClient.download_file" title="Link to this definition">#</a></dt>
+<dd><p>Download a file with optional progress bar</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>endpoint</strong> (<em>str</em>)</p></li>
-<li><p><strong>destination_path</strong> (<em>str</em>)</p></li>
-<li><p><strong>overwrite</strong> (<em>bool</em>)</p></li>
+<li><p><strong>endpoint</strong> (<em>str</em>) – API endpoint to download from</p></li>
+<li><p><strong>destination_path</strong> (<em>str</em>) – Where to save the file</p></li>
+<li><p><strong>overwrite</strong> (<em>bool</em>) – Whether to overwrite existing files</p></li>
+<li><p><strong>expected_size</strong> (<em>int</em><em> | </em><em>None</em>) – Expected size of the file in bytes (used for progress bar if enabled)</p></li>
+<li><p><strong>show_progress</strong> (<em>bool</em>) – Whether to show a progress bar during download</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>

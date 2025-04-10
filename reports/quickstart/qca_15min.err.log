@@ -46,34 +46,34 @@ mp2_meta, mp2_record_ids = client.add_singlepoints([water],
 [32m     10[39m                                                    method=[33m'[39m[33mmp2[39m[33m'[39m, 
 [32m     11[39m                                                    basis=[33m'[39m[33mdef2-tzvp[39m[33m'[39m)
 
-[36mFile [39m[32m~/work/QCFractal/QCFractal/qcportal/qcportal/client.py:1112[39m, in [36mPortalClient.add_singlepoints[39m[34m(self, molecules, program, driver, method, basis, keywords, protocols, compute_tag, compute_priority, owner_group, find_existing, **kwargs)[39m
-[32m   1109[39m     body_data[[33m"[39m[33mspecification[39m[33m"[39m][[33m"[39m[33mprotocols[39m[33m"[39m] = protocols
-[32m   1111[39m body = SinglepointAddBody(**body_data)
-[32m-> [39m[32m1112[39m [38;5;28;01mreturn[39;00m [38;5;28;43mself[39;49m[43m.[49m[43mmake_request[49m[43m([49m
-[32m   1113[39m [43m    [49m[33;43m"[39;49m[33;43mpost[39;49m[33;43m"[39;49m[43m,[49m[43m [49m[33;43m"[39;49m[33;43mapi/v1/records/singlepoint/bulkCreate[39;49m[33;43m"[39;49m[43m,[49m[43m [49m[43mTuple[49m[43m[[49m[43mInsertMetadata[49m[43m,[49m[43m [49m[43mList[49m[43m[[49m[38;5;28;43mint[39;49m[43m][49m[43m][49m[43m,[49m[43m [49m[43mbody[49m[43m=[49m[43mbody[49m
-[32m   1114[39m [43m[49m[43m)[49m
+[36mFile [39m[32m~/work/QCFractal/QCFractal/qcportal/qcportal/client.py:1116[39m, in [36mPortalClient.add_singlepoints[39m[34m(self, molecules, program, driver, method, basis, keywords, protocols, compute_tag, compute_priority, owner_group, find_existing, **kwargs)[39m
+[32m   1113[39m     body_data[[33m"[39m[33mspecification[39m[33m"[39m][[33m"[39m[33mprotocols[39m[33m"[39m] = protocols
+[32m   1115[39m body = SinglepointAddBody(**body_data)
+[32m-> [39m[32m1116[39m [38;5;28;01mreturn[39;00m [38;5;28;43mself[39;49m[43m.[49m[43mmake_request[49m[43m([49m
+[32m   1117[39m [43m    [49m[33;43m"[39;49m[33;43mpost[39;49m[33;43m"[39;49m[43m,[49m[43m [49m[33;43m"[39;49m[33;43mapi/v1/records/singlepoint/bulkCreate[39;49m[33;43m"[39;49m[43m,[49m[43m [49m[43mTuple[49m[43m[[49m[43mInsertMetadata[49m[43m,[49m[43m [49m[43mList[49m[43m[[49m[38;5;28;43mint[39;49m[43m][49m[43m][49m[43m,[49m[43m [49m[43mbody[49m[43m=[49m[43mbody[49m
+[32m   1118[39m [43m[49m[43m)[49m
 
-[36mFile [39m[32m~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:495[39m, in [36mPortalClientBase.make_request[39m[34m(self, method, endpoint, response_model, body_model, url_params_model, body, url_params, allow_retries, additional_headers)[39m
-[32m    492[39m [38;5;28;01mif[39;00m [38;5;28misinstance[39m(parsed_url_params, pydantic.BaseModel):
-[32m    493[39m     parsed_url_params = parsed_url_params.dict()
-[32m--> [39m[32m495[39m r = [38;5;28;43mself[39;49m[43m.[49m[43m_request[49m[43m([49m
-[32m    496[39m [43m    [49m[43mmethod[49m[43m,[49m
-[32m    497[39m [43m    [49m[43mendpoint[49m[43m,[49m
-[32m    498[39m [43m    [49m[43mbody[49m[43m=[49m[43mserialized_body[49m[43m,[49m
-[32m    499[39m [43m    [49m[43murl_params[49m[43m=[49m[43mparsed_url_params[49m[43m,[49m
-[32m    500[39m [43m    [49m[43mallow_retries[49m[43m=[49m[43mallow_retries[49m[43m,[49m
-[32m    501[39m [43m    [49m[43madditional_headers[49m[43m=[49m[43madditional_headers[49m[43m,[49m
-[32m    502[39m [43m[49m[43m)[49m
-[32m    503[39m d = deserialize(r.content, r.headers[[33m"[39m[33mContent-Type[39m[33m"[39m])
-[32m    505[39m [38;5;28;01mif[39;00m response_model [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m:
+[36mFile [39m[32m~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:497[39m, in [36mPortalClientBase.make_request[39m[34m(self, method, endpoint, response_model, body_model, url_params_model, body, url_params, allow_retries, additional_headers)[39m
+[32m    494[39m [38;5;28;01mif[39;00m [38;5;28misinstance[39m(parsed_url_params, pydantic.BaseModel):
+[32m    495[39m     parsed_url_params = parsed_url_params.dict()
+[32m--> [39m[32m497[39m r = [38;5;28;43mself[39;49m[43m.[49m[43m_request[49m[43m([49m
+[32m    498[39m [43m    [49m[43mmethod[49m[43m,[49m
+[32m    499[39m [43m    [49m[43mendpoint[49m[43m,[49m
+[32m    500[39m [43m    [49m[43mbody[49m[43m=[49m[43mserialized_body[49m[43m,[49m
+[32m    501[39m [43m    [49m[43murl_params[49m[43m=[49m[43mparsed_url_params[49m[43m,[49m
+[32m    502[39m [43m    [49m[43mallow_retries[49m[43m=[49m[43mallow_retries[49m[43m,[49m
+[32m    503[39m [43m    [49m[43madditional_headers[49m[43m=[49m[43madditional_headers[49m[43m,[49m
+[32m    504[39m [43m[49m[43m)[49m
+[32m    505[39m d = deserialize(r.content, r.headers[[33m"[39m[33mContent-Type[39m[33m"[39m])
+[32m    507[39m [38;5;28;01mif[39;00m response_model [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m:
 
-[36mFile [39m[32m~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:459[39m, in [36mPortalClientBase._request[39m[34m(self, method, endpoint, body, url_params, internal_retry, allow_retries, additional_headers)[39m
-[32m    454[39m     [38;5;28;01mexcept[39;00m:
-[32m    455[39m         [38;5;66;03m# If this error comes from, ie, the web server or something else, then[39;00m
-[32m    456[39m         [38;5;66;03m# we have to use 'reason'[39;00m
-[32m    457[39m         details = {[33m"[39m[33mmsg[39m[33m"[39m: r.reason}
-[32m--> [39m[32m459[39m     [38;5;28;01mraise[39;00m PortalRequestError([33mf[39m[33m"[39m[33mRequest failed: [39m[38;5;132;01m{[39;00mdetails[[33m'[39m[33mmsg[39m[33m'[39m][38;5;132;01m}[39;00m[33m"[39m, r.status_code, details)
-[32m    461[39m [38;5;28;01mreturn[39;00m r
+[36mFile [39m[32m~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:461[39m, in [36mPortalClientBase._request[39m[34m(self, method, endpoint, body, url_params, internal_retry, allow_retries, additional_headers)[39m
+[32m    456[39m     [38;5;28;01mexcept[39;00m:
+[32m    457[39m         [38;5;66;03m# If this error comes from, ie, the web server or something else, then[39;00m
+[32m    458[39m         [38;5;66;03m# we have to use 'reason'[39;00m
+[32m    459[39m         details = {[33m"[39m[33mmsg[39m[33m"[39m: r.reason}
+[32m--> [39m[32m461[39m     [38;5;28;01mraise[39;00m PortalRequestError([33mf[39m[33m"[39m[33mRequest failed: [39m[38;5;132;01m{[39;00mdetails[[33m'[39m[33mmsg[39m[33m'[39m][38;5;132;01m}[39;00m[33m"[39m, r.status_code, details)
+[32m    463[39m [38;5;28;01mreturn[39;00m r
 
 [31mPortalRequestError[39m: Request failed: 400 Bad Request: Invalid body: 4 validation errors for ParsingModel[SinglepointAddBody]
 __root__ -> tag
