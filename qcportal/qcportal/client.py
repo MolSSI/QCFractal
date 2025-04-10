@@ -379,7 +379,11 @@ class PortalClient(PortalClientBase):
         file_info = self.make_request("get", meta_url, ExternalFile)
 
         # Now actually download the file
-        file_size, file_sha256 = self.download_file(download_url, destination_path, overwrite=overwrite)
+        file_size, file_sha256 = self.download_file(download_url, 
+                                                    destination_path, 
+                                                    overwrite=overwrite, 
+                                                    expected_size=file_info.file_size,
+                                                    show_progress=True)
 
         if file_size != file_info.file_size:
             raise RuntimeError(f"Inconsistent file size. Expected {file_info.file_size}, got {file_size}")
