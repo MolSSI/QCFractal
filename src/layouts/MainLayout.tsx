@@ -40,7 +40,6 @@ function MainLayout(props: { disableCustomTheme?: boolean }) {
           <Box
             sx={{
               width: "80%", // Ensures all content takes 70% of the right side
-              maxWidth: "1400px", // Optional: Add a max width for large screens
               mx: "auto", // Centers horizontally
             }}
           >
