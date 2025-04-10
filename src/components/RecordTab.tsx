@@ -6,7 +6,6 @@ import {
   Collapse,
   IconButton,
   Paper,
-  Stack,
   Table,
   TableBody,
   TableCell,
@@ -18,24 +17,23 @@ import {
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 
-type DatasetMetadata = {
-  dataset_id: number;
-  dataset_type: string;
+type RecordMetadata = {
+  record_id: number;
   name: string;
+  status: string;
   description?: string;
-  tagline?: string;
   tags?: string[];
 };
 
-interface DatasetTabProps {
-  datasetMetadata: DatasetMetadata[];
-  onDelete?: (datasetId: number) => void;
+interface RecordTabProps {
+  recordMetadata: RecordMetadata[];
+  onDelete?: (recordId: number) => void;
 }
 
-export default function DatasetTab({
-  datasetMetadata,
+export default function RecordTab({
+  recordMetadata,
   onDelete,
-}: DatasetTabProps) {
+}: RecordTabProps) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
   const handleToggleExpand = (id: number) => {
@@ -46,26 +44,23 @@ export default function DatasetTab({
     if (onDelete) {
       onDelete(id);
     } else {
-      console.log("Delete dataset with ID:", id);
+      console.log("Delete record with ID:", id);
     }
   };
 
   return (
     <Box>
       <TableContainer component={Paper}>
-        <Table size="small" aria-label="dataset table">
+        <Table size="small" aria-label="record table">
           <TableHead>
             <TableRow>
-              {/* Column for dropdown icon */}
+              {/* Dropdown arrow column */}
               <TableCell />
               <TableCell>
                 <strong>Name</strong>
               </TableCell>
               <TableCell>
-                <strong>Type</strong>
-              </TableCell>
-              <TableCell>
-                <strong>Content</strong>
+                <strong>Status</strong>
               </TableCell>
               <TableCell>
                 <strong>Actions</strong>
@@ -73,20 +68,20 @@ export default function DatasetTab({
             </TableRow>
           </TableHead>
           <TableBody>
-            {datasetMetadata.map((ds) => {
-              const isExpanded = expandedId === ds.dataset_id;
+            {recordMetadata.map((record) => {
+              const isExpanded = expandedId === record.record_id;
               return (
-                <React.Fragment key={ds.dataset_id}>
-                  {/* Clickable row for toggling the dropdown */}
+                <React.Fragment key={record.record_id}>
+                  {/* Main record row */}
                   <TableRow
                     hover
-                    onClick={() => handleToggleExpand(ds.dataset_id)}
+                    onClick={() => handleToggleExpand(record.record_id)}
                     sx={{ cursor: "pointer" }}
                   >
                     <TableCell
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleToggleExpand(ds.dataset_id);
+                        handleToggleExpand(record.record_id);
                       }}
                     >
                       <IconButton size="small">
@@ -97,63 +92,54 @@ export default function DatasetTab({
                         )}
                       </IconButton>
                     </TableCell>
-                    <TableCell>{ds.name}</TableCell>
-                    <TableCell>{ds.dataset_type}</TableCell>
+                    <TableCell>{record.name}</TableCell>
+                    <TableCell>{record.status}</TableCell>
                     <TableCell>
-                      {/* Placeholder content, adjust based on your dataset info */}
-                      100 entries, 2 specifications
-                    </TableCell>
-                    <TableCell>
-                        <Stack direction="row" spacing={1} >
-                            <Button
-                                variant="contained"
-                                size="small"
-                                sx={{ mr: 1 }}
-                                onClick={(e) => {
-                                e.stopPropagation();
-                                // Placeholder for view action (new page link later)
-                                console.log(
-                                    "View details for dataset",
-                                    ds.dataset_id
-                                );
-                                }}
-                            >
-                                View
-                            </Button>
-                            <Button
-                                variant="contained"
-                                size="small"
-                                onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelete(ds.dataset_id);
-                                }}
-                                sx={{ ml: 1 }}
-                            >
-                                Delete
-                            </Button>
-                        </Stack>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Placeholder: Link to view page in the future
+                          console.log("View record", record.record_id);
+                        }}
+                      >
+                        View
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(record.record_id);
+                        }}
+                        sx={{ ml: 1 }}
+                      >
+                        Delete
+                      </Button>
                     </TableCell>
                   </TableRow>
 
-                  {/* Expanded row to show description & tags */}
+                  {/* Expanded row with description & tags */}
                   <TableRow>
                     <TableCell
                       style={{ paddingBottom: 0, paddingTop: 0 }}
-                      colSpan={5}
+                      colSpan={4}
                     >
                       <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                        <Box sx={{ margin: 2 }}>
-                          {ds.description && (
+                        <Box sx={{ m: 2 }}>
+                          {record.description && (
                             <>
                               <Typography variant="body2" fontWeight="bold">
                                 Description
                               </Typography>
                               <Typography variant="body2" paragraph>
-                                {ds.description}
+                                {record.description}
                               </Typography>
                             </>
                           )}
-                          {ds.tags && ds.tags.length > 0 && (
+                          {record.tags && record.tags.length > 0 && (
                             <>
                               <Typography variant="body2" fontWeight="bold">
                                 Tags
@@ -166,7 +152,7 @@ export default function DatasetTab({
                                   mt: 1,
                                 }}
                               >
-                                {ds.tags.map((tag) => (
+                                {record.tags.map((tag) => (
                                   <Chip
                                     key={tag}
                                     label={tag}
