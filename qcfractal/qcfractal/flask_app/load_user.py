@@ -20,6 +20,7 @@ def load_logged_in_user():
     # session info in the database (retrieved
     # via the typical flask session mechanism)
     ##############################################
+    user_id = None
     username = None
     role = None
     groups = []
@@ -33,11 +34,8 @@ def load_logged_in_user():
             username = user_info.username
             role = user_info.role
             groups = user_info.groups
-        else:
-            # Check for the JWT in the header
-            # don't raise exception if no JWT is found
-            verify_jwt_in_request(optional=True)
-            user_id = get_jwt_identity()  # may be None
+        elif verify_jwt_in_request(optional=True) is not None:
+            user_id = get_jwt_identity()
 
             if user_id is not None:
                 # user_id is stored in the JWT as a string
