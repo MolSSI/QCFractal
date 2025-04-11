@@ -274,9 +274,7 @@ class BaseRecordORM(BaseORM):
         d = BaseORM.model_dict(self, exclude)
 
         # TODO - DEPRECATED - REMOVE EVENTUALLY
-        if d.get("creator_user_id", None) is not None:
-            d["owner_user"] = self.creator_user.username if self.creator_user is not None else None
-
+        d["owner_user"] = self.creator_user.username if self.creator_user is not None else None
         d.pop("creator_user", None)
         d["owner_group"] = None
 

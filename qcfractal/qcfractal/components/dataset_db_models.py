@@ -94,9 +94,7 @@ class BaseDatasetORM(BaseORM):
         if "default_compute_priority" in d:
             d["default_priority"] = d.pop("default_compute_priority")
 
-        if ["creator_user_id"] is not None:
-            d["owner_user"] = self.creator_user.username if self.creator_user is not None else None
-
+        d["owner_user"] = self.creator_user.username if self.creator_user is not None else None
         d.pop("creator_user", None)
         d["owner_group"] = None
 
