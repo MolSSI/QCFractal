@@ -7,7 +7,6 @@ from qcarchivetesting import test_users
 from qcarchivetesting.testing_classes import (
     QCATestingSnowflake,
 )
-from qcfractal.components.auth.role_socket import default_roles
 from qcportal.exceptions import AuthenticationFailure
 
 
@@ -27,7 +26,6 @@ def test_jwt_refresh_user_newrole(secure_snowflake):
     assert submit_info.role == "submit"
     decoded_access = jwt.decode(client._jwt_access_token, algorithms=["HS256"], options={"verify_signature": False})
     assert decoded_access["role"] == "submit"
-    assert decoded_access["permissions"] == default_roles["submit"]
 
     uinfo = admin_client.get_user("submit_user")
     uinfo.role = "read"
@@ -38,32 +36,6 @@ def test_jwt_refresh_user_newrole(secure_snowflake):
     client.list_datasets()  # will refresh token as needed
     decoded_access = jwt.decode(client._jwt_access_token, algorithms=["HS256"], options={"verify_signature": False})
     assert decoded_access["role"] == "read"
-    assert decoded_access["permissions"] == default_roles["read"]
-
-
-@pytest.mark.slow
-def test_jwt_refresh_user_role_modified(secure_snowflake):
-    admin_client = secure_snowflake.client("admin_user", password=test_users["admin_user"]["pw"])
-    client = secure_snowflake.client("read_user", password=test_users["read_user"]["pw"])
-
-    read_info = client.get_user()
-    assert read_info.role == "read"
-    decoded_access = jwt.decode(client._jwt_access_token, algorithms=["HS256"], options={"verify_signature": False})
-    assert decoded_access["role"] == "read"
-    assert decoded_access["permissions"] == default_roles["read"]
-
-    rinfo = admin_client.get_role("read")
-    rinfo.permissions.Statement.append(
-        {"Effect": "Allow", "Action": "WRITE", "Resource": ["/api/v1/user", "/api/v1/role"]}
-    )
-    admin_client.modify_role(rinfo)
-
-    time.sleep(client._jwt_access_exp - time.time() + 1)
-
-    client.list_datasets()  # will refresh token as needed
-    decoded_access = jwt.decode(client._jwt_access_token, algorithms=["HS256"], options={"verify_signature": False})
-    assert decoded_access["role"] == "read"
-    assert decoded_access["permissions"] == rinfo.permissions.dict()
 
 
 @pytest.mark.slow

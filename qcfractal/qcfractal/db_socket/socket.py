@@ -94,7 +94,6 @@ class SQLAlchemySocket:
         from ..components.molecules.socket import MoleculeSocket
         from ..components.auth.user_socket import UserSocket
         from ..components.auth.group_socket import GroupSocket
-        from ..components.auth.role_socket import RoleSocket
         from ..components.auth.auth_socket import AuthSocket
         from ..components.serverinfo.socket import ServerInfoSocket
         from ..components.managers.socket import ManagerSocket
@@ -118,7 +117,6 @@ class SQLAlchemySocket:
         self.managers = ManagerSocket(self)
         self.users = UserSocket(self)
         self.groups = GroupSocket(self)
-        self.roles = RoleSocket(self)
         self.auth = AuthSocket(self)
 
     def __str__(self) -> str:
@@ -208,19 +206,8 @@ class SQLAlchemySocket:
         Populates any default values in the database
         """
 
-        from qcfractal.components.auth.db_models import RoleORM
-        from qcfractal.components.auth.role_socket import default_roles
-
-        session = sessionmaker(bind=engine)()
-        try:
-            for rolename, permissions in default_roles.items():
-                orm = RoleORM(rolename=rolename, permissions=permissions)
-                session.add(orm)
-            session.commit()
-        except Exception as e:
-            raise RuntimeError(f"Failed to populate default roles:\n {str(e)}")
-        finally:
-            session.close()
+        # Used to populate roles, but not anymore. Leaving for future needs
+        pass
 
     @staticmethod
     def upgrade_database(db_config: DatabaseConfig, revision: str = "head") -> None:

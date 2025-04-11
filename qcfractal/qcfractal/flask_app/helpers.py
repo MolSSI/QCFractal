@@ -8,12 +8,11 @@ from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
 )
-from werkzeug.exceptions import BadRequest, Forbidden
 
 from qcfractal import __version__ as qcfractal_version
 from qcfractal.flask_app import storage_socket
-from qcportal.auth import UserInfo, RoleInfo
-from qcportal.exceptions import AuthorizationFailure, AuthenticationFailure
+from qcportal.auth import UserInfo
+from qcportal.exceptions import AuthenticationFailure
 
 if TYPE_CHECKING:
     from typing import Set
@@ -54,43 +53,7 @@ def get_url_major_component(url: str):
     return "/" + resource.lstrip("/")
 
 
-def assert_is_authorized(requested_action: str):
-    """
-    Check for access to the URL given permissions in the JWT token in the request headers
-
-    1. If no security (enable_security is False), always allow
-    2. If security is enabled, and if read allowed (allow_unauthenticated_read=True), use the default read permissions.
-       Otherwise, check against the logged-in user permissions from the headers' JWT token
-    """
-
-    try:
-        subject = {"user_id": g.user_id, "username": g.username}
-
-        # Pull the first part of the URL (ie, /api/v1/molecule/a/b/c -> /api/v1/molecule)
-        resource = {"type": get_url_major_component(request.url)}
-
-        allowed, msg = storage_socket.auth.is_authorized(
-            resource=resource, action=requested_action, subject=subject, context={}, policies=g.policies
-        )
-
-        if not allowed:
-            if g.user_id is None:
-                # Authentication Error = not logged in, and resource requires it
-                raise AuthenticationFailure(msg)
-            else:
-                # Authorization error - logged in, but can't access
-                raise AuthorizationFailure(msg)
-
-    except AuthorizationFailure as e:
-        raise Forbidden(str(e))
-    except AuthenticationFailure as e:
-        raise AuthenticationFailure("Failed to authenticate user session or JWT: " + str(e))
-    except Exception as e:
-        current_app.logger.warning("Error in evaluating session or JWT permissions: \n" + str(e))
-        raise BadRequest("Error in evaluating session or JWT permissions")
-
-
-def login_user() -> Tuple[UserInfo, RoleInfo]:
+def login_user() -> UserInfo:
     """
     Handle a login from flask
 
@@ -124,33 +87,33 @@ def login_user() -> Tuple[UserInfo, RoleInfo]:
         raise AuthenticationFailure("No password provided for login")
 
     try:
-        user_info, role_info = storage_socket.auth.authenticate(username, password)
+        user_info = storage_socket.users.authenticate(username, password)
 
         # Used for logging (in the after_request_func)
         g.user_id = user_info.id
 
-        return user_info, role_info
+        return user_info
 
     except AuthenticationFailure as e:
         current_app.logger.info(f"Authentication failed for user {username}: {str(e)}")
         raise
 
 
-def login_user_session() -> Tuple[UserInfo, RoleInfo]:
+def login_user_session() -> UserInfo:
     # Raises exception on invalid username, password, etc
     # Submitted user/password are stored in the flask request object
     session.clear()
-    user_info, role_info = login_user()
+    user_info = login_user()
     session["user_id"] = str(user_info.id)
 
-    return user_info, role_info
+    return user_info
 
 
 def logout_user_session():
     session.clear()
 
 
-def access_token_from_user(user_info: UserInfo, role_info: RoleInfo):
+def access_token_from_user(user_info: UserInfo):
     """
     Creates a JWT access token from user/role information
     """
@@ -160,7 +123,6 @@ def access_token_from_user(user_info: UserInfo, role_info: RoleInfo):
             "username": user_info.username,
             "role": user_info.role,
             "groups": user_info.groups,
-            "permissions": role_info.permissions.dict(),
         },
     )
 
@@ -182,8 +144,8 @@ def login_and_get_jwt(get_refresh_token: bool) -> Tuple[str, Optional[str]]:
     """
 
     # Will raise exceptions on invalid username/password
-    user_info, role_info = login_user()
-    access_token = access_token_from_user(user_info, role_info)
+    user_info = login_user()
+    access_token = access_token_from_user(user_info)
 
     if get_refresh_token:
         refresh_token = create_refresh_token(identity=str(user_info.id))

@@ -12,7 +12,6 @@ from qcportal.exceptions import (
     AuthenticationFailure,
 )
 from .test_group_socket import invalid_groupnames
-from .test_role_socket import invalid_rolenames
 from .test_user_socket import invalid_usernames, invalid_passwords
 
 
@@ -151,20 +150,6 @@ def test_user_client_use_invalid_username(secure_snowflake: QCATestingSnowflake)
             client.change_user_password(username, "abcde1234")
         with pytest.raises(InvalidUsernameError):
             client.delete_user(username)
-
-
-def test_user_client_use_invalid_rolename(secure_snowflake: QCATestingSnowflake):
-    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
-
-    for rolename in invalid_rolenames:
-        uinfo = client.get_user()
-        uinfo.__dict__["role"] = rolename  # bypass pydantic validation
-        uinfo.__dict__["id"] = None
-
-        with pytest.raises(PortalRequestError, match=r"Rolename"):
-            client.add_user(uinfo)
-        with pytest.raises(PortalRequestError, match=r"Rolename"):
-            client.modify_user(uinfo)
 
 
 def test_user_client_use_invalid_groupname(secure_snowflake: QCATestingSnowflake):
@@ -316,129 +301,3 @@ def test_user_client_change_password_self(secure_snowflake: QCATestingSnowflake)
     # Reset password
     new_pw = client.change_user_password()
     secure_snowflake.client("read_user", new_pw)
-
-
-#########################################################################
-# Test some security issues
-#
-# Most of these tests are somewhat duplicated elsewhere, however since
-# users/roles are sensitive, it makes sense to make double sure users
-# can't do certain things (like modify other users)
-#########################################################################
-
-
-def test_user_client_secure_endpoints_disabled(snowflake_client):
-    """
-    Some secure endpoints are disabled when security is disabled
-    """
-
-    uinfo = UserInfo(
-        username="george",
-        role="compute",
-        enabled=True,
-        fullname="Test user",
-        email="george@example.com",
-        organization="My Org",
-    )
-
-    with pytest.raises(PortalRequestError, match=r"not available if security is not enabled"):
-        snowflake_client.add_user(uinfo)
-
-    with pytest.raises(PortalRequestError, match=r"not available if security is not enabled"):
-        snowflake_client.delete_user("george")
-
-    with pytest.raises(PortalRequestError, match=r"not available if security is not enabled"):
-        snowflake_client.get_user("george")
-
-    with pytest.raises(PortalRequestError, match=r"not available if security is not enabled"):
-        snowflake_client.change_user_password("george")
-
-    with pytest.raises(PortalRequestError, match=r"not available if security is not enabled"):
-        snowflake_client.list_users()
-
-    with pytest.raises(PortalRequestError, match=r"not available if security is not enabled"):
-        snowflake_client.modify_user(uinfo)
-
-
-def test_user_client_no_other(secure_snowflake: QCATestingSnowflake):
-    #
-    # a non-admin user cannot access/modify other users
-    #
-
-    # For trying some sneaky stuff
-    admin_client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
-    read_info = admin_client.get_user("read_user")
-
-    client = secure_snowflake.client("submit_user", test_users["submit_user"]["pw"])
-    my_uinfo = client.get_user()
-
-    with pytest.raises(PortalRequestError, match=r"Admin access is required"):
-        client.list_users()
-
-    with pytest.raises(PortalRequestError, match=r"Forbidden"):
-        client.get_user("read_user")
-
-    with pytest.raises(PortalRequestError, match=r"Forbidden"):
-        client.make_request("get", f"api/v1/users/read_user", UserInfo)
-
-    uinfo = UserInfo(id=read_info.id, username="read_user", role="read", fullname="New Full Name", enabled=True)
-
-    with pytest.raises(PortalRequestError, match=r"Forbidden"):
-        client.modify_user(uinfo)
-
-    with pytest.raises(PortalRequestError, match=r"Forbidden"):
-        client.make_request("patch", f"api/v1/users", UserInfo, body=uinfo)
-
-    with pytest.raises(PortalRequestError, match=r"Forbidden"):
-        client.change_user_password("read_user", "new_password")
-
-    with pytest.raises(PortalRequestError, match=r"Forbidden"):
-        client.make_request("put", f"api/v1/users/read_user/password", str, body="new_password")
-
-    with pytest.raises(PortalRequestError, match=r"Forbidden"):
-        client.change_user_password("read_user", None)
-
-    with pytest.raises(PortalRequestError, match=r"Forbidden"):
-        client.make_request("put", f"api/v1/users/read_user/password", str, body_model=Optional[str], body=None)
-
-
-def test_user_client_no_anonymous(secure_snowflake_allow_read: QCATestingSnowflake):
-    client = secure_snowflake_allow_read.client()
-
-    with pytest.raises(PortalRequestError, match=r"Login is required"):
-        client.list_users()
-
-    with pytest.raises(RuntimeError, match=r"not logged in"):
-        client.get_user()
-
-    with pytest.raises(PortalRequestError, match=r"Login is required"):
-        client.get_user("read_user")
-
-    with pytest.raises(PortalRequestError, match=r"Login is required"):
-        client.make_request("get", f"api/v1/users/read_user", UserInfo)
-
-    uinfo = UserInfo(username="read_user", role="read", fullname="New Full Name", enabled=True)
-
-    with pytest.raises(PortalRequestError, match=r"Login is required"):
-        client.modify_user(uinfo)
-
-    with pytest.raises(PortalRequestError, match=r"Login is required"):
-        client.make_request("patch", f"api/v1/users", UserInfo, body=uinfo)
-
-    with pytest.raises(RuntimeError, match=r"not logged in"):
-        client.change_user_password(None, "new password")
-
-    with pytest.raises(PortalRequestError, match=r"Login is required"):
-        client.change_user_password("read_user", "new_password")
-
-    with pytest.raises(PortalRequestError, match=r"Login is required"):
-        client.make_request("put", f"api/v1/users/read_user/password", str, body="new_password")
-
-    with pytest.raises(RuntimeError, match=r"not logged in"):
-        client.change_user_password(None, None)
-
-    with pytest.raises(PortalRequestError, match=r"Login is required"):
-        client.change_user_password("read_user", None)
-
-    with pytest.raises(PortalRequestError, match=r"Login is required"):
-        client.make_request("put", f"api/v1/users/read_user/password", str, body_model=Optional[str], body=None)

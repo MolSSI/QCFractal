@@ -33,7 +33,7 @@ ip_tests_enabled = os.path.exists(geoip_path) and os.path.exists(ip_testdata_pat
 testconfig_path = os.path.join(_my_path, "config_files")
 migrationdata_path = os.path.join(_my_path, "migration_data")
 
-test_groups = ["group1", "group2", "group3"]
+test_groups = ["group1", "group2", "group3", "group4"]
 test_users = {
     "admin_user": {
         "pw": "something123",
@@ -43,6 +43,16 @@ test_users = {
             "fullname": "Mrs. Admin User",
             "organization": "QCF Testing",
             "email": "admin@example.com",
+        },
+    },
+    "maintain_user": {
+        "pw": "something123",
+        "info": {
+            "role": "maintain",
+            "groups": ["group1", "group4"],
+            "fullname": "Mrs. Maintenance User",
+            "organization": "QCF Testing",
+            "email": "maintenance@example.com",
         },
     },
     "read_user": {
@@ -76,6 +86,16 @@ test_users = {
         },
     },
     "submit_user": {
+        "pw": "something123",
+        "info": {
+            "role": "submit",
+            "groups": ["group1"],
+            "fullname": "Mrs. Submit User",
+            "organization": "QCF Testing",
+            "email": "submit@example.com",
+        },
+    },
+    "submit_user_2": {
         "pw": "something123",
         "info": {
             "role": "submit",

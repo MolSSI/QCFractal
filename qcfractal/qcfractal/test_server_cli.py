@@ -250,20 +250,6 @@ def test_cli_user_password(cli_runner):
     assert "Password for testuser modified"
 
 
-def test_cli_role_info_list(cli_runner):
-    output = cli_runner(["role", "list"])
-    assert "admin" in output
-    assert "submit" in output
-
-    output = cli_runner(["role", "info", "admin"])
-    assert "Effect='Allow' Action='*' Resource='*'" in output
-
-
-def test_cli_role_reset(cli_runner):
-    output = cli_runner(["role", "reset"])
-    assert "Resetting default roles to their original" in output
-
-
 def test_cli_restore_noinit(cli_runner_core):
     # Restore where the db does not exist and has not been initialized
     migdata_path = os.path.join(migrationdata_path, "empty_v0.15.8.sql_dump")

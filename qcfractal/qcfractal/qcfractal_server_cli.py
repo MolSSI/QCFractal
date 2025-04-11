@@ -22,7 +22,7 @@ import tabulate
 import yaml
 
 from qcfractal import __version__
-from qcportal.auth import RoleInfo, UserInfo
+from qcportal.auth import UserInfo
 from .config import read_configuration, write_initial_configuration, FractalConfig, WebAPIConfig
 from .db_socket.socket import SQLAlchemySocket
 from .flask_app.waitress_app import FractalWaitressApp
@@ -278,24 +278,6 @@ def parse_args() -> argparse.Namespace:
     user_delete = user_subparsers.add_parser("delete", help="Delete a user.", parents=[base_parser])
     user_delete.add_argument("username", default=None, type=str, help="The username to delete/remove")
     user_delete.add_argument("--no-prompt", action="store_true", help="Do not prompt for confirmation")
-
-    #####################################
-    # role subcommand
-    #####################################
-    role = subparsers.add_parser("role", help="Manage roles for this instance", parents=[base_parser])
-
-    # user sub-subcommands
-    role_subparsers = role.add_subparsers(dest="role_command")
-
-    # role list
-    role_subparsers.add_parser("list", help="List all role names", parents=[base_parser])
-
-    # role info
-    role_info = role_subparsers.add_parser("info", help="Get information about a role", parents=[base_parser])
-    role_info.add_argument("rolename", type=str, help="The role of this user on the server")
-
-    # role reset
-    role_subparsers.add_parser("reset", help="Reset all the original roles to their defaults", parents=[base_parser])
 
     #####################################
     # backup subcommand
@@ -743,40 +725,6 @@ def server_user(args: argparse.Namespace, config: FractalConfig):
             print("Deleted!")
 
 
-def server_role(args: argparse.Namespace, config: FractalConfig):
-    role_command = args.role_command
-
-    # Don't check revision here - it will be done in the SQLAlchemySocket constructor
-    start_database(config, check_revision=False)
-    storage = SQLAlchemySocket(config)
-
-    def print_role_info(r: RoleInfo):
-        print("-" * 80)
-        print(f"    role: {r.rolename}")
-        print(f"    permissions:")
-        for stmt in r.permissions.Statement:
-            print("        ", stmt)
-
-    if role_command == "list":
-        role_list = storage.roles.list()
-
-        print()
-        print("rolename")
-        print("--------")
-        for r in role_list:
-            print(r["rolename"])
-        print()
-
-    if role_command == "info":
-        r = storage.roles.get(args.rolename)
-        print_role_info(RoleInfo(**r))
-
-    if role_command == "reset":
-        print("Resetting default roles to their original default permissions.")
-        print("Other roles will not be affected.")
-        storage.roles.reset_defaults()
-
-
 def server_backup(args: argparse.Namespace, config: FractalConfig):
     pg_harness = start_database(config, check_revision=True)
 
@@ -981,8 +929,6 @@ def main():
         server_upgrade_db(qcf_config)
     elif args.command == "user":
         server_user(args, qcf_config)
-    elif args.command == "role":
-        server_role(args, qcf_config)
     elif args.command == "backup":
         server_backup(args, qcf_config)
     elif args.command == "restore":

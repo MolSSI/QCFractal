@@ -5,16 +5,14 @@ try:
     import pydantic.v1 as pydantic
 except ImportError:
     import pydantic
-from flask import request, Response
+from flask import request, g, Response
 from werkzeug.exceptions import BadRequest
 
-from qcfractal.flask_app.helpers import assert_is_authorized
+from qcfractal.flask_app import storage_socket
 from qcportal.serialization import deserialize, serialize
 
 
-def wrap_route(
-    requested_action,
-) -> Callable:
+def wrap_global_route(requested_resource, requested_action, require_security: bool = False) -> Callable:
     """
     Decorator that wraps a Flask route function, providing useful functionality
 
@@ -38,14 +36,16 @@ def wrap_route(
 
     Parameters
     ----------
+    requested_resource
+        The name of the major resource
     requested_action
-        The overall type of action that this route handles (read, write, etc)
+        e of action that this route handles (read, write, etc)
     """
 
     def decorate(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):
-            assert_is_authorized(requested_action)
+            storage_socket.auth.assert_global_permission(g.role, requested_resource, requested_action, require_security)
 
             ##################################################################
             # If we got here, then the user is allowed access to this endpoint
