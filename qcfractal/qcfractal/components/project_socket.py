@@ -11,6 +11,7 @@ from qcfractal.components.project_db_models import (
     ProjectORM,
     ProjectRecordORM,
     ProjectDatasetORM,
+    ProjectMoleculeORM,
     ProjectAttachmentORM,
     ProjectInternalJobORM,
 )
@@ -157,17 +158,50 @@ class ProjectSocket:
         Get a list of projects in the database
         """
 
+        record_count_cte = (
+            select(ProjectRecordORM.project_id, func.count("*").label("record_count"))
+            .group_by(ProjectRecordORM.project_id)
+            .cte()
+        )
+        dataset_count_cte = (
+            select(ProjectDatasetORM.project_id, func.count("*").label("dataset_count"))
+            .group_by(ProjectDatasetORM.project_id)
+            .cte()
+        )
+        molecule_count_cte = (
+            select(ProjectMoleculeORM.project_id, func.count("*").label("molecule_count"))
+            .group_by(ProjectMoleculeORM.project_id)
+            .cte()
+        )
+
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(
                 ProjectORM.id,
                 ProjectORM.name,
                 ProjectORM.tagline,
                 ProjectORM.tags,
+                func.coalesce(record_count_cte.c.record_count, 0),
+                func.coalesce(dataset_count_cte.c.dataset_count, 0),
+                func.coalesce(molecule_count_cte.c.molecule_count, 0),
             )
+            stmt = stmt.join(record_count_cte, ProjectORM.id == record_count_cte.c.project_id, isouter=True)
+            stmt = stmt.join(dataset_count_cte, ProjectORM.id == dataset_count_cte.c.project_id, isouter=True)
+            stmt = stmt.join(molecule_count_cte, ProjectORM.id == molecule_count_cte.c.project_id, isouter=True)
             stmt = stmt.order_by(ProjectORM.id.asc())
             r = session.execute(stmt).all()
 
-            return [{"id": x[0], "project_name": x[1], "tagline": x[2], "tags": x[3]} for x in r]
+            return [
+                {
+                    "id": x[0],
+                    "project_name": x[1],
+                    "tagline": x[2],
+                    "tags": x[3],
+                    "record_count": x[4],
+                    "dataset_count": x[5],
+                    "molecule_count": x[6],
+                }
+                for x in r
+            ]
 
     def delete_project(
         self,

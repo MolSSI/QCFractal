@@ -51,7 +51,6 @@ def test_project_client_add_get(submitter_client: PortalClient):
     assert proj2.id == proj.id
 
     plist = submitter_client.list_projects()
-    print(plist)
     assert plist[0]["id"] == proj.id
     assert plist[0]["project_name"] == proj.name
 
@@ -82,6 +81,12 @@ def test_project_client_add_get_records_datasets(snowflake_client: PortalClient)
     assert ds2_test.id == ds2.id
     assert ds2_test.default_compute_tag == "test_compute_tag"
     assert ds2_test.default_compute_priority == PriorityEnum.low
+
+    plist = snowflake_client.list_projects()
+    assert plist[0]["id"] == proj.id
+    assert plist[0]["project_name"] == proj.name
+    assert plist[0]["record_count"] == 1
+    assert plist[0]["dataset_count"] == 2
 
 
 def test_project_client_delete(snowflake_client: PortalClient):
