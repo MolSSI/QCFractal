@@ -46,20 +46,11 @@ class ProjectORM(BaseORM):
 
     # Ownership of this project
     owner_user_id = Column(Integer, ForeignKey(UserORM.id), nullable=True)
-    owner_group_id = Column(Integer, ForeignKey(GroupORM.id), nullable=True)
 
     owner_user = relationship(
         UserIDMapSubquery,
         foreign_keys=[owner_user_id],
         primaryjoin="ProjectORM.owner_user_id == UserIDMapSubquery.id",
-        lazy="selectin",
-        viewonly=True,
-    )
-
-    owner_group = relationship(
-        GroupIDMapSubquery,
-        foreign_keys=[owner_group_id],
-        primaryjoin="ProjectORM.owner_group_id == GroupIDMapSubquery.id",
         lazy="selectin",
         viewonly=True,
     )
@@ -73,20 +64,14 @@ class ProjectORM(BaseORM):
     __table_args__ = (
         UniqueConstraint("lname", name="ux_project_project_type_lname"),
         Index("ix_project_owner_user_id", "owner_user_id"),
-        Index("ix_project_owner_group_id", "owner_group_id"),
-        ForeignKeyConstraint(
-            ["owner_user_id", "owner_group_id"],
-            ["user_groups.user_id", "user_groups.group_id"],
-        ),
     )
 
-    _qcportal_model_excludes = ["lname", "owner_user_id", "owner_group_id"]
+    _qcportal_model_excludes = ["lname", "owner_user_id"]
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         d = BaseORM.model_dict(self, exclude)
 
         d["owner_user"] = self.owner_user.username if self.owner_user is not None else None
-        d["owner_group"] = self.owner_group.groupname if self.owner_group is not None else None
 
         return d
 

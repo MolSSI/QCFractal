@@ -52,7 +52,6 @@ class ProjectSocket:
         default_compute_priority: PriorityEnum,
         extras: Dict[str, Any],
         owner_user: Optional[Union[int, str]],
-        owner_group: Optional[Union[int, str]],
         existing_ok: bool,
         *,
         session: Optional[Session] = None,
@@ -79,8 +78,7 @@ class ProjectSocket:
         )
 
         with self.root_socket.optional_session(session) as session:
-            user_id, group_id = self.root_socket.users.get_owner_ids(owner_user, owner_group)
-            self.root_socket.users.assert_group_member(user_id, group_id, session=session)
+            owner_user_id = self.root_socket.users.get_optional_user_id(owner_user)
 
             stmt = select(ProjectORM.id)
             stmt = stmt.where(ProjectORM.lname == name.lower())
@@ -92,8 +90,7 @@ class ProjectSocket:
                 else:
                     raise AlreadyExistsError(f"Project with name='{name}' already exists")
 
-            proj_orm.owner_user_id = user_id
-            proj_orm.owner_group_id = group_id
+            proj_orm.owner_user_id = owner_user_id
 
             session.add(proj_orm)
             session.commit()
@@ -312,8 +309,7 @@ class ProjectSocket:
         default_compute_tag: str,
         default_compute_priority: PriorityEnum,
         extras: Dict[str, Any],
-        owner_user: Optional[Union[int, str]],
-        owner_group: Optional[Union[int, str]],
+        creator_user: Optional[Union[int, str]],
         existing_ok: bool,
         *,
         session: Optional[Session] = None,
@@ -334,8 +330,7 @@ class ProjectSocket:
                 default_compute_tag=default_compute_tag,
                 default_compute_priority=default_compute_priority,
                 extras=extras,
-                owner_user=owner_user,
-                owner_group=owner_group,
+                creator_user=creator_user,
                 existing_ok=existing_ok,
                 session=session,
             )
@@ -429,8 +424,7 @@ class ProjectSocket:
         record_input: AllInputTypes,
         compute_tag: str,
         compute_priority: PriorityEnum,
-        owner_user: Optional[Union[int, str]],
-        owner_group: Optional[Union[int, str]],
+        creator_user: Optional[Union[int, str]],
         find_existing: bool,
         *,
         session: Optional[Session] = None,
@@ -444,8 +438,7 @@ class ProjectSocket:
                 record_input,
                 compute_tag=compute_tag,
                 compute_priority=compute_priority,
-                owner_user=owner_user,
-                owner_group=owner_group,
+                creator_user=creator_user,
                 find_existing=find_existing,
                 session=session,
             )
