@@ -25,13 +25,13 @@ def test_record_client_waiting_reason(snowflake: QCATestingSnowflake):
     input_spec_3, molecule_3, result_data_3 = load_sp_test_data("sp_rdkit_benzene_energy")
 
     meta, id_1 = storage_socket.records.singlepoint.add(
-        [molecule_1], input_spec_1, "tag1", PriorityEnum.low, None, None, True
+        [molecule_1], input_spec_1, "tag1", PriorityEnum.low, None, True
     )
     meta, id_2 = storage_socket.records.optimization.add(
-        [molecule_2], input_spec_2, "tag2", PriorityEnum.normal, None, None, True
+        [molecule_2], input_spec_2, "tag2", PriorityEnum.normal, None, True
     )
     meta, id_3 = storage_socket.records.singlepoint.add(
-        [molecule_3], input_spec_3, "tag3", PriorityEnum.high, None, None, True
+        [molecule_3], input_spec_3, "tag3", PriorityEnum.high, None, True
     )
     id_1 = id_1[0]
     id_2 = id_2[0]
@@ -148,7 +148,7 @@ def test_record_client_waiting_reason_2(snowflake: QCATestingSnowflake):
     input_spec_2, molecule_2, _ = load_td_test_data("td_H2O2_mopac_pm6")
 
     meta, id_1 = storage_socket.records.singlepoint.add(
-        [molecule_1], input_spec_1, "tag1", PriorityEnum.low, None, None, True
+        [molecule_1], input_spec_1, "tag1", PriorityEnum.low, None, True
     )
 
     meta, id_2 = snowflake_client.add_torsiondrives(

@@ -35,8 +35,7 @@ def add_torsiondrive_records_v1(body_data: TorsiondriveAddBody):
         as_service=body_data.as_service,
         compute_tag=body_data.compute_tag,
         compute_priority=body_data.compute_priority,
-        owner_user=g.username,
-        owner_group=body_data.owner_group,
+        creator_user=g.username,
         find_existing=body_data.find_existing,
     )
 

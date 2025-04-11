@@ -27,7 +27,7 @@ def test_dataset_socket_submit_defaults(
 ):
     storage_socket = secure_snowflake.get_storage_socket()
 
-    default_user_id, default_group_id = storage_socket.users.get_owner_ids(default_user, default_group)
+    default_user_id = storage_socket.users.get_optional_user_id(default_user)
     group1_id = storage_socket.groups.get("group1")["id"]
 
     ds_id = storage_socket.datasets.singlepoint.add(
@@ -39,8 +39,7 @@ def test_dataset_socket_submit_defaults(
         default_compute_tag=default_tag,
         default_compute_priority=default_priority,
         extras={},
-        owner_user=default_user,
-        owner_group=default_group,
+        creator_user=default_user,
         existing_ok=False,
     )
 
@@ -48,57 +47,46 @@ def test_dataset_socket_submit_defaults(
     assert ds["default_tag"] == default_tag.lower()
     assert ds["default_priority"] == default_priority
     assert ds["owner_user"] == default_user
-    assert ds["owner_group"] == default_group
 
-    tag, priority, group_id = storage_socket.datasets.singlepoint.get_submit_defaults(ds_id)
+    tag, priority = storage_socket.datasets.singlepoint.get_submit_defaults(ds_id)
     assert tag == default_tag.lower()
     assert priority == default_priority
-    assert group_id == default_group_id
 
-    tag, priority, user_id, group_id = storage_socket.datasets.singlepoint.get_submit_info(
-        ds_id, None, None, None, None
+    tag, priority, user_id = storage_socket.datasets.singlepoint.get_submit_info(
+        ds_id,
+        None,
+        None,
+        None,
     )
     assert tag == default_tag.lower()
     assert priority == default_priority
     assert user_id is None
-    assert group_id is None
 
-    tag, priority, user_id, group_id = storage_socket.datasets.singlepoint.get_submit_info(
-        ds_id, None, None, default_user, None
-    )
+    tag, priority, user_id = storage_socket.datasets.singlepoint.get_submit_info(ds_id, None, None, default_user)
     assert tag == default_tag.lower()
     assert priority == default_priority
     assert user_id == default_user_id
-    assert group_id == default_group_id
 
-    tag, priority, user_id, group_id = storage_socket.datasets.singlepoint.get_submit_info(
-        ds_id, None, None, "submit_user", None
-    )
+    tag, priority, user_id = storage_socket.datasets.singlepoint.get_submit_info(ds_id, None, None, "submit_user")
     assert tag == default_tag.lower()
     assert priority == default_priority
-    assert group_id == default_group_id
 
     # No user = no group either
-    tag, priority, user_id, group_id = storage_socket.datasets.singlepoint.get_submit_info(
-        ds_id, "diFFerent_TAG", None, None, "group2"
-    )
+    tag, priority, user_id = storage_socket.datasets.singlepoint.get_submit_info(ds_id, "diFFerent_TAG", None, None)
     assert tag == "different_tag"
     assert priority == default_priority
     assert user_id is None
-    assert group_id is None
 
-    tag, priority, user_id, group_id = storage_socket.datasets.singlepoint.get_submit_info(
-        ds_id, "diFFerent_TAG", None, default_user, "group1"
+    tag, priority, user_id = storage_socket.datasets.singlepoint.get_submit_info(
+        ds_id, "diFFerent_TAG", None, default_user
     )
     assert tag == "different_tag"
     assert priority == default_priority
     assert user_id == default_user_id
-    assert group_id == None if default_user is None else group1_id
 
-    tag, priority, user_id, group_id = storage_socket.datasets.singlepoint.get_submit_info(
-        ds_id, "different_tag", PriorityEnum.normal, default_user, None
+    tag, priority, user_id = storage_socket.datasets.singlepoint.get_submit_info(
+        ds_id, "different_tag", PriorityEnum.normal, default_user
     )
     assert tag == "different_tag"
     assert priority == PriorityEnum.normal
     assert user_id == default_user_id
-    assert group_id == default_group_id

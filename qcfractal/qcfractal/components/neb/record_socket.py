@@ -366,8 +366,7 @@ class NEBRecordSocket(BaseRecordSocket):
             opt_spec,
             service_orm.compute_tag,
             service_orm.compute_priority,
-            neb_orm.owner_user_id,
-            neb_orm.owner_group_id,
+            neb_orm.creator_user_id,
             service_orm.find_existing,
             session=session,
         )
@@ -410,8 +409,7 @@ class NEBRecordSocket(BaseRecordSocket):
             QCSpecification(**qc_spec),
             service_orm.compute_tag,
             service_orm.compute_priority,
-            neb_orm.owner_user_id,
-            neb_orm.owner_group_id,
+            neb_orm.creator_user_id,
             service_orm.find_existing,
             session=session,
         )
@@ -451,8 +449,7 @@ class NEBRecordSocket(BaseRecordSocket):
             [{"info_dict": service_state.nebinfo}],
             service_orm.compute_tag,
             service_orm.compute_priority,
-            neb_orm.owner_user_id,
-            neb_orm.owner_group_id,
+            neb_orm.creator_user_id,
             session=session,
         )
 
@@ -698,8 +695,7 @@ class NEBRecordSocket(BaseRecordSocket):
         neb_spec_id: int,
         compute_tag: str,
         compute_priority: PriorityEnum,
-        owner_user_id: Optional[int],
-        owner_group_id: Optional[int],
+        creator_user_id: Optional[int],
         find_existing: bool,
         *,
         session: Optional[Session] = None,
@@ -723,10 +719,8 @@ class NEBRecordSocket(BaseRecordSocket):
             The tag for the task. This will assist in routing to appropriate compute managers.
         compute_priority
             The priority for the computation
-        owner_user_id
-            ID of the user who owns the record
-        owner_group_id
-            ID of the group with additional permission for these records
+        creator_user_id
+            ID of the user who created the record
         find_existing
             If True, search for existing records and return those. If False, always add new records
         session
@@ -742,8 +736,6 @@ class NEBRecordSocket(BaseRecordSocket):
         compute_tag = compute_tag.lower()
 
         with self.root_socket.optional_session(session, False) as session:
-            self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
-
             # Lock for the entire transaction
             session.execute(select(func.pg_advisory_xact_lock(neb_insert_lock_id))).scalar()
 
@@ -783,8 +775,7 @@ class NEBRecordSocket(BaseRecordSocket):
                             is_service=True,
                             specification_id=neb_spec_id,
                             status=RecordStatusEnum.waiting,
-                            owner_user_id=owner_user_id,
-                            owner_group_id=owner_group_id,
+                            creator_user_id=creator_user_id,
                         )
 
                         self.create_service(neb_orm, compute_tag, compute_priority, find_existing)
@@ -809,8 +800,7 @@ class NEBRecordSocket(BaseRecordSocket):
                         is_service=True,
                         specification_id=neb_spec_id,
                         status=RecordStatusEnum.waiting,
-                        owner_user_id=owner_user_id,
-                        owner_group_id=owner_group_id,
+                        creator_user_id=creator_user_id,
                     )
 
                     self.create_service(neb_orm, compute_tag, compute_priority, find_existing)
@@ -836,8 +826,7 @@ class NEBRecordSocket(BaseRecordSocket):
         neb_spec: NEBSpecification,
         compute_tag: str,
         compute_priority: PriorityEnum,
-        owner_user: Optional[Union[int, str]],
-        owner_group: Optional[Union[int, str]],
+        creator_user: Optional[Union[int, str]],
         find_existing: bool,
         *,
         session: Optional[Session] = None,
@@ -860,10 +849,8 @@ class NEBRecordSocket(BaseRecordSocket):
             The tag for the task. This will assist in routing to appropriate compute managers.
         compute_priority
             The priority for the computation
-        owner_user
-            Name or ID of the user who owns the record
-        owner_group
-            Group with additional permission for these records
+        creator_user
+            Name or ID of the user who created the record
         find_existing
             If True, search for existing records and return those. If False, always add new records
         session
@@ -878,9 +865,7 @@ class NEBRecordSocket(BaseRecordSocket):
         """
         images = neb_spec.keywords.images
         with self.root_socket.optional_session(session, False) as session:
-            owner_user_id, owner_group_id = self.root_socket.users.get_owner_ids(
-                owner_user, owner_group, session=session
-            )
+            creator_user_id = self.root_socket.users.get_optional_user_id(creator_user, session=session)
 
             # First, add the specification
             spec_meta, spec_id = self.add_specification(neb_spec, session=session)
@@ -923,8 +908,7 @@ class NEBRecordSocket(BaseRecordSocket):
                 spec_id,
                 compute_tag,
                 compute_priority,
-                owner_user_id,
-                owner_group_id,
+                creator_user_id,
                 find_existing,
                 session=session,
             )
@@ -934,8 +918,7 @@ class NEBRecordSocket(BaseRecordSocket):
         record_input: NEBInput,
         compute_tag: str,
         compute_priority: PriorityEnum,
-        owner_user: Optional[Union[int, str]],
-        owner_group: Optional[Union[int, str]],
+        creator_user: Optional[Union[int, str]],
         find_existing: bool,
         *,
         session: Optional[Session] = None,
@@ -948,8 +931,7 @@ class NEBRecordSocket(BaseRecordSocket):
             record_input.specification,
             compute_tag,
             compute_priority,
-            owner_user,
-            owner_group,
+            creator_user,
             find_existing,
         )
 

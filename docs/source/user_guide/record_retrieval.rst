@@ -43,8 +43,7 @@ take a list or other sequence of IDs, and returns a list of records in the same 
            "manager_name": null,
            "modified_on": "2019-03-07T19:45:27.745000",
            "molecule_id": 37,
-           "owner_group": null,
-           "owner_user": null,
+           "creator_user": null,
            ...
         },
         {
@@ -55,8 +54,7 @@ take a list or other sequence of IDs, and returns a list of records in the same 
            "manager_name": null,
            "modified_on": "2019-03-07T19:45:42.748000",
            "molecule_id": 38,
-           "owner_group": null,
-           "owner_user": null,
+           "creator_user": null,
            ...
         }
       ]

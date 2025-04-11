@@ -309,28 +309,16 @@ def test_record_client_query_owner(secure_snowflake: QCATestingSnowflake):
         geometry=[0, 0, 0],
     )
 
-    _, ids_1 = submit_client.add_singlepoints(m, "prog1", "energy", "b3lyp", "sto-3g", {}, owner_group=None)
-    _, ids_2 = submit_client.add_singlepoints(m, "prog2", "energy", "b3lyp", "sto-3g", {}, owner_group="group1")
+    _, ids_1 = submit_client.add_singlepoints(m, "prog1", "energy", "b3lyp", "sto-3g", {})
+    _, ids_2 = submit_client.add_singlepoints(m, "prog2", "energy", "b3lyp", "sto-3g", {})
 
-    _, ids_3 = admin_client.add_singlepoints(m, "prog3", "energy", "b3lyp", "sto-3g", {}, owner_group=None)
-    _, ids_4 = admin_client.add_singlepoints(m, "prog4", "energy", "b3lyp", "sto-3g", {}, owner_group="group1")
+    _, ids_3 = admin_client.add_singlepoints(m, "prog3", "energy", "b3lyp", "sto-3g", {})
+    _, ids_4 = admin_client.add_singlepoints(m, "prog4", "energy", "b3lyp", "sto-3g", {})
 
-    query_res = admin_client.query_records(owner_user="submit_user")
+    query_res = admin_client.query_records(creator_user="submit_user")
     query_res_l = list(query_res)
     assert len(query_res_l) == 2
 
-    query_res = admin_client.query_records(owner_user=[submit_uid])
+    query_res = admin_client.query_records(creator_user=[submit_uid])
     query_res_l = list(query_res)
     assert len(query_res_l) == 2
-
-    query_res = admin_client.query_records(owner_group="group1")
-    query_res_l = list(query_res)
-    assert len(query_res_l) == 2
-
-    query_res = admin_client.query_records(owner_user=["admin_user"], owner_group=["group1"])
-    query_res_l = list(query_res)
-    assert len(query_res_l) == 1
-
-    query_res = admin_client.query_records(owner_user=["admin_user"], owner_group=["missing"])
-    query_res_l = list(query_res)
-    assert len(query_res_l) == 0

@@ -325,7 +325,7 @@ class TaskSocket:
                 stmt = stmt.filter(TaskQueueORM.available == True)
                 stmt = stmt.filter(search_programs.contains(TaskQueueORM.required_programs))
                 stmt = stmt.options(load_only(BaseRecordORM.id, BaseRecordORM.record_type))
-                stmt = stmt.options(lazyload(BaseRecordORM.owner_user), lazyload(BaseRecordORM.owner_group))
+                stmt = stmt.options(lazyload(BaseRecordORM.creator_user))
 
                 # Order by priority, then date (earliest first)
                 # The sort_date usually comes from the created_on of the record, or the created_on of the record's parent service

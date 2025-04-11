@@ -29,7 +29,7 @@ def test_reaction_socket_add_get(storage_socket: SQLAlchemySocket, session: Sess
 
     time_0 = now_at_utc()
     meta, ids = storage_socket.records.reaction.add(
-        [[(1.0, hooh), (2.0, ne4)], [(3.0, hooh), (4.0, water)]], spec, "tag1", PriorityEnum.low, None, None, True
+        [[(1.0, hooh), (2.0, ne4)], [(3.0, hooh), (4.0, water)]], spec, "tag1", PriorityEnum.low, None, True
     )
     time_1 = now_at_utc()
     assert meta.success
@@ -82,13 +82,13 @@ def test_reaction_socket_add_same_1(storage_socket: SQLAlchemySocket):
     water = load_molecule_data("water_dimer_minima")
 
     meta, id1 = storage_socket.records.reaction.add(
-        [[(2.0, water), (3.0, hooh)]], spec, "*", PriorityEnum.normal, None, None, True
+        [[(2.0, water), (3.0, hooh)]], spec, "*", PriorityEnum.normal, None, True
     )
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
 
     meta, id2 = storage_socket.records.reaction.add(
-        [[(3.0, hooh), (2.0, water)]], spec, "*", PriorityEnum.normal, None, None, True
+        [[(3.0, hooh), (2.0, water)]], spec, "*", PriorityEnum.normal, None, True
     )
     assert meta.n_inserted == 0
     assert meta.n_existing == 1
@@ -110,11 +110,10 @@ def test_reaction_socket_run(
 ):
     input_spec_1, stoich_1, result_data_1 = load_test_data(test_data_name)
 
-    storage_socket.groups.add(GroupInfo(groupname="group1"))
-    storage_socket.users.add(UserInfo(username="submit_user", role="submit", groups=["group1"], enabled=True))
+    storage_socket.users.add(UserInfo(username="submit_user", role="submit", enabled=True))
 
     meta_1, id_1 = storage_socket.records.reaction.add(
-        [stoich_1], input_spec_1, "test_tag", PriorityEnum.low, "submit_user", "group1", True
+        [stoich_1], input_spec_1, "test_tag", PriorityEnum.low, "submit_user", True
     )
     id_1 = id_1[0]
     assert meta_1.success
@@ -163,7 +162,7 @@ def test_reaction_socket_run_duplicate(
     input_spec_1, molecules_1, result_data_1 = load_test_data("rxn_H2O_psi4_mp2_optsp")
 
     meta_1, id_1 = storage_socket.records.reaction.add(
-        [molecules_1], input_spec_1, "test_tag", PriorityEnum.low, None, None, True
+        [molecules_1], input_spec_1, "test_tag", PriorityEnum.low, None, True
     )
     id_1 = id_1[0]
     assert meta_1.success
@@ -177,7 +176,7 @@ def test_reaction_socket_run_duplicate(
 
     # Submit again, without duplicate checking
     meta_2, id_2 = storage_socket.records.reaction.add(
-        [molecules_1], input_spec_1, "test_tag", PriorityEnum.low, None, None, False
+        [molecules_1], input_spec_1, "test_tag", PriorityEnum.low, None, False
     )
     id_2 = id_2[0]
     assert meta_2.success

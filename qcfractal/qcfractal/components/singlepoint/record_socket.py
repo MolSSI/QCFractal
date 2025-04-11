@@ -339,8 +339,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
         qc_spec_id: int,
         compute_tag: str,
         compute_priority: PriorityEnum,
-        owner_user_id: Optional[int],
-        owner_group_id: Optional[int],
+        creator_user_id: Optional[int],
         find_existing: bool,
         *,
         session: Optional[Session] = None,
@@ -364,10 +363,8 @@ class SinglepointRecordSocket(BaseRecordSocket):
             The tag for the task. This will assist in routing to appropriate compute managers.
         compute_priority
             The priority for the computation
-        owner_user_id
-            ID of the user who owns the record
-        owner_group_id
-            ID of the group with additional permission for these records
+        creator_user_id
+            ID of the user who created the record
         find_existing
             If True, search for existing records and return those. If False, always add new records
         session
@@ -384,8 +381,6 @@ class SinglepointRecordSocket(BaseRecordSocket):
         compute_tag = compute_tag.lower()
 
         with self.root_socket.optional_session(session, False) as session:
-            self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
-
             # Get the spec orm. The full orm will be needed for create_task
             stmt = select(QCSpecificationORM).where(QCSpecificationORM.id == qc_spec_id)
             spec_orm = session.execute(stmt).scalar_one()
@@ -399,8 +394,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
                     specification_id=qc_spec_id,
                     molecule_id=mid,
                     status=RecordStatusEnum.waiting,
-                    owner_user_id=owner_user_id,
-                    owner_group_id=owner_group_id,
+                    creator_user_id=creator_user_id,
                 )
 
                 self.create_task(sp_orm, compute_tag, compute_priority)
@@ -428,8 +422,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
         qc_spec: QCSpecification,
         compute_tag: str,
         compute_priority: PriorityEnum,
-        owner_user: Optional[Union[int, str]],
-        owner_group: Optional[Union[int, str]],
+        creator_user: Optional[Union[int, str]],
         find_existing: bool,
         *,
         session: Optional[Session] = None,
@@ -450,10 +443,8 @@ class SinglepointRecordSocket(BaseRecordSocket):
             The tag for the task. This will assist in routing to appropriate compute managers.
         compute_priority
             The priority for the computation
-        owner_user
-            Name or ID of the user who owns the record
-        owner_group
-            Group with additional permission for these records
+        creator_user
+            Name or ID of the user who created the record
         find_existing
             If True, search for existing records and return those. If False, always add new records
         session
@@ -468,9 +459,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
         """
 
         with self.root_socket.optional_session(session, False) as session:
-            owner_user_id, owner_group_id = self.root_socket.users.get_owner_ids(
-                owner_user, owner_group, session=session
-            )
+            creator_user_id = self.root_socket.users.get_optional_user_id(creator_user, session=session)
 
             # First, add the specification
             spec_meta, spec_id = self.add_specification(qc_spec, session=session)
@@ -495,8 +484,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
                 spec_id,
                 compute_tag,
                 compute_priority,
-                owner_user_id,
-                owner_group_id,
+                creator_user_id,
                 find_existing,
                 session=session,
             )
@@ -506,8 +494,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
         record_input: SinglepointInput,
         compute_tag: str,
         compute_priority: PriorityEnum,
-        owner_user: Optional[Union[int, str]],
-        owner_group: Optional[Union[int, str]],
+        creator_user: Optional[Union[int, str]],
         find_existing: bool,
         *,
         session: Optional[Session] = None,
@@ -520,8 +507,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
             record_input.specification,
             compute_tag,
             compute_priority,
-            owner_user,
-            owner_group,
+            creator_user,
             find_existing,
         )
 

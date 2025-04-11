@@ -97,7 +97,7 @@ def submit_test_data(
 ) -> Tuple[int, Dict[str, Union[QCEl_AtomicResult, QCEl_OptimizationResult]]]:
     input_spec, stoich, result = load_test_data(name)
     meta, record_ids = storage_socket.records.reaction.add(
-        [stoich], input_spec, compute_tag, compute_priority, None, None, True
+        [stoich], input_spec, compute_tag, compute_priority, None, True
     )
     assert meta.success
     assert len(record_ids) == 1

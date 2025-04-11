@@ -7,7 +7,6 @@ from sqlalchemy import (
     String,
     Integer,
     ForeignKey,
-    ForeignKeyConstraint,
     Enum,
     TIMESTAMP,
     JSON,
@@ -22,7 +21,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship, deferred
 from sqlalchemy.orm.collections import attribute_keyed_dict
 
-from qcfractal.components.auth.db_models import UserORM, GroupORM, UserIDMapSubquery, GroupIDMapSubquery
+from qcfractal.components.auth.db_models import UserORM, UserIDMapSubquery
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.db_socket import BaseORM
 from qcportal.compression import CompressionEnum, decompress
@@ -207,22 +206,13 @@ class BaseRecordORM(BaseORM):
     created_on = Column(TIMESTAMP(timezone=True), default=now_at_utc, nullable=False)
     modified_on = Column(TIMESTAMP(timezone=True), default=now_at_utc, nullable=False)
 
-    # Ownership of this record
-    owner_user_id = Column(Integer, ForeignKey(UserORM.id), nullable=True)
-    owner_group_id = Column(Integer, ForeignKey(GroupORM.id), nullable=True)
+    # Who created this record
+    creator_user_id = Column(Integer, ForeignKey(UserORM.id), nullable=True)
 
-    owner_user = relationship(
+    creator_user = relationship(
         UserIDMapSubquery,
-        foreign_keys=[owner_user_id],
-        primaryjoin="BaseRecordORM.owner_user_id == UserIDMapSubquery.id",
-        lazy="selectin",
-        viewonly=True,
-    )
-
-    owner_group = relationship(
-        GroupIDMapSubquery,
-        foreign_keys=[owner_group_id],
-        primaryjoin="BaseRecordORM.owner_group_id == GroupIDMapSubquery.id",
+        foreign_keys=[creator_user_id],
+        primaryjoin="BaseRecordORM.creator_user_id == UserIDMapSubquery.id",
         lazy="selectin",
         viewonly=True,
     )
@@ -269,27 +259,24 @@ class BaseRecordORM(BaseORM):
         Index("ix_base_record_status", "status"),
         Index("ix_base_record_record_type", "record_type"),
         Index("ix_base_record_manager_name", "manager_name"),
-        Index("ix_base_record_owner_user_id", "owner_user_id"),
-        Index("ix_base_record_owner_group_id", "owner_group_id"),
+        Index("ix_base_record_creator_user_id", "creator_user_id"),
         Index("ix_base_record_created_on", "created_on"),
         Index("ix_base_record_modified_on", "modified_on"),
-        ForeignKeyConstraint(
-            ["owner_user_id", "owner_group_id"],
-            ["user_groups.user_id", "user_groups.group_id"],
-        ),
     )
 
     __mapper_args__ = {"polymorphic_on": "record_type"}
 
     # strip user/group ids
     # info_backup is also never part of models
-    _qcportal_model_excludes = ["owner_user_id", "owner_group_id", "info_backup"]
+    _qcportal_model_excludes = ["creator_user_id", "info_backup"]
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         d = BaseORM.model_dict(self, exclude)
 
-        d["owner_user"] = self.owner_user.username if self.owner_user is not None else None
-        d["owner_group"] = self.owner_group.groupname if self.owner_group is not None else None
+        # TODO - DEPRECATED - REMOVE EVENTUALLY
+        d["owner_user"] = self.creator_user.username if self.creator_user is not None else None
+        d.pop("creator_user", None)
+        d["owner_group"] = None
 
         return d
 

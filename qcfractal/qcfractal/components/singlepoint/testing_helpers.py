@@ -77,7 +77,7 @@ def submit_test_data(
 ) -> Tuple[int, QCEl_AtomicResult]:
     input_spec, molecule, result = load_test_data(name)
     meta, record_ids = storage_socket.records.singlepoint.add(
-        [molecule], input_spec, compute_tag, compute_priority, None, None, find_existing
+        [molecule], input_spec, compute_tag, compute_priority, None, find_existing
     )
     assert meta.success
     assert len(record_ids) == 1

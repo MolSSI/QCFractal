@@ -123,8 +123,7 @@ class BaseDatasetSocket:
         existing_records: Iterable[Tuple[str, str]],
         compute_tag: str,
         compute_priority: PriorityEnum,
-        owner_user_id: Optional[int],
-        owner_group_id: Optional[int],
+        creator_user_id: Optional[int],
         find_existing: bool,
     ) -> InsertCountsMetadata:
         raise NotImplementedError("_submit must be overridden by the derived class")
@@ -134,11 +133,10 @@ class BaseDatasetSocket:
         dataset_id: int,
         compute_tag: Optional[str],
         compute_priority: Optional[str],
-        owner_user: Optional[Union[int, str]],
-        owner_group: Optional[Union[int, str]],
+        creator_user: Optional[Union[int, str]],
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[str, PriorityEnum, int, int]:
+    ) -> Tuple[str, PriorityEnum, int]:
         """
         Obtains the tag, priority, and group a new record should be computed with
 
@@ -153,8 +151,8 @@ class BaseDatasetSocket:
             Specified tag to use. If None, then the default tag will be used instead
         compute_priority
             Specified priority to use. If None, then the default priority will be used instead
-        owner_group
-            Specified owner_group to use. If None, then the datasets owner_group will be used instead
+        creator_user
+            Name or ID of the user who submitted the dataset
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -162,11 +160,11 @@ class BaseDatasetSocket:
         Returns
         -------
         :
-            The tag, priority, owner id, and group id
+            The tag, priority, and creator id
         """
 
         with self.root_socket.optional_session(session, True) as session:
-            default_tag, default_priority, default_group_id = self.get_submit_defaults(dataset_id, session=session)
+            default_tag, default_priority = self.get_submit_defaults(dataset_id, session=session)
 
             if compute_tag is None:
                 compute_tag = default_tag
@@ -176,16 +174,11 @@ class BaseDatasetSocket:
             if compute_priority is None:
                 compute_priority = default_priority
 
-            if owner_group is None:
-                owner_group = default_group_id
+            user_id = self.root_socket.users.get_optional_user_id(creator_user, session=session)
 
-            user_id, group_id = self.root_socket.users.get_owner_ids(owner_user, owner_group, session=session)
+        return compute_tag, compute_priority, user_id
 
-        return compute_tag, compute_priority, user_id, group_id
-
-    def get_submit_defaults(
-        self, dataset_id: int, *, session: Optional[Session] = None
-    ) -> Tuple[str, PriorityEnum, int]:
+    def get_submit_defaults(self, dataset_id: int, *, session: Optional[Session] = None) -> Tuple[str, PriorityEnum]:
         """
         Obtain a dataset's default submission information
 
@@ -198,9 +191,7 @@ class BaseDatasetSocket:
             is used, it will be flushed (but not committed) before returning from this function.
         """
 
-        stmt = select(
-            BaseDatasetORM.default_compute_tag, BaseDatasetORM.default_compute_priority, BaseDatasetORM.owner_group_id
-        )
+        stmt = select(BaseDatasetORM.default_compute_tag, BaseDatasetORM.default_compute_priority)
         stmt = stmt.where(BaseDatasetORM.id == dataset_id)
 
         with self.root_socket.optional_session(session, True) as session:
@@ -389,8 +380,7 @@ class BaseDatasetSocket:
         default_compute_tag: str,
         default_compute_priority: PriorityEnum,
         extras: Dict[str, Any],
-        owner_user: Optional[Union[int, str]],
-        owner_group: Optional[Union[int, str]],
+        creator_user: Optional[Union[int, str]],
         existing_ok: bool,
         *,
         session: Optional[Session] = None,
@@ -419,8 +409,7 @@ class BaseDatasetSocket:
         )
 
         with self.root_socket.optional_session(session) as session:
-            user_id, group_id = self.root_socket.users.get_owner_ids(owner_user, owner_group)
-            self.root_socket.users.assert_group_member(user_id, group_id, session=session)
+            creator_user_id = self.root_socket.users.get_optional_user_id(creator_user)
 
             stmt = select(self.dataset_orm.id)
             stmt = stmt.where(self.dataset_orm.lname == name.lower())
@@ -435,8 +424,7 @@ class BaseDatasetSocket:
                         f"Dataset with type='{self.dataset_type}' and name='{name}' already exists"
                     )
 
-            ds_orm.owner_user_id = user_id
-            ds_orm.owner_group_id = group_id
+            ds_orm.creator_user_id = creator_user_id
 
             session.add(ds_orm)
             session.commit()
@@ -1240,8 +1228,7 @@ class BaseDatasetSocket:
         specification_names: Optional[Iterable[str]],
         compute_tag: Optional[str],
         compute_priority: Optional[PriorityEnum],
-        owner_user: Optional[Union[int, str]],
-        owner_group: Optional[Union[int, str]],
+        creator_user: Optional[Union[int, str]],
         find_existing: bool,
         *,
         job_progress: Optional[JobProgress] = None,
@@ -1267,8 +1254,8 @@ class BaseDatasetSocket:
         compute_priority
             Priority for new records. If None, use the dataset's default. Existing records
             will not be modified.
-        owner_group
-            Group with additional permission for these records
+        creator_user
+            Name or ID of the user who submitted the dataset
         find_existing
             If True, search for existing records and return those. If False, always add new records
         job_progress
@@ -1289,8 +1276,8 @@ class BaseDatasetSocket:
         n_existing = 0
 
         with self.root_socket.optional_session(session) as session:
-            compute_tag, compute_priority, owner_user_id, owner_group_id = self.get_submit_info(
-                dataset_id, compute_tag, compute_priority, owner_user, owner_group, session=session
+            compute_tag, compute_priority, creator_user_id = self.get_submit_info(
+                dataset_id, compute_tag, compute_priority, creator_user, session=session
             )
 
             ################################
@@ -1349,8 +1336,7 @@ class BaseDatasetSocket:
                         existing_records,
                         compute_tag,
                         compute_priority,
-                        owner_user_id,
-                        owner_group_id,
+                        creator_user_id,
                         find_existing,
                     )
 
@@ -1401,8 +1387,7 @@ class BaseDatasetSocket:
                         existing_records,
                         compute_tag,
                         compute_priority,
-                        owner_user_id,
-                        owner_group_id,
+                        creator_user_id,
                         find_existing,
                     )
 
@@ -1428,8 +1413,7 @@ class BaseDatasetSocket:
         specification_names: Optional[Iterable[str]],
         compute_tag: Optional[str],
         compute_priority: Optional[PriorityEnum],
-        owner_user: Optional[Union[int, str]],
-        owner_group: Optional[Union[int, str]],
+        creator_user: Optional[Union[int, str]],
         find_existing: bool,
         *,
         session: Optional[Session] = None,
@@ -1458,8 +1442,7 @@ class BaseDatasetSocket:
                     "specification_names": specification_names,
                     "compute_tag": compute_tag,
                     "compute_priority": compute_priority,
-                    "owner_user": owner_user,
-                    "owner_group": owner_group,
+                    "creator_user": creator_user,
                     "find_existing": find_existing,
                 },
                 user_id=None,
@@ -1869,8 +1852,7 @@ class BaseDatasetSocket:
                 default_compute_tag=source_orm.default_compute_tag,
                 default_compute_priority=source_orm.default_compute_priority,
                 extras=source_orm.extras,
-                owner_user=source_orm.owner_user,
-                owner_group=source_orm.owner_group,
+                creator_user=source_orm.creator_user,
                 existing_ok=False,
             )
 
@@ -2494,8 +2476,7 @@ class DatasetSocket:
         specification_names: Optional[Iterable[str]],
         compute_tag: Optional[str],
         compute_priority: Optional[PriorityEnum],
-        owner_user: Optional[Union[int, str]],
-        owner_group: Optional[Union[int, str]],
+        creator_user: Optional[Union[int, str]],
         find_existing: bool,
         *,
         session: Optional[Session] = None,
@@ -2516,8 +2497,7 @@ class DatasetSocket:
                 specification_names=specification_names,
                 compute_tag=compute_tag,
                 compute_priority=compute_priority,
-                owner_user=owner_user,
-                owner_group=owner_group,
+                creator_user=creator_user,
                 find_existing=find_existing,
                 session=session,
             )

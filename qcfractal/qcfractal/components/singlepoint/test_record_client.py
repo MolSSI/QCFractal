@@ -39,8 +39,7 @@ def test_singlepoint_client_tag_priority(snowflake_client: PortalClient):
 
 
 @pytest.mark.parametrize("spec", test_specs)
-@pytest.mark.parametrize("owner_group", ["group1", None])
-def test_singlepoint_client_add_get(submitter_client: PortalClient, spec: QCSpecification, owner_group: Optional[str]):
+def test_singlepoint_client_add_get(submitter_client: PortalClient, spec: QCSpecification):
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
     ne4 = load_molecule_data("neon_tetramer")
@@ -57,7 +56,6 @@ def test_singlepoint_client_add_get(submitter_client: PortalClient, spec: QCSpec
         spec.protocols,
         "tag1",
         PriorityEnum.high,
-        owner_group,
     )
     time_1 = now_at_utc()
 
@@ -74,8 +72,7 @@ def test_singlepoint_client_add_get(submitter_client: PortalClient, spec: QCSpec
         assert r.task.function is None
         assert r.task.compute_tag == "tag1"
         assert r.task.compute_priority == PriorityEnum.high
-        assert r.owner_user == submitter_client.username
-        assert r.owner_group == owner_group
+        assert r.creator_user == submitter_client.username
         assert time_0 < r.created_on < time_1
         assert time_0 < r.modified_on < time_1
 
@@ -102,7 +99,6 @@ def test_singlepoint_client_add_duplicate(submitter_client: PortalClient, spec: 
         spec.protocols,
         "tag1",
         PriorityEnum.high,
-        None,
         find_existing=True,
     )
 
@@ -118,7 +114,6 @@ def test_singlepoint_client_add_duplicate(submitter_client: PortalClient, spec: 
         spec.protocols,
         "tag1",
         PriorityEnum.high,
-        None,
         find_existing=find_existing,
     )
 

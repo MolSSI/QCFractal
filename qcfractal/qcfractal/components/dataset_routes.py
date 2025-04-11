@@ -99,8 +99,7 @@ def add_dataset_v1(dataset_type: str, body_data: DatasetAddBody):
         default_compute_tag=body_data.default_compute_tag,
         default_compute_priority=body_data.default_compute_priority,
         extras=body_data.extras,
-        owner_user=g.username,
-        owner_group=body_data.owner_group,
+        creator_user=g.username,
         existing_ok=body_data.existing_ok,
     )
 
@@ -194,8 +193,7 @@ def submit_dataset_v1(dataset_type: str, dataset_id: int, body_data: DatasetSubm
         specification_names=body_data.specification_names,
         compute_tag=body_data.compute_tag,
         compute_priority=body_data.compute_priority,
-        owner_user=g.username,
-        owner_group=body_data.owner_group,
+        creator_user=g.username,
         find_existing=body_data.find_existing,
     )
 
@@ -210,8 +208,7 @@ def background_submit_dataset_v1(dataset_type: str, dataset_id: int, body_data: 
         specification_names=body_data.specification_names,
         compute_tag=body_data.compute_tag,
         compute_priority=body_data.compute_priority,
-        owner_user=g.username,
-        owner_group=body_data.owner_group,
+        creator_user=g.username,
         find_existing=body_data.find_existing,
     )
 
@@ -307,8 +304,7 @@ def background_add_entries_v1(dataset_type: str, dataset_id: int, body_data: Dat
         specification_names=body_data.specification_names,
         compute_tag=body_data.compute_tag,
         compute_priority=body_data.compute_priority,
-        owner_user=g.username,
-        owner_group=body_data.owner_group,
+        creator_user=g.username,
         find_existing=body_data.find_existing,
     )
 

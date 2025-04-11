@@ -113,8 +113,7 @@ class BaseDataset(BaseModel):
     default_compute_tag: str
     default_compute_priority: PriorityEnum
 
-    owner_user: Optional[str]
-    owner_group: Optional[str]
+    creator_user: Optional[str]
 
     ########################################
     # Caches of information
@@ -162,6 +161,10 @@ class BaseDataset(BaseModel):
             kwargs["default_compute_tag"] = kwargs.pop("default_tag")
         if "default_priority" in kwargs:
             kwargs["default_compute_priority"] = kwargs.pop("default_priority")
+        if "owner_user" in kwargs:
+            kwargs["creator_user"] = kwargs.pop("owner_user")
+        if "owner_group" in kwargs:
+            del kwargs["owner_group"]
 
         BaseModel.__init__(self, **kwargs)
 
@@ -2310,7 +2313,6 @@ class DatasetAddBody(RestModelBase):
     default_compute_tag: str
     default_compute_priority: PriorityEnum
     extras: Dict[str, Any]
-    owner_group: Optional[str]
     existing_ok: bool = False
 
     # TODO - DEPRECATED - Remove eventually
@@ -2327,6 +2329,9 @@ class DatasetAddBody(RestModelBase):
             values["default_compute_tag"] = values.pop("default_tag")
         if "default_priority" in values:
             values["default_compute_priority"] = values.pop("default_priority")
+
+        if "owner_group" in values:
+            del values["owner_group"]
 
         return values
 
@@ -2430,7 +2435,6 @@ class DatasetSubmitBody(RestModelBase):
     specification_names: Optional[List[str]] = None
     compute_tag: Optional[str] = None
     compute_priority: Optional[PriorityEnum] = None
-    owner_group: Optional[str] = None
     find_existing: bool = True
 
     @root_validator(pre=True)
@@ -2440,6 +2444,8 @@ class DatasetSubmitBody(RestModelBase):
             values["compute_tag"] = values.pop("tag")
         if "priority" in values:
             values["compute_priority"] = values.pop("priority")
+        if "owner_group" in values:
+            del values["owner_group"]
 
         return values
 

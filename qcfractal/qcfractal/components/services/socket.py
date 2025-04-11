@@ -408,8 +408,7 @@ class ServiceSubtaskRecordSocket(BaseRecordSocket):
         function_kwargs: List[Dict[str, Any]],
         compute_tag: str,
         compute_priority: PriorityEnum,
-        owner_user: Optional[Union[int, str]],
-        owner_group: Optional[Union[int, str]],
+        creator_user: Optional[Union[int, str]],
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
@@ -431,10 +430,8 @@ class ServiceSubtaskRecordSocket(BaseRecordSocket):
             The tag for the task. This will assist in routing to appropriate compute managers.
         compute_priority
             The priority for the computation
-        owner_user
-            Name or ID of the user who owns the record
-        owner_group
-            Group with additional permission for these records
+        creator_user
+            Name or ID of the user who created the record
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -447,10 +444,7 @@ class ServiceSubtaskRecordSocket(BaseRecordSocket):
         """
 
         with self.root_socket.optional_session(session, False) as session:
-            owner_user_id, owner_group_id = self.root_socket.users.get_owner_ids(
-                owner_user, owner_group, session=session
-            )
-            self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
+            creator_user_id = self.root_socket.users.get_optional_user_id(creator_user, session=session)
 
             all_orm = []
 
@@ -461,8 +455,7 @@ class ServiceSubtaskRecordSocket(BaseRecordSocket):
                     function_kwargs=kw,
                     required_programs=required_programs,
                     status=RecordStatusEnum.waiting,
-                    owner_user_id=owner_user_id,
-                    owner_group_id=owner_group_id,
+                    creator_user_id=creator_user_id,
                 )
 
                 self.create_task(rec_orm, compute_tag, compute_priority)

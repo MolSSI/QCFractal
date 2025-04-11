@@ -120,8 +120,7 @@ class BaseRecordSocket:
         record_input,
         compute_tag: str,
         compute_priority: PriorityEnum,
-        owner_user: Optional[Union[int, str]],
-        owner_group: Optional[Union[int, str]],
+        creator_user: Optional[Union[int, str]],
         find_existing: bool,
         *,
         session: Optional[Session] = None,
@@ -137,10 +136,8 @@ class BaseRecordSocket:
             The tag for the task. This will assist in routing to appropriate compute managers.
         compute_priority
             The priority for the computation
-        owner_user
-            Name or ID of the user who owns the record
-        owner_group
-            Group with additional permission for these records
+        creator_user
+            Name or ID of the user who created the record
         find_existing
             If True, search for existing records and return those. If False, always add new records
         session
@@ -796,21 +793,13 @@ class RecordSocket:
         if query_data.modified_after is not None:
             and_query.append(orm_type.modified_on >= query_data.modified_after)
 
-        if query_data.owner_user is not None:
+        if query_data.creator_user is not None:
             stmt = stmt.join(UserIDMapSubquery)
 
-            int_ids = {x for x in query_data.owner_user if isinstance(x, int) or x.isdecimal()}
-            str_names = set(query_data.owner_user) - int_ids
+            int_ids = {x for x in query_data.creator_user if isinstance(x, int) or x.isdecimal()}
+            str_names = set(query_data.creator_user) - int_ids
 
             and_query.append(or_(UserIDMapSubquery.username.in_(str_names), UserIDMapSubquery.id.in_(int_ids)))
-
-        if query_data.owner_group is not None:
-            stmt = stmt.join(GroupIDMapSubquery)
-
-            int_ids = {x for x in query_data.owner_group if isinstance(x, int) or x.isdecimal()}
-            str_names = set(query_data.owner_group) - int_ids
-
-            and_query.append(or_(GroupIDMapSubquery.groupname.in_(str_names), GroupIDMapSubquery.id.in_(int_ids)))
 
         if query_data.parent_id is not None:
             # We alias the cte because we might join on it twice
@@ -1172,15 +1161,14 @@ class RecordSocket:
         record_input: AllInputTypes,
         compute_tag: str,
         compute_priority: PriorityEnum,
-        owner_user: Optional[Union[int, str]],
-        owner_group: Optional[Union[int, str]],
+        creator_user: Optional[Union[int, str]],
         find_existing: bool,
         *,
         session: Optional[Session] = None,
     ):
         record_socket = self._handler_map_by_input[type(record_input)]
         return record_socket.add_from_input(
-            record_input, compute_tag, compute_priority, owner_user, owner_group, find_existing, session=session
+            record_input, compute_tag, compute_priority, creator_user, find_existing, session=session
         )
 
     def insert_complete_schema_v1(self, session: Session, results: Sequence[AllResultTypes]) -> List[int]:
