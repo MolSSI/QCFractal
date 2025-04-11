@@ -227,7 +227,6 @@ class PortalClient(PortalClientBase):
         default_compute_tag: str = "*",
         default_compute_priority: PriorityEnum = PriorityEnum.normal,
         extras: Optional[Dict[str, Any]] = None,
-        owner_group: Optional[str] = None,
         existing_ok: bool = False,
     ) -> Project:
         if description is None:
@@ -247,7 +246,6 @@ class PortalClient(PortalClientBase):
             default_compute_tag=default_compute_tag,
             default_compute_priority=default_compute_priority,
             extras=extras,
-            owner_group=owner_group,
             existing_ok=existing_ok,
         )
 

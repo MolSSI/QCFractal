@@ -25,8 +25,7 @@ test_inp_1 = SinglepointInput(
 )
 
 
-@pytest.mark.parametrize("owner_group", ["group1", None])
-def test_project_client_add_get(submitter_client: PortalClient, owner_group: Optional[str]):
+def test_project_client_add_get(submitter_client: PortalClient):
     proj = submitter_client.add_project(
         "test project",
         "Test Description",
@@ -35,7 +34,6 @@ def test_project_client_add_get(submitter_client: PortalClient, owner_group: Opt
         "test_compute_tag",
         PriorityEnum.low,
         {"meta_key_1": "meta_value_1"},
-        owner_group,
     )
 
     assert proj.name == "test project"
@@ -47,7 +45,6 @@ def test_project_client_add_get(submitter_client: PortalClient, owner_group: Opt
     assert proj.extras == {"meta_key_1": "meta_value_1"}
 
     assert proj.owner_user == submitter_client.username
-    assert proj.owner_group == owner_group
 
     # case insensitive
     proj2 = submitter_client.get_project("TEST PrOJECT")

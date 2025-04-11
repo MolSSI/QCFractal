@@ -59,7 +59,6 @@ class ProjectAddBody(RestModelBase):
     default_compute_tag: str
     default_compute_priority: PriorityEnum
     extras: Dict[str, Any]
-    owner_group: Optional[str]
     existing_ok: bool = False
 
 
@@ -76,7 +75,6 @@ class ProjectDatasetAddBody(RestModelBase):
     default_compute_tag: str
     default_compute_priority: PriorityEnum
     extras: Dict[str, Any]
-    owner_group: Optional[str]
     existing_ok: bool = False
 
 
@@ -122,7 +120,6 @@ class Project(BaseModel):
     default_compute_priority: PriorityEnum
 
     owner_user: Optional[str]
-    owner_group: Optional[str]
 
     extras: Dict[str, Any]
 
@@ -202,7 +199,6 @@ class Project(BaseModel):
         tags: List[str] = None,
         compute_tag: Optional[str] = None,
         compute_priority: Optional[PriorityEnum] = None,
-        owner_group: Optional[str] = None,
         find_existing: bool = True,
     ) -> BaseRecord:
 
@@ -224,7 +220,6 @@ class Project(BaseModel):
             record_input=record_input,
             compute_tag=compute_tag,
             compute_priority=compute_priority,
-            owner_group=owner_group,
             find_existing=find_existing,
         )
 
@@ -285,7 +280,6 @@ class Project(BaseModel):
         default_compute_tag: Optional[str] = None,
         default_compute_priority: Optional[PriorityEnum] = None,
         extras: Optional[Dict[str, Any]] = None,
-        owner_group: Optional[str] = None,
         existing_ok: bool = False,
     ) -> BaseDataset:
 
@@ -317,7 +311,6 @@ class Project(BaseModel):
             default_compute_tag=default_compute_tag,
             default_compute_priority=default_compute_priority,
             extras=extras,
-            owner_group=owner_group,
             existing_ok=existing_ok,
         )
 
