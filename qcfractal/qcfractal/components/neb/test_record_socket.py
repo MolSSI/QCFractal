@@ -8,7 +8,7 @@ from qcarchivetesting import load_molecule_data
 from qcfractal.components.neb.record_db_models import NEBRecordORM
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service
-from qcportal.auth import UserInfo, GroupInfo
+from qcportal.auth import UserInfo
 from qcportal.neb import (
     NEBSpecification,
     NEBKeywords,
@@ -33,7 +33,7 @@ def test_neb_socket_add_get(storage_socket: SQLAlchemySocket, session: Session, 
     chain2 = [load_molecule_data("neb/neb_C3H2N_%i" % i) for i in range(21)]
 
     time_0 = now_at_utc()
-    meta, ids = storage_socket.records.neb.add([chain1, chain2], spec, "tag1", PriorityEnum.low, None, None, True)
+    meta, ids = storage_socket.records.neb.add([chain1, chain2], spec, "tag1", PriorityEnum.low, None, True)
     time_1 = now_at_utc()
     assert meta.success
 
@@ -63,7 +63,7 @@ def test_neb_socket_add_same_chains_diff_order(storage_socket: SQLAlchemySocket,
     chain2 = chain1[::-1]
 
     # Now add records
-    meta, ids = storage_socket.records.neb.add([chain1, chain2], spec, "*", PriorityEnum.normal, None, None, True)
+    meta, ids = storage_socket.records.neb.add([chain1, chain2], spec, "*", PriorityEnum.normal, None, True)
     assert meta.success
     assert meta.n_inserted == 2
     assert meta.n_existing == 0
@@ -92,11 +92,11 @@ def test_neb_socket_add_same_1(storage_socket: SQLAlchemySocket):
     )
     chain1 = [load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)]
 
-    meta, id1 = storage_socket.records.neb.add([chain1], spec, "*", PriorityEnum.normal, None, None, True)
+    meta, id1 = storage_socket.records.neb.add([chain1], spec, "*", PriorityEnum.normal, None, True)
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
 
-    meta, id2 = storage_socket.records.neb.add([chain1], spec, "*", PriorityEnum.normal, None, None, True)
+    meta, id2 = storage_socket.records.neb.add([chain1], spec, "*", PriorityEnum.normal, None, True)
     assert meta.n_inserted == 0
     assert meta.n_existing == 1
     assert meta.existing_idx == [0]
@@ -141,13 +141,11 @@ def test_neb_socket_add_same_2(storage_socket: SQLAlchemySocket):
 
     chain1 = [load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)]
 
-    meta, id1 = storage_socket.records.neb.add([chain1], spec1, "*", PriorityEnum.normal, None, None, True)
+    meta, id1 = storage_socket.records.neb.add([chain1], spec1, "*", PriorityEnum.normal, None, True)
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
 
-    meta, id2 = storage_socket.records.neb.add(
-        [chain1, chain1, chain1], spec2, "*", PriorityEnum.normal, None, None, True
-    )
+    meta, id2 = storage_socket.records.neb.add([chain1, chain1, chain1], spec2, "*", PriorityEnum.normal, None, True)
     assert meta.n_inserted == 0
     assert meta.n_existing == 3
     assert meta.existing_idx == [0, 1, 2]
@@ -174,12 +172,12 @@ def test_neb_socket_add_different_1(storage_socket: SQLAlchemySocket):
     )
     chain1 = [load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)]
     chain2 = [load_molecule_data("neb/neb_C3H2N_%i" % i) for i in range(21)]
-    meta, id1 = storage_socket.records.neb.add([chain1, chain2], spec, "*", PriorityEnum.normal, None, None, True)
+    meta, id1 = storage_socket.records.neb.add([chain1, chain2], spec, "*", PriorityEnum.normal, None, True)
     assert meta.n_inserted == 2
     assert meta.inserted_idx == [0, 1]
 
     meta, id2 = storage_socket.records.neb.add(
-        [chain1, chain2, chain2[::-1]], spec, "*", PriorityEnum.normal, None, None, True
+        [chain1, chain2, chain2[::-1]], spec, "*", PriorityEnum.normal, None, True
     )
     assert meta.n_inserted == 1
     assert meta.n_existing == 2
@@ -204,8 +202,7 @@ def test_neb_socket_run(
 ):
     input_spec_1, initial_chain_1, result_data_1 = load_test_data(test_data_name)
 
-    storage_socket.groups.add(GroupInfo(groupname="group1"))
-    storage_socket.users.add(UserInfo(username="submit_user", role="submit", groups=["group1"], enabled=True))
+    storage_socket.users.add(UserInfo(username="submit_user", role="submit", enabled=True))
 
     meta_1, id_1 = storage_socket.records.neb.add(
         [initial_chain_1],
@@ -213,7 +210,6 @@ def test_neb_socket_run(
         "test_tag",
         PriorityEnum.low,
         "submit_user",
-        "group1",
         True,
     )
     assert meta_1.success
@@ -253,9 +249,7 @@ def test_neb_socket_run_duplicate(
 ):
     input_spec_1, molecules_1, result_data_1 = load_test_data("neb_HCN_psi4_pbe_opt_diff")
 
-    meta_1, id_1 = storage_socket.records.neb.add(
-        [molecules_1], input_spec_1, "test_tag", PriorityEnum.low, None, None, True
-    )
+    meta_1, id_1 = storage_socket.records.neb.add([molecules_1], input_spec_1, "test_tag", PriorityEnum.low, None, True)
     id_1 = id_1[0]
     assert meta_1.success
 
@@ -268,7 +262,7 @@ def test_neb_socket_run_duplicate(
 
     # Submit again, without duplicate checking
     meta_2, id_2 = storage_socket.records.neb.add(
-        [molecules_1], input_spec_1, "test_tag", PriorityEnum.low, None, None, False
+        [molecules_1], input_spec_1, "test_tag", PriorityEnum.low, None, False
     )
     id_2 = id_2[0]
     assert meta_2.success

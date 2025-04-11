@@ -27,8 +27,7 @@ These fields are
 - ``status`` - The current status of the record. See :ref:`record_status` for a description of statuses.
 - ``created_on`` - The date and time the record was created.
 - ``modified_on`` - The date and time the record was last modified.
-- ``owner_user`` - The user that owns the record.
-- ``owner_user`` - The group (that the user belongs to) that owns the record.
+- ``creator_user`` - The user that created the record.
 
 .. tab-set::
 

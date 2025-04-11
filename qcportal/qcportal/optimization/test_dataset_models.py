@@ -146,7 +146,6 @@ def test_optimization_dataset_model_submit(dataset_submit_test_client: PortalCli
         "Test dataset",
         default_tag="default_tag",
         default_priority=PriorityEnum.low,
-        owner_group="group1",
     )
     ds_helpers.run_dataset_model_submit(ds, test_entries, test_specs[0], record_compare, background)
 

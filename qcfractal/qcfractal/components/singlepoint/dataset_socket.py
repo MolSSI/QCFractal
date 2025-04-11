@@ -75,8 +75,7 @@ class SinglepointDatasetSocket(BaseDatasetSocket):
         existing_records: Iterable[Tuple[str, str]],
         compute_tag: str,
         compute_priority: PriorityEnum,
-        owner_user_id: Optional[int],
-        owner_group_id: Optional[int],
+        creator_user_id: Optional[int],
         find_existing: bool,
     ) -> InsertCountsMetadata:
 
@@ -97,8 +96,7 @@ class SinglepointDatasetSocket(BaseDatasetSocket):
                 qc_spec_id=spec.specification_id,
                 compute_tag=compute_tag,
                 compute_priority=compute_priority,
-                owner_user_id=owner_user_id,
-                owner_group_id=owner_group_id,
+                creator_user_id=creator_user_id,
                 find_existing=find_existing,
                 session=session,
             )
@@ -129,8 +127,7 @@ class SinglepointDatasetSocket(BaseDatasetSocket):
                     qc_spec=QCSpecification(**new_spec),
                     compute_tag=compute_tag,
                     compute_priority=compute_priority,
-                    owner_user=owner_user_id,
-                    owner_group=owner_group_id,
+                    creator_user=creator_user_id,
                     find_existing=find_existing,
                     session=session,
                 )

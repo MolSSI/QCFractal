@@ -38,8 +38,7 @@ def test_dataset_model_basic(submitter_client: PortalClient):
     assert ds.default_compute_tag == "def_tag"
     assert ds.default_compute_priority == PriorityEnum.low
 
-    assert ds.owner_user == submitter_client.username
-    assert ds.owner_group == "group1"
+    assert ds.creator_user == submitter_client.username
 
     assert ds.entry_names == []
 

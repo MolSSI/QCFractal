@@ -113,7 +113,7 @@ def submit_test_data(
 ) -> Tuple[int, Dict[str, QCEl_AtomicResult]]:
     input_spec, molecule, result = load_test_data(name)
     meta, record_ids = storage_socket.records.manybody.add(
-        [molecule], input_spec, compute_tag, compute_priority, None, None, True
+        [molecule], input_spec, compute_tag, compute_priority, None, True
     )
     assert meta.success
     assert len(record_ids) == 1

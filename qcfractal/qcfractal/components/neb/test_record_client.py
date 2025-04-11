@@ -52,8 +52,7 @@ def test_neb_client_tag_priority(snowflake_client: PortalClient):
 
 
 @pytest.mark.parametrize("spec", test_specs)
-@pytest.mark.parametrize("owner_group", ["group1", None])
-def test_neb_client_add_get(submitter_client: PortalClient, spec: NEBSpecification, owner_group: Optional[str]):
+def test_neb_client_add_get(submitter_client: PortalClient, spec: NEBSpecification):
     chain1 = [load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)]
     chain2 = [load_molecule_data("neb/neb_C3H2N_%i" % i) for i in range(21)]
 
@@ -66,7 +65,6 @@ def test_neb_client_add_get(submitter_client: PortalClient, spec: NEBSpecificati
         keywords=spec.keywords,
         compute_tag="tag1",
         compute_priority=PriorityEnum.low,
-        owner_group=owner_group,
     )
 
     time_1 = now_at_utc()
@@ -87,8 +85,7 @@ def test_neb_client_add_get(submitter_client: PortalClient, spec: NEBSpecificati
         assert r.service.compute_tag == "tag1"
         assert r.service.compute_priority == PriorityEnum.low
 
-        assert r.owner_user == submitter_client.username
-        assert r.owner_group == owner_group
+        assert r.creator_user == submitter_client.username
 
         assert time_0 < r.created_on < time_1
         assert time_0 < r.modified_on < time_1
@@ -118,7 +115,6 @@ def test_neb_client_add_duplicate(submitter_client: PortalClient, spec: NEBSpeci
         keywords=spec.keywords,
         compute_tag="tag1",
         compute_priority=PriorityEnum.low,
-        owner_group=None,
         find_existing=True,
     )
 
@@ -134,7 +130,6 @@ def test_neb_client_add_duplicate(submitter_client: PortalClient, spec: NEBSpeci
         keywords=spec.keywords,
         compute_tag="tag1",
         compute_priority=PriorityEnum.low,
-        owner_group=None,
         find_existing=find_existing,
     )
 

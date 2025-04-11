@@ -9,7 +9,7 @@ from qcfractal.components.gridoptimization.record_db_models import Gridoptimizat
 from qcfractal.components.optimization.record_db_models import OptimizationRecordORM
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service
-from qcportal.auth import UserInfo, GroupInfo
+from qcportal.auth import UserInfo
 from qcportal.gridoptimization import GridoptimizationSpecification, GridoptimizationKeywords
 from qcportal.optimization import OptimizationSpecification, OptimizationProtocols
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
@@ -31,9 +31,7 @@ def test_gridoptimization_socket_add_get(
     h3ns = load_molecule_data("go_H3NS")
 
     time_0 = now_at_utc()
-    meta, ids = storage_socket.records.gridoptimization.add(
-        [hooh, h3ns], spec, "tag1", PriorityEnum.low, None, None, True
-    )
+    meta, ids = storage_socket.records.gridoptimization.add([hooh, h3ns], spec, "tag1", PriorityEnum.low, None, True)
     time_1 = now_at_utc()
     assert meta.success
 
@@ -81,11 +79,11 @@ def test_gridoptimization_socket_find_existing_1(storage_socket: SQLAlchemySocke
     )
 
     hooh = load_molecule_data("peroxide2")
-    meta, id1 = storage_socket.records.gridoptimization.add([hooh], spec, "*", PriorityEnum.normal, None, None, True)
+    meta, id1 = storage_socket.records.gridoptimization.add([hooh], spec, "*", PriorityEnum.normal, None, True)
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
 
-    meta, id2 = storage_socket.records.gridoptimization.add([hooh], spec, "*", PriorityEnum.normal, None, None, True)
+    meta, id2 = storage_socket.records.gridoptimization.add([hooh], spec, "*", PriorityEnum.normal, None, True)
     assert meta.n_inserted == 0
     assert meta.n_existing == 1
     assert meta.existing_idx == [0]
@@ -142,15 +140,11 @@ def test_gridoptimization_socket_find_existing_2(storage_socket: SQLAlchemySocke
 
     mol1 = load_molecule_data("go_H3NS")
     mol2 = load_molecule_data("peroxide2")
-    meta, id1 = storage_socket.records.gridoptimization.add(
-        [mol1, mol2], spec1, "*", PriorityEnum.normal, None, None, True
-    )
+    meta, id1 = storage_socket.records.gridoptimization.add([mol1, mol2], spec1, "*", PriorityEnum.normal, None, True)
     assert meta.n_inserted == 2
     assert meta.inserted_idx == [0, 1]
 
-    meta, id2 = storage_socket.records.gridoptimization.add(
-        [mol1, mol2], spec2, "*", PriorityEnum.normal, None, None, True
-    )
+    meta, id2 = storage_socket.records.gridoptimization.add([mol1, mol2], spec2, "*", PriorityEnum.normal, None, True)
     assert meta.n_inserted == 0
     assert meta.n_existing == 2
     assert meta.existing_idx == [0, 1]
@@ -170,11 +164,10 @@ def test_gridoptimization_socket_run(
 ):
     input_spec_1, molecules_1, result_data_1 = load_test_data(test_data_name)
 
-    storage_socket.groups.add(GroupInfo(groupname="group1"))
-    storage_socket.users.add(UserInfo(username="submit_user", role="submit", groups=["group1"], enabled=True))
+    storage_socket.users.add(UserInfo(username="submit_user", role="submit", enabled=True))
 
     meta_1, id_1 = storage_socket.records.gridoptimization.add(
-        [molecules_1], input_spec_1, "test_tag", PriorityEnum.low, "submit_user", "group1", True
+        [molecules_1], input_spec_1, "test_tag", PriorityEnum.low, "submit_user", True
     )
     id_1 = id_1[0]
     assert meta_1.success
@@ -224,7 +217,7 @@ def test_gridoptimization_socket_run_duplicate(
     input_spec_1, molecules_1, result_data_1 = load_test_data("go_H2O2_psi4_b3lyp")
 
     meta_1, id_1 = storage_socket.records.gridoptimization.add(
-        [molecules_1], input_spec_1, "test_tag", PriorityEnum.low, None, None, True
+        [molecules_1], input_spec_1, "test_tag", PriorityEnum.low, None, True
     )
     id_1 = id_1[0]
     assert meta_1.success
@@ -237,7 +230,7 @@ def test_gridoptimization_socket_run_duplicate(
 
     # Submit again, without duplicate checking
     meta_2, id_2 = storage_socket.records.gridoptimization.add(
-        [molecules_1], input_spec_1, "test_tag", PriorityEnum.low, None, None, False
+        [molecules_1], input_spec_1, "test_tag", PriorityEnum.low, None, False
     )
     id_2 = id_2[0]
     assert meta_2.success

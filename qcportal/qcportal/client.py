@@ -298,6 +298,8 @@ class PortalClient(PortalClientBase):
             self._logger.warning(f"'group' parameter has been deprecated and will be removed in a future version")
         if visibility is not None:
             self._logger.warning(f"'visibility' parameter has been deprecated and will be removed in a future version")
+        if owner_group is not None:
+            self._logger.warning(f"'owner_group' parameter has been deprecated and will be removed in a future version")
 
         if description is None:
             description = ""
@@ -325,7 +327,6 @@ class PortalClient(PortalClientBase):
             default_tag=default_tag,
             default_priority=default_priority,
             extras=extras,
-            owner_group=owner_group,
             existing_ok=existing_ok,
         )
 
@@ -764,8 +765,7 @@ class PortalClient(PortalClientBase):
         created_after: Optional[Union[datetime, str]] = None,
         modified_before: Optional[Union[datetime, str]] = None,
         modified_after: Optional[Union[datetime, str]] = None,
-        owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
-        owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
+        creator_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: int = None,
         include: Optional[Iterable[str]] = None,
     ) -> RecordQueryIterator[BaseRecord]:
@@ -801,10 +801,8 @@ class PortalClient(PortalClientBase):
             Query records that were modified before the given date/time
         modified_after
             Query records that were modified after the given date/time
-        owner_user
-            Query records owned by a user in the given list (usernames or IDs)
-        owner_group
-            Query records owned by a group in the given list (group names or IDS)
+        creator_user
+            Query records created by a user in the given list (usernames or IDs)
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
         include
@@ -828,8 +826,7 @@ class PortalClient(PortalClientBase):
             "created_after": created_after,
             "modified_before": modified_before,
             "modified_after": modified_after,
-            "owner_user": make_list(owner_user),
-            "owner_group": make_list(owner_group),
+            "creator_user": make_list(creator_user),
             "limit": limit,
         }
 
@@ -1028,7 +1025,6 @@ class PortalClient(PortalClientBase):
         protocols: Optional[Union[SinglepointProtocols, Dict[str, Any]]] = None,
         compute_tag: str = "*",
         compute_priority: PriorityEnum = PriorityEnum.normal,
-        owner_group: Optional[str] = None,
         find_existing: bool = True,
         **kwargs,  # For deprecated parameters
     ) -> Tuple[InsertMetadata, List[int]]:
@@ -1060,8 +1056,6 @@ class PortalClient(PortalClientBase):
             The tag for the task. This will assist in routing to appropriate compute managers.
         compute_priority
             The priority of the job (high, normal, low). Default is normal.
-        owner_group
-            Group with additional permission for these records
         find_existing
             If True, search for existing records and return those. If False, always add new records
 
@@ -1098,7 +1092,6 @@ class PortalClient(PortalClientBase):
             },
             "compute_tag": compute_tag,
             "compute_priority": compute_priority,
-            "owner_group": owner_group,
             "find_existing": find_existing,
         }
 
@@ -1163,8 +1156,7 @@ class PortalClient(PortalClientBase):
         basis: Optional[Union[str, Iterable[Optional[str]]]] = None,
         keywords: Optional[Union[Dict[str, Any], Iterable[Dict[str, Any]]]] = None,
         molecule_id: Optional[Union[int, Iterable[int]]] = None,
-        owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
-        owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
+        creator_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
         include: Optional[Iterable[str]] = None,
     ) -> RecordQueryIterator[SinglepointRecord]:
@@ -1205,10 +1197,8 @@ class PortalClient(PortalClientBase):
             Query records with these keywords (exact match)
         molecule_id
             Query records whose molecule (id) is in the given list
-        owner_user
-            Query records owned by a user in the given list
-        owner_group
-            Query records owned by a group in the given list
+        creator_user
+            Query records created by a user in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
         include
@@ -1237,8 +1227,7 @@ class PortalClient(PortalClientBase):
             "created_after": created_after,
             "modified_before": modified_before,
             "modified_after": modified_after,
-            "owner_user": make_list(owner_user),
-            "owner_group": make_list(owner_group),
+            "creator_user": make_list(creator_user),
             "limit": limit,
         }
 
@@ -1258,7 +1247,6 @@ class PortalClient(PortalClientBase):
         protocols: Optional[OptimizationProtocols] = None,
         compute_tag: str = "*",
         compute_priority: PriorityEnum = PriorityEnum.normal,
-        owner_group: Optional[str] = None,
         find_existing: bool = True,
         **kwargs,  # For deprecated parameters
     ) -> Tuple[InsertMetadata, List[int]]:
@@ -1286,8 +1274,6 @@ class PortalClient(PortalClientBase):
             The tag for the task. This will assist in routing to appropriate compute managers.
         compute_priority
             The priority of the job (high, normal, low). Default is normal.
-        owner_group
-            Group with additional permission for these records
         find_existing
             If True, search for existing records and return those. If False, always add new records
 
@@ -1322,7 +1308,6 @@ class PortalClient(PortalClientBase):
             },
             "compute_tag": compute_tag,
             "compute_priority": compute_priority,
-            "owner_group": owner_group,
             "find_existing": find_existing,
         }
 
@@ -1392,8 +1377,7 @@ class PortalClient(PortalClientBase):
         qc_basis: Optional[Union[str, Iterable[Optional[str]]]] = None,
         initial_molecule_id: Optional[Union[int, Iterable[int]]] = None,
         final_molecule_id: Optional[Union[int, Iterable[int]]] = None,
-        owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
-        owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
+        creator_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
         include: Optional[Iterable[str]] = None,
     ) -> RecordQueryIterator[OptimizationRecord]:
@@ -1436,10 +1420,8 @@ class PortalClient(PortalClientBase):
             Query records whose initial molecule (id) is in the given list
         final_molecule_id
             Query records whose final molecule (id) is in the given list
-        owner_user
-            Query records owned by a user in the given list
-        owner_group
-            Query records owned by a group in the given list
+        creator_user
+            Query records created by a user in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
         include
@@ -1468,8 +1450,7 @@ class PortalClient(PortalClientBase):
             "created_after": created_after,
             "modified_before": modified_before,
             "modified_after": modified_after,
-            "owner_user": make_list(owner_user),
-            "owner_group": make_list(owner_group),
+            "creator_user": make_list(creator_user),
             "limit": limit,
         }
 
@@ -1488,7 +1469,6 @@ class PortalClient(PortalClientBase):
         keywords: Union[TorsiondriveKeywords, Dict[str, Any]],
         compute_tag: str = "*",
         compute_priority: PriorityEnum = PriorityEnum.normal,
-        owner_group: Optional[str] = None,
         find_existing: bool = True,
         **kwargs,  # For deprecated parameters
     ) -> Tuple[InsertMetadata, List[int]]:
@@ -1515,8 +1495,6 @@ class PortalClient(PortalClientBase):
             The tag for the task. This will assist in routing to appropriate compute managers.
         compute_priority
             The priority of the job (high, normal, low). Default is normal.
-        owner_group
-            Group with additional permission for these records
         find_existing
             If True, search for existing records and return those. If False, always add new records
 
@@ -1552,7 +1530,6 @@ class PortalClient(PortalClientBase):
             "as_service": True,
             "compute_tag": compute_tag,
             "compute_priority": compute_priority,
-            "owner_group": owner_group,
             "find_existing": find_existing,
         }
 
@@ -1613,8 +1590,8 @@ class PortalClient(PortalClientBase):
         qc_method: Optional[Union[str, Iterable[str]]] = None,
         qc_basis: Optional[Union[str, Iterable[str]]] = None,
         initial_molecule_id: Optional[Union[int, Iterable[int]]] = None,
-        owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
-        owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
+        creator_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
+        creator_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
         include: Optional[Iterable[str]] = None,
     ) -> RecordQueryIterator[TorsiondriveRecord]:
@@ -1657,10 +1634,8 @@ class PortalClient(PortalClientBase):
             Query records whose basis is in the given list
         initial_molecule_id
             Query records whose initial molecule (id) is in the given list
-        owner_user
-            Query records owned by a user in the given list
-        owner_group
-            Query records owned by a group in the given list
+        creator_user
+            Query records created by a user in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
         include
@@ -1689,8 +1664,7 @@ class PortalClient(PortalClientBase):
             "created_after": created_after,
             "modified_before": modified_before,
             "modified_after": modified_after,
-            "owner_user": make_list(owner_user),
-            "owner_group": make_list(owner_group),
+            "creator_user": make_list(creator_user),
             "limit": limit,
         }
 
@@ -1709,7 +1683,6 @@ class PortalClient(PortalClientBase):
         keywords: Union[GridoptimizationKeywords, Dict[str, Any]],
         compute_tag: str = "*",
         compute_priority: PriorityEnum = PriorityEnum.normal,
-        owner_group: Optional[str] = None,
         find_existing: bool = True,
         **kwargs,  # For deprecated parameters
     ) -> Tuple[InsertMetadata, List[int]]:
@@ -1736,8 +1709,6 @@ class PortalClient(PortalClientBase):
             The tag for the task. This will assist in routing to appropriate compute managers.
         compute_priority
             The priority of the job (high, normal, low). Default is normal.
-        owner_group
-            Group with additional permission for these records
         find_existing
             If True, search for existing records and return those. If False, always add new records
 
@@ -1773,7 +1744,6 @@ class PortalClient(PortalClientBase):
             },
             "compute_tag": compute_tag,
             "compute_priority": compute_priority,
-            "owner_group": owner_group,
             "find_existing": find_existing,
         }
 
@@ -1834,8 +1804,7 @@ class PortalClient(PortalClientBase):
         qc_method: Optional[Union[str, Iterable[str]]] = None,
         qc_basis: Optional[Union[str, Iterable[Optional[str]]]] = None,
         initial_molecule_id: Optional[Union[int, Iterable[int]]] = None,
-        owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
-        owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
+        creator_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
         include: Optional[Iterable[str]] = None,
     ) -> RecordQueryIterator[GridoptimizationRecord]:
@@ -1878,10 +1847,8 @@ class PortalClient(PortalClientBase):
             Query records whose basis is in the given list
         initial_molecule_id
             Query records whose initial molecule (id) is in the given list
-        owner_user
-            Query records owned by a user in the given list
-        owner_group
-            Query records owned by a group in the given list
+        creator_user
+            Query records created by a user in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
         include
@@ -1910,8 +1877,7 @@ class PortalClient(PortalClientBase):
             "created_after": created_after,
             "modified_before": modified_before,
             "modified_after": modified_after,
-            "owner_user": make_list(owner_user),
-            "owner_group": make_list(owner_group),
+            "creator_user": make_list(creator_user),
             "limit": limit,
         }
 
@@ -1931,7 +1897,6 @@ class PortalClient(PortalClientBase):
         keywords: ReactionKeywords,
         compute_tag: str = "*",
         compute_priority: PriorityEnum = PriorityEnum.normal,
-        owner_group: Optional[str] = None,
         find_existing: bool = True,
         **kwargs,  # For deprecated parameters
     ) -> Tuple[InsertMetadata, List[int]]:
@@ -1965,8 +1930,6 @@ class PortalClient(PortalClientBase):
             The tag for the task. This will assist in routing to appropriate compute managers.
         compute_priority
             The priority of the job (high, normal, low). Default is normal.
-        owner_group
-            Group with additional permission for these records
         find_existing
             If True, search for existing records and return those. If False, always add new records
 
@@ -2002,7 +1965,6 @@ class PortalClient(PortalClientBase):
             },
             "compute_tag": compute_tag,
             "compute_priority": compute_priority,
-            "owner_group": owner_group,
             "find_existing": find_existing,
         }
 
@@ -2063,8 +2025,7 @@ class PortalClient(PortalClientBase):
         qc_method: Optional[Union[str, Iterable[str]]] = None,
         qc_basis: Optional[Union[str, Iterable[str]]] = None,
         molecule_id: Optional[Union[int, Iterable[int]]] = None,
-        owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
-        owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
+        creator_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
         include: Optional[Iterable[str]] = None,
     ) -> RecordQueryIterator[ReactionRecord]:
@@ -2107,10 +2068,8 @@ class PortalClient(PortalClientBase):
             Query records whose basis is in the given list
         molecule_id
             Query reactions that contain a molecule (id) is in the given list
-        owner_user
-            Query records owned by a user in the given list
-        owner_group
-            Query records owned by a group in the given list
+        creator_user
+            Query records created by a user in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
         include
@@ -2139,8 +2098,7 @@ class PortalClient(PortalClientBase):
             "created_after": created_after,
             "modified_before": modified_before,
             "modified_after": modified_after,
-            "owner_user": make_list(owner_user),
-            "owner_group": make_list(owner_group),
+            "creator_user": make_list(creator_user),
             "limit": limit,
         }
 
@@ -2160,7 +2118,6 @@ class PortalClient(PortalClientBase):
         keywords: Union[ManybodyKeywords, Dict[str, Any]],
         compute_tag: str = "*",
         compute_priority: PriorityEnum = PriorityEnum.normal,
-        owner_group: Optional[str] = None,
         find_existing: bool = True,
         **kwargs,  # For deprecated parameters
     ) -> Tuple[InsertMetadata, List[int]]:
@@ -2186,8 +2143,6 @@ class PortalClient(PortalClientBase):
             The tag for the task. This will assist in routing to appropriate compute managers.
         compute_priority
             The priority of the job (high, normal, low). Default is normal.
-        owner_group
-            Group with additional permission for these records
         find_existing
             If True, search for existing records and return those. If False, always add new records
 
@@ -2224,7 +2179,6 @@ class PortalClient(PortalClientBase):
             },
             "compute_tag": compute_tag,
             "compute_priority": compute_priority,
-            "owner_group": owner_group,
             "find_existing": find_existing,
         }
 
@@ -2284,8 +2238,7 @@ class PortalClient(PortalClientBase):
         qc_method: Optional[Union[str, Iterable[str]]] = None,
         qc_basis: Optional[Union[str, Iterable[str]]] = None,
         initial_molecule_id: Optional[Union[int, Iterable[int]]] = None,
-        owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
-        owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
+        creator_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
         include: Optional[Iterable[str]] = None,
     ) -> RecordQueryIterator[ManybodyRecord]:
@@ -2326,10 +2279,8 @@ class PortalClient(PortalClientBase):
             Query records whose qc basis is in the given list
         initial_molecule_id
             Query manybody calculations that contain an initial molecule (id) is in the given list
-        owner_user
-            Query records owned by a user in the given list
-        owner_group
-            Query records owned by a group in the given list
+        creator_user
+            Query records created by a user in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
         include
@@ -2357,8 +2308,7 @@ class PortalClient(PortalClientBase):
             "created_after": created_after,
             "modified_before": modified_before,
             "modified_after": modified_after,
-            "owner_user": make_list(owner_user),
-            "owner_group": make_list(owner_group),
+            "creator_user": make_list(creator_user),
             "limit": limit,
         }
 
@@ -2378,7 +2328,6 @@ class PortalClient(PortalClientBase):
         keywords: Union[NEBKeywords, Dict[str, Any]],
         compute_tag: str = "*",
         compute_priority: PriorityEnum = PriorityEnum.normal,
-        owner_group: Optional[str] = None,
         find_existing: bool = True,
         **kwargs,  # For deprecated parameters
     ) -> Tuple[InsertMetadata, List[int]]:
@@ -2407,8 +2356,6 @@ class PortalClient(PortalClientBase):
             The tag for the task. This will assist in routing to appropriate compute managers.
         compute_priority
             The priority of the job (high, normal, low). Default is normal.
-        owner_group
-            Group with additional permission for these records
         find_existing
             If True, search for existing records and return those. If False, always add new records
 
@@ -2439,7 +2386,6 @@ class PortalClient(PortalClientBase):
             },
             "compute_tag": compute_tag,
             "compute_priority": compute_priority,
-            "owner_group": owner_group,
             "find_existing": find_existing,
         }
 
@@ -2507,8 +2453,7 @@ class PortalClient(PortalClientBase):
         qc_method: Optional[Union[str, Iterable[str]]] = None,
         qc_basis: Optional[Union[str, Iterable[str]]] = None,
         molecule_id: Optional[Union[int, Iterable[int]]] = None,
-        owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
-        owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
+        creator_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
         include: Optional[Iterable[str]] = None,
     ) -> RecordQueryIterator[NEBRecord]:
@@ -2549,10 +2494,8 @@ class PortalClient(PortalClientBase):
             Query records whose basis is in the given list
         molecule_id
             Query records whose initial chains contain a molecule (id) that is in the given list
-        owner_user
-            Query records owned by a user in the given list
-        owner_group
-            Query records owned by a group in the given list
+        creator_user
+            Query records created by a user in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
         include
@@ -2580,8 +2523,7 @@ class PortalClient(PortalClientBase):
             "created_after": created_after,
             "modified_before": modified_before,
             "modified_after": modified_after,
-            "owner_user": make_list(owner_user),
-            "owner_group": make_list(owner_group),
+            "creator_user": make_list(creator_user),
             "limit": limit,
         }
 
