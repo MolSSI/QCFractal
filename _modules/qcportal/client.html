@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=9c7c952f"></script>
+    <script src="../../_static/documentation_options.js?v=1f4546ab"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.60.post23+g828be87d6" />
+  <meta name="docsearch:version" content="0.60.post38+gc2d7a5df0" />
   </head>
   
   
@@ -501,11 +501,9 @@
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.auth</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">UserInfo</span><span class="p">,</span>
-    <span class="n">RoleInfo</span><span class="p">,</span>
     <span class="n">GroupInfo</span><span class="p">,</span>
     <span class="n">is_valid_username</span><span class="p">,</span>
     <span class="n">is_valid_password</span><span class="p">,</span>
-    <span class="n">is_valid_rolename</span><span class="p">,</span>
     <span class="n">is_valid_groupname</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.base_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">CommonBulkGetNamesBody</span><span class="p">,</span> <span class="n">CommonBulkGetBody</span>
@@ -3575,80 +3573,8 @@
 
 
     <span class="c1">##############################################################</span>
-    <span class="c1"># User, group, &amp; role management</span>
+    <span class="c1"># User &amp; group management</span>
     <span class="c1">##############################################################</span>
-
-<div class="viewcode-block" id="PortalClient.list_roles">
-<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.list_roles">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">list_roles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">RoleInfo</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        List all user roles on the server</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="s2">&quot;api/v1/roles&quot;</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">RoleInfo</span><span class="p">])</span></div>
-
-
-<div class="viewcode-block" id="PortalClient.get_role">
-<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.get_role">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_role</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rolename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RoleInfo</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get information about a role on the server</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">is_valid_rolename</span><span class="p">(</span><span class="n">rolename</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/roles/</span><span class="si">{</span><span class="n">rolename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">RoleInfo</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="PortalClient.add_role">
-<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.add_role">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">add_role</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">role_info</span><span class="p">:</span> <span class="n">RoleInfo</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Adds a role with permissions to the server</span>
-
-<span class="sd">        If not successful, an exception is raised.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">is_valid_rolename</span><span class="p">(</span><span class="n">role_info</span><span class="o">.</span><span class="n">rolename</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="s2">&quot;api/v1/roles&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">role_info</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="PortalClient.modify_role">
-<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.modify_role">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">modify_role</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">role_info</span><span class="p">:</span> <span class="n">RoleInfo</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RoleInfo</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Modifies the permissions of a role on the server</span>
-
-<span class="sd">        If not successful, an exception is raised.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        :</span>
-<span class="sd">            A copy of the role as it now appears on the server</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">is_valid_rolename</span><span class="p">(</span><span class="n">role_info</span><span class="o">.</span><span class="n">rolename</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;put&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/roles/</span><span class="si">{</span><span class="n">role_info</span><span class="o">.</span><span class="n">rolename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">RoleInfo</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">role_info</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="PortalClient.delete_role">
-<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.delete_role">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">delete_role</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rolename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Deletes a role from the server</span>
-
-<span class="sd">        This will not delete any role to which a user is assigned</span>
-
-<span class="sd">        Will raise an exception on error</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        rolename</span>
-<span class="sd">            Name of the role to delete</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">is_valid_rolename</span><span class="p">(</span><span class="n">rolename</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;delete&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/roles/</span><span class="si">{</span><span class="n">rolename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
-
 
 <div class="viewcode-block" id="PortalClient.list_groups">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.list_groups">[docs]</a>

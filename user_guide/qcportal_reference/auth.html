@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=9c7c952f"></script>
+    <script src="../../_static/documentation_options.js?v=1f4546ab"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="QCPortal Clients" href="clients.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.60.post23+g828be87d6" />
+  <meta name="docsearch:version" content="0.60.post38+gc2d7a5df0" />
   </head>
   
   
@@ -558,128 +558,6 @@
 </dl>
 </dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="qcportal.auth.models.is_valid_rolename">
-<span class="sig-name descname"><span class="pre">is_valid_rolename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rolename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/auth/models.html#is_valid_rolename"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.auth.models.is_valid_rolename" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>rolename</strong> (<em>str</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py class pydantic_model">
-<dt class="sig sig-object py" id="qcportal.auth.models.PolicyStatement">
-<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PolicyStatement</span></span><a class="reference internal" href="../../_modules/qcportal/auth/models.html#PolicyStatement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.auth.models.PolicyStatement" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
-<p>A statment of permissions for a role</p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Fields<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><a class="reference internal" href="#qcportal.auth.models.PolicyStatement.Action" title="qcportal.auth.models.PolicyStatement.Action"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Action</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">List[str])</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.auth.models.PolicyStatement.Effect" title="qcportal.auth.models.PolicyStatement.Effect"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Effect</span> <span class="pre">(str)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.auth.models.PolicyStatement.Resource" title="qcportal.auth.models.PolicyStatement.Resource"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Resource</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">List[str])</span></code></a></p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.auth.models.PolicyStatement.Effect">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Effect</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.auth.models.PolicyStatement.Effect" title="Link to this definition">#</a></dt>
-<dd><p>The effect of the permission (Allow, Deny)</p>
-</dd></dl>
-
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.auth.models.PolicyStatement.Action">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Action</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.auth.models.PolicyStatement.Action" title="Link to this definition">#</a></dt>
-<dd><p>The actions this permission applies to (GET, POST, etc). May be ‘*’ to apply to all.</p>
-</dd></dl>
-
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.auth.models.PolicyStatement.Resource">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Resource</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.auth.models.PolicyStatement.Resource" title="Link to this definition">#</a></dt>
-<dd><p>The resource this permission applies to. Usually the first part of the path (molecules, keywords, etc). May be ‘*’ to apply to all.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class pydantic_model">
-<dt class="sig sig-object py" id="qcportal.auth.models.PermissionsPolicy">
-<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PermissionsPolicy</span></span><a class="reference internal" href="../../_modules/qcportal/auth/models.html#PermissionsPolicy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.auth.models.PermissionsPolicy" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
-<p>Permissions assigned to a role</p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Config<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>extra</strong>: <em>Extra = Extra.forbid</em></p></li>
-</ul>
-</dd>
-<dt class="field-even">Fields<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><a class="reference internal" href="#qcportal.auth.models.PermissionsPolicy.Statement" title="qcportal.auth.models.PermissionsPolicy.Statement"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Statement</span> <span class="pre">(List[qcportal.auth.models.PolicyStatement])</span></code></a></p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.auth.models.PermissionsPolicy.Statement">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Statement</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#qcportal.auth.models.PolicyStatement" title="qcportal.auth.models.PolicyStatement"><span class="pre">PolicyStatement</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.auth.models.PermissionsPolicy.Statement" title="Link to this definition">#</a></dt>
-<dd><p>Permission statements</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class pydantic_model">
-<dt class="sig sig-object py" id="qcportal.auth.models.RoleInfo">
-<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RoleInfo</span></span><a class="reference internal" href="../../_modules/qcportal/auth/models.html#RoleInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.auth.models.RoleInfo" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
-<p>Information about a role</p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Config<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>extra</strong>: <em>Extra = Extra.forbid</em></p></li>
-</ul>
-</dd>
-<dt class="field-even">Fields<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><a class="reference internal" href="#qcportal.auth.models.RoleInfo.permissions" title="qcportal.auth.models.RoleInfo.permissions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">permissions</span> <span class="pre">(qcportal.auth.models.PermissionsPolicy)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.auth.models.RoleInfo.rolename" title="qcportal.auth.models.RoleInfo.rolename"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rolename</span> <span class="pre">(str)</span></code></a></p></li>
-</ul>
-</dd>
-<dt class="field-odd">Validators<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_valid_rolename</span></code> » <a class="reference internal" href="#qcportal.auth.models.RoleInfo.rolename" title="qcportal.auth.models.RoleInfo.rolename"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rolename</span></code></a></p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.auth.models.RoleInfo.rolename">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rolename</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.auth.models.RoleInfo.rolename" title="Link to this definition">#</a></dt>
-<dd><p>The name of the role</p>
-<dl class="field-list simple">
-<dt class="field-odd">Validated by<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_valid_rolename</span></code></p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.auth.models.RoleInfo.permissions">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">permissions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.auth.models.PermissionsPolicy" title="qcportal.auth.models.PermissionsPolicy"><span class="pre">PermissionsPolicy</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.auth.models.RoleInfo.permissions" title="Link to this definition">#</a></dt>
-<dd><p>The permissions associated with this role</p>
-</dd></dl>
-
-</dd></dl>
-
 <dl class="py class pydantic_model">
 <dt class="sig sig-object py" id="qcportal.auth.models.GroupInfo">
 <em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GroupInfo</span></span><a class="reference internal" href="../../_modules/qcportal/auth/models.html#GroupInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.auth.models.GroupInfo" title="Link to this definition">#</a></dt>
@@ -763,7 +641,6 @@
 <dt class="field-odd">Validators<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_valid_groupnames</span></code> » <a class="reference internal" href="#qcportal.auth.models.UserInfo.groups" title="qcportal.auth.models.UserInfo.groups"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups</span></code></a></p></li>
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_valid_rolename</span></code> » <a class="reference internal" href="#qcportal.auth.models.UserInfo.role" title="qcportal.auth.models.UserInfo.role"><code class="xref py py-obj docutils literal notranslate"><span class="pre">role</span></code></a></p></li>
 <li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_valid_username</span></code> » <a class="reference internal" href="#qcportal.auth.models.UserInfo.username" title="qcportal.auth.models.UserInfo.username"><code class="xref py py-obj docutils literal notranslate"><span class="pre">username</span></code></a></p></li>
 </ul>
 </dd>
@@ -797,13 +674,6 @@
 <dt class="sig sig-object py" id="qcportal.auth.models.UserInfo.role">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">role</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.auth.models.UserInfo.role" title="Link to this definition">#</a></dt>
 <dd><p>The role this user belongs to</p>
-<dl class="field-list simple">
-<dt class="field-odd">Validated by<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_valid_rolename</span></code></p></li>
-</ul>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -922,22 +792,6 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.is_valid_password"><code class="docutils literal notranslate"><span class="pre">is_valid_password()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.is_valid_username"><code class="docutils literal notranslate"><span class="pre">is_valid_username()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.is_valid_groupname"><code class="docutils literal notranslate"><span class="pre">is_valid_groupname()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.is_valid_rolename"><code class="docutils literal notranslate"><span class="pre">is_valid_rolename()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.PolicyStatement"><code class="docutils literal notranslate"><span class="pre">PolicyStatement</span></code></a><ul class="visible nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.PolicyStatement.Effect"><code class="docutils literal notranslate"><span class="pre">PolicyStatement.Effect</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.PolicyStatement.Action"><code class="docutils literal notranslate"><span class="pre">PolicyStatement.Action</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.PolicyStatement.Resource"><code class="docutils literal notranslate"><span class="pre">PolicyStatement.Resource</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.PermissionsPolicy"><code class="docutils literal notranslate"><span class="pre">PermissionsPolicy</span></code></a><ul class="visible nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.PermissionsPolicy.Statement"><code class="docutils literal notranslate"><span class="pre">PermissionsPolicy.Statement</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.RoleInfo"><code class="docutils literal notranslate"><span class="pre">RoleInfo</span></code></a><ul class="visible nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.RoleInfo.rolename"><code class="docutils literal notranslate"><span class="pre">RoleInfo.rolename</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.RoleInfo.permissions"><code class="docutils literal notranslate"><span class="pre">RoleInfo.permissions</span></code></a></li>
-</ul>
-</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.GroupInfo"><code class="docutils literal notranslate"><span class="pre">GroupInfo</span></code></a><ul class="visible nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.GroupInfo.id"><code class="docutils literal notranslate"><span class="pre">GroupInfo.id</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.GroupInfo.groupname"><code class="docutils literal notranslate"><span class="pre">GroupInfo.groupname</span></code></a></li>

@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=9c7c952f"></script>
+    <script src="../_static/documentation_options.js?v=1f4546ab"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="QCArchive Quickstart" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.60.post23+g828be87d6" />
+  <meta name="docsearch:version" content="0.60.post38+gc2d7a5df0" />
   </head>
   
   
@@ -490,7 +490,7 @@ To work with the QCArchive demo server, enter <code class="docutils literal notr
 </div>
 </div>
 <div class="cell_output docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"version_major": 2, "version_minor": 0, "model_id": "9a31371154b74901a2fb7cc854af8b67"}</script><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>WARNING: This client version is newer than the server version. This may work if the versions are close, but expect exceptions and errors if attempting things the server does not support. client version: 0.60.post23+g828be87d6, server version: 0.59
+<script type="application/vnd.jupyter.widget-view+json">{"version_major": 2, "version_minor": 0, "model_id": "116c67373e8d41afb9a89498c2f6595a"}</script><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>WARNING: This client version is newer than the server version. This may work if the versions are close, but expect exceptions and errors if attempting things the server does not support. client version: 0.60.post38+gc2d7a5df0, server version: 0.59
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>PortalClient(server_name=&#39;MolSSI QCFractal Demo Server&#39;, address=&#39;https://qcademo.molssi.org/&#39;, username=&#39;None&#39;)
@@ -561,7 +561,9 @@ In the cell below, we print the SCF total energy from our calcuation.</p>
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Molecule: H2, Energy: -1.1117197122934774
-Molecule: HO, Energy: -74.36430040801095
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Molecule: HO, Energy: -74.36430040801095
 Molecule: H2O, Energy: -74.82586558254185
 </pre></div>
 </div>
@@ -925,7 +927,7 @@ We retrieve these using <code class="docutils literal notranslate"><span class="
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>WARNING: This client version is newer than the server version. This may work if the versions are close, but expect exceptions and errors if attempting things the server does not support. client version: 0.60.post23+g828be87d6, server version: 0.59
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>WARNING: This client version is newer than the server version. This may work if the versions are close, but expect exceptions and errors if attempting things the server does not support. client version: 0.60.post38+gc2d7a5df0, server version: 0.59
 </pre></div>
 </div>
 </div>
@@ -957,7 +959,7 @@ Our molecule geometry in this example is an optimized structure of water.</p>
 </div>
 </div>
 <div class="cell_output docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"version_major": 2, "version_minor": 0, "model_id": "33d02134eca646faab02c14c5367ef6a"}</script></div>
+<script type="application/vnd.jupyter.widget-view+json">{"version_major": 2, "version_minor": 0, "model_id": "b6abcd7fcaf34708b2de05a389143cec"}</script></div>
 </div>
 <p>To submit our single point computation, we will use the <code class="docutils literal notranslate"><span class="pre">add_singlepoints</span></code> method.
 We will submit two single point computations for the same molecule using different methods.</p>
@@ -995,12 +997,12 @@ For this demonstration, we are submitting two single point calculations for wate
 <span class="g g-Whitespace">     </span><span class="mi">10</span>                                                    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;mp2&#39;</span><span class="p">,</span> 
 <span class="g g-Whitespace">     </span><span class="mi">11</span>                                                    <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-tzvp&#39;</span><span class="p">)</span>
 
-<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client.py:1116,</span> in <span class="ni">PortalClient.add_singlepoints</span><span class="nt">(self, molecules, program, driver, method, basis, keywords, protocols, compute_tag, compute_priority, owner_group, find_existing, **kwargs)</span>
-<span class="g g-Whitespace">   </span><span class="mi">1113</span>     <span class="n">body_data</span><span class="p">[</span><span class="s2">&quot;specification&quot;</span><span class="p">][</span><span class="s2">&quot;protocols&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">protocols</span>
-<span class="g g-Whitespace">   </span><span class="mi">1115</span> <span class="n">body</span> <span class="o">=</span> <span class="n">SinglepointAddBody</span><span class="p">(</span><span class="o">**</span><span class="n">body_data</span><span class="p">)</span>
-<span class="ne">-&gt; </span><span class="mi">1116</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
-<span class="g g-Whitespace">   </span><span class="mi">1117</span>     <span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="s2">&quot;api/v1/records/singlepoint/bulkCreate&quot;</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">InsertMetadata</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span>
-<span class="g g-Whitespace">   </span><span class="mi">1118</span> <span class="p">)</span>
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client.py:1114,</span> in <span class="ni">PortalClient.add_singlepoints</span><span class="nt">(self, molecules, program, driver, method, basis, keywords, protocols, compute_tag, compute_priority, owner_group, find_existing, **kwargs)</span>
+<span class="g g-Whitespace">   </span><span class="mi">1111</span>     <span class="n">body_data</span><span class="p">[</span><span class="s2">&quot;specification&quot;</span><span class="p">][</span><span class="s2">&quot;protocols&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">protocols</span>
+<span class="g g-Whitespace">   </span><span class="mi">1113</span> <span class="n">body</span> <span class="o">=</span> <span class="n">SinglepointAddBody</span><span class="p">(</span><span class="o">**</span><span class="n">body_data</span><span class="p">)</span>
+<span class="ne">-&gt; </span><span class="mi">1114</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+<span class="g g-Whitespace">   </span><span class="mi">1115</span>     <span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="s2">&quot;api/v1/records/singlepoint/bulkCreate&quot;</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">InsertMetadata</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span>
+<span class="g g-Whitespace">   </span><span class="mi">1116</span> <span class="p">)</span>
 
 <span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:497,</span> in <span class="ni">PortalClientBase.make_request</span><span class="nt">(self, method, endpoint, response_model, body_model, url_params_model, body, url_params, allow_retries, additional_headers)</span>
 <span class="g g-Whitespace">    </span><span class="mi">494</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parsed_url_params</span><span class="p">,</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>

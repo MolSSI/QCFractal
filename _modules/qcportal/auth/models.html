@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=9c7c952f"></script>
+    <script src="../../../_static/documentation_options.js?v=1f4546ab"></script>
     <script src="../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.60.post23+g828be87d6" />
+  <meta name="docsearch:version" content="0.60.post38+gc2d7a5df0" />
   </head>
   
   
@@ -441,14 +441,14 @@
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span>
 
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic.v1</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">constr</span><span class="p">,</span> <span class="n">Extra</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">constr</span><span class="p">,</span> <span class="n">Extra</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">..exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">InvalidPasswordError</span><span class="p">,</span> <span class="n">InvalidUsernameError</span><span class="p">,</span> <span class="n">InvalidRolenameError</span><span class="p">,</span> <span class="n">InvalidGroupnameError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">InvalidPasswordError</span><span class="p">,</span> <span class="n">InvalidUsernameError</span><span class="p">,</span> <span class="n">InvalidGroupnameError</span>
 
 
 <div class="viewcode-block" id="AuthTypeEnum">
@@ -514,84 +514,6 @@
 
 
 
-<div class="viewcode-block" id="is_valid_rolename">
-<a class="viewcode-back" href="../../../user_guide/qcportal_reference/auth.html#qcportal.auth.models.is_valid_rolename">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">is_valid_rolename</span><span class="p">(</span><span class="n">rolename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rolename</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">InvalidRolenameError</span><span class="p">(</span><span class="s2">&quot;Rolename is empty&quot;</span><span class="p">)</span>
-
-    <span class="c1"># Null character not allowed</span>
-    <span class="k">if</span> <span class="s2">&quot;</span><span class="se">\x00</span><span class="s2">&quot;</span> <span class="ow">in</span> <span class="n">rolename</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">InvalidRolenameError</span><span class="p">(</span><span class="s2">&quot;Rolename contains a NUL character&quot;</span><span class="p">)</span>
-
-    <span class="c1"># Spaces are not allowed</span>
-    <span class="k">if</span> <span class="s2">&quot; &quot;</span> <span class="ow">in</span> <span class="n">rolename</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">InvalidRolenameError</span><span class="p">(</span><span class="s2">&quot;Rolename contains spaces&quot;</span><span class="p">)</span>
-
-    <span class="c1"># Rolename cannot be all numbers</span>
-    <span class="k">if</span> <span class="n">rolename</span><span class="o">.</span><span class="n">isdecimal</span><span class="p">():</span>
-        <span class="k">raise</span> <span class="n">InvalidRolenameError</span><span class="p">(</span><span class="s2">&quot;Rolename cannot be all numbers&quot;</span><span class="p">)</span></div>
-
-
-
-<div class="viewcode-block" id="PolicyStatement">
-<a class="viewcode-back" href="../../../user_guide/qcportal_reference/auth.html#qcportal.auth.models.PolicyStatement">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">PolicyStatement</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A statment of permissions for a role</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">Effect</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The effect of the permission (Allow, Deny)&quot;</span><span class="p">)</span>
-    <span class="n">Action</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The actions this permission applies to (GET, POST, etc). May be &#39;*&#39; to apply to all.&quot;</span>
-    <span class="p">)</span>
-    <span class="n">Resource</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="o">...</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The resource this permission applies to. Usually the first part of the path (molecules, &quot;</span>
-        <span class="s2">&quot;keywords, etc). May be &#39;*&#39; to apply to all.&quot;</span><span class="p">,</span>
-    <span class="p">)</span></div>
-
-
-
-<div class="viewcode-block" id="PermissionsPolicy">
-<a class="viewcode-back" href="../../../user_guide/qcportal_reference/auth.html#qcportal.auth.models.PermissionsPolicy">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">PermissionsPolicy</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Permissions assigned to a role</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
-        <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span>
-
-    <span class="n">Statement</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">PolicyStatement</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Permission statements&quot;</span><span class="p">)</span></div>
-
-
-
-<div class="viewcode-block" id="RoleInfo">
-<a class="viewcode-back" href="../../../user_guide/qcportal_reference/auth.html#qcportal.auth.models.RoleInfo">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">RoleInfo</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Information about a role</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
-        <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span>
-
-    <span class="n">rolename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The name of the role&quot;</span><span class="p">)</span>
-    <span class="n">permissions</span><span class="p">:</span> <span class="n">PermissionsPolicy</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The permissions associated with this role&quot;</span><span class="p">)</span>
-
-    <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;rolename&quot;</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_valid_rolename</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Makes sure the username is a valid string&quot;&quot;&quot;</span>
-
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">is_valid_rolename</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">v</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
-
-
-
 <div class="viewcode-block" id="GroupInfo">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/auth.html#qcportal.auth.models.GroupInfo">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">GroupInfo</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
@@ -648,16 +570,6 @@
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">is_valid_username</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">v</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
-
-    <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;role&quot;</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_valid_rolename</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Makes sure the rolename is a valid string&quot;&quot;&quot;</span>
-
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">is_valid_rolename</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">v</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
