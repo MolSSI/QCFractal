@@ -3,10 +3,8 @@ import { styled } from "@mui/material/styles";
 import Avatar from "@mui/material/Avatar";
 import MuiDrawer, { drawerClasses } from "@mui/material/Drawer";
 import Box from "@mui/material/Box";
-import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import SelectContent from "./SelectContent";
 import MenuContent from "./MenuContent";
 import OptionsMenu from "./OptionsMenu";
 import ServerStatus from "../components/ServerStatus"
@@ -25,6 +23,7 @@ const Drawer = styled(MuiDrawer)({
 });
 
 export default function SideMenu() {
+
   return (
     <Drawer
       variant="permanent"
@@ -35,16 +34,24 @@ export default function SideMenu() {
         },
       }}
     >
+      {/* Logo Section */}
       <Box
         sx={{
           display: "flex",
-          mt: "calc(var(--template-frame-height, 0px) + 4px)",
-          p: 1.5,
+          justifyContent: "center",
+          alignItems: "center",
+          p: 2,
+          borderBottom: "1px solid",
+          borderColor: "divider",
         }}
       >
-        <SelectContent />
+        <Avatar
+          src="/src/assets/QCArchiveLogo.png" // Path to the logo
+          alt="QCArchive Logo"
+          sx={{ width: 100, height: 100 }}
+          variant="square"
+        />
       </Box>
-      <Divider />
       <Box
         sx={{
           overflow: "auto",

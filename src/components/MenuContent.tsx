@@ -1,4 +1,5 @@
 import * as React from "react";
+import {  useState } from "react";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
@@ -7,7 +8,6 @@ import ListItemText from "@mui/material/ListItemText";
 import Stack from "@mui/material/Stack";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted"
-import AnalyticsRoundedIcon from "@mui/icons-material/AnalyticsRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
@@ -16,10 +16,10 @@ import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
 import {useNavigate} from "react-router-dom";
 
 const mainListItems = [
-  { text: "Home", icon: <HomeRoundedIcon /> },
-  { text: "Projects", icon: <FormatListBulletedIcon /> },
-  { text: "Clients", icon: <PeopleRoundedIcon /> },
-  { text: "Tasks", icon: <AssignmentRoundedIcon /> },
+  { text: "Home", icon: <HomeRoundedIcon />, path: "/" },
+  { text: "Projects", icon: <FormatListBulletedIcon />, path: "/projects" },
+  { text: "Clients", icon: <PeopleRoundedIcon />, path: "/" },
+  { text: "Tasks", icon: <AssignmentRoundedIcon />, path: "/" },
 ];
 
 const secondaryListItems = [
@@ -29,37 +29,44 @@ const secondaryListItems = [
 ];
 
 export default function MenuContent() {
-  const navigate = useNavigate();
-  const handleClick = (text: string) => {
-    if (text === "Home") {
-      navigate("/");
-    } else if (text === "Projects") {
-      navigate("/projects");
-    }
-  };
+    const navigate = useNavigate();
+    const [selectedIndex, setSelectedIndex] = useState(0);
 
-  return (
-    <Stack sx={{ flexGrow: 1, p: 1, justifyContent: "space-between" }}>
-      <List dense>
-        {mainListItems.map((item, index) => (
-          <ListItem key={index} disablePadding sx={{ display: "block" }}>
-            <ListItemButton selected={index === 0} onClick={() => handleClick(item.text)}>
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-      <List dense>
-        {secondaryListItems.map((item, index) => (
-          <ListItem key={index} disablePadding sx={{ display: "block" }}>
-            <ListItemButton>
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-    </Stack>
-  );
+    // interface HandleClick {
+    //     (index: number, path: string): void;
+    // }
+
+    const handleClick = (index: number, path: string) => {
+            setSelectedIndex(index);
+            navigate(path);
+    };
+
+    return (
+      <Stack sx={{ flexGrow: 1, p: 1, justifyContent: "space-between" }}>
+        <List dense>
+          {mainListItems.map((item, index) => (
+            <ListItem key={index} disablePadding sx={{ display: "block" }}>
+              <ListItemButton
+                selected={selectedIndex === index}
+                onClick={() => handleClick(index, item.path)}
+                sx={{cursor: "pointer"}}
+              >
+                <ListItemIcon>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.text} />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+        <List dense>
+          {secondaryListItems.map((item, index) => (
+            <ListItem key={index} disablePadding sx={{ display: "block" }}>
+              <ListItemButton>
+                <ListItemIcon>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.text} />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+      </Stack>
+    );
 }
