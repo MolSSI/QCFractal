@@ -10,6 +10,7 @@ import SelectContent from "./SelectContent";
 import MenuContent from "./MenuContent";
 import OptionsMenu from "./OptionsMenu";
 import ServerStatus from "../components/ServerStatus"
+
 const drawerWidth = 240;
 
 const Drawer = styled(MuiDrawer)({

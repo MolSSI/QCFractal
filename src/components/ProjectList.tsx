@@ -7,12 +7,11 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Link,
   TableContainer,
   Typography,
   Paper,
   Box,
-  Chip
+  Chip,
 } from "@mui/material";
 
 interface Project {
@@ -20,6 +19,9 @@ interface Project {
   project_name: string;
   tagline: string;
   tags: string[];
+  record_count: number;
+  dataset_count: number;
+  molecule_count: number;
 }
 
 const ProjectList: React.FC = () => {
@@ -50,11 +52,10 @@ const ProjectList: React.FC = () => {
     navigate(`/projects/${projectId}`);
   };
 
-
   return (
     <>
-    {loading && <Typography>Loading...</Typography>}
-    {error && <Typography color="error">{error}</Typography>}
+      {loading && <Typography>Loading...</Typography>}
+      {error && <Typography color="error">{error}</Typography>}
 
       {/* Title / Heading */}
       <Box sx={{ mt: 4, mb: 2 }}>
@@ -69,10 +70,9 @@ const ProjectList: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Project Name</TableCell>
-                <TableCell>Tagline</TableCell>
-                <TableCell>Tags</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>Project Name</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>Content</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>Tags</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -84,20 +84,24 @@ const ProjectList: React.FC = () => {
                   onClick={() => handleClick(project.id)}
                 >
                   <TableCell>
-                    <Link
-                      component="button"
-                      variant="body2"
-                      underline="none"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleClick(project.id);
-                      }}
-                    >
-                      {project.id}
-                    </Link>
+                    <Typography variant="body1" fontWeight="bold">
+                      {project.project_name}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {project.tagline}
+                    </Typography>
                   </TableCell>
-                  <TableCell>{project.project_name}</TableCell>
-                  <TableCell>{project.tagline}</TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {project.record_count} records
+                    </Typography>
+                    <Typography variant="body2">
+                      {project.dataset_count} datasets
+                    </Typography>
+                    <Typography variant="body2">
+                      {project.molecule_count} molecules
+                    </Typography>
+                  </TableCell>
                   <TableCell>
                     {project.tags.map((tag) => (
                       <Chip
