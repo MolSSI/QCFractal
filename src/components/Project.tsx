@@ -47,15 +47,9 @@ export default function Project() {
   const [projectData, setProjectData] = useState<any | undefined>(undefined);  
   // State for dataset metadata
   const [datasetMetadata, setDatasetMetadata] = useState<any[]>([]);
-//   const [datasetLoading, setDatasetLoading] = useState(true);
-  const [datasetError, setDatasetError] = useState<string | undefined>(
-    // undefined
-  );
 
   // State for record metadata
   const [recordMetadata, setRecordMetadata] = useState<any[]>([]);
-//   const [recordLoading, setRecordLoading] = useState(true);
-//   const [recordError, setRecordError] = useState<string | undefined>(undefined);
 
   // State for the Tabs
   const [tabValue, setTabValue] = useState(0);
@@ -105,7 +99,7 @@ export default function Project() {
         `api/v1/projects/${projectId}/dataset_metadata`
       );
       setDatasetMetadata(data ?? []);
-      setDatasetError(error);
+      setError(error);
       setLoading(false);
     }
     fetchDatasetMetadata();

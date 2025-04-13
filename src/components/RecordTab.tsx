@@ -16,6 +16,7 @@ import {
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import { useNavigate, useParams } from "react-router-dom";
 
 type RecordMetadata = {
   record_id: number;
@@ -34,19 +35,25 @@ export default function RecordTab({
   recordMetadata,
   onDelete,
 }: RecordTabProps) {
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+    const navigate = useNavigate();
+    const { projectId } = useParams();
+    const [expandedId, setExpandedId] = useState<number | null>(null);
 
-  const handleToggleExpand = (id: number) => {
+    const handleToggleExpand = (id: number) => {
     setExpandedId((prev) => (prev === id ? null : id));
-  };
+    };
 
-  const handleDelete = (id: number) => {
+    const handleViewClick = (recordId: number) => {
+    navigate(`/projects/${projectId}/records/${recordId}`);
+    };
+
+    const handleDelete = (id: number) => {
     if (onDelete) {
-      onDelete(id);
+        onDelete(id);
     } else {
-      console.log("Delete record with ID:", id);
+        console.log("Delete record with ID:", id);
     }
-  };
+    };
 
   return (
     <Box>
@@ -98,11 +105,7 @@ export default function RecordTab({
                       <Button
                         variant="contained"
                         size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // Placeholder: Link to view page in the future
-                          console.log("View record", record.record_id);
-                        }}
+                        onClick={() => handleViewClick(record.record_id)}
                       >
                         View
                       </Button>

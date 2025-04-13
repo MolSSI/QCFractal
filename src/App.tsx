@@ -7,6 +7,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import Project from "./components/Project.tsx";
 import CalculationRecord from "./components/CalculationRecord";
 import ProjectList from "./components/ProjectList.tsx";
+import Record from "./components/Record.tsx";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/projects" element={<ProjectList />} />
               <Route path="/projects/:projectId" element={<Project />} />
+              <Route path="/projects/:projectId/records/:recordId" element={<Record />} />
               <Route
                 path="/projects/:projectId/records/:recordId"
                 element={<CalculationRecord />}
