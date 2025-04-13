@@ -40,7 +40,7 @@ export default function SideMenu() {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          p: 2,
+          p: 1,
           borderBottom: "1px solid",
           borderColor: "divider",
         }}
