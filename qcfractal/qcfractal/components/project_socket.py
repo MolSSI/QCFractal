@@ -414,9 +414,9 @@ class ProjectSocket:
 
     def assert_record_belongs(self, project_id: int, record_id: int, *, session: Optional[Session] = None):
 
-        stmt = select(ProjectRecordORM.record_id)
-        stmt = stmt.where(ProjectRecordORM.project_id == project_id)
-        stmt = stmt.where(ProjectRecordORM.record_id == record_id)
+        stmt = select(self._child_records_cte)
+        stmt = stmt.where(self._child_records_cte.c.project_id == project_id)
+        stmt = stmt.where(self._child_records_cte.c.record_id == record_id)
 
         with self.root_socket.optional_session(session, True) as session:
             r_id = session.execute(stmt).scalar_one_or_none()
@@ -497,6 +497,7 @@ class ProjectSocket:
         session: Optional[Session] = None,
     ) -> Dict[str, Any]:
 
+        # TODO - filter project_id into various get_records and do a join instead
         with self.root_socket.optional_session(session, True) as session:
             self.assert_record_belongs(project_id, record_id, session=session)
             return self.root_socket.records.get([record_id], missing_ok=False, session=session)[0]
