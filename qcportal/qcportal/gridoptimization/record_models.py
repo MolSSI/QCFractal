@@ -215,12 +215,12 @@ class GridoptimizationRecord(BaseRecord):
     ########################################
     _optimizations_cache: Optional[Dict[Any, OptimizationRecord]] = PrivateAttr(None)
 
-    def propagate_client(self, client):
-        BaseRecord.propagate_client(self, client)
+    def propagate_client(self, client, base_url_prefix: Optional[str]):
+        BaseRecord.propagate_client(self, client, base_url_prefix)
 
         if self._optimizations_cache is not None:
             for opt in self._optimizations_cache.values():
-                opt.propagate_client(client)
+                opt.propagate_client(client, base_url_prefix)
 
     @classmethod
     def _fetch_children_multi(
@@ -235,6 +235,9 @@ class GridoptimizationRecord(BaseRecord):
         assert records
         assert all(isinstance(x, GridoptimizationRecord) for x in records)
 
+        base_url_prefix = next(iter(records))._base_url_prefix
+        assert all(r._base_url_prefix == base_url_prefix for r in records)
+
         # Collect optimization id for all grid optimizations
         if is_included("optimizations", include, None, False):
             opt_ids = set()
@@ -244,7 +247,13 @@ class GridoptimizationRecord(BaseRecord):
 
             opt_ids = list(opt_ids)
             opt_records = get_records_with_cache(
-                client, record_cache, OptimizationRecord, opt_ids, include=include, force_fetch=force_fetch
+                client,
+                base_url_prefix,
+                record_cache,
+                OptimizationRecord,
+                opt_ids,
+                include=include,
+                force_fetch=force_fetch,
             )
             opt_map = {x.id: x for x in opt_records}
 
@@ -257,7 +266,7 @@ class GridoptimizationRecord(BaseRecord):
                         key = deserialize_key(go_opt.key)
                         r._optimizations_cache[key] = opt_map[go_opt.optimization_id]
 
-                r.propagate_client(r._client)
+                r.propagate_client(r._client, base_url_prefix)
 
     def _fetch_initial_molecule(self):
         self._assert_online()

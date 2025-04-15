@@ -41,7 +41,7 @@ def test_base_record_model_common(snowflake: QCATestingSnowflake, includes: Opti
         assert record.native_files_ is not None
         assert record.comments_ is not None
         assert record.compute_history_ is not None
-        record.propagate_client(None)
+        record.propagate_client(None, None)
         assert record.offline
     else:
         assert record.native_files_ is None
@@ -114,7 +114,7 @@ def test_base_record_model_task(snowflake: QCATestingSnowflake, includes: Option
 
     if includes is not None:
         assert record.task_ is not None
-        record.propagate_client(None)
+        record.propagate_client(None, None)
         assert record.offline
     else:
         assert record.task_ is None
@@ -141,7 +141,7 @@ def test_base_record_model_service(snowflake: QCATestingSnowflake, includes: Opt
 
     if includes is not None:
         assert record.service_ is not None
-        record.propagate_client(None)
+        record.propagate_client(None, None)
         assert record.offline
     else:
         assert record.service_ is None

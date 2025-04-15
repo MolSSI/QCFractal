@@ -29,7 +29,7 @@ def test_torsiondrive_record_model(snowflake: QCATestingSnowflake, includes: Opt
     if includes is not None:
         assert record.initial_molecules_ is not None
         assert record.optimizations_ is not None
-        record.propagate_client(None)
+        record.propagate_client(None, None)
         assert record.offline
 
         # children have all data fetched

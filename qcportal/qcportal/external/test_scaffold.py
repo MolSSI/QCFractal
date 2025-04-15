@@ -134,4 +134,4 @@ def test_dataset_scaffold(snowflake: QCATestingSnowflake, dataset_type: str):
     os.remove(filename)
 
     diff = DeepDiff(ds, ds2)
-    assert len(diff) == 1 and len(diff["values_changed"]) == 2  # Dataset ids and names change
+    assert len(diff) == 1 and len(diff["values_changed"]) == 3  # Dataset ids, base_url, and names change

@@ -172,6 +172,9 @@ class TorsiondriveRecord(BaseRecord):
         assert records
         assert all(isinstance(x, TorsiondriveRecord) for x in records)
 
+        base_url_prefix = next(iter(records))._base_url_prefix
+        assert all(r._base_url_prefix == base_url_prefix for r in records)
+
         do_opt = is_included("optimizations", include, None, False)
         do_minopt = is_included("minimum_optimizations", include, None, False)
 
@@ -188,7 +191,7 @@ class TorsiondriveRecord(BaseRecord):
 
         opt_ids = list(opt_ids)
         opt_records = get_records_with_cache(
-            client, record_cache, OptimizationRecord, opt_ids, include=include, force_fetch=force_fetch
+            client, base_url_prefix, record_cache, OptimizationRecord, opt_ids, include=include, force_fetch=force_fetch
         )
         opt_map = {x.id: x for x in opt_records}
 
@@ -224,20 +227,20 @@ class TorsiondriveRecord(BaseRecord):
                     deserialize_key(k): opt_map[v] for k, v in r.minimum_optimizations_.items()
                 }
 
-            r.propagate_client(r._client)
+            r.propagate_client(r._client, base_url_prefix)
 
-    def propagate_client(self, client):
-        BaseRecord.propagate_client(self, client)
+    def propagate_client(self, client, base_url_prefix: Optional[str]):
+        BaseRecord.propagate_client(self, client, base_url_prefix)
 
         if self._optimizations_cache is not None:
             for opts in self._optimizations_cache.values():
                 for opt in opts:
-                    opt.propagate_client(client)
+                    opt.propagate_client(client, base_url_prefix)
 
         # But may need to do minimum_optimizations_cache_, since they may have been obtained separately
         if self._minimum_optimizations_cache is not None:
             for opt in self._minimum_optimizations_cache.values():
-                opt.propagate_client(client)
+                opt.propagate_client(client, base_url_prefix)
 
     def _fetch_initial_molecules(self):
         self._assert_online()

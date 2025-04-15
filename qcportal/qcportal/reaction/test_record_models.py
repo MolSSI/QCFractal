@@ -29,7 +29,7 @@ def test_reaction_record_model(snowflake: QCATestingSnowflake, includes: Optiona
     if includes is not None:
         assert record.components_meta_ is not None
         assert record._components is not None
-        record.propagate_client(None)
+        record.propagate_client(None, None)
         assert record.offline
 
         # children have all data fetched

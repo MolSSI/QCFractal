@@ -134,6 +134,8 @@ class BaseDataset(BaseModel):
     # Private non-pydantic fields
     #############################
     _client: Any = PrivateAttr(None)
+    _base_url: Optional[str] = PrivateAttr(None)
+    _base_url_prefix: Optional[str] = PrivateAttr(None)
 
     # To be overridden by the derived classes
     _entry_type: ClassVar[Optional[Type]] = None
@@ -148,7 +150,13 @@ class BaseDataset(BaseModel):
     # Some dataset options
     auto_fetch_missing: bool = True  # Automatically fetch missing records from the server
 
-    def __init__(self, client: Optional[PortalClient] = None, cache_data: Optional[DatasetCache] = None, **kwargs):
+    def __init__(
+        self,
+        client: Optional[PortalClient] = None,
+        base_url_prefix: Optional[str] = None,
+        cache_data: Optional[DatasetCache] = None,
+        **kwargs,
+    ):
 
         # TODO - DEPRECATED - remove eventually
         if "group" in kwargs:
@@ -170,7 +178,7 @@ class BaseDataset(BaseModel):
 
         # Calls derived class propagate_client
         # which should filter down to the ones in this (BaseDataset) class
-        self.propagate_client(client)
+        self.propagate_client(client, base_url_prefix)
 
         assert self._client is client, "Client not set in base dataset class?"
 
@@ -211,13 +219,21 @@ class BaseDataset(BaseModel):
             raise RuntimeError(f"Cannot find subclass for record type {dataset_type}")
         return subcls
 
-    def propagate_client(self, client):
+    def propagate_client(self, client, base_url_prefix: Optional[str]):
         """
         Propagates a client to this record to any fields within this record that need it
 
         This may also be called from derived class propagate_client functions as well
         """
         self._client = client
+
+        if client is not None:
+            assert base_url_prefix is not None
+            self._base_url_prefix = base_url_prefix.rstrip("/")
+            self._base_url = f"{self._base_url_prefix}/datasets/{self.dataset_type}/{self.id}"
+        else:
+            self._base_url_prefix = None
+            self._base_url = None
 
     def _add_entries(self, entries: Union[BaseModel, Sequence[BaseModel]]) -> InsertMetadata:
         """
@@ -236,7 +252,7 @@ class BaseDataset(BaseModel):
             return InsertMetadata()
 
         assert all(isinstance(x, self._new_entry_type) for x in entries), "Incorrect entry type"
-        uri = f"api/v1/datasets/{self.dataset_type}/{self.id}/entries/bulkCreate"
+        uri = f"{self._base_url}/entries/bulkCreate"
 
         batch_size: int = math.ceil(self._client.api_limits["get_dataset_entries"] / 4)
         n_batches = math.ceil(len(entries) / batch_size)
@@ -272,9 +288,7 @@ class BaseDataset(BaseModel):
         entries = make_list(entries)
         assert all(isinstance(x, self._new_entry_type) for x in entries), "Incorrect entry type"
 
-        job_id = self._client.make_request(
-            "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/background_add_entries", int, body=entries
-        )
+        job_id = self._client.make_request("post", f"{self._base_url}/background_add_entries", int, body=entries)
 
         return self.get_internal_job(job_id)
 
@@ -293,7 +307,7 @@ class BaseDataset(BaseModel):
             return InsertMetadata()
 
         assert all(isinstance(x, self._specification_type) for x in specifications), "Incorrect specification type"
-        uri = f"api/v1/datasets/{self.dataset_type}/{self.id}/specifications"
+        uri = f"{self._base_url}/specifications"
 
         ret = self._client.make_request("post", uri, InsertMetadata, body=specifications)
 
@@ -318,7 +332,7 @@ class BaseDataset(BaseModel):
 
         new_body.update(**kwargs)
         body = DatasetModifyMetadata(**new_body)
-        self._client.make_request("patch", f"api/v1/datasets/{self.dataset_type}/{self.id}", None, body=body)
+        self._client.make_request("patch", f"{self._base_url}", None, body=body)
 
         self.name = body.name
         self.description = body.description
@@ -400,7 +414,7 @@ class BaseDataset(BaseModel):
 
                 meta = self._client.make_request(
                     "post",
-                    f"api/v1/datasets/{self.dataset_type}/{self.id}/submit",
+                    f"{self._base_url}/submit",
                     InsertCountsMetadata,
                     body=body_data,
                 )
@@ -463,10 +477,7 @@ class BaseDataset(BaseModel):
             find_existing=find_existing,
         )
 
-        job_id = self._client.make_request(
-            "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/background_submit", int, body=body_data
-        )
-
+        job_id = self._client.make_request("post", f"{self._base_url}/background_submit", int, body=body_data)
         return self.get_internal_job(job_id)
 
     #########################################
@@ -476,8 +487,10 @@ class BaseDataset(BaseModel):
         self.assert_is_not_view()
         self.assert_online()
 
-        ij_dict = self._client.make_request("get", f"/api/v1/datasets/{self.id}/internal_jobs/{job_id}", Dict[str, Any])
-        refresh_url = f"/api/v1/datasets/{self.id}/internal_jobs/{ij_dict['id']}"
+        ij_dict = self._client.make_request(
+            "get", f"{self._base_url_prefix}/datasets/{self.id}/internal_jobs/{job_id}", Dict[str, Any]
+        )
+        refresh_url = f"{self._base_url_prefix}/datasets/{self.id}/internal_jobs/{ij_dict['id']}"
         return InternalJob(client=self._client, refresh_url=refresh_url, **ij_dict)
 
     def list_internal_jobs(
@@ -488,10 +501,17 @@ class BaseDataset(BaseModel):
 
         url_params = DatasetGetInternalJobParams(status=make_list(status))
         ij_dicts = self._client.make_request(
-            "get", f"/api/v1/datasets/{self.id}/internal_jobs", List[Dict[str, Any]], url_params=url_params
+            "get",
+            f"{self._base_url_prefix}/datasets/{self.id}/internal_jobs",
+            List[Dict[str, Any]],
+            url_params=url_params,
         )
         return [
-            InternalJob(client=self._client, refresh_url=f"/api/v1/datasets/{self.id}/internal_jobs/{ij['id']}", **ij)
+            InternalJob(
+                client=self._client,
+                refresh_url=f"{self._base_url_prefix}/datasets/{self.id}/internal_jobs/{ij['id']}",
+                **ij,
+            )
             for ij in ij_dicts
         ]
 
@@ -504,7 +524,7 @@ class BaseDataset(BaseModel):
 
         self.attachments_ = self._client.make_request(
             "get",
-            f"api/v1/datasets/{self.id}/attachments",
+            f"{self._base_url_prefix}/datasets/{self.id}/attachments",
             Optional[List[DatasetAttachment]],
         )
 
@@ -519,11 +539,7 @@ class BaseDataset(BaseModel):
         self.assert_is_not_view()
         self.assert_online()
 
-        self._client.make_request(
-            "delete",
-            f"api/v1/datasets/{self.id}/attachments/{file_id}",
-            None,
-        )
+        self._client.make_request("delete", f"{self._base_url_prefix}/datasets/{self.id}/attachments/{file_id}", None)
 
         self.fetch_attachments()
 
@@ -711,10 +727,7 @@ class BaseDataset(BaseModel):
             include_children=include_children,
         )
 
-        job_id = self._client.make_request(
-            "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/create_view", int, body=body
-        )
-
+        job_id = self._client.make_request("post", f"{self._base_url}/create_view", int, body=body)
         return self.get_internal_job(job_id)
 
     #########################################
@@ -728,11 +741,7 @@ class BaseDataset(BaseModel):
     def status(self) -> Dict[str, Any]:
         self.assert_online()
 
-        return self._client.make_request(
-            "get",
-            f"api/v1/datasets/{self.dataset_type}/{self.id}/status",
-            Dict[str, Dict[RecordStatusEnum, int]],
-        )
+        return self._client.make_request("get", f"{self._base_url}/status", Dict[str, Dict[RecordStatusEnum, int]])
 
     def status_table(self) -> str:
         """
@@ -760,7 +769,7 @@ class BaseDataset(BaseModel):
 
         return self._client.make_request(
             "get",
-            f"api/v1/datasets/{self.dataset_type}/{self.id}/detailed_status",
+            f"{self._base_url}/detailed_status",
             List[Tuple[str, str, RecordStatusEnum]],
         )
 
@@ -776,21 +785,13 @@ class BaseDataset(BaseModel):
     def record_count(self) -> int:
         self.assert_online()
 
-        return self._client.make_request(
-            "get",
-            f"api/v1/datasets/{self.dataset_type}/{self.id}/record_count",
-            int,
-        )
+        return self._client.make_request("get", f"{self._base_url}/record_count", int)
 
     @property
     def computed_properties(self):
         self.assert_online()
 
-        return self._client.make_request(
-            "get",
-            f"api/v1/datasets/{self.dataset_type}/{self.id}/computed_properties",
-            Dict[str, List[str]],
-        )
+        return self._client.make_request("get", f"{self._base_url}/computed_properties", Dict[str, List[str]])
 
     def assert_is_not_view(self):
         if self.is_view:
@@ -894,11 +895,7 @@ class BaseDataset(BaseModel):
         self.assert_is_not_view()
         self.assert_online()
 
-        self._specification_names = self._client.make_request(
-            "get",
-            f"api/v1/datasets/{self.dataset_type}/{self.id}/specification_names",
-            List[str],
-        )
+        self._specification_names = self._client.make_request("get", f"{self._base_url}/specification_names", List[str])
 
     def _internal_fetch_specifications(
         self,
@@ -924,7 +921,7 @@ class BaseDataset(BaseModel):
 
         fetched_specifications = self._client.make_request(
             "post",
-            f"api/v1/datasets/{self.dataset_type}/{self.id}/specifications/bulkFetch",
+            f"{self._base_url}/specifications/bulkFetch",
             Dict[str, self._specification_type],
             body=DatasetFetchSpecificationBody(names=specification_names),
         )
@@ -1005,9 +1002,7 @@ class BaseDataset(BaseModel):
 
         name_map = {old_name: new_name}
 
-        self._client.make_request(
-            "patch", f"api/v1/datasets/{self.dataset_type}/{self.id}/specifications", None, body=name_map
-        )
+        self._client.make_request("patch", f"{self._base_url}/specifications", None, body=name_map)
 
         # rename locally cached entries and stuff
         self._specification_names = [name_map.get(x, x) for x in self._specification_names]
@@ -1022,7 +1017,7 @@ class BaseDataset(BaseModel):
 
         ret = self._client.make_request(
             "post",
-            f"api/v1/datasets/{self.dataset_type}/{self.id}/specifications/bulkDelete",
+            f"{self._base_url}/specifications/bulkDelete",
             DeleteMetadata,
             body=body,
         )
@@ -1045,11 +1040,7 @@ class BaseDataset(BaseModel):
         self.assert_is_not_view()
         self.assert_online()
 
-        self._entry_names = self._client.make_request(
-            "get",
-            f"api/v1/datasets/{self.dataset_type}/{self.id}/entry_names",
-            List[str],
-        )
+        self._entry_names = self._client.make_request("get", f"{self._base_url}/entry_names", List[str])
 
     def _internal_fetch_entries(
         self,
@@ -1077,7 +1068,7 @@ class BaseDataset(BaseModel):
 
         fetched_entries = self._client.make_request(
             "post",
-            f"api/v1/datasets/{self.dataset_type}/{self.id}/entries/bulkFetch",
+            f"{self._base_url}/entries/bulkFetch",
             Dict[str, self._entry_type],
             body=body,
         )
@@ -1237,9 +1228,7 @@ class BaseDataset(BaseModel):
         # Remove renames which aren't actually different
         name_map = {old_name: new_name for old_name, new_name in name_map.items() if old_name != new_name}
 
-        self._client.make_request(
-            "patch", f"api/v1/datasets/{self.dataset_type}/{self.id}/entries", None, body=name_map
-        )
+        self._client.make_request("patch", f"{self._base_url}/entries", None, body=name_map)
 
         # rename locally cached entries and stuff
         self._entry_names = [name_map.get(x, x) for x in self._entry_names]
@@ -1260,9 +1249,7 @@ class BaseDataset(BaseModel):
             attribute_map=attribute_map, comment_map=comment_map, overwrite_attributes=overwrite_attributes
         )
 
-        self._client.make_request(
-            "patch", f"api/v1/datasets/{self.dataset_type}/{self.id}/entries/modify", None, body=body
-        )
+        self._client.make_request("patch", f"{self._base_url}/entries/modify", None, body=body)
 
         # Sync local cache with updated server.
         entries_to_sync = set()
@@ -1282,7 +1269,7 @@ class BaseDataset(BaseModel):
 
         ret = self._client.make_request(
             "post",
-            f"api/v1/datasets/{self.dataset_type}/{self.id}/entries/bulkDelete",
+            f"{self._base_url}/entries/bulkDelete",
             DeleteMetadata,
             body=body,
         )
@@ -1344,7 +1331,7 @@ class BaseDataset(BaseModel):
 
         record_info = self._client.make_request(
             "post",
-            f"api/v1/datasets/{self.dataset_type}/{self.id}/records/bulkFetch",
+            f"{self._base_url}/records/bulkFetch",
             List[Tuple[str, str, int]],  # (entry_name, spec_name, record_id)
             body=body,
         )
@@ -1353,7 +1340,9 @@ class BaseDataset(BaseModel):
 
         # This function always fetches, so force_fetch = True
         # But records will be attached to thee cache
-        records = get_records_with_cache(self._client, self._cache_data, self._record_type, record_ids, include, True)
+        records = get_records_with_cache(
+            self._client, self._base_url_prefix, self._cache_data, self._record_type, record_ids, include, True
+        )
 
         # Update the locally-stored metadata for these dataset records
         # zip(record_info, records) = ((entry_name, spec_name, record_id), record)
@@ -1407,7 +1396,7 @@ class BaseDataset(BaseModel):
             # the 'modified_on' and 'status' fields
             server_record_info = self._client.make_request(
                 "post",
-                f"api/v1/records/bulkGet",
+                f"{self._base_url_prefix}/records/bulkGet",
                 List[Dict[str, Any]],
                 body=CommonBulkGetBody(ids=record_id_batch, include=["id", "modified_on", "status"]),
             )
@@ -1527,7 +1516,7 @@ class BaseDataset(BaseModel):
                     # Check if we have any cached records
                     cached_records = self._cache_data.get_dataset_records(missing_entries, [spec_name])
                     for _, _, cr in cached_records:
-                        cr.propagate_client(self._client)
+                        cr.propagate_client(self._client, self._base_url_prefix)
 
                     records_batch.extend(cached_records)
 
@@ -1581,7 +1570,7 @@ class BaseDataset(BaseModel):
                 record = records[0][2]
 
         if record is not None and self._client is not None:
-            record.propagate_client(self._client)
+            record.propagate_client(self._client, self._base_url_prefix)
 
         return record
 
@@ -1658,7 +1647,7 @@ class BaseDataset(BaseModel):
                         # Check if we have any cached records
                         cached_records = self._cache_data.get_dataset_records(missing_entries, [spec_name])
                         for _, _, cr in cached_records:
-                            cr.propagate_client(self._client)
+                            cr.propagate_client(self._client, self._base_url_prefix)
 
                         records_batch.extend(cached_records)
 
@@ -1693,12 +1682,7 @@ class BaseDataset(BaseModel):
                 delete_records=delete_records,
             )
 
-            self._client.make_request(
-                "post",
-                f"api/v1/datasets/{self.dataset_type}/{self.id}/records/bulkDelete",
-                None,
-                body=body,
-            )
+            self._client.make_request("post", f"{self._base_url}/records/bulkDelete", None, body=body)
 
             if delete_records:
                 record_info = self._cache_data.get_dataset_records(entry_names_batch, specification_names)
@@ -1744,12 +1728,8 @@ class BaseDataset(BaseModel):
                 status=new_status,
             )
 
-            self._client.make_request(
-                "patch",
-                f"api/v1/datasets/{self.dataset_type}/{self.id}/records",
-                None,
-                body=body,
-            )
+            self._client.make_request("patch", f"{self._base_url}/records", None, body=body)
+
         else:
             for entry_names_batch in chunk_iterable(entry_names, 200):
                 body = DatasetRecordModifyBody(
@@ -1761,12 +1741,7 @@ class BaseDataset(BaseModel):
                     status=new_status,
                 )
 
-                self._client.make_request(
-                    "patch",
-                    f"api/v1/datasets/{self.dataset_type}/{self.id}/records",
-                    None,
-                    body=body,
-                )
+                self._client.make_request("patch", f"{self._base_url}/records", None, body=body)
 
         if refetch_records:
             self.fetch_records(entry_names, specification_names, force_refetch=True)
@@ -1792,12 +1767,7 @@ class BaseDataset(BaseModel):
                 revert_status=revert_status,
             )
 
-            self._client.make_request(
-                "post",
-                f"api/v1/datasets/{self.dataset_type}/{self.id}/records/revert",
-                None,
-                body=body,
-            )
+            self._client.make_request("post", f"{self._base_url}/records/revert", None, body=body)
         else:
             for entry_names_batch in chunk_iterable(entry_names, 200):
                 body = DatasetRecordRevertBody(
@@ -1806,12 +1776,7 @@ class BaseDataset(BaseModel):
                     revert_status=revert_status,
                 )
 
-                self._client.make_request(
-                    "post",
-                    f"api/v1/datasets/{self.dataset_type}/{self.id}/records/revert",
-                    None,
-                    body=body,
-                )
+                self._client.make_request("post", f"{self._base_url}/records/revert", None, body=body)
 
         if refetch_records:
             self.fetch_records(entry_names, specification_names, force_refetch=True)
@@ -1936,10 +1901,7 @@ class BaseDataset(BaseModel):
             copy_entries=True,
         )
 
-        self._client.make_request(
-            "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/copy_from", None, body=body_data
-        )
-
+        self._client.make_request("post", f"{self._base_url}/copy_from", None, body=body_data)
         self.fetch_entry_names()
 
     def copy_specifications_from(
@@ -1968,10 +1930,7 @@ class BaseDataset(BaseModel):
             copy_specifications=True,
         )
 
-        self._client.make_request(
-            "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/copy_from", None, body=body_data
-        )
-
+        self._client.make_request("post", f"{self._base_url}/copy_from", None, body=body_data)
         self.fetch_specifications()
 
     def copy_records_from(
@@ -2008,10 +1967,7 @@ class BaseDataset(BaseModel):
             copy_records=True,
         )
 
-        self._client.make_request(
-            "post", f"api/v1/datasets/{self.dataset_type}/{self.id}/copy_from", None, body=body_data
-        )
-
+        self._client.make_request("post", f"{self._base_url}/copy_from", None, body=body_data)
         self.fetch_entry_names()
         self.fetch_specifications()
 
@@ -2246,7 +2202,7 @@ class BaseDataset(BaseModel):
 
                 server_ds_records = self._client.make_request(
                     "post",
-                    f"api/v1/datasets/{self.dataset_type}/{self.id}/records/bulkFetch",
+                    f"{self._base_url}/records/bulkFetch",
                     List[Tuple[str, str, int]],  # (entry_name, spec_name, record_id)
                     body=body,
                 )
@@ -2259,7 +2215,7 @@ class BaseDataset(BaseModel):
                 # the 'modified_on' and 'status' fields
                 server_record_info = self._client.make_request(
                     "post",
-                    f"api/v1/records/bulkGet",
+                    f"{self._base_url_prefix}/records/bulkGet",
                     List[Dict[str, Any]],
                     body=CommonBulkGetBody(ids=server_record_ids, include=["modified_on", "status"]),
                 )
@@ -2292,7 +2248,7 @@ class BaseDataset(BaseModel):
 
         self.contributed_values_ = self._client.make_request(
             "get",
-            f"api/v1/datasets/{self.id}/contributed_values",
+            f"{self._base_url_prefix}/datasets/{self.id}/contributed_values",
             Optional[Dict[str, ContributedValues]],
         )
 
@@ -2500,7 +2456,9 @@ class DatasetGetInternalJobParams(RestModelBase):
     status: Optional[List[InternalJobStatusEnum]] = None
 
 
-def dataset_from_dict(data: Dict[str, Any], client: Any, cache_data: Optional[DatasetCache] = None) -> BaseDataset:
+def dataset_from_dict(
+    data: Dict[str, Any], client: Any, base_url_prefix: Optional[str] = None, cache_data: Optional[DatasetCache] = None
+) -> BaseDataset:
     """
     Create a dataset object from a datamodel
 
@@ -2512,7 +2470,7 @@ def dataset_from_dict(data: Dict[str, Any], client: Any, cache_data: Optional[Da
 
     dataset_type = data["dataset_type"]
     cls = BaseDataset.get_subclass(dataset_type)
-    return cls(client=client, cache_data=cache_data, **data)
+    return cls(client=client, base_url_prefix=base_url_prefix, cache_data=cache_data, **data)
 
 
 def load_dataset_view(file_path: str) -> BaseDataset:
@@ -2525,7 +2483,7 @@ def load_dataset_view(file_path: str) -> BaseDataset:
     ds_cache = DatasetCache(cache_uri, True, ds_type)
 
     # Views never have a client attached
-    return dataset_from_dict(ds_meta, None, cache_data=ds_cache)
+    return dataset_from_dict(ds_meta, client=None, base_url_prefix=None, cache_data=ds_cache)
 
 
 def dataset_from_cache(file_path: str) -> BaseDataset:
@@ -2554,6 +2512,6 @@ def create_dataset_view(
     ds_dict = client.make_request("get", f"api/v1/datasets/{dataset_id}", Dict[str, Any])
     ds_cache = DatasetCache(f"file:{file_path}", False, BaseDataset.get_subclass(ds_dict["dataset_type"]))
 
-    ds = dataset_from_dict(ds_dict, client, ds_cache)
+    ds = dataset_from_dict(ds_dict, client, "api/v1", ds_cache)
 
     ds.fetch_records(include=include, force_refetch=True)

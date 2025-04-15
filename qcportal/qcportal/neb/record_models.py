@@ -154,17 +154,17 @@ class NEBRecord(BaseRecord):
     _singlepoints_cache: Optional[Dict[int, List[SinglepointRecord]]] = PrivateAttr(None)
     _ts_hessian: Optional[SinglepointRecord] = PrivateAttr(None)
 
-    def propagate_client(self, client):
-        BaseRecord.propagate_client(self, client)
+    def propagate_client(self, client, base_url_prefix: Optional[str]):
+        BaseRecord.propagate_client(self, client, base_url_prefix)
 
         if self._optimizations_cache is not None:
             for opt in self._optimizations_cache.values():
-                opt.propagate_client(client)
+                opt.propagate_client(client, base_url_prefix)
 
         if self._singlepoints_cache is not None:
             for splist in self._singlepoints_cache.values():
                 for sp2 in splist:
-                    sp2.propagate_client(client)
+                    sp2.propagate_client(client, base_url_prefix)
 
     @classmethod
     def _fetch_children_multi(
@@ -173,6 +173,9 @@ class NEBRecord(BaseRecord):
         # Should be checked by the calling function
         assert records
         assert all(isinstance(x, NEBRecord) for x in records)
+
+        base_url_prefix = next(iter(records))._base_url_prefix
+        assert all(r._base_url_prefix == base_url_prefix for r in records)
 
         do_sp = is_included("singlepoints", include, None, False)
         do_opt = is_included("optimizations", include, None, False)
@@ -195,12 +198,24 @@ class NEBRecord(BaseRecord):
 
         if do_sp:
             sp_records = get_records_with_cache(
-                client, record_cache, SinglepointRecord, sp_ids, include=include, force_fetch=force_fetch
+                client,
+                base_url_prefix,
+                record_cache,
+                SinglepointRecord,
+                sp_ids,
+                include=include,
+                force_fetch=force_fetch,
             )
             sp_map = {r.id: r for r in sp_records}
         if do_opt:
             opt_records = get_records_with_cache(
-                client, record_cache, OptimizationRecord, opt_ids, include=include, force_fetch=force_fetch
+                client,
+                base_url_prefix,
+                record_cache,
+                OptimizationRecord,
+                opt_ids,
+                include=include,
+                force_fetch=force_fetch,
             )
             opt_map = {r.id: r for r in opt_records}
 
@@ -226,7 +241,7 @@ class NEBRecord(BaseRecord):
                         r._ts_hessian = temp_list[0]
                         assert r._ts_hessian.specification.driver == "hessian"
 
-            r.propagate_client(r._client)
+            r.propagate_client(r._client, base_url_prefix)
 
     def _fetch_optimizations(self):
         if self.optimizations_ is None:

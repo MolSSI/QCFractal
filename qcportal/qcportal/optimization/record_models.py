@@ -81,6 +81,9 @@ class OptimizationRecord(BaseRecord):
         assert records
         assert all(isinstance(x, OptimizationRecord) for x in records)
 
+        base_url_prefix = next(iter(records))._base_url_prefix
+        assert all(r._base_url_prefix == base_url_prefix for r in records)
+
         if is_included("trajectory", include, None, False):
             # collect all singlepoint ids for all optimizations
             sp_ids = set()
@@ -90,7 +93,13 @@ class OptimizationRecord(BaseRecord):
 
             sp_ids = list(sp_ids)
             sp_records = get_records_with_cache(
-                client, record_cache, SinglepointRecord, sp_ids, include=include, force_fetch=force_fetch
+                client,
+                base_url_prefix,
+                record_cache,
+                SinglepointRecord,
+                sp_ids,
+                include=include,
+                force_fetch=force_fetch,
             )
             sp_map = {r.id: r for r in sp_records}
 
@@ -99,14 +108,14 @@ class OptimizationRecord(BaseRecord):
                     r._trajectory_records = None
                 else:
                     r._trajectory_records = [sp_map[x] for x in r.trajectory_ids_]
-                r.propagate_client(r._client)
+                r.propagate_client(r._client, base_url_prefix)
 
-    def propagate_client(self, client):
-        BaseRecord.propagate_client(self, client)
+    def propagate_client(self, client, base_url_prefix: Optional[str]):
+        BaseRecord.propagate_client(self, client, base_url_prefix)
 
         if self._trajectory_records is not None:
             for sp in self._trajectory_records:
-                sp.propagate_client(client)
+                sp.propagate_client(client, base_url_prefix)
 
     def _fetch_initial_molecule(self):
         self._assert_online()
@@ -162,7 +171,7 @@ class OptimizationRecord(BaseRecord):
             if self.trajectory_ids_ is not None:
                 traj_id = self.trajectory_ids_[trajectory_index]
                 sp_rec = self._get_child_records([traj_id], SinglepointRecord)[0]
-                sp_rec.propagate_client(self._client)
+                sp_rec.propagate_client(self._client, self._base_url_prefix)
                 return sp_rec
             else:
                 raise RuntimeError(f"Cannot find trajectory for record {self.id}")

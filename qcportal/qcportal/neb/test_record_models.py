@@ -29,7 +29,7 @@ def test_neb_record_model(snowflake: QCATestingSnowflake, includes: Optional[Lis
         assert record.initial_chain_molecule_ids_ is not None
         assert record.singlepoints_ is not None
         assert record.optimizations_ is not None
-        record.propagate_client(None)
+        record.propagate_client(None, None)
         assert record.offline
 
         # children have all data fetched

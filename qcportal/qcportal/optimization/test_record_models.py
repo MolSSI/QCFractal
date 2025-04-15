@@ -29,7 +29,7 @@ def test_optimization_record_model(snowflake: QCATestingSnowflake, includes: Opt
     if includes is not None:
         assert record.initial_molecule_ is not None
         assert record.trajectory_ids_ is not None
-        record.propagate_client(None)
+        record.propagate_client(None, None)
         assert record.offline
     else:
         assert record.initial_molecule_ is None

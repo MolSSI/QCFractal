@@ -415,7 +415,8 @@ class BaseRecord(BaseModel):
 
     # Private non-pydantic fields
     _client: Any = PrivateAttr(None)
-    _base_url: str = PrivateAttr(None)
+    _base_url: Optional[str] = PrivateAttr(None)
+    _base_url_prefix: Optional[str] = PrivateAttr(None)
 
     # A dictionary of all subclasses (calculation types) to actual class type
     _all_subclasses: ClassVar[Dict[str, Type[BaseRecord]]] = {}
@@ -425,7 +426,7 @@ class BaseRecord(BaseModel):
     _record_cache: Optional[RecordCache] = PrivateAttr(None)
     _cache_dirty: bool = PrivateAttr(False)
 
-    def __init__(self, client=None, **kwargs):
+    def __init__(self, client=None, base_url_prefix: Optional[str] = None, **kwargs):
         # TODO - DEPRECATED - REMOVE EVENTUALLY
         if "owner_user" in kwargs:
             kwargs["creator_user"] = kwargs.pop("owner_user")
@@ -436,7 +437,7 @@ class BaseRecord(BaseModel):
 
         # Calls derived class propagate_client
         # which should filter down to the ones in this (BaseRecord) class
-        self.propagate_client(client)
+        self.propagate_client(client, base_url_prefix)
 
         assert self._client is client, "Client not set in base record class?"
 
@@ -566,14 +567,21 @@ class BaseRecord(BaseModel):
     def __str__(self) -> str:
         return f"<{self.__class__.__name__} id={self.id} status={self.status}>"
 
-    def propagate_client(self, client):
+    def propagate_client(self, client, base_url_prefix: Optional[str]):
         """
         Propagates a client and related information to this record to any fields within this record that need it
 
         This is expected to be called from derived class propagate_client functions as well
         """
         self._client = client
-        self._base_url = f"api/v1/records/{self.record_type}/{self.id}"
+
+        if client is not None:
+            assert base_url_prefix is not None
+            self._base_url_prefix = base_url_prefix.rstrip("/")
+            self._base_url = f"{self._base_url_prefix}/records/{self.record_type}/{self.id}"
+        else:
+            self._base_url_prefix = None
+            self._base_url = None
 
         if self.compute_history_ is not None:
             for ch in self.compute_history_:
@@ -599,7 +607,13 @@ class BaseRecord(BaseModel):
         """
 
         return get_records_with_cache(
-            self._client, self._record_cache, child_record_type, child_record_ids, include, force_fetch=False
+            self._client,
+            self._base_url_prefix,
+            self._record_cache,
+            child_record_type,
+            child_record_ids,
+            include,
+            force_fetch=False,
         )
 
     def _assert_online(self):
@@ -614,7 +628,7 @@ class BaseRecord(BaseModel):
             "get", f"{self._base_url}/compute_history", List[ComputeHistory]
         )
 
-        self.propagate_client(self._client)
+        self.propagate_client(self._client, self._base_url_prefix)
 
     def _fetch_task(self):
         if self.is_service:
@@ -635,7 +649,7 @@ class BaseRecord(BaseModel):
 
     def _fetch_native_files(self):
         self.native_files_ = self._client.make_request("get", f"{self._base_url}/native_files", Dict[str, NativeFile])
-        self.propagate_client(self._client)
+        self.propagate_client(self._client, self._base_url_prefix)
 
     def _get_output(self, output_type: OutputTypeEnum) -> Optional[Union[str, Dict[str, Any]]]:
         history = self.compute_history
@@ -669,7 +683,7 @@ class BaseRecord(BaseModel):
             List[int],
         )
 
-        return self._client._get_records_by_type(None, error_ids)
+        return self._client._get_records_by_type(self._base_url_prefix, None, error_ids)
 
     @property
     def compute_history(self) -> List[ComputeHistory]:
@@ -694,7 +708,9 @@ class BaseRecord(BaseModel):
         return self.service_
 
     def get_waiting_reason(self) -> Dict[str, Any]:
-        return self._client.make_request("get", f"api/v1/records/{self.id}/waiting_reason", Dict[str, Any])
+        return self._client.make_request(
+            "get", f"{self._base_url_prefix}/records/{self.id}/waiting_reason", Dict[str, Any]
+        )
 
     @property
     def comments(self) -> Optional[List[RecordComment]]:
@@ -862,10 +878,10 @@ class RecordQueryIterator(QueryIteratorBase[_Record_T]):
                 body=self._query_filters,
             )
 
-        return self._client._get_records_by_type(self.record_type, record_ids, include=self.include)
+        return self._client._get_records_by_type("api/v1", self.record_type, record_ids, include=self.include)
 
 
-def record_from_dict(data: Dict[str, Any], client: Any = None) -> BaseRecord:
+def record_from_dict(data: Dict[str, Any], client: Any = None, base_url_prefix: Optional[str] = None) -> BaseRecord:
     """
     Create a record object from a dictionary containing the record information
 
@@ -875,12 +891,13 @@ def record_from_dict(data: Dict[str, Any], client: Any = None) -> BaseRecord:
 
     record_type = data["record_type"]
     cls = BaseRecord.get_subclass(record_type)
-    return cls(**data, client=client)
+    return cls(**data, client=client, base_url_prefix=base_url_prefix)
 
 
 def records_from_dicts(
     data: Sequence[Optional[Dict[str, Any]]],
     client: Any = None,
+    base_url_prefix: Optional[str] = None,
 ) -> List[Optional[BaseRecord]]:
     """
     Create a list of record objects from a sequence of datamodels
@@ -894,5 +911,5 @@ def records_from_dicts(
         if rd is None:
             ret.append(None)
         else:
-            ret.append(record_from_dict(rd, client))
+            ret.append(record_from_dict(rd, client, base_url_prefix))
     return ret

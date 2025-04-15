@@ -29,7 +29,7 @@ def test_dataset_cache_basic(snowflake: QCATestingSnowflake, tmp_path):
 
     # reload the dataset
     ds: SinglepointDataset = client.get_dataset("singlepoint", "Test dataset")
-    ds.propagate_client(None)
+    ds.propagate_client(None, None)
 
     spec_map = {"spec_1": test_specs[0], "spec_2": test_specs[1]}
     entry_map = {test_entries[0].name: test_entries[0], test_entries[1].name: test_entries[1]}
