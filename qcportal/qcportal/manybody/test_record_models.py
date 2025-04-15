@@ -29,7 +29,7 @@ def test_manybody_record_model(snowflake: QCATestingSnowflake, includes: Optiona
         assert record.initial_molecule_ is not None
         assert record.clusters_meta_ is not None
         assert record._clusters is not None
-        record.propagate_client(None)
+        record.propagate_client(None, None)
         assert record.offline
 
         # children have all data fetched

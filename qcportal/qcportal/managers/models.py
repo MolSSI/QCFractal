@@ -86,10 +86,12 @@ class ComputeManager(BaseModel):
 
     _client: Any = PrivateAttr(None)
     _base_url: Optional[str] = PrivateAttr(None)
+    _base_url_prefix: Optional[str] = PrivateAttr(None)
 
-    def propagate_client(self, client):
+    def propagate_client(self, client, base_url_prefix: Optional[str]):
         self._client = client
-        self._base_url = f"api/v1/managers/{self.name}"
+        self._base_url_prefix = base_url_prefix.rstrip("/")
+        self._base_url = f"{self._base_url_prefix}/managers/{self.name}"
 
     # TODO - DEPRECATED - remove at some point
     @property
@@ -196,6 +198,6 @@ class ManagerQueryIterator(QueryIteratorBase[ComputeManager]):
         )
 
         for m in managers:
-            m.propagate_client(self._client)
+            m.propagate_client(self._client, "api/v1")
 
         return managers

@@ -29,7 +29,7 @@ def test_gridoptimization_record_model(snowflake: QCATestingSnowflake, includes:
     if includes is not None:
         assert record.initial_molecule_ is not None
         assert record.optimizations_ is not None
-        record.propagate_client(None)
+        record.propagate_client(None, None)
         assert record.offline
 
         # children have all data fetched

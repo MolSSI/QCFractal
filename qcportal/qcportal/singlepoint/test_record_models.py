@@ -60,7 +60,7 @@ def test_singlepoint_record_model(snowflake: QCATestingSnowflake, includes: Opti
     record = snowflake_client.get_singlepoints(rec_id, include=includes)
 
     if includes is not None:
-        record.propagate_client(None)
+        record.propagate_client(None, None)
         assert record.wavefunction_ is not None
         assert record.molecule_ is not None
         assert record.offline

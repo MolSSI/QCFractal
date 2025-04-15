@@ -99,13 +99,13 @@ class ManybodyRecord(BaseRecord):
     ########################################
     _clusters: Optional[List[ManybodyCluster]] = PrivateAttr(None)
 
-    def propagate_client(self, client):
-        BaseRecord.propagate_client(self, client)
+    def propagate_client(self, client, base_url_prefix: Optional[str]):
+        BaseRecord.propagate_client(self, client, base_url_prefix)
 
         if self._clusters is not None:
             for cluster in self._clusters:
                 if cluster.singlepoint_record:
-                    cluster.singlepoint_record.propagate_client(client)
+                    cluster.singlepoint_record.propagate_client(client, base_url_prefix)
 
     @classmethod
     def _fetch_children_multi(
@@ -114,6 +114,9 @@ class ManybodyRecord(BaseRecord):
         # Should be checked by the calling function
         assert records
         assert all(isinstance(x, ManybodyRecord) for x in records)
+
+        base_url_prefix = next(iter(records))._base_url_prefix
+        assert all(r._base_url_prefix == base_url_prefix for r in records)
 
         if "clusters" in include or "**" in include:
             # collect all singlepoint ids for all manybody records
@@ -125,7 +128,13 @@ class ManybodyRecord(BaseRecord):
 
             sp_ids = list(sp_ids)
             sp_recs = get_records_with_cache(
-                client, record_cache, SinglepointRecord, sp_ids, include=include, force_fetch=force_fetch
+                client,
+                base_url_prefix,
+                record_cache,
+                SinglepointRecord,
+                sp_ids,
+                include=include,
+                force_fetch=force_fetch,
             )
             sp_map = {x.id: x for x in sp_recs}
 
@@ -142,7 +151,7 @@ class ManybodyRecord(BaseRecord):
 
                         r._clusters.append(cluster)
 
-                r.propagate_client(client)
+                r.propagate_client(client, base_url_prefix)
 
     def _fetch_initial_molecule(self):
         self._assert_online()
