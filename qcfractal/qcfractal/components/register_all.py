@@ -20,4 +20,4 @@ from .reaction import record_db_models, dataset_db_models, routes
 from .manybody import record_db_models, dataset_db_models, routes
 from .neb import record_db_models, dataset_db_models, routes
 
-from . import record_db_views
+from . import record_db_views, dataset_db_views

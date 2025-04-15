@@ -21,6 +21,7 @@ from sqlalchemy.orm import (
 from qcfractal.components.auth.db_models import UserIDMapSubquery
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.record_db_views import RecordDirectChildrenView, RecordChildrenView
+from qcfractal.components.dataset_db_views import DatasetDirectRecordsView, DatasetRecordsView
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.db_socket.helpers import (
@@ -766,11 +767,8 @@ class RecordSocket:
             stmt = stmt.where(child_cte.c.child_id.in_(query_data.child_id))
 
         if query_data.dataset_id is not None:
-            # Join with the CTE from the dataset socket
-            # This contains all records and dataset ids
-            cte = self.root_socket.datasets._record_cte
-            stmt = stmt.join(cte, cte.c.record_id == orm_type.id)
-            stmt = stmt.where(cte.c.dataset_id.in_(query_data.dataset_id))
+            stmt = stmt.join(DatasetDirectRecordsView, DatasetDirectRecordsView.c.record_id == orm_type.id)
+            stmt = stmt.where(DatasetDirectRecordsView.c.dataset_id.in_(query_data.dataset_id))
 
         with self.root_socket.optional_session(session, True) as session:
             stmt = stmt.where(*and_query)

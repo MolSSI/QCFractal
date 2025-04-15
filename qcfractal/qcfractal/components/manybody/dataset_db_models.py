@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import Column, Integer, ForeignKey, String, ForeignKeyConstraint, Index
+from sqlalchemy import Column, Integer, ForeignKey, String, ForeignKeyConstraint, Index, select
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
@@ -89,3 +89,15 @@ class ManybodyDatasetORM(BaseDatasetORM):
     __mapper_args__ = {
         "polymorphic_identity": "manybody",
     }
+
+
+dataset_records_select = [
+    select(
+        BaseDatasetORM.id.label("dataset_id"),
+        ManybodyDatasetRecordItemORM.entry_name.label("entry_name"),
+        ManybodyDatasetRecordItemORM.specification_name.label("specification_name"),
+        ManybodyDatasetRecordItemORM.record_id.label("record_id"),
+    )
+    .join(ManybodyDatasetRecordItemORM, BaseDatasetORM.id == ManybodyDatasetRecordItemORM.dataset_id)
+    .where(BaseDatasetORM.dataset_type == "manybody")
+]

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import Column, Integer, ForeignKey, String, ForeignKeyConstraint, Index
+from sqlalchemy import Column, Integer, ForeignKey, String, ForeignKeyConstraint, Index, select
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
@@ -132,3 +132,15 @@ class NEBDatasetORM(BaseDatasetORM):
     __mapper_args__ = {
         "polymorphic_identity": "neb",
     }
+
+
+dataset_records_select = [
+    select(
+        BaseDatasetORM.id.label("dataset_id"),
+        NEBDatasetRecordItemORM.entry_name.label("entry_name"),
+        NEBDatasetRecordItemORM.specification_name.label("specification_name"),
+        NEBDatasetRecordItemORM.record_id.label("record_id"),
+    )
+    .join(NEBDatasetRecordItemORM, BaseDatasetORM.id == NEBDatasetRecordItemORM.dataset_id)
+    .where(BaseDatasetORM.dataset_type == "neb")
+]

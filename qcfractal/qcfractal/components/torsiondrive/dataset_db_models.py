@@ -130,3 +130,15 @@ class TorsiondriveDatasetORM(BaseDatasetORM):
     __mapper_args__ = {
         "polymorphic_identity": "torsiondrive",
     }
+
+
+dataset_records_select = [
+    select(
+        BaseDatasetORM.id.label("dataset_id"),
+        TorsiondriveDatasetRecordItemORM.entry_name.label("entry_name"),
+        TorsiondriveDatasetRecordItemORM.specification_name.label("specification_name"),
+        TorsiondriveDatasetRecordItemORM.record_id.label("record_id"),
+    )
+    .join(TorsiondriveDatasetRecordItemORM, BaseDatasetORM.id == TorsiondriveDatasetRecordItemORM.dataset_id)
+    .where(BaseDatasetORM.dataset_type == "torsiondrive")
+]
