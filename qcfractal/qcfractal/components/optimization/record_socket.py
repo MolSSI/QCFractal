@@ -54,14 +54,6 @@ class OptimizationRecordSocket(BaseRecordSocket):
         BaseRecordSocket.__init__(self, root_socket)
         self._logger = logging.getLogger(__name__)
 
-    @staticmethod
-    def get_children_select() -> List[Any]:
-        stmt = select(
-            OptimizationTrajectoryORM.optimization_id.label("parent_id"),
-            OptimizationTrajectoryORM.singlepoint_id.label("child_id"),
-        )
-        return [stmt]
-
     def generate_task_specifications(self, session: Session, record_ids: Sequence[int]) -> List[Dict[str, Any]]:
 
         stmt = select(OptimizationRecordORM).filter(OptimizationRecordORM.id.in_(record_ids))

@@ -2,7 +2,19 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, ForeignKey, String, JSON, Index, CheckConstraint, UniqueConstraint, event, DDL
+from sqlalchemy import (
+    Column,
+    Integer,
+    ForeignKey,
+    String,
+    JSON,
+    Index,
+    CheckConstraint,
+    UniqueConstraint,
+    event,
+    DDL,
+    select,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.orm import relationship
@@ -145,3 +157,15 @@ _del_baserecord_trigger = DDL(
 event.listen(
     OptimizationRecordORM.__table__, "after_create", _del_baserecord_trigger.execute_if(dialect=("postgresql"))
 )
+
+
+record_direct_children_select = [
+    select(
+        BaseRecordORM.id.label("parent_id"),
+        OptimizationTrajectoryORM.singlepoint_id.label("child_id"),
+    )
+    .join(OptimizationTrajectoryORM, BaseRecordORM.id == OptimizationTrajectoryORM.optimization_id)
+    .where(BaseRecordORM.record_type == "optimization")
+]
+
+record_children_select = record_direct_children_select

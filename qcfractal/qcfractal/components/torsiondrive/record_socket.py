@@ -106,14 +106,6 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
     def available(self) -> bool:
         return _td_spec is not None
 
-    @staticmethod
-    def get_children_select() -> List[Any]:
-        stmt = select(
-            TorsiondriveOptimizationORM.torsiondrive_id.label("parent_id"),
-            TorsiondriveOptimizationORM.optimization_id.label("child_id"),
-        )
-        return [stmt]
-
     def initialize_service(
         self,
         session: Session,

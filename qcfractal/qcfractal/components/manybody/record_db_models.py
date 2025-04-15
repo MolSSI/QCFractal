@@ -12,6 +12,7 @@ from sqlalchemy import (
     CheckConstraint,
     event,
     DDL,
+    select,
 )
 from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 from sqlalchemy.orm import relationship
@@ -163,3 +164,11 @@ _del_baserecord_trigger = DDL(
 )
 
 event.listen(ManybodyRecordORM.__table__, "after_create", _del_baserecord_trigger.execute_if(dialect=("postgresql")))
+
+record_direct_children_select = [
+    select(BaseRecordORM.id.label("parent_id"), ManybodyClusterORM.singlepoint_id.label("child_id"))
+    .join(ManybodyClusterORM, BaseRecordORM.id == ManybodyClusterORM.manybody_id)
+    .where(BaseRecordORM.record_type == "manybody"),
+]
+
+record_children_select = record_direct_children_select

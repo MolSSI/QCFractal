@@ -5,7 +5,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING
 
 from qcelemental.models import FailedOperation
-from sqlalchemy import select, delete, update, union, or_, func, text
+from sqlalchemy import select, delete, update, or_, func, text
 from sqlalchemy.orm import (
     joinedload,
     selectinload,
@@ -18,8 +18,9 @@ from sqlalchemy.orm import (
     load_only,
 )
 
-from qcfractal.components.auth.db_models import UserIDMapSubquery, GroupIDMapSubquery
+from qcfractal.components.auth.db_models import UserIDMapSubquery
 from qcfractal.components.managers.db_models import ComputeManagerORM
+from qcfractal.components.record_db_views import RecordDirectChildrenView, RecordChildrenView
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.db_socket.helpers import (
@@ -78,16 +79,6 @@ class BaseRecordSocket:
 
         # Make sure these were set by the derived classes
         assert self.record_orm is not None
-
-    @staticmethod
-    def get_children_select() -> List[Any]:
-        """
-        Return a list of 'select' statements that contain a mapping of parent to child ids
-
-        This is used to construct a CTE. That table consists of two columns - parent_id and child_id,
-        which is used in various queries
-        """
-        return []
 
     @staticmethod
     def create_task(record_orm: BaseRecordORM, compute_tag: str, compute_priority: PriorityEnum) -> None:
@@ -510,17 +501,9 @@ class BaseRecordSocket:
         return decompress(raw_data, ctype)
 
     def get_children_status(self, record_id: int, *, session: Optional[Session] = None) -> Dict[RecordStatusEnum, int]:
-        # Get the SQL 'select' statements from the handlers
-        select_stmts = self.get_children_select()
-
-        if not select_stmts:
-            return {}
-
-        select_cte = union(*select_stmts).cte()
-
         stmt = select(BaseRecordORM.status, func.count())
-        stmt = stmt.join(select_cte, select_cte.c.child_id == BaseRecordORM.id)
-        stmt = stmt.where(select_cte.c.parent_id == record_id)
+        stmt = stmt.join(RecordDirectChildrenView, RecordDirectChildrenView.c.child_id == BaseRecordORM.id)
+        stmt = stmt.where(RecordDirectChildrenView.c.parent_id == record_id)
         stmt = stmt.group_by(BaseRecordORM.status)
 
         with self.root_socket.optional_session(session, True) as session:
@@ -528,17 +511,9 @@ class BaseRecordSocket:
             return {x: y for x, y in res}
 
     def get_children_errors(self, record_id: int, *, session: Optional[Session] = None) -> List[int]:
-        # Get the SQL 'select' statements from the handlers
-        select_stmts = self.get_children_select()
-
-        if not select_stmts:
-            return []
-
-        select_cte = union(*select_stmts).cte()
-
-        stmt = select(select_cte.c.child_id).distinct(select_cte.c.child_id)
-        stmt = stmt.join(BaseRecordORM, BaseRecordORM.id == select_cte.c.child_id)
-        stmt = stmt.where(select_cte.c.parent_id == record_id)
+        stmt = select(RecordDirectChildrenView.c.child_id).distinct(RecordDirectChildrenView.c.child_id)
+        stmt = stmt.join(BaseRecordORM, BaseRecordORM.id == RecordDirectChildrenView.c.child_id)
+        stmt = stmt.where(RecordDirectChildrenView.c.parent_id == record_id)
         stmt = stmt.where(BaseRecordORM.status == RecordStatusEnum.error)
 
         with self.root_socket.optional_session(session, True) as session:
@@ -602,22 +577,6 @@ class RecordSocket:
             self.neb.record_input_type: self.neb,
         }
 
-        ###############################################################################
-        # Build the cte that maps parent and children
-        # This cte represents a single table-like object with two columns
-        # - parent_id and child_id. This contains any parent-child record relationship
-        # (optimization trajectory, torsiondrive optimization, etc).
-        ###############################################################################
-
-        # Get the SQL 'select' statements from the handlers
-        selects = []
-        for h in self._handler_map.values():
-            sel = h.get_children_select()
-            selects.extend(sel)
-
-        # Union them into a single CTE
-        self._child_cte = union(*selects).cte()
-
     def get_socket(self, record_type: str) -> BaseRecordSocket:
         """
         Get the socket for a specific kind of record type
@@ -650,18 +609,13 @@ class RecordSocket:
         """
 
         # Do in batches to prevent really huge queries
-        # First, do just direct children
-        direct_children: List[int] = []
+        all_children: List[int] = []
         for id_batch in chunk_iterable(record_ids, 100):
-            stmt = select(self._child_cte.c.child_id).where(self._child_cte.c.parent_id.in_(id_batch))
-            children_ids = session.execute(stmt).scalars().unique().all()
-            direct_children.extend(children_ids)
+            stmt = select(RecordChildrenView.c.child_id).where(RecordChildrenView.c.parent_id.in_(id_batch))
+            children_ids = session.execute(stmt).scalars().all()
+            all_children.extend(children_ids)
 
-        if len(direct_children) == 0:
-            return []
-
-        # Now, recursively find all children of children, etc
-        return direct_children + self.get_children_ids(session, direct_children)
+        return list(set(all_children))
 
     def get_short_descriptions(
         self, record_ids: Iterable[int], *, session: Optional[Session] = None
@@ -700,18 +654,14 @@ class RecordSocket:
         """
 
         # Do in batches to prevent really huge queries
-        # First, do just direct parents
-        direct_parents: List[int] = []
+        all_parents: List[int] = []
 
         for id_batch in chunk_iterable(record_ids, 100):
-            stmt = select(self._child_cte.c.parent_id).where(self._child_cte.c.child_id.in_(id_batch))
-            parent_ids = session.execute(stmt).scalars().unique().all()
-            direct_parents.extend(parent_ids)
+            stmt = select(RecordChildrenView.c.parent_id).where(RecordChildrenView.c.child_id.in_(id_batch))
+            parent_ids = session.execute(stmt).scalars().all()
+            all_parents.extend(parent_ids)
 
-        if len(direct_parents) == 0:
-            return []
-
-        return direct_parents + self.get_parent_ids(session, direct_parents)
+        return list(set(all_parents))
 
     def get_relative_ids(self, session: Session, record_ids: Iterable[int]) -> List[int]:
         """
@@ -726,10 +676,10 @@ class RecordSocket:
 
             # do in batches to prevent really huge queries
             for id_batch in chunk_iterable(records_to_search, 100):
-                stmt = select(self._child_cte.c.parent_id).where(self._child_cte.c.child_id.in_(id_batch))
+                stmt = select(RecordChildrenView.c.parent_id).where(RecordChildrenView.c.child_id.in_(id_batch))
                 parent_ids = session.execute(stmt).scalars().unique().all()
 
-                stmt = select(self._child_cte.c.child_id).where(self._child_cte.c.parent_id.in_(id_batch))
+                stmt = select(RecordChildrenView.c.child_id).where(RecordChildrenView.c.parent_id.in_(id_batch))
                 child_ids = session.execute(stmt).scalars().unique().all()
 
                 direct_relatives.update(parent_ids)
@@ -803,14 +753,14 @@ class RecordSocket:
 
         if query_data.parent_id is not None:
             # We alias the cte because we might join on it twice
-            parent_cte = aliased(self._child_cte)
+            parent_cte = aliased(RecordDirectChildrenView)
 
             stmt = stmt.join(parent_cte, parent_cte.c.child_id == orm_type.id)
             stmt = stmt.where(parent_cte.c.parent_id.in_(query_data.parent_id))
 
         if query_data.child_id is not None:
             # We alias the cte because we might join on it twice
-            child_cte = aliased(self._child_cte)
+            child_cte = aliased(RecordDirectChildrenView)
 
             stmt = stmt.join(child_cte, child_cte.c.parent_id == orm_type.id)
             stmt = stmt.where(child_cte.c.child_id.in_(query_data.child_id))

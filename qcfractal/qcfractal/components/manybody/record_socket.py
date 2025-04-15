@@ -111,14 +111,6 @@ class ManybodyRecordSocket(BaseRecordSocket):
     def available(self) -> bool:
         return _qcm_spec is not None
 
-    @staticmethod
-    def get_children_select() -> List[Any]:
-        stmt = select(
-            ManybodyClusterORM.manybody_id.label("parent_id"),
-            ManybodyClusterORM.singlepoint_id.label("child_id"),
-        )
-        return [stmt]
-
     def initialize_service(self, session: Session, service_orm: ServiceQueueORM) -> None:
         mb_orm: ManybodyRecordORM = service_orm.record
 

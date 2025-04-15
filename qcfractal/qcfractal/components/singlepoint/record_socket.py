@@ -49,10 +49,6 @@ class SinglepointRecordSocket(BaseRecordSocket):
         BaseRecordSocket.__init__(self, root_socket)
         self._logger = logging.getLogger(__name__)
 
-    @staticmethod
-    def get_children_select() -> List[Any]:
-        return []
-
     def generate_task_specifications(self, session: Session, record_ids: Sequence[int]) -> List[Dict[str, Any]]:
         stmt = select(SinglepointRecordORM).filter(SinglepointRecordORM.id.in_(record_ids))
         stmt = stmt.options(load_only(SinglepointRecordORM.id, SinglepointRecordORM.extras))
