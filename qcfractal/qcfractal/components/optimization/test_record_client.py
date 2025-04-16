@@ -50,10 +50,7 @@ def test_optimization_client_tag_priority(snowflake_client: PortalClient):
 
 
 @pytest.mark.parametrize("spec", test_specs)
-@pytest.mark.parametrize("owner_group", ["group1", None])
-def test_optimization_client_add_get(
-    submitter_client: PortalClient, spec: OptimizationSpecification, owner_group: Optional[str]
-):
+def test_optimization_client_add_get(submitter_client: PortalClient, spec: OptimizationSpecification):
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
     ne4 = load_molecule_data("neon_tetramer")
@@ -68,7 +65,6 @@ def test_optimization_client_add_get(
         qc_specification=spec.qc_specification,
         compute_tag="tag1",
         compute_priority=PriorityEnum.low,
-        owner_group=owner_group,
     )
 
     time_1 = now_at_utc()
@@ -90,8 +86,7 @@ def test_optimization_client_add_get(
         assert r.task.compute_tag == "tag1"
         assert r.task.compute_priority == PriorityEnum.low
 
-        assert r.owner_user == submitter_client.username
-        assert r.owner_group == owner_group
+        assert r.creator_user == submitter_client.username
 
         assert time_0 < r.created_on < time_1
         assert time_0 < r.modified_on < time_1
@@ -127,7 +122,6 @@ def test_optimization_client_add_duplicate(
         qc_specification=spec.qc_specification,
         compute_tag="tag1",
         compute_priority=PriorityEnum.low,
-        owner_group=None,
         find_existing=True,
     )
 
@@ -142,7 +136,6 @@ def test_optimization_client_add_duplicate(
         qc_specification=spec.qc_specification,
         compute_tag="tag1",
         compute_priority=PriorityEnum.low,
-        owner_group=None,
         find_existing=find_existing,
     )
 

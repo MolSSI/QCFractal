@@ -185,7 +185,10 @@ def test_neb_dataset_model_clone(snowflake_client: PortalClient):
 @pytest.mark.parametrize("background", [True, False])
 def test_neb_dataset_model_submit(dataset_submit_test_client: PortalClient, background):
     ds = dataset_submit_test_client.add_dataset(
-        "neb", "Test dataset", default_tag="default_tag", default_priority=PriorityEnum.low, owner_group="group1"
+        "neb",
+        "Test dataset",
+        default_tag="default_tag",
+        default_priority=PriorityEnum.low,
     )
     ds_helpers.run_dataset_model_submit(ds, test_entries, test_specs[0], record_compare, background)
 

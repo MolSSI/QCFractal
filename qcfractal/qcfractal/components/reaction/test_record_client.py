@@ -47,9 +47,9 @@ def test_reaction_client_tag_priority(snowflake_client: PortalClient):
 
 
 @pytest.mark.parametrize("spec", test_specs)
-@pytest.mark.parametrize("owner_group", ["group1", None])
 def test_reaction_client_add_get(
-    submitter_client: PortalClient, spec: ReactionSpecification, owner_group: Optional[str]
+    submitter_client: PortalClient,
+    spec: ReactionSpecification,
 ):
     hooh = load_molecule_data("peroxide2")
     ne4 = load_molecule_data("neon_tetramer")
@@ -64,7 +64,6 @@ def test_reaction_client_add_get(
         spec.keywords,
         compute_tag="tag1",
         compute_priority=PriorityEnum.low,
-        owner_group=owner_group,
     )
     time_1 = now_at_utc()
     assert meta1.success
@@ -83,8 +82,7 @@ def test_reaction_client_add_get(
         assert r.service.compute_tag == "tag1"
         assert r.service.compute_priority == PriorityEnum.low
 
-        assert r.owner_user == submitter_client.username
-        assert r.owner_group == owner_group
+        assert r.creator_user == submitter_client.username
 
         assert time_0 < r.created_on < time_1
         assert time_0 < r.modified_on < time_1
@@ -122,7 +120,6 @@ def test_reaction_client_add_duplicate(
         spec.keywords,
         compute_tag="tag1",
         compute_priority=PriorityEnum.low,
-        owner_group=None,
         find_existing=True,
     )
     assert meta.success
@@ -136,7 +133,6 @@ def test_reaction_client_add_duplicate(
         spec.keywords,
         compute_tag="tag1",
         compute_priority=PriorityEnum.low,
-        owner_group=None,
         find_existing=find_existing,
     )
 

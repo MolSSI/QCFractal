@@ -48,9 +48,9 @@ def test_torsiondrive_client_tag_priority_as_service(snowflake_client: PortalCli
 
 
 @pytest.mark.parametrize("spec", test_specs)
-@pytest.mark.parametrize("owner_group", ["group1", None])
 def test_torsiondrive_client_add_get(
-    submitter_client: PortalClient, spec: TorsiondriveSpecification, owner_group: Optional[str]
+    submitter_client: PortalClient,
+    spec: TorsiondriveSpecification,
 ):
     hooh = load_molecule_data("peroxide2")
     td_mol_1 = load_molecule_data("td_C9H11NO2_1")
@@ -64,7 +64,6 @@ def test_torsiondrive_client_add_get(
         optimization_specification=spec.optimization_specification,
         compute_tag="tag1",
         compute_priority=PriorityEnum.low,
-        owner_group=owner_group,
     )
     time_1 = now_at_utc()
     assert meta.success
@@ -83,8 +82,7 @@ def test_torsiondrive_client_add_get(
         assert r.service.compute_tag == "tag1"
         assert r.service.compute_priority == PriorityEnum.low
 
-        assert r.owner_user == submitter_client.username
-        assert r.owner_group == owner_group
+        assert r.creator_user == submitter_client.username
 
         assert time_0 < r.created_on < time_1
         assert time_0 < r.modified_on < time_1
@@ -120,7 +118,6 @@ def test_torsiondrive_client_add_duplicate(
         optimization_specification=spec.optimization_specification,
         compute_tag="tag1",
         compute_priority=PriorityEnum.low,
-        owner_group=None,
         find_existing=True,
     )
 
@@ -134,7 +131,6 @@ def test_torsiondrive_client_add_duplicate(
         optimization_specification=spec.optimization_specification,
         compute_tag="tag1",
         compute_priority=PriorityEnum.low,
-        owner_group=None,
         find_existing=find_existing,
     )
 

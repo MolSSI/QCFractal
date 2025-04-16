@@ -153,8 +153,7 @@ class ReactionRecordSocket(BaseRecordSocket):
                 opt_spec_id,
                 service_orm.compute_tag,
                 service_orm.compute_priority,
-                rxn_orm.owner_user_id,
-                rxn_orm.owner_group_id,
+                rxn_orm.creator_user_id,
                 service_orm.find_existing,
                 session=session,
             )
@@ -189,8 +188,7 @@ class ReactionRecordSocket(BaseRecordSocket):
                 qc_spec_id,
                 service_orm.compute_tag,
                 service_orm.compute_priority,
-                rxn_orm.owner_user_id,
-                rxn_orm.owner_group_id,
+                rxn_orm.creator_user_id,
                 service_orm.find_existing,
                 session=session,
             )
@@ -540,8 +538,7 @@ class ReactionRecordSocket(BaseRecordSocket):
         rxn_spec_id: int,
         compute_tag: str,
         compute_priority: PriorityEnum,
-        owner_user_id: Optional[int],
-        owner_group_id: Optional[int],
+        creator_user_id: Optional[int],
         find_existing: bool,
         *,
         session: Optional[Session] = None,
@@ -565,10 +562,8 @@ class ReactionRecordSocket(BaseRecordSocket):
             The tag for the task. This will assist in routing to appropriate compute managers.
         compute_priority
             The priority for the computation
-        owner_user_id
-            ID of the user who owns the record
-        owner_group_id
-            ID of the group with additional permission for these records
+        creator_user_id
+            ID of the user who created the record
         find_existing
             If True, search for existing records and return those. If False, always add new records
         session
@@ -585,8 +580,6 @@ class ReactionRecordSocket(BaseRecordSocket):
         compute_tag = compute_tag.lower()
 
         with self.root_socket.optional_session(session, False) as session:
-            self.root_socket.users.assert_group_member(owner_user_id, owner_group_id, session=session)
-
             # Lock for the entire transaction
             session.execute(select(func.pg_advisory_xact_lock(reaction_insert_lock_id))).scalar()
 
@@ -638,8 +631,7 @@ class ReactionRecordSocket(BaseRecordSocket):
                             specification_id=rxn_spec_id,
                             components=component_orm,
                             status=RecordStatusEnum.waiting,
-                            owner_user_id=owner_user_id,
-                            owner_group_id=owner_group_id,
+                            creator_user_id=creator_user_id,
                         )
 
                         self.create_service(rxn_orm, compute_tag, compute_priority, find_existing)
@@ -667,8 +659,7 @@ class ReactionRecordSocket(BaseRecordSocket):
                         specification_id=rxn_spec_id,
                         components=component_orm,
                         status=RecordStatusEnum.waiting,
-                        owner_user_id=owner_user_id,
-                        owner_group_id=owner_group_id,
+                        creator_user_id=creator_user_id,
                     )
 
                     self.create_service(rxn_orm, compute_tag, compute_priority, find_existing)
@@ -688,8 +679,7 @@ class ReactionRecordSocket(BaseRecordSocket):
         rxn_spec: ReactionSpecification,
         compute_tag: str,
         compute_priority: PriorityEnum,
-        owner_user: Optional[Union[int, str]],
-        owner_group: Optional[Union[int, str]],
+        creator_user: Optional[Union[int, str]],
         find_existing: bool,
         *,
         session: Optional[Session] = None,
@@ -710,10 +700,8 @@ class ReactionRecordSocket(BaseRecordSocket):
             The tag for the task. This will assist in routing to appropriate compute managers.
         compute_priority
             The priority for the computation
-        owner_user
-            Name or ID of the user who owns the record
-        owner_group
-            Group with additional permission for these records
+        creator_user
+            Name or ID of the user who created the record
         find_existing
             If True, search for existing records and return those. If False, always add new records
         session
@@ -728,9 +716,7 @@ class ReactionRecordSocket(BaseRecordSocket):
         """
 
         with self.root_socket.optional_session(session, False) as session:
-            owner_user_id, owner_group_id = self.root_socket.users.get_owner_ids(
-                owner_user, owner_group, session=session
-            )
+            creator_user_id = self.root_socket.users.get_optional_user_id(creator_user, session=session)
 
             # First, add the specification
             spec_meta, spec_id = self.add_specification(rxn_spec, session=session)
@@ -763,8 +749,7 @@ class ReactionRecordSocket(BaseRecordSocket):
                 spec_id,
                 compute_tag,
                 compute_priority,
-                owner_user_id,
-                owner_group_id,
+                creator_user_id,
                 find_existing,
                 session=session,
             )
@@ -774,8 +759,7 @@ class ReactionRecordSocket(BaseRecordSocket):
         record_input: ReactionInput,
         compute_tag: str,
         compute_priority: PriorityEnum,
-        owner_user: Optional[Union[int, str]],
-        owner_group: Optional[Union[int, str]],
+        creator_user: Optional[Union[int, str]],
         find_existing: bool,
         *,
         session: Optional[Session] = None,
@@ -788,8 +772,7 @@ class ReactionRecordSocket(BaseRecordSocket):
             record_input.specification,
             compute_tag,
             compute_priority,
-            owner_user,
-            owner_group,
+            creator_user,
             find_existing,
         )
 

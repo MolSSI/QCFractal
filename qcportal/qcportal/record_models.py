@@ -402,8 +402,7 @@ class BaseRecord(BaseModel):
     created_on: datetime
     modified_on: datetime
 
-    owner_user: Optional[str]
-    owner_group: Optional[str]
+    creator_user: Optional[str]
 
     ######################################################
     # Fields not always included when fetching the record
@@ -427,6 +426,12 @@ class BaseRecord(BaseModel):
     _cache_dirty: bool = PrivateAttr(False)
 
     def __init__(self, client=None, **kwargs):
+        # TODO - DEPRECATED - REMOVE EVENTUALLY
+        if "owner_user" in kwargs:
+            kwargs["creator_user"] = kwargs.pop("owner_user")
+        if "owner_group" in kwargs:
+            del kwargs["owner_group"]
+
         BaseModel.__init__(self, **kwargs)
 
         # Calls derived class propagate_client
@@ -731,7 +736,6 @@ _Record_T = TypeVar("_Record_T", bound=BaseRecord)
 class RecordAddBodyBase(RestModelBase):
     compute_tag: constr(to_lower=True)
     compute_priority: PriorityEnum
-    owner_group: Optional[str]
     find_existing: bool = True
 
     @root_validator(pre=True)
@@ -741,6 +745,8 @@ class RecordAddBodyBase(RestModelBase):
             values["compute_tag"] = values.pop("tag")
         if "priority" in values:
             values["compute_priority"] = values.pop("priority")
+        if "owner_group" in values:
+            del values["owner_group"]
 
         return values
 
@@ -786,8 +792,16 @@ class RecordQueryFilters(QueryModelBase):
     created_after: Optional[datetime] = None
     modified_before: Optional[datetime] = None
     modified_after: Optional[datetime] = None
-    owner_user: Optional[List[Union[int, str]]] = None
-    owner_group: Optional[List[Union[int, str]]] = None
+    creator_user: Optional[List[Union[int, str]]] = None
+
+    # TODO - DEPRECATED - remove at some point
+    @root_validator(pre=True)
+    def _rm_deprecated(cls, values):
+        if "owner_user" in values:
+            values["creator_user"] = values.pop("owner_user")
+
+        values.pop("owner_group", None)
+        return values
 
     @validator("created_before", "created_after", "modified_before", "modified_after", pre=True)
     def parse_dates(cls, v):

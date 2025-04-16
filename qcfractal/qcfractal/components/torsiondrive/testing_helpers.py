@@ -120,7 +120,7 @@ def submit_test_data(
 ) -> Tuple[int, Dict[str, QCEl_OptimizationResult]]:
     input_spec, molecules, result = load_test_data(name)
     meta, record_ids = storage_socket.records.torsiondrive.add(
-        [molecules], input_spec, True, compute_tag, compute_priority, None, None, True
+        [molecules], input_spec, True, compute_tag, compute_priority, None, True
     )
     assert meta.success
     assert len(record_ids) == 1

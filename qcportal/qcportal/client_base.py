@@ -509,14 +509,17 @@ class PortalClientBase:
         else:
             return pydantic.parse_obj_as(response_model, d)
 
-    def download_file(self, endpoint: str, 
-                 destination_path: str, 
-                 overwrite: bool = False,
-                 expected_size: Optional[int] = None,
-                 show_progress: bool = False) -> Tuple[int, str]:
+    def download_file(
+        self,
+        endpoint: str,
+        destination_path: str,
+        overwrite: bool = False,
+        expected_size: Optional[int] = None,
+        show_progress: bool = False,
+    ) -> Tuple[int, str]:
         """
         Download a file with optional progress bar
-        
+
         Parameters
         ----------
         endpoint
@@ -530,7 +533,7 @@ class PortalClientBase:
         show_progress
             Whether to show a progress bar during download
         """
-        
+
         sha256 = hashlib.sha256()
         file_size = 0
 
@@ -552,26 +555,26 @@ class PortalClientBase:
             response = requests.get(new_location, stream=True, allow_redirects=True)
 
         response.raise_for_status()
-        
+
         # Get filename for display in progress bar
         filename = os.path.basename(destination_path)
-        
+
         with open(destination_path, "wb") as f:
             if show_progress:
                 # Show progress bar with expected_size (which can be None)
                 with tqdm(
                     total=expected_size,
-                    unit='B',
+                    unit="B",
                     unit_scale=True,
                     unit_divisor=1024,
                     desc=f"Downloading to {filename}",
-                    miniters=1,        # Update after each iteration
-                    mininterval=0.1     # Allow updates as frequently as every 0.1 seconds
+                    miniters=1,  # Update after each iteration
+                    mininterval=0.1,  # Allow updates as frequently as every 0.1 seconds
                 ) as pbar:
                     # set chunk_size here so that progress bar can be updated
                     # if set to None, it may only be updated after the entire download is complete
                     # 4*1024*1024 is 4MB
-                    for chunk in response.iter_content(chunk_size=4*1024*1024):
+                    for chunk in response.iter_content(chunk_size=4 * 1024 * 1024):
                         if chunk:
                             f.write(chunk)
                             sha256.update(chunk)

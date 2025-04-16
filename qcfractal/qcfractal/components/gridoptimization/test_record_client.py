@@ -55,9 +55,9 @@ def test_gridoptimization_client_tag_priority(snowflake_client: PortalClient):
 
 
 @pytest.mark.parametrize("spec", test_specs)
-@pytest.mark.parametrize("owner_group", ["group1", None])
 def test_gridoptimization_client_add_get(
-    submitter_client: PortalClient, spec: GridoptimizationSpecification, owner_group: Optional[str]
+    submitter_client: PortalClient,
+    spec: GridoptimizationSpecification,
 ):
     hooh = load_molecule_data("peroxide2")
     h3ns = load_molecule_data("go_H3NS")
@@ -70,7 +70,6 @@ def test_gridoptimization_client_add_get(
         spec.keywords,
         compute_tag="tag1",
         compute_priority=PriorityEnum.low,
-        owner_group=owner_group,
     )
     time_1 = now_at_utc()
     assert meta.success
@@ -89,8 +88,7 @@ def test_gridoptimization_client_add_get(
         assert r.service.compute_tag == "tag1"
         assert r.service.compute_priority == PriorityEnum.low
 
-        assert r.owner_user == submitter_client.username
-        assert r.owner_group == owner_group
+        assert r.creator_user == submitter_client.username
 
         assert time_0 < r.created_on < time_1
         assert time_0 < r.modified_on < time_1
@@ -117,7 +115,6 @@ def test_gridoptimization_client_add_duplicate(
         spec.keywords,
         compute_tag="tag1",
         compute_priority=PriorityEnum.low,
-        owner_group=None,
         find_existing=True,
     )
     assert meta.success
@@ -129,7 +126,6 @@ def test_gridoptimization_client_add_duplicate(
         spec.keywords,
         compute_tag="tag1",
         compute_priority=PriorityEnum.low,
-        owner_group=None,
         find_existing=find_existing,
     )
     assert meta.success

@@ -461,8 +461,7 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare, backgr
 
     record_compare(rec, test_entries[0], test_spec)
 
-    assert rec.owner_user == "submit_user"
-    assert rec.owner_group == "group1"
+    assert rec.creator_user == "submit_user"
 
     # Used default tag/priority
     if rec.is_service:

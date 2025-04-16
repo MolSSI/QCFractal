@@ -352,70 +352,26 @@ class UserSocket:
 
         self._logger.info(f"User {username_or_id} deleted")
 
-    def get_owner_ids(
+    def get_optional_user_id(
         self,
         username_or_id: Optional[Union[int, str]],
-        groupname_or_id: Optional[Union[int, str]],
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[Optional[int], Optional[int]]:
+    ) -> Optional[int]:
         """
-        Obtain the ID of a user and (optionally) group
+        Obtain the ID of a user
 
-        If the user does not belong to the given group, an exception is raised
+        If username_or_id is None, None is returned.
 
-        If a user is not specified, then (None, None) is returned
+        If an ID or name that does not exist is given, an exception is raised.
         """
 
         if username_or_id is None:
-            return None, None
+            return None
 
         with self.root_socket.optional_session(session) as session:
             user = self._get_internal(session, username_or_id)
-
-            if groupname_or_id is None:
-                group_id = None
-            else:
-                if isinstance(groupname_or_id, int):
-                    user_groups = [o.id for o in user.groups_orm]
-
-                    if groupname_or_id in user_groups:
-                        group_id = groupname_or_id
-                    else:
-                        group_id = None
-
-                else:
-                    user_groups = {o.groupname: o.id for o in user.groups_orm}
-                    group_id = user_groups.get(groupname_or_id, None)
-
-                if group_id is None:
-                    raise UserManagementError(f"User {username_or_id} is not part of group {groupname_or_id}")
-
-            return user.id, group_id
-
-    def assert_group_member(
-        self, user_id: Optional[int], group_id: Optional[int], *, session: Optional[Session] = None
-    ):
-        # No user and group - ok
-        if user_id is None and group_id is None:
-            return
-
-        # User but no group - ok
-        if user_id is not None and group_id is None:
-            return
-
-        # No user but group specified - not ok
-        if user_id is None and group_id is not None:
-            raise AuthenticationFailure(f"No user specified, so cannot belong to group (id={group_id})")
-
-        stmt = select(UserGroupORM)
-        stmt = stmt.where(UserGroupORM.user_id == user_id)
-        stmt = stmt.where(UserGroupORM.group_id == group_id)
-
-        with self.root_socket.optional_session(session, True) as session:
-            r = session.execute(stmt).scalar_one_or_none()
-            if r is None:
-                raise AuthenticationFailure(f"User (id={user_id}) does not belong to group (id={group_id})")
+            return user.id
 
     def get_preferences(self, user_id: int, *, session: Optional[Session] = None) -> Dict[str, Any]:
         """

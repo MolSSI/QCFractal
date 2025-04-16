@@ -7,18 +7,16 @@ from sqlalchemy import (
     Integer,
     String,
     JSON,
-    Boolean,
     Index,
     Computed,
     ForeignKey,
-    ForeignKeyConstraint,
     UniqueConstraint,
     Enum,
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.collections import attribute_keyed_dict
 
-from qcfractal.components.auth.db_models import UserIDMapSubquery, GroupIDMapSubquery, UserORM, GroupORM
+from qcfractal.components.auth.db_models import UserIDMapSubquery, UserORM
 from qcfractal.components.external_files.db_models import ExternalFileORM
 from qcfractal.components.internal_jobs.db_models import InternalJobORM
 from qcfractal.db_socket import BaseORM, MsgpackExt
@@ -42,22 +40,13 @@ class BaseDatasetORM(BaseORM):
     tagline = Column(String, nullable=False)
     description = Column(String, nullable=False)
 
-    # Ownership of this dataset
-    owner_user_id = Column(Integer, ForeignKey(UserORM.id), nullable=True)
-    owner_group_id = Column(Integer, ForeignKey(GroupORM.id), nullable=True)
+    # Who created this dataset
+    creator_user_id = Column(Integer, ForeignKey(UserORM.id), nullable=True)
 
-    owner_user = relationship(
+    creator_user = relationship(
         UserIDMapSubquery,
-        foreign_keys=[owner_user_id],
-        primaryjoin="BaseDatasetORM.owner_user_id == UserIDMapSubquery.id",
-        lazy="selectin",
-        viewonly=True,
-    )
-
-    owner_group = relationship(
-        GroupIDMapSubquery,
-        foreign_keys=[owner_group_id],
-        primaryjoin="BaseDatasetORM.owner_group_id == GroupIDMapSubquery.id",
+        foreign_keys=[creator_user_id],
+        primaryjoin="BaseDatasetORM.creator_user_id == UserIDMapSubquery.id",
         lazy="selectin",
         viewonly=True,
     )
@@ -84,23 +73,15 @@ class BaseDatasetORM(BaseORM):
     __table_args__ = (
         UniqueConstraint("dataset_type", "lname", name="ux_base_dataset_dataset_type_lname"),
         Index("ix_base_dataset_dataset_type", "dataset_type"),
-        Index("ix_base_dataset_owner_user_id", "owner_user_id"),
-        Index("ix_base_dataset_owner_group_id", "owner_group_id"),
-        ForeignKeyConstraint(
-            ["owner_user_id", "owner_group_id"],
-            ["user_groups.user_id", "user_groups.group_id"],
-        ),
+        Index("ix_base_dataset_creator_user_id", "creator_user_id"),
     )
 
     __mapper_args__ = {"polymorphic_on": "dataset_type"}
 
-    _qcportal_model_excludes = ["lname", "owner_user_id", "owner_group_id"]
+    _qcportal_model_excludes = ["lname", "creator_user_id"]
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         d = BaseORM.model_dict(self, exclude)
-
-        d["owner_user"] = self.owner_user.username if self.owner_user is not None else None
-        d["owner_group"] = self.owner_group.groupname if self.owner_group is not None else None
 
         # TODO - DEPRECATED - REMOVE EVENTUALLY
         d["group"] = "default"
@@ -112,6 +93,10 @@ class BaseDatasetORM(BaseORM):
             d["default_tag"] = d.pop("default_compute_tag")
         if "default_compute_priority" in d:
             d["default_priority"] = d.pop("default_compute_priority")
+
+        d["owner_user"] = self.creator_user.username if self.creator_user is not None else None
+        d.pop("creator_user", None)
+        d["owner_group"] = None
 
         return d
 
