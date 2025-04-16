@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=1f4546ab"></script>
+    <script src="../../_static/documentation_options.js?v=245a27c1"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.60.post38+gc2d7a5df0" />
+  <meta name="docsearch:version" content="0.60.post42+gbdb8444fb" />
   </head>
   
   
@@ -898,8 +898,7 @@
     <span class="n">created_on</span><span class="p">:</span> <span class="n">datetime</span>
     <span class="n">modified_on</span><span class="p">:</span> <span class="n">datetime</span>
 
-    <span class="n">owner_user</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
-    <span class="n">owner_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">creator_user</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
 
     <span class="c1">######################################################</span>
     <span class="c1"># Fields not always included when fetching the record</span>
@@ -923,6 +922,12 @@
     <span class="n">_cache_dirty</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># TODO - DEPRECATED - REMOVE EVENTUALLY</span>
+        <span class="k">if</span> <span class="s2">&quot;owner_user&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;creator_user&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;owner_user&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;owner_group&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;owner_group&quot;</span><span class="p">]</span>
+
         <span class="n">BaseModel</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="c1"># Calls derived class propagate_client</span>
@@ -1248,7 +1253,6 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">RecordAddBodyBase</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
     <span class="n">compute_tag</span><span class="p">:</span> <span class="n">constr</span><span class="p">(</span><span class="n">to_lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">compute_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span>
-    <span class="n">owner_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">find_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1258,6 +1262,8 @@
             <span class="n">values</span><span class="p">[</span><span class="s2">&quot;compute_tag&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tag&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="s2">&quot;priority&quot;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
             <span class="n">values</span><span class="p">[</span><span class="s2">&quot;compute_priority&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;priority&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;owner_group&quot;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;owner_group&quot;</span><span class="p">]</span>
 
         <span class="k">return</span> <span class="n">values</span></div>
 
@@ -1315,8 +1321,16 @@
     <span class="n">created_after</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">modified_before</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">modified_after</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">owner_user</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">owner_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">creator_user</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># TODO - DEPRECATED - remove at some point</span>
+    <span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rm_deprecated</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;owner_user&quot;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="n">values</span><span class="p">[</span><span class="s2">&quot;creator_user&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;owner_user&quot;</span><span class="p">)</span>
+
+        <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;owner_group&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">values</span>
 
 <div class="viewcode-block" id="RecordQueryFilters.parse_dates">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordQueryFilters.parse_dates">[docs]</a>

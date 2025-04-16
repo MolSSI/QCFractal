@@ -43,15 +43,12 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=1f4546ab"></script>
+    <script src="../_static/documentation_options.js?v=245a27c1"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
-    <script type="application/vnd.jupyter.widget-state+json">{"state": {"40180e1c99954b33911b982291fbb7d0": {"model_name": "LayoutModel", "model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "c76cc411eb1647f79e54b75211155e59": {"model_name": "ColormakerRegistryModel", "model_module": "nglview-js-widgets", "model_module_version": "3.1.4", "state": {"_dom_classes": [], "_model_module": "nglview-js-widgets", "_model_module_version": "3.1.4", "_model_name": "ColormakerRegistryModel", "_msg_ar": [], "_msg_q": [], "_ready": false, "_view_count": null, "_view_module": "nglview-js-widgets", "_view_module_version": "3.1.4", "_view_name": "ColormakerRegistryView", "layout": "IPY_MODEL_40180e1c99954b33911b982291fbb7d0", "tabbable": null, "tooltip": null}}}, "version_major": 2, "version_minor": 0}</script>
-    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script crossorigin="anonymous" data-jupyter-widgets-cdn="https://cdn.jsdelivr.net/npm/" src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@1.0.6/dist/embed-amd.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'quickstart/record_query';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -59,7 +56,7 @@
     <link rel="prev" title="How do I retrieve computation results by ID?" href="record_retrieval.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.60.post38+gc2d7a5df0" />
+  <meta name="docsearch:version" content="0.60.post42+gbdb8444fb" />
   </head>
   
   
@@ -475,7 +472,7 @@ However, you can also query the database for computations having specific detail
 </div>
 </div>
 <div class="cell_output docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"version_major": 2, "version_minor": 0, "model_id": "c76cc411eb1647f79e54b75211155e59"}</script></div>
+<script type="application/vnd.jupyter.widget-view+json">{"version_major": 2, "version_minor": 0, "model_id": "95fec06f1b8247a999981bf660da2ffc"}</script></div>
 </div>
 <section id="create-a-client-object-and-connect-to-the-demo-server">
 <h2>Create a client object and connect to the demo server<a class="headerlink" href="#create-a-client-object-and-connect-to-the-demo-server" title="Link to this heading">#</a></h2>
@@ -490,7 +487,7 @@ need to log in to submit or modify computations.</p>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>WARNING: This client version is newer than the server version. This may work if the versions are close, but expect exceptions and errors if attempting things the server does not support. client version: 0.60.post38+gc2d7a5df0, server version: 0.59
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>WARNING: This client version is newer than the server version. This may work if the versions are close, but expect exceptions and errors if attempting things the server does not support. client version: 0.60.post42+gbdb8444fb, server version: 0.59
 </pre></div>
 </div>
 </div>
@@ -518,7 +515,7 @@ Please note that since query_records searches all record types, you can only que
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Help on method query_records in module qcportal.client:
 
-query_records(*, record_id: &#39;Optional[Union[int, Iterable[int]]]&#39; = None, record_type: &#39;Optional[Union[str, Iterable[str]]]&#39; = None, manager_name: &#39;Optional[Union[str, Iterable[str]]]&#39; = None, status: &#39;Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]]&#39; = None, dataset_id: &#39;Optional[Union[int, Iterable[int]]]&#39; = None, parent_id: &#39;Optional[Union[int, Iterable[int]]]&#39; = None, child_id: &#39;Optional[Union[int, Iterable[int]]]&#39; = None, created_before: &#39;Optional[Union[datetime, str]]&#39; = None, created_after: &#39;Optional[Union[datetime, str]]&#39; = None, modified_before: &#39;Optional[Union[datetime, str]]&#39; = None, modified_after: &#39;Optional[Union[datetime, str]]&#39; = None, owner_user: &#39;Optional[Union[int, str, Iterable[Union[int, str]]]]&#39; = None, owner_group: &#39;Optional[Union[int, str, Iterable[Union[int, str]]]]&#39; = None, limit: &#39;int&#39; = None, include: &#39;Optional[Iterable[str]]&#39; = None) -&gt; &#39;RecordQueryIterator[BaseRecord]&#39; method of qcportal.client.PortalClient instance
+query_records(*, record_id: &#39;Optional[Union[int, Iterable[int]]]&#39; = None, record_type: &#39;Optional[Union[str, Iterable[str]]]&#39; = None, manager_name: &#39;Optional[Union[str, Iterable[str]]]&#39; = None, status: &#39;Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]]&#39; = None, dataset_id: &#39;Optional[Union[int, Iterable[int]]]&#39; = None, parent_id: &#39;Optional[Union[int, Iterable[int]]]&#39; = None, child_id: &#39;Optional[Union[int, Iterable[int]]]&#39; = None, created_before: &#39;Optional[Union[datetime, str]]&#39; = None, created_after: &#39;Optional[Union[datetime, str]]&#39; = None, modified_before: &#39;Optional[Union[datetime, str]]&#39; = None, modified_after: &#39;Optional[Union[datetime, str]]&#39; = None, creator_user: &#39;Optional[Union[int, str, Iterable[Union[int, str]]]]&#39; = None, limit: &#39;int&#39; = None, include: &#39;Optional[Iterable[str]]&#39; = None) -&gt; &#39;RecordQueryIterator[BaseRecord]&#39; method of qcportal.client.PortalClient instance
     Query records of all types based on common fields
     
     This is a general query of all record types, so it can only filter by fields
@@ -550,10 +547,8 @@ query_records(*, record_id: &#39;Optional[Union[int, Iterable[int]]]&#39; = None
         Query records that were modified before the given date/time
     modified_after
         Query records that were modified after the given date/time
-    owner_user
-        Query records owned by a user in the given list (usernames or IDs)
-    owner_group
-        Query records owned by a group in the given list (group names or IDS)
+    creator_user
+        Query records created by a user in the given list (usernames or IDs)
     limit
         The maximum number of records to return. Note that the server limit is always obeyed.
     include
@@ -574,6 +569,91 @@ query_records(*, record_id: &#39;Optional[Union[int, Iterable[int]]]&#39; = None
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">PortalRequestError</span><span class="g g-Whitespace">                        </span>Traceback (most recent call last)
+<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
+<span class="ne">----&gt; </span><span class="mi">1</span> <span class="n">results</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_records</span><span class="p">(</span><span class="n">created_after</span><span class="o">=</span><span class="s2">&quot;2023/01/10&quot;</span><span class="p">,</span> <span class="n">created_before</span><span class="o">=</span><span class="s2">&quot;2023/01/14&quot;</span><span class="p">)</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client.py:835,</span> in <span class="ni">PortalClient.query_records</span><span class="nt">(self, record_id, record_type, manager_name, status, dataset_id, parent_id, child_id, created_before, created_after, modified_before, modified_after, creator_user, limit, include)</span>
+<span class="g g-Whitespace">    </span><span class="mi">817</span> <span class="n">filter_dict</span> <span class="o">=</span> <span class="p">{</span>
+<span class="g g-Whitespace">    </span><span class="mi">818</span>     <span class="s2">&quot;record_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">record_id</span><span class="p">),</span>
+<span class="g g-Whitespace">    </span><span class="mi">819</span>     <span class="s2">&quot;record_type&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">record_type</span><span class="p">),</span>
+   <span class="p">(</span><span class="o">...</span><span class="p">)</span>    <span class="mi">830</span>     <span class="s2">&quot;limit&quot;</span><span class="p">:</span> <span class="n">limit</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">831</span> <span class="p">}</span>
+<span class="g g-Whitespace">    </span><span class="mi">833</span> <span class="n">filter_data</span> <span class="o">=</span> <span class="n">RecordQueryFilters</span><span class="p">(</span><span class="o">**</span><span class="n">filter_dict</span><span class="p">)</span>
+<span class="ne">--&gt; </span><span class="mi">835</span> <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">BaseRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
+
+<span class="nn">File /opt/hostedtoolcache/Python/3.11.11/x64/lib/python3.11/typing.py:1289,</span> in <span class="ni">_BaseGenericAlias.__call__</span><span class="nt">(self, *args, **kwargs)</span>
+<span class="g g-Whitespace">   </span><span class="mi">1286</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inst</span><span class="p">:</span>
+<span class="g g-Whitespace">   </span><span class="mi">1287</span>     <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Type </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="si">}</span><span class="s2"> cannot be instantiated; &quot;</span>
+<span class="g g-Whitespace">   </span><span class="mi">1288</span>                     <span class="sa">f</span><span class="s2">&quot;use </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__origin__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">() instead&quot;</span><span class="p">)</span>
+<span class="ne">-&gt; </span><span class="mi">1289</span> <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__origin__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="g g-Whitespace">   </span><span class="mi">1290</span> <span class="k">try</span><span class="p">:</span>
+<span class="g g-Whitespace">   </span><span class="mi">1291</span>     <span class="n">result</span><span class="o">.</span><span class="n">__orig_class__</span> <span class="o">=</span> <span class="bp">self</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/record_models.py:845,</span> in <span class="ni">RecordQueryIterator.__init__</span><span class="nt">(self, client, query_filters, record_type, include)</span>
+<span class="g g-Whitespace">    </span><span class="mi">842</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_type</span> <span class="o">=</span> <span class="n">record_type</span>
+<span class="g g-Whitespace">    </span><span class="mi">843</span> <span class="bp">self</span><span class="o">.</span><span class="n">include</span> <span class="o">=</span> <span class="n">include</span>
+<span class="ne">--&gt; </span><span class="mi">845</span> <span class="n">QueryIteratorBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">query_filters</span><span class="p">,</span> <span class="n">batch_limit</span><span class="p">)</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/base_models.py:108,</span> in <span class="ni">QueryIteratorBase.__init__</span><span class="nt">(self, client, query_filters, batch_limit)</span>
+<span class="g g-Whitespace">    </span><span class="mi">105</span> <span class="c1"># Total number of rows/whatever we want to fetch</span>
+<span class="g g-Whitespace">    </span><span class="mi">106</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_limit</span> <span class="o">=</span> <span class="n">query_filters</span><span class="o">.</span><span class="n">limit</span>
+<span class="ne">--&gt; </span><span class="mi">108</span> <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/base_models.py:118,</span> in <span class="ni">QueryIteratorBase.reset</span><span class="nt">(self)</span>
+<span class="g g-Whitespace">    </span><span class="mi">115</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_batch</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">T</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="g g-Whitespace">    </span><span class="mi">116</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetched</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="ne">--&gt; </span><span class="mi">118</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_batch</span><span class="p">()</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/base_models.py:145,</span> in <span class="ni">QueryIteratorBase._fetch_batch</span><span class="nt">(self)</span>
+<span class="g g-Whitespace">    </span><span class="mi">141</span>     <span class="n">new_limit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_batch_limit</span>
+<span class="g g-Whitespace">    </span><span class="mi">143</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_filters</span><span class="o">.</span><span class="n">limit</span> <span class="o">=</span> <span class="n">new_limit</span>
+<span class="ne">--&gt; </span><span class="mi">145</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">146</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetched</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_batch</span><span class="p">)</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/record_models.py:849,</span> in <span class="ni">RecordQueryIterator._request</span><span class="nt">(self)</span>
+<span class="g g-Whitespace">    </span><span class="mi">847</span> <span class="k">def</span><span class="w"> </span><span class="nf">_request</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">_Record_T</span><span class="p">]:</span>
+<span class="g g-Whitespace">    </span><span class="mi">848</span>     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">849</span>         <span class="n">record_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">850</span>             <span class="s2">&quot;post&quot;</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">851</span>             <span class="sa">f</span><span class="s2">&quot;api/v1/records/query&quot;</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">852</span>             <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+<span class="g g-Whitespace">    </span><span class="mi">853</span>             <span class="n">body</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_filters</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">854</span>         <span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">855</span>     <span class="k">else</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">856</span>         <span class="c1"># Get the record type string. This is kind of ugly, but works.</span>
+<span class="g g-Whitespace">    </span><span class="mi">857</span>         <span class="n">record_type_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_type</span><span class="o">.</span><span class="n">__fields__</span><span class="p">[</span><span class="s2">&quot;record_type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">default</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:497,</span> in <span class="ni">PortalClientBase.make_request</span><span class="nt">(self, method, endpoint, response_model, body_model, url_params_model, body, url_params, allow_retries, additional_headers)</span>
+<span class="g g-Whitespace">    </span><span class="mi">494</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parsed_url_params</span><span class="p">,</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="g g-Whitespace">    </span><span class="mi">495</span>     <span class="n">parsed_url_params</span> <span class="o">=</span> <span class="n">parsed_url_params</span><span class="o">.</span><span class="n">dict</span><span class="p">()</span>
+<span class="ne">--&gt; </span><span class="mi">497</span> <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">498</span>     <span class="n">method</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">499</span>     <span class="n">endpoint</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">500</span>     <span class="n">body</span><span class="o">=</span><span class="n">serialized_body</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">501</span>     <span class="n">url_params</span><span class="o">=</span><span class="n">parsed_url_params</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">502</span>     <span class="n">allow_retries</span><span class="o">=</span><span class="n">allow_retries</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">503</span>     <span class="n">additional_headers</span><span class="o">=</span><span class="n">additional_headers</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">504</span> <span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">505</span> <span class="n">d</span> <span class="o">=</span> <span class="n">deserialize</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">])</span>
+<span class="g g-Whitespace">    </span><span class="mi">507</span> <span class="k">if</span> <span class="n">response_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:461,</span> in <span class="ni">PortalClientBase._request</span><span class="nt">(self, method, endpoint, body, url_params, internal_retry, allow_retries, additional_headers)</span>
+<span class="g g-Whitespace">    </span><span class="mi">456</span>     <span class="k">except</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">457</span>         <span class="c1"># If this error comes from, ie, the web server or something else, then</span>
+<span class="g g-Whitespace">    </span><span class="mi">458</span>         <span class="c1"># we have to use &#39;reason&#39;</span>
+<span class="g g-Whitespace">    </span><span class="mi">459</span>         <span class="n">details</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;msg&quot;</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">reason</span><span class="p">}</span>
+<span class="ne">--&gt; </span><span class="mi">461</span>     <span class="k">raise</span> <span class="n">PortalRequestError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Request failed: </span><span class="si">{</span><span class="n">details</span><span class="p">[</span><span class="s1">&#39;msg&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">details</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">463</span> <span class="k">return</span> <span class="n">r</span>
+
+<span class="ne">PortalRequestError</span>: Request failed: 400 Bad Request: Invalid body: 1 validation error for ParsingModel[RecordQueryFilters]
+<span class="n">__root__</span> <span class="o">-&gt;</span> <span class="n">creator_user</span>
+  <span class="n">extra</span> <span class="n">fields</span> <span class="ow">not</span> <span class="n">permitted</span> <span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">value_error</span><span class="o">.</span><span class="n">extra</span><span class="p">)</span> <span class="p">(</span><span class="n">HTTP</span> <span class="n">status</span> <span class="mi">400</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
 </div>
 <p>Our results from this query will be in something called an iterator.
 An iterator can be made into a list by casting or used in a <code class="docutils literal notranslate"><span class="pre">for</span></code> loop.</p>
@@ -581,11 +661,6 @@ An iterator can be made into a list by casting or used in a <code class="docutil
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">results_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">results_list</span><span class="p">)</span><span class="si">}</span><span class="s2"> results.&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Found 0 results.
 </pre></div>
 </div>
 </div>
@@ -600,62 +675,6 @@ Documentation for the <code class="docutils literal notranslate"><span class="pr
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">help</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">query_singlepoints</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Help on method query_singlepoints in module qcportal.client:
-
-query_singlepoints(*, record_id: &#39;Optional[Union[int, Iterable[int]]]&#39; = None, manager_name: &#39;Optional[Union[str, Iterable[str]]]&#39; = None, status: &#39;Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]]&#39; = None, dataset_id: &#39;Optional[Union[int, Iterable[int]]]&#39; = None, parent_id: &#39;Optional[Union[int, Iterable[int]]]&#39; = None, created_before: &#39;Optional[Union[datetime, str]]&#39; = None, created_after: &#39;Optional[Union[datetime, str]]&#39; = None, modified_before: &#39;Optional[Union[datetime, str]]&#39; = None, modified_after: &#39;Optional[Union[datetime, str]]&#39; = None, program: &#39;Optional[Union[str, Iterable[str]]]&#39; = None, driver: &#39;Optional[Union[SinglepointDriver, Iterable[SinglepointDriver]]]&#39; = None, method: &#39;Optional[Union[str, Iterable[str]]]&#39; = None, basis: &#39;Optional[Union[str, Iterable[Optional[str]]]]&#39; = None, keywords: &#39;Optional[Union[Dict[str, Any], Iterable[Dict[str, Any]]]]&#39; = None, molecule_id: &#39;Optional[Union[int, Iterable[int]]]&#39; = None, owner_user: &#39;Optional[Union[int, str, Iterable[Union[int, str]]]]&#39; = None, owner_group: &#39;Optional[Union[int, str, Iterable[Union[int, str]]]]&#39; = None, limit: &#39;Optional[int]&#39; = None, include: &#39;Optional[Iterable[str]]&#39; = None) -&gt; &#39;RecordQueryIterator[SinglepointRecord]&#39; method of qcportal.client.PortalClient instance
-    Queries singlepoint records on the server
-    
-    Do not rely on the returned records being in any particular order.
-    
-    Parameters
-    ----------
-    record_id
-        Query records whose ID is in the given list
-    manager_name
-        Query records that were completed (or are currently runnning) on a manager is in the given list
-    status
-        Query records whose status is in the given list
-    dataset_id
-        Query records that are part of a dataset is in the given list
-    parent_id
-        Query records that have a parent is in the given list
-    created_before
-        Query records that were created before the given date/time
-    created_after
-        Query records that were created after the given date/time
-    modified_before
-        Query records that were modified before the given date/time
-    modified_after
-        Query records that were modified after the given date/time
-    program
-        Query records whose program is in the given list
-    driver
-        Query records whose driver is in the given list
-    method
-        Query records whose method is in the given list
-    basis
-        Query records whose basis is in the given list
-    keywords
-        Query records with these keywords (exact match)
-    molecule_id
-        Query records whose molecule (id) is in the given list
-    owner_user
-        Query records owned by a user in the given list
-    owner_group
-        Query records owned by a group in the given list
-    limit
-        The maximum number of records to return. Note that the server limit is always obeyed.
-    include
-        Additional fields to include in the returned record
-    
-    Returns
-    -------
-    :
-        An iterator that can be used to retrieve the results of the query
 </pre></div>
 </div>
 </div>
@@ -675,17 +694,6 @@ For the sake of demonstration in this notebook, we are limiting the number of re
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">molecule</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>78 Molecule(name=&#39;B&#39;, formula=&#39;2^B&#39;, hash=&#39;52710ba&#39;)
-77 Molecule(name=&#39;O&#39;, formula=&#39;O&#39;, hash=&#39;61591a7&#39;)
-76 Molecule(name=&#39;He&#39;, formula=&#39;He&#39;, hash=&#39;b3855c6&#39;)
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>75 Molecule(name=&#39;F&#39;, formula=&#39;2^F&#39;, hash=&#39;3fdfbc3&#39;)
-74 Molecule(name=&#39;C&#39;, formula=&#39;C&#39;, hash=&#39;9590329&#39;)
 </pre></div>
 </div>
 </div>

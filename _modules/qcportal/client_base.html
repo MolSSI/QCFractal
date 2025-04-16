@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=1f4546ab"></script>
+    <script src="../../_static/documentation_options.js?v=245a27c1"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.60.post38+gc2d7a5df0" />
+  <meta name="docsearch:version" content="0.60.post42+gbdb8444fb" />
   </head>
   
   
@@ -971,14 +971,17 @@
 
 <div class="viewcode-block" id="PortalClientBase.download_file">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client_base.PortalClientBase.download_file">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">download_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> 
-                 <span class="n">destination_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> 
-                 <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-                 <span class="n">expected_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                 <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">download_file</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">destination_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">expected_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Download a file with optional progress bar</span>
-<span class="sd">        </span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        endpoint</span>
@@ -992,7 +995,7 @@
 <span class="sd">        show_progress</span>
 <span class="sd">            Whether to show a progress bar during download</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="n">sha256</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">()</span>
         <span class="n">file_size</span> <span class="o">=</span> <span class="mi">0</span>
 
@@ -1014,26 +1017,26 @@
             <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">new_location</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">allow_redirects</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
-        
+
         <span class="c1"># Get filename for display in progress bar</span>
         <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">destination_path</span><span class="p">)</span>
-        
+
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">destination_path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
                 <span class="c1"># Show progress bar with expected_size (which can be None)</span>
                 <span class="k">with</span> <span class="n">tqdm</span><span class="p">(</span>
                     <span class="n">total</span><span class="o">=</span><span class="n">expected_size</span><span class="p">,</span>
-                    <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;B&#39;</span><span class="p">,</span>
+                    <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="p">,</span>
                     <span class="n">unit_scale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                     <span class="n">unit_divisor</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
                     <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Downloading to </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                    <span class="n">miniters</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>        <span class="c1"># Update after each iteration</span>
-                    <span class="n">mininterval</span><span class="o">=</span><span class="mf">0.1</span>     <span class="c1"># Allow updates as frequently as every 0.1 seconds</span>
+                    <span class="n">miniters</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># Update after each iteration</span>
+                    <span class="n">mininterval</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>  <span class="c1"># Allow updates as frequently as every 0.1 seconds</span>
                 <span class="p">)</span> <span class="k">as</span> <span class="n">pbar</span><span class="p">:</span>
                     <span class="c1"># set chunk_size here so that progress bar can be updated</span>
                     <span class="c1"># if set to None, it may only be updated after the entire download is complete</span>
                     <span class="c1"># 4*1024*1024 is 4MB</span>
-                    <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">iter_content</span><span class="p">(</span><span class="n">chunk_size</span><span class="o">=</span><span class="mi">4</span><span class="o">*</span><span class="mi">1024</span><span class="o">*</span><span class="mi">1024</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">iter_content</span><span class="p">(</span><span class="n">chunk_size</span><span class="o">=</span><span class="mi">4</span> <span class="o">*</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">):</span>
                         <span class="k">if</span> <span class="n">chunk</span><span class="p">:</span>
                             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
                             <span class="n">sha256</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>

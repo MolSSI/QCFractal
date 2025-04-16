@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=1f4546ab"></script>
+    <script src="../_static/documentation_options.js?v=245a27c1"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="QCArchive Quickstart" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.60.post38+gc2d7a5df0" />
+  <meta name="docsearch:version" content="0.60.post42+gbdb8444fb" />
   </head>
   
   
@@ -490,7 +490,7 @@ To work with the QCArchive demo server, enter <code class="docutils literal notr
 </div>
 </div>
 <div class="cell_output docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"version_major": 2, "version_minor": 0, "model_id": "116c67373e8d41afb9a89498c2f6595a"}</script><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>WARNING: This client version is newer than the server version. This may work if the versions are close, but expect exceptions and errors if attempting things the server does not support. client version: 0.60.post38+gc2d7a5df0, server version: 0.59
+<script type="application/vnd.jupyter.widget-view+json">{"version_major": 2, "version_minor": 0, "model_id": "a02b0d7f8b8d4611b66b0d273919fda5"}</script><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>WARNING: This client version is newer than the server version. This may work if the versions are close, but expect exceptions and errors if attempting things the server does not support. client version: 0.60.post42+gbdb8444fb, server version: 0.59
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>PortalClient(server_name=&#39;MolSSI QCFractal Demo Server&#39;, address=&#39;https://qcademo.molssi.org/&#39;, username=&#39;None&#39;)
@@ -561,9 +561,7 @@ In the cell below, we print the SCF total energy from our calcuation.</p>
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Molecule: H2, Energy: -1.1117197122934774
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Molecule: HO, Energy: -74.36430040801095
+Molecule: HO, Energy: -74.36430040801095
 Molecule: H2O, Energy: -74.82586558254185
 </pre></div>
 </div>
@@ -587,7 +585,89 @@ The query method returns a Python iterator.</p>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;SinglepointRecord id=100 status=RecordStatusEnum.complete&gt;
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">PortalRequestError</span><span class="g g-Whitespace">                        </span>Traceback (most recent call last)
+<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
+<span class="ne">----&gt; </span><span class="mi">1</span> <span class="n">records</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_records</span><span class="p">(</span><span class="n">created_after</span><span class="o">=</span><span class="s2">&quot;2024/01/01&quot;</span><span class="p">)</span>
+<span class="g g-Whitespace">      </span><span class="mi">3</span> <span class="c1"># Print the first record.</span>
+<span class="g g-Whitespace">      </span><span class="mi">4</span> <span class="nb">print</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">records</span><span class="p">))</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client.py:835,</span> in <span class="ni">PortalClient.query_records</span><span class="nt">(self, record_id, record_type, manager_name, status, dataset_id, parent_id, child_id, created_before, created_after, modified_before, modified_after, creator_user, limit, include)</span>
+<span class="g g-Whitespace">    </span><span class="mi">817</span> <span class="n">filter_dict</span> <span class="o">=</span> <span class="p">{</span>
+<span class="g g-Whitespace">    </span><span class="mi">818</span>     <span class="s2">&quot;record_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">record_id</span><span class="p">),</span>
+<span class="g g-Whitespace">    </span><span class="mi">819</span>     <span class="s2">&quot;record_type&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">record_type</span><span class="p">),</span>
+   <span class="p">(</span><span class="o">...</span><span class="p">)</span>    <span class="mi">830</span>     <span class="s2">&quot;limit&quot;</span><span class="p">:</span> <span class="n">limit</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">831</span> <span class="p">}</span>
+<span class="g g-Whitespace">    </span><span class="mi">833</span> <span class="n">filter_data</span> <span class="o">=</span> <span class="n">RecordQueryFilters</span><span class="p">(</span><span class="o">**</span><span class="n">filter_dict</span><span class="p">)</span>
+<span class="ne">--&gt; </span><span class="mi">835</span> <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">BaseRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
+
+<span class="nn">File /opt/hostedtoolcache/Python/3.11.11/x64/lib/python3.11/typing.py:1289,</span> in <span class="ni">_BaseGenericAlias.__call__</span><span class="nt">(self, *args, **kwargs)</span>
+<span class="g g-Whitespace">   </span><span class="mi">1286</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inst</span><span class="p">:</span>
+<span class="g g-Whitespace">   </span><span class="mi">1287</span>     <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Type </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="si">}</span><span class="s2"> cannot be instantiated; &quot;</span>
+<span class="g g-Whitespace">   </span><span class="mi">1288</span>                     <span class="sa">f</span><span class="s2">&quot;use </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__origin__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">() instead&quot;</span><span class="p">)</span>
+<span class="ne">-&gt; </span><span class="mi">1289</span> <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__origin__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="g g-Whitespace">   </span><span class="mi">1290</span> <span class="k">try</span><span class="p">:</span>
+<span class="g g-Whitespace">   </span><span class="mi">1291</span>     <span class="n">result</span><span class="o">.</span><span class="n">__orig_class__</span> <span class="o">=</span> <span class="bp">self</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/record_models.py:845,</span> in <span class="ni">RecordQueryIterator.__init__</span><span class="nt">(self, client, query_filters, record_type, include)</span>
+<span class="g g-Whitespace">    </span><span class="mi">842</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_type</span> <span class="o">=</span> <span class="n">record_type</span>
+<span class="g g-Whitespace">    </span><span class="mi">843</span> <span class="bp">self</span><span class="o">.</span><span class="n">include</span> <span class="o">=</span> <span class="n">include</span>
+<span class="ne">--&gt; </span><span class="mi">845</span> <span class="n">QueryIteratorBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">query_filters</span><span class="p">,</span> <span class="n">batch_limit</span><span class="p">)</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/base_models.py:108,</span> in <span class="ni">QueryIteratorBase.__init__</span><span class="nt">(self, client, query_filters, batch_limit)</span>
+<span class="g g-Whitespace">    </span><span class="mi">105</span> <span class="c1"># Total number of rows/whatever we want to fetch</span>
+<span class="g g-Whitespace">    </span><span class="mi">106</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_limit</span> <span class="o">=</span> <span class="n">query_filters</span><span class="o">.</span><span class="n">limit</span>
+<span class="ne">--&gt; </span><span class="mi">108</span> <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/base_models.py:118,</span> in <span class="ni">QueryIteratorBase.reset</span><span class="nt">(self)</span>
+<span class="g g-Whitespace">    </span><span class="mi">115</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_batch</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">T</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="g g-Whitespace">    </span><span class="mi">116</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetched</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="ne">--&gt; </span><span class="mi">118</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_batch</span><span class="p">()</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/base_models.py:145,</span> in <span class="ni">QueryIteratorBase._fetch_batch</span><span class="nt">(self)</span>
+<span class="g g-Whitespace">    </span><span class="mi">141</span>     <span class="n">new_limit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_batch_limit</span>
+<span class="g g-Whitespace">    </span><span class="mi">143</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_filters</span><span class="o">.</span><span class="n">limit</span> <span class="o">=</span> <span class="n">new_limit</span>
+<span class="ne">--&gt; </span><span class="mi">145</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">146</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetched</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_batch</span><span class="p">)</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/record_models.py:849,</span> in <span class="ni">RecordQueryIterator._request</span><span class="nt">(self)</span>
+<span class="g g-Whitespace">    </span><span class="mi">847</span> <span class="k">def</span><span class="w"> </span><span class="nf">_request</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">_Record_T</span><span class="p">]:</span>
+<span class="g g-Whitespace">    </span><span class="mi">848</span>     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">849</span>         <span class="n">record_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">850</span>             <span class="s2">&quot;post&quot;</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">851</span>             <span class="sa">f</span><span class="s2">&quot;api/v1/records/query&quot;</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">852</span>             <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+<span class="g g-Whitespace">    </span><span class="mi">853</span>             <span class="n">body</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_filters</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">854</span>         <span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">855</span>     <span class="k">else</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">856</span>         <span class="c1"># Get the record type string. This is kind of ugly, but works.</span>
+<span class="g g-Whitespace">    </span><span class="mi">857</span>         <span class="n">record_type_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_type</span><span class="o">.</span><span class="n">__fields__</span><span class="p">[</span><span class="s2">&quot;record_type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">default</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:497,</span> in <span class="ni">PortalClientBase.make_request</span><span class="nt">(self, method, endpoint, response_model, body_model, url_params_model, body, url_params, allow_retries, additional_headers)</span>
+<span class="g g-Whitespace">    </span><span class="mi">494</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parsed_url_params</span><span class="p">,</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="g g-Whitespace">    </span><span class="mi">495</span>     <span class="n">parsed_url_params</span> <span class="o">=</span> <span class="n">parsed_url_params</span><span class="o">.</span><span class="n">dict</span><span class="p">()</span>
+<span class="ne">--&gt; </span><span class="mi">497</span> <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">498</span>     <span class="n">method</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">499</span>     <span class="n">endpoint</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">500</span>     <span class="n">body</span><span class="o">=</span><span class="n">serialized_body</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">501</span>     <span class="n">url_params</span><span class="o">=</span><span class="n">parsed_url_params</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">502</span>     <span class="n">allow_retries</span><span class="o">=</span><span class="n">allow_retries</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">503</span>     <span class="n">additional_headers</span><span class="o">=</span><span class="n">additional_headers</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">504</span> <span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">505</span> <span class="n">d</span> <span class="o">=</span> <span class="n">deserialize</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">])</span>
+<span class="g g-Whitespace">    </span><span class="mi">507</span> <span class="k">if</span> <span class="n">response_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:461,</span> in <span class="ni">PortalClientBase._request</span><span class="nt">(self, method, endpoint, body, url_params, internal_retry, allow_retries, additional_headers)</span>
+<span class="g g-Whitespace">    </span><span class="mi">456</span>     <span class="k">except</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">457</span>         <span class="c1"># If this error comes from, ie, the web server or something else, then</span>
+<span class="g g-Whitespace">    </span><span class="mi">458</span>         <span class="c1"># we have to use &#39;reason&#39;</span>
+<span class="g g-Whitespace">    </span><span class="mi">459</span>         <span class="n">details</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;msg&quot;</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">reason</span><span class="p">}</span>
+<span class="ne">--&gt; </span><span class="mi">461</span>     <span class="k">raise</span> <span class="n">PortalRequestError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Request failed: </span><span class="si">{</span><span class="n">details</span><span class="p">[</span><span class="s1">&#39;msg&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">details</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">463</span> <span class="k">return</span> <span class="n">r</span>
+
+<span class="ne">PortalRequestError</span>: Request failed: 400 Bad Request: Invalid body: 1 validation error for ParsingModel[RecordQueryFilters]
+<span class="n">__root__</span> <span class="o">-&gt;</span> <span class="n">creator_user</span>
+  <span class="n">extra</span> <span class="n">fields</span> <span class="ow">not</span> <span class="n">permitted</span> <span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">value_error</span><span class="o">.</span><span class="n">extra</span><span class="p">)</span> <span class="p">(</span><span class="n">HTTP</span> <span class="n">status</span> <span class="mi">400</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -612,39 +692,12 @@ Below, we print the names of the data sets on the QCArchive demo server.</p>
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Name: Element Benchmark, Type: singlepoint
-Name: qcademo, Type: singlepoint
-Name: FmH2O10, Type: manybody
-Name: HB15, Type: manybody
-Name: HSG, Type: manybody
-Name: Bauza30, Type: manybody
-Name: X40, Type: manybody
-Name: AlkBind12, Type: manybody
-Name: S22by5, Type: manybody
-Name: A21, Type: manybody
-Name: A24, Type: manybody
-Name: SSI, Type: manybody
-Name: S22by7, Type: manybody
-Name: S22, Type: manybody
-Name: NC15, Type: manybody
-Name: DS14, Type: manybody
-Name: S66, Type: manybody
-Name: Element Benchmark 9, Type: singlepoint
-</pre></div>
-</div>
-</div>
 </div>
 <p>We can retrieve records from a particular dataset using the <code class="docutils literal notranslate"><span class="pre">get_dataset</span></code> method and passing in the dataset name and type. The following cell retrieves the “Element Benchmark” dataset.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_dataset</span><span class="p">(</span><span class="n">dataset_type</span><span class="o">=</span><span class="s2">&quot;singlepoint&quot;</span><span class="p">,</span> <span class="n">dataset_name</span><span class="o">=</span><span class="s2">&quot;Element Benchmark&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Single point calculations of water at various levels of theory.
 </pre></div>
 </div>
 </div>
@@ -663,123 +716,6 @@ You can pull out iterate over records, see specifications, and compile values fr
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output text_html"><div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead tr th {
-        text-align: left;
-    }
-
-    .dataframe thead tr:last-of-type th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr>
-      <th>specification</th>
-      <th>hf/sto-3g</th>
-      <th>mp2/aug-cc-pvtz</th>
-      <th>hf/sto-3g</th>
-      <th>mp2/aug-cc-pvtz</th>
-    </tr>
-    <tr>
-      <th></th>
-      <th>scf_total_energy</th>
-      <th>scf_total_energy</th>
-      <th>scf_iterations</th>
-      <th>scf_iterations</th>
-    </tr>
-    <tr>
-      <th>entry</th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>b_atom</th>
-      <td>-24.149117</td>
-      <td>NaN</td>
-      <td>2.0</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>be_atom</th>
-      <td>-14.352011</td>
-      <td>-14.572879</td>
-      <td>2.0</td>
-      <td>9.0</td>
-    </tr>
-    <tr>
-      <th>c_atom</th>
-      <td>-37.089740</td>
-      <td>-37.603047</td>
-      <td>2.0</td>
-      <td>13.0</td>
-    </tr>
-    <tr>
-      <th>f_atom</th>
-      <td>-97.986588</td>
-      <td>NaN</td>
-      <td>2.0</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>h_atom</th>
-      <td>-0.466582</td>
-      <td>NaN</td>
-      <td>2.0</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>he_atom</th>
-      <td>-2.807913</td>
-      <td>-2.861206</td>
-      <td>2.0</td>
-      <td>7.0</td>
-    </tr>
-    <tr>
-      <th>li_atom</th>
-      <td>-7.315604</td>
-      <td>NaN</td>
-      <td>4.0</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>n_atom</th>
-      <td>-53.554678</td>
-      <td>NaN</td>
-      <td>2.0</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>ne_atom</th>
-      <td>-126.604573</td>
-      <td>-128.533266</td>
-      <td>2.0</td>
-      <td>12.0</td>
-    </tr>
-    <tr>
-      <th>o_atom</th>
-      <td>-73.661918</td>
-      <td>-74.685504</td>
-      <td>2.0</td>
-      <td>12.0</td>
-    </tr>
-  </tbody>
-</table>
-</div></div></div>
 </div>
 <p>This dataframe is a multi-index dataframe with the top level index being the “specification” of our calculation.
 For example, we can pull out just our results for <code class="docutils literal notranslate"><span class="pre">hf/sto-3g</span></code>.</p>
@@ -789,109 +725,11 @@ For example, we can pull out just our results for <code class="docutils literal 
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output text_html"><div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>scf_total_energy</th>
-      <th>scf_iterations</th>
-    </tr>
-    <tr>
-      <th>entry</th>
-      <th></th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>b_atom</th>
-      <td>-24.149117</td>
-      <td>2.0</td>
-    </tr>
-    <tr>
-      <th>be_atom</th>
-      <td>-14.352011</td>
-      <td>2.0</td>
-    </tr>
-    <tr>
-      <th>c_atom</th>
-      <td>-37.089740</td>
-      <td>2.0</td>
-    </tr>
-    <tr>
-      <th>f_atom</th>
-      <td>-97.986588</td>
-      <td>2.0</td>
-    </tr>
-    <tr>
-      <th>h_atom</th>
-      <td>-0.466582</td>
-      <td>2.0</td>
-    </tr>
-    <tr>
-      <th>he_atom</th>
-      <td>-2.807913</td>
-      <td>2.0</td>
-    </tr>
-    <tr>
-      <th>li_atom</th>
-      <td>-7.315604</td>
-      <td>4.0</td>
-    </tr>
-    <tr>
-      <th>n_atom</th>
-      <td>-53.554678</td>
-      <td>2.0</td>
-    </tr>
-    <tr>
-      <th>ne_atom</th>
-      <td>-126.604573</td>
-      <td>2.0</td>
-    </tr>
-    <tr>
-      <th>o_atom</th>
-      <td>-73.661918</td>
-      <td>2.0</td>
-    </tr>
-  </tbody>
-</table>
-</div></div></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">df[&quot;hf/sto-3g&quot;][&quot;scf_total_energy&quot;]</span></code> will give us the SCF total energy for all of the records in the dataset with the <code class="docutils literal notranslate"><span class="pre">hf/sto-3g</span></code> specification.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;hf/sto-3g&quot;</span><span class="p">][</span><span class="s2">&quot;scf_total_energy&quot;</span><span class="p">]</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>entry
-b_atom     -24.149117
-be_atom    -14.352011
-c_atom     -37.089740
-f_atom     -97.986588
-h_atom      -0.466582
-he_atom     -2.807913
-li_atom     -7.315604
-n_atom     -53.554678
-ne_atom   -126.604573
-o_atom     -73.661918
-Name: scf_total_energy, dtype: float64
 </pre></div>
 </div>
 </div>
@@ -926,11 +764,6 @@ We retrieve these using <code class="docutils literal notranslate"><span class="
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>WARNING: This client version is newer than the server version. This may work if the versions are close, but expect exceptions and errors if attempting things the server does not support. client version: 0.60.post38+gc2d7a5df0, server version: 0.59
-</pre></div>
-</div>
-</div>
 </div>
 <p>We now have a QCPortal client that can be used to submit computations.</p>
 <section id="how-do-i-submit-a-computation">
@@ -958,8 +791,6 @@ Our molecule geometry in this example is an optimized structure of water.</p>
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"version_major": 2, "version_minor": 0, "model_id": "b6abcd7fcaf34708b2de05a389143cec"}</script></div>
 </div>
 <p>To submit our single point computation, we will use the <code class="docutils literal notranslate"><span class="pre">add_singlepoints</span></code> method.
 We will submit two single point computations for the same molecule using different methods.</p>
@@ -979,62 +810,6 @@ For this demonstration, we are submitting two single point calculations for wate
                                                    <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;energy&#39;</span><span class="p">,</span> 
                                                    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;mp2&#39;</span><span class="p">,</span> 
                                                    <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-tzvp&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">PortalRequestError</span><span class="g g-Whitespace">                        </span>Traceback (most recent call last)
-<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">15</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
-<span class="ne">----&gt; </span><span class="mi">1</span> <span class="n">b3lyp_meta</span><span class="p">,</span> <span class="n">b3lyp_record_ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_singlepoints</span><span class="p">([</span><span class="n">water</span><span class="p">],</span> 
-<span class="g g-Whitespace">      </span><span class="mi">2</span>                                                        <span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span> 
-<span class="g g-Whitespace">      </span><span class="mi">3</span>                                                        <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;energy&#39;</span><span class="p">,</span> 
-<span class="g g-Whitespace">      </span><span class="mi">4</span>                                                        <span class="n">method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> 
-<span class="g g-Whitespace">      </span><span class="mi">5</span>                                                        <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-tzvp&#39;</span><span class="p">)</span>
-<span class="g g-Whitespace">      </span><span class="mi">7</span> <span class="n">mp2_meta</span><span class="p">,</span> <span class="n">mp2_record_ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_singlepoints</span><span class="p">([</span><span class="n">water</span><span class="p">],</span> 
-<span class="g g-Whitespace">      </span><span class="mi">8</span>                                                    <span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span> 
-<span class="g g-Whitespace">      </span><span class="mi">9</span>                                                    <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;energy&#39;</span><span class="p">,</span> 
-<span class="g g-Whitespace">     </span><span class="mi">10</span>                                                    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;mp2&#39;</span><span class="p">,</span> 
-<span class="g g-Whitespace">     </span><span class="mi">11</span>                                                    <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-tzvp&#39;</span><span class="p">)</span>
-
-<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client.py:1114,</span> in <span class="ni">PortalClient.add_singlepoints</span><span class="nt">(self, molecules, program, driver, method, basis, keywords, protocols, compute_tag, compute_priority, owner_group, find_existing, **kwargs)</span>
-<span class="g g-Whitespace">   </span><span class="mi">1111</span>     <span class="n">body_data</span><span class="p">[</span><span class="s2">&quot;specification&quot;</span><span class="p">][</span><span class="s2">&quot;protocols&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">protocols</span>
-<span class="g g-Whitespace">   </span><span class="mi">1113</span> <span class="n">body</span> <span class="o">=</span> <span class="n">SinglepointAddBody</span><span class="p">(</span><span class="o">**</span><span class="n">body_data</span><span class="p">)</span>
-<span class="ne">-&gt; </span><span class="mi">1114</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
-<span class="g g-Whitespace">   </span><span class="mi">1115</span>     <span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="s2">&quot;api/v1/records/singlepoint/bulkCreate&quot;</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">InsertMetadata</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span>
-<span class="g g-Whitespace">   </span><span class="mi">1116</span> <span class="p">)</span>
-
-<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:497,</span> in <span class="ni">PortalClientBase.make_request</span><span class="nt">(self, method, endpoint, response_model, body_model, url_params_model, body, url_params, allow_retries, additional_headers)</span>
-<span class="g g-Whitespace">    </span><span class="mi">494</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parsed_url_params</span><span class="p">,</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
-<span class="g g-Whitespace">    </span><span class="mi">495</span>     <span class="n">parsed_url_params</span> <span class="o">=</span> <span class="n">parsed_url_params</span><span class="o">.</span><span class="n">dict</span><span class="p">()</span>
-<span class="ne">--&gt; </span><span class="mi">497</span> <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span>
-<span class="g g-Whitespace">    </span><span class="mi">498</span>     <span class="n">method</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">499</span>     <span class="n">endpoint</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">500</span>     <span class="n">body</span><span class="o">=</span><span class="n">serialized_body</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">501</span>     <span class="n">url_params</span><span class="o">=</span><span class="n">parsed_url_params</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">502</span>     <span class="n">allow_retries</span><span class="o">=</span><span class="n">allow_retries</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">503</span>     <span class="n">additional_headers</span><span class="o">=</span><span class="n">additional_headers</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">504</span> <span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">505</span> <span class="n">d</span> <span class="o">=</span> <span class="n">deserialize</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">])</span>
-<span class="g g-Whitespace">    </span><span class="mi">507</span> <span class="k">if</span> <span class="n">response_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-
-<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:461,</span> in <span class="ni">PortalClientBase._request</span><span class="nt">(self, method, endpoint, body, url_params, internal_retry, allow_retries, additional_headers)</span>
-<span class="g g-Whitespace">    </span><span class="mi">456</span>     <span class="k">except</span><span class="p">:</span>
-<span class="g g-Whitespace">    </span><span class="mi">457</span>         <span class="c1"># If this error comes from, ie, the web server or something else, then</span>
-<span class="g g-Whitespace">    </span><span class="mi">458</span>         <span class="c1"># we have to use &#39;reason&#39;</span>
-<span class="g g-Whitespace">    </span><span class="mi">459</span>         <span class="n">details</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;msg&quot;</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">reason</span><span class="p">}</span>
-<span class="ne">--&gt; </span><span class="mi">461</span>     <span class="k">raise</span> <span class="n">PortalRequestError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Request failed: </span><span class="si">{</span><span class="n">details</span><span class="p">[</span><span class="s1">&#39;msg&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">details</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">463</span> <span class="k">return</span> <span class="n">r</span>
-
-<span class="ne">PortalRequestError</span>: Request failed: 400 Bad Request: Invalid body: 4 validation errors for ParsingModel[SinglepointAddBody]
-<span class="n">__root__</span> <span class="o">-&gt;</span> <span class="n">tag</span>
-  <span class="n">field</span> <span class="n">required</span> <span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">value_error</span><span class="o">.</span><span class="n">missing</span><span class="p">)</span>
-<span class="n">__root__</span> <span class="o">-&gt;</span> <span class="n">priority</span>
-  <span class="n">field</span> <span class="n">required</span> <span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">value_error</span><span class="o">.</span><span class="n">missing</span><span class="p">)</span>
-<span class="n">__root__</span> <span class="o">-&gt;</span> <span class="n">compute_priority</span>
-  <span class="n">extra</span> <span class="n">fields</span> <span class="ow">not</span> <span class="n">permitted</span> <span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">value_error</span><span class="o">.</span><span class="n">extra</span><span class="p">)</span>
-<span class="n">__root__</span> <span class="o">-&gt;</span> <span class="n">compute_tag</span>
-  <span class="n">extra</span> <span class="n">fields</span> <span class="ow">not</span> <span class="n">permitted</span> <span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">value_error</span><span class="o">.</span><span class="n">extra</span><span class="p">)</span> <span class="p">(</span><span class="n">HTTP</span> <span class="n">status</span> <span class="mi">400</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>

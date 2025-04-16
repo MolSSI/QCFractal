@@ -18,19 +18,14 @@ Traceback (most recent call last):
     raise CellExecutionError.from_cell_and_msg(cell, exec_reply_content)
 nbclient.exceptions.CellExecutionError: An error occurred while executing the following cell:
 ------------------
-records = client.query_records(created_after="2024/01/01")
-
-# Print the first record.
-print(next(records))
+results = client.query_records(created_after="2023/01/10", created_before="2023/01/14")
 ------------------
 
 
 [31m---------------------------------------------------------------------------[39m
 [31mPortalRequestError[39m                        Traceback (most recent call last)
-[36mCell[39m[36m [39m[32mIn[6][39m[32m, line 1[39m
-[32m----> [39m[32m1[39m records = [43mclient[49m[43m.[49m[43mquery_records[49m[43m([49m[43mcreated_after[49m[43m=[49m[33;43m"[39;49m[33;43m2024/01/01[39;49m[33;43m"[39;49m[43m)[49m
-[32m      3[39m [38;5;66;03m# Print the first record.[39;00m
-[32m      4[39m [38;5;28mprint[39m([38;5;28mnext[39m(records))
+[36mCell[39m[36m [39m[32mIn[4][39m[32m, line 1[39m
+[32m----> [39m[32m1[39m results = [43mclient[49m[43m.[49m[43mquery_records[49m[43m([49m[43mcreated_after[49m[43m=[49m[33;43m"[39;49m[33;43m2023/01/10[39;49m[33;43m"[39;49m[43m,[49m[43m [49m[43mcreated_before[49m[43m=[49m[33;43m"[39;49m[33;43m2023/01/14[39;49m[33;43m"[39;49m[43m)[49m
 
 [36mFile [39m[32m~/work/QCFractal/QCFractal/qcportal/qcportal/client.py:835[39m, in [36mPortalClient.query_records[39m[34m(self, record_id, record_type, manager_name, status, dataset_id, parent_id, child_id, created_before, created_after, modified_before, modified_after, creator_user, limit, include)[39m
 [32m    817[39m filter_dict = {

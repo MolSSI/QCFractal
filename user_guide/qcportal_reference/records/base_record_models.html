@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=1f4546ab"></script>
+    <script src="../../../_static/documentation_options.js?v=245a27c1"></script>
     <script src="../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Utilities and Miscellaneous" href="../utils_misc.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.60.post38+gc2d7a5df0" />
+  <meta name="docsearch:version" content="0.60.post42+gbdb8444fb" />
   </head>
   
   
@@ -1167,14 +1167,13 @@
 <li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.comments_" title="qcportal.record_models.BaseRecord.comments_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">comments_</span> <span class="pre">(List[qcportal.record_models.RecordComment]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.compute_history_" title="qcportal.record_models.BaseRecord.compute_history_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_history_</span> <span class="pre">(List[qcportal.record_models.ComputeHistory]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.created_on" title="qcportal.record_models.BaseRecord.created_on"><code class="xref py py-obj docutils literal notranslate"><span class="pre">created_on</span> <span class="pre">(datetime.datetime)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.creator_user" title="qcportal.record_models.BaseRecord.creator_user"><code class="xref py py-obj docutils literal notranslate"><span class="pre">creator_user</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.extras" title="qcportal.record_models.BaseRecord.extras"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extras</span> <span class="pre">(Dict[str,</span> <span class="pre">Any])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.id" title="qcportal.record_models.BaseRecord.id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id</span> <span class="pre">(int)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.is_service" title="qcportal.record_models.BaseRecord.is_service"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_service</span> <span class="pre">(bool)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.manager_name" title="qcportal.record_models.BaseRecord.manager_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">manager_name</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.modified_on" title="qcportal.record_models.BaseRecord.modified_on"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modified_on</span> <span class="pre">(datetime.datetime)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.native_files_" title="qcportal.record_models.BaseRecord.native_files_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">native_files_</span> <span class="pre">(Dict[str,</span> <span class="pre">qcportal.record_models.NativeFile]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.owner_group" title="qcportal.record_models.BaseRecord.owner_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owner_group</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.owner_user" title="qcportal.record_models.BaseRecord.owner_user"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owner_user</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.properties" title="qcportal.record_models.BaseRecord.properties"><code class="xref py py-obj docutils literal notranslate"><span class="pre">properties</span> <span class="pre">(Dict[str,</span> <span class="pre">Any]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.record_type" title="qcportal.record_models.BaseRecord.record_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_type</span> <span class="pre">(str)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.BaseRecord.service_" title="qcportal.record_models.BaseRecord.service_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">service_</span> <span class="pre">(qcportal.record_models.RecordService</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
@@ -1241,13 +1240,8 @@
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.record_models.BaseRecord.owner_user">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">owner_user</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.owner_user" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.record_models.BaseRecord.owner_group">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">owner_group</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.owner_group" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="qcportal.record_models.BaseRecord.creator_user">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">creator_user</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.BaseRecord.creator_user" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -1431,7 +1425,6 @@ that can span multiple records</p>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordAddBodyBase.compute_priority" title="qcportal.record_models.RecordAddBodyBase.compute_priority"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_priority</span> <span class="pre">(qcportal.record_models.PriorityEnum)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordAddBodyBase.compute_tag" title="qcportal.record_models.RecordAddBodyBase.compute_tag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_tag</span> <span class="pre">(qcportal.record_models.ConstrainedStrValue)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordAddBodyBase.find_existing" title="qcportal.record_models.RecordAddBodyBase.find_existing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_existing</span> <span class="pre">(bool)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.record_models.RecordAddBodyBase.owner_group" title="qcportal.record_models.RecordAddBodyBase.owner_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owner_group</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 </ul>
 </dd>
 </dl>
@@ -1450,18 +1443,6 @@ that can span multiple records</p>
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.record_models.RecordAddBodyBase.compute_priority">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_priority</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><span class="pre">PriorityEnum</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.record_models.RecordAddBodyBase.compute_priority" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Validated by<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.record_models.RecordAddBodyBase.owner_group">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">owner_group</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.RecordAddBodyBase.owner_group" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Validated by<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1658,14 +1639,13 @@ that can span multiple records</p>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.child_id" title="qcportal.record_models.RecordQueryFilters.child_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">child_id</span> <span class="pre">(List[int]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.created_after" title="qcportal.record_models.RecordQueryFilters.created_after"><code class="xref py py-obj docutils literal notranslate"><span class="pre">created_after</span> <span class="pre">(datetime.datetime</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.created_before" title="qcportal.record_models.RecordQueryFilters.created_before"><code class="xref py py-obj docutils literal notranslate"><span class="pre">created_before</span> <span class="pre">(datetime.datetime</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.creator_user" title="qcportal.record_models.RecordQueryFilters.creator_user"><code class="xref py py-obj docutils literal notranslate"><span class="pre">creator_user</span> <span class="pre">(List[int</span> <span class="pre">|</span> <span class="pre">str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.cursor" title="qcportal.record_models.RecordQueryFilters.cursor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cursor</span> <span class="pre">(int</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.dataset_id" title="qcportal.record_models.RecordQueryFilters.dataset_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dataset_id</span> <span class="pre">(List[int]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.limit" title="qcportal.record_models.RecordQueryFilters.limit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">limit</span> <span class="pre">(int</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.manager_name" title="qcportal.record_models.RecordQueryFilters.manager_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">manager_name</span> <span class="pre">(List[str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.modified_after" title="qcportal.record_models.RecordQueryFilters.modified_after"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modified_after</span> <span class="pre">(datetime.datetime</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.modified_before" title="qcportal.record_models.RecordQueryFilters.modified_before"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modified_before</span> <span class="pre">(datetime.datetime</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.owner_group" title="qcportal.record_models.RecordQueryFilters.owner_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owner_group</span> <span class="pre">(List[int</span> <span class="pre">|</span> <span class="pre">str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.owner_user" title="qcportal.record_models.RecordQueryFilters.owner_user"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owner_user</span> <span class="pre">(List[int</span> <span class="pre">|</span> <span class="pre">str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.parent_id" title="qcportal.record_models.RecordQueryFilters.parent_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parent_id</span> <span class="pre">(List[int]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.record_id" title="qcportal.record_models.RecordQueryFilters.record_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_id</span> <span class="pre">(List[int]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.record_type" title="qcportal.record_models.RecordQueryFilters.record_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_type</span> <span class="pre">(List[str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
@@ -1674,6 +1654,7 @@ that can span multiple records</p>
 </dd>
 <dt class="field-odd">Validators<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code> » <code class="xref py py-obj docutils literal notranslate"><span class="pre">all</span> <span class="pre">fields</span></code></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.parse_dates" title="qcportal.record_models.RecordQueryFilters.parse_dates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_dates</span></code></a> » <a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.created_after" title="qcportal.record_models.RecordQueryFilters.created_after"><code class="xref py py-obj docutils literal notranslate"><span class="pre">created_after</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.parse_dates" title="qcportal.record_models.RecordQueryFilters.parse_dates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_dates</span></code></a> » <a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.created_before" title="qcportal.record_models.RecordQueryFilters.created_before"><code class="xref py py-obj docutils literal notranslate"><span class="pre">created_before</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.parse_dates" title="qcportal.record_models.RecordQueryFilters.parse_dates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_dates</span></code></a> » <a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.modified_after" title="qcportal.record_models.RecordQueryFilters.modified_after"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modified_after</span></code></a></p></li>
@@ -1686,37 +1667,86 @@ that can span multiple records</p>
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.record_models.RecordQueryFilters.record_id">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">record_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.RecordQueryFilters.record_id" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.record_models.RecordQueryFilters.record_type">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">record_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.RecordQueryFilters.record_type" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.record_models.RecordQueryFilters.manager_name">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">manager_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.RecordQueryFilters.manager_name" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.record_models.RecordQueryFilters.status">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><span class="pre">RecordStatusEnum</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.RecordQueryFilters.status" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.record_models.RecordQueryFilters.dataset_id">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dataset_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.RecordQueryFilters.dataset_id" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.record_models.RecordQueryFilters.parent_id">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parent_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.RecordQueryFilters.parent_id" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.record_models.RecordQueryFilters.child_id">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">child_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.RecordQueryFilters.child_id" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.record_models.RecordQueryFilters.created_before">
@@ -1724,6 +1754,7 @@ that can span multiple records</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Validated by<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.parse_dates" title="qcportal.record_models.RecordQueryFilters.parse_dates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_dates</span></code></a></p></li>
 </ul>
 </dd>
@@ -1736,6 +1767,7 @@ that can span multiple records</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Validated by<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.parse_dates" title="qcportal.record_models.RecordQueryFilters.parse_dates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_dates</span></code></a></p></li>
 </ul>
 </dd>
@@ -1748,6 +1780,7 @@ that can span multiple records</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Validated by<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.parse_dates" title="qcportal.record_models.RecordQueryFilters.parse_dates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_dates</span></code></a></p></li>
 </ul>
 </dd>
@@ -1760,6 +1793,7 @@ that can span multiple records</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Validated by<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.parse_dates" title="qcportal.record_models.RecordQueryFilters.parse_dates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_dates</span></code></a></p></li>
 </ul>
 </dd>
@@ -1767,23 +1801,25 @@ that can span multiple records</p>
 </dd></dl>
 
 <dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.record_models.RecordQueryFilters.owner_user">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">owner_user</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.RecordQueryFilters.owner_user" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.record_models.RecordQueryFilters.owner_group">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">owner_group</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.RecordQueryFilters.owner_group" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="qcportal.record_models.RecordQueryFilters.creator_user">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">creator_user</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.RecordQueryFilters.creator_user" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method pydantic_validator">
 <dt class="sig sig-object py" id="qcportal.record_models.RecordQueryFilters.parse_dates">
-<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.modified_after" title="qcportal.record_models.RecordQueryFilters.modified_after"><em class="xref py py-obj"><span class="pre">modified_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.created_after" title="qcportal.record_models.RecordQueryFilters.created_after"><em class="xref py py-obj"><span class="pre">created_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.modified_before" title="qcportal.record_models.RecordQueryFilters.modified_before"><em class="xref py py-obj"><span class="pre">modified_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.created_before" title="qcportal.record_models.RecordQueryFilters.created_before"><em class="xref py py-obj"><span class="pre">created_before</span></em></a><a class="reference internal" href="../../../_modules/qcportal/record_models.html#RecordQueryFilters.parse_dates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.record_models.RecordQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.created_before" title="qcportal.record_models.RecordQueryFilters.created_before"><em class="xref py py-obj"><span class="pre">created_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.modified_before" title="qcportal.record_models.RecordQueryFilters.modified_before"><em class="xref py py-obj"><span class="pre">modified_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.created_after" title="qcportal.record_models.RecordQueryFilters.created_after"><em class="xref py py-obj"><span class="pre">created_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.modified_after" title="qcportal.record_models.RecordQueryFilters.modified_after"><em class="xref py py-obj"><span class="pre">modified_after</span></em></a><a class="reference internal" href="../../../_modules/qcportal/record_models.html#RecordQueryFilters.parse_dates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.record_models.RecordQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method pydantic_validator">
 <dt class="sig sig-object py" id="qcportal.record_models.RecordQueryFilters.validate_lists">
-<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_lists</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.cursor" title="qcportal.record_models.RecordQueryFilters.cursor"><em class="xref py py-obj"><span class="pre">cursor</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.limit" title="qcportal.record_models.RecordQueryFilters.limit"><em class="xref py py-obj"><span class="pre">limit</span></em></a><a class="headerlink" href="#qcportal.record_models.RecordQueryFilters.validate_lists" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_lists</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.limit" title="qcportal.record_models.RecordQueryFilters.limit"><em class="xref py py-obj"><span class="pre">limit</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.cursor" title="qcportal.record_models.RecordQueryFilters.cursor"><em class="xref py py-obj"><span class="pre">cursor</span></em></a><a class="headerlink" href="#qcportal.record_models.RecordQueryFilters.validate_lists" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -1792,6 +1828,7 @@ that can span multiple records</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Validated by<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
 <li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_lists</span></code></p></li>
 </ul>
 </dd>
@@ -1804,6 +1841,7 @@ that can span multiple records</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Validated by<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
 <li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_lists</span></code></p></li>
 </ul>
 </dd>
@@ -2136,6 +2174,7 @@ and creates an instance of that class.</p>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.attachments_" title="qcportal.dataset_models.BaseDataset.attachments_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">attachments_</span> <span class="pre">(List[qcportal.dataset_models.DatasetAttachment]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.auto_fetch_missing" title="qcportal.dataset_models.BaseDataset.auto_fetch_missing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">auto_fetch_missing</span> <span class="pre">(bool)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.contributed_values_" title="qcportal.dataset_models.BaseDataset.contributed_values_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">contributed_values_</span> <span class="pre">(Dict[str,</span> <span class="pre">qcportal.dataset_models.ContributedValues]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.creator_user" title="qcportal.dataset_models.BaseDataset.creator_user"><code class="xref py py-obj docutils literal notranslate"><span class="pre">creator_user</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.dataset_type" title="qcportal.dataset_models.BaseDataset.dataset_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dataset_type</span> <span class="pre">(str)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.default_compute_priority" title="qcportal.dataset_models.BaseDataset.default_compute_priority"><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_compute_priority</span> <span class="pre">(qcportal.record_models.PriorityEnum)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.default_compute_tag" title="qcportal.dataset_models.BaseDataset.default_compute_tag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_compute_tag</span> <span class="pre">(str)</span></code></a></p></li>
@@ -2143,8 +2182,6 @@ and creates an instance of that class.</p>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.extras" title="qcportal.dataset_models.BaseDataset.extras"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extras</span> <span class="pre">(Dict[str,</span> <span class="pre">Any])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.id" title="qcportal.dataset_models.BaseDataset.id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id</span> <span class="pre">(int)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.name" title="qcportal.dataset_models.BaseDataset.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span> <span class="pre">(str)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.owner_group" title="qcportal.dataset_models.BaseDataset.owner_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owner_group</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.owner_user" title="qcportal.dataset_models.BaseDataset.owner_user"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owner_user</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.provenance" title="qcportal.dataset_models.BaseDataset.provenance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">provenance</span> <span class="pre">(Dict[str,</span> <span class="pre">Any])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.tagline" title="qcportal.dataset_models.BaseDataset.tagline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tagline</span> <span class="pre">(str)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.BaseDataset.tags" title="qcportal.dataset_models.BaseDataset.tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tags</span> <span class="pre">(List[str])</span></code></a></p></li>
@@ -2202,13 +2239,8 @@ and creates an instance of that class.</p>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.owner_user">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">owner_user</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.owner_user" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.owner_group">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">owner_group</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.owner_group" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.creator_user">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">creator_user</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.creator_user" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -3179,7 +3211,6 @@ by a submit without duplicate checking.</p>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.DatasetAddBody.existing_ok" title="qcportal.dataset_models.DatasetAddBody.existing_ok"><code class="xref py py-obj docutils literal notranslate"><span class="pre">existing_ok</span> <span class="pre">(bool)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.DatasetAddBody.extras" title="qcportal.dataset_models.DatasetAddBody.extras"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extras</span> <span class="pre">(Dict[str,</span> <span class="pre">Any])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.DatasetAddBody.name" title="qcportal.dataset_models.DatasetAddBody.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span> <span class="pre">(str)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.dataset_models.DatasetAddBody.owner_group" title="qcportal.dataset_models.DatasetAddBody.owner_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owner_group</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.DatasetAddBody.provenance" title="qcportal.dataset_models.DatasetAddBody.provenance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">provenance</span> <span class="pre">(Dict[str,</span> <span class="pre">Any])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.DatasetAddBody.tagline" title="qcportal.dataset_models.DatasetAddBody.tagline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tagline</span> <span class="pre">(str)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.DatasetAddBody.tags" title="qcportal.dataset_models.DatasetAddBody.tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tags</span> <span class="pre">(List[str])</span></code></a></p></li>
@@ -3273,18 +3304,6 @@ by a submit without duplicate checking.</p>
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.dataset_models.DatasetAddBody.extras">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">extras</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.dataset_models.DatasetAddBody.extras" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Validated by<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.dataset_models.DatasetAddBody.owner_group">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">owner_group</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.dataset_models.DatasetAddBody.owner_group" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Validated by<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -3854,7 +3873,6 @@ by a submit without duplicate checking.</p>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.DatasetSubmitBody.compute_tag" title="qcportal.dataset_models.DatasetSubmitBody.compute_tag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_tag</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.DatasetSubmitBody.entry_names" title="qcportal.dataset_models.DatasetSubmitBody.entry_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">entry_names</span> <span class="pre">(List[str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.DatasetSubmitBody.find_existing" title="qcportal.dataset_models.DatasetSubmitBody.find_existing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_existing</span> <span class="pre">(bool)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.dataset_models.DatasetSubmitBody.owner_group" title="qcportal.dataset_models.DatasetSubmitBody.owner_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owner_group</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.DatasetSubmitBody.specification_names" title="qcportal.dataset_models.DatasetSubmitBody.specification_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">specification_names</span> <span class="pre">(List[str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 </ul>
 </dd>
@@ -3898,18 +3916,6 @@ by a submit without duplicate checking.</p>
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.dataset_models.DatasetSubmitBody.compute_priority">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_priority</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><span class="pre">PriorityEnum</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.dataset_models.DatasetSubmitBody.compute_priority" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Validated by<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_rm_deprecated</span></code></p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.dataset_models.DatasetSubmitBody.owner_group">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">owner_group</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.dataset_models.DatasetSubmitBody.owner_group" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Validated by<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -4445,8 +4451,7 @@ and creates an instance of that class.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.BaseRecord.manager_name"><code class="docutils literal notranslate"><span class="pre">BaseRecord.manager_name</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.BaseRecord.created_on"><code class="docutils literal notranslate"><span class="pre">BaseRecord.created_on</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.BaseRecord.modified_on"><code class="docutils literal notranslate"><span class="pre">BaseRecord.modified_on</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.BaseRecord.owner_user"><code class="docutils literal notranslate"><span class="pre">BaseRecord.owner_user</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.BaseRecord.owner_group"><code class="docutils literal notranslate"><span class="pre">BaseRecord.owner_group</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.BaseRecord.creator_user"><code class="docutils literal notranslate"><span class="pre">BaseRecord.creator_user</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.BaseRecord.compute_history_"><code class="docutils literal notranslate"><span class="pre">BaseRecord.compute_history_</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.BaseRecord.task_"><code class="docutils literal notranslate"><span class="pre">BaseRecord.task_</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.BaseRecord.service_"><code class="docutils literal notranslate"><span class="pre">BaseRecord.service_</span></code></a></li>
@@ -4475,7 +4480,6 @@ and creates an instance of that class.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordAddBodyBase"><code class="docutils literal notranslate"><span class="pre">RecordAddBodyBase</span></code></a><ul class="visible nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordAddBodyBase.compute_tag"><code class="docutils literal notranslate"><span class="pre">RecordAddBodyBase.compute_tag</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordAddBodyBase.compute_priority"><code class="docutils literal notranslate"><span class="pre">RecordAddBodyBase.compute_priority</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordAddBodyBase.owner_group"><code class="docutils literal notranslate"><span class="pre">RecordAddBodyBase.owner_group</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordAddBodyBase.find_existing"><code class="docutils literal notranslate"><span class="pre">RecordAddBodyBase.find_existing</span></code></a></li>
 </ul>
 </li>
@@ -4510,8 +4514,7 @@ and creates an instance of that class.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordQueryFilters.created_after"><code class="docutils literal notranslate"><span class="pre">RecordQueryFilters.created_after</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordQueryFilters.modified_before"><code class="docutils literal notranslate"><span class="pre">RecordQueryFilters.modified_before</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordQueryFilters.modified_after"><code class="docutils literal notranslate"><span class="pre">RecordQueryFilters.modified_after</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordQueryFilters.owner_user"><code class="docutils literal notranslate"><span class="pre">RecordQueryFilters.owner_user</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordQueryFilters.owner_group"><code class="docutils literal notranslate"><span class="pre">RecordQueryFilters.owner_group</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordQueryFilters.creator_user"><code class="docutils literal notranslate"><span class="pre">RecordQueryFilters.creator_user</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordQueryFilters.parse_dates"><code class="docutils literal notranslate"><span class="pre">RecordQueryFilters.parse_dates</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordQueryFilters.validate_lists"><code class="docutils literal notranslate"><span class="pre">RecordQueryFilters.validate_lists</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.record_models.RecordQueryFilters.limit"><code class="docutils literal notranslate"><span class="pre">RecordQueryFilters.limit</span></code></a></li>
@@ -4575,8 +4578,7 @@ and creates an instance of that class.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.extras"><code class="docutils literal notranslate"><span class="pre">BaseDataset.extras</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.default_compute_tag"><code class="docutils literal notranslate"><span class="pre">BaseDataset.default_compute_tag</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.default_compute_priority"><code class="docutils literal notranslate"><span class="pre">BaseDataset.default_compute_priority</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.owner_user"><code class="docutils literal notranslate"><span class="pre">BaseDataset.owner_user</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.owner_group"><code class="docutils literal notranslate"><span class="pre">BaseDataset.owner_group</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.creator_user"><code class="docutils literal notranslate"><span class="pre">BaseDataset.creator_user</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.contributed_values_"><code class="docutils literal notranslate"><span class="pre">BaseDataset.contributed_values_</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.attachments_"><code class="docutils literal notranslate"><span class="pre">BaseDataset.attachments_</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.BaseDataset.auto_fetch_missing"><code class="docutils literal notranslate"><span class="pre">BaseDataset.auto_fetch_missing</span></code></a></li>
@@ -4666,7 +4668,6 @@ and creates an instance of that class.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.DatasetAddBody.default_compute_tag"><code class="docutils literal notranslate"><span class="pre">DatasetAddBody.default_compute_tag</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.DatasetAddBody.default_compute_priority"><code class="docutils literal notranslate"><span class="pre">DatasetAddBody.default_compute_priority</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.DatasetAddBody.extras"><code class="docutils literal notranslate"><span class="pre">DatasetAddBody.extras</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.DatasetAddBody.owner_group"><code class="docutils literal notranslate"><span class="pre">DatasetAddBody.owner_group</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.DatasetAddBody.existing_ok"><code class="docutils literal notranslate"><span class="pre">DatasetAddBody.existing_ok</span></code></a></li>
 </ul>
 </li>
@@ -4748,7 +4749,6 @@ and creates an instance of that class.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.DatasetSubmitBody.specification_names"><code class="docutils literal notranslate"><span class="pre">DatasetSubmitBody.specification_names</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.DatasetSubmitBody.compute_tag"><code class="docutils literal notranslate"><span class="pre">DatasetSubmitBody.compute_tag</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.DatasetSubmitBody.compute_priority"><code class="docutils literal notranslate"><span class="pre">DatasetSubmitBody.compute_priority</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.DatasetSubmitBody.owner_group"><code class="docutils literal notranslate"><span class="pre">DatasetSubmitBody.owner_group</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.DatasetSubmitBody.find_existing"><code class="docutils literal notranslate"><span class="pre">DatasetSubmitBody.find_existing</span></code></a></li>
 </ul>
 </li>
