@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy.orm import as_declarative
 
 if TYPE_CHECKING:
-    from typing import Any, TypeVar, Type, Dict, Optional, Iterable, Union, List
+    from typing import Any, TypeVar, Type, Dict, Optional, Iterable, Union
 
     try:
         from pydantic.v1 import BaseModel
@@ -22,35 +22,6 @@ if TYPE_CHECKING:
 @as_declarative()
 class BaseORM:
     """Base declarative class of all ORM"""
-
-    @staticmethod
-    def append_exclude(exclude: Optional[Iterable[str]] = None, *args: str) -> List[str]:
-        """
-        Appends additional exclude entries to a list
-
-        The updated list is returned. If a list or other iterable is not given (ie, `exclude` is `None`)
-        then one created.
-
-        Parameters
-        ----------
-        exclude
-            Existing list (or other iterable) of includes. This input may be modified.
-
-        args
-            Additional exclude entries to add to the list
-
-        Returns
-        -------
-        :
-            The input iterable as a list, with the additional entries added.
-        """
-
-        if exclude is None:
-            return list(args)
-        else:
-            exclude = list(exclude)
-            exclude.extend(args)
-            return exclude
 
     @classmethod
     def from_model(cls, model_data: Union[dict, BaseModel]):

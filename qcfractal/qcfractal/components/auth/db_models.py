@@ -124,12 +124,7 @@ class UserPreferencesORM(BaseORM):
 
 
 _user_id_map_subq = select(UserORM.id.label("id"), UserORM.username.label("username")).subquery()
-_group_id_map_subq = select(GroupORM.id.label("id"), GroupORM.groupname.label("groupname")).subquery()
 
 
 class UserIDMapSubquery(BaseORM):
     __table__ = _user_id_map_subq
-
-
-class GroupIDMapSubquery(BaseORM):
-    __table__ = _group_id_map_subq
