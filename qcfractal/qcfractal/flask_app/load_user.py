@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from flask import session, g
 from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity, get_jwt
+from jwt.exceptions import ExpiredSignatureError
 from werkzeug.exceptions import InternalServerError
 
 from qcfractal.flask_app import storage_socket
@@ -49,8 +50,10 @@ def load_logged_in_user():
                 groups = claims.get("groups", [])
     except (AuthorizationFailure, AuthenticationFailure):
         raise
+    except ExpiredSignatureError as e:
+        raise AuthenticationFailure(f"Authentication failure - JWT Token has expired: {str(e)}")
     except Exception as e:
-        raise InternalServerError(f"Failed to verify user info: {e}")
+        raise InternalServerError(f"Failed to verify user info: {str(e)}")
 
     # Store the user in the global app/request context
     g.user_id = user_id
