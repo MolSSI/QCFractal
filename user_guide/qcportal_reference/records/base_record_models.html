@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=58fa85b7"></script>
+    <script src="../../../_static/documentation_options.js?v=f7c5c263"></script>
     <script src="../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Utilities and Miscellaneous" href="../utils_misc.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.60.post50+g2f4d54881" />
+  <meta name="docsearch:version" content="0.60.post52+g6d4d7eb66" />
   </head>
   
   
@@ -1328,9 +1328,14 @@ that can span multiple records</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.record_models.BaseRecord.propagate_client">
-<span class="sig-name descname"><span class="pre">propagate_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/record_models.html#BaseRecord.propagate_client"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.record_models.BaseRecord.propagate_client" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">propagate_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url_prefix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/record_models.html#BaseRecord.propagate_client"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.record_models.BaseRecord.propagate_client" title="Link to this definition">#</a></dt>
 <dd><p>Propagates a client and related information to this record to any fields within this record that need it</p>
 <p>This is expected to be called from derived class propagate_client functions as well</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>base_url_prefix</strong> (<em>str</em><em> | </em><em>None</em>)</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">
@@ -1814,12 +1819,12 @@ that can span multiple records</p>
 
 <dl class="py method pydantic_validator">
 <dt class="sig sig-object py" id="qcportal.record_models.RecordQueryFilters.parse_dates">
-<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.created_before" title="qcportal.record_models.RecordQueryFilters.created_before"><em class="xref py py-obj"><span class="pre">created_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.created_after" title="qcportal.record_models.RecordQueryFilters.created_after"><em class="xref py py-obj"><span class="pre">created_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.modified_before" title="qcportal.record_models.RecordQueryFilters.modified_before"><em class="xref py py-obj"><span class="pre">modified_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.modified_after" title="qcportal.record_models.RecordQueryFilters.modified_after"><em class="xref py py-obj"><span class="pre">modified_after</span></em></a><a class="reference internal" href="../../../_modules/qcportal/record_models.html#RecordQueryFilters.parse_dates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.record_models.RecordQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.created_after" title="qcportal.record_models.RecordQueryFilters.created_after"><em class="xref py py-obj"><span class="pre">created_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.modified_after" title="qcportal.record_models.RecordQueryFilters.modified_after"><em class="xref py py-obj"><span class="pre">modified_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.created_before" title="qcportal.record_models.RecordQueryFilters.created_before"><em class="xref py py-obj"><span class="pre">created_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.modified_before" title="qcportal.record_models.RecordQueryFilters.modified_before"><em class="xref py py-obj"><span class="pre">modified_before</span></em></a><a class="reference internal" href="../../../_modules/qcportal/record_models.html#RecordQueryFilters.parse_dates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.record_models.RecordQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method pydantic_validator">
 <dt class="sig sig-object py" id="qcportal.record_models.RecordQueryFilters.validate_lists">
-<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_lists</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.limit" title="qcportal.record_models.RecordQueryFilters.limit"><em class="xref py py-obj"><span class="pre">limit</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.cursor" title="qcportal.record_models.RecordQueryFilters.cursor"><em class="xref py py-obj"><span class="pre">cursor</span></em></a><a class="headerlink" href="#qcportal.record_models.RecordQueryFilters.validate_lists" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_lists</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.cursor" title="qcportal.record_models.RecordQueryFilters.cursor"><em class="xref py py-obj"><span class="pre">cursor</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.limit" title="qcportal.record_models.RecordQueryFilters.limit"><em class="xref py py-obj"><span class="pre">limit</span></em></a><a class="headerlink" href="#qcportal.record_models.RecordQueryFilters.validate_lists" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -1878,7 +1883,7 @@ of a record query, and works with all kinds of records.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="qcportal.record_models.record_from_dict">
-<span class="sig-name descname"><span class="pre">record_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/record_models.html#record_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.record_models.record_from_dict" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">record_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/record_models.html#record_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.record_models.record_from_dict" title="Link to this definition">#</a></dt>
 <dd><p>Create a record object from a dictionary containing the record information</p>
 <p>This determines the appropriate record class (deriving from BaseRecord)
 and creates an instance of that class.</p>
@@ -1887,6 +1892,7 @@ and creates an instance of that class.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
 <li><p><strong>client</strong> (<em>Any</em>)</p></li>
+<li><p><strong>base_url_prefix</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1897,7 +1903,7 @@ and creates an instance of that class.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="qcportal.record_models.records_from_dicts">
-<span class="sig-name descname"><span class="pre">records_from_dicts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/record_models.html#records_from_dicts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.record_models.records_from_dicts" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">records_from_dicts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/record_models.html#records_from_dicts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.record_models.records_from_dicts" title="Link to this definition">#</a></dt>
 <dd><p>Create a list of record objects from a sequence of datamodels</p>
 <p>This determines the appropriate record class (deriving from BaseRecord)
 and creates an instance of that class.</p>
@@ -1906,6 +1912,7 @@ and creates an instance of that class.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data</strong> (<em>Sequence</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em><em>]</em>)</p></li>
 <li><p><strong>client</strong> (<em>Any</em>)</p></li>
+<li><p><strong>base_url_prefix</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -2270,9 +2277,14 @@ and creates an instance of that class.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.propagate_client">
-<span class="sig-name descname"><span class="pre">propagate_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/dataset_models.html#BaseDataset.propagate_client"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.propagate_client" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">propagate_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url_prefix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/dataset_models.html#BaseDataset.propagate_client"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.propagate_client" title="Link to this definition">#</a></dt>
 <dd><p>Propagates a client to this record to any fields within this record that need it</p>
 <p>This may also be called from derived class propagate_client functions as well</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>base_url_prefix</strong> (<em>str</em><em> | </em><em>None</em>)</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -4237,7 +4249,7 @@ by a submit without duplicate checking.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="qcportal.dataset_models.dataset_from_dict">
-<span class="sig-name descname"><span class="pre">dataset_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/dataset_models.html#dataset_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.dataset_from_dict" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">dataset_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/dataset_models.html#dataset_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.dataset_from_dict" title="Link to this definition">#</a></dt>
 <dd><p>Create a dataset object from a datamodel</p>
 <p>This determines the appropriate dataset class (deriving from BaseDataset)
 and creates an instance of that class.</p>
@@ -4247,6 +4259,7 @@ and creates an instance of that class.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
 <li><p><strong>client</strong> (<em>Any</em>)</p></li>
+<li><p><strong>base_url_prefix</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>cache_data</strong> (<a class="reference internal" href="../clients.html#qcportal.cache.DatasetCache" title="qcportal.cache.DatasetCache"><em>DatasetCache</em></a><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>

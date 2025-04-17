@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=58fa85b7"></script>
+    <script src="../../_static/documentation_options.js?v=f7c5c263"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="QCPortal API Reference" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.60.post50+g2f4d54881" />
+  <meta name="docsearch:version" content="0.60.post52+g6d4d7eb66" />
   </head>
   
   
@@ -3255,7 +3255,7 @@ are searched for “qcportal_config.yaml”</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="qcportal.cache.get_records_with_cache">
-<span class="sig-name descname"><span class="pre">get_records_with_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_cache</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_fetch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/cache.html#get_records_with_cache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.cache.get_records_with_cache" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_records_with_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url_prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_cache</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_fetch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/cache.html#get_records_with_cache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.cache.get_records_with_cache" title="Link to this definition">#</a></dt>
 <dd><p>Helper function for obtaining child records either from the cache or from the server</p>
 <p>The records are returned in the same order as the <cite>record_ids</cite> parameter.</p>
 <p>If records are missing from the cache, and client is None, and exception is raised.</p>
@@ -3272,6 +3272,7 @@ class functions of the record types.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>client</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><em>PortalClient</em></a><em>]</em>) – The client to use for fetching records from the server.
 If <cite>None</cite>, the function will only use the cache</p></li>
+<li><p><strong>base_url_prefix</strong> (<em>str</em>) – Prefix of all the URLs for fetching records</p></li>
 <li><p><strong>record_cache</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#qcportal.cache.RecordCache" title="qcportal.cache.RecordCache"><em>RecordCache</em></a><em>]</em>) – The cache to use for fetching records from the cache.
 If <cite>None</cite>, the function will only use the client</p></li>
 <li><p><strong>record_type</strong> (<em>Type</em><em>[</em><em>_RECORD_T</em><em>]</em>) – The type of record to fetch</p></li>

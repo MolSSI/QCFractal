@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=58fa85b7"></script>
+    <script src="../../../_static/documentation_options.js?v=f7c5c263"></script>
     <script src="../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Manybody Records" href="manybody.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.60.post50+g2f4d54881" />
+  <meta name="docsearch:version" content="0.60.post52+g6d4d7eb66" />
   </head>
   
   
@@ -874,7 +874,7 @@
 
 <dl class="py method pydantic_validator">
 <dt class="sig sig-object py" id="qcportal.reaction.record_models.ReactionQueryFilters.parse_dates">
-<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.reaction.record_models.ReactionQueryFilters.created_before" title="qcportal.reaction.record_models.ReactionQueryFilters.created_before"><em class="xref py py-obj"><span class="pre">created_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.reaction.record_models.ReactionQueryFilters.created_after" title="qcportal.reaction.record_models.ReactionQueryFilters.created_after"><em class="xref py py-obj"><span class="pre">created_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.reaction.record_models.ReactionQueryFilters.modified_before" title="qcportal.reaction.record_models.ReactionQueryFilters.modified_before"><em class="xref py py-obj"><span class="pre">modified_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.reaction.record_models.ReactionQueryFilters.modified_after" title="qcportal.reaction.record_models.ReactionQueryFilters.modified_after"><em class="xref py py-obj"><span class="pre">modified_after</span></em></a><a class="headerlink" href="#qcportal.reaction.record_models.ReactionQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.reaction.record_models.ReactionQueryFilters.created_before" title="qcportal.reaction.record_models.ReactionQueryFilters.created_before"><em class="xref py py-obj"><span class="pre">created_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.reaction.record_models.ReactionQueryFilters.modified_before" title="qcportal.reaction.record_models.ReactionQueryFilters.modified_before"><em class="xref py py-obj"><span class="pre">modified_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.reaction.record_models.ReactionQueryFilters.created_after" title="qcportal.reaction.record_models.ReactionQueryFilters.created_after"><em class="xref py py-obj"><span class="pre">created_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.reaction.record_models.ReactionQueryFilters.modified_after" title="qcportal.reaction.record_models.ReactionQueryFilters.modified_after"><em class="xref py py-obj"><span class="pre">modified_after</span></em></a><a class="headerlink" href="#qcportal.reaction.record_models.ReactionQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method pydantic_validator">
@@ -1232,9 +1232,14 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.reaction.record_models.ReactionRecord.propagate_client">
-<span class="sig-name descname"><span class="pre">propagate_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/reaction/record_models.html#ReactionRecord.propagate_client"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.reaction.record_models.ReactionRecord.propagate_client" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">propagate_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url_prefix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/reaction/record_models.html#ReactionRecord.propagate_client"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.reaction.record_models.ReactionRecord.propagate_client" title="Link to this definition">#</a></dt>
 <dd><p>Propagates a client and related information to this record to any fields within this record that need it</p>
 <p>This is expected to be called from derived class propagate_client functions as well</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>base_url_prefix</strong> (<em>str</em><em> | </em><em>None</em>)</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">
@@ -2370,9 +2375,14 @@ If a record does not exist for this entry and specification, None is returned</p
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.reaction.dataset_models.ReactionDataset.propagate_client">
-<span class="sig-name descname"><span class="pre">propagate_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.reaction.dataset_models.ReactionDataset.propagate_client" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">propagate_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url_prefix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.reaction.dataset_models.ReactionDataset.propagate_client" title="Link to this definition">#</a></dt>
 <dd><p>Propagates a client to this record to any fields within this record that need it</p>
 <p>This may also be called from derived class propagate_client functions as well</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>base_url_prefix</strong> (<em>str</em><em> | </em><em>None</em>)</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">

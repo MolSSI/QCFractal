@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=58fa85b7"></script>
+    <script src="../../_static/documentation_options.js?v=f7c5c263"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.60.post50+g2f4d54881" />
+  <meta name="docsearch:version" content="0.60.post52+g6d4d7eb66" />
   </head>
   
   
@@ -1177,6 +1177,7 @@
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.get_records_with_cache">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_records_with_cache</span><span class="p">(</span>
     <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PortalClient</span><span class="p">],</span>
+    <span class="n">base_url_prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">record_cache</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RecordCache</span><span class="p">],</span>
     <span class="n">record_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">_RECORD_T</span><span class="p">],</span>
     <span class="n">record_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
@@ -1207,6 +1208,8 @@
 <span class="sd">    client</span>
 <span class="sd">        The client to use for fetching records from the server.</span>
 <span class="sd">        If `None`, the function will only use the cache</span>
+<span class="sd">    base_url_prefix</span>
+<span class="sd">        Prefix of all the URLs for fetching records</span>
 <span class="sd">    record_cache</span>
 <span class="sd">        The cache to use for fetching records from the cache.</span>
 <span class="sd">        If `None`, the function will only use the client</span>
@@ -1234,13 +1237,13 @@
         <span class="n">records_tofetch</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">record_ids</span><span class="p">)</span> <span class="o">-</span> <span class="p">{</span><span class="n">x</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">existing_records</span><span class="p">}</span>
 
         <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">existing_records</span><span class="p">:</span>
-            <span class="n">r</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="n">client</span><span class="p">)</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">base_url_prefix</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">records_tofetch</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">client</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Need to fetch some records, but not connected to a client&quot;</span><span class="p">)</span>
 
-        <span class="n">recs</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">_fetch_records</span><span class="p">(</span><span class="n">record_type</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">records_tofetch</span><span class="p">),</span> <span class="n">include</span><span class="o">=</span><span class="n">include</span><span class="p">)</span>
+        <span class="n">recs</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">_fetch_records</span><span class="p">(</span><span class="n">base_url_prefix</span><span class="p">,</span> <span class="n">record_type</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">records_tofetch</span><span class="p">),</span> <span class="n">include</span><span class="o">=</span><span class="n">include</span><span class="p">)</span>
 
         <span class="c1"># Set up for the writeback on change, but write the record as-is for now</span>
         <span class="k">if</span> <span class="n">record_cache</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
