@@ -3,6 +3,8 @@ from __future__ import annotations
 from typing import Optional, Iterable, Dict, Any
 
 from sqlalchemy import (
+    select,
+    union,
     Column,
     Integer,
     String,
@@ -10,17 +12,19 @@ from sqlalchemy import (
     Index,
     Computed,
     ForeignKey,
-    ForeignKeyConstraint,
     UniqueConstraint,
     Enum,
 )
 from sqlalchemy.orm import relationship
 
-from qcfractal.components.auth.db_models import UserIDMapSubquery, GroupIDMapSubquery, UserORM, GroupORM
+from qcfractal.components.auth.db_models import UserIDMapSubquery, UserORM
 from qcfractal.components.external_files.db_models import ExternalFileORM
 from qcfractal.components.internal_jobs.db_models import InternalJobORM
 from qcfractal.db_socket import BaseORM
 from qcportal.project_models import ProjectAttachmentType
+from qcfractal.db_socket.db_views import view
+from qcfractal.components.dataset_db_views import DatasetDirectRecordsView
+from qcfractal.components.record_db_views import RecordChildrenView
 
 
 class ProjectORM(BaseORM):
@@ -134,3 +138,18 @@ class ProjectAttachmentORM(ExternalFileORM):
     __table_args__ = (Index("ix_project_attachment_project_id", "project_id"),)
 
     _qcportal_model_excludes = ["project_id"]
+
+
+ProjectRecordsView = view(
+    "project_records_view",
+    BaseORM.metadata,
+    union(
+        select(ProjectRecordORM.project_id.label("project_id"), ProjectRecordORM.record_id.label("record_id")),
+        select(ProjectRecordORM.project_id.label("project_id"), RecordChildrenView.c.child_id.label("record_id")).join(
+            RecordChildrenView, ProjectRecordORM.record_id == RecordChildrenView.c.parent_id
+        ),
+        select(
+            ProjectDatasetORM.project_id.label("project_id"), DatasetDirectRecordsView.c.record_id.label("record_id")
+        ).join(DatasetDirectRecordsView, ProjectDatasetORM.dataset_id == DatasetDirectRecordsView.c.dataset_id),
+    ),
+)
