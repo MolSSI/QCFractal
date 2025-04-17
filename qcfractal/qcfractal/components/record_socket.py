@@ -19,9 +19,9 @@ from sqlalchemy.orm import (
 )
 
 from qcfractal.components.auth.db_models import UserIDMapSubquery
+from qcfractal.components.dataset_db_views import DatasetDirectRecordsView
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.record_db_views import RecordDirectChildrenView, RecordChildrenView
-from qcfractal.components.dataset_db_views import DatasetDirectRecordsView, DatasetRecordsView
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.db_socket.helpers import (
