@@ -106,15 +106,15 @@ class ReactionRecord(BaseRecord):
     ########################################
     _components: Optional[List[ReactionComponent]] = PrivateAttr(None)
 
-    def propagate_client(self, client):
-        BaseRecord.propagate_client(self, client)
+    def propagate_client(self, client, base_url_prefix: Optional[str]):
+        BaseRecord.propagate_client(self, client, base_url_prefix)
 
         if self._components is not None:
             for comp in self._components:
                 if comp.singlepoint_record:
-                    comp.singlepoint_record.propagate_client(self._client)
+                    comp.singlepoint_record.propagate_client(self._client, base_url_prefix)
                 if comp.optimization_record:
-                    comp.optimization_record.propagate_client(self._client)
+                    comp.optimization_record.propagate_client(self._client, base_url_prefix)
 
     @classmethod
     def _fetch_children_multi(
@@ -123,6 +123,9 @@ class ReactionRecord(BaseRecord):
         # Should be checked by the calling function
         assert records
         assert all(isinstance(x, ReactionRecord) for x in records)
+
+        base_url_prefix = next(iter(records))._base_url_prefix
+        assert all(r._base_url_prefix == base_url_prefix for r in records)
 
         if is_included("components", include, None, False):
             # collect all singlepoint * optimization ids for all optimization
@@ -141,10 +144,22 @@ class ReactionRecord(BaseRecord):
             opt_ids = list(opt_ids)
 
             sp_records = get_records_with_cache(
-                client, record_cache, SinglepointRecord, sp_ids, include=include, force_fetch=force_fetch
+                client,
+                base_url_prefix,
+                record_cache,
+                SinglepointRecord,
+                sp_ids,
+                include=include,
+                force_fetch=force_fetch,
             )
             opt_records = get_records_with_cache(
-                client, record_cache, OptimizationRecord, opt_ids, include=include, force_fetch=force_fetch
+                client,
+                base_url_prefix,
+                record_cache,
+                OptimizationRecord,
+                opt_ids,
+                include=include,
+                force_fetch=force_fetch,
             )
 
             sp_map = {r.id: r for r in sp_records}
@@ -165,7 +180,7 @@ class ReactionRecord(BaseRecord):
 
                         r._components.append(rc)
 
-                r.propagate_client(r._client)
+                r.propagate_client(r._client, base_url_prefix)
 
     def _fetch_components(self):
         if self.components_meta_ is None:

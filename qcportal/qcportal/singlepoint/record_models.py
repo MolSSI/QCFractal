@@ -111,8 +111,8 @@ class SinglepointRecord(BaseRecord):
     molecule_: Optional[Molecule] = Field(None, alias="molecule")
     wavefunction_: Optional[Wavefunction] = Field(None, alias="wavefunction")
 
-    def propagate_client(self, client):
-        BaseRecord.propagate_client(self, client)
+    def propagate_client(self, client, base_url_prefix: Optional[str]):
+        BaseRecord.propagate_client(self, client, base_url_prefix)
 
         if self.wavefunction_ is not None:
             self.wavefunction_.propagate_client(self._client, self._base_url)
@@ -130,7 +130,7 @@ class SinglepointRecord(BaseRecord):
             Optional[Wavefunction],
         )
 
-        self.propagate_client(self._client)
+        self.propagate_client(self._client, self._base_url_prefix)
 
     @property
     def return_result(self) -> Any:

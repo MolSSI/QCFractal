@@ -603,6 +603,7 @@ def read_dataset_metadata(file_path: str):
 
 def get_records_with_cache(
     client: Optional[PortalClient],
+    base_url_prefix: str,
     record_cache: Optional[RecordCache],
     record_type: Type[_RECORD_T],
     record_ids: Sequence[int],
@@ -633,6 +634,8 @@ def get_records_with_cache(
     client
         The client to use for fetching records from the server.
         If `None`, the function will only use the cache
+    base_url_prefix
+        Prefix of all the URLs for fetching records
     record_cache
         The cache to use for fetching records from the cache.
         If `None`, the function will only use the client
@@ -660,13 +663,13 @@ def get_records_with_cache(
         records_tofetch = set(record_ids) - {x.id for x in existing_records}
 
         for r in existing_records:
-            r.propagate_client(client)
+            r.propagate_client(client, base_url_prefix)
 
     if records_tofetch:
         if client is None:
             raise RuntimeError("Need to fetch some records, but not connected to a client")
 
-        recs = client._fetch_records(record_type, list(records_tofetch), include=include)
+        recs = client._fetch_records(base_url_prefix, record_type, list(records_tofetch), include=include)
 
         # Set up for the writeback on change, but write the record as-is for now
         if record_cache is not None:

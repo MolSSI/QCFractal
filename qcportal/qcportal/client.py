@@ -233,7 +233,7 @@ class PortalClient(PortalClientBase):
         body = DatasetQueryModel(dataset_name=dataset_name, dataset_type=dataset_type)
         ds = self.make_request("post", f"api/v1/datasets/query", Dict[str, Any], body=body)
 
-        return dataset_from_dict(ds, self)
+        return dataset_from_dict(ds, self, "api/v1")
 
     def query_dataset_records(
         self,
@@ -245,14 +245,14 @@ class PortalClient(PortalClientBase):
 
     def get_dataset_by_id(self, dataset_id: int):
         ds = self.make_request("get", f"api/v1/datasets/{dataset_id}", Dict[str, Any])
-        return dataset_from_dict(ds, self)
+        return dataset_from_dict(ds, self, "api/v1")
 
     def dataset_from_cache(self, file_path: str) -> BaseDataset:
         ds_meta = read_dataset_metadata(file_path)
         ds_type = BaseDataset.get_subclass(ds_meta["dataset_type"])
         ds_cache = DatasetCache(file_path, False, ds_type)
 
-        ds = dataset_from_dict(ds_meta, self, cache_data=ds_cache)
+        ds = dataset_from_dict(ds_meta, self, "api/v1", cache_data=ds_cache)
 
         # Check to make sure we are connected to the same server
         cache_address = ds_cache.get_metadata("client_address")
@@ -581,6 +581,7 @@ class PortalClient(PortalClientBase):
 
     def _fetch_records(
         self,
+        base_url_prefix: str,
         record_type: Optional[Type[_T]],
         record_ids: Sequence[int],
         missing_ok: bool = False,
@@ -596,6 +597,8 @@ class PortalClient(PortalClientBase):
 
         Parameters
         ----------
+        base_url_prefix
+            Prefix of all the URLs for fetching records
         record_type
             The type of record to fetch
         record_ids
@@ -622,11 +625,11 @@ class PortalClient(PortalClientBase):
             include = list(include) + ["*"]
 
         if record_type is None:
-            endpoint = "api/v1/records/bulkGet"
+            endpoint = f"{base_url_prefix}/records/bulkGet"
         else:
             # A little hacky
             record_type_str = record_type.__fields__["record_type"].default
-            endpoint = f"api/v1/records/{record_type_str}/bulkGet"
+            endpoint = f"{base_url_prefix}/records/{record_type_str}/bulkGet"
 
         max_batch_size = self.api_limits["get_records"]
         initial_batch_size = math.ceil(max_batch_size // 10)
@@ -646,9 +649,11 @@ class PortalClient(PortalClientBase):
             keep_order=True,
         ):
             if record_type is None:
-                all_records.extend(records_from_dicts(record_dicts, self))
+                all_records.extend(records_from_dicts(record_dicts, self, base_url_prefix))
             else:
-                all_records.extend([record_type(self, **r) if r is not None else None for r in record_dicts])
+                all_records.extend(
+                    [record_type(self, base_url_prefix, **r) if r is not None else None for r in record_dicts]
+                )
 
         # Just to really make sure the process_chunk_iterable code is correct
         assert all((x is None or x.id == rid) for x, rid in zip(all_records, record_ids))
@@ -687,10 +692,11 @@ class PortalClient(PortalClientBase):
             that was not found.
         """
 
-        return self._get_records_by_type(None, record_ids, missing_ok, include)
+        return self._get_records_by_type("api/v1", None, record_ids, missing_ok, include)
 
     def _get_records_by_type(
         self,
+        base_url_prefix: str,
         record_type: Optional[Type[_T]],
         record_ids: Union[int, Sequence[int]],
         missing_ok: bool = False,
@@ -709,6 +715,8 @@ class PortalClient(PortalClientBase):
 
         Parameters
         ----------
+        base_url_prefix
+            Prefix of all the URLs for fetching records
         record_type
             The type of record to fetch
         record_ids
@@ -730,7 +738,7 @@ class PortalClient(PortalClientBase):
         is_single = not isinstance(record_ids, Sequence)
 
         record_ids = make_list(record_ids)
-        all_records = self._fetch_records(record_type, record_ids, missing_ok, include)
+        all_records = self._fetch_records(base_url_prefix, record_type, record_ids, missing_ok, include)
 
         # We always force fetch here. Given that this record is not part of the cache, it shouldn't be using any
         # cache anyway. But the semantics of this function is that is always fetches everything
@@ -1136,7 +1144,7 @@ class PortalClient(PortalClientBase):
             that was not found.
         """
 
-        return self._get_records_by_type(SinglepointRecord, record_ids, missing_ok, include)
+        return self._get_records_by_type("api/v1", SinglepointRecord, record_ids, missing_ok, include)
 
     def query_singlepoints(
         self,
@@ -1356,7 +1364,7 @@ class PortalClient(PortalClientBase):
             that was not found.
         """
 
-        return self._get_records_by_type(OptimizationRecord, record_ids, missing_ok, include)
+        return self._get_records_by_type("api/v1", OptimizationRecord, record_ids, missing_ok, include)
 
     def query_optimizations(
         self,
@@ -1569,7 +1577,7 @@ class PortalClient(PortalClientBase):
             that was not found.
         """
 
-        return self._get_records_by_type(TorsiondriveRecord, record_ids, missing_ok, include)
+        return self._get_records_by_type("api/v1", TorsiondriveRecord, record_ids, missing_ok, include)
 
     def query_torsiondrives(
         self,
@@ -1783,7 +1791,7 @@ class PortalClient(PortalClientBase):
             that was not found.
         """
 
-        return self._get_records_by_type(GridoptimizationRecord, record_ids, missing_ok, include)
+        return self._get_records_by_type("api/v1", GridoptimizationRecord, record_ids, missing_ok, include)
 
     def query_gridoptimizations(
         self,
@@ -2004,7 +2012,7 @@ class PortalClient(PortalClientBase):
             that was not found.
         """
 
-        return self._get_records_by_type(ReactionRecord, record_ids, missing_ok, include)
+        return self._get_records_by_type("api/v1", ReactionRecord, record_ids, missing_ok, include)
 
     def query_reactions(
         self,
@@ -2218,7 +2226,7 @@ class PortalClient(PortalClientBase):
             that was not found.
         """
 
-        return self._get_records_by_type(ManybodyRecord, record_ids, missing_ok, include)
+        return self._get_records_by_type("api/v1", ManybodyRecord, record_ids, missing_ok, include)
 
     def query_manybodys(
         self,
@@ -2433,7 +2441,7 @@ class PortalClient(PortalClientBase):
             that was not found.
         """
 
-        return self._get_records_by_type(NEBRecord, record_ids, missing_ok, include)
+        return self._get_records_by_type("api/v1", NEBRecord, record_ids, missing_ok, include)
 
     def query_nebs(
         self,
@@ -2569,7 +2577,7 @@ class PortalClient(PortalClientBase):
 
         for m in managers:
             if m is not None:
-                m.propagate_client(self)
+                m.propagate_client(self, "api/v1")
 
         if is_single:
             return managers[0]
@@ -2761,7 +2769,7 @@ class PortalClient(PortalClientBase):
         """
 
         ij_dict = self.make_request("get", f"api/v1/internal_jobs/{job_id}", Dict[str, Any])
-        return InternalJob(client=self, **ij_dict)
+        return InternalJob(client=self, refresh_url=f"api/v1/internal_jobs/{job_id}", **ij_dict)
 
     def query_internal_jobs(
         self,
