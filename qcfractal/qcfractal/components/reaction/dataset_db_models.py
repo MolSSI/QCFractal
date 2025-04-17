@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import Column, Integer, ForeignKey, String, ForeignKeyConstraint, Index
+from sqlalchemy import Column, Integer, ForeignKey, String, ForeignKeyConstraint, Index, select
 from sqlalchemy.dialects.postgresql import DOUBLE_PRECISION, JSONB
 from sqlalchemy.orm import relationship
 
@@ -115,3 +115,15 @@ class ReactionDatasetORM(BaseDatasetORM):
     __mapper_args__ = {
         "polymorphic_identity": "reaction",
     }
+
+
+dataset_records_select = [
+    select(
+        BaseDatasetORM.id.label("dataset_id"),
+        ReactionDatasetRecordItemORM.entry_name.label("entry_name"),
+        ReactionDatasetRecordItemORM.specification_name.label("specification_name"),
+        ReactionDatasetRecordItemORM.record_id.label("record_id"),
+    )
+    .join(ReactionDatasetRecordItemORM, BaseDatasetORM.id == ReactionDatasetRecordItemORM.dataset_id)
+    .where(BaseDatasetORM.dataset_type == "reaction")
+]

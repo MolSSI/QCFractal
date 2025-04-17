@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import Column, String, Integer, ForeignKey, CheckConstraint, Index, UniqueConstraint, event, DDL
+from sqlalchemy import Column, String, Integer, ForeignKey, CheckConstraint, Index, UniqueConstraint, event, DDL, select
 from sqlalchemy.dialects.postgresql import DOUBLE_PRECISION, JSONB
 from sqlalchemy.orm import relationship
 
@@ -8,6 +8,7 @@ from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.optimization.record_db_models import (
     OptimizationRecordORM,
     OptimizationSpecificationORM,
+    OptimizationTrajectoryORM,
 )
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.singlepoint.record_db_models import SinglepointRecordORM, QCSpecificationORM
@@ -139,3 +140,21 @@ _del_baserecord_trigger = DDL(
 )
 
 event.listen(ReactionRecordORM.__table__, "after_create", _del_baserecord_trigger.execute_if(dialect=("postgresql")))
+
+
+record_direct_children_select = [
+    select(BaseRecordORM.id.label("parent_id"), ReactionComponentORM.singlepoint_id.label("child_id"))
+    .join(ReactionComponentORM, BaseRecordORM.id == ReactionComponentORM.reaction_id)
+    .where(BaseRecordORM.record_type == "reaction", ReactionComponentORM.singlepoint_id.isnot(None)),
+    select(BaseRecordORM.id.label("parent_id"), ReactionComponentORM.optimization_id.label("child_id"))
+    .join(ReactionComponentORM, BaseRecordORM.id == ReactionComponentORM.reaction_id)
+    .where(BaseRecordORM.record_type == "reaction", ReactionComponentORM.optimization_id.isnot(None)),
+]
+
+record_children_select = [
+    *record_direct_children_select,
+    select(BaseRecordORM.id.label("parent_id"), OptimizationTrajectoryORM.singlepoint_id.label("child_id"))
+    .join(ReactionComponentORM, BaseRecordORM.id == ReactionComponentORM.reaction_id)
+    .join(OptimizationTrajectoryORM, OptimizationTrajectoryORM.optimization_id == ReactionComponentORM.optimization_id)
+    .where(BaseRecordORM.record_type == "reaction", ReactionComponentORM.optimization_id.isnot(None)),
+]

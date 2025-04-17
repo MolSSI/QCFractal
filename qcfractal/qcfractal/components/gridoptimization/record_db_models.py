@@ -20,6 +20,7 @@ from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.optimization.record_db_models import (
     OptimizationSpecificationORM,
     OptimizationRecordORM,
+    OptimizationTrajectoryORM,
 )
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.db_socket import BaseORM
@@ -137,3 +138,20 @@ _del_baserecord_trigger = DDL(
 event.listen(
     GridoptimizationRecordORM.__table__, "after_create", _del_baserecord_trigger.execute_if(dialect=("postgresql"))
 )
+
+record_direct_children_select = [
+    select(BaseRecordORM.id.label("parent_id"), GridoptimizationOptimizationORM.optimization_id.label("child_id"))
+    .join(GridoptimizationOptimizationORM, BaseRecordORM.id == GridoptimizationOptimizationORM.gridoptimization_id)
+    .where(BaseRecordORM.record_type == "gridoptimization"),
+]
+
+record_children_select = [
+    *record_direct_children_select,
+    select(BaseRecordORM.id.label("parent_id"), OptimizationTrajectoryORM.singlepoint_id.label("child_id"))
+    .join(GridoptimizationOptimizationORM, BaseRecordORM.id == GridoptimizationOptimizationORM.gridoptimization_id)
+    .join(
+        OptimizationTrajectoryORM,
+        OptimizationTrajectoryORM.optimization_id == GridoptimizationOptimizationORM.optimization_id,
+    )
+    .where(BaseRecordORM.record_type == "gridoptimization"),
+]

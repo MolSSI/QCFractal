@@ -50,20 +50,6 @@ class ReactionRecordSocket(BaseRecordSocket):
         BaseRecordSocket.__init__(self, root_socket)
         self._logger = logging.getLogger(__name__)
 
-    @staticmethod
-    def get_children_select() -> List[Any]:
-        stmt = [
-            select(
-                ReactionComponentORM.reaction_id.label("parent_id"),
-                ReactionComponentORM.singlepoint_id.label("child_id"),
-            ),
-            select(
-                ReactionComponentORM.reaction_id.label("parent_id"),
-                ReactionComponentORM.optimization_id.label("child_id"),
-            ),
-        ]
-        return stmt
-
     def initialize_service(self, session: Session, service_orm: ServiceQueueORM) -> None:
         rxn_orm: ReactionRecordORM = service_orm.record
 

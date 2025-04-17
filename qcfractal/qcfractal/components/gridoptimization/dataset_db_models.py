@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import Column, Integer, ForeignKey, String, ForeignKeyConstraint, Index
+from sqlalchemy import Column, Integer, ForeignKey, String, ForeignKeyConstraint, Index, select
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
@@ -93,3 +93,15 @@ class GridoptimizationDatasetORM(BaseDatasetORM):
     __mapper_args__ = {
         "polymorphic_identity": "gridoptimization",
     }
+
+
+dataset_records_select = [
+    select(
+        BaseDatasetORM.id.label("dataset_id"),
+        GridoptimizationDatasetRecordItemORM.entry_name.label("entry_name"),
+        GridoptimizationDatasetRecordItemORM.specification_name.label("specification_name"),
+        GridoptimizationDatasetRecordItemORM.record_id.label("record_id"),
+    )
+    .join(GridoptimizationDatasetRecordItemORM, BaseDatasetORM.id == GridoptimizationDatasetRecordItemORM.dataset_id)
+    .where(BaseDatasetORM.dataset_type == "gridoptimization")
+]

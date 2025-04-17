@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import JSON, Column, Integer, ForeignKey, String, ForeignKeyConstraint, Index
+from sqlalchemy import JSON, Column, Integer, ForeignKey, String, ForeignKeyConstraint, Index, select
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
@@ -97,3 +97,15 @@ class SinglepointDatasetORM(BaseDatasetORM):
     __mapper_args__ = {
         "polymorphic_identity": "singlepoint",
     }
+
+
+dataset_records_select = [
+    select(
+        BaseDatasetORM.id.label("dataset_id"),
+        SinglepointDatasetRecordItemORM.entry_name.label("entry_name"),
+        SinglepointDatasetRecordItemORM.specification_name.label("specification_name"),
+        SinglepointDatasetRecordItemORM.record_id.label("record_id"),
+    )
+    .join(SinglepointDatasetRecordItemORM, BaseDatasetORM.id == SinglepointDatasetRecordItemORM.dataset_id)
+    .where(BaseDatasetORM.dataset_type == "singlepoint")
+]

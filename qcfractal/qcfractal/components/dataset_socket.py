@@ -5,7 +5,7 @@ import os
 import tempfile
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select, delete, func, union, text, and_, literal
+from sqlalchemy import select, delete, func, text, and_, literal
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only, lazyload, joinedload, noload, with_polymorphic
@@ -17,6 +17,7 @@ from qcfractal.components.dataset_db_models import (
     DatasetAttachmentORM,
     DatasetInternalJobORM,
 )
+from qcfractal.components.dataset_db_views import DatasetDirectRecordsView
 from qcfractal.components.dataset_processing import create_view_file
 from qcfractal.components.internal_jobs.db_models import InternalJobORM
 from qcfractal.components.record_db_models import BaseRecordORM
@@ -82,37 +83,6 @@ class BaseDatasetSocket:
 
     def _create_entries(self, session, dataset_id, new_entries) -> Sequence[BaseORM]:
         raise NotImplementedError("_create_entries must be overridden by the derived class")
-
-    def get_records_select(self):
-        """
-        Create a statement that selects the dataset id, entry_name, specification_name, and record_id
-        from a dataset (with appropriate labels).
-        """
-
-        # Use the common stuff here, but this function can be overridden
-
-        stmt = select(
-            self.record_item_orm.dataset_id.label("dataset_id"),
-            self.record_item_orm.entry_name.label("entry_name"),
-            self.record_item_orm.specification_name.label("specification_name"),
-            self.record_item_orm.record_id.label("record_id"),
-        )
-
-        return [stmt]
-
-    def get_record_counts_select(self):
-        """
-        Create a statement that selects the dataset id, entry_name, specification_name, and record_id
-        from a dataset (with appropriate labels).
-        """
-
-        # Use the common stuff here, but this function can be overridden
-
-        stmt = select(self.record_item_orm.dataset_id.label("dataset_id"), func.count().label("record_count")).group_by(
-            self.record_item_orm.dataset_id
-        )
-
-        return [stmt]
 
     def _submit(
         self,
@@ -1923,23 +1893,6 @@ class DatasetSocket:
             self.neb.dataset_type: self.neb,
         }
 
-        # Get the SQL 'select' statements for records belonging to a dataset
-        # and union them into a CTE
-        record_selects = []
-        for h in self._handler_map.values():
-            sel = h.get_records_select()
-            record_selects.extend(sel)
-
-        self._record_cte = union(*record_selects).cte()
-
-        # Same for record counts
-        counts_selects = []
-        for h in self._handler_map.values():
-            sel = h.get_record_counts_select()
-            counts_selects.extend(sel)
-
-        self._record_count_cte = union(*counts_selects).cte()
-
     def get_socket(self, dataset_type: str) -> BaseDatasetSocket:
         """
         Get the socket for a specific kind of dataset type
@@ -2088,6 +2041,15 @@ class DatasetSocket:
         Get a list of datasets in the database
         """
 
+        count_cte = (
+            select(
+                DatasetDirectRecordsView.c.dataset_id,
+                func.count(DatasetDirectRecordsView.c.record_id).label("record_count"),
+            )
+            .group_by(DatasetDirectRecordsView.c.dataset_id)
+            .cte()
+        )
+
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(
                 BaseDatasetORM.id,
@@ -2095,11 +2057,9 @@ class DatasetSocket:
                 BaseDatasetORM.name,
                 BaseDatasetORM.tagline,
                 BaseDatasetORM.description,
-                func.coalesce(self._record_count_cte.c.record_count, 0),
+                func.coalesce(count_cte.c.record_count, 0),
             )
-            stmt = stmt.join(
-                self._record_count_cte, self._record_count_cte.c.dataset_id == BaseDatasetORM.id, isouter=True
-            )
+            stmt = stmt.join(count_cte, count_cte.c.dataset_id == BaseDatasetORM.id, isouter=True)
             stmt = stmt.order_by(BaseDatasetORM.id.asc())
             r = session.execute(stmt).all()
 
@@ -2156,15 +2116,15 @@ class DatasetSocket:
         """
 
         stmt = select(
-            self._record_cte.c.record_id,
+            DatasetDirectRecordsView.c.record_id,
             BaseDatasetORM.id,
             BaseDatasetORM.dataset_type,
             BaseDatasetORM.name,
-            self._record_cte.c.entry_name,
-            self._record_cte.c.specification_name,
+            DatasetDirectRecordsView.c.entry_name,
+            DatasetDirectRecordsView.c.specification_name,
         )
-        stmt = stmt.join(self._record_cte, BaseDatasetORM.id == self._record_cte.c.dataset_id)
-        stmt = stmt.where(self._record_cte.c.record_id.in_(record_id))
+        stmt = stmt.join(DatasetDirectRecordsView, BaseDatasetORM.id == DatasetDirectRecordsView.c.dataset_id)
+        stmt = stmt.where(DatasetDirectRecordsView.c.record_id.in_(record_id))
 
         if dataset_type is not None:
             stmt = stmt.where(BaseDatasetORM.dataset_type == dataset_type)

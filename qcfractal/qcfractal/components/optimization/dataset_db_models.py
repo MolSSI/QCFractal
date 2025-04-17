@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import Column, Integer, ForeignKey, String, ForeignKeyConstraint, Index
+from sqlalchemy import Column, Integer, ForeignKey, String, ForeignKeyConstraint, Index, select
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
@@ -92,3 +92,15 @@ class OptimizationDatasetORM(BaseDatasetORM):
     __mapper_args__ = {
         "polymorphic_identity": "optimization",
     }
+
+
+dataset_records_select = [
+    select(
+        BaseDatasetORM.id.label("dataset_id"),
+        OptimizationDatasetRecordItemORM.entry_name.label("entry_name"),
+        OptimizationDatasetRecordItemORM.specification_name.label("specification_name"),
+        OptimizationDatasetRecordItemORM.record_id.label("record_id"),
+    )
+    .join(OptimizationDatasetRecordItemORM, BaseDatasetORM.id == OptimizationDatasetRecordItemORM.dataset_id)
+    .where(BaseDatasetORM.dataset_type == "optimization")
+]

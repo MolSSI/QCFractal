@@ -163,14 +163,6 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         BaseRecordSocket.__init__(self, root_socket)
         self._logger = logging.getLogger(__name__)
 
-    @staticmethod
-    def get_children_select() -> List[Any]:
-        stmt = select(
-            GridoptimizationOptimizationORM.gridoptimization_id.label("parent_id"),
-            GridoptimizationOptimizationORM.optimization_id.label("child_id"),
-        )
-        return [stmt]
-
     def initialize_service(self, session: Session, service_orm: ServiceQueueORM) -> None:
         go_orm: GridoptimizationRecordORM = service_orm.record
         specification = GridoptimizationSpecification(**go_orm.specification.model_dict())

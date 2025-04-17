@@ -98,20 +98,6 @@ class NEBRecordSocket(BaseRecordSocket):
     def available(self) -> bool:
         return _geo_spec is not None
 
-    @staticmethod
-    def get_children_select() -> List[Any]:
-        stmt = [
-            select(
-                NEBSinglepointsORM.neb_id.label("parent_id"),
-                NEBSinglepointsORM.singlepoint_id.label("child_id"),
-            ),
-            select(
-                NEBOptimizationsORM.neb_id.label("parent_id"),
-                NEBOptimizationsORM.optimization_id.label("child_id"),
-            ),
-        ]
-        return stmt
-
     def initialize_service(
         self,
         session: Session,
