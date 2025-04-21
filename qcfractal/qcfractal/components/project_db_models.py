@@ -112,7 +112,13 @@ class ProjectDatasetORM(BaseORM):
     __tablename__ = "project_dataset"
 
     project_id = Column(Integer, ForeignKey("project.id", ondelete="cascade"), primary_key=True)
-    dataset_id = Column(Integer, ForeignKey("base_dataset.id"), primary_key=True)
+    dataset_id = Column(Integer, ForeignKey("base_dataset.id"), nullable=False)
+
+    name = Column(String, nullable=False)
+    lname = Column(String(100), Computed("LOWER(name)"), primary_key=True)
+    description = Column(String, nullable=False)
+    tagline = Column(String, nullable=False)
+    tags = Column(JSON, nullable=False)
 
     __table_args__ = (Index("ix_project_dataset_dataset_id", "dataset_id"),)
 

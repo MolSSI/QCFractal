@@ -248,7 +248,10 @@ class Project(BaseModel):
             record_id = self._lookup_record_id(record_id)
 
         r_dict = self._client.make_request("get", f"api/v1/projects/{self.id}/records/{record_id}", Dict[str, Any])
-        return record_from_dict(r_dict, client=self._client)
+
+        # set prefix to be the main prefix of the server. We will fetch all the records/datasets
+        # directly via the regular (non-project) endpoints
+        return record_from_dict(r_dict, client=self._client, base_url_prefix="api/v1")
 
     #############################
     # Datasets
@@ -335,4 +338,7 @@ class Project(BaseModel):
             dataset_id = self._lookup_dataset_id(dataset_id)
 
         ds_dict = self._client.make_request("get", f"api/v1/projects/{self.id}/datasets/{dataset_id}", Dict[str, Any])
-        return dataset_from_dict(ds_dict, client=self._client)
+
+        # set prefix to be the main prefix of the server. We will fetch all the records/datasets
+        # directly via the regular (non-project) endpoints
+        return dataset_from_dict(ds_dict, client=self._client, base_url_prefix="api/v1")
