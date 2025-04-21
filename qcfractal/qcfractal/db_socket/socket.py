@@ -110,9 +110,9 @@ class SQLAlchemySocket:
         # Then the rest
         self.serverinfo = ServerInfoSocket(self)
         self.molecules = MoleculeSocket(self)
-        self.datasets = DatasetSocket(self)
-        self.projects = ProjectSocket(self)
         self.records = RecordSocket(self)
+        self.datasets = DatasetSocket(self)
+        self.projects = ProjectSocket(self)  # Must be done after dataset and record sockets
         self.external_files = ExternalFileSocket(self)
         self.tasks = TaskSocket(self)
         self.services = ServiceSocket(self)
