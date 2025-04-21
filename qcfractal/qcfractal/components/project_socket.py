@@ -4,6 +4,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select, delete, func
+from sqlalchemy.dialects.postgresql import insert
 
 from qcfractal.components.dataset_db_models import BaseDatasetORM
 from qcfractal.components.internal_jobs.db_models import InternalJobORM
@@ -208,7 +209,7 @@ class ProjectSocket:
         project_id: int,
         delete_records: bool,
         delete_datasets: bool,
-        delete_datasets_records: bool,
+        delete_dataset_records: bool,
         *,
         session: Optional[Session] = None,
     ):
@@ -234,7 +235,7 @@ class ProjectSocket:
                     project_id,
                     ds_ids,
                     delete_datasets=True,
-                    delete_datasets_records=delete_datasets_records,
+                    delete_dataset_records=delete_dataset_records,
                     session=session,
                 )
 
@@ -351,7 +352,7 @@ class ProjectSocket:
             if self.dataset_name_exists(project_id, dataset_name, session=session):
                 raise ValueError(f"Dataset '{dataset_name}' already exists in project {project_id}")
 
-            # Note - name, description, tagline, and tags gets duplicated in places - in the dataet, and in the
+            # Note - name, description, tagline, and tags gets duplicated in places - in the dataset, and in the
             # link between the project and the dataset
             # This should be fixed at some point
             ds_id = ds_socket.add(
@@ -411,12 +412,47 @@ class ProjectSocket:
 
             return ds_dict
 
+    def link_dataset(
+        self,
+        project_id: int,
+        dataset_id: int,
+        name: Optional[str],
+        description: Optional[str],
+        tagline: Optional[str],
+        tags: Optional[List[str]],
+        *,
+        session: Optional[Session] = None,
+    ):
+        with self.root_socket.optional_session(session, True) as session:
+            ds = self.root_socket.datasets.get(
+                dataset_id, include={"name", "description", "tagline", "tags"}, missing_ok=False, session=session
+            )
+
+            stmt = (
+                insert(ProjectDatasetORM)
+                .values(
+                    project_id=project_id,
+                    dataset_id=dataset_id,
+                    name=ds["name"] if name is None else name,
+                    description=ds["description"] if description is None else description,
+                    tagline=ds["tagline"] if tagline is None else tagline,
+                    tags=ds["tags"] if tags is None else tags,
+                )
+                .on_conflict_do_nothing()
+                .returning(ProjectDatasetORM.dataset_id)
+            )
+
+            r = session.execute(stmt).scalar_one_or_none()
+
+            if r is None:
+                raise ValueError(f"Dataset {dataset_id} already linked to project {project_id}")
+
     def unlink_datasets(
         self,
         project_id: int,
         dataset_ids: Iterable[int],
         delete_datasets: bool,
-        delete_datasets_records: bool,
+        delete_dataset_records: bool,
         *,
         session: Optional[Session] = None,
     ):
@@ -432,7 +468,7 @@ class ProjectSocket:
             # Use ds_ids so we only delete datasets that were removed from this dataset
             if delete_datasets:
                 for ds_id in ds_ids:
-                    self.root_socket.datasets.delete(ds_id, delete_datasets_records, session=session)
+                    self.root_socket.datasets.delete(ds_id, delete_dataset_records, session=session)
 
     #################################
     # Records
@@ -481,9 +517,9 @@ class ProjectSocket:
     def add_record(
         self,
         project_id: int,
-        record_name: str,
-        record_description: str,
-        record_tags: List[str],
+        name: str,
+        description: str,
+        tags: List[str],
         record_input: AllInputTypes,
         compute_tag: str,
         compute_priority: PriorityEnum,
@@ -494,8 +530,8 @@ class ProjectSocket:
     ) -> Tuple[InsertCountsMetadata, int]:
 
         with self.root_socket.optional_session(session) as session:
-            if self.record_name_exists(project_id, record_name, session=session):
-                raise ValueError(f"Record '{record_name}' already exists in project {project_id}")
+            if self.record_name_exists(project_id, name, session=session):
+                raise ValueError(f"Record '{name}' already exists in project {project_id}")
 
             meta, record_id = self.root_socket.records.add_from_input(
                 record_input,
@@ -510,9 +546,9 @@ class ProjectSocket:
                 proj_rec_orm = ProjectRecordORM(
                     project_id=project_id,
                     record_id=record_id,
-                    name=record_name,
-                    description=record_description,
-                    tags=record_tags,
+                    name=name,
+                    description=description,
+                    tags=tags,
                 )
                 session.add(proj_rec_orm)
 
@@ -539,6 +575,35 @@ class ProjectSocket:
             rec_dict = self.root_socket.records.get([record_id], missing_ok=False, session=session)[0]
             rec_dict.update(name=project_rec.name, description=project_rec.description, tags=project_rec.tags)
             return rec_dict
+
+    def link_record(
+        self,
+        project_id: int,
+        record_id: int,
+        name: str,
+        description: str,
+        tags: List[str],
+        *,
+        session: Optional[Session] = None,
+    ):
+        with self.root_socket.optional_session(session, True) as session:
+            stmt = (
+                insert(ProjectRecordORM)
+                .values(
+                    project_id=project_id,
+                    record_id=record_id,
+                    name=name,
+                    description=description,
+                    tags=tags,
+                )
+                .on_conflict_do_nothing()
+                .returning(ProjectRecordORM.record_id)
+            )
+
+            r = session.execute(stmt).scalar_one_or_none()
+
+            if r is None:
+                raise ValueError(f"Record {record_id} already linked to project {project_id}")
 
     def unlink_records(
         self, project_id: int, record_ids: Iterable[int], delete_records: bool, *, session: Optional[Session] = None
