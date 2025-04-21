@@ -300,12 +300,8 @@ class ProjectSocket:
 
     def get_dataset_metadata(self, project_id: int, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
         stmt = select(
-            BaseDatasetORM.id,
+            ProjectDatasetORM,
             BaseDatasetORM.dataset_type,
-            BaseDatasetORM.name,
-            BaseDatasetORM.description,
-            BaseDatasetORM.tagline,
-            BaseDatasetORM.tags,
         )
         stmt = stmt.join(ProjectDatasetORM, BaseDatasetORM.id == ProjectDatasetORM.dataset_id)
         stmt = stmt.where(ProjectDatasetORM.project_id == project_id)
@@ -314,14 +310,14 @@ class ProjectSocket:
             meta_info = session.execute(stmt).all()
             return [
                 {
-                    "dataset_id": d[0],
-                    "dataset_type": d[1],
-                    "name": d[2],
-                    "description": d[3],
-                    "tagline": d[4],
-                    "tags": d[5],
+                    "dataset_id": pd.dataset_id,
+                    "dataset_type": ds_type,
+                    "name": pd.name,
+                    "description": pd.description,
+                    "tagline": pd.tagline,
+                    "tags": pd.tags,
                 }
-                for d in meta_info
+                for pd, ds_type in meta_info
             ]
 
     def get_dataset_ids(self, project_id: int, *, session: Optional[Session] = None) -> List[int]:
@@ -355,6 +351,9 @@ class ProjectSocket:
             if self.dataset_name_exists(project_id, dataset_name, session=session):
                 raise ValueError(f"Dataset '{dataset_name}' already exists in project {project_id}")
 
+            # Note - name, description, tagline, and tags gets duplicated in places - in the dataet, and in the
+            # link between the project and the dataset
+            # This should be fixed at some point
             ds_id = ds_socket.add(
                 name=dataset_name,
                 description=description,
@@ -369,7 +368,14 @@ class ProjectSocket:
                 session=session,
             )
 
-            proj_ds_orm = ProjectDatasetORM(project_id=project_id, dataset_id=ds_id)
+            proj_ds_orm = ProjectDatasetORM(
+                project_id=project_id,
+                dataset_id=ds_id,
+                name=dataset_name,
+                description=description,
+                tagline=tagline,
+                tags=tags,
+            )
             session.add(proj_ds_orm)
             return ds_id
 
@@ -381,9 +387,29 @@ class ProjectSocket:
         session: Optional[Session] = None,
     ) -> Dict[str, Any]:
 
+        stmt = select(ProjectDatasetORM, BaseDatasetORM)
+        stmt = stmt.join(ProjectDatasetORM, BaseDatasetORM.id == ProjectDatasetORM.dataset_id)
+        stmt = stmt.where(ProjectDatasetORM.project_id == project_id)
+        stmt = stmt.where(ProjectDatasetORM.dataset_id == dataset_id)
+
         with self.root_socket.optional_session(session, True) as session:
-            self.assert_dataset_belongs(project_id, dataset_id, session=session)
-            return self.root_socket.datasets.get(dataset_id, missing_ok=False, session=session)
+            ds_info = session.execute(stmt).one_or_none()
+
+            if ds_info is None:
+                raise MissingDataError(f"Dataset {dataset_id} not found in project {project_id}")
+
+            # Use the name, description, etc from the project, not from the base dataset
+            project_ds, base_ds = ds_info
+
+            ds_dict = base_ds.model_dict()
+            ds_dict.update(
+                name=project_ds.name,
+                description=project_ds.description,
+                tagline=project_ds.tagline,
+                tags=project_ds.tags,
+            )
+
+            return ds_dict
 
     def unlink_datasets(
         self,
@@ -440,7 +466,10 @@ class ProjectSocket:
 
         with self.root_socket.optional_session(session, True) as session:
             meta_info = session.execute(stmt).all()
-            return [{"record_type": m[1], "status": m[2], **m[0].model_dict()} for m in meta_info]
+            return [
+                {"record_type": record_type, "status": status, **pr.model_dict()}
+                for pr, record_type, status in meta_info
+            ]
 
     def get_record_ids(self, project_id: int, *, session: Optional[Session] = None) -> List[int]:
         stmt = select(ProjectRecordORM.record_id).where(ProjectRecordORM.project_id == project_id)
@@ -497,9 +526,19 @@ class ProjectSocket:
         session: Optional[Session] = None,
     ) -> Dict[str, Any]:
 
+        stmt = select(ProjectRecordORM)
+        stmt = stmt.where(ProjectRecordORM.project_id == project_id)
+        stmt = stmt.where(ProjectRecordORM.record_id == record_id)
+
         with self.root_socket.optional_session(session, True) as session:
-            self.assert_record_belongs(project_id, record_id, session=session)
-            return self.root_socket.records.get([record_id], missing_ok=False, session=session)[0]
+            project_rec = session.execute(stmt).scalar_one_or_none()
+
+            if project_rec is None:
+                raise MissingDataError(f"Record {record_id} not found in project {project_id}")
+
+            rec_dict = self.root_socket.records.get([record_id], missing_ok=False, session=session)[0]
+            rec_dict.update(name=project_rec.name, description=project_rec.description, tags=project_rec.tags)
+            return rec_dict
 
     def unlink_records(
         self, project_id: int, record_ids: Iterable[int], delete_records: bool, *, session: Optional[Session] = None

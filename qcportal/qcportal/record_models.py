@@ -393,6 +393,10 @@ class BaseRecord(BaseModel):
     record_type: str
     is_service: bool
 
+    name: Optional[str] = None
+    description: Optional[str] = None
+    tags: Optional[List[str]] = None
+
     properties: Optional[Dict[str, Any]]
     extras: Dict[str, Any] = Field({})
 
