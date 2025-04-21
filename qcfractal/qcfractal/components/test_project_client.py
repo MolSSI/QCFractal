@@ -89,6 +89,86 @@ def test_project_client_add_get_records_datasets(snowflake_client: PortalClient)
     assert plist[0]["dataset_count"] == 2
 
 
+def test_project_client_link_records_datasets(snowflake_client: PortalClient):
+
+    # Add these directly to the server (not part of the project)
+    meta, rids = snowflake_client.add_singlepoints(
+        molecules=[test_inp_1.molecule],
+        program=test_inp_1.specification.program,
+        driver=test_inp_1.specification.driver,
+        method=test_inp_1.specification.method,
+        basis=test_inp_1.specification.basis,
+        keywords=test_inp_1.specification.keywords,
+        compute_tag="test_compute_tag",
+        compute_priority=PriorityEnum.low,
+    )
+
+    assert meta.success
+
+    ds1 = snowflake_client.add_dataset(
+        "singlepoint", "test singlepoint dataset", description="description", tagline="tagline", tags=["tag2"]
+    )
+    ds2 = snowflake_client.add_dataset(
+        "optimization", "test optimization dataset", description="description 2", tagline="tagline 2", tags=["tag4"]
+    )
+
+    proj = snowflake_client.add_project(
+        "test project",
+        default_compute_tag="test_compute_tag",
+        default_compute_priority=PriorityEnum.low,
+    )
+
+    linked_ds1 = proj.link_dataset(ds1.id)
+
+    # Changing the name
+    linked_ds2 = proj.link_dataset(
+        ds2.id, name="new name", description="new description", tagline="new tagline", tags=["tag3"]
+    )
+
+    linked_r = proj.link_record(rids[0], "record_name", "description", tags=["tag1"])
+
+    # Refetch to make sure it's changed on the server
+    linked_ds1 = proj.get_dataset("test singlepoint dataset")
+    linked_ds2 = proj.get_dataset("new name")
+    linked_r = proj.get_record("record_name")
+
+    assert linked_r.id == rids[0]
+    assert linked_r.name == "record_name"
+    assert linked_r.description == "description"
+    assert linked_r.tags == ["tag1"]
+
+    assert linked_ds1.id == ds1.id
+    assert linked_ds1.name == "test singlepoint dataset"
+    assert linked_ds1.description == "description"
+    assert linked_ds1.tagline == "tagline"
+    assert linked_ds1.tags == ["tag2"]
+
+    assert linked_ds2.id == ds2.id
+    assert linked_ds2.name == "new name"
+    assert linked_ds2.description == "new description"
+    assert linked_ds2.tagline == "new tagline"
+    assert linked_ds2.tags == ["tag3"]
+
+    # Can't link again
+    with pytest.raises(PortalRequestError, match="Dataset.*already linked"):
+        proj.link_dataset(ds1.id)
+
+    with pytest.raises(PortalRequestError, match="Record.*already linked"):
+        proj.link_record(rids[0], "record_name", "description", tags=["tag1"])
+
+    # Unlink stuff
+    proj.unlink_datasets("test singlepoint dataset")
+    proj.unlink_records("record_name")
+    proj.unlink_datasets("new name")
+
+    assert len(proj.dataset_metadata) == 0
+    assert len(proj.record_metadata) == 0
+    proj.fetch_dataset_metadata()
+    proj.fetch_record_metadata()
+    assert len(proj.dataset_metadata) == 0
+    assert len(proj.record_metadata) == 0
+
+
 def test_project_client_delete(snowflake_client: PortalClient):
     proj = snowflake_client.add_project("test project")
 

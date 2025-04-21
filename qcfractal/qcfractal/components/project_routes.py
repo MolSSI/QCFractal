@@ -10,6 +10,10 @@ from qcportal.project_models import (
     ProjectDeleteParams,
     ProjectDatasetAddBody,
     ProjectRecordAddBody,
+    ProjectLinkDatasetBody,
+    ProjectUnlinkDatasetsBody,
+    ProjectLinkRecordBody,
+    ProjectUnlinkRecordsBody,
 )
 
 
@@ -40,7 +44,7 @@ def delete_project_v1(project_id: int, url_params: ProjectDeleteParams):
         project_id,
         delete_records=url_params.delete_records,
         delete_datasets=url_params.delete_datasets,
-        delete_datasets_records=url_params.delete_dataset_records,
+        delete_dataset_records=url_params.delete_dataset_records,
     )
 
 
@@ -106,6 +110,30 @@ def add_project_dataset_v1(project_id: int, body_data: ProjectDatasetAddBody):
     )
 
 
+@api_v1.route("/projects/<int:project_id>/datasets/link", methods=["POST"])
+@wrap_global_route("projects", "modify")
+def project_link_dataset_v1(project_id: int, body_data: ProjectLinkDatasetBody):
+    return storage_socket.projects.link_dataset(
+        project_id=project_id,
+        dataset_id=body_data.dataset_id,
+        name=body_data.name,
+        description=body_data.description,
+        tagline=body_data.tagline,
+        tags=body_data.tags,
+    )
+
+
+@api_v1.route("/projects/<int:project_id>/datasets/unlink", methods=["POST"])
+@wrap_global_route("projects", "modify")
+def project_unlink_datasets_v1(project_id: int, body_data: ProjectUnlinkDatasetsBody):
+    return storage_socket.projects.unlink_datasets(
+        project_id=project_id,
+        dataset_ids=body_data.dataset_ids,
+        delete_datasets=body_data.delete_datasets,
+        delete_dataset_records=body_data.delete_dataset_records,
+    )
+
+
 @api_v1.route("/projects/<int:project_id>/datasets/<int:dataset_id>", methods=["GET"])
 @wrap_global_route("projects", "read")
 def get_project_dataset_v1(project_id: int, dataset_id: int):
@@ -120,14 +148,36 @@ def get_project_dataset_v1(project_id: int, dataset_id: int):
 def add_project_record_v1(project_id: int, body_data: ProjectRecordAddBody):
     return storage_socket.projects.add_record(
         project_id,
-        record_name=body_data.name,
-        record_description=body_data.description,
-        record_tags=body_data.tags,
+        name=body_data.name,
+        description=body_data.description,
+        tags=body_data.tags,
         record_input=body_data.record_input,
         compute_tag=body_data.compute_tag,
         compute_priority=body_data.compute_priority,
         creator_user=g.username,
         find_existing=body_data.find_existing,
+    )
+
+
+@api_v1.route("/projects/<int:project_id>/records/link", methods=["POST"])
+@wrap_global_route("projects", "modify")
+def project_link_record_v1(project_id: int, body_data: ProjectLinkRecordBody):
+    return storage_socket.projects.link_record(
+        project_id=project_id,
+        record_id=body_data.record_id,
+        name=body_data.name,
+        description=body_data.description,
+        tags=body_data.tags,
+    )
+
+
+@api_v1.route("/projects/<int:project_id>/records/unlink", methods=["POST"])
+@wrap_global_route("projects", "modify")
+def project_unlink_records_v1(project_id: int, body_data: ProjectUnlinkRecordsBody):
+    return storage_socket.projects.unlink_records(
+        project_id=project_id,
+        record_ids=body_data.record_ids,
+        delete_records=body_data.delete_records,
     )
 
 
