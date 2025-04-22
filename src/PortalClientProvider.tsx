@@ -3,7 +3,7 @@ import * as qcpTypes from "./PortalTypes";
 import * as requestHelpers from "./RequestHelpers";
 import * as authHelpers from "./AuthHelpers";
 import { PortalClientContext, RequestReturnType } from "./PortalClientContext";
-import { AuthenticationError } from "./Exceptions.ts";
+import { AuthenticationError } from "./Exceptions";
 
 export function PortalClientProvider({ children }: { children: ReactNode }) {
   const [connectionState, setConnectionState] = useState<

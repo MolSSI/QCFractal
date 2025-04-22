@@ -1,5 +1,8 @@
 // src/pages/Profile.tsx
-import { usePortalClientRequest } from "../usePortalClient.ts";
+import {
+  usePortalClientRequest,
+  useCommonRequest,
+} from "../usePortalClient.ts";
 import { useEffect, useState } from "react";
 import * as qcpTypes from "../PortalTypes.ts";
 import { useParams } from "react-router-dom";
@@ -11,7 +14,7 @@ import {
   Paper,
   Typography,
   Tabs,
-  Tab
+  Tab,
 } from "@mui/material";
 import DatasetTab from "./DatasetTab.tsx";
 import RecordTab from "./RecordTab.tsx";
@@ -39,17 +42,24 @@ export default function Project() {
   const { projectId } = useParams();
 
   const { connectionState, makeRequest } = usePortalClientRequest(); // Get client instance here
+  const [error, setError] = useState<string | undefined>(undefined);
 
   //State for metadata
-  const [data, setData] = useState<qcpTypes.Project | undefined>(undefined);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | undefined>(undefined);
-  const [projectData, setProjectData] = useState<any | undefined>(undefined);  
-  // State for dataset metadata
-  const [datasetMetadata, setDatasetMetadata] = useState<any[]>([]);
+  const [projectDataLoading, setProjectDataLoading] = useState(true);
+  const [projectData, setProjectData] = useState<qcpTypes.Project | undefined>(
+    undefined,
+  );
 
-  // State for record metadata
-  const [recordMetadata, setRecordMetadata] = useState<any[]>([]);
+  // dataset and record metadata
+  const [datasetMetadata, setDatasetMetadata] = useState<
+    Array<Record<string, unknown>>
+  >([]);
+  const [datasetMetadataLoading, setDatasetMetadataLoading] = useState(false);
+
+  const [recordMetadata, setRecordMetadata] = useState<
+    Array<Record<string, unknown>>
+  >([]);
+  const [recordMetadataLoading, setRecordMetadataLoading] = useState(false);
 
   // State for the Tabs
   const [tabValue, setTabValue] = useState(0);
@@ -59,81 +69,72 @@ export default function Project() {
 
   // Fetch project metadata
   useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
-      const { data, error } = await makeRequest<qcpTypes.Project>(
-        "get",
-        `api/v1/projects/${projectId}`
-      );
-      setData(data);
-      setError(error);
-      setLoading(false);
-    }
-    fetchData();
-  }, [projectId, connectionState, makeRequest]);
-
-
-// Fetch project content 
-  useEffect(() => {
-    async function fetchProjects() {
-      setLoading(true);
-      const { data, error } = await makeRequest<any[]>(
-        "get",
-        "/api/v1/projects"
-      );   
-      const selectedProject = data ? data.find((project) => project.id === Number(projectId)) : {};
-      setProjectData(selectedProject);
-      setError(error);
-      setLoading(false);
-      console.log("Project data:", selectedProject);
-    }
-    fetchProjects();
+    setProjectDataLoading(true);
+    makeRequest<qcpTypes.Project>("get", `api/v1/projects/${projectId}`)
+      .then(({ data, error }) => {
+        setProjectData(data);
+        setError(error);
+      })
+      .catch((error) => {
+        setError(error);
+      })
+      .finally(() => {
+        setProjectDataLoading(false);
+      });
   }, [projectId, connectionState, makeRequest]);
 
   // Fetch dataset metadata
   useEffect(() => {
-    async function fetchDatasetMetadata() {
-      setLoading(true);
-      const { data, error } = await makeRequest<any[]>(
-        "get",
-        `api/v1/projects/${projectId}/dataset_metadata`
-      );
-      setDatasetMetadata(data ?? []);
-      setError(error);
-      setLoading(false);
-    }
-    fetchDatasetMetadata();
+    setDatasetMetadataLoading(true);
+    makeRequest<Record<string, unknown>>(
+      "get",
+      `api/v1/projects/${projectId}/dataset_metadata`,
+    )
+      .then(({ data, error }) => {
+        setDatasetMetadata(data);
+        setError(error);
+      })
+      .catch((error) => {
+        setError(error);
+      })
+      .finally(() => {
+        setDatasetMetadataLoading(false);
+      });
   }, [projectId, connectionState, makeRequest]);
 
   // Fetch record metadata
   useEffect(() => {
-    async function fetchRecordMetadata() {
-      setLoading(true);
-      const { data, error } = await makeRequest<any[]>(
-        "get",
-        `api/v1/projects/${projectId}/record_metadata`
-      );
-      setRecordMetadata(data ?? []);
-      setError(error);
-      setLoading(false);
-    }
-    fetchRecordMetadata();
+    setRecordMetadata(true);
+    makeRequest<Record<string, unknown>>(
+      "get",
+      `api/v1/projects/${projectId}/record_metadata`,
+    )
+      .then(({ data, error }) => {
+        setRecordMetadata(data);
+        setError(error);
+      })
+      .catch((error) => {
+        setError(error);
+      })
+      .finally(() => {
+        setRecordMetadataLoading(false);
+      });
   }, [projectId, connectionState, makeRequest]);
 
   return (
     <>
-      {loading && <Typography>Loading...</Typography>}
+      {projectDataLoading && <Typography>Loading...</Typography>}
       {error && <Typography color="error">{error}</Typography>}
 
-      {data && (
+      {!projectDataLoading && (
         <Grid container spacing={2} width="100%">
           {/* Project name & tagline */}
           <Grid item xs={12}>
             <Typography variant="h4" fontWeight="bold">
-              {data.name}
+              {projectData.name}
             </Typography>
             <Typography variant="subtitle1" sx={{ color: "text.secondary" }}>
-              {data.tagline}
+              {projectData.tagline}
             </Typography>
           </Grid>
           {/* Summary stats: for example, Records, Datasets, Molecules */}
@@ -141,7 +142,7 @@ export default function Project() {
             <Paper elevation={3}>
               <Box p={2}>
                 <Typography variant="h6" fontWeight="bold">
-                  {projectData?.record_count} Records
+                  {recordMetadata.length} Records
                 </Typography>
               </Box>
             </Paper>
@@ -150,7 +151,7 @@ export default function Project() {
             <Paper elevation={3}>
               <Box p={2}>
                 <Typography variant="h6" fontWeight="bold">
-                  {projectData?.dataset_count} Datasets
+                  {datasetMetadata.length} Datasets
                 </Typography>
               </Box>
             </Paper>
@@ -159,7 +160,7 @@ export default function Project() {
             <Paper elevation={3}>
               <Box p={2}>
                 <Typography variant="h6" fontWeight="bold">
-                  {projectData?.molecule_count} Molecules
+                  0 Molecules
                 </Typography>
               </Box>
             </Paper>
@@ -187,14 +188,14 @@ export default function Project() {
                     Description
                   </Typography>
                   <Typography variant="body1" paragraph>
-                    {data.description}
+                    {projectData.description}
                   </Typography>
 
                   <Typography variant="h6" fontWeight="bold" gutterBottom>
                     Tags
                   </Typography>
                   <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                    {data.tags?.map((tag, idx) => (
+                    {projectData.tags?.map((tag, idx) => (
                       <Chip key={idx} label={tag} variant="outlined" />
                     ))}
                   </Box>
@@ -204,7 +205,7 @@ export default function Project() {
                       Owner
                     </Typography>
                     <Typography variant="body1">
-                      {data.owner_user || "N/A"}
+                      {projectData.owner_user || "N/A"}
                     </Typography>
                   </Box>
                 </Box>
@@ -230,8 +231,10 @@ export default function Project() {
                 </Tabs>
 
                 {/* Tab 1: Datasets */}
-                <TabPanel value={tabValue} index={0}>
-                  {datasetMetadata.length > 0 && (
+                {datasetMetadataLoading && "Loading..."}
+                {!datasetMetadataLoading && (
+                  <TabPanel value={tabValue} index={0}>
+                    {datasetMetadata.length > 0 && (
                       <DatasetTab
                         datasetMetadata={datasetMetadata}
                         onDelete={(id) => {
@@ -240,11 +243,14 @@ export default function Project() {
                         }}
                       />
                     )}
-                </TabPanel>
+                  </TabPanel>
+                )}
 
                 {/* Tab 2: Records */}
-                <TabPanel value={tabValue} index={1}>
-                  {recordMetadata.length > 0 && (
+                {recordMetadataLoading && "Loading..."}
+                {!recordMetadataLoading && (
+                  <TabPanel value={tabValue} index={1}>
+                    {recordMetadata.length > 0 && (
                       <RecordTab
                         recordMetadata={recordMetadata}
                         onDelete={(id) => {
@@ -253,7 +259,8 @@ export default function Project() {
                         }}
                       />
                     )}
-                </TabPanel>
+                  </TabPanel>
+                )}
 
                 {/* Tab 3: Molecules - placeholder content */}
                 <TabPanel value={tabValue} index={2}>
