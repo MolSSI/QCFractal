@@ -141,7 +141,7 @@ export default function Project() {
             <Paper elevation={3}>
               <Box p={2}>
                 <Typography variant="h6" fontWeight="bold">
-                  {projectData.record_count} Records
+                  {projectData?.record_count} Records
                 </Typography>
               </Box>
             </Paper>
@@ -150,7 +150,7 @@ export default function Project() {
             <Paper elevation={3}>
               <Box p={2}>
                 <Typography variant="h6" fontWeight="bold">
-                  {projectData.dataset_count} Datasets
+                  {projectData?.dataset_count} Datasets
                 </Typography>
               </Box>
             </Paper>
@@ -159,7 +159,7 @@ export default function Project() {
             <Paper elevation={3}>
               <Box p={2}>
                 <Typography variant="h6" fontWeight="bold">
-                  {projectData.molecule_count} Molecules
+                  {projectData?.molecule_count} Molecules
                 </Typography>
               </Box>
             </Paper>
