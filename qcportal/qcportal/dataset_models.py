@@ -2322,8 +2322,8 @@ class DatasetModifyMetadata(RestModelBase):
 
 
 class DatasetQueryModel(RestModelBase):
-    dataset_type: Optional[str] = None
-    dataset_name: Optional[str] = None
+    dataset_type: str
+    dataset_name: str
     include: Optional[List[str]] = None
     exclude: Optional[List[str]] = None
 
