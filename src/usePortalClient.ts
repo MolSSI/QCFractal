@@ -22,6 +22,6 @@ export function usePortalClientRequest() {
     );
   }
 
-  const { connectionState, makeRequest } = context;
-  return { connectionState, makeRequest };
+  const { connectionState, makeRequest, fetchData } = context;
+  return { connectionState, makeRequest, fetchData };
 }

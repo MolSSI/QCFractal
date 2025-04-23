@@ -1,10 +1,8 @@
 // src/pages/Profile.tsx
-import {
-  usePortalClientRequest,
-  useCommonRequest,
-} from "../usePortalClient.ts";
+import { usePortalClientRequest } from "../usePortalClient";
+import { FetchedData } from "../PortalClientContext";
 import { useEffect, useState } from "react";
-import * as qcpTypes from "../PortalTypes.ts";
+import * as qcpTypes from "../PortalTypes";
 import { useParams } from "react-router-dom";
 import {
   Box,
@@ -12,12 +10,12 @@ import {
   Chip,
   Grid,
   Paper,
-  Typography,
-  Tabs,
   Tab,
+  Tabs,
+  Typography,
 } from "@mui/material";
-import DatasetTab from "./DatasetTab.tsx";
-import RecordTab from "./RecordTab.tsx";
+import DatasetTab from "./DatasetTab";
+import RecordTab from "./RecordTab";
 
 function TabPanel(props: {
   children?: React.ReactNode;
@@ -41,25 +39,31 @@ function TabPanel(props: {
 export default function Project() {
   const { projectId } = useParams();
 
-  const { connectionState, makeRequest } = usePortalClientRequest(); // Get client instance here
-  const [error, setError] = useState<string | undefined>(undefined);
+  const { fetchData } = usePortalClientRequest(); // Get client instance here
 
-  //State for metadata
-  const [projectDataLoading, setProjectDataLoading] = useState(true);
-  const [projectData, setProjectData] = useState<qcpTypes.Project | undefined>(
-    undefined,
-  );
+  const [projectFetchedData, setProjectFetchedData] = useState<
+    FetchedData<qcpTypes.Project>
+  >({
+    data: undefined,
+    error: undefined,
+    loading: true,
+  });
 
-  // dataset and record metadata
-  const [datasetMetadata, setDatasetMetadata] = useState<
-    Array<Record<string, unknown>>
-  >([]);
-  const [datasetMetadataLoading, setDatasetMetadataLoading] = useState(false);
+  const [datasetMetadataFetchedData, setDatasetMetadataFetchedData] = useState<
+    FetchedData<Array<qcpTypes.ProjectDatasetMetadata>>
+  >({
+    data: undefined,
+    error: undefined,
+    loading: true,
+  });
 
-  const [recordMetadata, setRecordMetadata] = useState<
-    Array<Record<string, unknown>>
-  >([]);
-  const [recordMetadataLoading, setRecordMetadataLoading] = useState(false);
+  const [recordMetadataFetchedData, setRecordMetadataFetchedData] = useState<
+    FetchedData<Array<qcpTypes.ProjectRecordMetadata>>
+  >({
+    data: undefined,
+    error: undefined,
+    loading: true,
+  });
 
   // State for the Tabs
   const [tabValue, setTabValue] = useState(0);
@@ -67,67 +71,41 @@ export default function Project() {
     setTabValue(newValue);
   };
 
-  // Fetch project metadata
+  // Load project data, then dataset & record metadata
   useEffect(() => {
-    setProjectDataLoading(true);
-    makeRequest<qcpTypes.Project>("get", `api/v1/projects/${projectId}`)
-      .then(({ data, error }) => {
-        setProjectData(data);
-        setError(error);
-        console.log("Project data:", data);
-      })
-      .catch((error) => {
-        setError(error);
-      })
-      .finally(() => {
-        setProjectDataLoading(false);
-      });
-  }, [projectId, connectionState, makeRequest]);
+    fetchData<qcpTypes.Project>(
+      setProjectFetchedData,
+      "get",
+      `api/v1/projects/${projectId}`,
+    );
+  }, [fetchData, projectId]);
 
   // Fetch dataset metadata
   useEffect(() => {
-    setDatasetMetadataLoading(true);
-    makeRequest<Record<string, unknown>>(
+    fetchData<Array<qcpTypes.ProjectDatasetMetadata>>(
+      setDatasetMetadataFetchedData,
       "get",
       `api/v1/projects/${projectId}/dataset_metadata`,
-    )
-      .then(({ data, error }) => {
-        setDatasetMetadata(data);
-        setError(error);
-      })
-      .catch((error) => {
-        setError(error);
-      })
-      .finally(() => {
-        setDatasetMetadataLoading(false);
-      });
-  }, [projectId, connectionState, makeRequest]);
+    );
+  }, [fetchData, projectId]);
 
-  // Fetch record metadata
   useEffect(() => {
-    setRecordMetadata(true);
-    makeRequest<Record<string, unknown>>(
+    fetchData<Array<qcpTypes.ProjectRecordMetadata>>(
+      setRecordMetadataFetchedData,
       "get",
       `api/v1/projects/${projectId}/record_metadata`,
-    )
-      .then(({ data, error }) => {
-        setRecordMetadata(data);
-        setError(error);
-      })
-      .catch((error) => {
-        setError(error);
-      })
-      .finally(() => {
-        setRecordMetadataLoading(false);
-      });
-  }, [projectId, connectionState, makeRequest]);
+    );
+  }, [fetchData, projectId]);
+
+  const projectData = projectFetchedData?.data;
+  const datasetMetadata = datasetMetadataFetchedData?.data;
+  const recordMetadata = recordMetadataFetchedData?.data;
 
   return (
     <>
-      {projectDataLoading && <Typography>Loading...</Typography>}
-      {error && <Typography color="error">{error}</Typography>}
+      {projectFetchedData.loading && <Typography>Loading...</Typography>}
 
-      {!projectDataLoading && projectData && (
+      {!projectFetchedData.loading && projectData && (
         <Grid container spacing={2} width="100%">
           {/* Project name & tagline */}
           <Grid item xs={12}>
@@ -143,7 +121,7 @@ export default function Project() {
             <Paper elevation={3}>
               <Box p={2}>
                 <Typography variant="h6" fontWeight="bold">
-                  {recordMetadata.length} Records
+                  {recordMetadata ? recordMetadata.length : 0} Records
                 </Typography>
               </Box>
             </Paper>
@@ -152,7 +130,7 @@ export default function Project() {
             <Paper elevation={3}>
               <Box p={2}>
                 <Typography variant="h6" fontWeight="bold">
-                  {datasetMetadata.length} Datasets
+                  {datasetMetadata ? datasetMetadata.length : 0} Datasets
                 </Typography>
               </Box>
             </Paper>
@@ -232,10 +210,10 @@ export default function Project() {
                 </Tabs>
 
                 {/* Tab 1: Datasets */}
-                {datasetMetadataLoading && "Loading..."}
-                {!datasetMetadataLoading && datasetMetadata && (
+                {datasetMetadataFetchedData.loading && "Loading..."}
+                {!datasetMetadataFetchedData.loading && (
                   <TabPanel value={tabValue} index={0}>
-                    {datasetMetadata.length > 0 && (
+                    {datasetMetadata && datasetMetadata.length > 0 && (
                       <DatasetTab
                         datasetMetadata={datasetMetadata}
                         onDelete={(id) => {
@@ -248,10 +226,10 @@ export default function Project() {
                 )}
 
                 {/* Tab 2: Records */}
-                {recordMetadataLoading && "Loading..."}
-                {!recordMetadataLoading && (
+                {recordMetadataFetchedData.loading && "Loading..."}
+                {!recordMetadataFetchedData.loading && (
                   <TabPanel value={tabValue} index={1}>
-                    {recordMetadata.length > 0 && (
+                    {recordMetadata && recordMetadata.length > 0 && (
                       <RecordTab
                         recordMetadata={recordMetadata}
                         onDelete={(id) => {

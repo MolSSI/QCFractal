@@ -42,6 +42,14 @@ export type Project = {
   tags: string[];
 };
 
+export type ProjectDatasetMetadata = {
+  dataset_id: number;
+}
+
+export type ProjectRecordMetadata = {
+  record_id: number;
+}
+
 export type CalculationRecord = {
   record_id: number;
   record_type: string;
