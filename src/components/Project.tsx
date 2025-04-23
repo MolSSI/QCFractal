@@ -74,6 +74,7 @@ export default function Project() {
       .then(({ data, error }) => {
         setProjectData(data);
         setError(error);
+        console.log("Project data:", data);
       })
       .catch((error) => {
         setError(error);
@@ -126,7 +127,7 @@ export default function Project() {
       {projectDataLoading && <Typography>Loading...</Typography>}
       {error && <Typography color="error">{error}</Typography>}
 
-      {!projectDataLoading && (
+      {!projectDataLoading && projectData && (
         <Grid container spacing={2} width="100%">
           {/* Project name & tagline */}
           <Grid item xs={12}>
@@ -232,7 +233,7 @@ export default function Project() {
 
                 {/* Tab 1: Datasets */}
                 {datasetMetadataLoading && "Loading..."}
-                {!datasetMetadataLoading && (
+                {!datasetMetadataLoading && datasetMetadata && (
                   <TabPanel value={tabValue} index={0}>
                     {datasetMetadata.length > 0 && (
                       <DatasetTab

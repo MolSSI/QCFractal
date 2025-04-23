@@ -31,29 +31,42 @@ interface RecordTabProps {
   onDelete?: (recordId: number) => void;
 }
 
+const statusColors: Record<
+  string,
+  "success" | "error" | "warning" | "default" | "info" | "primary" | "secondary"
+> = {
+  complete: "success",
+  error: "error",
+  waiting: "warning",
+  invalid: "default",
+  running: "info",
+  cancelled: "primary",
+  deleted: "secondary",
+};
+
 export default function RecordTab({
   recordMetadata,
   onDelete,
 }: RecordTabProps) {
-    const navigate = useNavigate();
-    const { projectId } = useParams();
-    const [expandedId, setExpandedId] = useState<number | null>(null);
+  const navigate = useNavigate();
+  const { projectId } = useParams();
+  const [expandedId, setExpandedId] = useState<number | null>(null);
 
-    const handleToggleExpand = (id: number) => {
+  const handleToggleExpand = (id: number) => {
     setExpandedId((prev) => (prev === id ? null : id));
-    };
+  };
 
-    const handleViewClick = (recordId: number) => {
+  const handleViewClick = (recordId: number) => {
     navigate(`/projects/${projectId}/records/${recordId}`);
-    };
+  };
 
-    const handleDelete = (id: number) => {
+  const handleDelete = (id: number) => {
     if (onDelete) {
-        onDelete(id);
+      onDelete(id);
     } else {
-        console.log("Delete record with ID:", id);
+      console.log("Delete record with ID:", id);
     }
-    };
+  };
 
   return (
     <Box>
@@ -100,7 +113,13 @@ export default function RecordTab({
                       </IconButton>
                     </TableCell>
                     <TableCell>{record.name}</TableCell>
-                    <TableCell>{record.status}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={record.status}
+                        color={statusColors[record.status] || "default"}
+                        sx={{ fontWeight: "bold" }}
+                      />
+                    </TableCell>
                     <TableCell>
                       <Button
                         variant="contained"

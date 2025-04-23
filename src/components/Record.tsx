@@ -4,6 +4,7 @@ import { usePortalClientRequest } from "../usePortalClient";
 import {
   Box,
   Typography,
+  Button,
   Chip,
   Paper,
   Grid,
@@ -13,6 +14,7 @@ import {
   TableCell,
   TableContainer,
   TableRow,
+  Modal,
 } from "@mui/material";
 
 interface RecordData {
@@ -38,7 +40,7 @@ const Record: React.FC = () => {
   const [recordData, setRecordData] = useState<RecordData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const [modalOpen, setModalOpen] = useState(false);
   useEffect(() => {
     async function fetchRecord() {
       setLoading(true);
@@ -65,38 +67,84 @@ const Record: React.FC = () => {
     return <Typography>No record data available.</Typography>;
   }
 
+  const statusColors: Record<
+    string,
+    | "success"
+    | "error"
+    | "warning"
+    | "default"
+    | "info"
+    | "primary"
+    | "secondary"
+  > = {
+    complete: "success",
+    error: "error",
+    waiting: "warning",
+    invalid: "default",
+    running: "info",
+    cancelled: "primary",
+    deleted: "secondary",
+  };
+
   return (
     <Paper elevation={3} sx={{ p: 3, mt: 2 }}>
       <Grid container spacing={2}>
         {/* Title and Description */}
         <Grid item xs={12}>
           <Typography variant="h4" fontWeight="bold">
-            Record {recordData.id}
+            {recordData.name}
           </Typography>
           <Typography variant="body2" color="text.secondary" gutterBottom>
-            This record was created using the {recordData.specification.driver}{" "}
-            driver with the {recordData.specification.method} method and the{" "}
-            {recordData.specification.basis} basis set.
+            {recordData.description}
           </Typography>
         </Grid>
         {/* Status */}
         <Grid item xs={12}>
           <Stack spacing={2}>
+            <Button
+              variant="outlined"
+              onClick={() => setModalOpen(true)}
+              sx={{ textTransform: "none" }}
+            >
+              Manager: {recordData.manager_name}
+            </Button>
             <Chip
               label={recordData.status}
-              color={
-                recordData.status === "complete"
-                  ? "success"
-                  : recordData.status === "error"
-                    ? "error"
-                    : "default"
-              }
+              color={statusColors[recordData.status] || "default"}
               sx={{ fontWeight: "bold" }}
             />
           </Stack>
         </Grid>
 
-        {/* Specification and Properties Tables */}
+        {/* Modal for Manager Info */}
+        <Modal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          aria-labelledby="manager-info-title"
+          aria-describedby="manager-info-description"
+        >
+          <Box
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: 400,
+              bgcolor: "background.paper",
+              boxShadow: 24,
+              p: 4,
+              borderRadius: 2,
+            }}
+          >
+            <Typography id="manager-info-title" variant="h6" fontWeight="bold">
+              Manager Information
+            </Typography>
+            <Typography id="manager-info-description" sx={{ mt: 2 }}>
+              Information about manager: {recordData.manager_name}
+            </Typography>
+          </Box>
+        </Modal>
+
         {/* Specification and Properties Tables */}
         <Box sx={{ width: "100%", mx: "auto" }}>
           <Grid item xs={12} container spacing={2}>
