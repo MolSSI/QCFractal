@@ -55,3 +55,13 @@ export type CalculationRecord = {
   record_type: string;
   status: string;
 };
+
+
+export type Molecule = {
+  id: number;
+  name?: string;
+  symbols: Array<string>;
+  geometry: Array<number>
+  connectivity: Array<[number, number, number]>;
+  real: Array<boolean>;
+};

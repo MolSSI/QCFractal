@@ -21,6 +21,7 @@
     "@mui/x-date-pickers": "^7.28.3",
     "@mui/x-tree-view": "^7.28.1",
     "dayjs": "^1.11.13",
+    "ngl": "^2.4.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router": "^7.4.1",
