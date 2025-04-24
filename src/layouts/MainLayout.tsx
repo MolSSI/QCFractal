@@ -7,14 +7,12 @@ import Header from "../components/Header";
 import {
   chartsCustomizations,
   dataGridCustomizations,
-  datePickersCustomizations,
   treeViewCustomizations,
 } from "../theme/customizations";
 
 const xThemeComponents = {
   ...chartsCustomizations,
   ...dataGridCustomizations,
-  ...datePickersCustomizations,
   ...treeViewCustomizations,
 };
 
