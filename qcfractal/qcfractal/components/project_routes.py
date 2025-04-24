@@ -183,8 +183,10 @@ def project_unlink_records_v1(project_id: int, body_data: ProjectUnlinkRecordsBo
 
 @api_v1.route("/projects/<int:project_id>/records/<int:record_id>", methods=["GET"])
 @wrap_global_route("projects", "read")
-def get_project_record_v1(project_id: int, record_id: int):
-    return storage_socket.projects.get_record(project_id, record_id)
+def get_project_record_v1(project_id: int, record_id: int, url_params: ProjURLParameters):
+    return storage_socket.projects.get_record(
+        project_id, record_id, include=url_params.include, exclude=url_params.exclude
+    )
 
 
 #########################
