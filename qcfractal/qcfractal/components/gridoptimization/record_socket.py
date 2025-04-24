@@ -519,9 +519,13 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         options = []
 
         if include:
-            if is_included("initial_molecule", include, exclude, False):
+            if is_included("initial_molecule", include, exclude, False) or is_included(
+                "molecules", include, exclude, False
+            ):
                 options.append(joinedload(GridoptimizationRecordORM.initial_molecule))
-            if is_included("starting_molecule", include, exclude, False):
+            if is_included("starting_molecule", include, exclude, False) or is_included(
+                "molecules", include, exclude, False
+            ):
                 options.append(joinedload(GridoptimizationRecordORM.starting_molecule))
             if is_included("optimizations", include, exclude, False):
                 options.append(selectinload(GridoptimizationRecordORM.optimizations))

@@ -269,7 +269,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
     ) -> List[Optional[Dict[str, Any]]]:
         options = []
         if include:
-            if is_included("molecule", include, exclude, False):
+            if is_included("molecule", include, exclude, False) or is_included("molecules", include, exclude, False):
                 options.append(joinedload(SinglepointRecordORM.molecule))
             if is_included("wavefunction", include, exclude, False):
                 options.append(joinedload(SinglepointRecordORM.wavefunction).undefer(WavefunctionORM.data))

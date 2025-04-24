@@ -439,7 +439,9 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         options = []
         if include:
             # Initial molecules will get both the ids and the actual molecule
-            if is_included("initial_molecules", include, exclude, False):
+            if is_included("initial_molecules", include, exclude, False) or is_included(
+                "molecules", include, exclude, False
+            ):
                 options.append(
                     selectinload(TorsiondriveRecordORM.initial_molecules).joinedload(
                         TorsiondriveInitialMoleculeORM.molecule

@@ -329,9 +329,13 @@ class OptimizationRecordSocket(BaseRecordSocket):
     ) -> List[Optional[Dict[str, Any]]]:
         options = []
         if include:
-            if is_included("initial_molecule", include, exclude, False):
+            if is_included("initial_molecule", include, exclude, False) or is_included(
+                "molecules", include, exclude, False
+            ):
                 options.append(joinedload(OptimizationRecordORM.initial_molecule))
-            if is_included("final_molecule", include, exclude, False):
+            if is_included("final_molecule", include, exclude, False) or is_included(
+                "molecules", include, exclude, False
+            ):
                 options.append(joinedload(OptimizationRecordORM.final_molecule))
             if is_included("trajectory", include, exclude, False):
                 options.append(selectinload(OptimizationRecordORM.trajectory))
