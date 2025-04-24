@@ -57,6 +57,11 @@ export type CalculationRecord = {
 };
 
 
+export type MoleculeIdentifiers = {
+  molecule_hash: string;
+  molecular_formula: string;
+};
+
 export type Molecule = {
   id: number;
   name?: string;
@@ -64,4 +69,6 @@ export type Molecule = {
   geometry: Array<number>
   connectivity: Array<[number, number, number]>;
   real: Array<boolean>;
+
+  identifiers: MoleculeIdentifiers;
 };
