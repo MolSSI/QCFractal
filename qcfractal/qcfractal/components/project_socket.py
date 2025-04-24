@@ -558,22 +558,29 @@ class ProjectSocket:
         self,
         project_id: int,
         record_id: int,
+        include: Optional[Sequence[str]] = None,
+        exclude: Optional[Sequence[str]] = None,
         *,
         session: Optional[Session] = None,
     ) -> Dict[str, Any]:
 
-        stmt = select(ProjectRecordORM)
+        stmt = select(ProjectRecordORM, BaseRecordORM.record_type)
+        stmt = stmt.join(ProjectRecordORM, BaseRecordORM.id == ProjectRecordORM.record_id)
         stmt = stmt.where(ProjectRecordORM.project_id == project_id)
         stmt = stmt.where(ProjectRecordORM.record_id == record_id)
 
         with self.root_socket.optional_session(session, True) as session:
-            project_rec = session.execute(stmt).scalar_one_or_none()
+            project_rec = session.execute(stmt).one_or_none()
 
             if project_rec is None:
                 raise MissingDataError(f"Record {record_id} not found in project {project_id}")
 
-            rec_dict = self.root_socket.records.get([record_id], missing_ok=False, session=session)[0]
-            rec_dict.update(name=project_rec.name, description=project_rec.description, tags=project_rec.tags)
+            pr, record_type = project_rec
+            record_socket = self.root_socket.records.get_socket(record_type)
+            rec_dict = record_socket.get(
+                [record_id], include=include, exclude=exclude, missing_ok=False, session=session
+            )[0]
+            rec_dict.update(name=pr.name, description=pr.description, tags=pr.tags)
             return rec_dict
 
     def link_record(
