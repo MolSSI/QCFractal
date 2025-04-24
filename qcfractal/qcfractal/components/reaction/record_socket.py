@@ -447,7 +447,7 @@ class ReactionRecordSocket(BaseRecordSocket):
         options = []
 
         if include:
-            if is_included("components", include, exclude, False):
+            if is_included("components", include, exclude, False) or is_included("molecules", include, exclude, False):
                 options.append(
                     selectinload(ReactionRecordORM.components).options(selectinload(ReactionComponentORM.molecule))
                 )
