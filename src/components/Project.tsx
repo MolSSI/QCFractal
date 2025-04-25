@@ -108,7 +108,7 @@ export default function Project() {
       {!projectFetchedData.loading && projectData && (
         <Grid container spacing={2} width="100%">
           {/* Project name & tagline */}
-          <Grid item xs={12}>
+          <Grid item size={12}>
             <Typography variant="h4" fontWeight="bold">
               {projectData.name}
             </Typography>
@@ -117,35 +117,35 @@ export default function Project() {
             </Typography>
           </Grid>
           {/* Summary stats: for example, Records, Datasets, Molecules */}
-          <Grid item xs={12} sm={4}>
+          <Grid item size={2}>
             <Paper elevation={3}>
-              <Box p={2}>
-                <Typography variant="h6" fontWeight="bold">
+              <Box p={1}>
+                <Typography variant="body1" fontWeight="bold">
                   {recordMetadata ? recordMetadata.length : 0} Records
                 </Typography>
               </Box>
             </Paper>
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid item size={2}>
             <Paper elevation={3}>
-              <Box p={2}>
-                <Typography variant="h6" fontWeight="bold">
+              <Box p={1}>
+                <Typography variant="body1" fontWeight="bold">
                   {datasetMetadata ? datasetMetadata.length : 0} Datasets
                 </Typography>
               </Box>
             </Paper>
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid item size={2}>
             <Paper elevation={3}>
-              <Box p={2}>
-                <Typography variant="h6" fontWeight="bold">
+              <Box p={1}>
+                <Typography variant="body1" fontWeight="bold">
                   0 Molecules
                 </Typography>
               </Box>
             </Paper>
           </Grid>
 
-          <Box sx={{ width: "100%", mx: "auto" }}>
+          <Box size={12} sx={{ mx: "auto" }}>
             {/* Description & Metadata section */}
             <Grid item xs={12} mb={3}>
               <Paper elevation={2}>
@@ -192,7 +192,7 @@ export default function Project() {
             </Grid>
 
             {/* Lower section with Tabs for Datasets, Records, Molecules */}
-            <Grid item xs={12} mt={3}>
+            <Grid item size={12}>
               <Paper elevation={2}>
                 <Tabs
                   value={tabValue}
