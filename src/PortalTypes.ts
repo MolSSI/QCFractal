@@ -56,6 +56,20 @@ export type CalculationRecord = {
   status: string;
 };
 
+export type Manager = {
+  id: number;
+  manager_version: string;
+  name: string;
+  cluster: string;
+  hostname: string;
+  username: string;
+  tags: Array<string>;
+  programs: Record<string, string>
+
+  status: string;
+  created_on: string;
+  modified_on: string;
+};
 
 export type MoleculeIdentifiers = {
   molecule_hash: string;
