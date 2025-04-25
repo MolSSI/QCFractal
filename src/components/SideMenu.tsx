@@ -7,7 +7,10 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import MenuContent from "./MenuContent";
 import OptionsMenu from "./OptionsMenu";
-import ServerStatus from "../components/ServerStatus"
+import Button from "@mui/material/Button";
+import ServerStatus from "../components/ServerStatus";
+import { usePortalClientAuth } from "../usePortalClient";
+import { useNavigate } from "react-router-dom";
 
 const drawerWidth = 240;
 
@@ -23,6 +26,8 @@ const Drawer = styled(MuiDrawer)({
 });
 
 export default function SideMenu() {
+  const { connectionState, logout } = usePortalClientAuth();
+  const navigate = useNavigate();
 
   return (
     <Drawer
@@ -73,24 +78,58 @@ export default function SideMenu() {
           borderColor: "divider",
         }}
       >
-        <Avatar
-          sizes="small"
-          alt="Riley Carter"
-          src="/static/images/avatar/7.jpg"
-          sx={{ width: 36, height: 36 }}
-        />
-        <Box sx={{ mr: "auto" }}>
-          <Typography
-            variant="body2"
-            sx={{ fontWeight: 500, lineHeight: "16px" }}
-          >
-            Riley Carter
-          </Typography>
-          <Typography variant="caption" sx={{ color: "text.secondary" }}>
-            riley@email.com
-          </Typography>
-        </Box>
-        <OptionsMenu />
+        {connectionState?.userInfo ? (
+          <>
+            <Avatar
+              sizes="small"
+              alt={connectionState.userInfo.username}
+              sx={{ width: 36, height: 36 }}
+            />
+            <Box sx={{ mr: "auto" }}>
+              <Typography
+                variant="body2"
+                sx={{ fontWeight: 500, lineHeight: "16px" }}
+              >
+                {connectionState.userInfo.username}
+              </Typography>
+              <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                {connectionState.userInfo.role}
+              </Typography>
+            </Box>
+            <OptionsMenu />
+          </>
+        ) : (
+          <>
+            <Avatar
+              sizes="small"
+              alt="(Not logged in)"
+              sx={{ width: 36, height: 36 }}
+            >
+              ?
+            </Avatar>
+            <Stack sx={{ mr: "auto" }}>
+              <Typography
+                variant="body2"
+                sx={{ fontWeight: 500, lineHeight: "16px", p: 2 }}
+              >
+                (Not logged in)
+              </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={() => {
+                  logout(true);
+                  navigate(
+                    `/login?redirect=${encodeURIComponent(location.pathname + location.search)}`,
+                  );
+                }}
+              >
+                Login
+              </Button>
+            </Stack>
+          </>
+        )}
       </Stack>
     </Drawer>
   );
