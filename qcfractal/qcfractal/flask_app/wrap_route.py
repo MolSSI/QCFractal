@@ -39,7 +39,9 @@ def wrap_global_route(requested_resource, requested_action, require_security: bo
     requested_resource
         The name of the major resource
     requested_action
-        e of action that this route handles (read, write, etc)
+        Type of action that this route handles (read, write, etc)
+    require_security
+        If true, route is only accessible if security is enabled on the server.
     """
 
     def decorate(fn):
