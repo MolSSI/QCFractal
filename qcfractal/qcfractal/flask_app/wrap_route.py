@@ -1,5 +1,9 @@
+import shutil
+import tempfile
 from functools import wraps
-from typing import Callable
+from typing import Callable, Optional, Iterable
+
+from flask import current_app
 
 try:
     import pydantic.v1 as pydantic
@@ -12,7 +16,12 @@ from qcfractal.flask_app import storage_socket
 from qcportal.serialization import deserialize, serialize
 
 
-def wrap_global_route(requested_resource, requested_action, require_security: bool = False) -> Callable:
+def wrap_global_route(
+    requested_resource,
+    requested_action,
+    require_security: bool = False,
+    allowed_file_extensions: Optional[Iterable[str]] = None,
+) -> Callable:
     """
     Decorator that wraps a Flask route function, providing useful functionality
 
@@ -34,12 +43,18 @@ def wrap_global_route(requested_resource, requested_action, require_security: bo
     parameters are read, and then pydantic is used to convert the deserialized request body/params
     into the appropriate type, after which they are passed to the function.
 
+    If `allowed_file_extensions` is not None, then this route will also accept file uploads. The wrapped
+    function will be passed the file objects as the `files` parameter. If this parameter does not exist,
+    an exception will be raised.
+
     Parameters
     ----------
     requested_resource
         The name of the major resource
     requested_action
         Type of action that this route handles (read, write, etc)
+    allowed_file_extensions
+        If not None, files are allowed to be uploaded with this route. The files must have these extensions.
     require_security
         If true, route is only accessible if security is enabled on the server.
     """
@@ -74,16 +89,29 @@ def wrap_global_route(requested_resource, requested_action, require_security: bo
             body_model = annotations.get("body_data", None)
             url_params_model = annotations.get("url_params", None)
 
+            # If files are allowed, check for the files parameter in the function
+            if allowed_file_extensions is not None:
+                if "files" not in annotations:
+                    raise BadRequest('Route allows uploads, but function doesn\'t have the "files" argument')
+
             # 1. The body is stored in request.data
+            #    However, if it's not there, and we have files, it will be in request.files
+            #    (since you cannot send body data and files in the same request)
+            if "body_data" in request.files:
+                body_data = request.files["body_data"].read()
+                content_type = request.files["body_data"].content_type
+            else:
+                body_data = request.data
+
             if body_model is not None:
                 if content_type is None:
                     raise BadRequest("No Content-Type specified")
 
-                if not request.data:
+                if not body_data:
                     raise BadRequest("Expected body, but it is empty")
 
                 try:
-                    deserialized_data = deserialize(request.data, content_type)
+                    deserialized_data = deserialize(body_data, content_type)
                     kwargs["body_data"] = pydantic.parse_obj_as(body_model, deserialized_data)
                 except Exception as e:
                     raise BadRequest("Invalid body: " + str(e))
@@ -95,8 +123,33 @@ def wrap_global_route(requested_resource, requested_action, require_security: bo
                 except Exception as e:
                     raise BadRequest("Invalid request arguments: " + str(e))
 
+            # 3. File uploads
+            temp_dir = None
+            if allowed_file_extensions is not None:
+                kwargs["files"] = []
+
+                if "files" in request.files:
+                    temp_dir = tempfile.mkdtemp(dir=current_app.config["UPLOAD_FOLDER"])
+
+                    req_files = request.files.getlist("files")
+                    for f in req_files:
+                        if f.filename.split(".")[-1] not in allowed_file_extensions:
+                            raise BadRequest(
+                                f"Invalid file extension on file: {f.filename}. Allowed extensions: {allowed_file_extensions}"
+                            )
+
+                        with tempfile.NamedTemporaryFile("wb", dir=temp_dir, delete=False) as temp_file:
+                            f.save(temp_file)
+                            kwargs["files"].append((f.filename, temp_file.name))
+                else:
+                    kwargs["files"] = []
+
             # Now call the function, and validate the output
-            ret = fn(*args, **kwargs)
+            try:
+                ret = fn(*args, **kwargs)
+            finally:
+                if temp_dir is not None:
+                    shutil.rmtree(temp_dir)
 
             # Serialize the output it it's not a normal flask response
             if isinstance(ret, Response):
