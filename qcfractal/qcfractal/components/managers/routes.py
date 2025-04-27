@@ -11,6 +11,7 @@ from qcportal.managers import (
     ManagerUpdateBody,
     ManagerStatusEnum,
     ManagerQueryFilters,
+    ManagerQueryAvailableFilters,
 )
 from qcportal.utils import calculate_limit
 
@@ -85,3 +86,9 @@ def query_managers_v1(body_data: ManagerQueryFilters):
     body_data.limit = calculate_limit(max_limit, body_data.limit)
 
     return storage_socket.managers.query(body_data)
+
+
+@api_v1.route("/managers/queryActive", methods=["POST"])
+@wrap_global_route("managers", "read")
+def query_active_managers_v1(body_data: ManagerQueryAvailableFilters):
+    return storage_socket.managers.query_active(body_data.compute_tag, body_data.programs)

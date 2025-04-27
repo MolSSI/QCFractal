@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
 from sqlalchemy import and_, update, select
+from sqlalchemy.dialects.postgresql import array
 
 from qcfractal.db_socket.helpers import get_query_proj_options, get_count, get_general
 from qcportal.exceptions import ComputeManagerError
@@ -280,6 +281,46 @@ class ManagerSocket:
             result_dicts = [x.model_dict() for x in results]
 
         return result_dicts
+
+    def query_active(
+        self, compute_tag: List[str], programs: Dict[str, List[str]], *, session: Optional[Session] = None
+    ) -> List[str]:
+        """
+        Queries active managers for any that can take the given compute tag or program
+
+        This will select managers that can handle any of the given compute tags, and all the given programs/versions.
+
+        Parameters
+        ----------
+        compute_tag
+            List of possible tags the task can have. A manager must have one of the tags to be considered available.
+        programs
+            Required programs/versions for the task. A manager must have all the programs/versions to be considered available.
+        session
+            An existing SQLAlchemy session to use.
+
+        Returns
+        -------
+        :
+            List of manager names that could possible handle the given compute tags/programs.
+        """
+
+        stmt = select(ComputeManagerORM.name)
+        stmt = stmt.where(ComputeManagerORM.status == ManagerStatusEnum.active)
+
+        # TODO - handle versions
+        program_names = array(programs.keys())
+        stmt = stmt.where(ComputeManagerORM.programs.op("?&")(program_names))  # ?& = JSONB contains the keys of ...
+
+        # Handle *
+        # If the server doesn't have strict_queue_tags and there is a * in the tags, then
+        # don't limit the query
+        if "*" not in compute_tag or ("*" in compute_tag and self.root_socket.qcf_config.strict_queue_tags):
+            stmt = stmt.where(ComputeManagerORM.compute_tags.op("&&")(compute_tag))  # && = overlaps between two arrays
+
+        with self.root_socket.optional_session(session, True) as session:
+            manager_names = session.execute(stmt).scalars().all()
+            return list(manager_names)
 
     def check_manager_heartbeats(self, session: Session) -> None:
         """
