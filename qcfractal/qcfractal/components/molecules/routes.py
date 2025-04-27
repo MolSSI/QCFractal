@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 from flask import current_app
 
@@ -7,7 +7,7 @@ from qcfractal.flask_app.api_v1.blueprint import api_v1
 from qcfractal.flask_app.wrap_route import wrap_global_route
 from qcportal.base_models import CommonBulkGetBody, ProjURLParameters
 from qcportal.exceptions import LimitExceededError
-from qcportal.molecules import Molecule, MoleculeQueryFilters, MoleculeModifyBody
+from qcportal.molecules import Molecule, MoleculeQueryFilters, MoleculeModifyBody, MoleculeUploadOptions
 from qcportal.utils import calculate_limit
 
 
@@ -61,6 +61,12 @@ def add_molecules_v1(body_data: List[Molecule]):
         raise LimitExceededError(f"Cannot add {len(body_data)} molecule records - limit is {limit}")
 
     return storage_socket.molecules.add(body_data)
+
+
+@api_v1.route("/molecules/fromFiles", methods=["POST"])
+@wrap_global_route("records", "add", allowed_file_extensions=["xyz", "sdf"])
+def add_molecules_from_files_v1(body_data: MoleculeUploadOptions, files: List[Tuple[str, str]]):
+    return storage_socket.molecules.add_from_files(files, body_data)
 
 
 @api_v1.route("/molecules/query", methods=["POST"])

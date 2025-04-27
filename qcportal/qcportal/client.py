@@ -83,7 +83,14 @@ from .dataset_models import (
 from .internal_jobs import InternalJob, InternalJobQueryFilters, InternalJobQueryIterator, InternalJobStatusEnum
 from .managers import ManagerQueryFilters, ManagerQueryIterator, ManagerQueryAvailableFilters, ComputeManager
 from .metadata_models import UpdateMetadata, InsertMetadata, DeleteMetadata
-from .molecules import Molecule, MoleculeIdentifiers, MoleculeModifyBody, MoleculeQueryIterator, MoleculeQueryFilters
+from .molecules import (
+    Molecule,
+    MoleculeIdentifiers,
+    MoleculeModifyBody,
+    MoleculeQueryIterator,
+    MoleculeQueryFilters,
+    MoleculeUploadOptions,
+)
 
 from .project_models import (
     Project,
@@ -578,6 +585,20 @@ class PortalClient(PortalClientBase):
 
         mols = self.make_request(
             "post", "api/v1/molecules/bulkCreate", Tuple[InsertMetadata, List[int]], body=make_list(molecules)
+        )
+        return mols
+
+    def upload_molecules(self, file_paths: List[str]) -> Tuple[InsertMetadata, List[Tuple[str, int]]]:
+        file_info = [(os.path.basename(f), f) for f in file_paths]
+
+        body = MoleculeUploadOptions()
+
+        mols = self.make_request(
+            "post",
+            "api/v1/molecules/fromFiles",
+            Tuple[InsertMetadata, List[Tuple[str, int]]],
+            body=body,
+            upload_files=file_info,
         )
         return mols
 

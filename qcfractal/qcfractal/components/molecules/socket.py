@@ -20,8 +20,9 @@ from qcportal.metadata_models import (
     DeleteMetadata,
     UpdateMetadata,
 )
-from qcportal.molecules import Molecule, MoleculeIdentifiers, MoleculeQueryFilters
+from qcportal.molecules import Molecule, MoleculeIdentifiers, MoleculeQueryFilters, MoleculeUploadOptions
 from .db_models import MoleculeORM
+from .from_files import molecules_from_files
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -102,6 +103,14 @@ class MoleculeSocket:
 
         # added_ids is a list of tuple, with each tuple only having one value. Flatten that out
         return meta, [x[0] for x in added_ids]
+
+    def add_from_files(
+        self, file_list: List[Tuple[str, str]], options: MoleculeUploadOptions, *, session: Optional[Session] = None
+    ) -> Tuple[InsertMetadata, List[Tuple[str, int]]]:
+        minfo = molecules_from_files(file_list, options)
+        meta, molecule_ids = self.add([x[1] for x in minfo], session=session)
+
+        return meta, [(mname, mid) for (mname, _), mid in zip(minfo, molecule_ids)]
 
     def get(
         self,

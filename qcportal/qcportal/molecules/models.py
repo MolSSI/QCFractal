@@ -20,6 +20,10 @@ class MoleculeModifyBody(RestModelBase):
     overwrite_identifiers: bool = False
 
 
+class MoleculeUploadOptions(RestModelBase):
+    dummy: bool = True
+
+
 class MoleculeQueryIterator(QueryIteratorBase[Molecule]):
     """
     Iterator for molecule queries
