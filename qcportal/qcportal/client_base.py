@@ -20,7 +20,7 @@ try:
 except ImportError:
     import pydantic
 import requests
-from typing import Tuple
+from typing import Tuple, Iterable
 import yaml
 import hashlib
 from packaging.version import parse as parse_version
@@ -281,7 +281,7 @@ class PortalClientBase:
     @encoding.setter
     def encoding(self, encoding: str):
         self._encoding = encoding
-        enc_headers = {"Content-Type": encoding, "Accept": encoding}
+        enc_headers = {"Accept": encoding}
         self._req_session.headers.update(enc_headers)
 
     def _send_request(self, req: requests.Request, allow_retries: bool = True) -> requests.Response:
@@ -423,6 +423,7 @@ class PortalClientBase:
         *,
         body: Optional[Union[bytes, str]] = None,
         url_params: Optional[Dict[str, Any]] = None,
+        file_data: Optional[Iterable[Tuple[str, Any]]] = None,
         internal_retry: Optional[bool] = True,
         allow_retries: bool = True,
         additional_headers: Optional[Dict[str, Any]] = None,
@@ -436,8 +437,19 @@ class PortalClientBase:
             self._refresh_JWT_token()
 
         full_uri = self.address + endpoint
+
+        headers = {}
+
+        # Let requests handle content-type if doing multipart
+        # but specify our encoding otherwise
+        if file_data is None:
+            headers = {"Content-Type": self.encoding}
+
+        if additional_headers is not None:
+            headers.update(additional_headers)
+
         req = requests.Request(
-            method=method.upper(), url=full_uri, data=body, params=url_params, headers=additional_headers
+            method=method.upper(), url=full_uri, data=body, params=url_params, files=file_data, headers=headers
         )
         r = self._send_request(req, allow_retries=allow_retries)
 
@@ -472,6 +484,7 @@ class PortalClientBase:
         url_params_model: Optional[Type[_U]] = None,
         body: Optional[Union[_T, Dict[str, Any]]] = None,
         url_params: Optional[Union[_U, Dict[str, Any]]] = None,
+        upload_files: Optional[Iterable[Tuple[str, str]]] = None,
         allow_retries: bool = True,
         additional_headers: Optional[Dict[str, Any]] = None,
     ) -> _V:
@@ -494,11 +507,26 @@ class PortalClientBase:
         if isinstance(parsed_url_params, pydantic.BaseModel):
             parsed_url_params = parsed_url_params.dict()
 
+        if upload_files is not None:
+            # Yes, a list of tuples. We always use the "files" key, and doing it this way
+            # allows for multiple files to be uploaded in a single request.
+            file_data = [("files", (fname, open(fpath, "rb"))) for fname, fpath in upload_files]
+
+            # We must also send the serialized body as part of the multipart upload
+            if serialized_body is not None:
+                file_data.append(("body_data", ("body_data", serialized_body, self.encoding)))
+                serialized_body = None
+        else:
+            file_data = None
+
+        assert (serialized_body is None) or (file_data is None)  # Just to check my logic
+
         r = self._request(
             method,
             endpoint,
             body=serialized_body,
             url_params=parsed_url_params,
+            file_data=file_data,
             allow_retries=allow_retries,
             additional_headers=additional_headers,
         )

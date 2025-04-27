@@ -482,6 +482,9 @@ class FractalConfig(ConfigBase):
     homepage_redirect_url: Optional[str] = Field(None, description="Redirect to this URL when going to the root path")
     homepage_directory: Optional[str] = Field(None, description="Use this directory to serve the homepage")
 
+    # File uploads
+    upload_directory: Optional[str] = Field(None, description="Directory to store user-uploaded files for processing")
+
     # Other settings blocks
     database: DatabaseConfig = Field(..., description="Configuration of the settings for the database")
     api: WebAPIConfig = Field(..., description="Configuration of the REST interface")
@@ -523,6 +526,10 @@ class FractalConfig(ConfigBase):
 
     @validator("homepage_directory")
     def _check_hompepage_directory_path(cls, v, values):
+        return _make_abs_path(v, values["base_folder"], None)
+
+    @validator("upload_directory")
+    def _check_upload_directory_path(cls, v, values):
         return _make_abs_path(v, values["base_folder"], None)
 
     @validator("logfile")

@@ -69,6 +69,9 @@ def create_flask_app(
     app.config["SESSION_COOKIE_NAME"] = qcfractal_config.api.user_session_cookie_name
     app.config["PERMANENT_SESSION_LIFETIME"] = qcfractal_config.api.user_session_max_age
 
+    # Where we store user-uploaded files for processing
+    app.config["UPLOAD_FOLDER"] = qcfractal_config.upload_directory
+
     # Any additional configuration
     if qcfractal_config.api.extra_flask_options:
         app.config.update(**qcfractal_config.api.extra_flask_options)
