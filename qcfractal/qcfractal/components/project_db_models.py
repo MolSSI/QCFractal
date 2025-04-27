@@ -80,20 +80,6 @@ class ProjectORM(BaseORM):
         return d
 
 
-class ProjectMoleculeORM(BaseORM):
-    __tablename__ = "project_molecule"
-
-    project_id = Column(Integer, ForeignKey("project.id", ondelete="cascade"), primary_key=True)
-    molecule_id = Column(Integer, ForeignKey("molecule.id"), nullable=False)
-
-    name = Column(String, nullable=False)
-    lname = Column(String(100), Computed("LOWER(name)"), primary_key=True)
-    description = Column(String, nullable=False)
-    tags = Column(JSON, nullable=False)
-
-    __table_args__ = (Index("ix_project_molecule_molecule_id", "molecule_id"),)
-
-
 class ProjectRecordORM(BaseORM):
     __tablename__ = "project_record"
 

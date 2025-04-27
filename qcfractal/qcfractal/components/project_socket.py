@@ -12,7 +12,6 @@ from qcfractal.components.project_db_models import (
     ProjectORM,
     ProjectRecordORM,
     ProjectDatasetORM,
-    ProjectMoleculeORM,
     ProjectAttachmentORM,
     ProjectInternalJobORM,
 )
@@ -169,11 +168,6 @@ class ProjectSocket:
             .group_by(ProjectDatasetORM.project_id)
             .cte()
         )
-        molecule_count_cte = (
-            select(ProjectMoleculeORM.project_id, func.count("*").label("molecule_count"))
-            .group_by(ProjectMoleculeORM.project_id)
-            .cte()
-        )
 
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(
@@ -183,11 +177,9 @@ class ProjectSocket:
                 ProjectORM.tags,
                 func.coalesce(record_count_cte.c.record_count, 0),
                 func.coalesce(dataset_count_cte.c.dataset_count, 0),
-                func.coalesce(molecule_count_cte.c.molecule_count, 0),
             )
             stmt = stmt.join(record_count_cte, ProjectORM.id == record_count_cte.c.project_id, isouter=True)
             stmt = stmt.join(dataset_count_cte, ProjectORM.id == dataset_count_cte.c.project_id, isouter=True)
-            stmt = stmt.join(molecule_count_cte, ProjectORM.id == molecule_count_cte.c.project_id, isouter=True)
             stmt = stmt.order_by(ProjectORM.id.asc())
             r = session.execute(stmt).all()
 
@@ -199,7 +191,6 @@ class ProjectSocket:
                     "tags": x[3],
                     "record_count": x[4],
                     "dataset_count": x[5],
-                    "molecule_count": x[6],
                 }
                 for x in r
             ]
