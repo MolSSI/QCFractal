@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=39a4d864"></script>
+    <script src="../../_static/documentation_options.js?v=cb8c78bb"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="QCPortal API Reference" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.60.post57+g46aca5310" />
+  <meta name="docsearch:version" content="0.60.post59+ga22973c55" />
   </head>
   
   
@@ -1972,6 +1972,27 @@ that was not found.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="qcportal.client.PortalClient.query_active_managers">
+<span class="sig-name descname"><span class="pre">query_active_managers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">compute_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">programs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/client.html#PortalClient.query_active_managers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.client.PortalClient.query_active_managers" title="Link to this definition">#</a></dt>
+<dd><p>Queries active managers for any that can take the given compute tag or program</p>
+<p>This will select managers that can handle any of the given compute tags, and all the given programs/versions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>compute_tag</strong> (<em>str</em><em> | </em><em>List</em><em>[</em><em>str</em><em>]</em>) – List of possible tags the task can have. A manager must have one of the tags to be considered available.</p></li>
+<li><p><strong>programs</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Required programs/versions for the task. A manager must have all the programs/versions to be considered available.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of manager names that could possible handle the given compute tags/programs.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>List</em>[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="qcportal.client.PortalClient.query_access_log">
 <span class="sig-name descname"><span class="pre">query_access_log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">before</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">after</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/client.html#PortalClient.query_access_log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.client.PortalClient.query_access_log" title="Link to this definition">#</a></dt>
 <dd><p>Query the server access log</p>
@@ -3418,6 +3439,7 @@ regardless of whether they are in the cache</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.query_nebs"><code class="docutils literal notranslate"><span class="pre">PortalClient.query_nebs()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.get_managers"><code class="docutils literal notranslate"><span class="pre">PortalClient.get_managers()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.query_managers"><code class="docutils literal notranslate"><span class="pre">PortalClient.query_managers()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.query_active_managers"><code class="docutils literal notranslate"><span class="pre">PortalClient.query_active_managers()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.query_access_log"><code class="docutils literal notranslate"><span class="pre">PortalClient.query_access_log()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.delete_access_log"><code class="docutils literal notranslate"><span class="pre">PortalClient.delete_access_log()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.query_error_log"><code class="docutils literal notranslate"><span class="pre">PortalClient.query_error_log()</span></code></a></li>
