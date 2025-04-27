@@ -78,27 +78,28 @@ results = client.query_records(created_after="2023/01/10", created_before="2023/
 [32m    872[39m         [38;5;66;03m# Get the record type string. This is kind of ugly, but works.[39;00m
 [32m    873[39m         record_type_str = [38;5;28mself[39m.record_type.__fields__[[33m"[39m[33mrecord_type[39m[33m"[39m].default
 
-[36mFile [39m[32m~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:497[39m, in [36mPortalClientBase.make_request[39m[34m(self, method, endpoint, response_model, body_model, url_params_model, body, url_params, allow_retries, additional_headers)[39m
-[32m    494[39m [38;5;28;01mif[39;00m [38;5;28misinstance[39m(parsed_url_params, pydantic.BaseModel):
-[32m    495[39m     parsed_url_params = parsed_url_params.dict()
-[32m--> [39m[32m497[39m r = [38;5;28;43mself[39;49m[43m.[49m[43m_request[49m[43m([49m
-[32m    498[39m [43m    [49m[43mmethod[49m[43m,[49m
-[32m    499[39m [43m    [49m[43mendpoint[49m[43m,[49m
-[32m    500[39m [43m    [49m[43mbody[49m[43m=[49m[43mserialized_body[49m[43m,[49m
-[32m    501[39m [43m    [49m[43murl_params[49m[43m=[49m[43mparsed_url_params[49m[43m,[49m
-[32m    502[39m [43m    [49m[43mallow_retries[49m[43m=[49m[43mallow_retries[49m[43m,[49m
-[32m    503[39m [43m    [49m[43madditional_headers[49m[43m=[49m[43madditional_headers[49m[43m,[49m
-[32m    504[39m [43m[49m[43m)[49m
-[32m    505[39m d = deserialize(r.content, r.headers[[33m"[39m[33mContent-Type[39m[33m"[39m])
-[32m    507[39m [38;5;28;01mif[39;00m response_model [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m:
+[36mFile [39m[32m~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:524[39m, in [36mPortalClientBase.make_request[39m[34m(self, method, endpoint, response_model, body_model, url_params_model, body, url_params, upload_files, allow_retries, additional_headers)[39m
+[32m    520[39m     file_data = [38;5;28;01mNone[39;00m
+[32m    522[39m [38;5;28;01massert[39;00m (serialized_body [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m) [38;5;129;01mor[39;00m (file_data [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m)  [38;5;66;03m# Just to check my logic[39;00m
+[32m--> [39m[32m524[39m r = [38;5;28;43mself[39;49m[43m.[49m[43m_request[49m[43m([49m
+[32m    525[39m [43m    [49m[43mmethod[49m[43m,[49m
+[32m    526[39m [43m    [49m[43mendpoint[49m[43m,[49m
+[32m    527[39m [43m    [49m[43mbody[49m[43m=[49m[43mserialized_body[49m[43m,[49m
+[32m    528[39m [43m    [49m[43murl_params[49m[43m=[49m[43mparsed_url_params[49m[43m,[49m
+[32m    529[39m [43m    [49m[43mfile_data[49m[43m=[49m[43mfile_data[49m[43m,[49m
+[32m    530[39m [43m    [49m[43mallow_retries[49m[43m=[49m[43mallow_retries[49m[43m,[49m
+[32m    531[39m [43m    [49m[43madditional_headers[49m[43m=[49m[43madditional_headers[49m[43m,[49m
+[32m    532[39m [43m[49m[43m)[49m
+[32m    533[39m d = deserialize(r.content, r.headers[[33m"[39m[33mContent-Type[39m[33m"[39m])
+[32m    535[39m [38;5;28;01mif[39;00m response_model [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m:
 
-[36mFile [39m[32m~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:461[39m, in [36mPortalClientBase._request[39m[34m(self, method, endpoint, body, url_params, internal_retry, allow_retries, additional_headers)[39m
-[32m    456[39m     [38;5;28;01mexcept[39;00m:
-[32m    457[39m         [38;5;66;03m# If this error comes from, ie, the web server or something else, then[39;00m
-[32m    458[39m         [38;5;66;03m# we have to use 'reason'[39;00m
-[32m    459[39m         details = {[33m"[39m[33mmsg[39m[33m"[39m: r.reason}
-[32m--> [39m[32m461[39m     [38;5;28;01mraise[39;00m PortalRequestError([33mf[39m[33m"[39m[33mRequest failed: [39m[38;5;132;01m{[39;00mdetails[[33m'[39m[33mmsg[39m[33m'[39m][38;5;132;01m}[39;00m[33m"[39m, r.status_code, details)
-[32m    463[39m [38;5;28;01mreturn[39;00m r
+[36mFile [39m[32m~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:473[39m, in [36mPortalClientBase._request[39m[34m(self, method, endpoint, body, url_params, file_data, internal_retry, allow_retries, additional_headers)[39m
+[32m    468[39m     [38;5;28;01mexcept[39;00m:
+[32m    469[39m         [38;5;66;03m# If this error comes from, ie, the web server or something else, then[39;00m
+[32m    470[39m         [38;5;66;03m# we have to use 'reason'[39;00m
+[32m    471[39m         details = {[33m"[39m[33mmsg[39m[33m"[39m: r.reason}
+[32m--> [39m[32m473[39m     [38;5;28;01mraise[39;00m PortalRequestError([33mf[39m[33m"[39m[33mRequest failed: [39m[38;5;132;01m{[39;00mdetails[[33m'[39m[33mmsg[39m[33m'[39m][38;5;132;01m}[39;00m[33m"[39m, r.status_code, details)
+[32m    475[39m [38;5;28;01mreturn[39;00m r
 
 [31mPortalRequestError[39m: Request failed: 400 Bad Request: Invalid body: 1 validation error for ParsingModel[RecordQueryFilters]
 __root__ -> creator_user

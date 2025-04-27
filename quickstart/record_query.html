@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=48d67545"></script>
+    <script src="../_static/documentation_options.js?v=39a4d864"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="How do I retrieve computation results by ID?" href="record_retrieval.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.60.post54+g7fe949180" />
+  <meta name="docsearch:version" content="0.60.post57+g46aca5310" />
   </head>
   
   
@@ -472,7 +472,7 @@ However, you can also query the database for computations having specific detail
 </div>
 </div>
 <div class="cell_output docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"version_major": 2, "version_minor": 0, "model_id": "5af79004c3ee4afa878de19228d5b45e"}</script></div>
+<script type="application/vnd.jupyter.widget-view+json">{"version_major": 2, "version_minor": 0, "model_id": "6b67c0fdaa944c9eae13c71807ba7824"}</script></div>
 </div>
 <section id="create-a-client-object-and-connect-to-the-demo-server">
 <h2>Create a client object and connect to the demo server<a class="headerlink" href="#create-a-client-object-and-connect-to-the-demo-server" title="Link to this heading">#</a></h2>
@@ -487,7 +487,7 @@ need to log in to submit or modify computations.</p>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>WARNING: This client version is newer than the server version. This may work if the versions are close, but expect exceptions and errors if attempting things the server does not support. client version: 0.60.post54+g7fe949180, server version: 0.59
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>WARNING: This client version is newer than the server version. This may work if the versions are close, but expect exceptions and errors if attempting things the server does not support. client version: 0.60.post57+g46aca5310, server version: 0.59
 </pre></div>
 </div>
 </div>
@@ -626,27 +626,28 @@ query_records(*, record_id: &#39;Optional[Union[int, Iterable[int]]]&#39; = None
 <span class="g g-Whitespace">    </span><span class="mi">872</span>         <span class="c1"># Get the record type string. This is kind of ugly, but works.</span>
 <span class="g g-Whitespace">    </span><span class="mi">873</span>         <span class="n">record_type_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_type</span><span class="o">.</span><span class="n">__fields__</span><span class="p">[</span><span class="s2">&quot;record_type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">default</span>
 
-<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:497,</span> in <span class="ni">PortalClientBase.make_request</span><span class="nt">(self, method, endpoint, response_model, body_model, url_params_model, body, url_params, allow_retries, additional_headers)</span>
-<span class="g g-Whitespace">    </span><span class="mi">494</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parsed_url_params</span><span class="p">,</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
-<span class="g g-Whitespace">    </span><span class="mi">495</span>     <span class="n">parsed_url_params</span> <span class="o">=</span> <span class="n">parsed_url_params</span><span class="o">.</span><span class="n">dict</span><span class="p">()</span>
-<span class="ne">--&gt; </span><span class="mi">497</span> <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span>
-<span class="g g-Whitespace">    </span><span class="mi">498</span>     <span class="n">method</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">499</span>     <span class="n">endpoint</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">500</span>     <span class="n">body</span><span class="o">=</span><span class="n">serialized_body</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">501</span>     <span class="n">url_params</span><span class="o">=</span><span class="n">parsed_url_params</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">502</span>     <span class="n">allow_retries</span><span class="o">=</span><span class="n">allow_retries</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">503</span>     <span class="n">additional_headers</span><span class="o">=</span><span class="n">additional_headers</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">504</span> <span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">505</span> <span class="n">d</span> <span class="o">=</span> <span class="n">deserialize</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">])</span>
-<span class="g g-Whitespace">    </span><span class="mi">507</span> <span class="k">if</span> <span class="n">response_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:524,</span> in <span class="ni">PortalClientBase.make_request</span><span class="nt">(self, method, endpoint, response_model, body_model, url_params_model, body, url_params, upload_files, allow_retries, additional_headers)</span>
+<span class="g g-Whitespace">    </span><span class="mi">520</span>     <span class="n">file_data</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="g g-Whitespace">    </span><span class="mi">522</span> <span class="k">assert</span> <span class="p">(</span><span class="n">serialized_body</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">file_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>  <span class="c1"># Just to check my logic</span>
+<span class="ne">--&gt; </span><span class="mi">524</span> <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">525</span>     <span class="n">method</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">526</span>     <span class="n">endpoint</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">527</span>     <span class="n">body</span><span class="o">=</span><span class="n">serialized_body</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">528</span>     <span class="n">url_params</span><span class="o">=</span><span class="n">parsed_url_params</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">529</span>     <span class="n">file_data</span><span class="o">=</span><span class="n">file_data</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">530</span>     <span class="n">allow_retries</span><span class="o">=</span><span class="n">allow_retries</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">531</span>     <span class="n">additional_headers</span><span class="o">=</span><span class="n">additional_headers</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">532</span> <span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">533</span> <span class="n">d</span> <span class="o">=</span> <span class="n">deserialize</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">])</span>
+<span class="g g-Whitespace">    </span><span class="mi">535</span> <span class="k">if</span> <span class="n">response_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 
-<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:461,</span> in <span class="ni">PortalClientBase._request</span><span class="nt">(self, method, endpoint, body, url_params, internal_retry, allow_retries, additional_headers)</span>
-<span class="g g-Whitespace">    </span><span class="mi">456</span>     <span class="k">except</span><span class="p">:</span>
-<span class="g g-Whitespace">    </span><span class="mi">457</span>         <span class="c1"># If this error comes from, ie, the web server or something else, then</span>
-<span class="g g-Whitespace">    </span><span class="mi">458</span>         <span class="c1"># we have to use &#39;reason&#39;</span>
-<span class="g g-Whitespace">    </span><span class="mi">459</span>         <span class="n">details</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;msg&quot;</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">reason</span><span class="p">}</span>
-<span class="ne">--&gt; </span><span class="mi">461</span>     <span class="k">raise</span> <span class="n">PortalRequestError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Request failed: </span><span class="si">{</span><span class="n">details</span><span class="p">[</span><span class="s1">&#39;msg&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">details</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">463</span> <span class="k">return</span> <span class="n">r</span>
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:473,</span> in <span class="ni">PortalClientBase._request</span><span class="nt">(self, method, endpoint, body, url_params, file_data, internal_retry, allow_retries, additional_headers)</span>
+<span class="g g-Whitespace">    </span><span class="mi">468</span>     <span class="k">except</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">469</span>         <span class="c1"># If this error comes from, ie, the web server or something else, then</span>
+<span class="g g-Whitespace">    </span><span class="mi">470</span>         <span class="c1"># we have to use &#39;reason&#39;</span>
+<span class="g g-Whitespace">    </span><span class="mi">471</span>         <span class="n">details</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;msg&quot;</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">reason</span><span class="p">}</span>
+<span class="ne">--&gt; </span><span class="mi">473</span>     <span class="k">raise</span> <span class="n">PortalRequestError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Request failed: </span><span class="si">{</span><span class="n">details</span><span class="p">[</span><span class="s1">&#39;msg&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">details</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">475</span> <span class="k">return</span> <span class="n">r</span>
 
 <span class="ne">PortalRequestError</span>: Request failed: 400 Bad Request: Invalid body: 1 validation error for ParsingModel[RecordQueryFilters]
 <span class="n">__root__</span> <span class="o">-&gt;</span> <span class="n">creator_user</span>

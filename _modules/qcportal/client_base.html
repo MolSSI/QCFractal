@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=48d67545"></script>
+    <script src="../../_static/documentation_options.js?v=39a4d864"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.60.post54+g7fe949180" />
+  <meta name="docsearch:version" content="0.60.post57+g46aca5310" />
   </head>
   
   
@@ -460,7 +460,7 @@
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">pydantic</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Iterable</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">packaging.version</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse</span> <span class="k">as</span> <span class="n">parse_version</span>
@@ -738,7 +738,7 @@
     <span class="nd">@encoding</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">encoding</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_encoding</span> <span class="o">=</span> <span class="n">encoding</span>
-        <span class="n">enc_headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">:</span> <span class="n">encoding</span><span class="p">,</span> <span class="s2">&quot;Accept&quot;</span><span class="p">:</span> <span class="n">encoding</span><span class="p">}</span>
+        <span class="n">enc_headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Accept&quot;</span><span class="p">:</span> <span class="n">encoding</span><span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_req_session</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">enc_headers</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_send_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">req</span><span class="p">:</span> <span class="n">requests</span><span class="o">.</span><span class="n">Request</span><span class="p">,</span> <span class="n">allow_retries</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">requests</span><span class="o">.</span><span class="n">Response</span><span class="p">:</span>
@@ -880,6 +880,7 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">body</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">url_params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">file_data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">internal_retry</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">allow_retries</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">additional_headers</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -893,8 +894,19 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_JWT_token</span><span class="p">()</span>
 
         <span class="n">full_uri</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">address</span> <span class="o">+</span> <span class="n">endpoint</span>
+
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Let requests handle content-type if doing multipart</span>
+        <span class="c1"># but specify our encoding otherwise</span>
+        <span class="k">if</span> <span class="n">file_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">additional_headers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">headers</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">additional_headers</span><span class="p">)</span>
+
         <span class="n">req</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">Request</span><span class="p">(</span>
-            <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span> <span class="n">url</span><span class="o">=</span><span class="n">full_uri</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">body</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">url_params</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">additional_headers</span>
+            <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span> <span class="n">url</span><span class="o">=</span><span class="n">full_uri</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">body</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">url_params</span><span class="p">,</span> <span class="n">files</span><span class="o">=</span><span class="n">file_data</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span>
         <span class="p">)</span>
         <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_request</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="n">allow_retries</span><span class="o">=</span><span class="n">allow_retries</span><span class="p">)</span>
 
@@ -931,6 +943,7 @@
         <span class="n">url_params_model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">_U</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">body</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">_T</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">url_params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">_U</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">upload_files</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">allow_retries</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">additional_headers</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_V</span><span class="p">:</span>
@@ -953,11 +966,26 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parsed_url_params</span><span class="p">,</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
             <span class="n">parsed_url_params</span> <span class="o">=</span> <span class="n">parsed_url_params</span><span class="o">.</span><span class="n">dict</span><span class="p">()</span>
 
+        <span class="k">if</span> <span class="n">upload_files</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Yes, a list of tuples. We always use the &quot;files&quot; key, and doing it this way</span>
+            <span class="c1"># allows for multiple files to be uploaded in a single request.</span>
+            <span class="n">file_data</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;files&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)))</span> <span class="k">for</span> <span class="n">fname</span><span class="p">,</span> <span class="n">fpath</span> <span class="ow">in</span> <span class="n">upload_files</span><span class="p">]</span>
+
+            <span class="c1"># We must also send the serialized body as part of the multipart upload</span>
+            <span class="k">if</span> <span class="n">serialized_body</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">file_data</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;body_data&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;body_data&quot;</span><span class="p">,</span> <span class="n">serialized_body</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">)))</span>
+                <span class="n">serialized_body</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">file_data</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">assert</span> <span class="p">(</span><span class="n">serialized_body</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">file_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>  <span class="c1"># Just to check my logic</span>
+
         <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span>
             <span class="n">method</span><span class="p">,</span>
             <span class="n">endpoint</span><span class="p">,</span>
             <span class="n">body</span><span class="o">=</span><span class="n">serialized_body</span><span class="p">,</span>
             <span class="n">url_params</span><span class="o">=</span><span class="n">parsed_url_params</span><span class="p">,</span>
+            <span class="n">file_data</span><span class="o">=</span><span class="n">file_data</span><span class="p">,</span>
             <span class="n">allow_retries</span><span class="o">=</span><span class="n">allow_retries</span><span class="p">,</span>
             <span class="n">additional_headers</span><span class="o">=</span><span class="n">additional_headers</span><span class="p">,</span>
         <span class="p">)</span>
