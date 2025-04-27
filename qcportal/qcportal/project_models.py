@@ -8,7 +8,6 @@ from qcportal.base_models import RestModelBase, validate_list_to_single
 from qcportal.dataset_models import BaseDataset, dataset_from_dict
 from qcportal.external_files import ExternalFile
 from qcportal.metadata_models import InsertCountsMetadata
-from qcportal.molecules import Molecule
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, RecordAddBodyBase, record_from_dict, BaseRecord
 from qcportal.utils import make_list
 
@@ -155,7 +154,6 @@ class Project(BaseModel):
     ########################################
     _record_metadata: List[ProjectRecordMetadata] = PrivateAttr([])
     _dataset_metadata: List[ProjectDatasetMetadata] = PrivateAttr([])
-    _molecules: List[Molecule] = PrivateAttr([])
 
     ######################################################
     # Fields not always included when fetching the dataset
