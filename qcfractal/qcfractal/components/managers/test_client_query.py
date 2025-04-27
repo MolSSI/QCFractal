@@ -76,3 +76,30 @@ def test_manager_client_query_limit(queryable_managers_client: PortalClient):
     query_res = queryable_managers_client.query_managers(hostname="test_host_1", limit=11)
     query_res_l = list(query_res)
     assert len(query_res_l) == 11
+
+
+def test_manager_client_query_active(queryable_managers_client: PortalClient):
+    mnames = queryable_managers_client.query_active_managers(compute_tag="tag2", programs={"qcprog": ["unknown"]})
+    assert len(mnames) == 80
+
+    mnames = queryable_managers_client.query_active_managers(
+        compute_tag="tag_3", programs={"qcprog": ["unknown"], "qcprog2": ["v3.0"]}
+    )
+    assert len(mnames) == 20
+
+    mnames = queryable_managers_client.query_active_managers(
+        compute_tag=["tag_2", "othertag"], programs={"qcprog": ["unknown"], "qcprog2": ["v3.0"]}
+    )
+    assert len(mnames) == 20
+
+    mnames = queryable_managers_client.query_active_managers(compute_tag="tag_3", programs={"qcprog9": ["unknown"]})
+    assert len(mnames) == 0
+
+    mnames = queryable_managers_client.query_active_managers(compute_tag="notag", programs={"qcprog": ["unknown"]})
+    assert len(mnames) == 0
+
+    mnames = queryable_managers_client.query_active_managers(compute_tag="tag2", programs={"qcprog9": ["unknown"]})
+    assert len(mnames) == 0
+
+    mnames = queryable_managers_client.query_active_managers(compute_tag="*", programs={"qcprog": ["unknown"]})
+    assert len(mnames) == 80

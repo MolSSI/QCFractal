@@ -9,12 +9,11 @@ from sqlalchemy import (
     Float,
     Index,
     String,
-    JSON,
     Enum,
     UniqueConstraint,
     CheckConstraint,
 )
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 
 from qcfractal.db_socket import BaseORM
 from qcportal.managers import ManagerStatusEnum
@@ -56,7 +55,7 @@ class ComputeManagerORM(BaseORM):
     modified_on = Column(TIMESTAMP(timezone=True), nullable=False, default=now_at_utc)
 
     manager_version = Column(String, nullable=False)
-    programs = Column(JSON, nullable=False)
+    programs = Column(JSONB, nullable=False)
 
     __table_args__ = (
         Index("ix_compute_manager_status", "status"),

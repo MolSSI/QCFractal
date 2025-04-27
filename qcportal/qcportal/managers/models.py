@@ -166,6 +166,11 @@ class ManagerQueryFilters(QueryProjModelBase):
         return v
 
 
+class ManagerQueryAvailableFilters(RestModelBase):
+    compute_tag: List[str]
+    programs: Dict[str, List[str]]
+
+
 class ManagerQueryIterator(QueryIteratorBase[ComputeManager]):
     """
     Iterator for manager queries

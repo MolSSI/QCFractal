@@ -81,7 +81,7 @@ from .dataset_models import (
     create_dataset_view,
 )
 from .internal_jobs import InternalJob, InternalJobQueryFilters, InternalJobQueryIterator, InternalJobStatusEnum
-from .managers import ManagerQueryFilters, ManagerQueryIterator, ComputeManager
+from .managers import ManagerQueryFilters, ManagerQueryIterator, ManagerQueryAvailableFilters, ComputeManager
 from .metadata_models import UpdateMetadata, InsertMetadata, DeleteMetadata
 from .molecules import Molecule, MoleculeIdentifiers, MoleculeModifyBody, MoleculeQueryIterator, MoleculeQueryFilters
 from .record_models import (
@@ -2637,6 +2637,32 @@ class PortalClient(PortalClientBase):
 
         filter_data = ManagerQueryFilters(**filter_dict)
         return ManagerQueryIterator(self, filter_data)
+
+    def query_active_managers(
+        self,
+        compute_tag: Union[str, List[str]],
+        programs: Dict[str, List[str]],
+    ) -> List[str]:
+        """
+        Queries active managers for any that can take the given compute tag or program
+
+        This will select managers that can handle any of the given compute tags, and all the given programs/versions.
+
+        Parameters
+        ----------
+        compute_tag
+            List of possible tags the task can have. A manager must have one of the tags to be considered available.
+        programs
+            Required programs/versions for the task. A manager must have all the programs/versions to be considered available.
+
+        Returns
+        -------
+        :
+            List of manager names that could possible handle the given compute tags/programs.
+        """
+
+        query_data = ManagerQueryAvailableFilters(compute_tag=make_list(compute_tag), programs=programs)
+        return self.make_request("post", "api/v1/managers/queryActive", List[str], body=query_data)
 
     def query_access_log(
         self,
