@@ -59,7 +59,15 @@ export default function OptionsMenu() {
           },
         }}
       >
-        <MenuItem onClick={handleClose}>Profile</MenuItem>
+        <MenuItem onClick={handleClose}>
+          <ListItemText
+            onClick={() => {
+              navigate("/me");
+            }}
+          >
+          Profile
+          </ListItemText>
+          </MenuItem>
         <MenuItem onClick={handleClose}>My account</MenuItem>
         <Divider />
         <MenuItem onClick={handleClose}>Add another account</MenuItem>

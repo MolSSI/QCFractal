@@ -8,6 +8,7 @@ export type UserInfo = {
   username: string;
   groups: string[];
   role: string;
+  auth_type: string;
 };
 
 export type ConnectionState = {
