@@ -61,7 +61,10 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
           </Grid>
           <Grid size={3}>
             <Typography variant="body1">Role: {userData.role}</Typography>
-            <Typography variant="body1">Auth: {userData.auth_type}</Typography>
+
+            { (isAdmin || isThisUser) && (
+              <Typography variant="body1">Auth: {userData.auth_type}</Typography>
+            )}
           </Grid>
           <Grid size={4}>
             <Typography variant="h6">Groups</Typography>
