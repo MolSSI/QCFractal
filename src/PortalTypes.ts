@@ -42,15 +42,16 @@ export type Project = {
   tagline: string;
   description: string;
   tags: string[];
+  owner_user: string | null;
 };
 
 export type ProjectDatasetMetadata = {
   dataset_id: number;
-}
+};
 
 export type ProjectRecordMetadata = {
   record_id: number;
-}
+};
 
 export type CalculationRecord = {
   record_id: number;
@@ -68,7 +69,7 @@ export type Manager = {
   hostname: string;
   username: string;
   tags: Array<string>;
-  programs: Record<string, string>
+  programs: Record<string, string>;
 
   status: string;
   created_on: string;
@@ -84,9 +85,31 @@ export type Molecule = {
   id: number;
   name?: string;
   symbols: Array<string>;
-  geometry: Array<number>
+  geometry: Array<number>;
   connectivity: Array<[number, number, number]>;
   real: Array<boolean>;
 
   identifiers: MoleculeIdentifiers;
+};
+
+export type RecordData = {
+  name: string;
+  description: string;
+  manager_name: string;
+  status: string;
+  id: number;
+  record_type: string;
+  tags: Array<string>;
+  is_service: boolean;
+  created_on: string;
+  modified_on: string;
+  owner_group: string | null;
+  specification: {
+    driver: string;
+    basis: string;
+    method: string;
+    program: string;
+    keywords: Record<string, any>;
+  };
+  properties: Record<string, any>;
 };
