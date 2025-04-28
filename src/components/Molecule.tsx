@@ -4,14 +4,21 @@ import React, {
   useEffect,
   useRef,
   useState,
+  ReactNode
 } from "react";
 import { moleculeToSDF } from "../MoleculeUtils";
 import * as qcpTypes from "../PortalTypes";
-import { Stage } from "ngl";
+import { Stage, Component } from "ngl";
 
 const StageContext = createContext<Stage | undefined>(undefined);
 
-function MoleculeStageProvider({ width, height, children }) {
+type MoleculeStageProviderProps = {
+  width: number;
+  height: number;
+  children: ReactNode
+};
+
+function MoleculeStageProvider({ width, height, children }: MoleculeStageProviderProps) {
   const stageElementRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Stage | null>(null);
   const [isReady, setIsReady] = useState(false);
@@ -23,11 +30,11 @@ function MoleculeStageProvider({ width, height, children }) {
       });
       setIsReady(true);
 
-      const handleResize = () => stageRef.current.handleResize();
+      const handleResize = () => stageRef.current!.handleResize();
       window.addEventListener("resize", handleResize);
       return () => {
         window.removeEventListener("resize", handleResize);
-        stageRef.current.dispose();
+        stageRef.current!.dispose();
       };
     }
   }, []);
@@ -36,7 +43,7 @@ function MoleculeStageProvider({ width, height, children }) {
     <>
       <div ref={stageElementRef} style={{ width, height }} />
       {isReady && (
-        <StageContext.Provider value={stageRef.current}>
+        <StageContext.Provider value={stageRef.current!}>
           {children}
         </StageContext.Provider>
       )}
@@ -54,10 +61,10 @@ const MoleculeViewer: React.FC<{ moleculeData: qcpTypes.Molecule }> = ({
       "MoleculeViewer must be used within a MoleculeStageProvider",
     );
   }
-  const componentRef = useRef<any>(null);
+  const componentRef = useRef<Component>(null);
 
   useEffect(() => {
-    // Remove previous component if it exists
+    // Remove the previous component if it exists
     if (componentRef.current) {
       stage.removeComponent(componentRef.current);
       componentRef.current = null;
@@ -72,8 +79,10 @@ const MoleculeViewer: React.FC<{ moleculeData: qcpTypes.Molecule }> = ({
     stage
       .loadFile(molBlob, { ext: "sdf", defaultRepresentation: true })
       .then(function (comp) {
-        componentRef.current = comp;
-        comp.addRepresentation("ball+stick", { multipleBond: true });
+        if (comp instanceof Component) {
+          componentRef.current = comp;
+        }
+        comp!.addRepresentation("ball+stick", { multipleBond: true });
         stage.autoView();
       });
   }, [stage, moleculeData]);

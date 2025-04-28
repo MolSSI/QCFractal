@@ -1,4 +1,3 @@
-import * as React from "react";
 import { styled } from "@mui/material/styles";
 import Avatar from "@mui/material/Avatar";
 import MuiDrawer, { drawerClasses } from "@mui/material/Drawer";
@@ -11,7 +10,7 @@ import Button from "@mui/material/Button";
 import ServerStatus from "../components/ServerStatus";
 import { usePortalClientAuth } from "../usePortalClient";
 import { useNavigate } from "react-router-dom";
-import  qcarchiveLogo from "../assets/QCArchiveLogo.png"
+import qcarchiveLogo from "../assets/QCArchiveLogo.png";
 
 const drawerWidth = 240;
 
