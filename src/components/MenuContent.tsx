@@ -9,7 +9,7 @@ import Stack from "@mui/material/Stack";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted"
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
-import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import ComputerIcon from "@mui/icons-material/Computer";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
@@ -19,7 +19,7 @@ const mainListItems = [
   { text: "Home", icon: <HomeRoundedIcon />, path: "/" },
   { text: "Projects", icon: <FormatListBulletedIcon />, path: "/projects" },
   { text: "Clients", icon: <PeopleRoundedIcon />, path: "/" },
-  { text: "Tasks", icon: <AssignmentRoundedIcon />, path: "/" },
+  { text: "Compute", icon: <ComputerIcon />, path: "/managers" },
 ];
 
 const secondaryListItems = [

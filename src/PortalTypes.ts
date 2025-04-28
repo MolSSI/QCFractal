@@ -74,6 +74,33 @@ export type Manager = {
   status: string;
   created_on: string;
   modified_on: string;
+
+  claimed: number;
+  successes: number
+  failures: number
+  rejected: number
+
+  total_cpu_hours: number
+  active_tasks: number
+  active_cores: number
+  active_memory: number
+};
+
+export type QueryProjModelBase = {
+  limit?: number;
+  cursor?: number;
+  include?: string[];
+  exclude?: string[];
+}
+
+export type ManagerQueryFilters = QueryProjModelBase & {
+  manager_id?: number[];
+  name?: string[];
+  cluster?: string[];
+  hostname?: string[];
+  status?: string[];
+  modified_before?: string;
+  modified_after?: string;
 };
 
 export type MoleculeIdentifiers = {
