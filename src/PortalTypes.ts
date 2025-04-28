@@ -8,6 +8,8 @@ export type UserInfo = {
   username: string;
   groups: string[];
   role: string;
+  auth_type: string;
+  enabled: boolean;
 };
 
 export type ConnectionState = {
@@ -54,6 +56,8 @@ export type CalculationRecord = {
   record_id: number;
   record_type: string;
   status: string;
+  name?: string;
+  description?: string;
 };
 
 export type Manager = {
