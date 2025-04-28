@@ -108,7 +108,7 @@ export default function Project() {
       {!projectFetchedData.loading && projectData && (
         <Grid container spacing={2} width="100%">
           {/* Project name & tagline */}
-          <Grid item size={12}>
+          <Grid size={12}>
             <Typography variant="h4" fontWeight="bold">
               {projectData.name}
             </Typography>
@@ -117,7 +117,7 @@ export default function Project() {
             </Typography>
           </Grid>
           {/* Summary stats: for example, Records, Datasets, Molecules */}
-          <Grid item size={2}>
+          <Grid size={2}>
             <Paper elevation={3}>
               <Box p={1}>
                 <Typography variant="body1" fontWeight="bold">
@@ -126,7 +126,7 @@ export default function Project() {
               </Box>
             </Paper>
           </Grid>
-          <Grid item size={2}>
+          <Grid size={2}>
             <Paper elevation={3}>
               <Box p={1}>
                 <Typography variant="body1" fontWeight="bold">
@@ -135,7 +135,7 @@ export default function Project() {
               </Box>
             </Paper>
           </Grid>
-          <Grid item size={2}>
+          <Grid size={2}>
             <Paper elevation={3}>
               <Box p={1}>
                 <Typography variant="body1" fontWeight="bold">
@@ -147,7 +147,7 @@ export default function Project() {
 
           <Box size={12} sx={{ mx: "auto" }}>
             {/* Description & Metadata section */}
-            <Grid item xs={12} mb={3}>
+            <Grid xs={12} mb={3}>
               <Paper elevation={2}>
                 <Box
                   display="flex"

@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
+    "lint": "prettier --check",
     "preview": "vite preview",
     "format": "prettier --write ."
   },
@@ -19,6 +19,7 @@
     "@mui/x-data-grid": "^8.1.0",
     "@mui/x-data-grid-pro": "^8.1.0",
     "@mui/x-tree-view": "^8.1.0",
+    "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "ngl": "^2.4.0",
     "react": "^19.1.0",
