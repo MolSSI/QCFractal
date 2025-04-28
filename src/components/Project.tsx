@@ -145,9 +145,9 @@ export default function Project() {
             </Paper>
           </Grid>
 
-          <Box size={12} sx={{ mx: "auto" }}>
-            {/* Description & Metadata section */}
-            <Grid xs={12} mb={3}>
+          {/* Description & Metadata section */}
+          <Box size={12} mx={"auto"}>
+            <Grid size={12} mb={3}>
               <Paper elevation={2}>
                 <Box
                   display="flex"
@@ -192,7 +192,7 @@ export default function Project() {
             </Grid>
 
             {/* Lower section with Tabs for Datasets, Records, Molecules */}
-            <Grid item size={12}>
+            <Grid size={12}>
               <Paper elevation={2}>
                 <Tabs
                   value={tabValue}

@@ -42,6 +42,7 @@ export type Project = {
   tagline: string;
   description: string;
   tags: string[];
+  owner_user: string | null;
 };
 
 export type ProjectDatasetMetadata = {
