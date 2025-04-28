@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import AppTheme from "../shared-theme/AppTheme";
 import {
   Box,
   Button,
@@ -9,6 +10,7 @@ import {
 } from "@mui/material";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { usePortalClientAuth } from "../usePortalClient";
+import { alpha } from "@mui/material/styles";
 
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState("");
@@ -36,53 +38,57 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <Box
-      sx={{
-        width: "100vw",
-        height: "100vh",
-        backgroundColor: "white",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Card sx={{ width: "300px", p: 2, boxShadow: 3 }}>
-        <CardContent>
-          <Typography variant="h5" gutterBottom textAlign="center">
-            Login
-          </Typography>
-          {error && <Typography color="error">{error}</Typography>}
-          <form onSubmit={handleLogin}>
-            <TextField
-              fullWidth
-              label="Username"
-              margin="normal"
-              variant="outlined"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
-            <TextField
-              fullWidth
-              label="Password"
-              type="password"
-              margin="normal"
-              variant="outlined"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <Button
-              fullWidth
-              variant="contained"
-              color="primary"
-              type="submit"
-              sx={{ mt: 2 }}
-            >
+    <AppTheme>
+      <Box
+        sx={(theme) => ({
+          width: "100vw",
+          height: "100vh",
+          backgroundColor: theme.vars
+            ? `rgba(${theme.vars.palette.background.defaultChannel} / 1)`
+            : alpha(theme.palette.background.default, 1),
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        })}
+      >
+        <Card sx={{ width: "300px", p: 2, boxShadow: 3 }}>
+          <CardContent>
+            <Typography variant="h5" gutterBottom textAlign="center">
               Login
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </Box>
+            </Typography>
+            {error && <Typography color="error">{error}</Typography>}
+            <form onSubmit={handleLogin}>
+              <TextField
+                fullWidth
+                label="Username"
+                margin="normal"
+                variant="outlined"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+              <TextField
+                fullWidth
+                label="Password"
+                type="password"
+                margin="normal"
+                variant="outlined"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <Button
+                fullWidth
+                variant="contained"
+                color="primary"
+                type="submit"
+                sx={{ mt: 2 }}
+              >
+                Login
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </Box>
+    </AppTheme>
   );
 };
 

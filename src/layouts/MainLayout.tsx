@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
 import { alpha } from "@mui/material/styles";
-import SideMenu from "../components/SideMenu"
+import SideMenu from "../components/SideMenu";
 import { Box, CssBaseline, Stack } from "@mui/material";
 import AppTheme from "../shared-theme/AppTheme";
 import Header from "../components/Header";
@@ -16,9 +16,9 @@ const xThemeComponents = {
   ...treeViewCustomizations,
 };
 
-function MainLayout(props: { disableCustomTheme?: boolean }) {
+function MainLayout() {
   return (
-    <AppTheme {...props} themeComponents={xThemeComponents}>
+    <AppTheme themeComponents={xThemeComponents}>
       <CssBaseline enableColorScheme />
       <Box sx={{ display: "flex", height: "100vh" }}>
         <SideMenu />
@@ -42,22 +42,22 @@ function MainLayout(props: { disableCustomTheme?: boolean }) {
             }}
           >
             <Stack
-                spacing={2}
-                sx={{
-                    alignItems: "center",
-                    pb: 5,
-                    mt: { xs: 8, md: 0 },
-                    mx: 3
-                }}
-                >
-                <Header />
-                <Outlet />
+              spacing={2}
+              sx={{
+                alignItems: "center",
+                pb: 5,
+                mt: { xs: 8, md: 0 },
+                mx: 3,
+              }}
+            >
+              <Header />
+              <Outlet />
             </Stack>
           </Box>
         </Box>
       </Box>
     </AppTheme>
   );
-};
+}
 
 export default MainLayout;
