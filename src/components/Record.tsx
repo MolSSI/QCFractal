@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { usePortalClientRequest } from "../usePortalClient";
+import { WaitingReasonFragment } from "./WaitingReasonFragment";
 import * as qcpTypes from "../PortalTypes";
 import { FetchedData } from "../PortalClientContext";
 import {
@@ -10,14 +11,18 @@ import {
   Stack,
   Paper,
   Box,
-  Divider
+  Divider,
+  Tooltip,
+  Dialog,
+  DialogContent,
 } from "@mui/material";
+import HelpOutline from '@mui/icons-material/HelpOutline';
 import { format } from "date-fns"; 
 
 function Record() {
   const { projectId, recordId } = useParams();
   const { fetchData } = usePortalClientRequest();
-
+  const [waitingReasonOpen, setWaitingReasonOpen] = React.useState(false);
   const [recordFetchedData, setRecordFetchedData] = React.useState<
     FetchedData<qcpTypes.RecordData>
   >({
@@ -36,7 +41,7 @@ function Record() {
   }, [fetchData, projectId, recordId]);
 
   const recordData = recordFetchedData?.data;
-
+  console.log(recordData?.status)
   // Status color mapping
   const statusColors: Record<
     string,
@@ -134,13 +139,36 @@ function Record() {
               justifyContent="flex-start"
             >
               <Stack spacing={1} alignItems="flex-end">
-                <Chip
-                  label={recordData.status}
-                  color={
-                    statusColors[recordData.status.toLowerCase()] || "default"
-                  }
-                  sx={{ fontWeight: "bold", textTransform: "capitalize" }}
-                />
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Chip
+                    label={recordData.status}
+                    color={
+                      statusColors[recordData.status.toLowerCase()] || "default"
+                    }
+                    sx={{ fontWeight: "bold", textTransform: "capitalize" }}
+                  />
+                  {recordData.status.toLowerCase() === "waiting" && (
+                    <>
+                      <Tooltip title="Click here for waiting reason">
+                        <HelpOutline
+                          fontSize="small"
+                          color="action"
+                          sx={{ cursor: "pointer" }}
+                          onClick={() => setWaitingReasonOpen(true)}
+                        />
+                      </Tooltip>
+                      <Dialog
+                        fullWidth={true}
+                        open={waitingReasonOpen}
+                        onClose={() => setWaitingReasonOpen(false)}
+                      >
+                        <DialogContent>
+                          <WaitingReasonFragment recordId={recordId} />
+                        </DialogContent>
+                      </Dialog>
+                    </>
+                  )}
+                </Box>
                 <Paper elevation={3}>
                   <Box p={1}>
                     <Typography variant="body1" fontWeight="bold">
@@ -151,20 +179,7 @@ function Record() {
               </Stack>
             </Grid>
           </Grid>
-          <Divider sx={{my: 2, width:"100%"}} />
-          <Box>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              <strong>Created On:</strong>{" "}
-              {format(new Date(recordData.created_on), "MMMM dd, yyyy HH:mm")}
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              <strong>Modified On:</strong>{" "}
-              {format(new Date(recordData.modified_on), "MMMM dd, yyyy HH:mm")}
-            </Typography>
-            <Typography variant="body2">
-              <strong>Creator:</strong> {recordData.owner_group || "None"}
-            </Typography>
-          </Box>
+          <Divider sx={{ my: 2, width: "100%" }} />
         </>
       )}
     </>
