@@ -1,7 +1,8 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { usePortalClientRequest } from "../usePortalClient";
 import { WaitingReasonFragment } from "./WaitingReasonFragment";
+import { ManagerFragment } from "./ManagerFragment";
 import Comments from "./Comments";
 import * as qcpTypes from "../PortalTypes";
 import { FetchedData } from "../PortalClientContext";
@@ -25,6 +26,8 @@ function Record() {
   const { projectId, recordId } = useParams();
   const { fetchData } = usePortalClientRequest();
   const [waitingReasonOpen, setWaitingReasonOpen] = React.useState(false);
+  const [managerDialogOpen, setManagerDialogOpen] = useState(false);
+
   const [recordFetchedData, setRecordFetchedData] = React.useState<
     FetchedData<qcpTypes.RecordData>
   >({
@@ -183,26 +186,42 @@ function Record() {
           <Divider sx={{ my: 2, width: "100%" }} />
           <Grid container spacing={2} width="100%">
             {/* Comments Section */}
-            <Grid size={{xs:12, md:6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Box>
                 <Comments />
               </Box>
             </Grid>
 
             {/* Last Manager Section */}
-            <Grid size={{xs:12, md:6}}>
-              <Paper elevation={3} >
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Paper elevation={3}>
                 <Box p={2}>
                   <Typography variant="body1" fontWeight="bold">
                     Last Manager:
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {recordData.manager_name ? recordData.manager_name : "None"}
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ cursor: "pointer", textDecoration: "underline" }}
+                    onClick={() => setManagerDialogOpen(true)}
+                  >
+                    {recordData.manager_name || "None"}
                   </Typography>
                 </Box>
               </Paper>
             </Grid>
           </Grid>
+
+          {/* Manager Dialog */}
+          <Dialog
+            fullWidth={true}
+            open={managerDialogOpen}
+            onClose={() => setManagerDialogOpen(false)}
+          >
+            <DialogContent>
+              <ManagerFragment managerName={recordData.manager_name} />
+            </DialogContent>
+          </Dialog>
         </>
       )}
     </>
