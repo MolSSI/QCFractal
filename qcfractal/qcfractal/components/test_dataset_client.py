@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -72,6 +72,31 @@ def test_dataset_client_status(snowflake: QCATestingSnowflake):
     stat1 = ds.status()
     stat2 = snowflake_client.get_dataset_status_by_id(ds.id)
     assert stat1 == stat2
+
+
+def test_dataset_client_status_by_tag(snowflake: QCATestingSnowflake):
+    snowflake_client = snowflake.client()
+    manager_name, _ = snowflake.activate_manager()
+
+    ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
+    assert ds.status_by_compute_tag() == []
+
+    input_spec, molecule, _ = load_test_data("sp_psi4_peroxide_energy_wfn")
+
+    molecule_2 = Molecule(symbols=["b"], geometry=[0, 0, 0])
+
+    # Add this as a part of the dataset
+    ds.add_specification("spec_1", input_spec)
+    ds.add_entry(name="test_molecule", molecule=molecule)
+    ds.add_entry(name="test_molecule_2", molecule=molecule_2)
+    ds.submit(entry_names=["test_molecule"], compute_tag="tag1")
+    ds.submit(entry_names=["test_molecule_2"], compute_tag="tag2")
+
+    status = ds.status_by_compute_tag()
+    assert len(status) == 2
+    assert {s[0] for s in status} == {"tag1", "tag2"}
+    assert all(s[1] == "waiting" for s in status)
+    assert all(s[2] == 1 for s in status)
 
 
 def test_dataset_client_add_same_name(snowflake_client: PortalClient):

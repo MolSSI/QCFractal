@@ -21,6 +21,8 @@ from qcfractal.components.dataset_db_views import DatasetDirectRecordsView
 from qcfractal.components.dataset_processing import create_view_file
 from qcfractal.components.internal_jobs.db_models import InternalJobORM
 from qcfractal.components.record_db_models import BaseRecordORM
+from qcfractal.components.tasks.db_models import TaskQueueORM
+from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.db_socket.helpers import get_count
 from qcfractal.db_socket.helpers import (
     get_general,
@@ -269,6 +271,49 @@ class BaseDatasetSocket:
         with self.root_socket.optional_session(session, True) as session:
             stats = session.execute(stmt).all()
             return [tuple(x) for x in stats]
+
+    def status_by_compute_tag(
+        self, dataset_id: int, *, session: Optional[Session] = None
+    ) -> List[Tuple[str, RecordStatusEnum, int]]:
+        """
+        Compute the status of the dataset grouped by tag
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            List of tuple (tag, status, count)
+        """
+
+        stmt1 = select(TaskQueueORM.compute_tag, BaseRecordORM.status, func.count(BaseRecordORM.id))
+        stmt1 = stmt1.join(BaseRecordORM, TaskQueueORM.record_id == BaseRecordORM.id)
+        stmt1 = stmt1.join(self.record_item_orm, BaseRecordORM.id == self.record_item_orm.record_id)
+        stmt1 = stmt1.where(self.record_item_orm.dataset_id == dataset_id)
+        stmt1 = stmt1.group_by(TaskQueueORM.compute_tag, BaseRecordORM.status)
+
+        stmt2 = select(ServiceQueueORM.compute_tag, BaseRecordORM.status, func.count(BaseRecordORM.id))
+        stmt2 = stmt2.join(BaseRecordORM, ServiceQueueORM.record_id == BaseRecordORM.id)
+        stmt2 = stmt2.join(self.record_item_orm, BaseRecordORM.id == self.record_item_orm.record_id)
+        stmt2 = stmt2.where(self.record_item_orm.dataset_id == dataset_id)
+        stmt2 = stmt2.group_by(ServiceQueueORM.compute_tag, BaseRecordORM.status)
+
+        with self.root_socket.optional_session(session, True) as session:
+            task_stats = session.execute(stmt1).all()
+            service_stats = session.execute(stmt2).all()
+
+            ret: List[Tuple[str, RecordStatusEnum, int]] = []
+            for s in task_stats:
+                ret.append((s[0], s[1], s[2]))
+            for s in service_stats:
+                ret.append((s[0], s[1], s[2]))
+            return ret
 
     def get_record_count(self, dataset_id: int, *, session: Optional[Session] = None) -> int:
         """

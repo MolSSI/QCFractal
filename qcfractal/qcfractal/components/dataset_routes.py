@@ -138,6 +138,13 @@ def get_dataset_detailed_status_v1(dataset_type: str, dataset_id: int):
     return ds_socket.detailed_status(dataset_id)
 
 
+@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/status_by_tag", methods=["GET"])
+@wrap_global_route("datasets", "read")
+def get_dataset_status_by_tag_v1(dataset_type: str, dataset_id: int):
+    ds_socket = storage_socket.datasets.get_socket(dataset_type)
+    return ds_socket.status_by_compute_tag(dataset_id)
+
+
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/record_count", methods=["GET"])
 @wrap_global_route("datasets", "read")
 def get_dataset_record_count_v1(dataset_type: str, dataset_id: int):
