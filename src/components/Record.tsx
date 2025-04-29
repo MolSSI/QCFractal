@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { usePortalClientRequest } from "../usePortalClient";
 import { WaitingReasonFragment } from "./WaitingReasonFragment";
+import Comments from "./Comments";
 import * as qcpTypes from "../PortalTypes";
 import { FetchedData } from "../PortalClientContext";
 import {
@@ -18,6 +19,7 @@ import {
 } from "@mui/material";
 import HelpOutline from '@mui/icons-material/HelpOutline';
 import { format } from "date-fns"; 
+
 
 function Record() {
   const { projectId, recordId } = useParams();
@@ -41,7 +43,6 @@ function Record() {
   }, [fetchData, projectId, recordId]);
 
   const recordData = recordFetchedData?.data;
-  console.log(recordData?.status)
   // Status color mapping
   const statusColors: Record<
     string,
@@ -180,6 +181,28 @@ function Record() {
             </Grid>
           </Grid>
           <Divider sx={{ my: 2, width: "100%" }} />
+          <Grid container spacing={2} width="100%">
+            {/* Comments Section */}
+            <Grid size={{xs:12, md:6}}>
+              <Box>
+                <Comments />
+              </Box>
+            </Grid>
+
+            {/* Last Manager Section */}
+            <Grid size={{xs:12, md:6}}>
+              <Paper elevation={3} >
+                <Box p={2}>
+                  <Typography variant="body1" fontWeight="bold">
+                    Last Manager:
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {recordData.manager_name ? recordData.manager_name : "None"}
+                  </Typography>
+                </Box>
+              </Paper>
+            </Grid>
+          </Grid>
         </>
       )}
     </>
