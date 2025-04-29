@@ -591,6 +591,7 @@ class ComputeManager:
         # total_successful_tasks/n_failed_tasks are updated above, per executor
         ########################################################################
 
+        self.statistics.active_tasks = self.n_total_active_tasks
         n_active_tasks = self.n_active_tasks
 
         # Active cores - active tasks * cores per task (worker) for each executor
