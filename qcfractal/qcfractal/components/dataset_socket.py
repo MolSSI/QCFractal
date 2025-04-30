@@ -5,7 +5,7 @@ import os
 import tempfile
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select, delete, func, text, and_, literal
+from sqlalchemy import select, delete, func, text, and_, literal, union
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only, lazyload, joinedload, noload, with_polymorphic
@@ -305,15 +305,54 @@ class BaseDatasetSocket:
         stmt2 = stmt2.group_by(ServiceQueueORM.compute_tag, BaseRecordORM.status)
 
         with self.root_socket.optional_session(session, True) as session:
+            stat = session.execute(union(stmt1, stmt2)).all()
+            return [(x[0], x[1], x[2]) for x in stat]
+
+    def detailed_status_by_compute_tag(
+        self, dataset_id: int, *, session: Optional[Session] = None
+    ) -> List[Tuple[str, RecordStatusEnum, List[int]]]:
+        """
+        Compute the status of the dataset, getting all record ids for each tag/status
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            List of tuple (tag, status, count)
+        """
+
+        stmt1 = select(TaskQueueORM.compute_tag, BaseRecordORM.status, func.array_agg(BaseRecordORM.id))
+        stmt1 = stmt1.join(BaseRecordORM, TaskQueueORM.record_id == BaseRecordORM.id)
+        stmt1 = stmt1.join(self.record_item_orm, BaseRecordORM.id == self.record_item_orm.record_id)
+        stmt1 = stmt1.where(self.record_item_orm.dataset_id == dataset_id)
+        stmt1 = stmt1.group_by(TaskQueueORM.compute_tag, BaseRecordORM.status)
+
+        stmt2 = select(ServiceQueueORM.compute_tag, BaseRecordORM.status, func.array_agg(BaseRecordORM.id))
+        stmt2 = stmt2.join(BaseRecordORM, ServiceQueueORM.record_id == BaseRecordORM.id)
+        stmt2 = stmt2.join(self.record_item_orm, BaseRecordORM.id == self.record_item_orm.record_id)
+        stmt2 = stmt2.where(self.record_item_orm.dataset_id == dataset_id)
+        stmt2 = stmt2.group_by(ServiceQueueORM.compute_tag, BaseRecordORM.status)
+
+        with self.root_socket.optional_session(session, True) as session:
             task_stats = session.execute(stmt1).all()
             service_stats = session.execute(stmt2).all()
 
-            ret: List[Tuple[str, RecordStatusEnum, int]] = []
-            for s in task_stats:
-                ret.append((s[0], s[1], s[2]))
+            ret: Dict[Tuple[str, RecordStatusEnum], List[int]] = {}
+            for ts in task_stats:
+                ret[ts[0], ts[1]] = ts[2]
+
             for s in service_stats:
-                ret.append((s[0], s[1], s[2]))
-            return ret
+                ret.setdefault((s[0], s[1]), [])
+                ret[(s[0], s[1])].extend(s[2])
+
+            return [(k[0], k[1], v) for k, v in ret.items()]
 
     def get_record_count(self, dataset_id: int, *, session: Optional[Session] = None) -> int:
         """

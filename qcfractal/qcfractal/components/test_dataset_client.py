@@ -99,6 +99,34 @@ def test_dataset_client_status_by_tag(snowflake: QCATestingSnowflake):
     assert all(s[2] == 1 for s in status)
 
 
+def test_dataset_client_detailed_status_by_tag(snowflake: QCATestingSnowflake):
+    snowflake_client = snowflake.client()
+    manager_name, _ = snowflake.activate_manager()
+
+    ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
+    assert ds.detailed_status_by_compute_tag() == []
+
+    input_spec, molecule, _ = load_test_data("sp_psi4_peroxide_energy_wfn")
+
+    molecule_2 = Molecule(symbols=["b"], geometry=[0, 0, 0])
+
+    # Add this as a part of the dataset
+    ds.add_specification("spec_1", input_spec)
+    ds.add_entry(name="test_molecule", molecule=molecule)
+    ds.add_entry(name="test_molecule_2", molecule=molecule_2)
+    ds.submit(entry_names=["test_molecule"], compute_tag="tag1")
+    ds.submit(entry_names=["test_molecule_2"], compute_tag="tag2")
+
+    status = ds.detailed_status_by_compute_tag()
+    assert len(status) == 2
+    assert {s[0] for s in status} == {"tag1", "tag2"}
+    assert all(s[1] == "waiting" for s in status)
+
+    test_d = {x[0]: x[2] for x in status}
+    assert test_d["tag1"] == [ds.get_record("test_molecule", "spec_1").id]
+    assert test_d["tag2"] == [ds.get_record("test_molecule_2", "spec_1").id]
+
+
 def test_dataset_client_add_same_name(snowflake_client: PortalClient):
     ds1 = snowflake_client.add_dataset("singlepoint", "Test dataset")
     ds2 = snowflake_client.add_dataset("optimization", "Test dataset")
