@@ -103,6 +103,11 @@ export type ManagerQueryFilters = QueryProjModelBase & {
   modified_after?: string;
 };
 
+export type ActiveManagerQuery = {
+  compute_tag: string[];
+  programs: Record<string, string[]>
+};
+
 export type MoleculeIdentifiers = {
   molecule_hash: string;
   molecular_formula: string;

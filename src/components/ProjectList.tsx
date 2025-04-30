@@ -98,9 +98,6 @@ const ProjectList: React.FC = () => {
                     <Typography variant="body2">
                       {project.dataset_count} datasets
                     </Typography>
-                    <Typography variant="body2">
-                      {project.molecule_count} molecules
-                    </Typography>
                   </TableCell>
                   <TableCell>
                     {project.tags.map((tag) => (

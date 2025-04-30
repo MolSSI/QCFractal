@@ -116,7 +116,7 @@ export default function Project() {
               {projectData.tagline}
             </Typography>
           </Grid>
-          {/* Summary stats: for example, Records, Datasets, Molecules */}
+          {/* Summary stats: for example, Records, Datasets */}
           <Grid size={2}>
             <Paper elevation={3}>
               <Box p={1}>
@@ -131,15 +131,6 @@ export default function Project() {
               <Box p={1}>
                 <Typography variant="body1" fontWeight="bold">
                   {datasetMetadata ? datasetMetadata.length : 0} Datasets
-                </Typography>
-              </Box>
-            </Paper>
-          </Grid>
-          <Grid size={2}>
-            <Paper elevation={3}>
-              <Box p={1}>
-                <Typography variant="body1" fontWeight="bold">
-                  0 Molecules
                 </Typography>
               </Box>
             </Paper>
@@ -191,7 +182,7 @@ export default function Project() {
               </Paper>
             </Grid>
 
-            {/* Lower section with Tabs for Datasets, Records, Molecules */}
+            {/* Lower section with Tabs for Datasets, Records */}
             <Grid size={12}>
               <Paper elevation={2}>
                 <Tabs
@@ -202,11 +193,6 @@ export default function Project() {
                 >
                   <Tab label="Datasets" id="tab-0" aria-controls="tabpanel-0" />
                   <Tab label="Records" id="tab-1" aria-controls="tabpanel-1" />
-                  <Tab
-                    label="Molecules"
-                    id="tab-2"
-                    aria-controls="tabpanel-2"
-                  />
                 </Tabs>
 
                 {/* Tab 1: Datasets */}
@@ -241,17 +227,6 @@ export default function Project() {
                   </TabPanel>
                 )}
 
-                {/* Tab 3: Molecules - placeholder content */}
-                <TabPanel value={tabValue} index={2}>
-                  <Typography variant="h6" gutterBottom>
-                    Molecules
-                  </Typography>
-                  <Typography variant="body1">
-                    Placeholder for molecule details: in the future, you could
-                    display a list of molecule structures or 2D/3D
-                    visualizations here.
-                  </Typography>
-                </TabPanel>
               </Paper>
             </Grid>
           </Box>

@@ -4,6 +4,7 @@ import { FetchedData } from "../PortalClientContext";
 import React, { useEffect, useState } from "react";
 import * as qcpTypes from "../PortalTypes";
 import { Chip, Grid, Stack, TableCell, TableRow, Typography } from "@mui/material";
+import { PieChart } from '@mui/x-charts/PieChart';
 import { parseToDate } from "../Utils";
 
 export const ManagerFragment: React.FC<{ managerName: string }> = ({
@@ -30,6 +31,13 @@ export const ManagerFragment: React.FC<{ managerName: string }> = ({
   const managerData = managerFetchedData?.data;
   const mCreatedOn = parseToDate(managerData?.created_on);
   const mLastUpdated = parseToDate(managerData?.modified_on);
+
+  const returned = managerData ? (
+    managerData.claimed - (
+      managerData.active_tasks +
+      managerData.successes +
+      managerData.failures
+    )) : 0
 
   return (
     <>
@@ -85,6 +93,26 @@ export const ManagerFragment: React.FC<{ managerName: string }> = ({
                 <li key={index}>{tag}</li>
               ))}
             </ul>
+          </Grid>
+          <Grid item size={6}>
+            <Stack>
+              <Typography variant="h6">Tasks ({managerData.claimed} total claimed)</Typography>
+              { managerData.claimed == 0 ? (
+                <Typography variant="body1">(no claimed tasks)</Typography>) : (
+            <PieChart
+              colors={['blue', 'green', 'red', 'orange']}
+              series={[
+              {
+                data: [
+                  { id: 0, value: managerData.active_tasks, label: `${managerData.active_tasks} active`},
+                  { id: 1, value: managerData.successes, label: `${managerData.successes} success`},
+                  { id: 2, value: managerData.failures, label: `${managerData.failures} failed`},
+                  { id: 4, value: returned, label: `${returned} returned`},
+                ]
+              }
+            ]} />
+              )}
+            </Stack>
           </Grid>
         </Grid>
       )}
