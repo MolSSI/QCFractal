@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=cb8c78bb"></script>
+    <script src="../../../_static/documentation_options.js?v=b2f0ecd4"></script>
     <script src="../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Optimization Records" href="optimization.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.60.post59+ga22973c55" />
+  <meta name="docsearch:version" content="0.60.post61+gd59e7821c" />
   </head>
   
   
@@ -2664,6 +2664,16 @@ by a submit without duplicate checking.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="qcportal.torsiondrive.dataset_models.TorsiondriveDataset.status_by_compute_tag">
+<span class="sig-name descname"><span class="pre">status_by_compute_tag</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.status_by_compute_tag" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>List</em>[<em>Tuple</em>[str, <a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a>, int]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="qcportal.torsiondrive.dataset_models.TorsiondriveDataset.status_table">
 <span class="sig-name descname"><span class="pre">status_table</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.status_table" title="Link to this definition">#</a></dt>
 <dd><p>Returns the status of the dataset’s computations as a table (in a string)</p>
@@ -3079,6 +3089,7 @@ records created for those that don’t match. If False, new records will always 
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.specification_names"><code class="docutils literal notranslate"><span class="pre">TorsiondriveDataset.specification_names</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.specifications"><code class="docutils literal notranslate"><span class="pre">TorsiondriveDataset.specifications</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.status"><code class="docutils literal notranslate"><span class="pre">TorsiondriveDataset.status()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.status_by_compute_tag"><code class="docutils literal notranslate"><span class="pre">TorsiondriveDataset.status_by_compute_tag()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.status_table"><code class="docutils literal notranslate"><span class="pre">TorsiondriveDataset.status_table()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.submit"><code class="docutils literal notranslate"><span class="pre">TorsiondriveDataset.submit()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.uncancel_records"><code class="docutils literal notranslate"><span class="pre">TorsiondriveDataset.uncancel_records()</span></code></a></li>
