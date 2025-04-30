@@ -10,12 +10,23 @@ from qcportal import PortalRequestError
 from qcportal.auth import UserInfo, GroupInfo
 from qcportal.managers import ManagerActivationBody, ManagerUpdateBody
 from qcportal.molecules import Molecule
+from qcportal.singlepoint import SinglepointInput
 from qcportal.singlepoint.test_dataset_models import test_entries, test_specs
 from qcportal.tasks import TaskClaimBody, TaskReturnBody
 from qcportal.utils import now_at_utc
 
 test_mol = Molecule(symbols=["h"], geometry=[0, 0, 0])
 test_uinfo = UserInfo(username="test_new_user", role="read", enabled=True)
+
+test_project_inp_1 = SinglepointInput(
+    molecule={"symbols": ["h", "h"], "geometry": [0, 0, 0, 0, 0, 2]},
+    specification={
+        "program": "psi4",
+        "driver": "energy",
+        "method": "hf",
+        "basis": "sto-3g",
+    },
+)
 
 
 @pytest.fixture(scope="function")
@@ -24,10 +35,17 @@ def roletest_snowflake(secure_snowflake_allow_read):
     client = secure_snowflake_allow_read.client("admin_user", password=test_users["admin_user"]["pw"])
 
     client.add_molecules([test_mol])
-    client.add_singlepoints(molecules=[test_mol], program="psi4", driver="energy", method="b3lyp", basis="sto-3g")
+    _, rids = client.add_singlepoints(
+        molecules=[test_mol], program="psi4", driver="energy", method="b3lyp", basis="sto-3g"
+    )
     ds = client.add_dataset("singlepoint", "testds")
     ds.add_entries(test_entries)
     ds.add_specification("test_spec", test_specs[0])
+
+    pr = client.add_project("test_project")
+    pr.link_record(rids[0], "test record", "test description", ["tag1", "tag2"])
+    pr.link_dataset(ds.id)
+
     return secure_snowflake_allow_read
 
 
@@ -185,6 +203,30 @@ def get_other_sessions(client: PortalClient):
     return client.make_request("get", f"api/v1/users/submit_user_2", Any)
 
 
+def project_list_records(client: PortalClient):
+    client.get_project("test_project").record_metadata()
+
+
+def project_list_datasets(client: PortalClient):
+    client.get_project("test_project").dataset_metadata()
+
+
+def project_link_record(client: PortalClient):
+    client.get_project("test_project").link_record(9999, "name", "Desc", ["tag"])
+
+
+def project_link_dataset(client: PortalClient):
+    client.get_project("test_project").link_dataset(9999)
+
+
+def project_add_dataset(client: PortalClient):
+    client.get_project("test_project").add_dataset("singlepoint", "newdataset")
+
+
+def project_add_record(client: PortalClient):
+    client.get_project("test_project").add_record("test new rec", test_project_inp_1)
+
+
 # fmt: off
 test_function_map = {
     "get_information": PortalClient.get_server_information,
@@ -261,6 +303,13 @@ test_function_map = {
     "claim_tasks": claim_tasks,
     "return_tasks": return_tasks,
 
+    "add_project": partial(PortalClient.add_project, name="test_project"),
+    "get_project": [partial(PortalClient.get_project, project_name="test_project"),
+                    partial(PortalClient.get_project_by_id, project_id=1)],
+    "read_project": [project_list_records, project_list_datasets],
+    "modify_project": [project_add_dataset, project_link_dataset, project_add_record, project_link_record],
+    "delete_project": partial(PortalClient.delete_project, project_id=1),
+
 }
 
 test_role_permissions_map = {
@@ -274,25 +323,28 @@ test_role_permissions_map = {
                  "add_record", "get_record", "query_record", "modify_record", "delete_record",
                  "list_datasets", "add_dataset", "get_dataset", "read_dataset", "submit_dataset",
                  "modify_dataset", "delete_dataset", "create_dataset_view",
+                 "add_project", "get_project", "read_project", "modify_project", "delete_project",
                  "get_manager", "query_manager",
                  "get_me", "get_my_preferences", "get_my_sessions"},
     "monitor": {"get_information",
                 "get_access_log", "get_error_log", "get_internal_job",
                 "get_molecule", "query_molecule", "get_record", "query_record", "list_datasets",
                 "get_dataset", "read_dataset", "get_manager", "query_manager",
+                "get_project", "read_project",
                 "get_me", "get_my_preferences", "get_my_sessions"},
     "submit": {"get_information",
                "add_molecule", "get_molecule", "query_molecule", "modify_molecule", "delete_molecule",
                "add_record", "get_record", "query_record", "modify_record", "delete_record",
                "list_datasets", "add_dataset", "get_dataset", "read_dataset", "submit_dataset",
                "modify_dataset", "delete_dataset", "create_dataset_view",
+               "add_project", "get_project", "read_project", "modify_project", "delete_project",
                "get_manager", "query_manager",
                "get_me", "get_my_preferences", "get_my_sessions"},
     "read": {"get_information", "get_molecule", "query_molecule", "get_record", "query_record", "list_datasets",
-             "get_dataset", "read_dataset", "get_manager", "query_manager",
+             "get_dataset", "read_dataset", "get_project", "read_project", "get_manager", "query_manager",
              "get_me", "get_my_preferences", "get_my_sessions"},
     "anonymous": {"get_information", "get_molecule", "query_molecule", "get_record", "query_record", "list_datasets",
-                  "get_dataset", "read_dataset", "get_manager", "query_manager"},
+                  "get_dataset", "read_dataset", "get_project", "read_project", "get_manager", "query_manager"},
     "compute": {"get_information", "activate_manager", "modify_manager", "claim_tasks", "return_tasks",
                 "get_me", "get_my_preferences", "get_my_sessions"},
 }
