@@ -773,6 +773,15 @@ class BaseDataset(BaseModel):
             List[Tuple[str, str, RecordStatusEnum]],
         )
 
+    def status_by_compute_tag(self) -> List[Tuple[str, RecordStatusEnum, int]]:
+        self.assert_online()
+
+        return self._client.make_request(
+            "get",
+            f"{self._base_url}/status_by_tag",
+            List[Tuple[str, RecordStatusEnum, int]],
+        )
+
     @property
     def offline(self) -> bool:
         return self._client is None
