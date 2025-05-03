@@ -4,6 +4,7 @@ import { usePortalClientRequest } from "../usePortalClient";
 import { WaitingReasonFragment } from "./WaitingReasonFragment";
 import { ManagerFragment } from "./ManagerFragment";
 import Comments from "./Comments";
+import ComputeHistory from "./ComputeHistory";  
 import * as qcpTypes from "../PortalTypes";
 import { FetchedData } from "../PortalClientContext";
 import {
@@ -17,6 +18,7 @@ import {
   Tooltip,
   Dialog,
   DialogContent,
+  Button,
 } from "@mui/material";
 import HelpOutline from '@mui/icons-material/HelpOutline';
 import { format } from "date-fns"; 
@@ -167,7 +169,7 @@ function Record() {
                         onClose={() => setWaitingReasonOpen(false)}
                       >
                         <DialogContent>
-                          <WaitingReasonFragment recordId={recordId} />
+                          <WaitingReasonFragment recordId={Number(recordId)} />
                         </DialogContent>
                       </Dialog>
                     </>
@@ -184,6 +186,7 @@ function Record() {
             </Grid>
           </Grid>
           <Divider sx={{ my: 2, width: "100%" }} />
+
           <Grid container spacing={2} width="100%">
             {/* Comments Section */}
             <Grid size={{ xs: 12, md: 6 }}>
@@ -209,6 +212,59 @@ function Record() {
                   </Typography>
                 </Box>
               </Paper>
+            </Grid>
+          </Grid>
+          <Grid
+            container
+            sx={{ mt: 2 }}
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            {/* Compute History Section */}
+            <Grid size={{ xs: 12, md: 8 }} sx={{ mt: 2 }}>
+              <ComputeHistory
+                recordType={recordData.record_type}
+                recordId={Number(recordId)}
+              />
+            </Grid>
+            {/* Right: Buttons */}
+            <Grid
+              size={{ xs: 12, md: 4 }}
+              sx={{
+                display: "flex",
+                justifyContent: { xs: "flex-start", md: "flex-end" },
+                mt: { xs: 2, md: 0 },
+              }}
+            >
+              <Box display="flex" gap={1}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => {
+                    console.log("View Outputs clicked");
+                  }}
+                >
+                  View Outputs
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => {
+                    console.log("Native Files clicked");
+                  }}
+                >
+                  Native Files
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => {
+                    console.log("Extra clicked");
+                  }}
+                >
+                  Extra
+                </Button>
+              </Box>
             </Grid>
           </Grid>
 

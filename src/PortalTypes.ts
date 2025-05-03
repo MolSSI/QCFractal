@@ -113,3 +113,16 @@ export type RecordData = {
   };
   properties: Record<string, any>;
 };
+
+export type ComputeHistory = {
+  id: number;
+  record_type: string;
+  compute_history: Array<{
+    id: number;
+    manager_name: string;
+    status: string;
+    output: any;
+    modified_on: string;
+  }>;
+  owner_user: string | null;
+};
