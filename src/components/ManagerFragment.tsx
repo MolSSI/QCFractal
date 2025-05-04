@@ -3,7 +3,7 @@ import { usePortalClientRequest } from "../usePortalClient";
 import { FetchedData } from "../PortalClientContext";
 import React, { useEffect, useState } from "react";
 import * as qcpTypes from "../PortalTypes";
-import { Chip, Grid, Stack, TableCell, TableRow, Typography } from "@mui/material";
+import { Chip, Grid, Stack, Typography } from "@mui/material";
 import { parseToDate } from "../Utils";
 
 export const ManagerFragment: React.FC<{ managerName: string }> = ({

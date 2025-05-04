@@ -186,53 +186,54 @@ function Record() {
           </Grid>
           <Divider sx={{ my: 2, width: "100%" }} />
 
-          <Grid container spacing={2} width="80%">
+          <Grid
+            container
+            spacing={2}
+            sx={{ mt: 2, alignItems: "stretch", width: "100%" }}
+          >
             {/* Comments Section */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Box>
+            <Grid size={{ xs: 12, md: 6 }} sx={{ width: "100%" }}>
+              <Box p={0} sx={{ height: "100%" }}>
                 <Comments />
               </Box>
             </Grid>
 
             {/* Last Manager Section */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Paper elevation={3}>
-                <Box p={2}>
-                  <Typography variant="body1" fontWeight="bold">
-                    Last Manager:
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ cursor: "pointer", textDecoration: "underline" }}
-                    onClick={() => setManagerDialogOpen(true)}
-                  >
-                    {recordData.manager_name || "None"}
-                  </Typography>
-                </Box>
-              </Paper>
-        
-                {/* Manager Dialog */}
-                <Dialog
-                    fullWidth={true}
-                    open={managerDialogOpen}
-                    onClose={() => setManagerDialogOpen(false)}
+            <Grid size={{ xs: 12, md: 6 }} sx={{ width: "100%" }}>
+              <Box p={0} sx={{ height: "100%" }}>
+                <Typography variant="body1" fontWeight="bold">
+                  Last Manager:
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ cursor: "pointer", textDecoration: "underline" }}
+                  onClick={() => setManagerDialogOpen(true)}
                 >
-                    <DialogContent>
-                    <ManagerFragment managerName={recordData.manager_name} />
-                    </DialogContent>
-                </Dialog>
+                  {recordData.manager_name || "None"}
+                </Typography>
+              </Box>
+
+              {/* Manager Dialog */}
+              <Dialog
+                fullWidth={true}
+                open={managerDialogOpen}
+                onClose={() => setManagerDialogOpen(false)}
+              >
+                <DialogContent>
+                  <ManagerFragment managerName={recordData.manager_name} />
+                </DialogContent>
+              </Dialog>
             </Grid>
           </Grid>
 
-            {/* Compute History Section */}
-            <Grid size={{ xs: 12 }} sx={{ mt: 2, width: "100%" }}>
-              <ComputeHistory
-                recordType={recordData.record_type}
-                recordId={Number(recordId)}
-              />
-            </Grid>
-
+          {/* Compute History Section */}
+          <Grid size={{ xs: 12 }} sx={{ mt: 2, width: "100%" }}>
+            <ComputeHistory
+              recordType={recordData.record_type}
+              recordId={Number(recordId)}
+            />
+          </Grid>
         </>
       )}
     </>

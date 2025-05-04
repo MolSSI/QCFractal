@@ -32,7 +32,7 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
   recordId,
 }) => {
   const [computeHistoryFetchedData, setComputeHistoryFetchedData] =
-    React.useState<FetchedData<qcpTypes.ComputeHistory>>({
+    React.useState<FetchedData<qcpTypes.ComputeHistory[]>>({
       data: undefined,
       error: undefined,
       loading: true,
@@ -63,28 +63,64 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
   };
 
   useEffect(() => {
-    fetchData<qcpTypes.ComputeHistory>(
+    fetchData<qcpTypes.ComputeHistory[]>(
       setComputeHistoryFetchedData,
       "get",
-      `/api/v1/records/${recordType}/${recordId}?include=compute_history`
+      `/api/v1/records/${recordType}/${recordId}/compute_history`
     );
   }, [fetchData, recordType, recordId]);
 
-  const computeHistory = computeHistoryFetchedData?.data?.compute_history || [];
+  const computeHistory = computeHistoryFetchedData?.data || []; 
   return (
     <>
-      {/* Title with toggle button */}
-      <Box display="flex" alignItems="center" gap={1}>
-        <IconButton
-          size="small"
-          onClick={() => setIsExpanded(!isExpanded)}
-          aria-label="toggle compute history"
-        >
-          {isExpanded ? <RemoveIcon /> : <AddIcon />}
-        </IconButton>
-        <Typography variant="h6" fontWeight="bold">
-          Compute History
-        </Typography>
+      {/* Title with toggle button and buttons */}
+      <Box
+        display="flex"
+        alignItems="center"
+        justifyContent="space-between"
+        mb={2}
+      >
+        <Box display="flex" alignItems="center" gap={1}>
+          <IconButton
+            size="small"
+            onClick={() => setIsExpanded(!isExpanded)}
+            aria-label="toggle compute history"
+          >
+            {isExpanded ? <RemoveIcon /> : <AddIcon />}
+          </IconButton>
+          <Typography variant="h6" fontWeight="bold">
+            Compute History
+          </Typography>
+        </Box>
+        <Box display="flex" gap={1}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => {
+              console.log("View Outputs clicked");
+            }}
+          >
+            View Outputs
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => {
+              console.log("Native Files clicked");
+            }}
+          >
+            Native Files
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => {
+              console.log("Wave Functions clicked");
+            }}
+          >
+            Wave Functions
+          </Button>
+        </Box>
       </Box>
 
       {/* Content */}
@@ -137,7 +173,7 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {computeHistory.map((history, index) => (
+                  {computeHistory.map((history: qcpTypes.ComputeHistory, index) => (
                     <TableRow key={index}>
                       <TableCell>{history.id || "N/A"}</TableCell>
                       <TableCell>

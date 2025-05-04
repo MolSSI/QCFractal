@@ -116,14 +116,18 @@ export type RecordData = {
 
 export type ComputeHistory = {
   id: number;
-  record_type: string;
-  compute_history: Array<{
-    id: number;
-    manager_name: string;
-    status: string;
-    output: any;
-    modified_on: string;
-    provenance: Record<string, any>;
-  }>;
-  owner_user: string | null;
+  modified_on: string;
+  record_id: number;
+  manager_name: string;
+  status: string;
+  provenance: {
+    creator: string;
+    version: string;
+    routine: string;
+    username: string;
+    cpu: string;
+    hostname: string;
+    qcengine_version: string;
+    wall_time: number;
+  };
 };
