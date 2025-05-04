@@ -18,7 +18,6 @@ import {
   Tooltip,
   Dialog,
   DialogContent,
-  Button,
 } from "@mui/material";
 import HelpOutline from '@mui/icons-material/HelpOutline';
 import { format } from "date-fns"; 
@@ -187,7 +186,7 @@ function Record() {
           </Grid>
           <Divider sx={{ my: 2, width: "100%" }} />
 
-          <Grid container spacing={2} width="100%">
+          <Grid container spacing={2} width="80%">
             {/* Comments Section */}
             <Grid size={{ xs: 12, md: 6 }}>
               <Box>

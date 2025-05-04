@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Typography,
   Table,
   TableBody,
@@ -11,15 +8,19 @@ import {
   TableHead,
   TableRow,
   Paper,
+  Chip,
+  Box,
+  IconButton,
   Button,
+  Dialog,
+  DialogContent,
 } from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import RemoveIcon from "@mui/icons-material/Remove";
 import AddIcon from "@mui/icons-material/Add";
 import { usePortalClientRequest } from "../usePortalClient";
 import { FetchedData } from "../PortalClientContext";
-import { Box, IconButton, Chip, Divider } from "@mui/material";
 import * as qcpTypes from "../PortalTypes";
+import { ManagerFragment } from "./ManagerFragment";
 
 interface ComputeHistoryProps {
   recordType: string;
@@ -36,7 +37,9 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
       error: undefined,
       loading: true,
     });
-  const [isExpanded, setIsExpanded] = useState(false); 
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [managerDialogOpen, setManagerDialogOpen] = useState(false); 
+  const [selectedManager, setSelectedManager] = useState<string | null>(null);
   const { fetchData } = usePortalClientRequest();
 
   // Status color mapping (updated to match Record component)
@@ -83,7 +86,6 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
           Compute History
         </Typography>
       </Box>
-      <Divider sx={{ my: 1 }} />
 
       {/* Content */}
       {isExpanded && (
@@ -138,7 +140,22 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
                   {computeHistory.map((history, index) => (
                     <TableRow key={index}>
                       <TableCell>{history.id || "N/A"}</TableCell>
-                      <TableCell>{history.manager_name || "N/A"}</TableCell>
+                      <TableCell>
+                        <Typography
+                          variant="body2"
+                          color="primary"
+                          sx={{
+                            cursor: "pointer",
+                            textDecoration: "underline",
+                          }}
+                          onClick={() => {
+                            setSelectedManager(history.manager_name);
+                            setManagerDialogOpen(true);
+                          }}
+                        >
+                          {history.manager_name || "N/A"}
+                        </Typography>
+                      </TableCell>
                       <TableCell>
                         {new Date(history.modified_on).toLocaleString() ||
                           "N/A"}
@@ -169,7 +186,14 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
                       </TableCell>
                       <TableCell>
                         {history.provenance ? (
-                          <Box component="ul" sx={{ pl: 2, m: 0 }}>
+                          <Box
+                            component="ul"
+                            sx={{
+                              pl: 2,
+                              m: 0,
+                              listStyleType: "none", // Remove bullet points
+                            }}
+                          >
                             {Object.entries(history.provenance).map(
                               ([key, value]) => (
                                 <li key={key}>
@@ -190,6 +214,18 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
               </Table>
             </TableContainer>
           )}
+          {/* Manager Dialog */}
+          <Dialog
+            fullWidth={true}
+            open={managerDialogOpen}
+            onClose={() => setManagerDialogOpen(false)}
+          >
+            <DialogContent>
+              {selectedManager && (
+                <ManagerFragment managerName={selectedManager} />
+              )}
+            </DialogContent>
+          </Dialog>
         </>
       )}
     </>

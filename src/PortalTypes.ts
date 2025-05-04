@@ -123,7 +123,7 @@ export type ComputeHistory = {
     status: string;
     output: any;
     modified_on: string;
+    provenance: Record<string, any>;
   }>;
   owner_user: string | null;
-  provenance: Record<string, any>;
 };
