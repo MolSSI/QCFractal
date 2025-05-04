@@ -125,4 +125,5 @@ export type ComputeHistory = {
     modified_on: string;
   }>;
   owner_user: string | null;
+  provenance: Record<string, any>;
 };

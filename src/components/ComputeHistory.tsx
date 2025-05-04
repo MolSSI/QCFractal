@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Accordion,
   AccordionSummary,
@@ -14,9 +14,11 @@ import {
   Button,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import RemoveIcon from "@mui/icons-material/Remove";
+import AddIcon from "@mui/icons-material/Add";
 import { usePortalClientRequest } from "../usePortalClient";
 import { FetchedData } from "../PortalClientContext";
-import { Chip } from "@mui/material";
+import { Box, IconButton, Chip, Divider } from "@mui/material";
 import * as qcpTypes from "../PortalTypes";
 
 interface ComputeHistoryProps {
@@ -34,6 +36,7 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
       error: undefined,
       loading: true,
     });
+  const [isExpanded, setIsExpanded] = useState(false); 
   const { fetchData } = usePortalClientRequest();
 
   // Status color mapping (updated to match Record component)
@@ -67,87 +70,126 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
   const computeHistory = computeHistoryFetchedData?.data?.compute_history || [];
   return (
     <>
-      {computeHistoryFetchedData.loading && <Typography>Loading...</Typography>}
-      {computeHistoryFetchedData.error && (
-        <Typography color="error">
-          Error: {computeHistoryFetchedData.error}
+      {/* Title with toggle button */}
+      <Box display="flex" alignItems="center" gap={1}>
+        <IconButton
+          size="small"
+          onClick={() => setIsExpanded(!isExpanded)}
+          aria-label="toggle compute history"
+        >
+          {isExpanded ? <RemoveIcon /> : <AddIcon />}
+        </IconButton>
+        <Typography variant="h6" fontWeight="bold">
+          Compute History
         </Typography>
-      )}
-      {!computeHistoryFetchedData.loading && computeHistory && (
+      </Box>
+      <Divider sx={{ my: 1 }} />
+
+      {/* Content */}
+      {isExpanded && (
         <>
-          <Accordion>
-            <AccordionSummary
-              expandIcon={<ExpandMoreIcon />}
-              aria-controls="compute-history-content"
-              id="compute-history-header"
-            >
-              <Typography variant="h6" fontWeight="bold">
-                Compute History
+          {computeHistoryFetchedData.loading && (
+            <Typography>Loading...</Typography>
+          )}
+          {computeHistoryFetchedData.error && (
+            <Typography color="error">
+              Error: {computeHistoryFetchedData.error}
+            </Typography>
+          )}
+          {!computeHistoryFetchedData.loading &&
+            computeHistory.length === 0 && (
+              <Typography>
+                There is no compute history for this record.
               </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <TableContainer component={Paper}>
-                <Table size="small" aria-label="compute history table">
-                  <TableHead>
-                    <TableRow>
+            )}
+          {!computeHistoryFetchedData.loading && computeHistory.length > 0 && (
+            <TableContainer component={Paper} sx={{ boxShadow: "none" }}>
+              <Table
+                size="small"
+                aria-label="compute history table"
+                sx={{
+                  borderCollapse: "collapse",
+                  "& td, & th": { borderBottom: "1px solid #ccc" }, // Horizontal lines only
+                }}
+              >
+                <TableHead>
+                  <TableRow>
+                    <TableCell>
+                      <strong>ID</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Manager Name</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Date</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Status</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Output</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Provenance</strong>
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {computeHistory.map((history, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{history.id || "N/A"}</TableCell>
+                      <TableCell>{history.manager_name || "N/A"}</TableCell>
                       <TableCell>
-                        <strong>ID</strong>
+                        {new Date(history.modified_on).toLocaleString() ||
+                          "N/A"}
                       </TableCell>
                       <TableCell>
-                        <strong>Manager Name</strong>
+                        <Chip
+                          label={history.status || "N/A"}
+                          color={
+                            statusColors[history.status.toLowerCase()] ||
+                            "default"
+                          }
+                          sx={{
+                            fontWeight: "bold",
+                            textTransform: "capitalize",
+                          }}
+                        />
                       </TableCell>
                       <TableCell>
-                        <strong>Date</strong>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => {
+                            console.log(`View output for ID: ${history.id}`);
+                          }}
+                        >
+                          View Output
+                        </Button>
                       </TableCell>
                       <TableCell>
-                        <strong>Status</strong>
-                      </TableCell>
-                      <TableCell>
-                        <strong>Output</strong>
+                        {history.provenance ? (
+                          <Box component="ul" sx={{ pl: 2, m: 0 }}>
+                            {Object.entries(history.provenance).map(
+                              ([key, value]) => (
+                                <li key={key}>
+                                  <Typography variant="body2">
+                                    <strong>{key}:</strong> {value || "N/A"}
+                                  </Typography>
+                                </li>
+                              )
+                            )}
+                          </Box>
+                        ) : (
+                          <Typography variant="body2">None</Typography>
+                        )}
                       </TableCell>
                     </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {computeHistory.map((history, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{history.id || "N/A"}</TableCell>
-                        <TableCell>{history.manager_name || "N/A"}</TableCell>
-                        <TableCell>
-                          {new Date(history.modified_on).toLocaleString() ||
-                            "N/A"}
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={history.status || "N/A"}
-                            color={
-                              statusColors[history.status.toLowerCase()] ||
-                              "default"
-                            }
-                            sx={{
-                              fontWeight: "bold",
-                              textTransform: "capitalize",
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            onClick={() => {
-                              // Placeholder for output dialog logic
-                              console.log(`View output for ID: ${history.id}`);
-                            }}
-                          >
-                            View Output
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </AccordionDetails>
-          </Accordion>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
         </>
       )}
     </>

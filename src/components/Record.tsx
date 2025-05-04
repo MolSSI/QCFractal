@@ -212,72 +212,28 @@ function Record() {
                   </Typography>
                 </Box>
               </Paper>
+        
+                {/* Manager Dialog */}
+                <Dialog
+                    fullWidth={true}
+                    open={managerDialogOpen}
+                    onClose={() => setManagerDialogOpen(false)}
+                >
+                    <DialogContent>
+                    <ManagerFragment managerName={recordData.manager_name} />
+                    </DialogContent>
+                </Dialog>
             </Grid>
           </Grid>
-          <Grid
-            container
-            sx={{ mt: 2 }}
-            justifyContent="space-between"
-            alignItems="center"
-          >
+
             {/* Compute History Section */}
-            <Grid size={{ xs: 12, md: 8 }} sx={{ mt: 2 }}>
+            <Grid size={{ xs: 12 }} sx={{ mt: 2, width: "100%" }}>
               <ComputeHistory
                 recordType={recordData.record_type}
                 recordId={Number(recordId)}
               />
             </Grid>
-            {/* Right: Buttons */}
-            <Grid
-              size={{ xs: 12, md: 4 }}
-              sx={{
-                display: "flex",
-                justifyContent: { xs: "flex-start", md: "flex-end" },
-                mt: { xs: 2, md: 0 },
-              }}
-            >
-              <Box display="flex" gap={1}>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={() => {
-                    console.log("View Outputs clicked");
-                  }}
-                >
-                  View Outputs
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={() => {
-                    console.log("Native Files clicked");
-                  }}
-                >
-                  Native Files
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={() => {
-                    console.log("Extra clicked");
-                  }}
-                >
-                  Extra
-                </Button>
-              </Box>
-            </Grid>
-          </Grid>
 
-          {/* Manager Dialog */}
-          <Dialog
-            fullWidth={true}
-            open={managerDialogOpen}
-            onClose={() => setManagerDialogOpen(false)}
-          >
-            <DialogContent>
-              <ManagerFragment managerName={recordData.manager_name} />
-            </DialogContent>
-          </Dialog>
         </>
       )}
     </>
