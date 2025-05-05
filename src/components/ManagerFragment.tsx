@@ -61,20 +61,18 @@ export const ManagerFragment: React.FC<{ managerName: string }> = ({
             </Typography>
           </Grid>
           <Grid item size={6}>
-          <Typography variant="body1">
-            Created: {mCreatedOn?.toLocaleString()}
-          </Typography>
-          <Typography variant="body1">
-            Last seen: {mLastUpdated?.toLocaleString()}
-          </Typography>
+            <Typography variant="body1">
+              Created: {mCreatedOn?.toLocaleString()}
+            </Typography>
+            <Typography variant="body1">
+              Last seen: {mLastUpdated?.toLocaleString()}
+            </Typography>
           </Grid>
           <Grid item size={6}>
             <Typography variant="h6">Programs</Typography>
             <ul>
               {Object.entries(managerData.programs).map(([p, v]) => {
-                return (
-                  <li key={p}>{p}</li>
-                );
+                return <li key={p}>{p}</li>;
               })}
             </ul>
           </Grid>

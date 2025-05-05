@@ -48,7 +48,7 @@ const OutputFragment: React.FC<OutputFragmentProps> = ({
     fetchData<Record<string, any>>(
       setOutputKeysFetchedData,
       "get",
-      `/api/v1/records/${recordType}/${recordId}/compute_history/${computeHistoryId}/outputs`
+      `/api/v1/records/${recordType}/${recordId}/compute_history/${computeHistoryId}/outputs`,
     );
   }, [recordType, recordId, computeHistoryId, fetchData]);
 
@@ -58,7 +58,7 @@ const OutputFragment: React.FC<OutputFragmentProps> = ({
       fetchData<string>(
         setOutputContentFetchedData,
         "get",
-        `/api/v1/records/${recordType}/${recordId}/compute_history/${computeHistoryId}/outputs/${selectedKey}/uncompressed_data`
+        `/api/v1/records/${recordType}/${recordId}/compute_history/${computeHistoryId}/outputs/${selectedKey}/uncompressed_data`,
       );
     }
   }, [selectedKey, recordType, recordId, computeHistoryId, fetchData]);
@@ -138,7 +138,7 @@ const OutputFragment: React.FC<OutputFragmentProps> = ({
                               ? value
                               : JSON.stringify(value, null, 2)}
                           </Typography>
-                        )
+                        ),
                       )}
                     </Box>
                   )}

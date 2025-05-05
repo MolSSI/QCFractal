@@ -36,7 +36,7 @@ const ProjectList: React.FC = () => {
       setLoading(true);
       const { data, error } = await makeRequest<Project[]>(
         "GET",
-        "/api/v1/projects"
+        "/api/v1/projects",
       );
       if (error) {
         setError(error);

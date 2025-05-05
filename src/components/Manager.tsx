@@ -54,20 +54,19 @@ export default function Manager() {
         <Grid container spacing={2} width="100%">
           <Grid item size={12}>
             <Stack>
-            <Typography variant="h4" fontWeight="bold">
-              {managerData.name}
-            </Typography>
-            <Chip
-              label={managerData.status}
-              color={managerData.status == "active" ? "success" : "default"}
-              sx={{ width: "fit-content", fontWeight: "bold" }}
-
-            />
+              <Typography variant="h4" fontWeight="bold">
+                {managerData.name}
+              </Typography>
+              <Chip
+                label={managerData.status}
+                color={managerData.status == "active" ? "success" : "default"}
+                sx={{ width: "fit-content", fontWeight: "bold" }}
+              />
             </Stack>
           </Grid>
           <Grid item size={6}>
             <Typography variant="body1">
-             Manager version: {managerData.manager_version}
+              Manager version: {managerData.manager_version}
             </Typography>
             <Typography variant="body1">
               Created: {mCreatedOn?.toLocaleString()}

@@ -65,9 +65,9 @@ export default function OptionsMenu() {
               navigate("/me");
             }}
           >
-          Profile
+            Profile
           </ListItemText>
-          </MenuItem>
+        </MenuItem>
         <MenuItem onClick={handleClose}>My account</MenuItem>
         <Divider />
         <MenuItem onClick={handleClose}>Add another account</MenuItem>

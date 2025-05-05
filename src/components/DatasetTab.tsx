@@ -104,34 +104,34 @@ export default function DatasetTab({
                       100 entries, 2 specifications
                     </TableCell>
                     <TableCell>
-                        <Stack direction="row" spacing={1} >
-                            <Button
-                                variant="contained"
-                                size="small"
-                                sx={{ mr: 1 }}
-                                onClick={(e) => {
-                                e.stopPropagation();
-                                // Placeholder for view action (new page link later)
-                                console.log(
-                                    "View details for dataset",
-                                    ds.dataset_id
-                                );
-                                }}
-                            >
-                                View
-                            </Button>
-                            <Button
-                                variant="contained"
-                                size="small"
-                                onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelete(ds.dataset_id);
-                                }}
-                                sx={{ ml: 1 }}
-                            >
-                                Delete
-                            </Button>
-                        </Stack>
+                      <Stack direction="row" spacing={1}>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          sx={{ mr: 1 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Placeholder for view action (new page link later)
+                            console.log(
+                              "View details for dataset",
+                              ds.dataset_id,
+                            );
+                          }}
+                        >
+                          View
+                        </Button>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(ds.dataset_id);
+                          }}
+                          sx={{ ml: 1 }}
+                        >
+                          Delete
+                        </Button>
+                      </Stack>
                     </TableCell>
                   </TableRow>
 

@@ -4,7 +4,7 @@ import { usePortalClientRequest } from "../usePortalClient";
 import { WaitingReasonFragment } from "./WaitingReasonFragment";
 import { ManagerFragment } from "./ManagerFragment";
 import Comments from "./Comments";
-import ComputeHistory from "./ComputeHistory";  
+import ComputeHistory from "./ComputeHistory";
 import * as qcpTypes from "../PortalTypes";
 import { FetchedData } from "../PortalClientContext";
 import {
@@ -19,9 +19,8 @@ import {
   Dialog,
   DialogContent,
 } from "@mui/material";
-import HelpOutline from '@mui/icons-material/HelpOutline';
-import { format } from "date-fns"; 
-
+import HelpOutline from "@mui/icons-material/HelpOutline";
+import { format } from "date-fns";
 
 function Record() {
   const { projectId, recordId } = useParams();
@@ -42,7 +41,7 @@ function Record() {
     fetchData<qcpTypes.RecordData>(
       setRecordFetchedData,
       "get",
-      `/api/v1/projects/${projectId}/records/${recordId}`
+      `/api/v1/projects/${projectId}/records/${recordId}`,
     );
   }, [fetchData, projectId, recordId]);
 
@@ -127,7 +126,7 @@ function Record() {
                 <strong>Modified On:</strong>{" "}
                 {format(
                   new Date(recordData.modified_on),
-                  "MMMM dd, yyyy HH:mm"
+                  "MMMM dd, yyyy HH:mm",
                 )}
               </Typography>
               <Typography variant="body2">
@@ -238,6 +237,6 @@ function Record() {
       )}
     </>
   );
-};
+}
 
 export default Record;

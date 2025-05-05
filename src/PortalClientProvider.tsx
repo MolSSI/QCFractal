@@ -2,7 +2,11 @@ import { ReactNode, useCallback, useEffect, useState } from "react";
 import * as qcpTypes from "./PortalTypes";
 import * as requestHelpers from "./RequestHelpers";
 import * as authHelpers from "./AuthHelpers";
-import {FetchedData, PortalClientContext, RequestReturnType} from "./PortalClientContext";
+import {
+  FetchedData,
+  PortalClientContext,
+  RequestReturnType,
+} from "./PortalClientContext";
 import { AuthenticationError } from "./Exceptions";
 
 export function PortalClientProvider({ children }: { children: ReactNode }) {
@@ -83,28 +87,36 @@ export function PortalClientProvider({ children }: { children: ReactNode }) {
   );
 
   const fetchData = useCallback(
-      function <T>(
-          setDataFn: (value: FetchedData<T>) => void,
-          method: string,
-          endpoint: string,
-          body?: object,
-          url_params?: Record<string, string>,
-      ): void {
-          setDataFn({data: undefined, error: undefined, loading: true});
+    function <T>(
+      setDataFn: (value: FetchedData<T>) => void,
+      method: string,
+      endpoint: string,
+      body?: object,
+      url_params?: Record<string, string>,
+    ): void {
+      setDataFn({ data: undefined, error: undefined, loading: true });
 
-          wrappedMakeRequest<T>(method, endpoint, body, url_params)
-              .then(r => {
-                  setDataFn(prevData => ({...prevData, data: r.data, error: r.error}));
-              })
-              .catch(err => {
-                  setDataFn(prevData => ({...prevData, data: undefined, error: err}));
-              })
-              .finally(() => {
-                  setDataFn(prevData => ({...prevData, loading: false}));
-              })
-      }
-  , [wrappedMakeRequest]
-  )
+      wrappedMakeRequest<T>(method, endpoint, body, url_params)
+        .then((r) => {
+          setDataFn((prevData) => ({
+            ...prevData,
+            data: r.data,
+            error: r.error,
+          }));
+        })
+        .catch((err) => {
+          setDataFn((prevData) => ({
+            ...prevData,
+            data: undefined,
+            error: err,
+          }));
+        })
+        .finally(() => {
+          setDataFn((prevData) => ({ ...prevData, loading: false }));
+        });
+    },
+    [wrappedMakeRequest],
+  );
 
   // Detect login status & server info on initial load
   useEffect(() => {

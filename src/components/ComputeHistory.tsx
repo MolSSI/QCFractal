@@ -39,12 +39,12 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
       loading: true,
     });
   const [isExpanded, setIsExpanded] = useState(false);
-  const [managerDialogOpen, setManagerDialogOpen] = useState(false); 
+  const [managerDialogOpen, setManagerDialogOpen] = useState(false);
   const [selectedManager, setSelectedManager] = useState<string | null>(null);
-  const [outputDialogOpen, setOutputDialogOpen] = useState(false); 
+  const [outputDialogOpen, setOutputDialogOpen] = useState(false);
   const [selectedComputeHistoryId, setSelectedComputeHistoryId] = useState<
-      number | null
-    >(null); 
+    number | null
+  >(null);
   const { fetchData } = usePortalClientRequest();
 
   // Status color mapping (updated to match Record component)
@@ -71,11 +71,11 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
     fetchData<qcpTypes.ComputeHistory[]>(
       setComputeHistoryFetchedData,
       "get",
-      `/api/v1/records/${recordType}/${recordId}/compute_history`
+      `/api/v1/records/${recordType}/${recordId}/compute_history`,
     );
   }, [fetchData, recordType, recordId]);
 
-  const computeHistory = computeHistoryFetchedData?.data || []; 
+  const computeHistory = computeHistoryFetchedData?.data || [];
   return (
     <>
       {/* Title with toggle button and buttons */}
@@ -106,7 +106,9 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
             }
             onClick={() => {
               if (computeHistory.length > 0) {
-                setSelectedComputeHistoryId(computeHistory[computeHistory.length-1].id); // Use the first item's ID
+                setSelectedComputeHistoryId(
+                  computeHistory[computeHistory.length - 1].id,
+                ); // Use the first item's ID
                 setOutputDialogOpen(true); // Open the Output dialog
               }
             }}
@@ -250,7 +252,7 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
                                       <strong>{key}:</strong> {value || "N/A"}
                                     </Typography>
                                   </li>
-                                )
+                                ),
                               )}
                             </Box>
                           ) : (
@@ -258,7 +260,7 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
                           )}
                         </TableCell>
                       </TableRow>
-                    )
+                    ),
                   )}
                 </TableBody>
               </Table>

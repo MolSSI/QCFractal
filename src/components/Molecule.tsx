@@ -4,7 +4,7 @@ import React, {
   useEffect,
   useRef,
   useState,
-  ReactNode
+  ReactNode,
 } from "react";
 import { moleculeToSDF } from "../MoleculeUtils";
 import * as qcpTypes from "../PortalTypes";
@@ -15,10 +15,14 @@ const StageContext = createContext<Stage | undefined>(undefined);
 type MoleculeStageProviderProps = {
   width: number;
   height: number;
-  children: ReactNode
+  children: ReactNode;
 };
 
-function MoleculeStageProvider({ width, height, children }: MoleculeStageProviderProps) {
+function MoleculeStageProvider({
+  width,
+  height,
+  children,
+}: MoleculeStageProviderProps) {
   const stageElementRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Stage | null>(null);
   const [isReady, setIsReady] = useState(false);

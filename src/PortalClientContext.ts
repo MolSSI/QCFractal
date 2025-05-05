@@ -12,7 +12,6 @@ export type FetchedData<T> = {
   loading: boolean;
 };
 
-
 type ClientContextType = {
   connectionState?: qcpTypes.ConnectionState;
   serverInfo: qcpTypes.ServerInfo;
@@ -28,11 +27,11 @@ type ClientContextType = {
   ) => Promise<RequestReturnType<T>>;
 
   fetchData: <T>(
-      setDataFn: (value: FetchedData<T>) => void,
-      method: string,
-      endpoint: string,
-      body?: object,
-      url_params?: Record<string, string>,
+    setDataFn: (value: FetchedData<T>) => void,
+    method: string,
+    endpoint: string,
+    body?: object,
+    url_params?: Record<string, string>,
   ) => void;
 };
 
