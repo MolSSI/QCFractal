@@ -93,7 +93,7 @@ const OutputFragment: React.FC<OutputFragmentProps> = ({
           <Grid size={{ xs: 3 }}>
             <Tabs
               orientation="vertical"
-              value={selectedKey}
+              value={selectedKey || outputKeys[0] || false}
               onChange={(event, newValue) => setSelectedKey(newValue)}
               sx={{ borderRight: 1, borderColor: "divider" }}
             >
@@ -121,7 +121,27 @@ const OutputFragment: React.FC<OutputFragmentProps> = ({
                     maxHeight: "400px",
                   }}
                 >
-                  {outputContentFetchedData.data}
+                  {typeof outputContentFetchedData.data === "string" ? (
+                    outputContentFetchedData.data
+                  ) : (
+                    // Render object content if the data is not a string
+                    <Box component="div">
+                      {Object.entries(outputContentFetchedData.data).map(
+                        ([key, value]) => (
+                          <Typography
+                            key={key}
+                            variant="body2"
+                            sx={{ marginBottom: "8px" }}
+                          >
+                            <strong>{key}:</strong>{" "}
+                            {typeof value === "string"
+                              ? value
+                              : JSON.stringify(value, null, 2)}
+                          </Typography>
+                        )
+                      )}
+                    </Box>
+                  )}
                 </Box>
               )}
           </Grid>

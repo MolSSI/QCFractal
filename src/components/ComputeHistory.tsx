@@ -105,9 +105,8 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
               computeHistoryFetchedData.loading || computeHistory.length === 0
             }
             onClick={() => {
-              console.log(computeHistory);
               if (computeHistory.length > 0) {
-                setSelectedComputeHistoryId(computeHistory[0].id); // Use the first item's ID
+                setSelectedComputeHistoryId(computeHistory[computeHistory.length-1].id); // Use the first item's ID
                 setOutputDialogOpen(true); // Open the Output dialog
               }
             }}
