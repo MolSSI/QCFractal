@@ -47,6 +47,8 @@ export type Project = {
 
 export type ProjectDatasetMetadata = {
   dataset_id: number;
+  dataset_type: string;
+  name: string;
 };
 
 export type ProjectRecordMetadata = {

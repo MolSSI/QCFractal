@@ -13,13 +13,13 @@ import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const mainListItems = [
   { text: "Home", icon: <HomeRoundedIcon />, path: "/" },
   { text: "Projects", icon: <FormatListBulletedIcon />, path: "/projects" },
-  { text: "Clients", icon: <PeopleRoundedIcon />, path: "/" },
-  { text: "Tasks", icon: <AssignmentRoundedIcon />, path: "/" },
+  { text: "Clients", icon: <PeopleRoundedIcon />, path: "#" },
+  { text: "Tasks", icon: <AssignmentRoundedIcon />, path: "#" },
 ];
 
 const secondaryListItems = [
@@ -30,11 +30,8 @@ const secondaryListItems = [
 
 export default function MenuContent() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [selectedIndex, setSelectedIndex] = useState(0);
-
-  // interface HandleClick {
-  //     (index: number, path: string): void;
-  // }
 
   const handleClick = (index: number, path: string) => {
     setSelectedIndex(index);
@@ -47,7 +44,7 @@ export default function MenuContent() {
         {mainListItems.map((item, index) => (
           <ListItem key={index} disablePadding sx={{ display: "block" }}>
             <ListItemButton
-              selected={selectedIndex === index}
+              selected={location.pathname === item.path}
               onClick={() => handleClick(index, item.path)}
               sx={{ cursor: "pointer" }}
             >
