@@ -57,7 +57,9 @@ export default function RecordTab({
   };
 
   const handleViewClick = (recordId: number) => {
-    navigate(`/projects/${projectId}/records/${recordId}`);
+    navigate(`/projects/${projectId}/records/${recordId}`,{
+      state:{activeTab:1}
+    });
   };
 
   const handleDelete = (id: number) => {

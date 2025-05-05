@@ -51,6 +51,8 @@ export type ProjectDatasetMetadata = {
 
 export type ProjectRecordMetadata = {
   record_id: number;
+  name: string;
+  status: string;
 };
 
 export type CalculationRecord = {

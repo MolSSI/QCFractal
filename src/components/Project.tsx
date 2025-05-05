@@ -3,7 +3,7 @@ import { usePortalClientRequest } from "../usePortalClient";
 import { FetchedData } from "../PortalClientContext";
 import { useEffect, useState } from "react";
 import * as qcpTypes from "../PortalTypes";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import {
   Box,
   Button,
@@ -38,7 +38,7 @@ function TabPanel(props: {
 
 export default function Project() {
   const { projectId } = useParams();
-
+  const location = useLocation();
   const { fetchData } = usePortalClientRequest(); // Get client instance here
 
   const [projectFetchedData, setProjectFetchedData] = useState<
@@ -65,18 +65,24 @@ export default function Project() {
     loading: true,
   });
 
-  // State for the Tabs
-  const [tabValue, setTabValue] = useState(0);
+  // Load from location state or sessionStorage or fallback to 0
+  const [tabValue, setTabValue] = useState<number>(() => {
+    const saved = sessionStorage.getItem("projectTabValue");
+    return location.state?.activeTab ?? (saved ? parseInt(saved) : 0);
+  });
+
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+    sessionStorage.setItem("projectTabValue", newValue.toString());
   };
+
 
   // Load project data, then dataset & record metadata
   useEffect(() => {
     fetchData<qcpTypes.Project>(
       setProjectFetchedData,
       "get",
-      `api/v1/projects/${projectId}`,
+      `api/v1/projects/${projectId}`
     );
   }, [fetchData, projectId]);
 
@@ -85,15 +91,16 @@ export default function Project() {
     fetchData<Array<qcpTypes.ProjectDatasetMetadata>>(
       setDatasetMetadataFetchedData,
       "get",
-      `api/v1/projects/${projectId}/dataset_metadata`,
+      `api/v1/projects/${projectId}/dataset_metadata`
     );
   }, [fetchData, projectId]);
 
+  // Fetch record metadata
   useEffect(() => {
     fetchData<Array<qcpTypes.ProjectRecordMetadata>>(
       setRecordMetadataFetchedData,
       "get",
-      `api/v1/projects/${projectId}/record_metadata`,
+      `api/v1/projects/${projectId}/record_metadata`
     );
   }, [fetchData, projectId]);
 
@@ -116,7 +123,7 @@ export default function Project() {
               {projectData.tagline}
             </Typography>
           </Grid>
-          {/* Summary stats: for example, Records, Datasets, Molecules */}
+          {/* Summary stats: for example, Records, Datasets */}
           <Grid size={2}>
             <Paper elevation={3}>
               <Box p={1}>
@@ -135,18 +142,9 @@ export default function Project() {
               </Box>
             </Paper>
           </Grid>
-          <Grid size={2}>
-            <Paper elevation={3}>
-              <Box p={1}>
-                <Typography variant="body1" fontWeight="bold">
-                  0 Molecules
-                </Typography>
-              </Box>
-            </Paper>
-          </Grid>
 
           {/* Description & Metadata section */}
-          <Box size={12} mx={"auto"}>
+          <Box size={12} sx={{ mx: "auto" }}>
             <Grid size={12} mb={3}>
               <Paper elevation={2}>
                 <Box
@@ -202,11 +200,6 @@ export default function Project() {
                 >
                   <Tab label="Datasets" id="tab-0" aria-controls="tabpanel-0" />
                   <Tab label="Records" id="tab-1" aria-controls="tabpanel-1" />
-                  <Tab
-                    label="Molecules"
-                    id="tab-2"
-                    aria-controls="tabpanel-2"
-                  />
                 </Tabs>
 
                 {/* Tab 1: Datasets */}
@@ -217,7 +210,6 @@ export default function Project() {
                       <DatasetTab
                         datasetMetadata={datasetMetadata}
                         onDelete={(id) => {
-                          // Implement your delete logic here, e.g. calling an API endpoint
                           console.log("Deleting dataset ID:", id);
                         }}
                       />
@@ -240,18 +232,6 @@ export default function Project() {
                     )}
                   </TabPanel>
                 )}
-
-                {/* Tab 3: Molecules - placeholder content */}
-                <TabPanel value={tabValue} index={2}>
-                  <Typography variant="h6" gutterBottom>
-                    Molecules
-                  </Typography>
-                  <Typography variant="body1">
-                    Placeholder for molecule details: in the future, you could
-                    display a list of molecule structures or 2D/3D
-                    visualizations here.
-                  </Typography>
-                </TabPanel>
               </Paper>
             </Grid>
           </Box>
