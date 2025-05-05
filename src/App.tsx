@@ -8,7 +8,9 @@ import Project from "./components/Project.tsx";
 import ProjectList from "./components/ProjectList.tsx";
 import Record from "./components/Record.tsx";
 import Manager from "./components/Manager.tsx";
-import { MyUserInfo, UserInfo } from "./components/UserInfo.tsx";
+import ManagerList from "./components/ManagerList.tsx";
+import {MyUserInfo, UserInfo} from "./components/UserInfo.tsx";
+import AddProjectRecord from "./components/AddProjectRecord.tsx";
 
 function App() {
   return (
@@ -23,10 +25,9 @@ function App() {
               <Route path="/users/:userName" element={<UserInfo />} />
               <Route path="/projects" element={<ProjectList />} />
               <Route path="/projects/:projectId" element={<Project />} />
-              <Route
-                path="/projects/:projectId/records/:recordId"
-                element={<Record />}
-              />
+              <Route path="/projects/:projectId/records/:recordId" element={<Record />} />
+              <Route path="/projects/:projectId/addRecord" element={<AddProjectRecord />} />
+              <Route path="/managers" element={<ManagerList />} />
               <Route path="/managers/:managerName" element={<Manager />} />
             </Route>
           </Route>

@@ -189,7 +189,7 @@ export default function Project() {
               </Paper>
             </Grid>
 
-            {/* Lower section with Tabs for Datasets, Records, Molecules */}
+            {/* Lower section with Tabs for Datasets, Records */}
             <Grid size={12}>
               <Paper elevation={2}>
                 <Tabs
