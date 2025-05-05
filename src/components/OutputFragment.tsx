@@ -48,7 +48,7 @@ const OutputFragment: React.FC<OutputFragmentProps> = ({
     fetchData<Record<string, any>>(
       setOutputKeysFetchedData,
       "get",
-      `/api/v1/records/${recordType}/${recordId}/compute_history/${computeHistoryId}/outputs/`
+      `/api/v1/records/${recordType}/${recordId}/compute_history/${computeHistoryId}/outputs`
     );
   }, [recordType, recordId, computeHistoryId, fetchData]);
 
@@ -64,9 +64,11 @@ const OutputFragment: React.FC<OutputFragmentProps> = ({
   }, [selectedKey, recordType, recordId, computeHistoryId, fetchData]);
 
   // Extract keys from fetched data
-  const outputKeys = outputKeysFetchedData.data
-    ? Object.keys(outputKeysFetchedData.data)
-    : [];
+  const outputKeys = React.useMemo(() => {
+    return outputKeysFetchedData.data
+      ? Object.keys(outputKeysFetchedData.data)
+      : [];
+  }, [outputKeysFetchedData.data]);
 
   // Automatically select the first key when keys are fetched
   useEffect(() => {
@@ -88,7 +90,7 @@ const OutputFragment: React.FC<OutputFragmentProps> = ({
       {!outputKeysFetchedData.loading && outputKeysFetchedData.data && (
         <Grid container spacing={2} width="100%">
           {/* Tabs for output keys */}
-          <Grid size={{xs:3}}>
+          <Grid size={{ xs: 3 }}>
             <Tabs
               orientation="vertical"
               value={selectedKey}
@@ -102,7 +104,7 @@ const OutputFragment: React.FC<OutputFragmentProps> = ({
           </Grid>
 
           {/* Content for the selected key */}
-          <Grid size={{xs:9}}>
+          <Grid size={{ xs: 9 }}>
             {outputContentFetchedData.loading && <CircularProgress />}
             {outputContentFetchedData.error && (
               <Typography color="error">

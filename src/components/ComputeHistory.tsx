@@ -21,6 +21,7 @@ import { usePortalClientRequest } from "../usePortalClient";
 import { FetchedData } from "../PortalClientContext";
 import * as qcpTypes from "../PortalTypes";
 import { ManagerFragment } from "./ManagerFragment";
+import OutputFragment from "./OutputFragment";
 
 interface ComputeHistoryProps {
   recordType: string;
@@ -40,6 +41,10 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [managerDialogOpen, setManagerDialogOpen] = useState(false); 
   const [selectedManager, setSelectedManager] = useState<string | null>(null);
+  const [outputDialogOpen, setOutputDialogOpen] = useState(false); 
+  const [selectedComputeHistoryId, setSelectedComputeHistoryId] = useState<
+      number | null
+    >(null); 
   const { fetchData } = usePortalClientRequest();
 
   // Status color mapping (updated to match Record component)
@@ -96,8 +101,15 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
           <Button
             variant="outlined"
             size="small"
+            disabled={
+              computeHistoryFetchedData.loading || computeHistory.length === 0
+            }
             onClick={() => {
-              console.log("View Outputs clicked");
+              console.log(computeHistory);
+              if (computeHistory.length > 0) {
+                setSelectedComputeHistoryId(computeHistory[0].id); // Use the first item's ID
+                setOutputDialogOpen(true); // Open the Output dialog
+              }
             }}
           >
             View Outputs
@@ -173,97 +185,116 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {computeHistory.map((history: qcpTypes.ComputeHistory, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{history.id || "N/A"}</TableCell>
-                      <TableCell>
-                        <Typography
-                          variant="body2"
-                          color="primary"
-                          sx={{
-                            cursor: "pointer",
-                            textDecoration: "underline",
-                          }}
-                          onClick={() => {
-                            setSelectedManager(history.manager_name);
-                            setManagerDialogOpen(true);
-                          }}
-                        >
-                          {history.manager_name || "N/A"}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(history.modified_on).toLocaleString() ||
-                          "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={history.status || "N/A"}
-                          color={
-                            statusColors[history.status.toLowerCase()] ||
-                            "default"
-                          }
-                          sx={{
-                            fontWeight: "bold",
-                            textTransform: "capitalize",
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          onClick={() => {
-                            console.log(`View output for ID: ${history.id}`);
-                          }}
-                        >
-                          View Output
-                        </Button>
-                      </TableCell>
-                      <TableCell>
-                        {history.provenance ? (
-                          <Box
-                            component="ul"
+                  {computeHistory.map(
+                    (history: qcpTypes.ComputeHistory, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{history.id || "N/A"}</TableCell>
+                        <TableCell>
+                          <Typography
+                            variant="body2"
+                            color="primary"
                             sx={{
-                              pl: 2,
-                              m: 0,
-                              listStyleType: "none", // Remove bullet points
+                              cursor: "pointer",
+                              textDecoration: "underline",
+                            }}
+                            onClick={() => {
+                              setSelectedManager(history.manager_name);
+                              setManagerDialogOpen(true);
                             }}
                           >
-                            {Object.entries(history.provenance).map(
-                              ([key, value]) => (
-                                <li key={key}>
-                                  <Typography variant="body2">
-                                    <strong>{key}:</strong> {value || "N/A"}
-                                  </Typography>
-                                </li>
-                              )
-                            )}
-                          </Box>
-                        ) : (
-                          <Typography variant="body2">None</Typography>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                            {history.manager_name || "N/A"}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(history.modified_on).toLocaleString() ||
+                            "N/A"}
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={history.status || "N/A"}
+                            color={
+                              statusColors[history.status.toLowerCase()] ||
+                              "default"
+                            }
+                            sx={{
+                              fontWeight: "bold",
+                              textTransform: "capitalize",
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() => {
+                              setSelectedComputeHistoryId(history.id);
+                              setOutputDialogOpen(true);
+                            }}
+                          >
+                            View Output
+                          </Button>
+                        </TableCell>
+                        <TableCell>
+                          {history.provenance ? (
+                            <Box
+                              component="ul"
+                              sx={{
+                                pl: 2,
+                                m: 0,
+                                listStyleType: "none", // Remove bullet points
+                              }}
+                            >
+                              {Object.entries(history.provenance).map(
+                                ([key, value]) => (
+                                  <li key={key}>
+                                    <Typography variant="body2">
+                                      <strong>{key}:</strong> {value || "N/A"}
+                                    </Typography>
+                                  </li>
+                                )
+                              )}
+                            </Box>
+                          ) : (
+                            <Typography variant="body2">None</Typography>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>
           )}
-          {/* Manager Dialog */}
-          <Dialog
-            fullWidth={true}
-            open={managerDialogOpen}
-            onClose={() => setManagerDialogOpen(false)}
-          >
-            <DialogContent>
-              {selectedManager && (
-                <ManagerFragment managerName={selectedManager} />
-              )}
-            </DialogContent>
-          </Dialog>
         </>
       )}
+      {/* Manager Dialog */}
+      <Dialog
+        fullWidth={true}
+        open={managerDialogOpen}
+        onClose={() => setManagerDialogOpen(false)}
+      >
+        <DialogContent>
+          {selectedManager && <ManagerFragment managerName={selectedManager} />}
+        </DialogContent>
+      </Dialog>
+
+      {/* Output Dialog */}
+      <Dialog
+        fullWidth={true}
+        maxWidth="md"
+        open={outputDialogOpen}
+        onClose={() => setOutputDialogOpen(false)}
+      >
+        <DialogContent>
+          {selectedComputeHistoryId && (
+            <OutputFragment
+              recordType={recordType}
+              recordId={recordId}
+              computeHistoryId={selectedComputeHistoryId}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
