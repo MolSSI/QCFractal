@@ -21,8 +21,8 @@ from qcfractal.components.dataset_db_views import DatasetDirectRecordsView
 from qcfractal.components.dataset_processing import create_view_file
 from qcfractal.components.internal_jobs.db_models import InternalJobORM
 from qcfractal.components.record_db_models import BaseRecordORM
-from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.components.services.db_models import ServiceQueueORM
+from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.db_socket.helpers import get_count
 from qcfractal.db_socket.helpers import (
     get_general,
@@ -1677,6 +1677,15 @@ class BaseDatasetSocket:
         If `specification_names` is not provided, all specifications will be copied
         """
 
+        # Which specs already exist in the destination dataset
+        # We will allow duplicates if name and spec id match, so we filter those out with an outer join
+        existing_cte = select(
+            self.specification_orm.name,
+            self.specification_orm.specification_id,
+        )
+
+        existing_cte = existing_cte.where(self.specification_orm.dataset_id == destination_dataset_id).cte()
+
         # All dataset specifications (so far) have the same structure. So we can do it for all
         # types of datasets here
         select_stmt = select(
@@ -1686,7 +1695,16 @@ class BaseDatasetSocket:
             self.specification_orm.specification_id,
         )
 
+        select_stmt = select_stmt.join(
+            existing_cte,
+            and_(
+                self.specification_orm.name == existing_cte.c.name,
+                self.specification_orm.specification_id == existing_cte.c.specification_id,
+            ),
+            isouter=True,
+        )
         select_stmt = select_stmt.where(self.specification_orm.dataset_id == source_dataset_id)
+        select_stmt = select_stmt.where(existing_cte.c.name.is_(None))
 
         if specification_names is not None:
             select_stmt = select_stmt.where(self.specification_orm.name.in_(specification_names))
