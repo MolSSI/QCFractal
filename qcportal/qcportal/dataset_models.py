@@ -1887,6 +1887,7 @@ class BaseDataset(BaseModel):
         self,
         source_dataset_id: int,
         entry_names: Optional[Union[str, Iterable[str]]] = None,
+        existing_ok: bool = False,
     ):
         """
         Copies entries from another dataset into this one
@@ -1899,23 +1900,27 @@ class BaseDataset(BaseModel):
             The ID of the dataset to copy entries from
         entry_names
             Names of the entries to copy. If not provided, all entries will be copied.
+        existing_ok
+            If False and an entry already exists by that name, an exception is raised.
+
         """
         logger = logging.getLogger(self.__class__.__name__)
         self.assert_is_not_view()
         self.assert_online()
 
         self.fetch_entry_names()
-        seen_entries = set()
-        entry_names = [
-            entry_name
-            for entry_name in entry_names
-            if entry_name not in self.entry_names
-            or (
-                entry_name not in seen_entries
-                and seen_entries.add(entry_name) is None
-                and logger.warning(f"The entry, {entry_name}, is already in the dataset. It won't be copied.")
-            )
-        ]
+        if existing_ok:
+            seen_entries = set()
+            entry_names = [
+                entry_name
+                for entry_name in entry_names
+                if entry_name not in self.entry_names
+                or (
+                    entry_name not in seen_entries
+                    and seen_entries.add(entry_name) is None
+                    and logger.warning(f"The entry, {entry_name}, is already in the dataset. It won't be copied.")
+                )
+            ]
 
         body_data = DatasetCopyFromBody(
             source_dataset_id=source_dataset_id,
@@ -1930,6 +1935,7 @@ class BaseDataset(BaseModel):
         self,
         source_dataset_id: int,
         specification_names: Optional[Union[str, Iterable[str]]] = None,
+        existing_ok: bool = False,
     ):
         """
         Copies specifications from another dataset into this one
@@ -1942,23 +1948,28 @@ class BaseDataset(BaseModel):
             The ID of the dataset to copy entries from
         specification_names
             Names of the specifications to copy. If not provided, all specifications will be copied.
+        existing_ok
+            If False and a specification already exists by that name, an exception is raised.
         """
         logger = logging.getLogger(self.__class__.__name__)
         self.assert_is_not_view()
         self.assert_online()
 
         self.fetch_specifications()
-        seen_specifications = set()
-        specification_names = [
-            spec_name
-            for spec_name in specification_names
-            if spec_name not in self.specification_names
-            or (
-                spec_name not in seen_specifications
-                and seen_specifications.add(spec_name) is None
-                and logger.warning(f"The specification, {spec_name}, is already in the dataset. It won't be copied.")
-            )
-        ]
+        if existing_ok:
+            seen_specifications = set()
+            specification_names = [
+                spec_name
+                for spec_name in specification_names
+                if spec_name not in self.specification_names
+                or (
+                    spec_name not in seen_specifications
+                    and seen_specifications.add(spec_name) is None
+                    and logger.warning(
+                        f"The specification, {spec_name}, is already in the dataset. It won't be copied."
+                    )
+                )
+            ]
 
         body_data = DatasetCopyFromBody(
             source_dataset_id=source_dataset_id,
@@ -1974,6 +1985,7 @@ class BaseDataset(BaseModel):
         source_dataset_id: int,
         entry_names: Optional[Union[str, Iterable[str]]] = None,
         specification_names: Optional[Union[str, Iterable[str]]] = None,
+        existing_ok: bool = False,
     ):
         """
         Copies records from another dataset into this one
@@ -1991,32 +2003,37 @@ class BaseDataset(BaseModel):
             Names of the entries to copy. If not provided, all entries will be copied.
         specification_names
             Names of the specifications to copy. If not provided, all specifications will be copied.
+        existing_ok
+            If False and a specification or entry already exists by a supplied name, an exception is raised.
         """
         logger = logging.getLogger(self.__class__.__name__)
         self.fetch_entry_names()
         self.fetch_specifications()
-        seen_specifications = set()
-        specification_names = [
-            spec_name
-            for spec_name in specification_names
-            if spec_name not in self.specification_names
-            or (
-                spec_name not in seen_specifications
-                and seen_specifications.add(spec_name) is None
-                and logger.warning(f"The specification, {spec_name}, is already in the dataset. It won't be copied.")
-            )
-        ]
-        seen_entries = set()
-        entry_names = [
-            entry_name
-            for entry_name in entry_names
-            if entry_name not in self.entry_names
-            or (
-                entry_name not in seen_entries
-                and seen_entries.add(entry_name) is None
-                and logger.warning(f"The entry, {entry_name}, is already in the dataset. It won't be copied.")
-            )
-        ]
+        if existing_ok:
+            seen_specifications = set()
+            specification_names = [
+                spec_name
+                for spec_name in specification_names
+                if spec_name not in self.specification_names
+                or (
+                    spec_name not in seen_specifications
+                    and seen_specifications.add(spec_name) is None
+                    and logger.warning(
+                        f"The specification, {spec_name}, is already in the dataset. It won't be copied."
+                    )
+                )
+            ]
+            seen_entries = set()
+            entry_names = [
+                entry_name
+                for entry_name in entry_names
+                if entry_name not in self.entry_names
+                or (
+                    entry_name not in seen_entries
+                    and seen_entries.add(entry_name) is None
+                    and logger.warning(f"The entry, {entry_name}, is already in the dataset. It won't be copied.")
+                )
+            ]
 
         self.assert_is_not_view()
         self.assert_online()
