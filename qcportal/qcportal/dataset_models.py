@@ -2000,7 +2000,6 @@ class BaseDataset(BaseModel):
         self,
         source_dataset_id: int,
         specification_names: Optional[Union[str, Iterable[str]]] = None,
-        existing_ok: bool = False,
     ):
         """
         Copies specifications from another dataset into this one
@@ -2021,20 +2020,6 @@ class BaseDataset(BaseModel):
         self.assert_online()
 
         self.fetch_specifications()
-        if existing_ok:
-            seen_specifications = set()
-            specification_names = [
-                spec_name
-                for spec_name in specification_names
-                if spec_name not in self.specification_names
-                or (
-                    spec_name not in seen_specifications
-                    and seen_specifications.add(spec_name) is None
-                    and logger.warning(
-                        f"The specification, {spec_name}, is already in the dataset. It won't be copied."
-                    )
-                )
-            ]
 
         body_data = DatasetCopyFromBody(
             source_dataset_id=source_dataset_id,
@@ -2075,19 +2060,6 @@ class BaseDataset(BaseModel):
         self.fetch_entry_names()
         self.fetch_specifications()
         if existing_ok:
-            seen_specifications = set()
-            specification_names = [
-                spec_name
-                for spec_name in specification_names
-                if spec_name not in self.specification_names
-                or (
-                    spec_name not in seen_specifications
-                    and seen_specifications.add(spec_name) is None
-                    and logger.warning(
-                        f"The specification, {spec_name}, is already in the dataset. It won't be copied."
-                    )
-                )
-            ]
             seen_entries = set()
             entry_names = [
                 entry_name
