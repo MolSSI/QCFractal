@@ -1,4 +1,4 @@
-import { styled } from "@mui/material/styles";
+import { styled, useColorScheme } from "@mui/material/styles";
 import Avatar from "@mui/material/Avatar";
 import MuiDrawer, { drawerClasses } from "@mui/material/Drawer";
 import Box from "@mui/material/Box";
@@ -10,7 +10,8 @@ import Button from "@mui/material/Button";
 import ServerStatus from "../components/ServerStatus";
 import { usePortalClientAuth } from "../usePortalClient";
 import { useNavigate } from "react-router-dom";
-import qcarchiveLogo from "../assets/QCArchiveLogo.png";
+import qcarchiveLogo from "../assets/qcarchive_logo.svg";
+import qcarchiveLogoInverted from "../assets/qcarchive_logo_inverted.svg";
 
 const drawerWidth = 240;
 
@@ -26,6 +27,8 @@ const Drawer = styled(MuiDrawer)({
 });
 
 export default function SideMenu() {
+  const { mode, systemMode, setMode } = useColorScheme();
+  const resolvedMode = (systemMode || mode) as 'light' | 'dark';
   const { connectionState, logout } = usePortalClientAuth();
   const navigate = useNavigate();
 
@@ -51,9 +54,9 @@ export default function SideMenu() {
         }}
       >
         <Avatar
-          src={qcarchiveLogo} // Path to the logo
+          src={resolvedMode == "dark" ? qcarchiveLogoInverted: qcarchiveLogo}
           alt="QCArchive Logo"
-          sx={{ width: 100, height: 100 }}
+          sx={{ width: 125, height: 100 }}
           variant="square"
         />
       </Box>
