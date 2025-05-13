@@ -12,7 +12,7 @@ authors = [
 description = "A distributed compute and database platform for quantum chemistry."
 readme = "README.md"
 license = { file="LICENSE" }
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Development Status :: 4 - Beta",
