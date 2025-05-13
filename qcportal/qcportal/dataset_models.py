@@ -2012,14 +2012,9 @@ class BaseDataset(BaseModel):
             The ID of the dataset to copy entries from
         specification_names
             Names of the specifications to copy. If not provided, all specifications will be copied.
-        existing_ok
-            If False and a specification already exists by that name, an exception is raised.
         """
-        logger = logging.getLogger(self.__class__.__name__)
         self.assert_is_not_view()
         self.assert_online()
-
-        self.fetch_specifications()
 
         body_data = DatasetCopyFromBody(
             source_dataset_id=source_dataset_id,
