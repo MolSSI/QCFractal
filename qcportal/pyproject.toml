@@ -29,6 +29,7 @@ dependencies = [
     "zstandard",
     "apsw>=3.42",
     "qcelemental<0.70a0",
+    "pint", # Required for qcelemental. Doesn't install with py3.13. REMOVE EVENTUALLY
     "tabulate",
     "tqdm",
     "pandas",
