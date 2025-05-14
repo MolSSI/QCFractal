@@ -582,7 +582,7 @@ def run_dataset_model_copy_full(snowflake_client, dataset_type, test_entries, te
     ds2.copy_records_from(ds1.id)
     ds2 = snowflake_client.get_dataset_by_id(ds2.id)
 
-    with pytest.raises(PortalRequestError, match="already has specifications with the same name"):
+    with pytest.raises(PortalRequestError, match="already has entries with the same name"):
         ds2.copy_records_from(ds1.id)
 
     for e in ds1.iterate_entries():
@@ -600,7 +600,7 @@ def run_dataset_model_copy_full(snowflake_client, dataset_type, test_entries, te
     ###########################
     ds3.copy_records_from(ds1.id, specification_names=["spec_1"])
 
-    with pytest.raises(PortalRequestError, match="already has specifications with the same name"):
+    with pytest.raises(PortalRequestError, match="already has entries with the same name"):
         ds3.copy_records_from(ds1.id, specification_names=["spec_1"])
 
     ds3 = snowflake_client.get_dataset_by_id(ds3.id)
@@ -653,6 +653,7 @@ def run_dataset_model_copy(snowflake_client, dataset_type, test_entries, test_sp
     ds4 = snowflake_client.add_dataset(dataset_type, "Test dataset 4")
     ds1.add_specification("spec_1", test_specs[0])
     ds1.add_specification("spec_2", test_specs[1])
+    ds4.add_specification("spec_1", test_specs[1])  # called spec_1, but same as spec_2 above
     ds1.add_entries(test_entries)
 
     #################################################
@@ -668,6 +669,17 @@ def run_dataset_model_copy(snowflake_client, dataset_type, test_entries, test_sp
 
     ds2.copy_specifications_from(ds1.id)
     assert ds1.specifications == ds2.specifications
+
+    #################################################
+    # Try copying specs again
+    #################################################
+    # Allowed if name and specification id are the same
+    ds2.copy_specifications_from(ds1.id)
+    assert ds1.specifications == ds2.specifications
+
+    # Not allowed - spec_1 in ds4 is not the same as spec_1 in ds2
+    with pytest.raises(PortalRequestError, match="already has specifications with the same name"):
+        ds2.copy_specifications_from(ds4.id)
 
     all_recs = [(e, s, r) for e, s, r in ds2.iterate_records()]
     assert len(all_recs) == 0
