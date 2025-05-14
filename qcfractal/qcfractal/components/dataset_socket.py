@@ -1695,6 +1695,11 @@ class BaseDatasetSocket:
             self.specification_orm.specification_id,
         )
 
+        # Join against the CTE for the existing specs
+        # If a spec exists with the same name and spec id, then the "where is null" will be false and it will be
+        #     filtered out from the select
+        # If the name exists BUT THE ID IS DIFFERENT, it is not filtered out, which will cause an integrity error
+        #     when we insert later
         select_stmt = select_stmt.join(
             existing_cte,
             and_(
