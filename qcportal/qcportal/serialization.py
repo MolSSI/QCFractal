@@ -93,7 +93,7 @@ class _JSONEncoder(json.JSONEncoder):
         # Now do anything with pydantic, excluding unset fields
         # Also always use aliases when serializing
         if isinstance(obj, BaseModel):
-            return obj.dict(exclude_unset=False, by_alias=True)
+            return obj.dict(exclude_unset=True, by_alias=True)
 
         # Let pydantic handle other things
         try:

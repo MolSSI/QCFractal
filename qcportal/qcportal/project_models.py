@@ -93,7 +93,7 @@ class ProjectUnlinkDatasetsBody(RestModelBase):
 
 
 class ProjectRecordAddBody(RecordAddBodyBase):
-    record_input: AllInputTypes = Field(..., discriminator="record_type")
+    record_input: AllInputTypes
     name: str
     description: str
     tags: List[str]
