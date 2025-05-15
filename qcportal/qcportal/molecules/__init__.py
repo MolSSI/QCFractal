@@ -1,1 +1,8 @@
-from .models import Molecule, MoleculeIdentifiers, MoleculeQueryFilters, MoleculeModifyBody, MoleculeQueryIterator
+from .models import (
+    Molecule,
+    MoleculeIdentifiers,
+    MoleculeQueryFilters,
+    MoleculeModifyBody,
+    MoleculeQueryIterator,
+    MoleculeUploadOptions,
+)

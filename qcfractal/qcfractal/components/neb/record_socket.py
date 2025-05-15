@@ -607,7 +607,9 @@ class NEBRecordSocket(BaseRecordSocket):
         options = []
 
         if include:
-            if is_included("initial_chain", include, exclude, False):
+            if is_included("initial_chain", include, exclude, False) or is_included(
+                "molecules", include, exclude, False
+            ):
                 options.append(selectinload(NEBRecordORM.initial_chain).joinedload(NEBInitialchainORM.molecule))
             if is_included("singlepoints", include, exclude, False):
                 options.append(selectinload(NEBRecordORM.singlepoints))

@@ -25,7 +25,7 @@ from qcportal.manybody import (
 from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.molecules import Molecule
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
-from qcportal.utils import chunk_iterable, hash_dict
+from qcportal.utils import chunk_iterable, hash_dict, is_included
 from .record_db_models import (
     ManybodyClusterORM,
     ManybodyRecordORM,
@@ -457,9 +457,11 @@ class ManybodyRecordSocket(BaseRecordSocket):
     ) -> List[Optional[Dict[str, Any]]]:
         options = []
         if include:
-            if "**" in include or "initial_molecule" in include:
+            if is_included("initial_molecule", include, exclude, False) or is_included(
+                "molecules", include, exclude, False
+            ):
                 options.append(joinedload(ManybodyRecordORM.initial_molecule))
-            if "**" in include or "clusters" in include:
+            if is_included("clusters", include, exclude, False):
                 options.append(selectinload(ManybodyRecordORM.clusters))
 
         with self.root_socket.optional_session(session, True) as session:

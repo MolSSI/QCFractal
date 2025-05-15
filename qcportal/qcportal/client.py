@@ -83,7 +83,22 @@ from .dataset_models import (
 from .internal_jobs import InternalJob, InternalJobQueryFilters, InternalJobQueryIterator, InternalJobStatusEnum
 from .managers import ManagerQueryFilters, ManagerQueryIterator, ManagerQueryAvailableFilters, ComputeManager
 from .metadata_models import UpdateMetadata, InsertMetadata, DeleteMetadata
-from .molecules import Molecule, MoleculeIdentifiers, MoleculeModifyBody, MoleculeQueryIterator, MoleculeQueryFilters
+from .molecules import (
+    Molecule,
+    MoleculeIdentifiers,
+    MoleculeModifyBody,
+    MoleculeQueryIterator,
+    MoleculeQueryFilters,
+    MoleculeUploadOptions,
+)
+
+from .project_models import (
+    Project,
+    ProjectAddBody,
+    ProjectDeleteParams,
+    ProjectQueryModel,
+)
+
 from .record_models import (
     RecordStatusEnum,
     PriorityEnum,
@@ -206,6 +221,70 @@ class PortalClient(PortalClientBase):
         """
 
         return self.make_request("put", "api/v1/motd", None, body=new_motd)
+
+    ##############################################################
+    # Projects
+    ##############################################################
+    def add_project(
+        self,
+        name: str,
+        description: Optional[str] = None,
+        tagline: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        default_compute_tag: str = "*",
+        default_compute_priority: PriorityEnum = PriorityEnum.normal,
+        extras: Optional[Dict[str, Any]] = None,
+        existing_ok: bool = False,
+    ) -> Project:
+        if description is None:
+            description = ""
+        if tagline is None:
+            tagline = ""
+        if tags is None:
+            tags = []
+        if extras is None:
+            extras = {}
+
+        body = ProjectAddBody(
+            name=name,
+            description=description,
+            tagline=tagline,
+            tags=tags,
+            default_compute_tag=default_compute_tag,
+            default_compute_priority=default_compute_priority,
+            extras=extras,
+            existing_ok=existing_ok,
+        )
+
+        proj_id = self.make_request("post", f"api/v1/projects", int, body=body)
+        return self.get_project_by_id(proj_id)
+
+    def get_project(self, project_name: str):
+        body = ProjectQueryModel(project_name=project_name)
+        proj_dict = self.make_request("post", f"api/v1/projects/query", Dict[str, Any], body=body)
+        return Project(**proj_dict, client=self)
+
+    def get_project_by_id(self, project_id: int) -> Project:
+        project_dict = self.make_request("get", f"api/v1/projects/{project_id}", Dict[str, Any])
+        return Project(**project_dict, client=self)
+
+    def delete_project(
+        self,
+        project_id: int,
+        delete_records: bool = False,
+        delete_datasets: bool = False,
+        delete_dataset_records: bool = False,
+    ):
+
+        params = ProjectDeleteParams(
+            delete_records=delete_records,
+            delete_datasets=delete_datasets,
+            delete_dataset_records=delete_dataset_records,
+        )
+        return self.make_request("delete", f"api/v1/projects/{project_id}", None, url_params=params)
+
+    def list_projects(self):
+        return self.make_request("get", f"api/v1/projects", List[Dict[str, Any]])
 
     ##############################################################
     # Datasets
@@ -506,6 +585,20 @@ class PortalClient(PortalClientBase):
 
         mols = self.make_request(
             "post", "api/v1/molecules/bulkCreate", Tuple[InsertMetadata, List[int]], body=make_list(molecules)
+        )
+        return mols
+
+    def upload_molecules(self, file_paths: List[str]) -> Tuple[InsertMetadata, List[Tuple[str, int]]]:
+        file_info = [(os.path.basename(f), f) for f in file_paths]
+
+        body = MoleculeUploadOptions()
+
+        mols = self.make_request(
+            "post",
+            "api/v1/molecules/fromFiles",
+            Tuple[InsertMetadata, List[Tuple[str, int]]],
+            body=body,
+            upload_files=file_info,
         )
         return mols
 

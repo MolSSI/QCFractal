@@ -2009,7 +2009,7 @@ class DatasetSocket:
         if (include is None or "*" in include) and not exclude:
             wp = with_polymorphic(BaseDatasetORM, "*")
         else:
-            wp = BaseRecordORM
+            wp = BaseDatasetORM
 
         with self.root_socket.optional_session(session, True) as session:
             return get_general(session, wp, wp.id, [dataset_id], include, exclude, missing_ok)[0]
