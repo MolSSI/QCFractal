@@ -1231,6 +1231,21 @@ class BaseDataset(BaseModel):
         return self._entry_names
 
     def rename_entries(self, name_map: Dict[str, str]):
+        """
+        Renames entries in the dataset based on the provided mapping.
+        This method updates the names of entries both on the server and in the local cache.
+        It ensures that the dataset is not a view and is online before proceeding with the renaming.
+        Args:
+            name_map (Dict[str, str]): A dictionary mapping old entry names to new entry names.
+                                       Entries where the old name is the same as the new name
+                                       are ignored.
+        Raises:
+            AssertionError: If the dataset is a view or is not online.
+        Side Effects:
+            - Sends a patch request to the server to update entry names.
+            - Updates the local cache and entry names list with the new names.
+        """
+        
         self.assert_is_not_view()
         self.assert_online()
 
@@ -1251,6 +1266,26 @@ class BaseDataset(BaseModel):
         comment_map: Optional[Dict[str, str]] = None,
         overwrite_attributes: bool = False,
     ):
+        """
+        Modifies the entries in the dataset by updating their attributes or comments.
+        
+        Parameters:
+            attribute_map (Optional[Dict[str, Dict[str, Any]]]): 
+                A dictionary mapping entry names to their updated attributes. 
+                Each entry name maps to a dictionary of attribute key-value pairs to be updated.
+            comment_map (Optional[Dict[str, str]]): 
+                A dictionary mapping entry names to their updated comments.
+            overwrite_attributes (bool): 
+                If True, existing attributes for the specified entries will be completely 
+                replaced by the provided attributes in ``attribute_map``. If False, only the 
+                specified attributes will be updated, leaving others unchanged.
+        Raises:
+            AssertionError: If the dataset is a view or if the client is offline.
+        Side Effects:
+            - Sends a request to the server to modify the specified entries.
+            - Synchronizes the local cache with the updated server data for the modified entries.
+        """
+        
         self.assert_is_not_view()
         self.assert_online()
 
@@ -1270,6 +1305,18 @@ class BaseDataset(BaseModel):
         self.fetch_entries(entries_to_sync, force_refetch=True)
 
     def delete_entries(self, names: Union[str, Iterable[str]], delete_records: bool = False) -> DeleteMetadata:
+        """
+        Deletes entries from the dataset.
+        Parameters:
+            names (Union[str, Iterable[str]]): The name or list of names of the entries to delete.
+            delete_records (bool, optional): If True, associated records will also be deleted. Defaults to False.
+        Returns:
+            DeleteMetadata: Metadata about the deletion operation.
+        Raises:
+            AssertionError: If the dataset is a view or not online.
+        """
+        
+        
         self.assert_is_not_view()
         self.assert_online()
 
@@ -1548,10 +1595,28 @@ class BaseDataset(BaseModel):
         force_refetch: bool = False,
     ) -> Optional[BaseRecord]:
         """
-        Obtain a calculation record related to this dataset
+        Retrieve a calculation record associated with this dataset.
 
-        The record will be automatically fetched from the remote server if needed.
-        If a record does not exist for this entry and specification, None is returned
+        This method fetches the record from the remote server if it is not already cached locally.
+        If the record does not exist for the specified entry and specification, it returns None.
+
+        Parameters
+        ----------
+        entry_name : str
+            The name of the entry for which the record is to be retrieved.
+        specification_name : str
+            The name of the specification for which the record is to be retrieved.
+        include : Optional[Iterable[str]], optional
+            Additional fields to include in the fetched record, by default None.
+        fetch_updated : bool, optional
+            If True, fetches updated records from the server if they have been modified, by default True.
+        force_refetch : bool, optional
+            If True, forces a refetch of the record from the server, ignoring the local cache, by default False.
+
+        Returns
+        -------
+        Optional[BaseRecord]
+            The calculation record associated with the specified entry and specification, or None if it does not exist.
         """
 
         if self.is_view:
@@ -1887,6 +1952,7 @@ class BaseDataset(BaseModel):
         self,
         source_dataset_id: int,
         entry_names: Optional[Union[str, Iterable[str]]] = None,
+        existing_ok: bool = False,
     ):
         """
         Copies entries from another dataset into this one
@@ -1899,10 +1965,27 @@ class BaseDataset(BaseModel):
             The ID of the dataset to copy entries from
         entry_names
             Names of the entries to copy. If not provided, all entries will be copied.
-        """
+        existing_ok
+            If False and an entry already exists by that name, an exception is raised.
 
+        """
+        logger = logging.getLogger(self.__class__.__name__)
         self.assert_is_not_view()
         self.assert_online()
+
+        self.fetch_entry_names()
+        if existing_ok:
+            seen_entries = set()
+            entry_names = [
+                entry_name
+                for entry_name in entry_names
+                if entry_name not in self.entry_names
+                or (
+                    entry_name not in seen_entries
+                    and seen_entries.add(entry_name) is None
+                    and logger.warning(f"The entry, {entry_name}, is already in the dataset. It won't be copied.")
+                )
+            ]
 
         body_data = DatasetCopyFromBody(
             source_dataset_id=source_dataset_id,
@@ -1947,6 +2030,7 @@ class BaseDataset(BaseModel):
         source_dataset_id: int,
         entry_names: Optional[Union[str, Iterable[str]]] = None,
         specification_names: Optional[Union[str, Iterable[str]]] = None,
+        existing_ok: bool = False,
     ):
         """
         Copies records from another dataset into this one
@@ -1964,7 +2048,24 @@ class BaseDataset(BaseModel):
             Names of the entries to copy. If not provided, all entries will be copied.
         specification_names
             Names of the specifications to copy. If not provided, all specifications will be copied.
+        existing_ok
+            If False and a specification or entry already exists by a supplied name, an exception is raised.
         """
+        logger = logging.getLogger(self.__class__.__name__)
+        self.fetch_entry_names()
+        self.fetch_specifications()
+        if existing_ok:
+            seen_entries = set()
+            entry_names = [
+                entry_name
+                for entry_name in entry_names
+                if entry_name not in self.entry_names
+                or (
+                    entry_name not in seen_entries
+                    and seen_entries.add(entry_name) is None
+                    and logger.warning(f"The entry, {entry_name}, is already in the dataset. It won't be copied.")
+                )
+            ]
 
         self.assert_is_not_view()
         self.assert_online()
