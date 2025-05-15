@@ -27,14 +27,14 @@ results = client.query_records(created_after="2023/01/10", created_before="2023/
 [36mCell[39m[36m [39m[32mIn[4][39m[32m, line 1[39m
 [32m----> [39m[32m1[39m results = [43mclient[49m[43m.[49m[43mquery_records[49m[43m([49m[43mcreated_after[49m[43m=[49m[33;43m"[39;49m[33;43m2023/01/10[39;49m[33;43m"[39;49m[43m,[49m[43m [49m[43mcreated_before[49m[43m=[49m[33;43m"[39;49m[33;43m2023/01/14[39;49m[33;43m"[39;49m[43m)[49m
 
-[36mFile [39m[32m~/work/QCFractal/QCFractal/qcportal/qcportal/client.py:843[39m, in [36mPortalClient.query_records[39m[34m(self, record_id, record_type, manager_name, status, dataset_id, parent_id, child_id, created_before, created_after, modified_before, modified_after, creator_user, limit, include)[39m
-[32m    825[39m filter_dict = {
-[32m    826[39m     [33m"[39m[33mrecord_id[39m[33m"[39m: make_list(record_id),
-[32m    827[39m     [33m"[39m[33mrecord_type[39m[33m"[39m: make_list(record_type),
-[32m   (...)[39m[32m    838[39m     [33m"[39m[33mlimit[39m[33m"[39m: limit,
-[32m    839[39m }
-[32m    841[39m filter_data = RecordQueryFilters(**filter_dict)
-[32m--> [39m[32m843[39m [38;5;28;01mreturn[39;00m [43mRecordQueryIterator[49m[43m[[49m[43mBaseRecord[49m[43m][49m[43m([49m[38;5;28;43mself[39;49m[43m,[49m[43m [49m[43mfilter_data[49m[43m,[49m[43m [49m[38;5;28;43;01mNone[39;49;00m[43m,[49m[43m [49m[43minclude[49m[43m)[49m
+[36mFile [39m[32m~/work/QCFractal/QCFractal/qcportal/qcportal/client.py:936[39m, in [36mPortalClient.query_records[39m[34m(self, record_id, record_type, manager_name, status, dataset_id, parent_id, child_id, created_before, created_after, modified_before, modified_after, creator_user, limit, include)[39m
+[32m    918[39m filter_dict = {
+[32m    919[39m     [33m"[39m[33mrecord_id[39m[33m"[39m: make_list(record_id),
+[32m    920[39m     [33m"[39m[33mrecord_type[39m[33m"[39m: make_list(record_type),
+[32m   (...)[39m[32m    931[39m     [33m"[39m[33mlimit[39m[33m"[39m: limit,
+[32m    932[39m }
+[32m    934[39m filter_data = RecordQueryFilters(**filter_dict)
+[32m--> [39m[32m936[39m [38;5;28;01mreturn[39;00m [43mRecordQueryIterator[49m[43m[[49m[43mBaseRecord[49m[43m][49m[43m([49m[38;5;28;43mself[39;49m[43m,[49m[43m [49m[43mfilter_data[49m[43m,[49m[43m [49m[38;5;28;43;01mNone[39;49;00m[43m,[49m[43m [49m[43minclude[49m[43m)[49m
 
 [36mFile [39m[32m/opt/hostedtoolcache/Python/3.11.12/x64/lib/python3.11/typing.py:1289[39m, in [36m_BaseGenericAlias.__call__[39m[34m(self, *args, **kwargs)[39m
 [32m   1286[39m [38;5;28;01mif[39;00m [38;5;129;01mnot[39;00m [38;5;28mself[39m._inst:
@@ -44,10 +44,10 @@ results = client.query_records(created_after="2023/01/10", created_before="2023/
 [32m   1290[39m [38;5;28;01mtry[39;00m:
 [32m   1291[39m     result.__orig_class__ = [38;5;28mself[39m
 
-[36mFile [39m[32m~/work/QCFractal/QCFractal/qcportal/qcportal/record_models.py:861[39m, in [36mRecordQueryIterator.__init__[39m[34m(self, client, query_filters, record_type, include)[39m
-[32m    858[39m [38;5;28mself[39m.record_type = record_type
-[32m    859[39m [38;5;28mself[39m.include = include
-[32m--> [39m[32m861[39m [43mQueryIteratorBase[49m[43m.[49m[34;43m__init__[39;49m[43m([49m[38;5;28;43mself[39;49m[43m,[49m[43m [49m[43mclient[49m[43m,[49m[43m [49m[43mquery_filters[49m[43m,[49m[43m [49m[43mbatch_limit[49m[43m)[49m
+[36mFile [39m[32m~/work/QCFractal/QCFractal/qcportal/qcportal/record_models.py:865[39m, in [36mRecordQueryIterator.__init__[39m[34m(self, client, query_filters, record_type, include)[39m
+[32m    862[39m [38;5;28mself[39m.record_type = record_type
+[32m    863[39m [38;5;28mself[39m.include = include
+[32m--> [39m[32m865[39m [43mQueryIteratorBase[49m[43m.[49m[34;43m__init__[39;49m[43m([49m[38;5;28;43mself[39;49m[43m,[49m[43m [49m[43mclient[49m[43m,[49m[43m [49m[43mquery_filters[49m[43m,[49m[43m [49m[43mbatch_limit[49m[43m)[49m
 
 [36mFile [39m[32m~/work/QCFractal/QCFractal/qcportal/qcportal/base_models.py:108[39m, in [36mQueryIteratorBase.__init__[39m[34m(self, client, query_filters, batch_limit)[39m
 [32m    105[39m [38;5;66;03m# Total number of rows/whatever we want to fetch[39;00m
@@ -65,18 +65,18 @@ results = client.query_records(created_after="2023/01/10", created_before="2023/
 [32m--> [39m[32m145[39m [38;5;28mself[39m._current_batch = [38;5;28;43mself[39;49m[43m.[49m[43m_request[49m[43m([49m[43m)[49m
 [32m    146[39m [38;5;28mself[39m._fetched += [38;5;28mlen[39m([38;5;28mself[39m._current_batch)
 
-[36mFile [39m[32m~/work/QCFractal/QCFractal/qcportal/qcportal/record_models.py:865[39m, in [36mRecordQueryIterator._request[39m[34m(self)[39m
-[32m    863[39m [38;5;28;01mdef[39;00m[38;5;250m [39m[34m_request[39m([38;5;28mself[39m) -> List[_Record_T]:
-[32m    864[39m     [38;5;28;01mif[39;00m [38;5;28mself[39m.record_type [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m:
-[32m--> [39m[32m865[39m         record_ids = [38;5;28;43mself[39;49m[43m.[49m[43m_client[49m[43m.[49m[43mmake_request[49m[43m([49m
-[32m    866[39m [43m            [49m[33;43m"[39;49m[33;43mpost[39;49m[33;43m"[39;49m[43m,[49m
-[32m    867[39m [43m            [49m[33;43mf[39;49m[33;43m"[39;49m[33;43mapi/v1/records/query[39;49m[33;43m"[39;49m[43m,[49m
-[32m    868[39m [43m            [49m[43mList[49m[43m[[49m[38;5;28;43mint[39;49m[43m][49m[43m,[49m
-[32m    869[39m [43m            [49m[43mbody[49m[43m=[49m[38;5;28;43mself[39;49m[43m.[49m[43m_query_filters[49m[43m,[49m
-[32m    870[39m [43m        [49m[43m)[49m
-[32m    871[39m     [38;5;28;01melse[39;00m:
-[32m    872[39m         [38;5;66;03m# Get the record type string. This is kind of ugly, but works.[39;00m
-[32m    873[39m         record_type_str = [38;5;28mself[39m.record_type.__fields__[[33m"[39m[33mrecord_type[39m[33m"[39m].default
+[36mFile [39m[32m~/work/QCFractal/QCFractal/qcportal/qcportal/record_models.py:869[39m, in [36mRecordQueryIterator._request[39m[34m(self)[39m
+[32m    867[39m [38;5;28;01mdef[39;00m[38;5;250m [39m[34m_request[39m([38;5;28mself[39m) -> List[_Record_T]:
+[32m    868[39m     [38;5;28;01mif[39;00m [38;5;28mself[39m.record_type [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m:
+[32m--> [39m[32m869[39m         record_ids = [38;5;28;43mself[39;49m[43m.[49m[43m_client[49m[43m.[49m[43mmake_request[49m[43m([49m
+[32m    870[39m [43m            [49m[33;43m"[39;49m[33;43mpost[39;49m[33;43m"[39;49m[43m,[49m
+[32m    871[39m [43m            [49m[33;43mf[39;49m[33;43m"[39;49m[33;43mapi/v1/records/query[39;49m[33;43m"[39;49m[43m,[49m
+[32m    872[39m [43m            [49m[43mList[49m[43m[[49m[38;5;28;43mint[39;49m[43m][49m[43m,[49m
+[32m    873[39m [43m            [49m[43mbody[49m[43m=[49m[38;5;28;43mself[39;49m[43m.[49m[43m_query_filters[49m[43m,[49m
+[32m    874[39m [43m        [49m[43m)[49m
+[32m    875[39m     [38;5;28;01melse[39;00m:
+[32m    876[39m         [38;5;66;03m# Get the record type string. This is kind of ugly, but works.[39;00m
+[32m    877[39m         record_type_str = [38;5;28mself[39m.record_type.__fields__[[33m"[39m[33mrecord_type[39m[33m"[39m].default
 
 [36mFile [39m[32m~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:524[39m, in [36mPortalClientBase.make_request[39m[34m(self, method, endpoint, response_model, body_model, url_params_model, body, url_params, upload_files, allow_retries, additional_headers)[39m
 [32m    520[39m     file_data = [38;5;28;01mNone[39;00m

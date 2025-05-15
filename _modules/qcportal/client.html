@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=cda317d7"></script>
+    <script src="../../_static/documentation_options.js?v=b1929376"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.60.post78+g36a24110e" />
+  <meta name="docsearch:version" content="0.60.post99+g4f52be0d3" />
   </head>
   
   
@@ -523,7 +523,22 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.internal_jobs</span><span class="w"> </span><span class="kn">import</span> <span class="n">InternalJob</span><span class="p">,</span> <span class="n">InternalJobQueryFilters</span><span class="p">,</span> <span class="n">InternalJobQueryIterator</span><span class="p">,</span> <span class="n">InternalJobStatusEnum</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.managers</span><span class="w"> </span><span class="kn">import</span> <span class="n">ManagerQueryFilters</span><span class="p">,</span> <span class="n">ManagerQueryIterator</span><span class="p">,</span> <span class="n">ManagerQueryAvailableFilters</span><span class="p">,</span> <span class="n">ComputeManager</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.metadata_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">UpdateMetadata</span><span class="p">,</span> <span class="n">InsertMetadata</span><span class="p">,</span> <span class="n">DeleteMetadata</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.molecules</span><span class="w"> </span><span class="kn">import</span> <span class="n">Molecule</span><span class="p">,</span> <span class="n">MoleculeIdentifiers</span><span class="p">,</span> <span class="n">MoleculeModifyBody</span><span class="p">,</span> <span class="n">MoleculeQueryIterator</span><span class="p">,</span> <span class="n">MoleculeQueryFilters</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.molecules</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Molecule</span><span class="p">,</span>
+    <span class="n">MoleculeIdentifiers</span><span class="p">,</span>
+    <span class="n">MoleculeModifyBody</span><span class="p">,</span>
+    <span class="n">MoleculeQueryIterator</span><span class="p">,</span>
+    <span class="n">MoleculeQueryFilters</span><span class="p">,</span>
+    <span class="n">MoleculeUploadOptions</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.project_models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Project</span><span class="p">,</span>
+    <span class="n">ProjectAddBody</span><span class="p">,</span>
+    <span class="n">ProjectDeleteParams</span><span class="p">,</span>
+    <span class="n">ProjectQueryModel</span><span class="p">,</span>
+<span class="p">)</span>
+
 <span class="kn">from</span><span class="w"> </span><span class="nn">.record_models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">RecordStatusEnum</span><span class="p">,</span>
     <span class="n">PriorityEnum</span><span class="p">,</span>
@@ -656,6 +671,85 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;put&quot;</span><span class="p">,</span> <span class="s2">&quot;api/v1/motd&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">new_motd</span><span class="p">)</span></div>
+
+
+    <span class="c1">##############################################################</span>
+    <span class="c1"># Projects</span>
+    <span class="c1">##############################################################</span>
+<div class="viewcode-block" id="PortalClient.add_project">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.add_project">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_project</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">tagline</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">tags</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">default_compute_tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span>
+        <span class="n">default_compute_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span> <span class="o">=</span> <span class="n">PriorityEnum</span><span class="o">.</span><span class="n">normal</span><span class="p">,</span>
+        <span class="n">extras</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">existing_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Project</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">tagline</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">tagline</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">tags</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">tags</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">extras</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">extras</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="n">body</span> <span class="o">=</span> <span class="n">ProjectAddBody</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+            <span class="n">tagline</span><span class="o">=</span><span class="n">tagline</span><span class="p">,</span>
+            <span class="n">tags</span><span class="o">=</span><span class="n">tags</span><span class="p">,</span>
+            <span class="n">default_compute_tag</span><span class="o">=</span><span class="n">default_compute_tag</span><span class="p">,</span>
+            <span class="n">default_compute_priority</span><span class="o">=</span><span class="n">default_compute_priority</span><span class="p">,</span>
+            <span class="n">extras</span><span class="o">=</span><span class="n">extras</span><span class="p">,</span>
+            <span class="n">existing_ok</span><span class="o">=</span><span class="n">existing_ok</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">proj_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/projects&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_project_by_id</span><span class="p">(</span><span class="n">proj_id</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PortalClient.get_project">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.get_project">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="n">ProjectQueryModel</span><span class="p">(</span><span class="n">project_name</span><span class="o">=</span><span class="n">project_name</span><span class="p">)</span>
+        <span class="n">proj_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/projects/query&quot;</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Project</span><span class="p">(</span><span class="o">**</span><span class="n">proj_dict</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PortalClient.get_project_by_id">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.get_project_by_id">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_project_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Project</span><span class="p">:</span>
+        <span class="n">project_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/projects/</span><span class="si">{</span><span class="n">project_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">Project</span><span class="p">(</span><span class="o">**</span><span class="n">project_dict</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PortalClient.delete_project">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.delete_project">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_project</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">project_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">delete_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">delete_datasets</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">delete_dataset_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+
+        <span class="n">params</span> <span class="o">=</span> <span class="n">ProjectDeleteParams</span><span class="p">(</span>
+            <span class="n">delete_records</span><span class="o">=</span><span class="n">delete_records</span><span class="p">,</span>
+            <span class="n">delete_datasets</span><span class="o">=</span><span class="n">delete_datasets</span><span class="p">,</span>
+            <span class="n">delete_dataset_records</span><span class="o">=</span><span class="n">delete_dataset_records</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;delete&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/projects/</span><span class="si">{</span><span class="n">project_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">url_params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PortalClient.list_projects">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.list_projects">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">list_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/projects&quot;</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]])</span></div>
 
 
     <span class="c1">##############################################################</span>
@@ -1004,6 +1098,23 @@
 
         <span class="n">mols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
             <span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="s2">&quot;api/v1/molecules/bulkCreate&quot;</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">InsertMetadata</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="n">body</span><span class="o">=</span><span class="n">make_list</span><span class="p">(</span><span class="n">molecules</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">mols</span></div>
+
+
+<div class="viewcode-block" id="PortalClient.upload_molecules">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.upload_molecules">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">upload_molecules</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_paths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">InsertMetadata</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]]:</span>
+        <span class="n">file_info</span> <span class="o">=</span> <span class="p">[(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">file_paths</span><span class="p">]</span>
+
+        <span class="n">body</span> <span class="o">=</span> <span class="n">MoleculeUploadOptions</span><span class="p">()</span>
+
+        <span class="n">mols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+            <span class="s2">&quot;post&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;api/v1/molecules/fromFiles&quot;</span><span class="p">,</span>
+            <span class="n">Tuple</span><span class="p">[</span><span class="n">InsertMetadata</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]],</span>
+            <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
+            <span class="n">upload_files</span><span class="o">=</span><span class="n">file_info</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">mols</span></div>
 

@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=cda317d7"></script>
+    <script src="../_static/documentation_options.js?v=b1929376"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="QCArchive Quickstart" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.60.post78+g36a24110e" />
+  <meta name="docsearch:version" content="0.60.post99+g4f52be0d3" />
   </head>
   
   
@@ -490,7 +490,7 @@ To work with the QCArchive demo server, enter <code class="docutils literal notr
 </div>
 </div>
 <div class="cell_output docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"version_major": 2, "version_minor": 0, "model_id": "7b9f9c1fc86a40a9af8172bf5ecf2317"}</script><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>WARNING: This client version is newer than the server version. This may work if the versions are close, but expect exceptions and errors if attempting things the server does not support. client version: 0.60.post78+g36a24110e, server version: 0.59
+<script type="application/vnd.jupyter.widget-view+json">{"version_major": 2, "version_minor": 0, "model_id": "7d447e86136043c3b9262e19a3fa2c2e"}</script><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>WARNING: This client version is newer than the server version. This may work if the versions are close, but expect exceptions and errors if attempting things the server does not support. client version: 0.60.post99+g4f52be0d3, server version: 0.59
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>PortalClient(server_name=&#39;MolSSI QCFractal Demo Server&#39;, address=&#39;https://qcademo.molssi.org/&#39;, username=&#39;None&#39;)
@@ -561,10 +561,10 @@ In the cell below, we print the SCF total energy from our calcuation.</p>
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Molecule: H2, Energy: -1.1117197122934774
+Molecule: HO, Energy: -74.36430040801095
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Molecule: HO, Energy: -74.36430040801095
-Molecule: H2O, Energy: -74.82586558254185
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Molecule: H2O, Energy: -74.82586558254185
 </pre></div>
 </div>
 </div>
@@ -594,14 +594,14 @@ The query method returns a Python iterator.</p>
 <span class="g g-Whitespace">      </span><span class="mi">3</span> <span class="c1"># Print the first record.</span>
 <span class="g g-Whitespace">      </span><span class="mi">4</span> <span class="nb">print</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">records</span><span class="p">))</span>
 
-<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client.py:843,</span> in <span class="ni">PortalClient.query_records</span><span class="nt">(self, record_id, record_type, manager_name, status, dataset_id, parent_id, child_id, created_before, created_after, modified_before, modified_after, creator_user, limit, include)</span>
-<span class="g g-Whitespace">    </span><span class="mi">825</span> <span class="n">filter_dict</span> <span class="o">=</span> <span class="p">{</span>
-<span class="g g-Whitespace">    </span><span class="mi">826</span>     <span class="s2">&quot;record_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">record_id</span><span class="p">),</span>
-<span class="g g-Whitespace">    </span><span class="mi">827</span>     <span class="s2">&quot;record_type&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">record_type</span><span class="p">),</span>
-   <span class="p">(</span><span class="o">...</span><span class="p">)</span>    <span class="mi">838</span>     <span class="s2">&quot;limit&quot;</span><span class="p">:</span> <span class="n">limit</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">839</span> <span class="p">}</span>
-<span class="g g-Whitespace">    </span><span class="mi">841</span> <span class="n">filter_data</span> <span class="o">=</span> <span class="n">RecordQueryFilters</span><span class="p">(</span><span class="o">**</span><span class="n">filter_dict</span><span class="p">)</span>
-<span class="ne">--&gt; </span><span class="mi">843</span> <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">BaseRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client.py:936,</span> in <span class="ni">PortalClient.query_records</span><span class="nt">(self, record_id, record_type, manager_name, status, dataset_id, parent_id, child_id, created_before, created_after, modified_before, modified_after, creator_user, limit, include)</span>
+<span class="g g-Whitespace">    </span><span class="mi">918</span> <span class="n">filter_dict</span> <span class="o">=</span> <span class="p">{</span>
+<span class="g g-Whitespace">    </span><span class="mi">919</span>     <span class="s2">&quot;record_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">record_id</span><span class="p">),</span>
+<span class="g g-Whitespace">    </span><span class="mi">920</span>     <span class="s2">&quot;record_type&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">record_type</span><span class="p">),</span>
+   <span class="p">(</span><span class="o">...</span><span class="p">)</span>    <span class="mi">931</span>     <span class="s2">&quot;limit&quot;</span><span class="p">:</span> <span class="n">limit</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">932</span> <span class="p">}</span>
+<span class="g g-Whitespace">    </span><span class="mi">934</span> <span class="n">filter_data</span> <span class="o">=</span> <span class="n">RecordQueryFilters</span><span class="p">(</span><span class="o">**</span><span class="n">filter_dict</span><span class="p">)</span>
+<span class="ne">--&gt; </span><span class="mi">936</span> <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">BaseRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
 
 <span class="nn">File /opt/hostedtoolcache/Python/3.11.12/x64/lib/python3.11/typing.py:1289,</span> in <span class="ni">_BaseGenericAlias.__call__</span><span class="nt">(self, *args, **kwargs)</span>
 <span class="g g-Whitespace">   </span><span class="mi">1286</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inst</span><span class="p">:</span>
@@ -611,10 +611,10 @@ The query method returns a Python iterator.</p>
 <span class="g g-Whitespace">   </span><span class="mi">1290</span> <span class="k">try</span><span class="p">:</span>
 <span class="g g-Whitespace">   </span><span class="mi">1291</span>     <span class="n">result</span><span class="o">.</span><span class="n">__orig_class__</span> <span class="o">=</span> <span class="bp">self</span>
 
-<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/record_models.py:861,</span> in <span class="ni">RecordQueryIterator.__init__</span><span class="nt">(self, client, query_filters, record_type, include)</span>
-<span class="g g-Whitespace">    </span><span class="mi">858</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_type</span> <span class="o">=</span> <span class="n">record_type</span>
-<span class="g g-Whitespace">    </span><span class="mi">859</span> <span class="bp">self</span><span class="o">.</span><span class="n">include</span> <span class="o">=</span> <span class="n">include</span>
-<span class="ne">--&gt; </span><span class="mi">861</span> <span class="n">QueryIteratorBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">query_filters</span><span class="p">,</span> <span class="n">batch_limit</span><span class="p">)</span>
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/record_models.py:865,</span> in <span class="ni">RecordQueryIterator.__init__</span><span class="nt">(self, client, query_filters, record_type, include)</span>
+<span class="g g-Whitespace">    </span><span class="mi">862</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_type</span> <span class="o">=</span> <span class="n">record_type</span>
+<span class="g g-Whitespace">    </span><span class="mi">863</span> <span class="bp">self</span><span class="o">.</span><span class="n">include</span> <span class="o">=</span> <span class="n">include</span>
+<span class="ne">--&gt; </span><span class="mi">865</span> <span class="n">QueryIteratorBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">query_filters</span><span class="p">,</span> <span class="n">batch_limit</span><span class="p">)</span>
 
 <span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/base_models.py:108,</span> in <span class="ni">QueryIteratorBase.__init__</span><span class="nt">(self, client, query_filters, batch_limit)</span>
 <span class="g g-Whitespace">    </span><span class="mi">105</span> <span class="c1"># Total number of rows/whatever we want to fetch</span>
@@ -632,18 +632,18 @@ The query method returns a Python iterator.</p>
 <span class="ne">--&gt; </span><span class="mi">145</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">()</span>
 <span class="g g-Whitespace">    </span><span class="mi">146</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetched</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_batch</span><span class="p">)</span>
 
-<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/record_models.py:865,</span> in <span class="ni">RecordQueryIterator._request</span><span class="nt">(self)</span>
-<span class="g g-Whitespace">    </span><span class="mi">863</span> <span class="k">def</span><span class="w"> </span><span class="nf">_request</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">_Record_T</span><span class="p">]:</span>
-<span class="g g-Whitespace">    </span><span class="mi">864</span>     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-<span class="ne">--&gt; </span><span class="mi">865</span>         <span class="n">record_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
-<span class="g g-Whitespace">    </span><span class="mi">866</span>             <span class="s2">&quot;post&quot;</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">867</span>             <span class="sa">f</span><span class="s2">&quot;api/v1/records/query&quot;</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">868</span>             <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
-<span class="g g-Whitespace">    </span><span class="mi">869</span>             <span class="n">body</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_filters</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">870</span>         <span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">871</span>     <span class="k">else</span><span class="p">:</span>
-<span class="g g-Whitespace">    </span><span class="mi">872</span>         <span class="c1"># Get the record type string. This is kind of ugly, but works.</span>
-<span class="g g-Whitespace">    </span><span class="mi">873</span>         <span class="n">record_type_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_type</span><span class="o">.</span><span class="n">__fields__</span><span class="p">[</span><span class="s2">&quot;record_type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">default</span>
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/record_models.py:869,</span> in <span class="ni">RecordQueryIterator._request</span><span class="nt">(self)</span>
+<span class="g g-Whitespace">    </span><span class="mi">867</span> <span class="k">def</span><span class="w"> </span><span class="nf">_request</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">_Record_T</span><span class="p">]:</span>
+<span class="g g-Whitespace">    </span><span class="mi">868</span>     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">869</span>         <span class="n">record_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">870</span>             <span class="s2">&quot;post&quot;</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">871</span>             <span class="sa">f</span><span class="s2">&quot;api/v1/records/query&quot;</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">872</span>             <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+<span class="g g-Whitespace">    </span><span class="mi">873</span>             <span class="n">body</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_filters</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">874</span>         <span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">875</span>     <span class="k">else</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">876</span>         <span class="c1"># Get the record type string. This is kind of ugly, but works.</span>
+<span class="g g-Whitespace">    </span><span class="mi">877</span>         <span class="n">record_type_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_type</span><span class="o">.</span><span class="n">__fields__</span><span class="p">[</span><span class="s2">&quot;record_type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">default</span>
 
 <span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client_base.py:524,</span> in <span class="ni">PortalClientBase.make_request</span><span class="nt">(self, method, endpoint, response_model, body_model, url_params_model, body, url_params, upload_files, allow_retries, additional_headers)</span>
 <span class="g g-Whitespace">    </span><span class="mi">520</span>     <span class="n">file_data</span> <span class="o">=</span> <span class="kc">None</span>
