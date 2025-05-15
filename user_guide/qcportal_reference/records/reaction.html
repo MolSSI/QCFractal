@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=12beee3c"></script>
+    <script src="../../../_static/documentation_options.js?v=cda317d7"></script>
     <script src="../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Manybody Records" href="manybody.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.60.post71+gee5b8509a" />
+  <meta name="docsearch:version" content="0.60.post78+g36a24110e" />
   </head>
   
   
@@ -874,7 +874,7 @@
 
 <dl class="py method pydantic_validator">
 <dt class="sig sig-object py" id="qcportal.reaction.record_models.ReactionQueryFilters.parse_dates">
-<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.reaction.record_models.ReactionQueryFilters.modified_after" title="qcportal.reaction.record_models.ReactionQueryFilters.modified_after"><em class="xref py py-obj"><span class="pre">modified_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.reaction.record_models.ReactionQueryFilters.created_before" title="qcportal.reaction.record_models.ReactionQueryFilters.created_before"><em class="xref py py-obj"><span class="pre">created_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.reaction.record_models.ReactionQueryFilters.created_after" title="qcportal.reaction.record_models.ReactionQueryFilters.created_after"><em class="xref py py-obj"><span class="pre">created_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.reaction.record_models.ReactionQueryFilters.modified_before" title="qcportal.reaction.record_models.ReactionQueryFilters.modified_before"><em class="xref py py-obj"><span class="pre">modified_before</span></em></a><a class="headerlink" href="#qcportal.reaction.record_models.ReactionQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.reaction.record_models.ReactionQueryFilters.created_after" title="qcportal.reaction.record_models.ReactionQueryFilters.created_after"><em class="xref py py-obj"><span class="pre">created_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.reaction.record_models.ReactionQueryFilters.created_before" title="qcportal.reaction.record_models.ReactionQueryFilters.created_before"><em class="xref py py-obj"><span class="pre">created_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.reaction.record_models.ReactionQueryFilters.modified_after" title="qcportal.reaction.record_models.ReactionQueryFilters.modified_after"><em class="xref py py-obj"><span class="pre">modified_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.reaction.record_models.ReactionQueryFilters.modified_before" title="qcportal.reaction.record_models.ReactionQueryFilters.modified_before"><em class="xref py py-obj"><span class="pre">modified_before</span></em></a><a class="headerlink" href="#qcportal.reaction.record_models.ReactionQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method pydantic_validator">
@@ -1864,7 +1864,7 @@ same number of values for each record if unpack is True.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.reaction.dataset_models.ReactionDataset.copy_entries_from">
-<span class="sig-name descname"><span class="pre">copy_entries_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_dataset_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.reaction.dataset_models.ReactionDataset.copy_entries_from" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">copy_entries_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_dataset_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">existing_ok</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.reaction.dataset_models.ReactionDataset.copy_entries_from" title="Link to this definition">#</a></dt>
 <dd><p>Copies entries from another dataset into this one</p>
 <p>If entries already exist with the same name, an exception is raised.</p>
 <dl class="field-list simple">
@@ -1872,6 +1872,7 @@ same number of values for each record if unpack is True.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>source_dataset_id</strong> (<em>int</em>) – The ID of the dataset to copy entries from</p></li>
 <li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names of the entries to copy. If not provided, all entries will be copied.</p></li>
+<li><p><strong>existing_ok</strong> (<em>bool</em>) – If False and an entry already exists by that name, an exception is raised.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1879,7 +1880,7 @@ same number of values for each record if unpack is True.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.reaction.dataset_models.ReactionDataset.copy_records_from">
-<span class="sig-name descname"><span class="pre">copy_records_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_dataset_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.reaction.dataset_models.ReactionDataset.copy_records_from" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">copy_records_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_dataset_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">existing_ok</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.reaction.dataset_models.ReactionDataset.copy_records_from" title="Link to this definition">#</a></dt>
 <dd><p>Copies records from another dataset into this one</p>
 <p>Entries and specifications will also be copied.
 If entries or specifications already exist with the same name, an exception is raised.</p>
@@ -1890,6 +1891,7 @@ If entries or specifications already exist with the same name, an exception is r
 <li><p><strong>source_dataset_id</strong> (<em>int</em>) – The ID of the dataset to copy entries from</p></li>
 <li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names of the entries to copy. If not provided, all entries will be copied.</p></li>
 <li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names of the specifications to copy. If not provided, all specifications will be copied.</p></li>
+<li><p><strong>existing_ok</strong> (<em>bool</em>) – If False and a specification or entry already exists by a supplied name, an exception is raised.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1964,15 +1966,26 @@ in the view file.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.reaction.dataset_models.ReactionDataset.delete_entries">
 <span class="sig-name descname"><span class="pre">delete_entries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delete_records</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.reaction.dataset_models.ReactionDataset.delete_entries" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
+<dd><p>Deletes entries from the dataset.
+:param names: The name or list of names of the entries to delete.
+:type names: Union[str, Iterable[str]]
+:param delete_records: If True, associated records will also be deleted. Defaults to False.
+:type delete_records: bool, optional</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Metadata about the deletion operation.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="../metadata_models.html#qcportal.metadata_models.DeleteMetadata" title="qcportal.metadata_models.DeleteMetadata">DeleteMetadata</a></p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>AssertionError</strong> – If the dataset is a view or not online.</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
 <li><p><strong>names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>]</em>)</p></li>
 <li><p><strong>delete_records</strong> (<em>bool</em>)</p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="../metadata_models.html#qcportal.metadata_models.DeleteMetadata" title="qcportal.metadata_models.DeleteMetadata"><em>DeleteMetadata</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -2208,21 +2221,24 @@ NaN values are dropped.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.reaction.dataset_models.ReactionDataset.get_record">
 <span class="sig-name descname"><span class="pre">get_record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fetch_updated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_refetch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.reaction.dataset_models.ReactionDataset.get_record" title="Link to this definition">#</a></dt>
-<dd><p>Obtain a calculation record related to this dataset</p>
-<p>The record will be automatically fetched from the remote server if needed.
-If a record does not exist for this entry and specification, None is returned</p>
+<dd><p>Retrieve a calculation record associated with this dataset.</p>
+<p>This method fetches the record from the remote server if it is not already cached locally.
+If the record does not exist for the specified entry and specification, it returns None.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entry_name</strong> (<em>str</em>)</p></li>
-<li><p><strong>specification_name</strong> (<em>str</em>)</p></li>
-<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>fetch_updated</strong> (<em>bool</em>)</p></li>
-<li><p><strong>force_refetch</strong> (<em>bool</em>)</p></li>
+<li><p><strong>entry_name</strong> (<em>str</em>) – The name of the entry for which the record is to be retrieved.</p></li>
+<li><p><strong>specification_name</strong> (<em>str</em>) – The name of the specification for which the record is to be retrieved.</p></li>
+<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Additional fields to include in the fetched record, by default None.</p></li>
+<li><p><strong>fetch_updated</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, fetches updated records from the server if they have been modified, by default True.</p></li>
+<li><p><strong>force_refetch</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, forces a refetch of the record from the server, ignoring the local cache, by default False.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="base_record_models.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><em>BaseRecord</em></a> | None</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The calculation record associated with the specified entry and specification, or None if it does not exist.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[<a class="reference internal" href="base_record_models.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord">BaseRecord</a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2319,12 +2335,26 @@ If a record does not exist for this entry and specification, None is returned</p
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.reaction.dataset_models.ReactionDataset.modify_entries">
 <span class="sig-name descname"><span class="pre">modify_entries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attribute_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comment_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite_attributes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.reaction.dataset_models.ReactionDataset.modify_entries" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Modifies the entries in the dataset by updating their attributes or comments.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>attribute_map</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>comment_map</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>overwrite_attributes</strong> (<em>bool</em>)</p></li>
+<li><p><strong>attribute_map</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em><em>]</em>) – A dictionary mapping entry names to their updated attributes.
+Each entry name maps to a dictionary of attribute key-value pairs to be updated.</p></li>
+<li><p><strong>comment_map</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>]</em>) – A dictionary mapping entry names to their updated comments.</p></li>
+<li><p><strong>overwrite_attributes</strong> (<em>bool</em>) – If True, existing attributes for the specified entries will be completely
+replaced by the provided attributes in <code class="docutils literal notranslate"><span class="pre">attribute_map</span></code>. If False, only the
+specified attributes will be updated, leaving others unchanged.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>AssertionError</strong> – If the dataset is a view or if the client is offline.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Side Effects:</dt><dd><ul class="simple">
+<li><p>Sends a request to the server to modify the specified entries.</p></li>
+<li><p>Synchronizes the local cache with the updated server data for the modified entries.</p></li>
 </ul>
 </dd>
 </dl>
@@ -2429,9 +2459,27 @@ by a submit without duplicate checking.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.reaction.dataset_models.ReactionDataset.rename_entries">
 <span class="sig-name descname"><span class="pre">rename_entries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name_map</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.reaction.dataset_models.ReactionDataset.rename_entries" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name_map</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em>)</p>
+<dd><p>Renames entries in the dataset based on the provided mapping.
+This method updates the names of entries both on the server and in the local cache.
+It ensures that the dataset is not a view and is online before proceeding with the renaming.
+:param name_map: A dictionary mapping old entry names to new entry names.</p>
+<blockquote>
+<div><p>Entries where the old name is the same as the new name
+are ignored.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>AssertionError</strong> – If the dataset is a view or is not online.</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>name_map</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em>)</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Side Effects:</dt><dd><ul class="simple">
+<li><p>Sends a patch request to the server to update entry names.</p></li>
+<li><p>Updates the local cache and entry names list with the new names.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>

@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=12beee3c"></script>
+    <script src="../../_static/documentation_options.js?v=cda317d7"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.60.post71+gee5b8509a" />
+  <meta name="docsearch:version" content="0.60.post78+g36a24110e" />
   </head>
   
   
@@ -1816,6 +1816,21 @@
 <div class="viewcode-block" id="BaseDataset.rename_entries">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.rename_entries">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">rename_entries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Renames entries in the dataset based on the provided mapping.</span>
+<span class="sd">        This method updates the names of entries both on the server and in the local cache.</span>
+<span class="sd">        It ensures that the dataset is not a view and is online before proceeding with the renaming.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            name_map (Dict[str, str]): A dictionary mapping old entry names to new entry names.</span>
+<span class="sd">                                       Entries where the old name is the same as the new name</span>
+<span class="sd">                                       are ignored.</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            AssertionError: If the dataset is a view or is not online.</span>
+<span class="sd">        Side Effects:</span>
+<span class="sd">            - Sends a patch request to the server to update entry names.</span>
+<span class="sd">            - Updates the local cache and entry names list with the new names.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
 
@@ -1839,6 +1854,26 @@
         <span class="n">comment_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">overwrite_attributes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Modifies the entries in the dataset by updating their attributes or comments.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">            attribute_map (Optional[Dict[str, Dict[str, Any]]]): </span>
+<span class="sd">                A dictionary mapping entry names to their updated attributes. </span>
+<span class="sd">                Each entry name maps to a dictionary of attribute key-value pairs to be updated.</span>
+<span class="sd">            comment_map (Optional[Dict[str, str]]): </span>
+<span class="sd">                A dictionary mapping entry names to their updated comments.</span>
+<span class="sd">            overwrite_attributes (bool): </span>
+<span class="sd">                If True, existing attributes for the specified entries will be completely </span>
+<span class="sd">                replaced by the provided attributes in ``attribute_map``. If False, only the </span>
+<span class="sd">                specified attributes will be updated, leaving others unchanged.</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            AssertionError: If the dataset is a view or if the client is offline.</span>
+<span class="sd">        Side Effects:</span>
+<span class="sd">            - Sends a request to the server to modify the specified entries.</span>
+<span class="sd">            - Synchronizes the local cache with the updated server data for the modified entries.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
 
@@ -1861,6 +1896,18 @@
 <div class="viewcode-block" id="BaseDataset.delete_entries">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.delete_entries">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">delete_entries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">delete_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DeleteMetadata</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deletes entries from the dataset.</span>
+<span class="sd">        Parameters:</span>
+<span class="sd">            names (Union[str, Iterable[str]]): The name or list of names of the entries to delete.</span>
+<span class="sd">            delete_records (bool, optional): If True, associated records will also be deleted. Defaults to False.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            DeleteMetadata: Metadata about the deletion operation.</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            AssertionError: If the dataset is a view or not online.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
 
@@ -2145,10 +2192,28 @@
         <span class="n">force_refetch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">BaseRecord</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Obtain a calculation record related to this dataset</span>
+<span class="sd">        Retrieve a calculation record associated with this dataset.</span>
 
-<span class="sd">        The record will be automatically fetched from the remote server if needed.</span>
-<span class="sd">        If a record does not exist for this entry and specification, None is returned</span>
+<span class="sd">        This method fetches the record from the remote server if it is not already cached locally.</span>
+<span class="sd">        If the record does not exist for the specified entry and specification, it returns None.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        entry_name : str</span>
+<span class="sd">            The name of the entry for which the record is to be retrieved.</span>
+<span class="sd">        specification_name : str</span>
+<span class="sd">            The name of the specification for which the record is to be retrieved.</span>
+<span class="sd">        include : Optional[Iterable[str]], optional</span>
+<span class="sd">            Additional fields to include in the fetched record, by default None.</span>
+<span class="sd">        fetch_updated : bool, optional</span>
+<span class="sd">            If True, fetches updated records from the server if they have been modified, by default True.</span>
+<span class="sd">        force_refetch : bool, optional</span>
+<span class="sd">            If True, forces a refetch of the record from the server, ignoring the local cache, by default False.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Optional[BaseRecord]</span>
+<span class="sd">            The calculation record associated with the specified entry and specification, or None if it does not exist.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_view</span><span class="p">:</span>
@@ -2511,6 +2576,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">source_dataset_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">entry_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">existing_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Copies entries from another dataset into this one</span>
@@ -2523,10 +2589,27 @@
 <span class="sd">            The ID of the dataset to copy entries from</span>
 <span class="sd">        entry_names</span>
 <span class="sd">            Names of the entries to copy. If not provided, all entries will be copied.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        existing_ok</span>
+<span class="sd">            If False and an entry already exists by that name, an exception is raised.</span>
 
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">fetch_entry_names</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">existing_ok</span><span class="p">:</span>
+            <span class="n">seen_entries</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+            <span class="n">entry_names</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">entry_name</span>
+                <span class="k">for</span> <span class="n">entry_name</span> <span class="ow">in</span> <span class="n">entry_names</span>
+                <span class="k">if</span> <span class="n">entry_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">entry_names</span>
+                <span class="ow">or</span> <span class="p">(</span>
+                    <span class="n">entry_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen_entries</span>
+                    <span class="ow">and</span> <span class="n">seen_entries</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">entry_name</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+                    <span class="ow">and</span> <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The entry, </span><span class="si">{</span><span class="n">entry_name</span><span class="si">}</span><span class="s2">, is already in the dataset. It won&#39;t be copied.&quot;</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">]</span>
 
         <span class="n">body_data</span> <span class="o">=</span> <span class="n">DatasetCopyFromBody</span><span class="p">(</span>
             <span class="n">source_dataset_id</span><span class="o">=</span><span class="n">source_dataset_id</span><span class="p">,</span>
@@ -2577,6 +2660,7 @@
         <span class="n">source_dataset_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">entry_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">specification_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">existing_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Copies records from another dataset into this one</span>
@@ -2594,7 +2678,24 @@
 <span class="sd">            Names of the entries to copy. If not provided, all entries will be copied.</span>
 <span class="sd">        specification_names</span>
 <span class="sd">            Names of the specifications to copy. If not provided, all specifications will be copied.</span>
+<span class="sd">        existing_ok</span>
+<span class="sd">            If False and a specification or entry already exists by a supplied name, an exception is raised.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fetch_entry_names</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fetch_specifications</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">existing_ok</span><span class="p">:</span>
+            <span class="n">seen_entries</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+            <span class="n">entry_names</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">entry_name</span>
+                <span class="k">for</span> <span class="n">entry_name</span> <span class="ow">in</span> <span class="n">entry_names</span>
+                <span class="k">if</span> <span class="n">entry_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">entry_names</span>
+                <span class="ow">or</span> <span class="p">(</span>
+                    <span class="n">entry_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen_entries</span>
+                    <span class="ow">and</span> <span class="n">seen_entries</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">entry_name</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+                    <span class="ow">and</span> <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The entry, </span><span class="si">{</span><span class="n">entry_name</span><span class="si">}</span><span class="s2">, is already in the dataset. It won&#39;t be copied.&quot;</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">]</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
