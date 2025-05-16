@@ -1,6 +1,35 @@
 Release Notes
 =============
 
+0.61 / 2025-05-15
+-----------------
+
+Some good bug fixes, and important features. Mainly, an initial beta version of projects.
+
+This release also adds lots of functionality useful for building web applications against the server.
+
+Internally, one big change - roles and permissions is now handled in a streamlined fashion, rather than using
+attribute-based access control (:pr:`928`). As a side effect, this removes the ability to customize roles (which I don't
+believe anyone did).
+
+One small interface change:
+ - `owner_user` is renamed to `creator_user` and `owner_group` is removed (:pr:`931`)
+
+Notable PRs for this release:
+
+- (:pr:`927`) Improve sessions and add endpoints for preferences and uncompressed outputs
+- (:pr:`928`) Rework global roles and permissions
+- (:pr:`932`) Use postgres views for getting child records and database records
+- (:pr:`931`) Rename owner_user and remove owner_group
+- (:pr:`937`) Add query for active managers
+- (:pr:`938`) Lay groundwork for file uploads
+- (:pr:`939`) Add getting dataset status by compute tag
+- (:pr:`940`) Fix active task reporting in compute manager
+- (:pr:`941`) Allow entries that exist to be skipped when copying between datasets (J. Clark :contrib:`jaclark5`)
+- (:pr:`942`) Allow copying specs between datasets with same name/id
+- (:pr:`944`) Initial implementation of projects
+
+
 0.60 / 2025-04-05
 -----------------
 
@@ -17,7 +46,7 @@ backwards compatible, so if you have issues open an issue**. Those changes:
 - Similarly, datasets now have a ``default_compute_tag`` and ``default_compute_priority``
 
 All these fields are still accessible via their old names, and functions that used them as keyword parameters should
-still work (if not, open an issue). For eample, ``ds.submit(tag='large-mem')`` should still work.
+still work (if not, open an issue). For example, ``ds.submit(tag='large-mem')`` should still work.
 
 Notable PRs for this release:
 
