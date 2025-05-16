@@ -160,7 +160,7 @@ def create_view_file(
         record_socket = socket.records.get_socket(record_type_str)
         record_type = BaseRecord.get_subclass(record_type_str)
 
-        for id_chunk in chunk_iterable(record_ids, 200):
+        for id_chunk in chunk_iterable(record_ids, 20):
             record_dicts = record_socket.get(id_chunk, include=include, exclude=exclude, session=session)
             record_data = [record_type(**r) for r in record_dicts]
             view_db.update_records(record_data)
