@@ -2185,6 +2185,8 @@ class BaseDataset(BaseModel):
         properties_list: Sequence[str],
         entry_names: Sequence[str] | None = None,
         specification_names: Sequence[str] | None = None,
+        *,
+        local: bool = False,
     ) -> "DataFrame":
         """
         Retrieve a DataFrame populated with the specified properties from dataset records.
@@ -2212,21 +2214,58 @@ class BaseDataset(BaseModel):
             A DataFrame populated with the specified properties for each record.
         """
 
-        # create lambda function to get all properties at once
-        extract_properties = lambda x: [x.properties.get(property_name) for property_name in properties_list]
+        import pandas as pd
 
-        # retrieve values.
-        result = self.compile_values(
-            extract_properties,
-            value_names=properties_list,
-            unpack=True,
-            specification_names=specification_names,
-            entry_names=entry_names,
-        )
+        if local:
+            # create lambda function to get all properties at once
+            extract_properties = lambda x: [x.properties.get(property_name) for property_name in properties_list]
+
+            # retrieve values.
+            result = self.compile_values(
+                extract_properties,
+                value_names=properties_list,
+                unpack=True,
+                specification_names=specification_names,
+                entry_names=entry_names,
+            )
+
+        else:
+            self.assert_online()
+            self.assert_is_not_view()
+
+            # get directly from the server
+            body = DatasetGetPropertiesBody(
+                properties_list=properties_list,
+                entry_names=entry_names,
+                specification_names=specification_names,
+            )
+
+            result_py = self._client.make_request(
+                "get",
+                f"api/v1/datasets/{self.dataset_type}/{self.id}/aggregate_properties",
+                List[Tuple[str, str, Dict[str, Any]]],  # (entry_name, spec_name, dict of properties)
+                body=body,
+            )
+
+            all_keys = set()
+            for _, _, property_data in result_py:
+                all_keys.update(property_data.keys())
+            all_keys = list(all_keys)
+
+            result = pd.DataFrame(
+                [
+                    {**{"entry": ename, "specification": sname}, **{k: pv.get(k, None) for k in all_keys}}
+                    for ename, sname, pv in result_py
+                ]
+            )
+
+            result = result.pivot(index="entry", columns="specification", values=all_keys)
+            result = result.swaplevel(0, 1, axis=1).sort_index(axis=1)
 
         # Drop columns with all nan  values. This will occur if a property that is not part of a
         # specification is requested.
         result.dropna(how="all", axis=1, inplace=True)
+
         return result
 
     ##############################
@@ -2479,6 +2518,12 @@ class DatasetCopyFromBody(RestModelBase):
     copy_entries: bool = False
     copy_specifications: bool = False
     copy_records: bool = False
+
+
+class DatasetGetPropertiesBody(RestModelBase):
+    properties_list: List[str]
+    entry_names: Optional[List[str]] = None
+    specification_names: Optional[List[str]] = None
 
 
 class DatasetFetchRecordsBody(RestModelBase):
