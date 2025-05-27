@@ -36,16 +36,66 @@ function Record() {
     loading: true,
   });
 
-  // Fetch record data
+  const [serviceFetchedData, setServiceFetchedData] = React.useState<
+    FetchedData<qcpTypes.Service>
+  >({
+    data: undefined,
+    error: undefined,
+    loading: true,
+  });
+  const [taskFetchedData, setTaskFetchedData] = React.useState<
+    FetchedData<qcpTypes.Task>
+  >({
+    data: undefined,
+    error: undefined,
+    loading: true,
+  });
+
+
   useEffect(() => {
+    setRecordFetchedData({ data: undefined, error: undefined, loading: true });
+    setServiceFetchedData({ data: undefined, error: undefined, loading: true });
+    setTaskFetchedData({ data: undefined, error: undefined, loading: true });
+
     fetchData<qcpTypes.RecordData>(
       setRecordFetchedData,
       "get",
-      `/api/v1/projects/${projectId}/records/${recordId}`,
+      `/api/v1/projects/${projectId}/records/${recordId}`
     );
   }, [fetchData, projectId, recordId]);
 
+  useEffect(() => {
+    // Only fetch when record data is loaded and record_type is available
+    if (
+      !recordFetchedData.loading &&
+      recordFetchedData.data?.record_type &&
+      recordFetchedData.data?.is_service !== undefined
+    ) {
+      const type = recordFetchedData.data.record_type;
+      if (recordFetchedData.data.is_service) {
+        fetchData<qcpTypes.Service>(
+          setServiceFetchedData,
+          "get",
+          `/api/v1/records/${type}/${recordId}/service`
+        );
+      } else {
+        fetchData<qcpTypes.Task>(
+          setTaskFetchedData,
+          "get",
+          `/api/v1/records/${type}/${recordId}/task`
+        );
+      }
+    }
+  }, [
+    fetchData,
+    recordFetchedData.loading,
+    recordFetchedData.data?.record_type,
+    recordFetchedData.data?.is_service,
+    recordId,
+  ]);
+
   const recordData = recordFetchedData?.data;
+
   // Status color mapping
   const statusColors: Record<
     string,
@@ -126,7 +176,7 @@ function Record() {
                 <strong>Modified On:</strong>{" "}
                 {format(
                   new Date(recordData.modified_on),
-                  "MMMM dd, yyyy HH:mm",
+                  "MMMM dd, yyyy HH:mm"
                 )}
               </Typography>
               <Typography variant="body2">
@@ -232,6 +282,67 @@ function Record() {
               recordType={recordData.record_type}
               recordId={Number(recordId)}
             />
+          </Grid>
+
+          <Divider sx={{ my: 2, width: "100%" }} />
+
+          {/* Advance Section */}
+          <Grid
+            container
+            spacing={2}
+            sx={{
+              mt: 2,
+              alignItems: "center",
+              justifyContent: "flex-start",
+            }}
+          >
+            {/* Title */}
+            <Grid>
+              <Typography variant="h6" fontWeight="bold">
+                Advance
+              </Typography>
+            </Grid>
+
+            {/* Button */}
+            <Grid>
+              {recordData.is_service ? (
+                <button
+                  disabled={!serviceFetchedData.data}
+                  onClick={() => {
+                    console.log(serviceFetchedData.data);
+                  }}
+                  style={{
+                    padding: "8px 16px",
+                    backgroundColor: serviceFetchedData.data
+                      ? "#1976d2"
+                      : "#ccc",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: serviceFetchedData.data ? "pointer" : "not-allowed",
+                  }}
+                >
+                  Service
+                </button>
+              ) : (
+                <button
+                  disabled={!taskFetchedData.data}
+                  onClick={() => {
+                    console.log(taskFetchedData.data);
+                  }}
+                  style={{
+                    padding: "8px 16px",
+                    backgroundColor: taskFetchedData.data ? "#1976d2" : "#ccc",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: taskFetchedData.data ? "pointer" : "not-allowed",
+                  }}
+                >
+                  Task
+                </button>
+              )}
+            </Grid>
           </Grid>
         </>
       )}

@@ -80,14 +80,14 @@ export type Manager = {
   modified_on: string;
 
   claimed: number;
-  successes: number
-  failures: number
-  rejected: number
+  successes: number;
+  failures: number;
+  rejected: number;
 
-  total_cpu_hours: number
-  active_tasks: number
-  active_cores: number
-  active_memory: number
+  total_cpu_hours: number;
+  active_tasks: number;
+  active_cores: number;
+  active_memory: number;
 };
 
 export type QueryProjModelBase = {
@@ -95,7 +95,7 @@ export type QueryProjModelBase = {
   cursor?: number;
   include?: string[];
   exclude?: string[];
-}
+};
 
 export type ManagerQueryFilters = QueryProjModelBase & {
   manager_id?: number[];
@@ -109,7 +109,7 @@ export type ManagerQueryFilters = QueryProjModelBase & {
 
 export type ActiveManagerQuery = {
   compute_tag: string[];
-  programs: Record<string, string[]>
+  programs: Record<string, string[]>;
 };
 
 export type MoleculeIdentifiers = {
@@ -137,6 +137,8 @@ export type RecordData = {
   record_type: string;
   tags: Array<string>;
   is_service: boolean;
+  service: Record<string, any>;
+  task: Record<string, any>;
   created_on: string;
   modified_on: string;
   owner_group: string | null;
@@ -148,6 +150,25 @@ export type RecordData = {
     keywords: Record<string, any>;
   };
   properties: Record<string, any>;
+};
+
+export type Task = {
+  record_id: number;
+  id: number;
+  function: string;
+  tag: string;
+  priority: number;
+  required_program: Array<string>;
+};
+
+export type Service = {
+  record_id: number;
+  find_existing: boolean;
+  id: number;
+  service_state: string | null;
+  dependencies: Array<any>;
+  tag: string;
+  priority: number;
 };
 
 export type ComputeHistory = {
