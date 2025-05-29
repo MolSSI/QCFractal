@@ -5,6 +5,7 @@ import { WaitingReasonFragment } from "./WaitingReasonFragment";
 import { ManagerFragment } from "./ManagerFragment";
 import Comments from "./Comments";
 import ComputeHistory from "./ComputeHistory";
+import SpecificationList from "./SpecificationList";
 import * as qcpTypes from "../PortalTypes";
 import { FetchedData } from "../PortalClientContext";
 import {
@@ -21,6 +22,8 @@ import {
 } from "@mui/material";
 import HelpOutline from "@mui/icons-material/HelpOutline";
 import { format } from "date-fns";
+import {MoleculeStageProvider, MoleculeViewer} from "./Molecule";
+import { getRecordReprMolecule } from "../Utils";
 
 function Record() {
   const { projectId, recordId } = useParams();
@@ -51,6 +54,13 @@ function Record() {
     loading: true,
   });
 
+  const [moleculeFetchedData, setMoleculeFetchedData] = useState<
+    FetchedData<qcpTypes.Molecule>
+  >({
+    data: undefined,
+    error: undefined,
+    loading: false,
+  });
 
   useEffect(() => {
     setRecordFetchedData({ data: undefined, error: undefined, loading: true });
@@ -94,6 +104,24 @@ function Record() {
     recordId,
   ]);
 
+  // Fetch molecule info when recordData is available and moleculeId can be determined
+  useEffect(() => {
+    if (!recordFetchedData.loading && recordFetchedData?.data) {
+      const moleculeId = getRecordReprMolecule(recordFetchedData?.data);
+      if (moleculeId) {
+        setMoleculeFetchedData({
+          data: undefined,
+          error: undefined,
+          loading: true,
+        });
+        fetchData<qcpTypes.Molecule>(
+          setMoleculeFetchedData,
+          "get",
+          `api/v1/molecules/${moleculeId}`
+        );
+      }
+    }
+  }, [fetchData, recordFetchedData.loading, recordFetchedData?.data]);
   const recordData = recordFetchedData?.data;
 
   // Status color mapping
@@ -287,61 +315,105 @@ function Record() {
           <Divider sx={{ my: 2, width: "100%" }} />
 
           {/* Advance Section */}
+          {/* Title and Button */}
+          <Grid container spacing={2} sx={{ mt: 2 }}>
+            {/* Title and Button on the same line, left aligned */}
+
+            <Typography variant="h6" fontWeight="bold">
+              Advance
+            </Typography>
+            {recordData.is_service ? (
+              <button
+                disabled={!serviceFetchedData.data}
+                onClick={() => {
+                  console.log(serviceFetchedData.data);
+                }}
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: serviceFetchedData.data ? "#1976d2" : "#ccc",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: serviceFetchedData.data ? "pointer" : "not-allowed",
+                }}
+              >
+                View Service
+              </button>
+            ) : (
+              <button
+                disabled={!taskFetchedData.data}
+                onClick={() => {
+                  console.log(taskFetchedData.data);
+                }}
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: taskFetchedData.data ? "#1976d2" : "#ccc",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: taskFetchedData.data ? "pointer" : "not-allowed",
+                }}
+              >
+                View Task
+              </button>
+            )}
+          </Grid>
           <Grid
             container
             spacing={2}
-            sx={{
-              mt: 2,
-              alignItems: "center",
-              justifyContent: "flex-start",
-            }}
+            sx={{ mt: 2, width: "100%" }}
+            alignItems="flex-start"
           >
-            {/* Title */}
-            <Grid>
-              <Typography variant="h6" fontWeight="bold">
-                Advance
-              </Typography>
+            {/* Specification */}
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Box
+                sx={{
+                  p: 2,
+                  height: "100%",
+                }}
+              >
+                <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
+                  Specification
+                </Typography>
+                {recordFetchedData.data?.specification ? (
+                  <SpecificationList
+                    data={recordFetchedData.data.specification}
+                  />
+                ) : (
+                  <Typography>None</Typography>
+                )}
+              </Box>
             </Grid>
 
-            {/* Button */}
-            <Grid>
-              {recordData.is_service ? (
-                <button
-                  disabled={!serviceFetchedData.data}
-                  onClick={() => {
-                    console.log(serviceFetchedData.data);
-                  }}
-                  style={{
-                    padding: "8px 16px",
-                    backgroundColor: serviceFetchedData.data
-                      ? "#1976d2"
-                      : "#ccc",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: serviceFetchedData.data ? "pointer" : "not-allowed",
+            {/* Molecule Viewer */}
+            <Grid size={{ xs: 12, md: 8 }}>
+              <Box
+                sx={{
+                  p: 2,
+                  height: "100%",
+                }}
+              >
+                <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
+                  Molecule Viewer
+                </Typography>
+                <Box
+                  sx={{
+                    position: "relative",
                   }}
                 >
-                  Service
-                </button>
-              ) : (
-                <button
-                  disabled={!taskFetchedData.data}
-                  onClick={() => {
-                    console.log(taskFetchedData.data);
-                  }}
-                  style={{
-                    padding: "8px 16px",
-                    backgroundColor: taskFetchedData.data ? "#1976d2" : "#ccc",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: taskFetchedData.data ? "pointer" : "not-allowed",
-                  }}
-                >
-                  Task
-                </button>
-              )}
+                  {moleculeFetchedData.loading ? (
+                    <Typography sx={{ p: 2 }}>Loading molecule...</Typography>
+                  ) : moleculeFetchedData.data ? (
+                    <MoleculeStageProvider width={"100%"} height={500}>
+                      <MoleculeViewer moleculeData={moleculeFetchedData.data} />
+                    </MoleculeStageProvider>
+                  ) : (
+                    <Typography sx={{ p: 2 }}>
+                      No molecule available for this record.
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
             </Grid>
           </Grid>
         </>

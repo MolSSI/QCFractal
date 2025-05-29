@@ -13,7 +13,7 @@ import { Stage, Component } from "ngl";
 const StageContext = createContext<Stage | undefined>(undefined);
 
 type MoleculeStageProviderProps = {
-  width: number;
+  width: number | string;
   height: number;
   children: ReactNode;
 };

@@ -57,14 +57,6 @@ export type ProjectRecordMetadata = {
   status: string;
 };
 
-export type CalculationRecord = {
-  record_id: number;
-  record_type: string;
-  status: string;
-  name?: string;
-  description?: string;
-};
-
 export type Manager = {
   id: number;
   manager_version: string;
@@ -129,8 +121,8 @@ export type Molecule = {
 };
 
 export type RecordData = {
-  name: string;
-  description: string;
+  name?: string;
+  description?: string;
   manager_name: string;
   status: string;
   id: number;
