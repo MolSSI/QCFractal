@@ -5,7 +5,8 @@ import { WaitingReasonFragment } from "./WaitingReasonFragment";
 import { ManagerFragment } from "./ManagerFragment";
 import Comments from "./Comments";
 import ComputeHistory from "./ComputeHistory";
-import SpecificationList from "./SpecificationList";
+import Specification from "./Specification";
+import Properties from "./Properties";
 import * as qcpTypes from "../PortalTypes";
 import { FetchedData } from "../PortalClientContext";
 import {
@@ -358,6 +359,7 @@ function Record() {
               </button>
             )}
           </Grid>
+          {/* Specification and molecule viewer*/}
           <Grid
             container
             spacing={2}
@@ -376,9 +378,7 @@ function Record() {
                   Specification
                 </Typography>
                 {recordFetchedData.data?.specification ? (
-                  <SpecificationList
-                    data={recordFetchedData.data.specification}
-                  />
+                  <Specification data={recordFetchedData.data.specification} />
                 ) : (
                   <Typography>None</Typography>
                 )}
@@ -414,6 +414,19 @@ function Record() {
                   )}
                 </Box>
               </Box>
+            </Grid>
+          </Grid>
+
+          {/* Properties and (right column placeholder) */}
+          <Grid container spacing={2} sx={{ mt: 2, width: "100%" }}>
+            {/* Properties Column */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Properties properties={recordData.properties} />
+            </Grid>
+
+            {/* Right column placeholder */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              {/* You can add more content here if needed */}
             </Grid>
           </Grid>
         </>

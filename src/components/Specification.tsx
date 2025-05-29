@@ -6,7 +6,7 @@ const isEmpty = (value: any) =>
   value == null ||
   (typeof value === "object" && Object.keys(value).length === 0);
 
-const SpecificationList = ({ data }: { data: Record<string, any> }) => {
+const Specification = ({ data }: { data: Record<string, any> }) => {
   const renderList = (obj: any): JSX.Element => {
     if (typeof obj !== "object" || obj === null) {
       return <>{String(obj)}</>;
@@ -37,4 +37,4 @@ const SpecificationList = ({ data }: { data: Record<string, any> }) => {
   return <>{renderList(data)}</>;
 };
 
-export default SpecificationList;
+export default Specification;
