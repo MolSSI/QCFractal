@@ -58,7 +58,7 @@ def to_json(ds, filename="scaffold.json", indent=4, compress=False):
 
 
 def from_json(filename, client):
-    """Create a QCFractal dataset from a json file.
+    """Create or append a QCFractal dataset from a json file.
 
     Created from output of :func:`to_json`. This allows a user to save the "state"
     of a dataset before submission.
@@ -81,7 +81,14 @@ def from_json(filename, client):
     else:
         raise ValueError(f"File extension must be json or json.bz2, not {extension[-2]}.{extension[-1]}")
 
-    ds = client.add_dataset(**ds_dict["metadata"])
+    try:
+        dataset_name = ds_dict["metadata"]["name"]
+        dataset_type = ds_dict["metadata"]["dataset_type"]
+        ds = client.get_dataset(dataset_type, dataset_name)
+        print("Dataset already found.")
+    except Exception:
+        ds = client.add_dataset(**ds_dict["metadata"])
+        print("Creating new dataset.")
 
     for _, spec in ds_dict["specifications"].items():
         ds.add_specification(**spec)
