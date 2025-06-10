@@ -57,7 +57,7 @@ def to_json(ds, filename="scaffold.json", indent=4, compress=False):
             json.dump(d_serializable, f, indent=indent)
 
 
-def from_json(filename, client):
+def from_json(filename, client, append=False):
     """Create or append a QCFractal dataset from a json file.
 
     Created from output of :func:`to_json`. This allows a user to save the "state"
@@ -66,6 +66,8 @@ def from_json(filename, client):
     Args:
         filename (str): Filename/path to imported json file.
         client (qcportal.client.PortalClient): Client to which the dataset will be added.
+        append (bool): If True, a dataset will be appended, otherwise if the dataset exists,
+        an error will occur. Default=False.
 
     Returns:
         qcportal.*Dataset: QCFractal dataset. This dataset is not submitted in this function.
@@ -81,12 +83,16 @@ def from_json(filename, client):
     else:
         raise ValueError(f"File extension must be json or json.bz2, not {extension[-2]}.{extension[-1]}")
 
-    try:
-        dataset_name = ds_dict["metadata"]["name"]
-        dataset_type = ds_dict["metadata"]["dataset_type"]
-        ds = client.get_dataset(dataset_type, dataset_name)
-        print("Dataset already found.")
-    except Exception:
+    if append:
+        try:
+            dataset_name = ds_dict["metadata"]["name"]
+            dataset_type = ds_dict["metadata"]["dataset_type"]
+            ds = client.get_dataset(dataset_type, dataset_name)
+            print("Dataset already found.")
+        except Exception:
+            ds = client.add_dataset(**ds_dict["metadata"])
+            print("Creating new dataset.")
+    else:
         ds = client.add_dataset(**ds_dict["metadata"])
         print("Creating new dataset.")
 
