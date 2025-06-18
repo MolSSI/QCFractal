@@ -10,6 +10,7 @@ This module will allow users to write and read a json file that can be reformed 
 
 import json
 import bz2
+import warnings
 
 from ..serialization import encode_to_json
 
@@ -84,27 +85,29 @@ def from_json(filename, client, append=False):
         raise ValueError(f"File extension must be json or json.bz2, not {extension[-2]}.{extension[-1]}")
 
     if append:
-        try:
-            dataset_name = ds_dict["metadata"]["name"]
-            dataset_type = ds_dict["metadata"]["dataset_type"]
-            ds = client.get_dataset(dataset_type, dataset_name)
-            print("Dataset already found.")
-        except Exception:
-            ds = client.add_dataset(**ds_dict["metadata"])
-            print("Creating new dataset.")
+        ds = client.add_dataset(**ds_dict["metadata"], existing_ok=True)
+        print("Appending dataset.")
     else:
         ds = client.add_dataset(**ds_dict["metadata"])
         print("Creating new dataset.")
 
-    for _, spec in ds_dict["specifications"].items():
-        ds.add_specification(**spec)
+    for spec_name, spec in ds_dict["specifications"].items():
+        if spec_name not in ds.specifications:
+            ds.add_specification(**spec)
+        else:
+            warnings.warn(f'Specification, {spec_name}, is already in the dataset: {ds_dict["metadata"]["name"]}')
 
     entries = []
     entry_type = ds._entry_type
-    for _, entry in ds_dict["entries"].items():
+    for entry_name, entry in ds_dict["entries"].items():
         if "local_results" in entry:
             del entry["local_results"]
-        entries.append(entry_type(**entry))
+            
+        if entry_name in ds.entry_names:
+            entries.append(entry_type(**entry))
+        else:
+            warnings.warn(f'The entry, {entry_name}, is already in the dataset: {ds_dict["metadata"]["name"]}')
+
     ds.background_add_entries(entries)
 
     return ds
