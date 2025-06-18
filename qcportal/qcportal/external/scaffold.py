@@ -10,6 +10,7 @@ This module will allow users to write and read a json file that can be reformed 
 
 import json
 import bz2
+import warnings
 
 from ..serialization import encode_to_json
 
@@ -57,8 +58,8 @@ def to_json(ds, filename="scaffold.json", indent=4, compress=False):
             json.dump(d_serializable, f, indent=indent)
 
 
-def from_json(filename, client):
-    """Create a QCFractal dataset from a json file.
+def from_json(filename, client, append=False):
+    """Create or append a QCFractal dataset from a json file.
 
     Created from output of :func:`to_json`. This allows a user to save the "state"
     of a dataset before submission.
@@ -66,6 +67,8 @@ def from_json(filename, client):
     Args:
         filename (str): Filename/path to imported json file.
         client (qcportal.client.PortalClient): Client to which the dataset will be added.
+        append (bool): If True, a dataset will be appended, otherwise if the dataset exists,
+        an error will occur. Default=False.
 
     Returns:
         qcportal.*Dataset: QCFractal dataset. This dataset is not submitted in this function.
@@ -81,17 +84,30 @@ def from_json(filename, client):
     else:
         raise ValueError(f"File extension must be json or json.bz2, not {extension[-2]}.{extension[-1]}")
 
-    ds = client.add_dataset(**ds_dict["metadata"])
+    if append:
+        ds = client.add_dataset(**ds_dict["metadata"], existing_ok=True)
+        print("Appending dataset.")
+    else:
+        ds = client.add_dataset(**ds_dict["metadata"])
+        print("Creating new dataset.")
 
-    for _, spec in ds_dict["specifications"].items():
-        ds.add_specification(**spec)
+    for spec_name, spec in ds_dict["specifications"].items():
+        if spec_name not in ds.specifications:
+            ds.add_specification(**spec)
+        else:
+            warnings.warn(f'Specification, {spec_name}, is already in the dataset: {ds_dict["metadata"]["name"]}')
 
     entries = []
     entry_type = ds._entry_type
-    for _, entry in ds_dict["entries"].items():
+    for entry_name, entry in ds_dict["entries"].items():
         if "local_results" in entry:
             del entry["local_results"]
-        entries.append(entry_type(**entry))
+            
+        if entry_name in ds.entry_names:
+            entries.append(entry_type(**entry))
+        else:
+            warnings.warn(f'The entry, {entry_name}, is already in the dataset: {ds_dict["metadata"]["name"]}')
+
     ds.background_add_entries(entries)
 
     return ds
