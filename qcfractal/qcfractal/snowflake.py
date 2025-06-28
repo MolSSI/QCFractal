@@ -19,135 +19,17 @@ from qcportal import PortalClient
 from qcportal.record_models import RecordStatusEnum
 from qcportal.utils import update_nested_dict
 from .config import FractalConfig, DatabaseConfig
-from .flask_app.waitress_app import FractalWaitressApp
-from .job_runner import FractalJobRunner
 from .port_util import find_open_port
 from .postgres_harness import create_snowflake_postgres
+from .process_targets import api_process, compute_process, job_runner_process
 
 if importlib.util.find_spec("qcfractalcompute") is None:
     raise RuntimeError("qcfractalcompute is not installed. Snowflake is useless without it")
 
-from qcfractalcompute.compute_manager import ComputeManager
 from qcfractalcompute.config import FractalComputeConfig, FractalServerSettings, LocalExecutorConfig
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Sequence, Optional, Set
-
-
-def _api_process(
-    qcf_config: FractalConfig,
-    logging_queue: multiprocessing.Queue,
-    finished_queue: multiprocessing.Queue,
-) -> None:
-    import signal
-
-    qh = logging.handlers.QueueHandler(logging_queue)
-    logger = logging.getLogger()
-    logger.handlers.clear()
-    logger.addHandler(qh)
-
-    early_stop = False
-
-    def signal_handler(signum, frame):
-        nonlocal early_stop
-        early_stop = True
-
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
-
-    api = FractalWaitressApp(qcf_config, finished_queue)
-
-    if early_stop:
-        logging_queue.close()
-        logging_queue.join_thread()
-        return
-
-    def signal_handler(signum, frame):
-        raise KeyboardInterrupt
-
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
-
-    try:
-        api.run()
-    finally:
-        logging_queue.close()
-        logging_queue.join_thread()
-
-
-def _compute_process(compute_config: FractalComputeConfig, logging_queue: multiprocessing.Queue) -> None:
-    import signal
-
-    qh = logging.handlers.QueueHandler(logging_queue)
-    logger = logging.getLogger()
-    logger.handlers.clear()
-    logger.addHandler(qh)
-
-    early_stop = False
-
-    def signal_handler(signum, frame):
-        nonlocal early_stop
-        early_stop = True
-
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
-
-    compute = ComputeManager(compute_config)
-    if early_stop:
-        logging_queue.close()
-        logging_queue.join_thread()
-        return
-
-    def signal_handler(signum, frame):
-        compute.stop()
-
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
-
-    try:
-        compute.start()
-    finally:
-        logging_queue.close()
-        logging_queue.join_thread()
-
-
-def _job_runner_process(
-    qcf_config: FractalConfig, logging_queue: multiprocessing.Queue, finished_queue: multiprocessing.Queue
-) -> None:
-    import signal
-
-    qh = logging.handlers.QueueHandler(logging_queue)
-    logger = logging.getLogger()
-    logger.handlers.clear()
-    logger.addHandler(qh)
-
-    early_stop = False
-
-    def signal_handler(signum, frame):
-        nonlocal early_stop
-        early_stop = True
-
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
-
-    job_runner = FractalJobRunner(qcf_config, finished_queue)
-
-    if early_stop:
-        logging_queue.close()
-        logging_queue.join_thread()
-        return
-
-    def signal_handler(signum, frame):
-        job_runner.stop()
-
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
-
-    try:
-        job_runner.start()
-    finally:
-        logging_queue.close()
-        logging_queue.join_thread()
 
 
 def _logging_thread(logging_queue, logging_thread_stop):
@@ -312,7 +194,7 @@ class FractalSnowflake:
     def _start_api(self):
         if self._api_proc is None:
             self._api_proc = self._mp_context.Process(
-                target=_api_process,
+                target=api_process,
                 args=(self._qcf_config, self._logging_queue, self._finished_queue),
             )
             self._api_proc.start()
@@ -333,7 +215,7 @@ class FractalSnowflake:
 
         if self._compute_proc is None:
             self._compute_proc = self._mp_context.Process(
-                target=_compute_process, args=(self._compute_config, self._logging_queue)
+                target=compute_process, args=(self._compute_config, self._logging_queue)
             )
             self._compute_proc.start()
             self._update_finalizer()
@@ -348,7 +230,7 @@ class FractalSnowflake:
     def _start_job_runner(self):
         if self._job_runner_proc is None:
             self._job_runner_proc = self._mp_context.Process(
-                target=_job_runner_process, args=(self._qcf_config, self._logging_queue, self._finished_queue)
+                target=job_runner_process, args=(self._qcf_config, self._logging_queue, self._finished_queue)
             )
             self._job_runner_proc.start()
             self._update_finalizer()
