@@ -107,7 +107,7 @@ class QCATestingSnowflake(FractalSnowflake):
         log_access=True,
         extra_config=None,
     ):
-        self.pg_harness = pg_harness
+        self._pg_harness = pg_harness
         self.encoding = encoding
 
         qcf_config = {}
@@ -197,7 +197,7 @@ class QCATestingSnowflake(FractalSnowflake):
         if self._api_proc is None:
             self.start_api()
 
-        self.pg_harness.recreate_database()
+        self._pg_harness.recreate_database()
 
     def get_storage_socket(self) -> SQLAlchemySocket:
         """
