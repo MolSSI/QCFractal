@@ -25,9 +25,8 @@ from qcfractal import __version__
 from qcportal.auth import UserInfo
 from .config import read_configuration, write_initial_configuration, FractalConfig, WebAPIConfig
 from .db_socket.socket import SQLAlchemySocket
-from .flask_app.waitress_app import FractalWaitressApp
-from .job_runner import FractalJobRunner
 from .postgres_harness import PostgresHarness
+from .process_targets import api_process, job_runner_process
 
 if TYPE_CHECKING:
     from logging import Logger
@@ -387,6 +386,9 @@ def server_start(config):
     logger = logging.getLogger(__name__)
     logger.info("*** Starting a QCFractal server ***")
 
+    # Set up a multiprocessing context
+    mp_context = multiprocessing.get_context("spawn")
+
     stdout_logging = setup_logging(config, logger)
 
     # Logger for the rest of this function
@@ -397,7 +399,7 @@ def server_start(config):
 
     # Set up a queue for logging. All child process will send logs
     # to this queue, and a separate thread will handle them
-    logging_queue = multiprocessing.Queue()
+    logging_queue = mp_context.Queue()
 
     def _log_thread(queue):
         while True:
@@ -412,13 +414,14 @@ def server_start(config):
     log_thread = threading.Thread(target=_log_thread, args=(logging_queue,))
     log_thread.start()
 
-    # Start up the api and job runner
-    api_app = FractalWaitressApp(config, logging_queue=logging_queue)
-    api_proc = multiprocessing.Process(target=api_app.run)
+    # Start up the api and job runner in separate processes
+    api_proc = mp_context.Process(name="API_Process", target=api_process, args=(config, logging_queue, None))
     api_proc.start()
 
-    job_runners = [FractalJobRunner(config, logging_queue=logging_queue) for _ in range(config.internal_job_processes)]
-    job_runner_procs = [multiprocessing.Process(target=jr.start) for jr in job_runners]
+    job_runner_procs = [
+        mp_context.Process(name=f"Job_Runner_{i}", target=job_runner_process, args=(config, logging_queue, None))
+        for i in range(config.internal_job_processes)
+    ]
     for p in job_runner_procs:
         p.start()
 

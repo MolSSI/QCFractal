@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import multiprocessing
+from typing import Optional
 
 from qcfractal.config import FractalConfig
 from qcfractal.flask_app.waitress_app import FractalWaitressApp
@@ -13,7 +14,7 @@ from qcfractalcompute.config import FractalComputeConfig
 def api_process(
     qcf_config: FractalConfig,
     logging_queue: multiprocessing.Queue,
-    finished_queue: multiprocessing.Queue,
+    finished_queue: Optional[multiprocessing.Queue],
 ) -> None:
     import signal
 
@@ -21,6 +22,7 @@ def api_process(
     logger = logging.getLogger()
     logger.handlers.clear()
     logger.addHandler(qh)
+    logger.setLevel(qcf_config.loglevel)
 
     early_stop = False
 
@@ -31,7 +33,7 @@ def api_process(
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
-    api = FractalWaitressApp(qcf_config, finished_queue)
+    api = FractalWaitressApp(qcf_config, finished_queue=finished_queue)
 
     if early_stop:
         logging_queue.close()
@@ -46,6 +48,8 @@ def api_process(
 
     try:
         api.run()
+    except KeyboardInterrupt:  # Swallow ugly output on CTRL-C
+        pass
     finally:
         logging_queue.close()
         logging_queue.join_thread()
@@ -58,6 +62,7 @@ def compute_process(compute_config: FractalComputeConfig, logging_queue: multipr
     logger = logging.getLogger()
     logger.handlers.clear()
     logger.addHandler(qh)
+    logger.setLevel(compute_config.loglevel)
 
     early_stop = False
 
@@ -82,13 +87,15 @@ def compute_process(compute_config: FractalComputeConfig, logging_queue: multipr
 
     try:
         compute.start()
+    except KeyboardInterrupt:  # Swallow ugly output on CTRL-C
+        pass
     finally:
         logging_queue.close()
         logging_queue.join_thread()
 
 
 def job_runner_process(
-    qcf_config: FractalConfig, logging_queue: multiprocessing.Queue, finished_queue: multiprocessing.Queue
+    qcf_config: FractalConfig, logging_queue: multiprocessing.Queue, finished_queue: Optional[multiprocessing.Queue]
 ) -> None:
     import signal
 
@@ -96,6 +103,7 @@ def job_runner_process(
     logger = logging.getLogger()
     logger.handlers.clear()
     logger.addHandler(qh)
+    logger.setLevel(qcf_config.loglevel)
 
     early_stop = False
 
@@ -106,7 +114,7 @@ def job_runner_process(
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
-    job_runner = FractalJobRunner(qcf_config, finished_queue)
+    job_runner = FractalJobRunner(qcf_config, finished_queue=finished_queue)
 
     if early_stop:
         logging_queue.close()
@@ -121,6 +129,8 @@ def job_runner_process(
 
     try:
         job_runner.start()
+    except KeyboardInterrupt:  # Swallow ugly output on CTRL-C
+        pass
     finally:
         logging_queue.close()
         logging_queue.join_thread()
