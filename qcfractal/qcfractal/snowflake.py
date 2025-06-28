@@ -291,7 +291,7 @@ class FractalSnowflake:
         port = self._qcf_config.api.port
         uri = f"http://{host}:{port}/api/v1/ping"
 
-        max_iter = 50
+        max_iter = 200
         iter = 0
         while True:
             try:
