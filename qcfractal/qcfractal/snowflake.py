@@ -65,8 +65,8 @@ class FractalSnowflake:
         This can also be used as a context manager (`with FractalSnowflake(...) as s:`)
         """
 
-        # Multiprocessing context - generally use fork
-        self._mp_context = multiprocessing.get_context("fork")
+        # Multiprocessing context - generally use spawn
+        self._mp_context = multiprocessing.get_context("spawn")
 
         self._logger = logging.getLogger("fractal_snowflake")
 
