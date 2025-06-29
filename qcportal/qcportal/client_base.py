@@ -14,6 +14,7 @@ from typing import (
 )
 
 import jwt
+import urllib3.exceptions
 
 try:
     import pydantic.v1 as pydantic
@@ -30,6 +31,13 @@ from tqdm import tqdm
 from . import __version__
 from .exceptions import AuthenticationFailure
 from .serialization import serialize, deserialize
+
+AllowedConnectionExceptions = (
+    ConnectionError,
+    requests.exceptions.Timeout,
+    requests.exceptions.ConnectionError,
+    urllib3.exceptions.TimeoutError,
+)
 
 _T = TypeVar("_T")
 _U = TypeVar("_U")
@@ -147,9 +155,7 @@ class PortalClientBase:
 
         # If no 3rd party verification, quiet urllib
         if self._verify is False:
-            from urllib3.exceptions import InsecureRequestWarning
-
-            requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
+            requests.packages.urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
 
         if username is not None and password is not None:
             self._username = username
@@ -327,7 +333,7 @@ class PortalClientBase:
                     break
                 except requests.exceptions.SSLError:
                     raise ConnectionRefusedError(_ssl_error_msg) from None
-                except (requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout) as e:
+                except AllowedConnectionExceptions as e:
                     if retry_count >= self.retry_max:
                         raise
 
@@ -343,7 +349,7 @@ class PortalClientBase:
                     time.sleep(time_to_wait)
         except requests.exceptions.SSLError:
             raise ConnectionRefusedError(_ssl_error_msg) from None
-        except requests.exceptions.ConnectionError:
+        except AllowedConnectionExceptions:
             raise ConnectionRefusedError(_connection_error_msg.format(self.address)) from None
 
         if self.debug_requests:
@@ -633,7 +639,7 @@ class PortalClientBase:
         try:
             r = requests.get(uri)
             return r.json()["success"]
-        except requests.exceptions.ConnectionError:
+        except AllowedConnectionExceptions:
             return False
 
     def get_server_information(self) -> Dict[str, Any]:

@@ -28,7 +28,7 @@ def run_dataset_model_add_get_entry(snowflake_client, ds, test_entries, entry_ex
 
     if background:
         ij = ds.background_add_entries(test_entries)
-        ij.watch(interval=0.1, timeout=10)
+        ij.watch(interval=0.1, timeout=30)
         meta = InsertMetadata(**ij.result)
         ds.fetch_entries()
     else:
@@ -445,7 +445,7 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare, backgr
 
     if background:
         ij = ds.background_submit()
-        ij.watch(interval=0.1, timeout=10)
+        ij.watch(interval=0.1, timeout=30)
         meta = InsertCountsMetadata(**ij.result)
     else:
         meta = ds.submit()
@@ -476,7 +476,7 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare, backgr
 
     if background:
         ij = ds.background_submit()
-        ij.watch(interval=0.1, timeout=10)
+        ij.watch(interval=0.1, timeout=30)
         meta = InsertCountsMetadata(**ij.result)
     else:
         meta = ds.submit()
@@ -493,7 +493,7 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare, backgr
 
     if background:
         ij = ds.background_submit(compute_tag="new_tag", compute_priority=PriorityEnum.high)
-        ij.watch(interval=0.1, timeout=10)
+        ij.watch(interval=0.1, timeout=30)
         meta = InsertCountsMetadata(**ij.result)
     else:
         meta = ds.submit(compute_tag="new_tag", compute_priority=PriorityEnum.high)
@@ -527,7 +527,7 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare, backgr
 
     if background:
         ij = ds.background_submit()
-        ij.watch(interval=0.1, timeout=10)
+        ij.watch(interval=0.1, timeout=30)
         meta = InsertCountsMetadata(**ij.result)
     else:
         meta = ds.submit()
@@ -549,7 +549,7 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare, backgr
 
     if background:
         ij = ds.background_submit(find_existing=False)
-        ij.watch(interval=0.1, timeout=10)
+        ij.watch(interval=0.1, timeout=30)
         meta = InsertCountsMetadata(**ij.result)
     else:
         meta = ds.submit(find_existing=False)

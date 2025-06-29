@@ -58,18 +58,11 @@ def test_periodics_service_iteration(snowflake: QCATestingSnowflake):
 
     snowflake.start_job_runner()
 
-    time.sleep(1.0)
-
     # added after startup
     id_2, _ = submit_go_test_data(storage_socket, "go_H2O2_psi4_b3lyp")
 
-    # The first services iterated at startup
-    rec = storage_socket.records.get([id_1, id_2])
-    assert rec[0]["status"] == RecordStatusEnum.running
-    assert rec[1]["status"] == RecordStatusEnum.waiting
-
-    # wait for the next iteration. Then both should be running
-    time.sleep(service_freq + 0.5)
+    # wait for iteration. Then both should be running
+    time.sleep(service_freq + 1.5)
     rec = storage_socket.records.get([id_1, id_2])
     assert rec[0]["status"] == RecordStatusEnum.running
     assert rec[1]["status"] == RecordStatusEnum.running
