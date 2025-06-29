@@ -11,6 +11,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Dict, List, Tuple
 
 import parsl.executors.high_throughput.interchange
+import requests.exceptions
 import tabulate
 from packaging.version import parse as parse_version
 from parsl.config import Config as ParslConfig
@@ -22,7 +23,8 @@ try:
     from pydantic.v1 import BaseModel, Extra, Field
 except ImportError:
     from pydantic import BaseModel, Extra, Field
-from requests.exceptions import Timeout
+from requests.exceptions import Timeout, ConnectTimeout, ConnectionError as RequestsConnectionError
+import urllib3.exceptions
 
 from qcfractalcompute.apps.app_manager import AppManager
 from qcportal import ManagerClient
@@ -316,9 +318,9 @@ class ComputeManager:
         # If we got here, the scheduler has stopped
         # Now handle the shutdown
         #############################################
-        self.update(new_tasks=False)
-
         try:
+            self.update(new_tasks=False)
+
             # Notify the server of shutdown
             self.client.deactivate(
                 active_tasks=self.statistics.active_tasks,
@@ -371,7 +373,13 @@ class ComputeManager:
             )
             self._failed_heartbeats = 0
 
-        except (ConnectionError, Timeout) as ex:
+        except (
+            ConnectionError,
+            Timeout,
+            RequestsConnectionError,
+            ConnectTimeout,
+            urllib3.exceptions.TimeoutError,
+        ) as ex:
             self._failed_heartbeats += 1
             self.logger.warning(f"Heartbeat failed: {str(ex).strip()}. QCFractal server down?")
             self.logger.warning(f"Missed {self._failed_heartbeats} heartbeats so far")
