@@ -21,12 +21,13 @@ from qcportal.utils import update_nested_dict
 from .config import FractalConfig, DatabaseConfig
 from .port_util import find_open_port
 from .postgres_harness import create_snowflake_postgres
-from .process_targets import api_process, compute_process, job_runner_process
+from .process_targets import api_process, job_runner_process
 
 if importlib.util.find_spec("qcfractalcompute") is None:
     raise RuntimeError("qcfractalcompute is not installed. Snowflake is useless without it")
 
 from qcfractalcompute.config import FractalComputeConfig, FractalServerSettings, LocalExecutorConfig
+from qcfractalcompute.process_targets import compute_process
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Sequence, Optional, Set
