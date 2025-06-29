@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING
 import requests
 
 from qcportal import PortalClient
+from qcportal.client_base import AllowedConnectionExceptions
 from qcportal.record_models import RecordStatusEnum
 from qcportal.utils import update_nested_dict
 from .config import FractalConfig, DatabaseConfig
@@ -310,7 +311,7 @@ class FractalSnowflake:
         port = self._qcf_config.api.port
         uri = f"http://{host}:{port}/api/v1/ping"
 
-        max_iter = 50
+        max_iter = 100
         iter = 0
         while True:
             try:
@@ -319,8 +320,8 @@ class FractalSnowflake:
                     raise RuntimeError("Error pinging snowflake fractal server: ", r.text)
                 break
 
-            except requests.exceptions.ConnectionError:
-                time.sleep(0.05)
+            except AllowedConnectionExceptions:
+                time.sleep(0.1)
                 iter += 1
                 if iter >= max_iter:
                     raise
