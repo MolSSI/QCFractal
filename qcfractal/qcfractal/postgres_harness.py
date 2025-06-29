@@ -528,14 +528,14 @@ class PostgresHarness:
                 r"#?unix_socket_directories =.*",
                 f"unix_socket_directories = '{sock_dir}'",
                 psql_conf,
-                re.M,
+                flags=re.MULTILINE,
             )
         else:
             psql_conf = re.sub(
                 r"#?unix_socket_directories =.*",
                 f"unix_socket_directories = ''",
                 psql_conf,
-                re.M,
+                flags=re.MULTILINE,
             )
 
         psql_conf_path.write_text(psql_conf)

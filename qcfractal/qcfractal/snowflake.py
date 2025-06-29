@@ -306,6 +306,7 @@ class FractalSnowflake:
             self._logging_queue,
             self._logging_thread,
             self._logging_thread_stop,
+            self._pg_harness,
         )
 
     def _start_api(self):
@@ -360,14 +361,19 @@ class FractalSnowflake:
             self._update_finalizer()
 
     @classmethod
-    def _stop(cls, compute_proc, api_proc, job_runner_proc, logging_queue, logging_thread, logging_thread_stop):
+    def _stop(
+        cls, compute_proc, api_proc, job_runner_proc, logging_queue, logging_thread, logging_thread_stop, pg_harness
+    ):
         ####################################################################################
         # This is written as a class method so that it can be called by a weakref finalizer
         ####################################################################################
 
         # Stop these in a particular order
         # First the compute, since it will communicate its demise to the api server
-        # Flask must be last. It was started first and owns the db
+        # Flask must be last. Then shutdown the database
+        # (Note about the db - this function should only be called from the finalizer. Stopping/starting the db
+        #  should NOT call this function, which allows data to persist between states of a particular
+        #  snowflake object)
 
         if compute_proc is not None:
             compute_proc.terminate()
@@ -385,6 +391,8 @@ class FractalSnowflake:
         logging_thread.join()
         logging_queue.close()
         logging_queue.join_thread()
+
+        pg_harness.shutdown()
 
     def wait_for_api(self):
         """
