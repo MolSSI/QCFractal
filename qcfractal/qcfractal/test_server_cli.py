@@ -368,7 +368,13 @@ def test_cli_start_options(cli_runner, tmp_path_factory):
     with open(log_path, "r") as f:
         log_output = f.read()
 
-    assert "waitress: Serving on http://0.0.0.0:2828" in log_output
+    if "waitress: Serving on http://0.0.0.0:2828" not in log_output:
+        print("LOGGED OUTPUT")
+        print("-"*80)
+        print(log_output)
+        print("-"*80)
+        raise RuntimeError("Log file does not contain expected output")
+
 
 
 def test_cli_start_outdated(cli_runner_core):
