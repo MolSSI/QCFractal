@@ -53,5 +53,7 @@ jobs:
         run: |
           pytest --runslow --client-encoding="${{ matrix.encoding }}" \
                  --log-level=DEBUG \
+                 --log-format="%(asctime)s %(levelname)s %(message)s" \
+                 --log-date-format="%Y-%m-%d %H:%M:%S.%f" \
                  qcfractal qcportal qcfractalcompute
 
