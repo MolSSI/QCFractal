@@ -92,10 +92,10 @@ def from_json(filename, client, append=False):
         print("Creating new dataset.")
 
     for spec_name, spec in ds_dict["specifications"].items():
-        if spec_name not in ds.specifications:
-            ds.add_specification(**spec)
-        else:
+        if spec_name in ds.specifications:
             warnings.warn(f'Specification, {spec_name}, is already in the dataset: {ds_dict["metadata"]["name"]}')
+        else:
+            ds.add_specification(**spec)
 
     entries = []
     entry_type = ds._entry_type
@@ -104,10 +104,10 @@ def from_json(filename, client, append=False):
             del entry["local_results"]
             
         if entry_name in ds.entry_names:
-            entries.append(entry_type(**entry))
-        else:
             warnings.warn(f'The entry, {entry_name}, is already in the dataset: {ds_dict["metadata"]["name"]}')
-
+        else:
+            entries.append(entry_type(**entry))
+            
     ds.background_add_entries(entries)
 
     return ds
