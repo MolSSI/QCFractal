@@ -128,7 +128,8 @@ class ManagerClient(PortalClientBase):
     def claim(self, programs: Dict[str, List[str]], tags: List[str], limit: int) -> List[RecordTask]:
         body = TaskClaimBody(name_data=self.manager_name_data, programs=programs, compute_tags=tags, limit=limit)
 
-        return self.make_request("post", "compute/v1/tasks/claim", List[RecordTask], body=body)
+        # Don't retry - will be handled elsewhere
+        return self.make_request("post", "compute/v1/tasks/claim", List[RecordTask], body=body, allow_retries=False)
 
     def return_finished(self, results_compressed: Dict[int, bytes]) -> TaskReturnMetadata:
         # Chunk based on the server limit
@@ -143,7 +144,10 @@ class ManagerClient(PortalClientBase):
                 results_compressed={k: v for k, v in results_flat[chunk : chunk + limit]},
             )
 
-            meta = self.make_request("post", "compute/v1/tasks/return", TaskReturnMetadata, body=body)
+            # Don't retry - will be handled elsewhere
+            meta = self.make_request(
+                "post", "compute/v1/tasks/return", TaskReturnMetadata, allow_retries=False, body=body
+            )
 
             task_return_meta.error_description = meta.error_description
             task_return_meta.rejected_info.extend(meta.rejected_info)
