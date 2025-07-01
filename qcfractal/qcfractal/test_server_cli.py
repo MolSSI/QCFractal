@@ -331,7 +331,7 @@ def test_cli_start(cli_runner):
 
     # Manually start then kill
     proc = subprocess.Popen(full_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
-    time.sleep(10)
+    time.sleep(20)
     proc.terminate()
     proc.wait(10)
 
@@ -359,7 +359,7 @@ def test_cli_start_options(cli_runner, tmp_path_factory):
 
     # Manually start then kill
     proc = subprocess.Popen(full_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
-    time.sleep(10)
+    time.sleep(20)
     proc.terminate()
     proc.wait(10)
 
@@ -377,5 +377,5 @@ def test_cli_start_outdated(cli_runner_core):
     output = cli_runner_core(["restore", migdata_path], stdin="REMOVEALLDATA qcfractal_default")
     assert "Restore complete!" in output
 
-    output = cli_runner_core(["start"], timeout=15, fail_expected=True)
+    output = cli_runner_core(["start"], timeout=20, fail_expected=True)
     assert "Database needs migration" in output

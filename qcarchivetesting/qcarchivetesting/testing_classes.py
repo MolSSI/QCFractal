@@ -175,7 +175,7 @@ class QCATestingSnowflake(FractalSnowflake):
         if create_users:
             self.create_users()
 
-        self.start_api()
+        self.start_api(wait=True)
 
     def create_users(self):
         # Get a storage socket and add the roles/users/passwords
@@ -195,7 +195,7 @@ class QCATestingSnowflake(FractalSnowflake):
         self._qcf_config = self._original_config.copy(deep=True)
 
         if self._api_proc is None:
-            self.start_api()
+            self.start_api(wait=True)
 
         self._pg_harness.recreate_database()
 
@@ -229,11 +229,13 @@ class QCATestingSnowflake(FractalSnowflake):
     def activated_manager_programs(self):
         return _activated_manager_programs
 
-    def start_api(self) -> None:
+    def start_api(self, wait: bool = False) -> None:
         """
         Starts the flask/api thread
         """
-        self._start_api()
+        self._start_api(wait=wait)
+        if wait:
+            self.wait_for_api()
 
     def stop_api(self) -> None:
         """
@@ -241,11 +243,11 @@ class QCATestingSnowflake(FractalSnowflake):
         """
         self._stop_api()
 
-    def start_job_runner(self) -> None:
+    def start_job_runner(self, wait: bool = False) -> None:
         """
         Starts the job runner thread
         """
-        self._start_job_runner()
+        self._start_job_runner(wait=wait)
 
     def stop_job_runner(self) -> None:
         """

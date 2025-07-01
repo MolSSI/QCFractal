@@ -241,7 +241,6 @@ def fulltest_client(pytestconfig):
 
         s = FractalSnowflake()
         yield s.client()
-        s.stop()
 
     else:
         yield PortalClient(address=uri)

@@ -19,135 +19,18 @@ from qcportal import PortalClient
 from qcportal.record_models import RecordStatusEnum
 from qcportal.utils import update_nested_dict
 from .config import FractalConfig, DatabaseConfig
-from .flask_app.waitress_app import FractalWaitressApp
-from .job_runner import FractalJobRunner
 from .port_util import find_open_port
 from .postgres_harness import create_snowflake_postgres
+from .process_targets import api_process, job_runner_process
 
 if importlib.util.find_spec("qcfractalcompute") is None:
     raise RuntimeError("qcfractalcompute is not installed. Snowflake is useless without it")
 
-from qcfractalcompute.compute_manager import ComputeManager
 from qcfractalcompute.config import FractalComputeConfig, FractalServerSettings, LocalExecutorConfig
+from qcfractalcompute.process_targets import compute_process
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Sequence, Optional, Set
-
-
-def _api_process(
-    qcf_config: FractalConfig,
-    logging_queue: multiprocessing.Queue,
-    finished_queue: multiprocessing.Queue,
-) -> None:
-    import signal
-
-    qh = logging.handlers.QueueHandler(logging_queue)
-    logger = logging.getLogger()
-    logger.handlers.clear()
-    logger.addHandler(qh)
-
-    early_stop = False
-
-    def signal_handler(signum, frame):
-        nonlocal early_stop
-        early_stop = True
-
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
-
-    api = FractalWaitressApp(qcf_config, finished_queue)
-
-    if early_stop:
-        logging_queue.close()
-        logging_queue.join_thread()
-        return
-
-    def signal_handler(signum, frame):
-        raise KeyboardInterrupt
-
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
-
-    try:
-        api.run()
-    finally:
-        logging_queue.close()
-        logging_queue.join_thread()
-
-
-def _compute_process(compute_config: FractalComputeConfig, logging_queue: multiprocessing.Queue) -> None:
-    import signal
-
-    qh = logging.handlers.QueueHandler(logging_queue)
-    logger = logging.getLogger()
-    logger.handlers.clear()
-    logger.addHandler(qh)
-
-    early_stop = False
-
-    def signal_handler(signum, frame):
-        nonlocal early_stop
-        early_stop = True
-
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
-
-    compute = ComputeManager(compute_config)
-    if early_stop:
-        logging_queue.close()
-        logging_queue.join_thread()
-        return
-
-    def signal_handler(signum, frame):
-        compute.stop()
-
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
-
-    try:
-        compute.start()
-    finally:
-        logging_queue.close()
-        logging_queue.join_thread()
-
-
-def _job_runner_process(
-    qcf_config: FractalConfig, logging_queue: multiprocessing.Queue, finished_queue: multiprocessing.Queue
-) -> None:
-    import signal
-
-    qh = logging.handlers.QueueHandler(logging_queue)
-    logger = logging.getLogger()
-    logger.handlers.clear()
-    logger.addHandler(qh)
-
-    early_stop = False
-
-    def signal_handler(signum, frame):
-        nonlocal early_stop
-        early_stop = True
-
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
-
-    job_runner = FractalJobRunner(qcf_config, finished_queue)
-
-    if early_stop:
-        logging_queue.close()
-        logging_queue.join_thread()
-        return
-
-    def signal_handler(signum, frame):
-        job_runner.stop()
-
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
-
-    try:
-        job_runner.start()
-    finally:
-        logging_queue.close()
-        logging_queue.join_thread()
 
 
 def _logging_thread(logging_queue, logging_thread_stop):
@@ -255,11 +138,13 @@ class FractalSnowflake:
         self._finished_queue = self._mp_context.Queue()
         self._all_completed: Set[int] = set()
         self._api_proc = None
+        self._api_initialized = self._mp_context.Event()
 
         # For the compute manager
         uri = f"http://{self._qcf_config.api.host}:{self._qcf_config.api.port}"
         self._compute_config = FractalComputeConfig(
             base_folder=self._tmpdir.name,
+            loglevel=logging.getLevelName(loglevel),
             parsl_run_dir=parsl_run_dir,
             cluster="snowflake_compute",
             update_frequency=5,
@@ -280,18 +165,20 @@ class FractalSnowflake:
         )
         self._compute_enabled = compute_workers > 0
         self._compute_proc = None
+        self._compute_initialized = self._mp_context.Event()
 
         # Job runner
         self._job_runner_proc = None
+        self._job_runner_initialized = self._mp_context.Event()
 
         # This is updated when starting components
         self._finalizer = None
 
-        # Update now because of the logging thread
+        # Update now because of the logging thread & pg_harness
         self._update_finalizer()
 
         if start:
-            self.start()
+            self.start(wait=True)
 
     def _update_finalizer(self):
         if self._finalizer is not None:
@@ -309,55 +196,70 @@ class FractalSnowflake:
             self._pg_harness,
         )
 
-    def _start_api(self):
+    def _start_api(self, wait: bool = False):
         if self._api_proc is None:
+            self._api_initialized.clear()
             self._api_proc = self._mp_context.Process(
-                target=_api_process,
-                args=(self._qcf_config, self._logging_queue, self._finished_queue),
+                target=api_process,
+                args=(self._qcf_config, self._logging_queue, self._finished_queue, self._api_initialized),
             )
             self._api_proc.start()
+            self._update_finalizer()
 
-        self._update_finalizer()
-        self.wait_for_api()
+        if wait:
+            self._api_initialized.wait()
 
     def _stop_api(self):
         if self._api_proc is not None:
             self._api_proc.terminate()
             self._api_proc.join()
             self._api_proc = None
+            self._api_initialized.clear()
             self._update_finalizer()
 
-    def _start_compute(self):
+    def _start_compute(self, wait: bool = False):
         if not self._compute_enabled:
             return
 
         if self._compute_proc is None:
+            self._compute_initialized.clear()
             self._compute_proc = self._mp_context.Process(
-                target=_compute_process, args=(self._compute_config, self._logging_queue)
+                target=compute_process,
+                args=(self._compute_config, self._logging_queue, self._compute_initialized),
             )
             self._compute_proc.start()
             self._update_finalizer()
+
+        if wait:
+            self._compute_initialized.wait()
 
     def _stop_compute(self):
         if self._compute_proc is not None:
             self._compute_proc.terminate()
             self._compute_proc.join()
             self._compute_proc = None
+            self._compute_initialized.clear()
             self._update_finalizer()
 
-    def _start_job_runner(self):
+    def _start_job_runner(self, wait: bool = False):
         if self._job_runner_proc is None:
+            self._job_runner_initialized.clear()
             self._job_runner_proc = self._mp_context.Process(
-                target=_job_runner_process, args=(self._qcf_config, self._logging_queue, self._finished_queue)
+                target=job_runner_process,
+                args=(self._qcf_config, self._logging_queue, self._finished_queue, self._job_runner_initialized),
             )
             self._job_runner_proc.start()
             self._update_finalizer()
+
+        if wait:
+            self._job_runner_initialized.wait()
 
     def _stop_job_runner(self):
         if self._job_runner_proc is not None:
             self._job_runner_proc.terminate()
             self._job_runner_proc.join()
             self._job_runner_proc = None
+            self._job_runner_initialized.clear()
             self._update_finalizer()
 
     @classmethod
@@ -423,36 +325,35 @@ class FractalSnowflake:
                 if iter >= max_iter:
                     raise
 
-    def start(self):
+    def start(self, wait: bool = False) -> None:
         """
         Starts all the components of the snowflake
         """
 
-        self._start_api()
-        self._start_compute()
-        self._start_job_runner()
+        # Start all in parallel, then wait on all independently
+        self._start_api(wait=False)
+        self._start_compute(wait=False)
+        self._start_job_runner(wait=False)
+
+        if wait:
+            if self._compute_proc is not None:
+                self._compute_initialized.wait()
+
+            if self._job_runner_proc is not None:
+                self._job_runner_initialized.wait()
+
+            if self._api_proc is not None:
+                self._api_initialized.wait()
+                self.wait_for_api()
 
     def stop(self):
         """
         Stops all components of the snowflake
         """
 
-        if self._compute_proc is not None:
-            self._compute_proc.terminate()
-            self._compute_proc.join()
-            self._compute_proc = None
-
-        if self._job_runner_proc is not None:
-            self._job_runner_proc.terminate()
-            self._job_runner_proc.join()
-            self._job_runner_proc = None
-
-        if self._api_proc is not None:
-            self._api_proc.terminate()
-            self._api_proc.join()
-            self._api_proc = None
-
-        self._update_finalizer()
+        self._stop_api()
+        self._stop_compute()
+        self._stop_job_runner()
 
     def get_uri(self) -> str:
         """
