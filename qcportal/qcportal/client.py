@@ -175,16 +175,26 @@ class PortalClient(PortalClientBase):
         str
             The desired representation.
         """
-        ret = "PortalClient(server_name='{}', address='{}', username='{}')".format(
-            self.server_name, self.address, self.username
-        )
-        return ret
+
+        # What if there was an error before we could get the server info?
+        if self.server_info is None:
+            server_name = "?"
+        else:
+            server_name = self.server_name
+
+        return f"PortalClient(server_name='{server_name}', address='{self.address}', username='{self.username}')"
 
     def _repr_html_(self) -> str:
+        # What if there was an error before we could get the server info?
+        if self.server_info is None:
+            server_name = "?"
+        else:
+            server_name = self.server_name
+
         output = f"""
         <h3>PortalClient</h3>
         <ul>
-          <li><b>Server:   &nbsp; </b>{self.server_name}</li>
+          <li><b>Server:   &nbsp; </b>{server_name}</li>
           <li><b>Address:  &nbsp; </b>{self.address}</li>
           <li><b>Username: &nbsp; </b>{self.username}</li>
         </ul>
