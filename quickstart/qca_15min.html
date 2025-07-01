@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=b612e419"></script>
+    <script src="../_static/documentation_options.js?v=1bbad4e7"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="QCArchive Quickstart" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.61.post11+g81a5da0a1" />
+  <meta name="docsearch:version" content="0.61.post22+g65e539d5a" />
   </head>
   
   
@@ -490,7 +490,7 @@ To work with the QCArchive demo server, enter <code class="docutils literal notr
 </div>
 </div>
 <div class="cell_output docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"version_major": 2, "version_minor": 0, "model_id": "ba7cbd9fa42e4ef0aa5ab9c75fb9d381"}</script><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>WARNING: This client version is newer than the server version. This may work if the versions are close, but expect exceptions and errors if attempting things the server does not support. client version: 0.61.post11+g81a5da0a1, server version: 0.59
+<script type="application/vnd.jupyter.widget-view+json">{"version_major": 2, "version_minor": 0, "model_id": "0c69889f61c445a4af39856b9a4bef34"}</script><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>WARNING: This client version is newer than the server version. This may work if the versions are close, but expect exceptions and errors if attempting things the server does not support. client version: 0.61.post22+g65e539d5a, server version: 0.59
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>PortalClient(server_name=&#39;MolSSI QCFractal Demo Server&#39;, address=&#39;https://qcademo.molssi.org/&#39;, username=&#39;None&#39;)
@@ -561,10 +561,10 @@ In the cell below, we print the SCF total energy from our calcuation.</p>
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Molecule: H2, Energy: -1.1117197122934774
+Molecule: HO, Energy: -74.36430040801095
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Molecule: HO, Energy: -74.36430040801095
-Molecule: H2O, Energy: -74.82586558254185
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Molecule: H2O, Energy: -74.82586558254185
 </pre></div>
 </div>
 </div>
@@ -594,14 +594,14 @@ The query method returns a Python iterator.</p>
 <span class="g g-Whitespace">      </span><span class="mi">3</span> <span class="c1"># Print the first record.</span>
 <span class="g g-Whitespace">      </span><span class="mi">4</span> <span class="nb">print</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">records</span><span class="p">))</span>
 
-<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client.py:936,</span> in <span class="ni">PortalClient.query_records</span><span class="nt">(self, record_id, record_type, manager_name, status, dataset_id, parent_id, child_id, created_before, created_after, modified_before, modified_after, creator_user, limit, include)</span>
-<span class="g g-Whitespace">    </span><span class="mi">918</span> <span class="n">filter_dict</span> <span class="o">=</span> <span class="p">{</span>
-<span class="g g-Whitespace">    </span><span class="mi">919</span>     <span class="s2">&quot;record_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">record_id</span><span class="p">),</span>
-<span class="g g-Whitespace">    </span><span class="mi">920</span>     <span class="s2">&quot;record_type&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">record_type</span><span class="p">),</span>
-   <span class="p">(</span><span class="o">...</span><span class="p">)</span>    <span class="mi">931</span>     <span class="s2">&quot;limit&quot;</span><span class="p">:</span> <span class="n">limit</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">932</span> <span class="p">}</span>
-<span class="g g-Whitespace">    </span><span class="mi">934</span> <span class="n">filter_data</span> <span class="o">=</span> <span class="n">RecordQueryFilters</span><span class="p">(</span><span class="o">**</span><span class="n">filter_dict</span><span class="p">)</span>
-<span class="ne">--&gt; </span><span class="mi">936</span> <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">BaseRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
+<span class="nn">File ~/work/QCFractal/QCFractal/qcportal/qcportal/client.py:946,</span> in <span class="ni">PortalClient.query_records</span><span class="nt">(self, record_id, record_type, manager_name, status, dataset_id, parent_id, child_id, created_before, created_after, modified_before, modified_after, creator_user, limit, include)</span>
+<span class="g g-Whitespace">    </span><span class="mi">928</span> <span class="n">filter_dict</span> <span class="o">=</span> <span class="p">{</span>
+<span class="g g-Whitespace">    </span><span class="mi">929</span>     <span class="s2">&quot;record_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">record_id</span><span class="p">),</span>
+<span class="g g-Whitespace">    </span><span class="mi">930</span>     <span class="s2">&quot;record_type&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">record_type</span><span class="p">),</span>
+   <span class="p">(</span><span class="o">...</span><span class="p">)</span>    <span class="mi">941</span>     <span class="s2">&quot;limit&quot;</span><span class="p">:</span> <span class="n">limit</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">942</span> <span class="p">}</span>
+<span class="g g-Whitespace">    </span><span class="mi">944</span> <span class="n">filter_data</span> <span class="o">=</span> <span class="n">RecordQueryFilters</span><span class="p">(</span><span class="o">**</span><span class="n">filter_dict</span><span class="p">)</span>
+<span class="ne">--&gt; </span><span class="mi">946</span> <span class="k">return</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">BaseRecord</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_data</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span>
 
 <span class="nn">File /opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/typing.py:1289,</span> in <span class="ni">_BaseGenericAlias.__call__</span><span class="nt">(self, *args, **kwargs)</span>
 <span class="g g-Whitespace">   </span><span class="mi">1286</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inst</span><span class="p">:</span>

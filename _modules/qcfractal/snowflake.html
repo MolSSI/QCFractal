@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=b612e419"></script>
+    <script src="../../_static/documentation_options.js?v=1bbad4e7"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.61.post11+g81a5da0a1" />
+  <meta name="docsearch:version" content="0.61.post22+g65e539d5a" />
   </head>
   
   
@@ -459,135 +459,18 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.record_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">RecordStatusEnum</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">update_nested_dict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">FractalConfig</span><span class="p">,</span> <span class="n">DatabaseConfig</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.flask_app.waitress_app</span><span class="w"> </span><span class="kn">import</span> <span class="n">FractalWaitressApp</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.job_runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">FractalJobRunner</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.port_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">find_open_port</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.postgres_harness</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_snowflake_postgres</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.process_targets</span><span class="w"> </span><span class="kn">import</span> <span class="n">api_process</span><span class="p">,</span> <span class="n">job_runner_process</span>
 
 <span class="k">if</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;qcfractalcompute&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;qcfractalcompute is not installed. Snowflake is useless without it&quot;</span><span class="p">)</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">qcfractalcompute.compute_manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">ComputeManager</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcfractalcompute.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">FractalComputeConfig</span><span class="p">,</span> <span class="n">FractalServerSettings</span><span class="p">,</span> <span class="n">LocalExecutorConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcfractalcompute.process_targets</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_process</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_api_process</span><span class="p">(</span>
-    <span class="n">qcf_config</span><span class="p">:</span> <span class="n">FractalConfig</span><span class="p">,</span>
-    <span class="n">logging_queue</span><span class="p">:</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span><span class="p">,</span>
-    <span class="n">finished_queue</span><span class="p">:</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">signal</span>
-
-    <span class="n">qh</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">QueueHandler</span><span class="p">(</span><span class="n">logging_queue</span><span class="p">)</span>
-    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">qh</span><span class="p">)</span>
-
-    <span class="n">early_stop</span> <span class="o">=</span> <span class="kc">False</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">signal_handler</span><span class="p">(</span><span class="n">signum</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
-        <span class="k">nonlocal</span> <span class="n">early_stop</span>
-        <span class="n">early_stop</span> <span class="o">=</span> <span class="kc">True</span>
-
-    <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">,</span> <span class="n">signal_handler</span><span class="p">)</span>
-    <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">,</span> <span class="n">signal_handler</span><span class="p">)</span>
-
-    <span class="n">api</span> <span class="o">=</span> <span class="n">FractalWaitressApp</span><span class="p">(</span><span class="n">qcf_config</span><span class="p">,</span> <span class="n">finished_queue</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">early_stop</span><span class="p">:</span>
-        <span class="n">logging_queue</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-        <span class="n">logging_queue</span><span class="o">.</span><span class="n">join_thread</span><span class="p">()</span>
-        <span class="k">return</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">signal_handler</span><span class="p">(</span><span class="n">signum</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">KeyboardInterrupt</span>
-
-    <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">,</span> <span class="n">signal_handler</span><span class="p">)</span>
-    <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">,</span> <span class="n">signal_handler</span><span class="p">)</span>
-
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">api</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
-    <span class="k">finally</span><span class="p">:</span>
-        <span class="n">logging_queue</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-        <span class="n">logging_queue</span><span class="o">.</span><span class="n">join_thread</span><span class="p">()</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_compute_process</span><span class="p">(</span><span class="n">compute_config</span><span class="p">:</span> <span class="n">FractalComputeConfig</span><span class="p">,</span> <span class="n">logging_queue</span><span class="p">:</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">signal</span>
-
-    <span class="n">qh</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">QueueHandler</span><span class="p">(</span><span class="n">logging_queue</span><span class="p">)</span>
-    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">qh</span><span class="p">)</span>
-
-    <span class="n">early_stop</span> <span class="o">=</span> <span class="kc">False</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">signal_handler</span><span class="p">(</span><span class="n">signum</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
-        <span class="k">nonlocal</span> <span class="n">early_stop</span>
-        <span class="n">early_stop</span> <span class="o">=</span> <span class="kc">True</span>
-
-    <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">,</span> <span class="n">signal_handler</span><span class="p">)</span>
-    <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">,</span> <span class="n">signal_handler</span><span class="p">)</span>
-
-    <span class="n">compute</span> <span class="o">=</span> <span class="n">ComputeManager</span><span class="p">(</span><span class="n">compute_config</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">early_stop</span><span class="p">:</span>
-        <span class="n">logging_queue</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-        <span class="n">logging_queue</span><span class="o">.</span><span class="n">join_thread</span><span class="p">()</span>
-        <span class="k">return</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">signal_handler</span><span class="p">(</span><span class="n">signum</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
-        <span class="n">compute</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
-
-    <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">,</span> <span class="n">signal_handler</span><span class="p">)</span>
-    <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">,</span> <span class="n">signal_handler</span><span class="p">)</span>
-
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">compute</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
-    <span class="k">finally</span><span class="p">:</span>
-        <span class="n">logging_queue</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-        <span class="n">logging_queue</span><span class="o">.</span><span class="n">join_thread</span><span class="p">()</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_job_runner_process</span><span class="p">(</span>
-    <span class="n">qcf_config</span><span class="p">:</span> <span class="n">FractalConfig</span><span class="p">,</span> <span class="n">logging_queue</span><span class="p">:</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span><span class="p">,</span> <span class="n">finished_queue</span><span class="p">:</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">signal</span>
-
-    <span class="n">qh</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">QueueHandler</span><span class="p">(</span><span class="n">logging_queue</span><span class="p">)</span>
-    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">qh</span><span class="p">)</span>
-
-    <span class="n">early_stop</span> <span class="o">=</span> <span class="kc">False</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">signal_handler</span><span class="p">(</span><span class="n">signum</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
-        <span class="k">nonlocal</span> <span class="n">early_stop</span>
-        <span class="n">early_stop</span> <span class="o">=</span> <span class="kc">True</span>
-
-    <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">,</span> <span class="n">signal_handler</span><span class="p">)</span>
-    <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">,</span> <span class="n">signal_handler</span><span class="p">)</span>
-
-    <span class="n">job_runner</span> <span class="o">=</span> <span class="n">FractalJobRunner</span><span class="p">(</span><span class="n">qcf_config</span><span class="p">,</span> <span class="n">finished_queue</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">early_stop</span><span class="p">:</span>
-        <span class="n">logging_queue</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-        <span class="n">logging_queue</span><span class="o">.</span><span class="n">join_thread</span><span class="p">()</span>
-        <span class="k">return</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">signal_handler</span><span class="p">(</span><span class="n">signum</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
-        <span class="n">job_runner</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
-
-    <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">,</span> <span class="n">signal_handler</span><span class="p">)</span>
-    <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">,</span> <span class="n">signal_handler</span><span class="p">)</span>
-
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">job_runner</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
-    <span class="k">finally</span><span class="p">:</span>
-        <span class="n">logging_queue</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-        <span class="n">logging_queue</span><span class="o">.</span><span class="n">join_thread</span><span class="p">()</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_logging_thread</span><span class="p">(</span><span class="n">logging_queue</span><span class="p">,</span> <span class="n">logging_thread_stop</span><span class="p">):</span>
@@ -697,11 +580,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_finished_queue</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mp_context</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_all_completed</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_api_initialized</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mp_context</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
 
         <span class="c1"># For the compute manager</span>
         <span class="n">uri</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;http://</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">host</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">port</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_compute_config</span> <span class="o">=</span> <span class="n">FractalComputeConfig</span><span class="p">(</span>
             <span class="n">base_folder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">loglevel</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">getLevelName</span><span class="p">(</span><span class="n">loglevel</span><span class="p">),</span>
             <span class="n">parsl_run_dir</span><span class="o">=</span><span class="n">parsl_run_dir</span><span class="p">,</span>
             <span class="n">cluster</span><span class="o">=</span><span class="s2">&quot;snowflake_compute&quot;</span><span class="p">,</span>
             <span class="n">update_frequency</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
@@ -722,18 +607,20 @@
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_compute_enabled</span> <span class="o">=</span> <span class="n">compute_workers</span> <span class="o">&gt;</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_compute_proc</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_compute_initialized</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mp_context</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
 
         <span class="c1"># Job runner</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_proc</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_initialized</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mp_context</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
 
         <span class="c1"># This is updated when starting components</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_finalizer</span> <span class="o">=</span> <span class="kc">None</span>
 
-        <span class="c1"># Update now because of the logging thread</span>
+        <span class="c1"># Update now because of the logging thread &amp; pg_harness</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_finalizer</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">start</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_update_finalizer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finalizer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -751,55 +638,70 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_pg_harness</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_start_api</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_start_api</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_api_initialized</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mp_context</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
-                <span class="n">target</span><span class="o">=</span><span class="n">_api_process</span><span class="p">,</span>
-                <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logging_queue</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finished_queue</span><span class="p">),</span>
+                <span class="n">target</span><span class="o">=</span><span class="n">api_process</span><span class="p">,</span>
+                <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logging_queue</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finished_queue</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_initialized</span><span class="p">),</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_finalizer</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_update_finalizer</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">wait_for_api</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">wait</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_api_initialized</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_stop_api</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_api_initialized</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_finalizer</span><span class="p">()</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_start_compute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_start_compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_enabled</span><span class="p">:</span>
             <span class="k">return</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_proc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_initialized</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_compute_proc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mp_context</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
-                <span class="n">target</span><span class="o">=</span><span class="n">_compute_process</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_compute_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logging_queue</span><span class="p">)</span>
+                <span class="n">target</span><span class="o">=</span><span class="n">compute_process</span><span class="p">,</span>
+                <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_compute_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logging_queue</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_initialized</span><span class="p">),</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_compute_proc</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_finalizer</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">wait</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_initialized</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_stop_compute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_proc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_compute_proc</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_compute_proc</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_compute_proc</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_initialized</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_finalizer</span><span class="p">()</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_start_job_runner</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_start_job_runner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_proc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_initialized</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_proc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mp_context</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
-                <span class="n">target</span><span class="o">=</span><span class="n">_job_runner_process</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logging_queue</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finished_queue</span><span class="p">)</span>
+                <span class="n">target</span><span class="o">=</span><span class="n">job_runner_process</span><span class="p">,</span>
+                <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logging_queue</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finished_queue</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_initialized</span><span class="p">),</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_proc</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_finalizer</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">wait</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_initialized</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_stop_job_runner</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_proc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_proc</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_proc</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_proc</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_initialized</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_finalizer</span><span class="p">()</span>
 
     <span class="nd">@classmethod</span>
@@ -870,14 +772,26 @@
 
 <div class="viewcode-block" id="FractalSnowflake.start">
 <a class="viewcode-back" href="../../overview/snowflake.html#qcfractal.snowflake.FractalSnowflake.start">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Starts all the components of the snowflake</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_start_api</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_start_compute</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_start_job_runner</span><span class="p">()</span></div>
+        <span class="c1"># Start all in parallel, then wait on all independently</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_start_api</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_start_compute</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_start_job_runner</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">wait</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_proc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_compute_initialized</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_proc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_initialized</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_api_initialized</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">wait_for_api</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="FractalSnowflake.stop">
@@ -887,22 +801,9 @@
 <span class="sd">        Stops all components of the snowflake</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_proc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_proc</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_proc</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_proc</span> <span class="o">=</span> <span class="kc">None</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_proc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_proc</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_proc</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_proc</span> <span class="o">=</span> <span class="kc">None</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span> <span class="o">=</span> <span class="kc">None</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_update_finalizer</span><span class="p">()</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stop_api</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stop_compute</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stop_job_runner</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="FractalSnowflake.get_uri">
