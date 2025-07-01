@@ -138,6 +138,7 @@ class FractalSnowflake:
         self._finished_queue = self._mp_context.Queue()
         self._all_completed: Set[int] = set()
         self._api_proc = None
+        self._api_initialized = self._mp_context.Event()
 
         # For the compute manager
         uri = f"http://{self._qcf_config.api.host}:{self._qcf_config.api.port}"
@@ -163,18 +164,20 @@ class FractalSnowflake:
         )
         self._compute_enabled = compute_workers > 0
         self._compute_proc = None
+        self._compute_initialized = self._mp_context.Event()
 
         # Job runner
         self._job_runner_proc = None
+        self._job_runner_initialized = self._mp_context.Event()
 
         # This is updated when starting components
         self._finalizer = None
 
-        # Update now because of the logging thread
+        # Update now because of the logging thread & pg_harness
         self._update_finalizer()
 
         if start:
-            self.start()
+            self.start(wait=True)
 
     def _update_finalizer(self):
         if self._finalizer is not None:
@@ -192,55 +195,70 @@ class FractalSnowflake:
             self._pg_harness,
         )
 
-    def _start_api(self):
+    def _start_api(self, wait: bool = False):
         if self._api_proc is None:
+            self._api_initialized.clear()
             self._api_proc = self._mp_context.Process(
                 target=api_process,
-                args=(self._qcf_config, self._logging_queue, self._finished_queue),
+                args=(self._qcf_config, self._logging_queue, self._finished_queue, self._api_initialized),
             )
             self._api_proc.start()
+            self._update_finalizer()
 
-        self._update_finalizer()
-        self.wait_for_api()
+        if wait:
+            self._api_initialized.wait()
 
     def _stop_api(self):
         if self._api_proc is not None:
             self._api_proc.terminate()
             self._api_proc.join()
             self._api_proc = None
+            self._api_initialized.clear()
             self._update_finalizer()
 
-    def _start_compute(self):
+    def _start_compute(self, wait: bool = False):
         if not self._compute_enabled:
             return
 
         if self._compute_proc is None:
+            self._compute_initialized.clear()
             self._compute_proc = self._mp_context.Process(
-                target=compute_process, args=(self._compute_config, self._logging_queue)
+                target=compute_process,
+                args=(self._compute_config, self._logging_queue, self._compute_initialized),
             )
             self._compute_proc.start()
             self._update_finalizer()
+
+        if wait:
+            self._compute_initialized.wait()
 
     def _stop_compute(self):
         if self._compute_proc is not None:
             self._compute_proc.terminate()
             self._compute_proc.join()
             self._compute_proc = None
+            self._compute_initialized.clear()
             self._update_finalizer()
 
-    def _start_job_runner(self):
+    def _start_job_runner(self, wait: bool = False):
         if self._job_runner_proc is None:
+            self._job_runner_initialized.clear()
             self._job_runner_proc = self._mp_context.Process(
-                target=job_runner_process, args=(self._qcf_config, self._logging_queue, self._finished_queue)
+                target=job_runner_process,
+                args=(self._qcf_config, self._logging_queue, self._finished_queue, self._job_runner_initialized),
             )
             self._job_runner_proc.start()
             self._update_finalizer()
+
+        if wait:
+            self._job_runner_initialized.wait()
 
     def _stop_job_runner(self):
         if self._job_runner_proc is not None:
             self._job_runner_proc.terminate()
             self._job_runner_proc.join()
             self._job_runner_proc = None
+            self._job_runner_initialized.clear()
             self._update_finalizer()
 
     @classmethod
@@ -306,36 +324,35 @@ class FractalSnowflake:
                 if iter >= max_iter:
                     raise
 
-    def start(self):
+    def start(self, wait: bool = False) -> None:
         """
         Starts all the components of the snowflake
         """
 
-        self._start_api()
-        self._start_compute()
-        self._start_job_runner()
+        # Start all in parallel, then wait on all independently
+        self._start_api(wait=False)
+        self._start_compute(wait=False)
+        self._start_job_runner(wait=False)
+
+        if wait:
+            if self._compute_proc is not None:
+                self._compute_initialized.wait()
+
+            if self._job_runner_proc is not None:
+                self._job_runner_initialized.wait()
+
+            if self._api_proc is not None:
+                self._api_initialized.wait()
+                self.wait_for_api()
 
     def stop(self):
         """
         Stops all components of the snowflake
         """
 
-        if self._compute_proc is not None:
-            self._compute_proc.terminate()
-            self._compute_proc.join()
-            self._compute_proc = None
-
-        if self._job_runner_proc is not None:
-            self._job_runner_proc.terminate()
-            self._job_runner_proc.join()
-            self._job_runner_proc = None
-
-        if self._api_proc is not None:
-            self._api_proc.terminate()
-            self._api_proc.join()
-            self._api_proc = None
-
-        self._update_finalizer()
+        self._stop_api()
+        self._stop_compute()
+        self._stop_job_runner()
 
     def get_uri(self) -> str:
         """
