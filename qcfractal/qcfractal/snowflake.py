@@ -144,6 +144,7 @@ class FractalSnowflake:
         uri = f"http://{self._qcf_config.api.host}:{self._qcf_config.api.port}"
         self._compute_config = FractalComputeConfig(
             base_folder=self._tmpdir.name,
+            loglevel=logging.getLevelName(loglevel),
             parsl_run_dir=parsl_run_dir,
             cluster="snowflake_compute",
             update_frequency=5,
