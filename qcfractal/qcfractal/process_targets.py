@@ -14,6 +14,7 @@ def api_process(
     qcf_config: FractalConfig,
     logging_queue: multiprocessing.Queue,
     finished_queue: Optional[multiprocessing.Queue],
+    initialized_event: Optional[multiprocessing.Event] = None,
 ) -> None:
     import signal
 
@@ -45,6 +46,9 @@ def api_process(
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
+    if initialized_event is not None:
+        initialized_event.set()
+
     try:
         api.run()
     except KeyboardInterrupt:  # Swallow ugly output on CTRL-C
@@ -55,7 +59,10 @@ def api_process(
 
 
 def job_runner_process(
-    qcf_config: FractalConfig, logging_queue: multiprocessing.Queue, finished_queue: Optional[multiprocessing.Queue]
+    qcf_config: FractalConfig,
+    logging_queue: multiprocessing.Queue,
+    finished_queue: Optional[multiprocessing.Queue],
+    initialized_event: Optional[multiprocessing.Event] = None,
 ) -> None:
     import signal
 
@@ -86,6 +93,9 @@ def job_runner_process(
 
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
+
+    if initialized_event is not None:
+        initialized_event.set()
 
     try:
         job_runner.start()

@@ -6,9 +6,14 @@ import multiprocessing
 
 from qcfractalcompute import ComputeManager
 from qcfractalcompute.config import FractalComputeConfig
+from typing import Optional
 
 
-def compute_process(compute_config: FractalComputeConfig, logging_queue: multiprocessing.Queue) -> None:
+def compute_process(
+    compute_config: FractalComputeConfig,
+    logging_queue: multiprocessing.Queue,
+    initialized_event: Optional[multiprocessing.Event] = None,
+) -> None:
     import signal
 
     qh = logging.handlers.QueueHandler(logging_queue)
@@ -37,6 +42,9 @@ def compute_process(compute_config: FractalComputeConfig, logging_queue: multipr
 
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
+
+    if initialized_event is not None:
+        initialized_event.set()
 
     try:
         compute.start()
