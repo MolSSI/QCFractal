@@ -64,10 +64,8 @@ class ServerInfoSocket:
         # MOTD contents
         self._load_motd()
 
-        if not os.path.exists(self._geoip2_dir):
-            os.makedirs(self._geoip2_dir)
-
         if self._access_log_enabled:
+            os.makedirs(self._geoip2_dir, exist_ok=True)
             if not geoip2_found:
                 self._logger.info(
                     "GeoIP2 package not found. To include locations in access logs, install the geoip2 package"
