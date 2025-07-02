@@ -9,6 +9,7 @@ import Specification from "./Specification";
 import Properties from "./Properties";
 import * as qcpTypes from "../PortalTypes";
 import { FetchedData } from "../PortalClientContext";
+import TaskServiceFragment from "./TaskServiceFragment";
 import {
   Typography,
   Chip,
@@ -62,6 +63,8 @@ function Record() {
     error: undefined,
     loading: false,
   });
+
+  const [taskServiceDialogOpen, setTaskServiceDialogOpen] = React.useState(false);
 
   useEffect(() => {
     setRecordFetchedData({ data: undefined, error: undefined, loading: true });
@@ -326,9 +329,7 @@ function Record() {
             {recordData.is_service ? (
               <button
                 disabled={!serviceFetchedData.data}
-                onClick={() => {
-                  console.log(serviceFetchedData.data);
-                }}
+                onClick={() => setTaskServiceDialogOpen(true)}
                 style={{
                   padding: "8px 16px",
                   backgroundColor: serviceFetchedData.data ? "#1976d2" : "#ccc",
@@ -343,9 +344,7 @@ function Record() {
             ) : (
               <button
                 disabled={!taskFetchedData.data}
-                onClick={() => {
-                  console.log(taskFetchedData.data);
-                }}
+                onClick={() => setTaskServiceDialogOpen(true)}
                 style={{
                   padding: "8px 16px",
                   backgroundColor: taskFetchedData.data ? "#1976d2" : "#ccc",
@@ -358,6 +357,26 @@ function Record() {
                 View Task
               </button>
             )}
+            {/* Modal for Task/Service Fragment */}
+            <Dialog
+              fullWidth
+              open={taskServiceDialogOpen}
+              onClose={() => setTaskServiceDialogOpen(false)}
+            >
+              <DialogContent>
+                {recordData.is_service ? (
+                  <TaskServiceFragment
+                    data={serviceFetchedData.data}
+                    type="service"
+                  />
+                ) : (
+                  <TaskServiceFragment
+                    data={taskFetchedData.data}
+                    type="task"
+                  />
+                )}
+              </DialogContent>
+            </Dialog>
           </Grid>
           {/* Specification and molecule viewer*/}
           <Grid
