@@ -98,7 +98,9 @@ class FractalSnowflake:
             self._pg_harness = create_snowflake_postgres(host, db_dir)
             self._pg_harness.create_database(True)
             db_config = self._pg_harness.config
+            self._own_pg_harness = True
         else:
+            self._own_pg_harness = False  # self._pg_harness should be handled by derived class
             db_config = database_config
 
         api_port = find_open_port(host)
@@ -194,7 +196,7 @@ class FractalSnowflake:
             self._logging_queue,
             self._logging_thread,
             self._logging_thread_stop,
-            self._pg_harness,
+            self._pg_harness if self._own_pg_harness else None,
         )
 
     def _start_api(self, wait: bool = True):
@@ -295,7 +297,8 @@ class FractalSnowflake:
         logging_queue.close()
         logging_queue.join_thread()
 
-        pg_harness.shutdown()
+        if pg_harness is not None:
+            pg_harness.shutdown()
 
     def wait_for_api(self):
         """
