@@ -2,6 +2,7 @@ import os
 import shutil
 import subprocess
 import time
+import hashlib
 from typing import List, Optional
 
 import pytest
@@ -9,6 +10,7 @@ import yaml
 
 from qcarchivetesting import testconfig_path, migrationdata_path
 from qcfractal.config import read_configuration
+from qcfractal.port_util import find_open_port
 
 config_file = os.path.join(testconfig_path, "qcf_basic.yaml")
 old_config_file = os.path.join(migrationdata_path, "qcfractal_config_v0.15.8.yaml")
@@ -18,23 +20,46 @@ pytestmark = pytest.mark.slow
 
 
 @pytest.fixture(scope="function")
-def tmp_config(tmp_path_factory):
+def unique_db_name(request):
+    # Use a hash of the node (which is unique in pytest)
+    # Prefix with qcf_ to make sure it is a valid dbname
+    yield f"qcf_{hashlib.sha1(request.node.nodeid.encode()).hexdigest()}"
+
+
+@pytest.fixture(scope="function")
+def tmp_config(tmp_path_factory, unique_db_name):
     tmp_subdir = tmp_path_factory.mktemp("cli_tmp")
-    shutil.copy(config_file, tmp_subdir)
     full_config_path = os.path.join(tmp_subdir, os.path.basename(config_file))
+
+    # inject the unique database name (unique per test)
+    with open(config_file, "r") as f:
+        config = yaml.safe_load(f)
+
+    config["database"]["database_name"] = unique_db_name
+    config["database"]["port"] = find_open_port()
+    config["api"]["port"] = find_open_port()
+
+    with open(full_config_path, "w") as f:
+        yaml.dump(config, f)
+
     yield full_config_path
 
 
-# Test with both an own server and
+# Test with both owning the database and not owning it
 @pytest.fixture(scope="function", params=[True, False])
-def cli_runner_core(postgres_server, tmp_config, request):
-    pg_harness = postgres_server.get_new_harness("qcfractal_default")
+def cli_runner_core(postgres_server, tmp_config, request, unique_db_name):
 
-    # Don't actually use the database - we just want a placeholder
-    pg_harness.delete_database()
-
+    pg_harness = None
     own_db = request.param
+
     if not own_db:
+        # Unique database for each test
+        # This is needed when running tests in parallel
+        pg_harness = postgres_server.get_new_harness(unique_db_name)
+
+        # Don't actually use the database - we just want a placeholder
+        pg_harness.delete_database()
+
         config = read_configuration([tmp_config])
         config.database = pg_harness.config.copy(deep=True)
         config.database.own = False
@@ -46,6 +71,7 @@ def cli_runner_core(postgres_server, tmp_config, request):
     class run_qcfractal_cli:
         def __init__(self):
             self.own_db = own_db
+            self.db_name = unique_db_name
             self.config_path = tmp_config
 
         def __call__(
@@ -78,7 +104,7 @@ def cli_runner_core(postgres_server, tmp_config, request):
     try:
         yield run_qcfractal_cli()
     finally:
-        if not own_db:
+        if pg_harness is not None:
             pg_harness.delete_database()
 
 
@@ -274,14 +300,17 @@ def test_cli_backup_restore(cli_runner_core, tmp_path_factory):
     assert os.path.isfile(backup_path)
     assert "Backup complete!" in output
 
-    output = cli_runner_core(["restore", backup_path], stdin="REMOVEALLDATA qcfractal_default")
+    db_name = cli_runner_core.db_name
+    output = cli_runner_core(["restore", backup_path], stdin=f"REMOVEALLDATA {db_name}")
     assert "Restore complete!" in output
 
 
 def test_cli_restore_existing(cli_runner):
     # Restore where the db already exists
     migdata_path = os.path.join(migrationdata_path, "empty_v0.15.8.sql_dump")
-    output = cli_runner(["restore", migdata_path], stdin="REMOVEALLDATA qcfractal_default")
+
+    db_name = cli_runner.db_name
+    output = cli_runner(["restore", migdata_path], stdin=f"REMOVEALLDATA {db_name}")
     assert "Restore complete!" in output
 
     migdata_path = os.path.join(migrationdata_path, "empty_v0.15.8.sql_dump")
@@ -292,7 +321,8 @@ def test_cli_restore_existing(cli_runner):
 def test_cli_upgrade(cli_runner_core):
     migdata_path = os.path.join(migrationdata_path, "empty_v0.15.8.sql_dump")
 
-    output = cli_runner_core(["restore", migdata_path], stdin="REMOVEALLDATA qcfractal_default")
+    db_name = cli_runner_core.db_name
+    output = cli_runner_core(["restore", migdata_path], stdin=f"REMOVEALLDATA {db_name}")
     assert "Restore complete!" in output
 
     output = cli_runner_core(["upgrade-db"])
@@ -344,6 +374,7 @@ def test_cli_start(cli_runner):
 def test_cli_start_options(cli_runner, tmp_path_factory):
     log_path = os.path.join(tmp_path_factory.mktemp("logs"), "qca_test.logfile")
 
+    port = find_open_port()
     full_cmd = [
         "qcfractal-server",
         "--config",
@@ -352,7 +383,7 @@ def test_cli_start_options(cli_runner, tmp_path_factory):
         "--host",
         "0.0.0.0",
         "--port",
-        "2828",
+        str(port),
         "--logfile",
         log_path,
     ]
@@ -368,13 +399,14 @@ def test_cli_start_options(cli_runner, tmp_path_factory):
     with open(log_path, "r") as f:
         log_output = f.read()
 
-    assert "waitress: Serving on http://0.0.0.0:2828" in log_output
+    assert f"waitress: Serving on http://0.0.0.0:{port}" in log_output
 
 
 def test_cli_start_outdated(cli_runner_core):
     migdata_path = os.path.join(migrationdata_path, "empty_v0.15.8.sql_dump")
 
-    output = cli_runner_core(["restore", migdata_path], stdin="REMOVEALLDATA qcfractal_default")
+    db_name = cli_runner_core.db_name
+    output = cli_runner_core(["restore", migdata_path], stdin=f"REMOVEALLDATA {db_name}")
     assert "Restore complete!" in output
 
     output = cli_runner_core(["start"], timeout=20, fail_expected=True)
