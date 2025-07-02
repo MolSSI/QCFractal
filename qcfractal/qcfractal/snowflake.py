@@ -197,7 +197,7 @@ class FractalSnowflake:
             self._pg_harness,
         )
 
-    def _start_api(self, wait: bool = False):
+    def _start_api(self, wait: bool = True):
         if self._api_proc is None:
             self._api_initialized.clear()
             self._api_proc = self._mp_context.Process(
@@ -218,7 +218,7 @@ class FractalSnowflake:
             self._api_initialized.clear()
             self._update_finalizer()
 
-    def _start_compute(self, wait: bool = False):
+    def _start_compute(self, wait: bool = True):
         if not self._compute_enabled:
             return
 
@@ -242,7 +242,7 @@ class FractalSnowflake:
             self._compute_initialized.clear()
             self._update_finalizer()
 
-    def _start_job_runner(self, wait: bool = False):
+    def _start_job_runner(self, wait: bool = True):
         if self._job_runner_proc is None:
             self._job_runner_initialized.clear()
             self._job_runner_proc = self._mp_context.Process(
@@ -326,7 +326,7 @@ class FractalSnowflake:
                 if iter >= max_iter:
                     raise
 
-    def start(self, wait: bool = False) -> None:
+    def start(self, wait: bool = True) -> None:
         """
         Starts all the components of the snowflake
         """

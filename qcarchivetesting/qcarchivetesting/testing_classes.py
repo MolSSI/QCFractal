@@ -229,7 +229,7 @@ class QCATestingSnowflake(FractalSnowflake):
     def activated_manager_programs(self):
         return _activated_manager_programs
 
-    def start_api(self, wait: bool = False) -> None:
+    def start_api(self, wait: bool = True) -> None:
         """
         Starts the flask/api thread
         """
@@ -243,7 +243,7 @@ class QCATestingSnowflake(FractalSnowflake):
         """
         self._stop_api()
 
-    def start_job_runner(self, wait: bool = False) -> None:
+    def start_job_runner(self, wait: bool = True) -> None:
         """
         Starts the job runner thread
         """
