@@ -19,6 +19,7 @@ export const getRecordReprMolecule = (record: RecordData): Molecule => {
     return record.initial_molecule_id;
   if (record.record_type == "manybody") return record.initial_molecule_id;
   if (record.record_type == "neb") return record.initial_chain[0];
+  if (record.record_type === "reaction") return undefined;
 
   throw new Error(`Unknown or unhandled record type: ${record.record_type}`);
 };

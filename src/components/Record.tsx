@@ -405,29 +405,38 @@ function Record() {
             </Grid>
 
             {/* Molecule Viewer */}
-            <Grid size={{ xs: 12, md: 8 }}>
-              <Box
-                sx={{
-                  p: 2,
-                  height: "100%",
-                }}
-              >
+            <Grid item xs={12} md={8}>
+              <Box sx={{ p: 2, height: "100%" }}>
                 <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
                   Molecule Viewer
                 </Typography>
                 <Box
                   sx={{
+                    width: "100%",
+                    height: 300,
+                    backgroundColor: "#e0e0e0",
+                    borderRadius: 2,
                     position: "relative",
                   }}
                 >
                   {moleculeFetchedData.loading ? (
                     <Typography sx={{ p: 2 }}>Loading molecule...</Typography>
-                  ) : moleculeFetchedData.data ? (
-                    <MoleculeStageProvider width={"100%"} height={500}>
+                  ) : moleculeFetchedData.data &&
+                    typeof moleculeFetchedData.data === "object" ? (
+                    <MoleculeStageProvider width={400} height={280}>
                       <MoleculeViewer moleculeData={moleculeFetchedData.data} />
                     </MoleculeStageProvider>
                   ) : (
-                    <Typography sx={{ p: 2 }}>
+                    <Typography
+                      sx={{
+                        color: "#856404",
+                        fontSize: "1.15rem",
+                        textAlign: "center",
+                        px: 2,
+                        width: "100%",
+                        fontWeight: 500,
+                      }}
+                    >
                       No molecule available for this record.
                     </Typography>
                   )}
