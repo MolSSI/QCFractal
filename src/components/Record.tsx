@@ -28,7 +28,7 @@ import {MoleculeStageProvider, MoleculeViewer} from "./Molecule";
 import { getRecordReprMolecule } from "../Utils";
 
 function Record() {
-  const { projectId, recordId } = useParams();
+  const { recordId } = useParams();
   const { fetchData } = usePortalClientRequest();
   const [waitingReasonOpen, setWaitingReasonOpen] = React.useState(false);
   const [managerDialogOpen, setManagerDialogOpen] = useState(false);
@@ -74,9 +74,9 @@ function Record() {
     fetchData<qcpTypes.RecordData>(
       setRecordFetchedData,
       "get",
-      `/api/v1/projects/${projectId}/records/${recordId}`
+      `/api/v1/records/${recordId}`
     );
-  }, [fetchData, projectId, recordId]);
+  }, [fetchData, recordId]);
 
   useEffect(() => {
     // Only fetch when record data is loaded and record_type is available

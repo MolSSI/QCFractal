@@ -25,8 +25,15 @@ function App() {
               <Route path="/users/:userName" element={<UserInfo />} />
               <Route path="/projects" element={<ProjectList />} />
               <Route path="/projects/:projectId" element={<Project />} />
-              <Route path="/projects/:projectId/records/:recordId" element={<Record />} />
-              <Route path="/projects/:projectId/addRecord" element={<AddProjectRecord />} />
+              <Route
+                path="/projects/:projectId/records/:recordId"
+                element={<Record />}
+              />
+              <Route path="/records/:recordId" element={<Record />} />
+              <Route
+                path="/projects/:projectId/addRecord"
+                element={<AddProjectRecord />}
+              />
               <Route path="/managers" element={<ManagerList />} />
               <Route path="/managers/:managerName" element={<Manager />} />
             </Route>
