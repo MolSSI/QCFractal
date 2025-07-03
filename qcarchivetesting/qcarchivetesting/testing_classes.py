@@ -129,7 +129,7 @@ class QCATestingSnowflake(FractalSnowflake):
         api_limits = {
             "manager_tasks_claim": 5,
             "manager_tasks_return": 2,
-            "get_records": 10,
+            "get_records": 50,
             "get_dataset_entries": 5,
             "get_molecules": 11,
             "get_managers": 10,
