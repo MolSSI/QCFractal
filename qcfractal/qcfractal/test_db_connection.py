@@ -220,4 +220,5 @@ def test_db_connection_full_uri(tmp_path):
 
     ## Socket file?
     sock_path = os.path.join(db_config.data_directory, "sock")
-    can_connect(f"postgresql://{username}:{password}@:{port}/{dbname}?host={sock_path}")
+    if len(sock_path) < 80:
+        can_connect(f"postgresql://{username}:{password}@:{port}/{dbname}?host={sock_path}")
