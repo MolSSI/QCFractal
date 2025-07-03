@@ -825,7 +825,7 @@ def run_dataset_model_modify_records(ds, test_entries, test_spec):
     ds.modify_records(
         entry_name,
         spec_name,
-        new_compute_tag="new_tag",
+        new_compute_tag="new_Tag",
         new_compute_priority=PriorityEnum.low,
         new_comment="a new comment",
     )

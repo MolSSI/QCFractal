@@ -211,7 +211,7 @@ def test_record_client_modify(snowflake: QCATestingSnowflake):
     time_0 = now_at_utc()
 
     # record 2 is complete - can't change
-    meta = snowflake_client.modify_records([all_id[0], all_id[1]], new_compute_tag="new_tag")
+    meta = snowflake_client.modify_records([all_id[0], all_id[1]], new_compute_tag="new_Tag")
     assert meta.n_updated == 1
     assert meta.updated_idx == [0]
     assert meta.error_idx == [1]

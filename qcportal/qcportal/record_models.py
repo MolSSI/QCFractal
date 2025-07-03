@@ -775,7 +775,7 @@ class RecordModifyBody(RestModelBase):
     record_ids: List[int]
     status: Optional[RecordStatusEnum] = None
     compute_priority: Optional[PriorityEnum] = None
-    compute_tag: Optional[str] = None
+    compute_tag: Optional[constr(to_lower=True)] = None
     comment: Optional[str] = None
 
     @root_validator(pre=True)
