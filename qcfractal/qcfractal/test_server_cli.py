@@ -142,6 +142,13 @@ def test_cli_init_config(cli_runner_core, full: bool):
     output = cli_runner_core(cmd)
     assert "Creating initial QCFractal configuration" in output
 
+    # Replace the port in the config file (to make this safe for parallel tests)
+    with open(cli_runner_core.config_path, "r") as f:
+        config = yaml.safe_load(f)
+    config["database"]["port"] = find_open_port()
+    with open(cli_runner_core.config_path, "w") as f:
+        yaml.dump(config, f)
+
     # Initialize the db. Needed for the config command
     cli_runner_core(["init-db"])
 
