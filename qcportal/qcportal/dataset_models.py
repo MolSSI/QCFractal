@@ -23,10 +23,10 @@ from typing import (
 
 try:
     import pydantic.v1 as pydantic
-    from pydantic.v1 import BaseModel, Extra, validator, PrivateAttr, Field, root_validator
+    from pydantic.v1 import BaseModel, Extra, validator, PrivateAttr, Field, root_validator, constr
 except ImportError:
     import pydantic
-    from pydantic import BaseModel, Extra, validator, PrivateAttr, Field, root_validator
+    from pydantic import BaseModel, Extra, validator, PrivateAttr, Field, root_validator, constr
 from qcelemental.models.types import Array
 from tabulate import tabulate
 from tqdm import tqdm
@@ -1245,7 +1245,7 @@ class BaseDataset(BaseModel):
             - Sends a patch request to the server to update entry names.
             - Updates the local cache and entry names list with the new names.
         """
-        
+
         self.assert_is_not_view()
         self.assert_online()
 
@@ -1268,16 +1268,16 @@ class BaseDataset(BaseModel):
     ):
         """
         Modifies the entries in the dataset by updating their attributes or comments.
-        
+
         Parameters:
-            attribute_map (Optional[Dict[str, Dict[str, Any]]]): 
-                A dictionary mapping entry names to their updated attributes. 
+            attribute_map (Optional[Dict[str, Dict[str, Any]]]):
+                A dictionary mapping entry names to their updated attributes.
                 Each entry name maps to a dictionary of attribute key-value pairs to be updated.
-            comment_map (Optional[Dict[str, str]]): 
+            comment_map (Optional[Dict[str, str]]):
                 A dictionary mapping entry names to their updated comments.
-            overwrite_attributes (bool): 
-                If True, existing attributes for the specified entries will be completely 
-                replaced by the provided attributes in ``attribute_map``. If False, only the 
+            overwrite_attributes (bool):
+                If True, existing attributes for the specified entries will be completely
+                replaced by the provided attributes in ``attribute_map``. If False, only the
                 specified attributes will be updated, leaving others unchanged.
         Raises:
             AssertionError: If the dataset is a view or if the client is offline.
@@ -1285,7 +1285,7 @@ class BaseDataset(BaseModel):
             - Sends a request to the server to modify the specified entries.
             - Synchronizes the local cache with the updated server data for the modified entries.
         """
-        
+
         self.assert_is_not_view()
         self.assert_online()
 
@@ -1315,8 +1315,7 @@ class BaseDataset(BaseModel):
         Raises:
             AssertionError: If the dataset is a view or not online.
         """
-        
-        
+
         self.assert_is_not_view()
         self.assert_online()
 
@@ -2521,7 +2520,7 @@ class DatasetRecordModifyBody(RestModelBase):
     specification_names: Optional[List[str]] = None
     status: Optional[RecordStatusEnum] = None
     compute_priority: Optional[PriorityEnum] = None
-    compute_tag: Optional[str] = None
+    compute_tag: Optional[constr(to_lower=True)] = None
     comment: Optional[str] = None
 
     @root_validator(pre=True)
