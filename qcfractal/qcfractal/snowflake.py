@@ -92,6 +92,8 @@ class FractalSnowflake:
         os.makedirs(parsl_run_dir, exist_ok=True)
         os.makedirs(compute_scratch_dir, exist_ok=True)
 
+        self._logger.info(f"Using temporary directory: {self._tmpdir.name}")
+
         if database_config is None:
             # db and socket are subdirs of the base temporary directory
             db_dir = os.path.join(self._tmpdir.name, "db")
