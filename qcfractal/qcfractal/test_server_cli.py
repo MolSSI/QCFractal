@@ -1,8 +1,8 @@
+import hashlib
 import os
 import shutil
 import subprocess
 import time
-import hashlib
 from typing import List, Optional
 
 import pytest
@@ -27,9 +27,8 @@ def unique_db_name(request):
 
 
 @pytest.fixture(scope="function")
-def tmp_config(tmp_path_factory, unique_db_name):
-    tmp_subdir = tmp_path_factory.mktemp("cli_tmp")
-    full_config_path = os.path.join(tmp_subdir, os.path.basename(config_file))
+def tmp_config(tmp_path, unique_db_name):
+    full_config_path = os.path.join(tmp_path, os.path.basename(config_file))
 
     # inject the unique database name (unique per test)
     with open(config_file, "r") as f:
@@ -288,13 +287,15 @@ def test_cli_restore_noinit(cli_runner_core):
         assert "Postgresql instance successfully initialized and started" not in output
 
 
-def test_cli_backup_restore(cli_runner_core, tmp_path_factory):
+def test_cli_backup_restore(cli_runner_core, tmp_path):
     migdata_path = os.path.join(migrationdata_path, "empty_v0.15.8.sql_dump")
 
     cli_runner_core(["restore", migdata_path])
     cli_runner_core(["upgrade-db"])
 
-    backup_path = os.path.join(tmp_path_factory.mktemp("db_bak"), "backup_file.sqlback")
+    backup_dir = tmp_path / "db_bak"
+    backup_dir.mkdir()
+    backup_path = str(backup_dir / "backup_file.sqlback")
 
     output = cli_runner_core(["backup", backup_path])
     assert os.path.isfile(backup_path)
@@ -342,8 +343,10 @@ def test_cli_upgrade_noinit(cli_runner_core):
         assert "does not exist for upgrading" in output
 
 
-def test_cli_upgrade_config(tmp_path_factory):
-    tmp_subdir = tmp_path_factory.mktemp("cli_tmp")
+def test_cli_upgrade_config(tmp_path):
+    tmp_subdir = tmp_path / "cli_tmp"
+    tmp_subdir.mkdir()
+
     shutil.copy(old_config_file, tmp_subdir)
 
     old_config_path = os.path.join(tmp_subdir, os.path.basename(old_config_file))
@@ -371,8 +374,12 @@ def test_cli_start(cli_runner):
     assert "waitress: Serving on" in output
 
 
-def test_cli_start_options(cli_runner, tmp_path_factory):
-    log_path = os.path.join(tmp_path_factory.mktemp("logs"), "qca_test.logfile")
+def test_cli_start_options(cli_runner, tmp_path):
+
+    log_dir = tmp_path / "logs"
+    log_dir.mkdir()
+
+    log_path = str(log_dir / "qca_test.logfile")
 
     port = find_open_port()
     full_cmd = [
