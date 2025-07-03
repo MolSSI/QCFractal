@@ -195,6 +195,7 @@ class PostgresHarness:
             conn.close()
             return True
         except psycopg2.OperationalError as e:
+            self._logger.debug(f"Could not connect to postgres instance: {str(e)}")
             return False
 
     def is_alive(self) -> bool:
