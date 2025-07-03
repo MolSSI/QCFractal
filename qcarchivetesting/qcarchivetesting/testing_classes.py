@@ -132,7 +132,7 @@ class QCATestingSnowflake(FractalSnowflake):
             "get_records": 50,
             "get_dataset_entries": 5,
             "get_molecules": 11,
-            "get_managers": 10,
+            "get_managers": 50,
             "get_error_logs": 10,
             "get_access_logs": 10,
         }
