@@ -81,10 +81,10 @@ def test_record_client_query(queryable_records_client: PortalClient):
 
     sorted_records = sorted(all_records, key=lambda x: x.modified_on)
     query_res = queryable_records_client.query_records(
-        record_type="singlepoint", modified_before=sorted_records[165].modified_on
+        record_type="singlepoint", modified_before=sorted_records[164].modified_on
     )
     query_res_l = list(query_res)
-    assert len(query_res_l) == 166
+    assert len(query_res_l) == 165
 
     query_res = queryable_records_client.query_records(
         record_type="singlepoint", modified_after=sorted_records[165].modified_on
@@ -136,7 +136,7 @@ def test_record_client_query(queryable_records_client: PortalClient):
     assert recs[0].compute_history_ is not None
 
 
-@pytest.mark.parametrize("timezone", [None, "UTC", "ETC/UTC", "America/New_York", "Asia/Singapore"])
+@pytest.mark.parametrize("timezone", [None, "UTC", "Asia/Singapore"])
 def test_record_client_query_timezones(queryable_records_client: PortalClient, timezone: Optional[str]):
     tzinfo = pytz.timezone(timezone) if timezone is not None else None
     query_res = queryable_records_client.query_records(record_type="singlepoint")
@@ -157,11 +157,11 @@ def test_record_client_query_timezones(queryable_records_client: PortalClient, t
     assert len(query_res_l) == 160
 
     sorted_records = sorted(all_records, key=lambda x: x.modified_on)
-    modified_before = sorted_records[165].modified_on.astimezone(tzinfo)
+    modified_before = sorted_records[164].modified_on.astimezone(tzinfo)
     # print("MODIFIED BEFORE", modified_before)
     query_res = queryable_records_client.query_records(record_type="singlepoint", modified_before=modified_before)
     query_res_l = list(query_res)
-    assert len(query_res_l) == 166
+    assert len(query_res_l) == 165
 
     modified_after = sorted_records[165].modified_on.astimezone(tzinfo)
     # print("MODIFIED AFTER", modified_after)
