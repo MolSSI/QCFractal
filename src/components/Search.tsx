@@ -1,49 +1,86 @@
 import * as React from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import FormControl from "@mui/material/FormControl";
 import InputAdornment from "@mui/material/InputAdornment";
 import OutlinedInput from "@mui/material/OutlinedInput";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
+
+const API_BASE = "https://prodtest.qcarchive.molssi.org";
 
 export default function Search() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [input, setInput] = React.useState("");
-  
-  // Clear input when location changes
-  React.useEffect(() => {
-    setInput("");
-  }, [location.pathname]);
-  
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter" && input.trim()) {
-      // Only allow numbers for record id
-      const recordId = input.trim();
-      if (/^\d+$/.test(recordId)) {
+  const [errorOpen, setErrorOpen] = React.useState(false);
+  const [errorMsg, setErrorMsg] = React.useState("");
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const recordId = input.trim();
+
+    if (!/^\d+$/.test(recordId)) {
+      setErrorMsg("Please enter a valid numeric record ID.");
+      setErrorOpen(true);
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/records/${recordId}`);
+      if (res.ok) {
         navigate(`/records/${recordId}`);
+      } else if (res.status === 404) {
+        setErrorMsg("No record found with that ID.");
+        setErrorOpen(true);
+      } else {
+        setErrorMsg("Non-existing record ID");
+        setErrorOpen(true);
       }
+    } catch {
+      setErrorMsg("Network error. Please try again.");
+      setErrorOpen(true);
     }
   };
 
   return (
-    <FormControl sx={{ width: { xs: "100%", md: "25ch" } }} variant="outlined">
-      <OutlinedInput
-        size="small"
-        id="search"
-        placeholder="Lookup Record ID…"
-        sx={{ flexGrow: 1 }}
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyDown={handleKeyDown}
-        startAdornment={
-          <InputAdornment position="start" sx={{ color: "text.primary" }}>
-            <SearchRoundedIcon fontSize="small" />
-          </InputAdornment>
-        }
-        inputProps={{
-          "aria-label": "lookup record id",
-        }}
-      />
-    </FormControl>
+    <>
+      <form onSubmit={handleSubmit}>
+        <FormControl
+          sx={{ width: { xs: "100%", md: "25ch" } }}
+          variant="outlined"
+        >
+          <OutlinedInput
+            size="small"
+            id="search"
+            placeholder="Lookup Record ID…"
+            sx={{ flexGrow: 1 }}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            startAdornment={
+              <InputAdornment position="start" sx={{ color: "text.primary" }}>
+                <SearchRoundedIcon fontSize="small" />
+              </InputAdornment>
+            }
+            inputProps={{
+              "aria-label": "lookup record id",
+            }}
+          />
+        </FormControl>
+      </form>
+      <Snackbar
+        open={errorOpen}
+        autoHideDuration={4000}
+        onClose={() => setErrorOpen(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          severity="error"
+          onClose={() => setErrorOpen(false)}
+          sx={{ width: "100%" }}
+        >
+          {errorMsg}
+        </Alert>
+      </Snackbar>
+    </>
   );
 }
