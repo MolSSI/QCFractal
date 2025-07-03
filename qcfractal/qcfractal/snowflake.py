@@ -297,8 +297,16 @@ class FractalSnowflake:
         logging_queue.close()
         logging_queue.join_thread()
 
-        if pg_harness is not None:
-            pg_harness.shutdown()
+        l = logging.getLogger("DEBUGGING")
+        l.warning(f"Shutdown harness? pg_harness={pg_harness}")
+
+        try:
+            if pg_harness is not None:
+                pg_harness.shutdown()
+        except Exception:
+            import traceback
+            traceback.print_stack()
+            raise
 
     def wait_for_api(self):
         """

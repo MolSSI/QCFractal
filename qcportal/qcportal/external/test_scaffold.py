@@ -37,6 +37,11 @@ testing_helper = {
     "dataset_type", ["singlepoint", "optimization", "torsiondrive", "gridoptimization", "manybody", "reaction", "neb"]
 )
 def test_dataset_scaffold(snowflake: QCATestingSnowflake, dataset_type: str, tmp_path):
+
+    print(snowflake._own_pg_harness)
+    print(snowflake._pg_harness)
+    print(snowflake._qcf_config)
+    print(snowflake._pg_harness.config)
     # We add entries using background jobs
     snowflake.start_job_runner()
 
