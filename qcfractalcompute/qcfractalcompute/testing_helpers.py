@@ -48,14 +48,14 @@ class MockTestingComputeManager(ComputeManager):
         # Not we set the update_frequency to be quite a bit less than the heartbeat_frequency
         # from the server. This allows us to test dropping deferred tasks without having the manager
         # die due to missed heartbeats
-        tmpdir = tempfile.TemporaryDirectory()
-        parsl_run_dir = os.path.join(tmpdir.name, "parsl_run_dir")
-        compute_scratch_dir = os.path.join(tmpdir.name, "compute_scratch_dir")
+        self.tmpdir = tempfile.TemporaryDirectory()
+        parsl_run_dir = os.path.join(self.tmpdir.name, "parsl_run_dir")
+        compute_scratch_dir = os.path.join(self.tmpdir.name, "compute_scratch_dir")
         os.makedirs(parsl_run_dir, exist_ok=True)
         os.makedirs(compute_scratch_dir, exist_ok=True)
 
         config_dict = dict(
-            base_folder=tmpdir.name,
+            base_folder=self.tmpdir.name,
             parsl_run_dir=parsl_run_dir,
             cluster="mock_compute",
             update_frequency=1,
@@ -83,11 +83,6 @@ class MockTestingComputeManager(ComputeManager):
         # Set the app manager already
         self.app_manager = MockTestingAppManager()
         ComputeManager.__init__(self, self._compute_config)
-
-        def cleanup(d):
-            d.cleanup()
-
-        weakref.finalize(self, cleanup, tmpdir)
 
         # Shorten the timeout on the client for testing
         self.client._timeout = 2
