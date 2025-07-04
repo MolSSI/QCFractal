@@ -25,6 +25,8 @@ def test_periodics_manager_heartbeats(snowflake: QCATestingSnowflake):
     heartbeat = snowflake._qcf_config.heartbeat_frequency
     max_missed = snowflake._qcf_config.heartbeat_max_missed
 
+    snowflake.start_job_runner()
+
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
     storage_socket.managers.activate(
         name_data=mname1,
@@ -33,8 +35,6 @@ def test_periodics_manager_heartbeats(snowflake: QCATestingSnowflake):
         programs={"qcengine": ["unknown"], "psi4": ["unknown"], "qchem": ["v3.0"]},
         compute_tags=["tag1"],
     )
-
-    snowflake.start_job_runner()
 
     for i in range(max_missed + 1):
         time.sleep(heartbeat)
