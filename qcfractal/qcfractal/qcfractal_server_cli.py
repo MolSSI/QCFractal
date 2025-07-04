@@ -387,7 +387,7 @@ def server_start(config):
     logger.info("*** Starting a QCFractal server ***")
 
     # Set up a multiprocessing context
-    mp_context = multiprocessing.get_context("fork")
+    mp_context = multiprocessing.get_context("spawn")
 
     stdout_logging = setup_logging(config, logger)
 
