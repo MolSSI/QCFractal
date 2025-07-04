@@ -6,8 +6,8 @@ from qcfractal.snowflake import FractalSnowflake
 
 
 @pytest.mark.slow
-def test_snowflake_restarting():
-    s = FractalSnowflake(start=False)
+def test_snowflake_restarting(tmp_path):
+    s = FractalSnowflake(start=False, tmpdir_parent=str(tmp_path))
 
     s._start_api()
     s._start_compute()

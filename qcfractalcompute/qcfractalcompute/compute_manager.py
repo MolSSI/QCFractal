@@ -22,11 +22,11 @@ try:
     from pydantic.v1 import BaseModel, Extra, Field
 except ImportError:
     from pydantic import BaseModel, Extra, Field
-from requests.exceptions import Timeout
 
 from qcfractalcompute.apps.app_manager import AppManager
 from qcportal import ManagerClient
 from qcportal.managers import ManagerName
+from qcportal.client_base import AllowedConnectionExceptions
 from qcportal.metadata_models import TaskReturnMetadata
 from qcportal.record_models import RecordTask
 from qcportal.utils import seconds_to_hms, apply_jitter
@@ -316,9 +316,9 @@ class ComputeManager:
         # If we got here, the scheduler has stopped
         # Now handle the shutdown
         #############################################
-        self.update(new_tasks=False)
-
         try:
+            self.update(new_tasks=False)
+
             # Notify the server of shutdown
             self.client.deactivate(
                 active_tasks=self.statistics.active_tasks,
@@ -371,7 +371,7 @@ class ComputeManager:
             )
             self._failed_heartbeats = 0
 
-        except (ConnectionError, Timeout) as ex:
+        except AllowedConnectionExceptions as ex:
             self._failed_heartbeats += 1
             self.logger.warning(f"Heartbeat failed: {str(ex).strip()}. QCFractal server down?")
             self.logger.warning(f"Missed {self._failed_heartbeats} heartbeats so far")
@@ -502,7 +502,7 @@ class ComputeManager:
                         f"Did not successfully push jobs from {attempts+1} updates ago. Error: {return_meta.error_string}"
                     )
 
-            except (Timeout, ConnectionError):
+            except AllowedConnectionExceptions:
                 # Tried and failed
                 attempts += 1
 
@@ -557,7 +557,7 @@ class ComputeManager:
                     status_rows.extend([(task_id, "rejected", reason) for task_id, reason in return_meta.rejected_info])
                     self.statistics.total_rejected_tasks += return_meta.n_rejected
 
-                except (ConnectionError, Timeout):
+                except AllowedConnectionExceptions:
                     self.logger.warning("Returning complete tasks failed. Attempting again on next update.")
                     self._deferred_tasks[0].update(executor_results)
 
@@ -652,7 +652,7 @@ class ComputeManager:
                     try:
                         executor_programs = self.executor_programs[executor_label]
                         new_task_info = self.client.claim(executor_programs, executor_config.compute_tags, open_slots)
-                    except (Timeout, ConnectionError) as ex:
+                    except AllowedConnectionExceptions as ex:
                         self.logger.warning(f"Acquisition of new tasks failed: {str(ex).strip()}")
                         return
 

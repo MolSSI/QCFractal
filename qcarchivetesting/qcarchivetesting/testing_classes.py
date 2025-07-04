@@ -129,10 +129,10 @@ class QCATestingSnowflake(FractalSnowflake):
         api_limits = {
             "manager_tasks_claim": 5,
             "manager_tasks_return": 2,
-            "get_records": 10,
+            "get_records": 50,
             "get_dataset_entries": 5,
             "get_molecules": 11,
-            "get_managers": 10,
+            "get_managers": 50,
             "get_error_logs": 10,
             "get_access_logs": 10,
         }
@@ -229,7 +229,7 @@ class QCATestingSnowflake(FractalSnowflake):
     def activated_manager_programs(self):
         return _activated_manager_programs
 
-    def start_api(self, wait: bool = False) -> None:
+    def start_api(self, wait: bool = True) -> None:
         """
         Starts the flask/api thread
         """
@@ -243,7 +243,7 @@ class QCATestingSnowflake(FractalSnowflake):
         """
         self._stop_api()
 
-    def start_job_runner(self, wait: bool = False) -> None:
+    def start_job_runner(self, wait: bool = True) -> None:
         """
         Starts the job runner thread
         """

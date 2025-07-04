@@ -36,7 +36,7 @@ testing_helper = {
 @pytest.mark.parametrize(
     "dataset_type", ["singlepoint", "optimization", "torsiondrive", "gridoptimization", "manybody", "reaction", "neb"]
 )
-def test_dataset_scaffold(snowflake: QCATestingSnowflake, dataset_type: str):
+def test_dataset_scaffold(snowflake: QCATestingSnowflake, dataset_type: str, tmp_path):
     # We add entries using background jobs
     snowflake.start_job_runner()
 
@@ -110,7 +110,7 @@ def test_dataset_scaffold(snowflake: QCATestingSnowflake, dataset_type: str):
 
     ds.add_specification("spec_1", input_spec)
 
-    filename = "test_dataset.json"
+    filename = str(tmp_path / "test_dataset.json")
     to_json(ds, filename, compress=True)
     assert os.path.exists(filename + ".bz2")
     os.remove(filename + ".bz2")

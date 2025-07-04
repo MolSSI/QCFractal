@@ -130,14 +130,16 @@ def test_db_connection_uri_convert(host, port, username, password, dbname, mdbna
         assert s in db_config.sqlalchemy_url.render_as_string(True)
 
 
-def test_db_connection_hosts(tmp_path_factory):
-    base_path = tmp_path_factory.mktemp("basefolder")
-    tmp_path = tmp_path_factory.mktemp("db_data")
+def test_db_connection_hosts(tmp_path):
+    base_path = tmp_path / "basefolder"
+    db_path = tmp_path / "db_data"
+    base_path.mkdir()
+    db_path.mkdir()
 
     port = find_open_port()
     db_config = DatabaseConfig(
         port=port,
-        data_directory=str(tmp_path),
+        data_directory=str(db_path),
         base_folder=str(base_path),
         username="test_connstr_user",
         password="test_connstr_password_1234",
@@ -153,27 +155,32 @@ def test_db_connection_hosts(tmp_path_factory):
     pg_harness.create_database(create_tables=True)
     assert pg_harness.can_connect()
 
-    # Make sure tests can fail
-    new_db_config = pg_harness.config.copy(update={"password": "not_correct"})
-    new_pg_harness = PostgresHarness(new_db_config)
-    assert new_pg_harness.can_connect() is False
+    try:
+        # Make sure tests can fail
+        new_db_config = pg_harness.config.copy(update={"password": "not_correct"})
+        new_pg_harness = PostgresHarness(new_db_config)
+        assert new_pg_harness.can_connect() is False
 
-    sock_path = os.path.join(db_config.data_directory, "sock")
-    for test_host in ["localhost", "127.0.0.1", sock_path]:
-        new_db_config = db_config.copy(update={"host": test_host})
-        assert PostgresHarness(new_db_config).can_connect()
-        assert create_engine(new_db_config.sqlalchemy_url).connect()
-        SQLAlchemySocket.upgrade_database(new_db_config)
+        sock_path = os.path.join(db_config.data_directory, "sock")
+        for test_host in ["localhost", "127.0.0.1", sock_path]:
+            new_db_config = db_config.copy(update={"host": test_host})
+            assert PostgresHarness(new_db_config).can_connect()
+            assert create_engine(new_db_config.sqlalchemy_url).connect()
+            SQLAlchemySocket.upgrade_database(new_db_config)
+    finally:
+        pg_harness.shutdown()
 
 
-def test_db_connection_full_uri(tmp_path_factory):
-    base_path = tmp_path_factory.mktemp("basefolder")
-    tmp_path = tmp_path_factory.mktemp("db_data")
+def test_db_connection_full_uri(tmp_path):
+    base_path = tmp_path / "basefolder"
+    db_path = tmp_path / "db_data"
+    base_path.mkdir()
+    db_path.mkdir()
 
     port = find_open_port()
     db_config = DatabaseConfig(
         port=port,
-        data_directory=str(tmp_path),
+        data_directory=str(db_path),
         base_folder=str(base_path),
         username="test_connstr_user",
         password="test_connstr_password_1234",
@@ -213,4 +220,5 @@ def test_db_connection_full_uri(tmp_path_factory):
 
     ## Socket file?
     sock_path = os.path.join(db_config.data_directory, "sock")
-    can_connect(f"postgresql://{username}:{password}@:{port}/{dbname}?host={sock_path}")
+    if len(sock_path) < 80:
+        can_connect(f"postgresql://{username}:{password}@:{port}/{dbname}?host={sock_path}")

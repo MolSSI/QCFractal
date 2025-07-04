@@ -6,6 +6,7 @@ import logging.handlers
 import multiprocessing
 import os
 import secrets
+import shutil
 import tempfile
 import threading
 import time
@@ -16,6 +17,7 @@ from typing import TYPE_CHECKING
 import requests
 
 from qcportal import PortalClient
+from qcportal.client_base import AllowedConnectionExceptions
 from qcportal.record_models import RecordStatusEnum
 from qcportal.utils import update_nested_dict
 from .config import FractalConfig, DatabaseConfig
@@ -55,6 +57,7 @@ class FractalSnowflake:
         extra_config: Optional[Dict[str, Any]] = None,
         *,
         host: str = "localhost",
+        tmpdir_parent: Optional[str] = None,
     ):
         """A temporary, self-contained server
 
@@ -83,21 +86,32 @@ class FractalSnowflake:
         self._logging_thread.start()
 
         # Create a temporary directory for everything
-        self._tmpdir = tempfile.TemporaryDirectory()
+        # Don't use TemporaryDirectory with autodelete - we will cleanup in the snowflake finalizer
+        # If allowed to do it automatically, it may be cleaned up before the finalizer runs, and
+        # the pg_harness won't like that (since the db files are stored there)
+        # tempfile.TemporaryDirectory doesn't have a "delete" parameter in older versions of python.
+        # So let's just use mkdtemp and delete it manually.
+        # mdtemp will return relative paths in some versions of python with some parameters of `dir`,
+        # but I always feel more comfortable with absolute paths.
+        self._tmpdir = os.path.abspath(tempfile.mkdtemp(dir=tmpdir_parent))
 
         # also parsl run directory and scratch directories
-        parsl_run_dir = os.path.join(self._tmpdir.name, "parsl_run_dir")
-        compute_scratch_dir = os.path.join(self._tmpdir.name, "compute_scratch_dir")
+        parsl_run_dir = os.path.join(self._tmpdir, "parsl_run_dir")
+        compute_scratch_dir = os.path.join(self._tmpdir, "compute_scratch_dir")
         os.makedirs(parsl_run_dir, exist_ok=True)
         os.makedirs(compute_scratch_dir, exist_ok=True)
 
+        self._logger.info(f"Using temporary directory: {self._tmpdir}")
+
         if database_config is None:
             # db and socket are subdirs of the base temporary directory
-            db_dir = os.path.join(self._tmpdir.name, "db")
+            db_dir = os.path.join(self._tmpdir, "db")
             self._pg_harness = create_snowflake_postgres(host, db_dir)
             self._pg_harness.create_database(True)
             db_config = self._pg_harness.config
+            self._own_pg_harness = True
         else:
+            self._own_pg_harness = False  # self._pg_harness should be handled by derived class
             db_config = database_config
 
         api_port = find_open_port(host)
@@ -108,7 +122,7 @@ class FractalSnowflake:
         loglevel = self._logger.getEffectiveLevel()
 
         qcf_cfg: Dict[str, Any] = {}
-        qcf_cfg["base_folder"] = self._tmpdir.name
+        qcf_cfg["base_folder"] = self._tmpdir
         qcf_cfg["loglevel"] = logging.getLevelName(loglevel)
         qcf_cfg["database"] = db_config.dict()
         qcf_cfg["enable_security"] = False
@@ -143,7 +157,7 @@ class FractalSnowflake:
         # For the compute manager
         uri = f"http://{self._qcf_config.api.host}:{self._qcf_config.api.port}"
         self._compute_config = FractalComputeConfig(
-            base_folder=self._tmpdir.name,
+            base_folder=self._tmpdir,
             loglevel=logging.getLevelName(loglevel),
             parsl_run_dir=parsl_run_dir,
             cluster="snowflake_compute",
@@ -193,10 +207,11 @@ class FractalSnowflake:
             self._logging_queue,
             self._logging_thread,
             self._logging_thread_stop,
-            self._pg_harness,
+            self._tmpdir,
+            self._pg_harness if self._own_pg_harness else None,
         )
 
-    def _start_api(self, wait: bool = False):
+    def _start_api(self, wait: bool = True):
         if self._api_proc is None:
             self._api_initialized.clear()
             self._api_proc = self._mp_context.Process(
@@ -217,7 +232,7 @@ class FractalSnowflake:
             self._api_initialized.clear()
             self._update_finalizer()
 
-    def _start_compute(self, wait: bool = False):
+    def _start_compute(self, wait: bool = True):
         if not self._compute_enabled:
             return
 
@@ -241,7 +256,7 @@ class FractalSnowflake:
             self._compute_initialized.clear()
             self._update_finalizer()
 
-    def _start_job_runner(self, wait: bool = False):
+    def _start_job_runner(self, wait: bool = True):
         if self._job_runner_proc is None:
             self._job_runner_initialized.clear()
             self._job_runner_proc = self._mp_context.Process(
@@ -264,7 +279,15 @@ class FractalSnowflake:
 
     @classmethod
     def _stop(
-        cls, compute_proc, api_proc, job_runner_proc, logging_queue, logging_thread, logging_thread_stop, pg_harness
+        cls,
+        compute_proc,
+        api_proc,
+        job_runner_proc,
+        logging_queue,
+        logging_thread,
+        logging_thread_stop,
+        tmpdir,
+        pg_harness,
     ):
         ####################################################################################
         # This is written as a class method so that it can be called by a weakref finalizer
@@ -294,7 +317,11 @@ class FractalSnowflake:
         logging_queue.close()
         logging_queue.join_thread()
 
-        pg_harness.shutdown()
+        if pg_harness is not None:
+            pg_harness.shutdown()
+
+        if tmpdir and os.path.exists(tmpdir):
+            shutil.rmtree(tmpdir)
 
     def wait_for_api(self):
         """
@@ -310,7 +337,7 @@ class FractalSnowflake:
         port = self._qcf_config.api.port
         uri = f"http://{host}:{port}/api/v1/ping"
 
-        max_iter = 50
+        max_iter = 100
         iter = 0
         while True:
             try:
@@ -319,13 +346,13 @@ class FractalSnowflake:
                     raise RuntimeError("Error pinging snowflake fractal server: ", r.text)
                 break
 
-            except requests.exceptions.ConnectionError:
-                time.sleep(0.05)
+            except AllowedConnectionExceptions:
+                time.sleep(0.1)
                 iter += 1
                 if iter >= max_iter:
                     raise
 
-    def start(self, wait: bool = False) -> None:
+    def start(self, wait: bool = True) -> None:
         """
         Starts all the components of the snowflake
         """
