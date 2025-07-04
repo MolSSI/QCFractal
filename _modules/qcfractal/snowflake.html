@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=1bbad4e7"></script>
+    <script src="../../_static/documentation_options.js?v=40b65323"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.61.post22+g65e539d5a" />
+  <meta name="docsearch:version" content="0.61.post39+g0efd61073" />
   </head>
   
   
@@ -446,6 +446,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">multiprocessing</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">secrets</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
@@ -456,6 +457,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal</span><span class="w"> </span><span class="kn">import</span> <span class="n">PortalClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.client_base</span><span class="w"> </span><span class="kn">import</span> <span class="n">AllowedConnectionExceptions</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.record_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">RecordStatusEnum</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">update_nested_dict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">FractalConfig</span><span class="p">,</span> <span class="n">DatabaseConfig</span>
@@ -497,6 +499,7 @@
         <span class="n">extra_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;localhost&quot;</span><span class="p">,</span>
+        <span class="n">tmpdir_parent</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;A temporary, self-contained server</span>
 
@@ -525,21 +528,32 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_logging_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
         <span class="c1"># Create a temporary directory for everything</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span>
+        <span class="c1"># Don&#39;t use TemporaryDirectory with autodelete - we will cleanup in the snowflake finalizer</span>
+        <span class="c1"># If allowed to do it automatically, it may be cleaned up before the finalizer runs, and</span>
+        <span class="c1"># the pg_harness won&#39;t like that (since the db files are stored there)</span>
+        <span class="c1"># tempfile.TemporaryDirectory doesn&#39;t have a &quot;delete&quot; parameter in older versions of python.</span>
+        <span class="c1"># So let&#39;s just use mkdtemp and delete it manually.</span>
+        <span class="c1"># mdtemp will return relative paths in some versions of python with some parameters of `dir`,</span>
+        <span class="c1"># but I always feel more comfortable with absolute paths.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="n">tmpdir_parent</span><span class="p">))</span>
 
         <span class="c1"># also parsl run directory and scratch directories</span>
-        <span class="n">parsl_run_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;parsl_run_dir&quot;</span><span class="p">)</span>
-        <span class="n">compute_scratch_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;compute_scratch_dir&quot;</span><span class="p">)</span>
+        <span class="n">parsl_run_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="p">,</span> <span class="s2">&quot;parsl_run_dir&quot;</span><span class="p">)</span>
+        <span class="n">compute_scratch_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="p">,</span> <span class="s2">&quot;compute_scratch_dir&quot;</span><span class="p">)</span>
         <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">parsl_run_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">compute_scratch_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using temporary directory: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">database_config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># db and socket are subdirs of the base temporary directory</span>
-            <span class="n">db_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;db&quot;</span><span class="p">)</span>
+            <span class="n">db_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="p">,</span> <span class="s2">&quot;db&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_pg_harness</span> <span class="o">=</span> <span class="n">create_snowflake_postgres</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">db_dir</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_pg_harness</span><span class="o">.</span><span class="n">create_database</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
             <span class="n">db_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pg_harness</span><span class="o">.</span><span class="n">config</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_own_pg_harness</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_own_pg_harness</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># self._pg_harness should be handled by derived class</span>
             <span class="n">db_config</span> <span class="o">=</span> <span class="n">database_config</span>
 
         <span class="n">api_port</span> <span class="o">=</span> <span class="n">find_open_port</span><span class="p">(</span><span class="n">host</span><span class="p">)</span>
@@ -550,7 +564,7 @@
         <span class="n">loglevel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">getEffectiveLevel</span><span class="p">()</span>
 
         <span class="n">qcf_cfg</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">&quot;base_folder&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">&quot;base_folder&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span>
         <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">&quot;loglevel&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLevelName</span><span class="p">(</span><span class="n">loglevel</span><span class="p">)</span>
         <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">&quot;database&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">db_config</span><span class="o">.</span><span class="n">dict</span><span class="p">()</span>
         <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">&quot;enable_security&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
@@ -585,7 +599,7 @@
         <span class="c1"># For the compute manager</span>
         <span class="n">uri</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;http://</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">host</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">port</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_compute_config</span> <span class="o">=</span> <span class="n">FractalComputeConfig</span><span class="p">(</span>
-            <span class="n">base_folder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">base_folder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="p">,</span>
             <span class="n">loglevel</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">getLevelName</span><span class="p">(</span><span class="n">loglevel</span><span class="p">),</span>
             <span class="n">parsl_run_dir</span><span class="o">=</span><span class="n">parsl_run_dir</span><span class="p">,</span>
             <span class="n">cluster</span><span class="o">=</span><span class="s2">&quot;snowflake_compute&quot;</span><span class="p">,</span>
@@ -635,10 +649,11 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_logging_queue</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logging_thread</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logging_thread_stop</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_pg_harness</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pg_harness</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_own_pg_harness</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_start_api</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_start_api</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_api_initialized</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_api_proc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mp_context</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
@@ -659,7 +674,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_api_initialized</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_finalizer</span><span class="p">()</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_start_compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_start_compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_enabled</span><span class="p">:</span>
             <span class="k">return</span>
 
@@ -683,7 +698,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_compute_initialized</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_finalizer</span><span class="p">()</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_start_job_runner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_start_job_runner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_proc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_initialized</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_job_runner_proc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mp_context</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
@@ -706,7 +721,15 @@
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_stop</span><span class="p">(</span>
-        <span class="bp">cls</span><span class="p">,</span> <span class="n">compute_proc</span><span class="p">,</span> <span class="n">api_proc</span><span class="p">,</span> <span class="n">job_runner_proc</span><span class="p">,</span> <span class="n">logging_queue</span><span class="p">,</span> <span class="n">logging_thread</span><span class="p">,</span> <span class="n">logging_thread_stop</span><span class="p">,</span> <span class="n">pg_harness</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">compute_proc</span><span class="p">,</span>
+        <span class="n">api_proc</span><span class="p">,</span>
+        <span class="n">job_runner_proc</span><span class="p">,</span>
+        <span class="n">logging_queue</span><span class="p">,</span>
+        <span class="n">logging_thread</span><span class="p">,</span>
+        <span class="n">logging_thread_stop</span><span class="p">,</span>
+        <span class="n">tmpdir</span><span class="p">,</span>
+        <span class="n">pg_harness</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="c1">####################################################################################</span>
         <span class="c1"># This is written as a class method so that it can be called by a weakref finalizer</span>
@@ -736,7 +759,11 @@
         <span class="n">logging_queue</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         <span class="n">logging_queue</span><span class="o">.</span><span class="n">join_thread</span><span class="p">()</span>
 
-        <span class="n">pg_harness</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">pg_harness</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pg_harness</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">tmpdir</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">):</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">)</span>
 
 <div class="viewcode-block" id="FractalSnowflake.wait_for_api">
 <a class="viewcode-back" href="../../overview/snowflake.html#qcfractal.snowflake.FractalSnowflake.wait_for_api">[docs]</a>
@@ -754,7 +781,7 @@
         <span class="n">port</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">port</span>
         <span class="n">uri</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;http://</span><span class="si">{</span><span class="n">host</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">port</span><span class="si">}</span><span class="s2">/api/v1/ping&quot;</span>
 
-        <span class="n">max_iter</span> <span class="o">=</span> <span class="mi">50</span>
+        <span class="n">max_iter</span> <span class="o">=</span> <span class="mi">100</span>
         <span class="nb">iter</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
@@ -763,8 +790,8 @@
                     <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Error pinging snowflake fractal server: &quot;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
                 <span class="k">break</span>
 
-            <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">:</span>
-                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.05</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">AllowedConnectionExceptions</span><span class="p">:</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
                 <span class="nb">iter</span> <span class="o">+=</span> <span class="mi">1</span>
                 <span class="k">if</span> <span class="nb">iter</span> <span class="o">&gt;=</span> <span class="n">max_iter</span><span class="p">:</span>
                     <span class="k">raise</span></div>
@@ -772,7 +799,7 @@
 
 <div class="viewcode-block" id="FractalSnowflake.start">
 <a class="viewcode-back" href="../../overview/snowflake.html#qcfractal.snowflake.FractalSnowflake.start">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Starts all the components of the snowflake</span>
 <span class="sd">        &quot;&quot;&quot;</span>

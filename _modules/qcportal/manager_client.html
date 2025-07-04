@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=1bbad4e7"></script>
+    <script src="../../_static/documentation_options.js?v=40b65323"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.61.post22+g65e539d5a" />
+  <meta name="docsearch:version" content="0.61.post39+g0efd61073" />
   </head>
   
   
@@ -581,7 +581,8 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">claim</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">programs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">tags</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">RecordTask</span><span class="p">]:</span>
         <span class="n">body</span> <span class="o">=</span> <span class="n">TaskClaimBody</span><span class="p">(</span><span class="n">name_data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">manager_name_data</span><span class="p">,</span> <span class="n">programs</span><span class="o">=</span><span class="n">programs</span><span class="p">,</span> <span class="n">compute_tags</span><span class="o">=</span><span class="n">tags</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="s2">&quot;compute/v1/tasks/claim&quot;</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">RecordTask</span><span class="p">],</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">)</span></div>
+        <span class="c1"># Don&#39;t retry - will be handled elsewhere</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="s2">&quot;compute/v1/tasks/claim&quot;</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">RecordTask</span><span class="p">],</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span> <span class="n">allow_retries</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="ManagerClient.return_finished">
@@ -599,7 +600,10 @@
                 <span class="n">results_compressed</span><span class="o">=</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">results_flat</span><span class="p">[</span><span class="n">chunk</span> <span class="p">:</span> <span class="n">chunk</span> <span class="o">+</span> <span class="n">limit</span><span class="p">]},</span>
             <span class="p">)</span>
 
-            <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="s2">&quot;compute/v1/tasks/return&quot;</span><span class="p">,</span> <span class="n">TaskReturnMetadata</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">)</span>
+            <span class="c1"># Don&#39;t retry - will be handled elsewhere</span>
+            <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+                <span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="s2">&quot;compute/v1/tasks/return&quot;</span><span class="p">,</span> <span class="n">TaskReturnMetadata</span><span class="p">,</span> <span class="n">allow_retries</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span>
+            <span class="p">)</span>
 
             <span class="n">task_return_meta</span><span class="o">.</span><span class="n">error_description</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">error_description</span>
             <span class="n">task_return_meta</span><span class="o">.</span><span class="n">rejected_info</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">rejected_info</span><span class="p">)</span>
