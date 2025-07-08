@@ -436,124 +436,6 @@ class RecordSocket:
 
         return self.get_base(wp, record_ids, include, exclude, missing_ok, session=session)
 
-    def update_completed_schema_v1(
-        self, session: Session, record_id: int, record_type: str, result: AllResultTypes, manager_name: str
-    ):
-        """
-        Update a record ORM based on the results of a successfully-completed computation
-
-        Parameters
-        ----------
-        session
-            An existing SQLAlchemy session
-        record_id
-            ID of the record to update and mark as completed
-        record_type
-            Type of record to update
-        result
-            The result of the computation. This should be a successful result
-        manager_name
-            The manager that produced the result
-        """
-
-        # Do these before calling the record-specific handler
-        # (these may pull stuff out of extras)
-        history_orm = compute_history_orms_from_schema_v1(result)
-        history_orm.record_id = record_id
-        history_orm.manager_name = manager_name
-        session.add(history_orm)
-
-        native_files_orms = native_files_orms_from_schema_v1(result)
-        for v in native_files_orms.values():
-            v.record_id = record_id
-            session.add(v)
-
-        # Now update fields specific to each record
-        record_socket = self._handler_map[record_type]
-        record_socket.update_completed_schema_v1(session, record_id, result)
-
-        # Now extras and properties
-        extras, properties = build_extras_properties(result)
-
-        # What updates we have for this record
-        record_updates = {
-            "extras": extras,
-            "properties": properties,
-            "status": RecordStatusEnum.complete,
-            "manager_name": manager_name,
-            "modified_on": history_orm.modified_on,
-        }
-
-        # Actually update the record
-        stmt = update(BaseRecordORM).where(BaseRecordORM.id == record_id).values(record_updates)
-        session.execute(stmt)
-
-        # Delete the task from the task queue since it is completed
-        stmt = delete(TaskQueueORM).where(TaskQueueORM.record_id == record_id)
-        session.execute(stmt)
-
-    def update_failed_task(self, session: Session, record_id: int, failed_result: FailedOperation, manager_name: str):
-        """
-        Update a record ORM whose computation has failed, and mark it as errored
-
-        Parameters
-        ----------
-        session
-            An existing SQLAlchemy session
-        record_id
-            ID of the record to update and mark as completed
-        failed_result
-            The (failed) result of the computation
-        manager_name
-            The manager that produced the result
-        """
-
-        if not isinstance(failed_result, FailedOperation):
-            raise RuntimeError("Developer error - this function only handles FailedOperation results")
-
-        # Handle outputs, which are a bit different in FailedOperation
-        # Error is special in a FailedOperation
-        error = failed_result.error
-        if error is None:
-            error = _default_error
-
-        error_out_orm = create_output_orm(OutputTypeEnum.error, error.dict())
-        all_outputs = {OutputTypeEnum.error: error_out_orm}
-
-        # Get the rest of the outputs
-        # This is stored in "input_data" (I know...)
-        # "input_data" can be anything. So ignore if it isn't a dict
-        if isinstance(failed_result.input_data, dict):
-            stdout = failed_result.input_data.get("stdout", None)
-            stderr = failed_result.input_data.get("stderr", None)
-
-            if stdout is not None:
-                stdout_orm = create_output_orm(OutputTypeEnum.stdout, stdout)
-                all_outputs[OutputTypeEnum.stdout] = stdout_orm
-            if stderr is not None:
-                stderr_orm = create_output_orm(OutputTypeEnum.stderr, stderr)
-                all_outputs[OutputTypeEnum.stderr] = stderr_orm
-
-        # Build the history orm
-        history_orm = RecordComputeHistoryORM()
-        history_orm.status = RecordStatusEnum.error
-        history_orm.manager_name = manager_name
-        history_orm.modified_on = now_at_utc()
-        history_orm.outputs = all_outputs
-        history_orm.record_id = record_id
-        session.add(history_orm)
-
-        # What updates we have for this record
-        record_updates = {
-            "status": RecordStatusEnum.error,
-            "modified_on": history_orm.modified_on,
-            "manager_name": manager_name,
-        }
-
-        # Actually update the record
-        stmt = update(BaseRecordORM).where(BaseRecordORM.id == record_id).values(record_updates)
-        session.execute(stmt)
-
     def initialize_service(self, session: Session, service_orm: ServiceQueueORM) -> None:
         """
         Initialize a service
@@ -644,6 +526,71 @@ class RecordSocket:
         record_orm.status = RecordStatusEnum.error
         record_orm.modified_on = now_at_utc()
 
+    ######################
+    # Non-service records
+    ######################
+    def update_failed_task(self, session: Session, record_id: int, failed_result: FailedOperation, manager_name: str):
+        """
+        Update a record ORM whose computation has failed, and mark it as errored
+
+        Parameters
+        ----------
+        session
+            An existing SQLAlchemy session
+        record_id
+            ID of the record to update and mark as completed
+        failed_result
+            The (failed) result of the computation
+        manager_name
+            The manager that produced the result
+        """
+
+        if not isinstance(failed_result, FailedOperation):
+            raise RuntimeError("Developer error - this function only handles FailedOperation results")
+
+        # Handle outputs, which are a bit different in FailedOperation
+        # Error is special in a FailedOperation
+        error = failed_result.error
+        if error is None:
+            error = _default_error
+
+        error_out_orm = create_output_orm(OutputTypeEnum.error, error.dict())
+        all_outputs = {OutputTypeEnum.error: error_out_orm}
+
+        # Get the rest of the outputs
+        # This is stored in "input_data" (I know...)
+        # "input_data" can be anything. So ignore if it isn't a dict
+        if isinstance(failed_result.input_data, dict):
+            stdout = failed_result.input_data.get("stdout", None)
+            stderr = failed_result.input_data.get("stderr", None)
+
+            if stdout is not None:
+                stdout_orm = create_output_orm(OutputTypeEnum.stdout, stdout)
+                all_outputs[OutputTypeEnum.stdout] = stdout_orm
+            if stderr is not None:
+                stderr_orm = create_output_orm(OutputTypeEnum.stderr, stderr)
+                all_outputs[OutputTypeEnum.stderr] = stderr_orm
+
+        # Build the history orm
+        history_orm = RecordComputeHistoryORM()
+        history_orm.status = RecordStatusEnum.error
+        history_orm.manager_name = manager_name
+        history_orm.modified_on = now_at_utc()
+        history_orm.outputs = all_outputs
+        history_orm.record_id = record_id
+        session.add(history_orm)
+
+        # What updates we have for this record
+        record_updates = {
+            "status": RecordStatusEnum.error,
+            "modified_on": history_orm.modified_on,
+            "manager_name": manager_name,
+        }
+
+        # Actually update the record
+        stmt = update(BaseRecordORM).where(BaseRecordORM.id == record_id).values(record_updates)
+        session.execute(stmt)
+
     def add_from_input(
         self,
         record_input: AllInputTypes,
@@ -658,6 +605,62 @@ class RecordSocket:
         return record_socket.add_from_input(
             record_input, compute_tag, compute_priority, creator_user, find_existing, session=session
         )
+
+    def update_completed_schema_v1(
+        self, session: Session, record_id: int, record_type: str, result: AllResultTypes, manager_name: str
+    ):
+        """
+        Update a record ORM based on the results of a successfully-completed computation
+
+        Parameters
+        ----------
+        session
+            An existing SQLAlchemy session
+        record_id
+            ID of the record to update and mark as completed
+        record_type
+            Type of record to update
+        result
+            The result of the computation. This should be a successful result
+        manager_name
+            The manager that produced the result
+        """
+
+        # Do these before calling the record-specific handler
+        # (these may pull stuff out of extras)
+        history_orm = compute_history_orms_from_schema_v1(result)
+        history_orm.record_id = record_id
+        history_orm.manager_name = manager_name
+        session.add(history_orm)
+
+        native_files_orms = native_files_orms_from_schema_v1(result)
+        for v in native_files_orms.values():
+            v.record_id = record_id
+            session.add(v)
+
+        # Now update fields specific to each record
+        record_socket = self._handler_map[record_type]
+        record_socket.update_completed_schema_v1(session, record_id, result)
+
+        # Now extras and properties
+        extras, properties = build_extras_properties(result)
+
+        # What updates we have for this record
+        record_updates = {
+            "extras": extras,
+            "properties": properties,
+            "status": RecordStatusEnum.complete,
+            "manager_name": manager_name,
+            "modified_on": history_orm.modified_on,
+        }
+
+        # Actually update the record
+        stmt = update(BaseRecordORM).where(BaseRecordORM.id == record_id).values(record_updates)
+        session.execute(stmt)
+
+        # Delete the task from the task queue since it is completed
+        stmt = delete(TaskQueueORM).where(TaskQueueORM.record_id == record_id)
+        session.execute(stmt)
 
     def insert_complete_schema_v1(self, session: Session, results: Sequence[AllResultTypes]) -> List[int]:
         """
@@ -725,6 +728,9 @@ class RecordSocket:
 
         return [o.id for o in to_add_orm]
 
+    ########################################
+    # Various record manipulation functions
+    ########################################
     def add_comment(
         self, record_ids: Sequence[int], user_id: Optional[int], comment: str, *, session: Optional[Session] = None
     ) -> UpdateMetadata:
