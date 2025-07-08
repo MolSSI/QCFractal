@@ -52,9 +52,9 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from sqlalchemy.sql import Select
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from qcportal.all_results import AllResultTypes
+    from qcportal.all_results import AllSchemaV1ResultTypes, AllResultTypes
     from qcportal.record_models import RecordQueryFilters
-    from qcportal.all_inputs import AllInputTypes
+    from qcportal.all_inputs import AllQCPortalInputTypes, AllInputTypes
     from typing import List, Dict, Tuple, Optional, Sequence, Any, Iterable, Type, Union
 
 
@@ -601,13 +601,38 @@ class RecordSocket:
         *,
         session: Optional[Session] = None,
     ):
+        return self.add_from_input_qcportal(
+            record_input, compute_tag, compute_priority, creator_user, find_existing, session=session
+        )
+
+    def update_completed(
+        self, session: Session, record_id: int, record_type: str, result: AllResultTypes, manager_name: str
+    ):
+        return self.update_completed_schema_v1(session, record_id, record_type, result, manager_name)
+
+    def insert_complete(self, session: Session, results: Sequence[AllResultTypes]) -> List[int]:
+        return self.insert_complete_schema_v1(session, results)
+
+    ######################################################
+    # Handlers for different result types (schema, etc)
+    ######################################################
+    def add_from_input_qcportal(
+        self,
+        record_input: AllQCPortalInputTypes,
+        compute_tag: str,
+        compute_priority: PriorityEnum,
+        creator_user: Optional[Union[int, str]],
+        find_existing: bool,
+        *,
+        session: Optional[Session] = None,
+    ):
         record_socket = self._handler_map_by_input[type(record_input)]
         return record_socket.add_from_input(
             record_input, compute_tag, compute_priority, creator_user, find_existing, session=session
         )
 
     def update_completed_schema_v1(
-        self, session: Session, record_id: int, record_type: str, result: AllResultTypes, manager_name: str
+        self, session: Session, record_id: int, record_type: str, result: AllSchemaV1ResultTypes, manager_name: str
     ):
         """
         Update a record ORM based on the results of a successfully-completed computation
@@ -662,7 +687,7 @@ class RecordSocket:
         stmt = delete(TaskQueueORM).where(TaskQueueORM.record_id == record_id)
         session.execute(stmt)
 
-    def insert_complete_schema_v1(self, session: Session, results: Sequence[AllResultTypes]) -> List[int]:
+    def insert_complete_schema_v1(self, session: Session, results: Sequence[AllSchemaV1ResultTypes]) -> List[int]:
         """
         Insert records into the database from a QCSchema result
 
@@ -673,7 +698,7 @@ class RecordSocket:
             return []
 
         # Map of schema name stored in the result to (index, result)
-        type_map: Dict[str, List[Tuple[int, AllResultTypes]]] = defaultdict(list)
+        type_map: Dict[str, List[Tuple[int, AllSchemaV1ResultTypes]]] = defaultdict(list)
 
         for idx, result in enumerate(results):
             if isinstance(result, FailedOperation) or not result.success:

@@ -6,4 +6,5 @@ from qcelemental.models import AtomicResult, OptimizationResult, FailedOperation
 
 from .generic_result import GenericTaskResult
 
+AllSchemaV1ResultTypes = Union[FailedOperation, AtomicResult, OptimizationResult, GenericTaskResult]
 AllResultTypes = Union[FailedOperation, AtomicResult, OptimizationResult, GenericTaskResult]

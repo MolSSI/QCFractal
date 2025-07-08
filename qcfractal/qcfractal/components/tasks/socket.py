@@ -178,9 +178,7 @@ class TaskSocket:
 
                     # Manager returned a full, successful result
                     else:
-                        self.root_socket.records.update_completed_schema_v1(
-                            session, record_id, record_type, result, manager_name
-                        )
+                        self.root_socket.records.update_completed(session, record_id, record_type, result, manager_name)
 
                         notify_status = RecordStatusEnum.complete
                         tasks_success.append(task_id)
