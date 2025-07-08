@@ -17,8 +17,8 @@ from qcportal.metadata_models import InsertMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
 from qcportal.utils import now_at_utc
 from .db_models import ServiceQueueORM, ServiceDependencyORM, ServiceSubtaskRecordORM
+from ..base_record_socket import BaseRecordSocket
 from ..outputstore.utils import create_output_orm
-from ..record_socket import BaseRecordSocket
 from ..record_utils import append_output
 
 if TYPE_CHECKING:

@@ -23,7 +23,7 @@ from qcportal.singlepoint import (
 )
 from qcportal.utils import hash_dict, is_included
 from .record_db_models import QCSpecificationORM, SinglepointRecordORM, WavefunctionORM
-from ..record_socket import BaseRecordSocket
+from ..base_record_socket import BaseRecordSocket
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session

@@ -24,7 +24,7 @@ from qcportal.reaction import (
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
 from qcportal.utils import hash_dict, is_included
 from .record_db_models import ReactionComponentORM, ReactionSpecificationORM, ReactionRecordORM
-from ..record_socket import BaseRecordSocket
+from ..base_record_socket import BaseRecordSocket
 from ..record_utils import append_output
 
 if TYPE_CHECKING:

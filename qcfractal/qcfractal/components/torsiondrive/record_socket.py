@@ -44,7 +44,7 @@ from .record_db_models import (
     TorsiondriveOptimizationORM,
     TorsiondriveRecordORM,
 )
-from ..record_socket import BaseRecordSocket
+from ..base_record_socket import BaseRecordSocket
 from ..record_utils import append_output
 
 # Torsiondrive package is optional
