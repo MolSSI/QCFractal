@@ -173,11 +173,13 @@ class BaseRecordSocket:
             f"generate_task_specifications not implemented for {type(self)}! This is a developer error"
         )
 
-    def update_completed_task(self, session: Session, record_id: int, result: AllResultTypes) -> None:
+    def update_completed_schema_v1(self, session: Session, record_id: int, result: AllResultTypes) -> None:
         """
         Update a record ORM based on the result of a successfully-completed computation
         """
-        raise NotImplementedError(f"update_completed_task not implemented for {type(self)}! This is a developer error")
+        raise NotImplementedError(
+            f"update_completed_schema_v1 not implemented for {type(self)}! This is a developer error"
+        )
 
     def insert_complete_schema_v1(
         self,

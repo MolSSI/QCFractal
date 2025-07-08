@@ -436,7 +436,7 @@ class RecordSocket:
 
         return self.get_base(wp, record_ids, include, exclude, missing_ok, session=session)
 
-    def update_completed_task(
+    def update_completed_schema_v1(
         self, session: Session, record_id: int, record_type: str, result: AllResultTypes, manager_name: str
     ):
         """
@@ -470,7 +470,7 @@ class RecordSocket:
 
         # Now update fields specific to each record
         record_socket = self._handler_map[record_type]
-        record_socket.update_completed_task(session, record_id, result)
+        record_socket.update_completed_schema_v1(session, record_id, result)
 
         # Now extras and properties
         extras, properties = build_extras_properties(result)
