@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import select, literal, insert
 
-from qcfractal.components.dataset_socket import BaseDatasetSocket
 from qcfractal.components.reaction.record_db_models import ReactionRecordORM
 from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.reaction import ReactionDatasetNewEntry, ReactionSpecification
@@ -18,6 +17,7 @@ from .dataset_db_models import (
     ReactionDatasetStoichiometryORM,
     ReactionDatasetRecordItemORM,
 )
+from ..base_dataset_socket import BaseDatasetSocket
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session

@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import select, literal, insert
 
-from qcfractal.components.dataset_socket import BaseDatasetSocket
 from qcfractal.components.manybody.record_db_models import ManybodyRecordORM
 from qcportal.manybody import ManybodyDatasetNewEntry, ManybodySpecification
 from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
@@ -17,6 +16,7 @@ from .dataset_db_models import (
     ManybodyDatasetEntryORM,
     ManybodyDatasetRecordItemORM,
 )
+from ..base_dataset_socket import BaseDatasetSocket
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session

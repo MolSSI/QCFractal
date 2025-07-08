@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import select, literal, text, insert
 
-from qcfractal.components.dataset_socket import BaseDatasetSocket
 from qcfractal.components.singlepoint.record_db_models import SinglepointRecordORM
 from qcportal.exceptions import InvalidArgumentsError, MissingDataError
 from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
@@ -18,6 +17,7 @@ from .dataset_db_models import (
     SinglepointDatasetEntryORM,
     SinglepointDatasetRecordItemORM,
 )
+from ..base_dataset_socket import BaseDatasetSocket
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
