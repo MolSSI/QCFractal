@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=40b65323"></script>
+    <script src="../../_static/documentation_options.js?v=0d5bb453"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.61.post39+g0efd61073" />
+  <meta name="docsearch:version" content="0.61.post42+g00e296743" />
   </head>
   
   
@@ -511,8 +511,8 @@
 <span class="sd">        This can also be used as a context manager (`with FractalSnowflake(...) as s:`)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="c1"># Multiprocessing context - generally use fork</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_mp_context</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="s2">&quot;fork&quot;</span><span class="p">)</span>
+        <span class="c1"># Multiprocessing context - generally use spawn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mp_context</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="s2">&quot;spawn&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;fractal_snowflake&quot;</span><span class="p">)</span>
 
