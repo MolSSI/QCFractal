@@ -10,7 +10,7 @@ except ImportError:
 from qcelemental.models import Molecule, FailedOperation, ComputeError, OptimizationResult as QCEl_OptimizationResult
 from qcelemental.models.procedures import OptimizationProtocols
 
-from qcarchivetesting.helpers import read_record_data
+from qcarchivetesting.helpers import read_procedure_data
 from qcfractal.components.torsiondrive.record_db_models import TorsiondriveRecordORM
 from qcfractal.testing_helpers import run_service
 from qcportal.optimization import OptimizationSpecification
@@ -103,7 +103,7 @@ def generate_task_key(task: RecordTask):
 
 
 def load_test_data(name: str) -> Tuple[TorsiondriveSpecification, List[Molecule], Dict[str, QCEl_OptimizationResult]]:
-    test_data = read_record_data(name)
+    test_data = read_procedure_data(name)
 
     return (
         pydantic.parse_obj_as(TorsiondriveSpecification, test_data["specification"]),
