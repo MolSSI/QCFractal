@@ -941,6 +941,8 @@ def compare_base_records(record_1: BaseRecord, record_2: BaseRecord):
     assert record_1.specification == record_2.specification
     assert record_1.manager_name == record_2.manager_name
 
+    assert record_1.is_service == record_2.is_service
+
     assert record_1.comments == record_2.comments
     assert record_1.properties == record_2.properties
     assert record_1.extras == record_2.extras

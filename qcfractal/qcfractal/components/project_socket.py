@@ -18,6 +18,7 @@ from qcfractal.components.project_db_models import (
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.db_socket.helpers import get_general
 from qcportal.all_inputs import AllInputTypes
+from qcportal.all_results import AllResultTypes
 from qcportal.exceptions import MissingDataError, UserReportableError, AlreadyExistsError
 from qcportal.internal_jobs import InternalJobStatusEnum
 from qcportal.metadata_models import InsertCountsMetadata

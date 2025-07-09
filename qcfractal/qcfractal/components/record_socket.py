@@ -44,7 +44,9 @@ from .record_db_models import (
 from .record_utils import (
     build_extras_properties,
     upsert_output,
-    compute_history_orms_from_schema_v1,
+    compute_history_orms_from_qcportal_record,
+    compute_history_orm_from_schema_v1,
+    native_files_orms_from_qcportal_record,
     native_files_orms_from_schema_v1,
 )
 
@@ -52,7 +54,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from sqlalchemy.sql import Select
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from qcportal.all_results import AllSchemaV1ResultTypes, AllResultTypes
+    from qcportal.all_results import AllSchemaV1ResultTypes, AllQCPortalRecordTypes, AllResultTypes
     from qcportal.record_models import RecordQueryFilters
     from qcportal.all_inputs import AllQCPortalInputTypes, AllInputTypes
     from typing import List, Dict, Tuple, Optional, Sequence, Any, Iterable, Type, Union
@@ -611,7 +613,38 @@ class RecordSocket:
         return self.update_completed_schema_v1(session, record_id, record_type, result, manager_name)
 
     def insert_complete(self, session: Session, results: Sequence[AllResultTypes]) -> List[int]:
-        return self.insert_complete_schema_v1(session, results)
+
+        all_ids: List[Optional[int]] = [None for _ in range(len(results))]
+
+        schema_v1_results: List[Tuple[int, AllSchemaV1ResultTypes]] = []
+        qcp_results: List[Tuple[int, AllQCPortalRecordTypes]] = []
+
+        for idx, result in enumerate(results):
+            if isinstance(result, FailedOperation) or not result.success:
+                raise UserReportableError("Cannot insert a completed, failed operation")
+            elif isinstance(result, AllSchemaV1ResultTypes):
+                schema_v1_results.append((idx, result))
+            elif isinstance(result, AllQCPortalRecordTypes):
+                qcp_results.append((idx, result))
+            else:
+                raise UserReportableError("Cannot insert a completed, unrecognized result")
+
+        if schema_v1_results:
+            schema_tmp = [x[1] for x in schema_v1_results]
+            schema_ids = self.insert_complete_schema_v1(session, schema_tmp)
+            for (schema_idx, _), schema_id in zip(schema_v1_results, schema_ids):
+                all_ids[schema_idx] = schema_id
+
+        if qcp_results:
+            qcp_tmp = [x[1] for x in qcp_results]
+            qcp_ids = self.insert_complete_qcportal_records(session, qcp_tmp)
+            for (record_idx, _), record_id in zip(qcp_results, qcp_ids):
+                all_ids[record_idx] = record_id
+
+        if None in all_ids:
+            raise RuntimeError("Developer error - Missing record ID in insert_complete")
+
+        return all_ids
 
     ######################################################
     # Handlers for different result types (schema, etc)
@@ -653,7 +686,7 @@ class RecordSocket:
 
         # Do these before calling the record-specific handler
         # (these may pull stuff out of extras)
-        history_orm = compute_history_orms_from_schema_v1(result)
+        history_orm = compute_history_orm_from_schema_v1(result)
         history_orm.record_id = record_id
         history_orm.manager_name = manager_name
         session.add(history_orm)
@@ -687,6 +720,71 @@ class RecordSocket:
         stmt = delete(TaskQueueORM).where(TaskQueueORM.record_id == record_id)
         session.execute(stmt)
 
+    def insert_complete_qcportal_records(
+        self, session: Session, records: Sequence[AllQCPortalRecordTypes]
+    ) -> List[int]:
+        """
+        Insert records into the database from a QCPortal record
+
+        This will always create new ORMs from scratch, and not update any existing records.
+        """
+
+        if len(records) == 0:
+            return []
+
+        # Map of schema name stored in the records to (index, record)
+        type_map: Dict[str, List[Tuple[int, AllQCPortalRecordTypes]]] = defaultdict(list)
+
+        for idx, record in enumerate(records):
+            type_map[record.record_type].append((idx, record))
+
+        # First element in the tuple is the index in the original "records" list
+        to_add: List[Tuple[int, BaseRecordORM]] = []
+
+        for record_type, idx_records in type_map.items():
+            # idx_records is a list of tuple (idx, record). idx is the index in the
+            # original records (function parameter)
+            type_records = [r for _, r in idx_records]
+            history_orms = [compute_history_orms_from_qcportal_record(r) for r in type_records]
+            native_files_orms = [native_files_orms_from_qcportal_record(r) for r in type_records]
+
+            # Now the record-specific stuff
+            handler = self._handler_map[record_type]
+            record_orms = handler.insert_complete_qcportal_records_v1(session, type_records)
+
+            for record_orm, history_orm, native_files_orm, (idx, type_record) in zip(
+                record_orms, history_orms, native_files_orms, idx_records
+            ):
+                record_orm.is_service = type_record.is_service
+
+                # Now back to the common modifications
+                record_orm.compute_history = history_orm
+                record_orm.native_files = native_files_orm
+                record_orm.status = type_record.status
+
+                if type_record.comments_:
+                    record_orm.comments = type_record.comments_
+
+                record_orm.created_on = type_record.created_on
+                record_orm.modified_on = type_record.modified_on
+                record_orm.manager_name = type_record.manager_name
+
+                record_orm.extras = type_record.extras
+                record_orm.properties = type_record.properties
+
+                to_add.append((idx, record_orm))
+
+        to_add.sort()
+
+        # Check that everything is in the original order
+        assert tuple(idx for idx, _ in to_add) == tuple(range(len(to_add)))
+        to_add_orm = [o for _, o in to_add]
+
+        session.add_all(to_add_orm)
+        session.flush()
+
+        return [o.id for o in to_add_orm]
+
     def insert_complete_schema_v1(self, session: Session, results: Sequence[AllSchemaV1ResultTypes]) -> List[int]:
         """
         Insert records into the database from a QCSchema result
@@ -717,7 +815,7 @@ class RecordSocket:
             # idx_results is a list of tuple (idx, result). idx is the index in the
             # original results (function parameter)
             type_results = [r for _, r in idx_results]
-            history_orms = [compute_history_orms_from_schema_v1(r) for r in type_results]
+            history_orms = [compute_history_orm_from_schema_v1(r) for r in type_results]
             native_files_orms = [native_files_orms_from_schema_v1(r) for r in type_results]
 
             # Now the record-specific stuff

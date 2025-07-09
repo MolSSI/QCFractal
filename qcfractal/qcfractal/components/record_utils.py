@@ -17,8 +17,8 @@ from .record_db_models import (
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
-    from qcportal.all_results import AllResultTypes
-    from typing import Dict, Tuple, Any
+    from qcportal.all_results import AllResultTypes, AllQCPortalRecordTypes, AllSchemaV1ResultTypes
+    from typing import Dict, Tuple, List, Any
 
 
 def build_extras_properties(result: AllResultTypes) -> Tuple[Dict[str, Any], Dict[str, Any]]:
@@ -91,7 +91,43 @@ def append_output(session: Session, record_orm: BaseRecordORM, output_type: Outp
     session.flush()
 
 
-def compute_history_orms_from_schema_v1(result: AllResultTypes) -> RecordComputeHistoryORM:
+def compute_history_orms_from_qcportal_record(result: AllQCPortalRecordTypes) -> List[RecordComputeHistoryORM]:
+    """
+    Retrieves status and (possibly compressed) outputs from a result, and creates
+    a record computation history entry
+    """
+
+    if not result.compute_history_:
+        return []
+
+    history_orms = []
+
+    for ch in result.compute_history_:
+        history_orm = RecordComputeHistoryORM()
+        history_orm.status = ch.status
+        history_orm.manager_name = ch.manager_name
+        history_orm.modified_on = ch.modified_on
+        history_orm.provenance = ch.provenance.dict()
+
+        # Get the compressed outputs if they exist
+        if ch.outputs_:
+            for output_type, output_store in ch.outputs_.items():
+                if output_store.data_ is not None:
+                    out_orm = OutputStoreORM(
+                        output_type=output_type,
+                        compression_type=output_store.compression_type,
+                        compression_level=-1,  # We don't know :( But it's not really used anywhere - just for curiosity
+                        data=output_store.data_,
+                    )
+
+                    history_orm.outputs[output_type] = out_orm
+
+        history_orms.append(history_orm)
+
+    return history_orms
+
+
+def compute_history_orm_from_schema_v1(result: AllSchemaV1ResultTypes) -> RecordComputeHistoryORM:
     """
     Retrieves status and (possibly compressed) outputs from a result, and creates
     a record computation history entry
@@ -129,7 +165,29 @@ def compute_history_orms_from_schema_v1(result: AllResultTypes) -> RecordCompute
     return history_orm
 
 
-def native_files_orms_from_schema_v1(result: AllResultTypes) -> Dict[str, NativeFileORM]:
+def native_files_orms_from_qcportal_record(result: AllQCPortalRecordTypes) -> Dict[str, NativeFileORM]:
+    """
+    Convert the native files stored in a QCElemental result to an ORM
+    """
+
+    if not result.native_files_:
+        return {}
+
+    native_files = {}
+    for name, nf in result.native_files_.items():
+        if nf.data_ is not None:
+            nf_orm = NativeFileORM(
+                name=name,
+                compression_type=nf.compression_type,
+                compression_level=-1,  # We don't know :( But it's not really used anywhere - just for curiosity
+                data=nf.data_,
+            )
+            native_files[name] = nf_orm
+
+    return native_files
+
+
+def native_files_orms_from_schema_v1(result: AllSchemaV1ResultTypes) -> Dict[str, NativeFileORM]:
     """
     Convert the native files stored in a QCElemental result to an ORM
     """
