@@ -35,7 +35,9 @@ def get_direct_link_external_file_v1(file_id: int):
     passthrough = current_app.config["QCFRACTAL_CONFIG"].s3.passthrough
 
     if passthrough:
-        return f"/api/v1/external_files/{file_id}/download"
+        # Will check for missing file id
+        meta = storage_socket.external_files.get_metadata(file_id)
+        return f"/api/v1/external_files/{meta['id']}/download"
     else:
         _, url = storage_socket.external_files.get_url(file_id)
         return url
