@@ -1,6 +1,28 @@
 Release Notes
 =============
 
+0.62 / 2025-07-11
+-----------------
+
+A few minor bug fixes and improvements - nothing terribly major. Some work on stabilizing tests and
+moving from "fork" to "spawn" for multiprocessing, but this should be transparent.
+
+This also improves error handling in various clients, particularly the manager client, and improves
+snowflake startup stability.
+
+One small database migration - removing the foreign key from `manager_name` to allow for copying between instances
+in the future.
+
+Notable PRs:
+
+- (:pr:`947`) Reduce batch size in view creation (helps with job runner memory usage)
+- (:pr:`951`) Ability to append to a dataset with scaffold (J. Clark :contrib:`jaclark5`)
+- (:pr:`955`, :pr:`959`) Rework multiprocessing and switch to "spawn" over "fork"
+- (:pr:`958`) Force compute tag to be lowercase when modifying records
+- (:pr:`960`) Cleanup and preparation for external record ingestion (includes the DB migration mentioned above)
+- (:pr:`961`) Implement getting direct download url for external files (including attachments and views)
+
+
 0.61 / 2025-05-15
 -----------------
 
