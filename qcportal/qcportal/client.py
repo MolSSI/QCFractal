@@ -434,6 +434,16 @@ class PortalClient(PortalClientBase):
     ##############################################################
     # External files
     ##############################################################
+    def get_external_file_direct_link(self, file_id: int) -> str:
+        url = self.make_request("get", f"api/v1/external_files/{file_id}/direct_link", str)
+        if url.startswith("/"):
+            # What was returned is a path relative to the current server's address.
+            # That means the file is being passed-through the server, and there's no other link
+            url = url.lstrip("/")
+            url = f"{self.address}{url}"
+
+        return url
+
     def download_external_file(self, file_id: int, destination_path: str, overwrite: bool = False) -> Tuple[int, str]:
         """
         Downloads an external file to the given path

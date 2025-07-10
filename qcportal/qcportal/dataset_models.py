@@ -528,6 +528,10 @@ class BaseDataset(BaseModel):
             Optional[List[DatasetAttachment]],
         )
 
+        if self.attachments_ is not None:
+            for x in self.attachments_:
+                x.propagate_client(self._client)
+
     @property
     def attachments(self) -> List[DatasetAttachment]:
         if not self.attachments_:
@@ -573,7 +577,7 @@ class BaseDataset(BaseModel):
             attachment_data = attachment_map[attachment_id]
             destination_path = os.path.join(os.getcwd(), attachment_data.file_name)
 
-        self._client.download_external_file(attachment_id, destination_path, overwrite=overwrite)
+        attachment_map[attachment_id].download(destination_path, overwrite=overwrite)
 
     #########################################
     # View creation and use
