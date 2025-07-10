@@ -17,8 +17,8 @@ from qcportal.metadata_models import InsertMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
 from qcportal.utils import now_at_utc
 from .db_models import ServiceQueueORM, ServiceDependencyORM, ServiceSubtaskRecordORM
+from ..base_record_socket import BaseRecordSocket
 from ..outputstore.utils import create_output_orm
-from ..record_socket import BaseRecordSocket
 from ..record_utils import append_output
 
 if TYPE_CHECKING:
@@ -391,7 +391,7 @@ class ServiceSubtaskRecordSocket(BaseRecordSocket):
         # Return in the input order
         return [task_specs[rid] for rid in record_ids]
 
-    def update_completed_task(self, session: Session, record_id: int, result: GenericTaskResult) -> None:
+    def update_completed_schema_v1(self, session: Session, record_id: int, result: GenericTaskResult) -> None:
 
         record_updates = {"results": result.results}
         stmt = update(ServiceSubtaskRecordORM).where(ServiceSubtaskRecordORM.id == record_id).values(record_updates)

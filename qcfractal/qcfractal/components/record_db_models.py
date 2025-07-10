@@ -22,7 +22,6 @@ from sqlalchemy.orm import relationship, deferred
 from sqlalchemy.orm.collections import attribute_keyed_dict
 
 from qcfractal.components.auth.db_models import UserORM, UserIDMapSubquery
-from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.db_socket import BaseORM
 from qcportal.compression import CompressionEnum, decompress
 from qcportal.record_models import RecordStatusEnum, OutputTypeEnum
@@ -162,7 +161,7 @@ class RecordComputeHistoryORM(BaseORM):
     record_id = Column(Integer, ForeignKey("base_record.id", ondelete="cascade"), nullable=False)
 
     status = Column(Enum(RecordStatusEnum), nullable=False)
-    manager_name = Column(String, ForeignKey(ComputeManagerORM.name), nullable=True)
+    manager_name = Column(String, nullable=True)
     modified_on = Column(TIMESTAMP(timezone=True), default=now_at_utc, nullable=False)
     provenance = Column(JSON)
 
@@ -201,7 +200,7 @@ class BaseRecordORM(BaseORM):
     # Compute status
     # (Denormalized from compute history table for faster lookup during manager claiming/returning)
     status = Column(Enum(RecordStatusEnum), nullable=False)
-    manager_name = Column(String, ForeignKey("compute_manager.name"), nullable=True)
+    manager_name = Column(String, nullable=True)
 
     created_on = Column(TIMESTAMP(timezone=True), default=now_at_utc, nullable=False)
     modified_on = Column(TIMESTAMP(timezone=True), default=now_at_utc, nullable=False)

@@ -28,7 +28,7 @@ from qcportal.singlepoint import (
 )
 from qcportal.utils import hash_dict, is_included
 from .record_db_models import OptimizationSpecificationORM, OptimizationRecordORM, OptimizationTrajectoryORM
-from ..record_socket import BaseRecordSocket
+from ..base_record_socket import BaseRecordSocket
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -120,7 +120,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
         # Return in the input order
         return [task_specs[rid] for rid in record_ids]
 
-    def update_completed_task(self, session: Session, record_id: int, result: QCEl_OptimizationResult) -> None:
+    def update_completed_schema_v1(self, session: Session, record_id: int, result: QCEl_OptimizationResult) -> None:
 
         # Add the final molecule
         meta, final_mol_id = self.root_socket.molecules.add([result.final_molecule], session=session)

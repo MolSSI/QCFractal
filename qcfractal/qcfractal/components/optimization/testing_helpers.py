@@ -6,7 +6,7 @@ try:
     import pydantic.v1 as pydantic
 except ImportError:
     import pydantic
-from qcarchivetesting.helpers import read_record_data
+from qcarchivetesting.helpers import read_procedure_data
 from qcelemental.models import (
     Molecule,
     FailedOperation,
@@ -77,7 +77,7 @@ test_specs = [
 
 
 def load_test_data(name: str) -> Tuple[OptimizationSpecification, Molecule, QCEl_OptimizationResult]:
-    test_data = read_record_data(name)
+    test_data = read_procedure_data(name)
 
     return (
         pydantic.parse_obj_as(OptimizationSpecification, test_data["specification"]),

@@ -23,7 +23,7 @@ from qcportal.singlepoint import (
 )
 from qcportal.utils import hash_dict, is_included
 from .record_db_models import QCSpecificationORM, SinglepointRecordORM, WavefunctionORM
-from ..record_socket import BaseRecordSocket
+from ..base_record_socket import BaseRecordSocket
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -108,7 +108,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
 
         return WavefunctionORM(compression_type=ctype, compression_level=clevel, data=cdata)
 
-    def update_completed_task(self, session: Session, record_id: int, result: QCEl_AtomicResult) -> None:
+    def update_completed_schema_v1(self, session: Session, record_id: int, result: QCEl_AtomicResult) -> None:
         # Update the fields themselves
         if result.wavefunction:
             wavefunction_orm = self.create_wavefunction_orm(result.wavefunction)

@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import select, literal, insert
 
-from qcfractal.components.dataset_socket import BaseDatasetSocket
 from qcfractal.components.torsiondrive.record_db_models import TorsiondriveRecordORM
 from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.record_models import PriorityEnum
@@ -18,6 +17,7 @@ from .dataset_db_models import (
     TorsiondriveDatasetMoleculeORM,
     TorsiondriveDatasetRecordItemORM,
 )
+from ..base_dataset_socket import BaseDatasetSocket
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session

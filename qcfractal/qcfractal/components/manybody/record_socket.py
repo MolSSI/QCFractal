@@ -32,7 +32,7 @@ from .record_db_models import (
     ManybodySpecificationORM,
     ManybodySpecificationLevelsORM,
 )
-from ..record_socket import BaseRecordSocket
+from ..base_record_socket import BaseRecordSocket
 from ..record_utils import append_output
 
 _qcm_spec = importlib.util.find_spec("qcmanybody")

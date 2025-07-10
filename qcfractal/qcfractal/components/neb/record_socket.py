@@ -42,7 +42,7 @@ from .record_db_models import (
     NEBInitialchainORM,
     NEBRecordORM,
 )
-from ..record_socket import BaseRecordSocket
+from ..base_record_socket import BaseRecordSocket
 from ..record_utils import append_output
 
 # geometric package is optional

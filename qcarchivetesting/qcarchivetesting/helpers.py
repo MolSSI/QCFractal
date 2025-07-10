@@ -107,13 +107,14 @@ test_users = {
     },
 }
 
-
-def read_record_data(name: str):
+def _read_data(directory: str, name: str):
     """
-    Loads pre-computed/dummy procedure data from the test directory
+    Loads pre-computed/dummy procedure data from a test directory
 
     Parameters
     ----------
+    directory
+        Directory that contains the data file
     name
         The name of the file to load (without the json extension)
 
@@ -121,10 +122,9 @@ def read_record_data(name: str):
     -------
     :
         A dictionary with all the data in the file
-
     """
 
-    data_path = os.path.join(_my_path, "procedure_data")
+    data_path = os.path.join(_my_path, directory)
     file_path = os.path.join(data_path, name + ".json.xz")
     is_xz = True
 
@@ -143,6 +143,45 @@ def read_record_data(name: str):
             data = json.load(f, object_hook=_json_decode)
 
     return data
+
+
+def read_procedure_data(name: str):
+    """
+    Loads pre-computed/dummy procedure data from the test directory
+
+    Parameters
+    ----------
+    name
+        The name of the file to load (without the json extension)
+
+    Returns
+    -------
+    :
+        A dictionary with all the data in the file
+
+    """
+
+    return _read_data("procedure_data", name)
+
+
+
+def read_record_data(name: str):
+    """
+    Loads pre-computed/dummy record data from the test directory
+
+    Parameters
+    ----------
+    name
+        The name of the file to load (without the json extension)
+
+    Returns
+    -------
+    :
+        A dictionary with all the data in the file
+
+    """
+
+    return _read_data("record_data", name)
 
 
 def load_molecule_data(name: str) -> Molecule:
