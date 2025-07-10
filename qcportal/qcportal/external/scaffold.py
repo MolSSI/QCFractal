@@ -102,12 +102,12 @@ def from_json(filename, client, append=False):
     for entry_name, entry in ds_dict["entries"].items():
         if "local_results" in entry:
             del entry["local_results"]
-            
+
         if entry_name in ds.entry_names:
             warnings.warn(f'The entry, {entry_name}, is already in the dataset: {ds_dict["metadata"]["name"]}')
         else:
             entries.append(entry_type(**entry))
-            
+
     ds.background_add_entries(entries)
 
     return ds
