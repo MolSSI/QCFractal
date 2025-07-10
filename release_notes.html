@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=c543c0b9"></script>
+    <script src="_static/documentation_options.js?v=4d09a704"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="NEB Records" href="user_guide/qcportal_reference/records/neb.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.61.post55+g0a8190de6" />
+  <meta name="docsearch:version" content="0.61.post58+g3849be1b7" />
   </head>
   
   
@@ -451,7 +451,25 @@
   <section id="release-notes">
 <h1>Release Notes<a class="headerlink" href="#release-notes" title="Link to this heading">#</a></h1>
 <section id="id1">
-<h2>0.61 / 2025-05-15<a class="headerlink" href="#id1" title="Link to this heading">#</a></h2>
+<h2>0.62 / 2025-07-11<a class="headerlink" href="#id1" title="Link to this heading">#</a></h2>
+<p>A few minor bug fixes and improvements - nothing terribly major. Some work on stabilizing tests and
+moving from “fork” to “spawn” for multiprocessing, but this should be transparent.</p>
+<p>This also improves error handling in various clients, particularly the manager client, and improves
+snowflake startup stability.</p>
+<p>One small database migration - removing the foreign key from <cite>manager_name</cite> to allow for copying between instances
+in the future.</p>
+<p>Notable PRs:</p>
+<ul class="simple">
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/947">PR 947</a>) Reduce batch size in view creation (helps with job runner memory usage)</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/951">PR 951</a>) Ability to append to a dataset with scaffold (J. Clark <a class="extlink-contrib reference external" href="https://github.com/jaclark5">&#64;jaclark5</a>)</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/955">PR 955</a>, <a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/959">PR 959</a>) Rework multiprocessing and switch to “spawn” over “fork”</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/958">PR 958</a>) Force compute tag to be lowercase when modifying records</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/960">PR 960</a>) Cleanup and preparation for external record ingestion (includes the DB migration mentioned above)</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/961">PR 961</a>) Implement getting direct download url for external files (including attachments and views)</p></li>
+</ul>
+</section>
+<section id="id2">
+<h2>0.61 / 2025-05-15<a class="headerlink" href="#id2" title="Link to this heading">#</a></h2>
 <p>Some good bug fixes, and important features. Mainly, an initial beta version of projects.</p>
 <p>This release also adds lots of functionality useful for building web applications against the server.</p>
 <p>Internally, one big change - roles and permissions is now handled in a streamlined fashion, rather than using
@@ -478,8 +496,8 @@ believe anyone did).</p>
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/944">PR 944</a>) Initial implementation of projects</p></li>
 </ul>
 </section>
-<section id="id2">
-<h2>0.60 / 2025-04-05<a class="headerlink" href="#id2" title="Link to this heading">#</a></h2>
+<section id="id3">
+<h2>0.60 / 2025-04-05<a class="headerlink" href="#id3" title="Link to this heading">#</a></h2>
 <p>Some good bug fixes, and important features. Mainly, the ability to add entries in the background, and
 import/export of dataset scaffolds (Thanks to <a class="extlink-contrib reference external" href="https://github.com/jaclark5">&#64;jaclark5</a>)!</p>
 <p>There some interfaces changes related to datasets and record submission. <strong>These are intended to be
@@ -509,8 +527,8 @@ still work (if not, open an issue). For example, <code class="docutils literal n
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/923">PR 923</a>, <a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/924">PR 924</a>) Better error handling in running conda commands in compute workers (J. Clark <a class="extlink-contrib reference external" href="https://github.com/jaclark5">&#64;jaclark5</a>)</p></li>
 </ul>
 </section>
-<section id="id3">
-<h2>0.59 / 2025-02-17<a class="headerlink" href="#id3" title="Link to this heading">#</a></h2>
+<section id="id4">
+<h2>0.59 / 2025-02-17<a class="headerlink" href="#id4" title="Link to this heading">#</a></h2>
 <p>A few bug fixes in this, but one big new feature - the ability to copy entries, specifications,
 and records from another dataset! See
 <a class="reference external" href="https://docs.qcarchive.molssi.org/user_guide/datasets/creating.html#cloning-a-dataset">documentation</a>
@@ -522,8 +540,8 @@ for details.</p>
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/896">PR 896</a>) Ability to clone datasets and copy entries/specifications/records from other datasets</p></li>
 </ul>
 </section>
-<section id="id4">
-<h2>0.58 / 2025-01-31<a class="headerlink" href="#id4" title="Link to this heading">#</a></h2>
+<section id="id5">
+<h2>0.58 / 2025-01-31<a class="headerlink" href="#id5" title="Link to this heading">#</a></h2>
 <p>This release has some big new features! These new features should be stable, but report
 any bugs you may find.</p>
 <p>1. Dataset views can now be attached to a dataset and stored in S3-compatible storage. The views are
@@ -555,8 +573,8 @@ cause issues, but if it does, contact me.</p>
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/889">PR 889</a>) Implement jitter for manager heartbeats and updates</p></li>
 </ul>
 </section>
-<section id="id5">
-<h2>0.57 / 2024-12-12<a class="headerlink" href="#id5" title="Link to this heading">#</a></h2>
+<section id="id6">
+<h2>0.57 / 2024-12-12<a class="headerlink" href="#id6" title="Link to this heading">#</a></h2>
 <p>A couple new features, some nice improvements, and of course some bug fixes!
 This update should be backwards compatible - new clients can access old servers, and old clients can
 access new servers. Same for compute managers.</p>
@@ -576,8 +594,8 @@ access new servers. Same for compute managers.</p>
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/863">PR 863</a>) Remove channels from Parsl config</p></li>
 </ul>
 </section>
-<section id="id6">
-<h2>0.56 / 2024-07-09<a class="headerlink" href="#id6" title="Link to this heading">#</a></h2>
+<section id="id7">
+<h2>0.56 / 2024-07-09<a class="headerlink" href="#id7" title="Link to this heading">#</a></h2>
 <p>Two small bugfixes. One is related to how the cache works, the other is a slight modification of the NEB specification.</p>
 <p>The fix to the caching behavior should help with a lot of unexpected behavior related to caching. See <a class="extlink-issue reference external" href="https://github.com/MolSSI/QCFractal/issues/844">Issue 844</a>.</p>
 <ul class="simple">
@@ -585,8 +603,8 @@ access new servers. Same for compute managers.</p>
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/843">PR 843</a>) Write records to cache immediately after fetching</p></li>
 </ul>
 </section>
-<section id="id7">
-<h2>0.55 / 2024-05-23<a class="headerlink" href="#id7" title="Link to this heading">#</a></h2>
+<section id="id8">
+<h2>0.55 / 2024-05-23<a class="headerlink" href="#id8" title="Link to this heading">#</a></h2>
 <p>Some moderate improvements - mainly, the use of ASPW for SQLite, and the removal of the never-used manager log and
 serverinfo log tables. Also adds maintenance jobs for removing old access log and completed internal jobs.</p>
 <p>This release also adds the ability to more-strictly handle queue tags (to prevent managers with <cite>*</cite> as a tag from pulling
@@ -610,16 +628,16 @@ everything).</p>
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/838">PR 838</a>) Better handling of passwords with <cite>init-db</cite></p></li>
 </ul>
 </section>
-<section id="id8">
-<h2>0.54.1 / 2024-04-12<a class="headerlink" href="#id8" title="Link to this heading">#</a></h2>
+<section id="id9">
+<h2>0.54.1 / 2024-04-12<a class="headerlink" href="#id9" title="Link to this heading">#</a></h2>
 <p>This is a minor fix-up release that fixes a few issues from the v0.54 release.</p>
 <ul class="simple">
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/815">PR 815</a>) Adds tag to the task queue sort index</p></li>
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/816">PR 816</a>) Fixes a few issues related to caching</p></li>
 </ul>
 </section>
-<section id="id9">
-<h2>0.54 / 2024-04-09<a class="headerlink" href="#id9" title="Link to this heading">#</a></h2>
+<section id="id10">
+<h2>0.54 / 2024-04-09<a class="headerlink" href="#id10" title="Link to this heading">#</a></h2>
 <p>Two big features of this release is client-side caching (including views) and the ability to download more of records.
 As part of this, fetching lots of records from a server will automatically scale to keep a relatively constant
 request time, rather than use a fixed batch size.</p>
@@ -632,8 +650,8 @@ request time, rather than use a fixed batch size.</p>
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/811">PR 811</a>) Improve task queue performance by storing time in the task queue table directly</p></li>
 </ul>
 </section>
-<section id="id10">
-<h2>0.53 / 2024-01-09<a class="headerlink" href="#id10" title="Link to this heading">#</a></h2>
+<section id="id11">
+<h2>0.53 / 2024-01-09<a class="headerlink" href="#id11" title="Link to this heading">#</a></h2>
 <p>The only real thing to report is fixing of molecules returned from the server. Other than that,
 a little bit of cleanup in preparation for implementing new features in the future
 No breaking changes. Upgrading qcportal is recommended, but is not required.</p>
@@ -642,8 +660,8 @@ No breaking changes. Upgrading qcportal is recommended, but is not required.</p>
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/798">PR 798</a>) Mark molecules coming from the server as already validated, and remove <cite>fix_com</cite> and <cite>fix_orientation</cite> from the database.</p></li>
 </ul>
 </section>
-<section id="id11">
-<h2>0.52 / 2023-11-29<a class="headerlink" href="#id11" title="Link to this heading">#</a></h2>
+<section id="id12">
+<h2>0.52 / 2023-11-29<a class="headerlink" href="#id12" title="Link to this heading">#</a></h2>
 <p>Some improvements and bugfixes, but no breaking changes. Upgrading qcportal is recommended
 due to fixes related to JWTs, but is not required. The same is true with compute managers.</p>
 <p>Notable pull requests and features:</p>
@@ -656,8 +674,8 @@ due to fixes related to JWTs, but is not required. The same is true with compute
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/794">PR 794</a>) Remove use of now-deprecated <cite>utctime</cite> function and improve handling of timezones</p></li>
 </ul>
 </section>
-<section id="id12">
-<h2>0.51 / 2023-10-19<a class="headerlink" href="#id12" title="Link to this heading">#</a></h2>
+<section id="id13">
+<h2>0.51 / 2023-10-19<a class="headerlink" href="#id13" title="Link to this heading">#</a></h2>
 <p>Many new improvements, but very little in the way of breaking changes. Upgrading qcportal is recommended
 due to efficiency gains, but is not required.</p>
 <p>Notable pull requests and features:</p>
@@ -683,8 +701,8 @@ due to efficiency gains, but is not required.</p>
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/775">PR 775</a>) Add automatic batching in ds.add_entries() and ds.submit()</p></li>
 </ul>
 </section>
-<section id="id13">
-<h2>0.50 / 2023-09-12<a class="headerlink" href="#id13" title="Link to this heading">#</a></h2>
+<section id="id14">
+<h2>0.50 / 2023-09-12<a class="headerlink" href="#id14" title="Link to this heading">#</a></h2>
 <p>Major refactoring of everything. Too many changes to enumerate, but see <a class="reference external" href="https://molssi.github.io/QCFractal">docs</a> for details.</p>
 </section>
 </section>
@@ -736,19 +754,20 @@ due to efficiency gains, but is not required.</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">0.61 / 2025-05-15</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">0.60 / 2025-04-05</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">0.59 / 2025-02-17</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">0.58 / 2025-01-31</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">0.57 / 2024-12-12</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">0.56 / 2024-07-09</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">0.55 / 2024-05-23</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">0.54.1 / 2024-04-12</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">0.54 / 2024-04-09</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">0.53 / 2024-01-09</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id11">0.52 / 2023-11-29</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id12">0.51 / 2023-10-19</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id13">0.50 / 2023-09-12</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">0.62 / 2025-07-11</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">0.61 / 2025-05-15</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">0.60 / 2025-04-05</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">0.59 / 2025-02-17</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">0.58 / 2025-01-31</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">0.57 / 2024-12-12</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">0.56 / 2024-07-09</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">0.55 / 2024-05-23</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">0.54.1 / 2024-04-12</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">0.54 / 2024-04-09</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id11">0.53 / 2024-01-09</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id12">0.52 / 2023-11-29</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id13">0.51 / 2023-10-19</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id14">0.50 / 2023-09-12</a></li>
 </ul>
   </nav></div>
 
