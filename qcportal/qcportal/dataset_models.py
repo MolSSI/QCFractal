@@ -1864,6 +1864,26 @@ class BaseDataset(BaseModel):
         *,
         refetch_records: bool = False,
     ):
+        """
+        Modify the compute tag, compute priority, or comment of records in this dataset.
+
+        Note: compute tags are not case sensitive and will be converted to lowercase.
+
+        Parameters
+        ----------
+        entry_names
+            Names of the entries whose records to modify. If None, modify records for all entries.
+        specification_names
+            Names of the specifications whose records to modify. If None, modify records for all specifications.
+        new_compute_tag
+            The new compute tag to assign to the records.
+        new_compute_priority
+            The new compute priority to assign to the records.
+        new_comment
+            A new comment to add to the records.
+        refetch_records
+            If True, refetch the modified records from the server.
+        """
 
         self._modify_records(
             entry_names=entry_names,
@@ -1881,6 +1901,18 @@ class BaseDataset(BaseModel):
         *,
         refetch_records: bool = False,
     ):
+        """
+        Resets running or errored records to be waiting again.
+
+        Parameters
+        ----------
+        entry_names
+            Names of the entries whose records to reset. If None, reset records for all entries.
+        specification_names
+            Names of the specifications whose records to reset. If None, reset records for all specifications.
+        refetch_records
+            If True, refetch the reset records from the server.
+        """
 
         self._modify_records(
             entry_names=entry_names,
@@ -1896,6 +1928,20 @@ class BaseDataset(BaseModel):
         *,
         refetch_records: bool = False,
     ):
+        """
+        Marks running, waiting, or errored records as cancelled.
+
+        A cancelled record will not be picked up by a manager.
+
+        Parameters
+        ----------
+        entry_names
+            Names of the entries whose records to cancel. If None, cancel records for all entries.
+        specification_names
+            Names of the specifications whose records to cancel. If None, cancel records for all specifications.
+        refetch_records
+            If True, refetch the cancelled records from the server.
+        """
 
         self._modify_records(
             entry_names=entry_names,
@@ -1911,6 +1957,18 @@ class BaseDataset(BaseModel):
         *,
         refetch_records: bool = False,
     ):
+        """
+        Undo the cancellation of records.
+
+        Parameters
+        ----------
+        entry_names
+            Names of the entries whose records to uncancel. If None, uncancel records for all entries.
+        specification_names
+            Names of the specifications whose records to uncancel. If None, uncancel records for all specifications.
+        refetch_records
+            If True, refetch the uncancelled records from the server.
+        """
         self._revert_records(
             revert_status=RecordStatusEnum.cancelled,
             entry_names=entry_names,
@@ -1925,6 +1983,21 @@ class BaseDataset(BaseModel):
         *,
         refetch_records: bool = False,
     ):
+        """
+        Marks a completed record as invalid.
+
+        An invalid record is one that supposedly successfully completed. However, after review,
+        is not correct.
+
+        Parameters
+        ----------
+        entry_names
+            Names of the entries whose records to invalidate. If None, invalidate records for all entries.
+        specification_names
+            Names of the specifications whose records to invalidate. If None, invalidate records for all specifications.
+        refetch_records
+            If True, refetch the invalidated records from the server.
+        """
 
         self._modify_records(
             entry_names=entry_names,
@@ -1940,6 +2013,18 @@ class BaseDataset(BaseModel):
         *,
         refetch_records: bool = False,
     ):
+        """
+        Undo the invalidation of records.
+
+        Parameters
+        ----------
+        entry_names
+            Names of the entries whose records to uninvalidate. If None, uninvalidate records for all entries.
+        specification_names
+            Names of the specifications whose records to uninvalidate. If None, uninvalidate records for all specifications.
+        refetch_records
+            If True, refetch the uninvalidated records from the server.
+        """
         self._revert_records(
             revert_status=RecordStatusEnum.invalid,
             entry_names=entry_names,
