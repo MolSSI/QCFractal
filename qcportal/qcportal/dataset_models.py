@@ -23,10 +23,10 @@ from typing import (
 
 try:
     import pydantic.v1 as pydantic
-    from pydantic.v1 import BaseModel, Extra, validator, PrivateAttr, Field, root_validator
+    from pydantic.v1 import BaseModel, Extra, validator, PrivateAttr, Field, root_validator, constr
 except ImportError:
     import pydantic
-    from pydantic import BaseModel, Extra, validator, PrivateAttr, Field, root_validator
+    from pydantic import BaseModel, Extra, validator, PrivateAttr, Field, root_validator, constr
 from qcelemental.models.types import Array
 from tabulate import tabulate
 from tqdm import tqdm
@@ -1245,7 +1245,7 @@ class BaseDataset(BaseModel):
             - Sends a patch request to the server to update entry names.
             - Updates the local cache and entry names list with the new names.
         """
-        
+
         self.assert_is_not_view()
         self.assert_online()
 
@@ -1268,16 +1268,16 @@ class BaseDataset(BaseModel):
     ):
         """
         Modifies the entries in the dataset by updating their attributes or comments.
-        
+
         Parameters:
-            attribute_map (Optional[Dict[str, Dict[str, Any]]]): 
-                A dictionary mapping entry names to their updated attributes. 
+            attribute_map (Optional[Dict[str, Dict[str, Any]]]):
+                A dictionary mapping entry names to their updated attributes.
                 Each entry name maps to a dictionary of attribute key-value pairs to be updated.
-            comment_map (Optional[Dict[str, str]]): 
+            comment_map (Optional[Dict[str, str]]):
                 A dictionary mapping entry names to their updated comments.
-            overwrite_attributes (bool): 
-                If True, existing attributes for the specified entries will be completely 
-                replaced by the provided attributes in ``attribute_map``. If False, only the 
+            overwrite_attributes (bool):
+                If True, existing attributes for the specified entries will be completely
+                replaced by the provided attributes in ``attribute_map``. If False, only the
                 specified attributes will be updated, leaving others unchanged.
         Raises:
             AssertionError: If the dataset is a view or if the client is offline.
@@ -1285,7 +1285,7 @@ class BaseDataset(BaseModel):
             - Sends a request to the server to modify the specified entries.
             - Synchronizes the local cache with the updated server data for the modified entries.
         """
-        
+
         self.assert_is_not_view()
         self.assert_online()
 
@@ -1315,8 +1315,7 @@ class BaseDataset(BaseModel):
         Raises:
             AssertionError: If the dataset is a view or not online.
         """
-        
-        
+
         self.assert_is_not_view()
         self.assert_online()
 
@@ -1865,6 +1864,26 @@ class BaseDataset(BaseModel):
         *,
         refetch_records: bool = False,
     ):
+        """
+        Modify the compute tag, compute priority, or comment of records in this dataset.
+
+        Note: compute tags are not case sensitive and will be converted to lowercase.
+
+        Parameters
+        ----------
+        entry_names
+            Names of the entries whose records to modify. If None, modify records for all entries.
+        specification_names
+            Names of the specifications whose records to modify. If None, modify records for all specifications.
+        new_compute_tag
+            The new compute tag to assign to the records.
+        new_compute_priority
+            The new compute priority to assign to the records.
+        new_comment
+            A new comment to add to the records.
+        refetch_records
+            If True, refetch the modified records from the server.
+        """
 
         self._modify_records(
             entry_names=entry_names,
@@ -1882,6 +1901,18 @@ class BaseDataset(BaseModel):
         *,
         refetch_records: bool = False,
     ):
+        """
+        Resets running or errored records to be waiting again.
+
+        Parameters
+        ----------
+        entry_names
+            Names of the entries whose records to reset. If None, reset records for all entries.
+        specification_names
+            Names of the specifications whose records to reset. If None, reset records for all specifications.
+        refetch_records
+            If True, refetch the reset records from the server.
+        """
 
         self._modify_records(
             entry_names=entry_names,
@@ -1897,6 +1928,20 @@ class BaseDataset(BaseModel):
         *,
         refetch_records: bool = False,
     ):
+        """
+        Marks running, waiting, or errored records as cancelled.
+
+        A cancelled record will not be picked up by a manager.
+
+        Parameters
+        ----------
+        entry_names
+            Names of the entries whose records to cancel. If None, cancel records for all entries.
+        specification_names
+            Names of the specifications whose records to cancel. If None, cancel records for all specifications.
+        refetch_records
+            If True, refetch the cancelled records from the server.
+        """
 
         self._modify_records(
             entry_names=entry_names,
@@ -1912,6 +1957,18 @@ class BaseDataset(BaseModel):
         *,
         refetch_records: bool = False,
     ):
+        """
+        Undo the cancellation of records.
+
+        Parameters
+        ----------
+        entry_names
+            Names of the entries whose records to uncancel. If None, uncancel records for all entries.
+        specification_names
+            Names of the specifications whose records to uncancel. If None, uncancel records for all specifications.
+        refetch_records
+            If True, refetch the uncancelled records from the server.
+        """
         self._revert_records(
             revert_status=RecordStatusEnum.cancelled,
             entry_names=entry_names,
@@ -1926,6 +1983,21 @@ class BaseDataset(BaseModel):
         *,
         refetch_records: bool = False,
     ):
+        """
+        Marks a completed record as invalid.
+
+        An invalid record is one that supposedly successfully completed. However, after review,
+        is not correct.
+
+        Parameters
+        ----------
+        entry_names
+            Names of the entries whose records to invalidate. If None, invalidate records for all entries.
+        specification_names
+            Names of the specifications whose records to invalidate. If None, invalidate records for all specifications.
+        refetch_records
+            If True, refetch the invalidated records from the server.
+        """
 
         self._modify_records(
             entry_names=entry_names,
@@ -1941,6 +2013,18 @@ class BaseDataset(BaseModel):
         *,
         refetch_records: bool = False,
     ):
+        """
+        Undo the invalidation of records.
+
+        Parameters
+        ----------
+        entry_names
+            Names of the entries whose records to uninvalidate. If None, uninvalidate records for all entries.
+        specification_names
+            Names of the specifications whose records to uninvalidate. If None, uninvalidate records for all specifications.
+        refetch_records
+            If True, refetch the uninvalidated records from the server.
+        """
         self._revert_records(
             revert_status=RecordStatusEnum.invalid,
             entry_names=entry_names,
@@ -2521,7 +2605,7 @@ class DatasetRecordModifyBody(RestModelBase):
     specification_names: Optional[List[str]] = None
     status: Optional[RecordStatusEnum] = None
     compute_priority: Optional[PriorityEnum] = None
-    compute_tag: Optional[str] = None
+    compute_tag: Optional[constr(to_lower=True)] = None
     comment: Optional[str] = None
 
     @root_validator(pre=True)
