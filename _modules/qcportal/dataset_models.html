@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=9ed67677"></script>
+    <script src="../../_static/documentation_options.js?v=79beb98f"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.61.post49+g9c9eb287a" />
+  <meta name="docsearch:version" content="0.61.post52+g267a7ecd8" />
   </head>
   
   
@@ -463,10 +463,10 @@
 
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">pydantic.v1</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pydantic</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic.v1</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">PrivateAttr</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">root_validator</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic.v1</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">PrivateAttr</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">root_validator</span><span class="p">,</span> <span class="n">constr</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">pydantic</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">PrivateAttr</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">root_validator</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">PrivateAttr</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">root_validator</span><span class="p">,</span> <span class="n">constr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcelemental.models.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">Array</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tabulate</span><span class="w"> </span><span class="kn">import</span> <span class="n">tabulate</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
@@ -1830,7 +1830,7 @@
 <span class="sd">            - Sends a patch request to the server to update entry names.</span>
 <span class="sd">            - Updates the local cache and entry names list with the new names.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
 
@@ -1856,16 +1856,16 @@
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Modifies the entries in the dataset by updating their attributes or comments.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Parameters:</span>
-<span class="sd">            attribute_map (Optional[Dict[str, Dict[str, Any]]]): </span>
-<span class="sd">                A dictionary mapping entry names to their updated attributes. </span>
+<span class="sd">            attribute_map (Optional[Dict[str, Dict[str, Any]]]):</span>
+<span class="sd">                A dictionary mapping entry names to their updated attributes.</span>
 <span class="sd">                Each entry name maps to a dictionary of attribute key-value pairs to be updated.</span>
-<span class="sd">            comment_map (Optional[Dict[str, str]]): </span>
+<span class="sd">            comment_map (Optional[Dict[str, str]]):</span>
 <span class="sd">                A dictionary mapping entry names to their updated comments.</span>
-<span class="sd">            overwrite_attributes (bool): </span>
-<span class="sd">                If True, existing attributes for the specified entries will be completely </span>
-<span class="sd">                replaced by the provided attributes in ``attribute_map``. If False, only the </span>
+<span class="sd">            overwrite_attributes (bool):</span>
+<span class="sd">                If True, existing attributes for the specified entries will be completely</span>
+<span class="sd">                replaced by the provided attributes in ``attribute_map``. If False, only the</span>
 <span class="sd">                specified attributes will be updated, leaving others unchanged.</span>
 <span class="sd">        Raises:</span>
 <span class="sd">            AssertionError: If the dataset is a view or if the client is offline.</span>
@@ -1873,7 +1873,7 @@
 <span class="sd">            - Sends a request to the server to modify the specified entries.</span>
 <span class="sd">            - Synchronizes the local cache with the updated server data for the modified entries.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
 
@@ -1906,8 +1906,7 @@
 <span class="sd">        Raises:</span>
 <span class="sd">            AssertionError: If the dataset is a view or not online.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
-        
+
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
 
@@ -2471,6 +2470,26 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">refetch_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Modify the compute tag, compute priority, or comment of records in this dataset.</span>
+
+<span class="sd">        Note: compute tags are not case sensitive and will be converted to lowercase.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        entry_names</span>
+<span class="sd">            Names of the entries whose records to modify. If None, modify records for all entries.</span>
+<span class="sd">        specification_names</span>
+<span class="sd">            Names of the specifications whose records to modify. If None, modify records for all specifications.</span>
+<span class="sd">        new_compute_tag</span>
+<span class="sd">            The new compute tag to assign to the records.</span>
+<span class="sd">        new_compute_priority</span>
+<span class="sd">            The new compute priority to assign to the records.</span>
+<span class="sd">        new_comment</span>
+<span class="sd">            A new comment to add to the records.</span>
+<span class="sd">        refetch_records</span>
+<span class="sd">            If True, refetch the modified records from the server.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_modify_records</span><span class="p">(</span>
             <span class="n">entry_names</span><span class="o">=</span><span class="n">entry_names</span><span class="p">,</span>
@@ -2491,6 +2510,18 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">refetch_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Resets running or errored records to be waiting again.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        entry_names</span>
+<span class="sd">            Names of the entries whose records to reset. If None, reset records for all entries.</span>
+<span class="sd">        specification_names</span>
+<span class="sd">            Names of the specifications whose records to reset. If None, reset records for all specifications.</span>
+<span class="sd">        refetch_records</span>
+<span class="sd">            If True, refetch the reset records from the server.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_modify_records</span><span class="p">(</span>
             <span class="n">entry_names</span><span class="o">=</span><span class="n">entry_names</span><span class="p">,</span>
@@ -2509,6 +2540,20 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">refetch_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Marks running, waiting, or errored records as cancelled.</span>
+
+<span class="sd">        A cancelled record will not be picked up by a manager.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        entry_names</span>
+<span class="sd">            Names of the entries whose records to cancel. If None, cancel records for all entries.</span>
+<span class="sd">        specification_names</span>
+<span class="sd">            Names of the specifications whose records to cancel. If None, cancel records for all specifications.</span>
+<span class="sd">        refetch_records</span>
+<span class="sd">            If True, refetch the cancelled records from the server.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_modify_records</span><span class="p">(</span>
             <span class="n">entry_names</span><span class="o">=</span><span class="n">entry_names</span><span class="p">,</span>
@@ -2527,6 +2572,18 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">refetch_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Undo the cancellation of records.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        entry_names</span>
+<span class="sd">            Names of the entries whose records to uncancel. If None, uncancel records for all entries.</span>
+<span class="sd">        specification_names</span>
+<span class="sd">            Names of the specifications whose records to uncancel. If None, uncancel records for all specifications.</span>
+<span class="sd">        refetch_records</span>
+<span class="sd">            If True, refetch the uncancelled records from the server.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_revert_records</span><span class="p">(</span>
             <span class="n">revert_status</span><span class="o">=</span><span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">cancelled</span><span class="p">,</span>
             <span class="n">entry_names</span><span class="o">=</span><span class="n">entry_names</span><span class="p">,</span>
@@ -2544,6 +2601,21 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">refetch_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Marks a completed record as invalid.</span>
+
+<span class="sd">        An invalid record is one that supposedly successfully completed. However, after review,</span>
+<span class="sd">        is not correct.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        entry_names</span>
+<span class="sd">            Names of the entries whose records to invalidate. If None, invalidate records for all entries.</span>
+<span class="sd">        specification_names</span>
+<span class="sd">            Names of the specifications whose records to invalidate. If None, invalidate records for all specifications.</span>
+<span class="sd">        refetch_records</span>
+<span class="sd">            If True, refetch the invalidated records from the server.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_modify_records</span><span class="p">(</span>
             <span class="n">entry_names</span><span class="o">=</span><span class="n">entry_names</span><span class="p">,</span>
@@ -2562,6 +2634,18 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">refetch_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Undo the invalidation of records.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        entry_names</span>
+<span class="sd">            Names of the entries whose records to uninvalidate. If None, uninvalidate records for all entries.</span>
+<span class="sd">        specification_names</span>
+<span class="sd">            Names of the specifications whose records to uninvalidate. If None, uninvalidate records for all specifications.</span>
+<span class="sd">        refetch_records</span>
+<span class="sd">            If True, refetch the uninvalidated records from the server.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_revert_records</span><span class="p">(</span>
             <span class="n">revert_status</span><span class="o">=</span><span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">invalid</span><span class="p">,</span>
             <span class="n">entry_names</span><span class="o">=</span><span class="n">entry_names</span><span class="p">,</span>
@@ -3209,7 +3293,7 @@
     <span class="n">specification_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">compute_priority</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PriorityEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">compute_tag</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">compute_tag</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">constr</span><span class="p">(</span><span class="n">to_lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">comment</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>

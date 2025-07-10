@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=9ed67677"></script>
+    <script src="../../../_static/documentation_options.js?v=79beb98f"></script>
     <script src="../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Utilities and Miscellaneous" href="../utils_misc.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.61.post49+g9c9eb287a" />
+  <meta name="docsearch:version" content="0.61.post52+g267a7ecd8" />
   </head>
   
   
@@ -1506,7 +1506,7 @@ that can span multiple records</p>
 <dd class="field-even"><ul class="simple">
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordModifyBody.comment" title="qcportal.record_models.RecordModifyBody.comment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">comment</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordModifyBody.compute_priority" title="qcportal.record_models.RecordModifyBody.compute_priority"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_priority</span> <span class="pre">(qcportal.record_models.PriorityEnum</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.record_models.RecordModifyBody.compute_tag" title="qcportal.record_models.RecordModifyBody.compute_tag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_tag</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.record_models.RecordModifyBody.compute_tag" title="qcportal.record_models.RecordModifyBody.compute_tag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_tag</span> <span class="pre">(qcportal.record_models.ConstrainedStrValue</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordModifyBody.record_ids" title="qcportal.record_models.RecordModifyBody.record_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_ids</span> <span class="pre">(List[int])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.record_models.RecordModifyBody.status" title="qcportal.record_models.RecordModifyBody.status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">status</span> <span class="pre">(qcportal.record_models.RecordStatusEnum</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 </ul>
@@ -1550,7 +1550,7 @@ that can span multiple records</p>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.record_models.RecordModifyBody.compute_tag">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.RecordModifyBody.compute_tag" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ConstrainedStrValue</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.record_models.RecordModifyBody.compute_tag" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Validated by<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -3031,15 +3031,17 @@ If the record does not exist for the specified entry and specification, it retur
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.modify_records">
 <span class="sig-name descname"><span class="pre">modify_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_compute_tag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_compute_priority</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_comment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refetch_records</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/dataset_models.html#BaseDataset.modify_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.modify_records" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Modify the compute tag, compute priority, or comment of records in this dataset.</p>
+<p>Note: compute tags are not case sensitive and will be converted to lowercase.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>new_compute_tag</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>new_compute_priority</strong> (<a class="reference internal" href="#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a><em> | </em><em>None</em>)</p></li>
-<li><p><strong>new_comment</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>refetch_records</strong> (<em>bool</em>)</p></li>
+<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names of the entries whose records to modify. If None, modify records for all entries.</p></li>
+<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names of the specifications whose records to modify. If None, modify records for all specifications.</p></li>
+<li><p><strong>new_compute_tag</strong> (<em>str</em><em> | </em><em>None</em>) – The new compute tag to assign to the records.</p></li>
+<li><p><strong>new_compute_priority</strong> (<a class="reference internal" href="#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a><em> | </em><em>None</em>) – The new compute priority to assign to the records.</p></li>
+<li><p><strong>new_comment</strong> (<em>str</em><em> | </em><em>None</em>) – A new comment to add to the records.</p></li>
+<li><p><strong>refetch_records</strong> (<em>bool</em>) – If True, refetch the modified records from the server.</p></li>
 </ul>
 </dd>
 </dl>
@@ -3048,12 +3050,13 @@ If the record does not exist for the specified entry and specification, it retur
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.reset_records">
 <span class="sig-name descname"><span class="pre">reset_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refetch_records</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/dataset_models.html#BaseDataset.reset_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.reset_records" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Resets running or errored records to be waiting again.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>refetch_records</strong> (<em>bool</em>)</p></li>
+<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names of the entries whose records to reset. If None, reset records for all entries.</p></li>
+<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names of the specifications whose records to reset. If None, reset records for all specifications.</p></li>
+<li><p><strong>refetch_records</strong> (<em>bool</em>) – If True, refetch the reset records from the server.</p></li>
 </ul>
 </dd>
 </dl>
@@ -3062,12 +3065,14 @@ If the record does not exist for the specified entry and specification, it retur
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.cancel_records">
 <span class="sig-name descname"><span class="pre">cancel_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refetch_records</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/dataset_models.html#BaseDataset.cancel_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.cancel_records" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Marks running, waiting, or errored records as cancelled.</p>
+<p>A cancelled record will not be picked up by a manager.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>refetch_records</strong> (<em>bool</em>)</p></li>
+<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names of the entries whose records to cancel. If None, cancel records for all entries.</p></li>
+<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names of the specifications whose records to cancel. If None, cancel records for all specifications.</p></li>
+<li><p><strong>refetch_records</strong> (<em>bool</em>) – If True, refetch the cancelled records from the server.</p></li>
 </ul>
 </dd>
 </dl>
@@ -3076,12 +3081,13 @@ If the record does not exist for the specified entry and specification, it retur
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.uncancel_records">
 <span class="sig-name descname"><span class="pre">uncancel_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refetch_records</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/dataset_models.html#BaseDataset.uncancel_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.uncancel_records" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Undo the cancellation of records.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>refetch_records</strong> (<em>bool</em>)</p></li>
+<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names of the entries whose records to uncancel. If None, uncancel records for all entries.</p></li>
+<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names of the specifications whose records to uncancel. If None, uncancel records for all specifications.</p></li>
+<li><p><strong>refetch_records</strong> (<em>bool</em>) – If True, refetch the uncancelled records from the server.</p></li>
 </ul>
 </dd>
 </dl>
@@ -3090,12 +3096,15 @@ If the record does not exist for the specified entry and specification, it retur
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.invalidate_records">
 <span class="sig-name descname"><span class="pre">invalidate_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refetch_records</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/dataset_models.html#BaseDataset.invalidate_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.invalidate_records" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Marks a completed record as invalid.</p>
+<p>An invalid record is one that supposedly successfully completed. However, after review,
+is not correct.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>refetch_records</strong> (<em>bool</em>)</p></li>
+<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names of the entries whose records to invalidate. If None, invalidate records for all entries.</p></li>
+<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names of the specifications whose records to invalidate. If None, invalidate records for all specifications.</p></li>
+<li><p><strong>refetch_records</strong> (<em>bool</em>) – If True, refetch the invalidated records from the server.</p></li>
 </ul>
 </dd>
 </dl>
@@ -3104,12 +3113,13 @@ If the record does not exist for the specified entry and specification, it retur
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.dataset_models.BaseDataset.uninvalidate_records">
 <span class="sig-name descname"><span class="pre">uninvalidate_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refetch_records</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/dataset_models.html#BaseDataset.uninvalidate_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.dataset_models.BaseDataset.uninvalidate_records" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Undo the invalidation of records.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>refetch_records</strong> (<em>bool</em>)</p></li>
+<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names of the entries whose records to uninvalidate. If None, uninvalidate records for all entries.</p></li>
+<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names of the specifications whose records to uninvalidate. If None, uninvalidate records for all specifications.</p></li>
+<li><p><strong>refetch_records</strong> (<em>bool</em>) – If True, refetch the uninvalidated records from the server.</p></li>
 </ul>
 </dd>
 </dl>
@@ -4044,7 +4054,7 @@ by a submit without duplicate checking.</p>
 <dd class="field-even"><ul class="simple">
 <li><p><a class="reference internal" href="#qcportal.dataset_models.DatasetRecordModifyBody.comment" title="qcportal.dataset_models.DatasetRecordModifyBody.comment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">comment</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.DatasetRecordModifyBody.compute_priority" title="qcportal.dataset_models.DatasetRecordModifyBody.compute_priority"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_priority</span> <span class="pre">(qcportal.record_models.PriorityEnum</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.dataset_models.DatasetRecordModifyBody.compute_tag" title="qcportal.dataset_models.DatasetRecordModifyBody.compute_tag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_tag</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.dataset_models.DatasetRecordModifyBody.compute_tag" title="qcportal.dataset_models.DatasetRecordModifyBody.compute_tag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_tag</span> <span class="pre">(qcportal.dataset_models.ConstrainedStrValue</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.DatasetRecordModifyBody.entry_names" title="qcportal.dataset_models.DatasetRecordModifyBody.entry_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">entry_names</span> <span class="pre">(List[str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.DatasetRecordModifyBody.specification_names" title="qcportal.dataset_models.DatasetRecordModifyBody.specification_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">specification_names</span> <span class="pre">(List[str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.dataset_models.DatasetRecordModifyBody.status" title="qcportal.dataset_models.DatasetRecordModifyBody.status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">status</span> <span class="pre">(qcportal.record_models.RecordStatusEnum</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
@@ -4101,7 +4111,7 @@ by a submit without duplicate checking.</p>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.dataset_models.DatasetRecordModifyBody.compute_tag">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.dataset_models.DatasetRecordModifyBody.compute_tag" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ConstrainedStrValue</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.dataset_models.DatasetRecordModifyBody.compute_tag" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Validated by<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
