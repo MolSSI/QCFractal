@@ -39,14 +39,14 @@ print(next(records))
 [32m      3[39m [38;5;66;03m# Print the first record.[39;00m
 [32m      4[39m [38;5;28mprint[39m([38;5;28mnext[39m(records))
 
-[36mFile [39m[32m~/work/QCFractal/QCFractal/qcportal/qcportal/client.py:946[39m, in [36mPortalClient.query_records[39m[34m(self, record_id, record_type, manager_name, status, dataset_id, parent_id, child_id, created_before, created_after, modified_before, modified_after, creator_user, limit, include)[39m
-[32m    928[39m filter_dict = {
-[32m    929[39m     [33m"[39m[33mrecord_id[39m[33m"[39m: make_list(record_id),
-[32m    930[39m     [33m"[39m[33mrecord_type[39m[33m"[39m: make_list(record_type),
-[32m   (...)[39m[32m    941[39m     [33m"[39m[33mlimit[39m[33m"[39m: limit,
-[32m    942[39m }
-[32m    944[39m filter_data = RecordQueryFilters(**filter_dict)
-[32m--> [39m[32m946[39m [38;5;28;01mreturn[39;00m [43mRecordQueryIterator[49m[43m[[49m[43mBaseRecord[49m[43m][49m[43m([49m[38;5;28;43mself[39;49m[43m,[49m[43m [49m[43mfilter_data[49m[43m,[49m[43m [49m[38;5;28;43;01mNone[39;49;00m[43m,[49m[43m [49m[43minclude[49m[43m)[49m
+[36mFile [39m[32m~/work/QCFractal/QCFractal/qcportal/qcportal/client.py:956[39m, in [36mPortalClient.query_records[39m[34m(self, record_id, record_type, manager_name, status, dataset_id, parent_id, child_id, created_before, created_after, modified_before, modified_after, creator_user, limit, include)[39m
+[32m    938[39m filter_dict = {
+[32m    939[39m     [33m"[39m[33mrecord_id[39m[33m"[39m: make_list(record_id),
+[32m    940[39m     [33m"[39m[33mrecord_type[39m[33m"[39m: make_list(record_type),
+[32m   (...)[39m[32m    951[39m     [33m"[39m[33mlimit[39m[33m"[39m: limit,
+[32m    952[39m }
+[32m    954[39m filter_data = RecordQueryFilters(**filter_dict)
+[32m--> [39m[32m956[39m [38;5;28;01mreturn[39;00m [43mRecordQueryIterator[49m[43m[[49m[43mBaseRecord[49m[43m][49m[43m([49m[38;5;28;43mself[39;49m[43m,[49m[43m [49m[43mfilter_data[49m[43m,[49m[43m [49m[38;5;28;43;01mNone[39;49;00m[43m,[49m[43m [49m[43minclude[49m[43m)[49m
 
 [36mFile [39m[32m/opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/typing.py:1289[39m, in [36m_BaseGenericAlias.__call__[39m[34m(self, *args, **kwargs)[39m
 [32m   1286[39m [38;5;28;01mif[39;00m [38;5;129;01mnot[39;00m [38;5;28mself[39m._inst:

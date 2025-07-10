@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=79beb98f"></script>
+    <script src="../../../_static/documentation_options.js?v=c543c0b9"></script>
     <script src="../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Utilities and Miscellaneous" href="../utils_misc.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.61.post52+g267a7ecd8" />
+  <meta name="docsearch:version" content="0.61.post55+g0a8190de6" />
   </head>
   
   
@@ -1837,7 +1837,7 @@ that can span multiple records</p>
 
 <dl class="py method pydantic_validator">
 <dt class="sig sig-object py" id="qcportal.record_models.RecordQueryFilters.parse_dates">
-<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.created_before" title="qcportal.record_models.RecordQueryFilters.created_before"><em class="xref py py-obj"><span class="pre">created_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.modified_after" title="qcportal.record_models.RecordQueryFilters.modified_after"><em class="xref py py-obj"><span class="pre">modified_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.created_after" title="qcportal.record_models.RecordQueryFilters.created_after"><em class="xref py py-obj"><span class="pre">created_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.modified_before" title="qcportal.record_models.RecordQueryFilters.modified_before"><em class="xref py py-obj"><span class="pre">modified_before</span></em></a><a class="reference internal" href="../../../_modules/qcportal/record_models.html#RecordQueryFilters.parse_dates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.record_models.RecordQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.created_after" title="qcportal.record_models.RecordQueryFilters.created_after"><em class="xref py py-obj"><span class="pre">created_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.modified_before" title="qcportal.record_models.RecordQueryFilters.modified_before"><em class="xref py py-obj"><span class="pre">modified_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.created_before" title="qcportal.record_models.RecordQueryFilters.created_before"><em class="xref py py-obj"><span class="pre">created_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.record_models.RecordQueryFilters.modified_after" title="qcportal.record_models.RecordQueryFilters.modified_after"><em class="xref py py-obj"><span class="pre">modified_after</span></em></a><a class="reference internal" href="../../../_modules/qcportal/record_models.html#RecordQueryFilters.parse_dates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.record_models.RecordQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method pydantic_validator">
@@ -1981,6 +1981,35 @@ and creates an instance of that class.</p>
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="qcportal.dataset_models.DatasetAttachment.attachment_type">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">attachment_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.dataset_models.DatasetAttachmentType" title="qcportal.dataset_models.DatasetAttachmentType"><span class="pre">DatasetAttachmentType</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.dataset_models.DatasetAttachment.attachment_type" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.DatasetAttachment.download">
+<span class="sig-name descname"><span class="pre">download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">destination_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.dataset_models.DatasetAttachment.download" title="Link to this definition">#</a></dt>
+<dd><p>Downloads an external file to the given path</p>
+<p>The file size and checksum will be checked against the metadata stored on the server</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>destination_path</strong> (<em>str</em>) – Full path to the destination file (including filename)</p></li>
+<li><p><strong>overwrite</strong> (<em>bool</em>) – If True, allow for overwriting an existing file. If False, and a file already exists at the given
+destination path, an exception will be raised.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.DatasetAttachment.get_direct_url">
+<span class="sig-name descname"><span class="pre">get_direct_url</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.dataset_models.DatasetAttachment.get_direct_url" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.dataset_models.DatasetAttachment.propagate_client">
+<span class="sig-name descname"><span class="pre">propagate_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.dataset_models.DatasetAttachment.propagate_client" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -4636,6 +4665,9 @@ and creates an instance of that class.</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.DatasetAttachment"><code class="docutils literal notranslate"><span class="pre">DatasetAttachment</span></code></a><ul class="visible nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.DatasetAttachment.attachment_type"><code class="docutils literal notranslate"><span class="pre">DatasetAttachment.attachment_type</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.DatasetAttachment.download"><code class="docutils literal notranslate"><span class="pre">DatasetAttachment.download()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.DatasetAttachment.get_direct_url"><code class="docutils literal notranslate"><span class="pre">DatasetAttachment.get_direct_url()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.DatasetAttachment.propagate_client"><code class="docutils literal notranslate"><span class="pre">DatasetAttachment.propagate_client()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.DatasetAttachment.id"><code class="docutils literal notranslate"><span class="pre">DatasetAttachment.id</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.DatasetAttachment.file_type"><code class="docutils literal notranslate"><span class="pre">DatasetAttachment.file_type</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.dataset_models.DatasetAttachment.created_on"><code class="docutils literal notranslate"><span class="pre">DatasetAttachment.created_on</span></code></a></li>

@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=79beb98f"></script>
+    <script src="_static/documentation_options.js?v=c543c0b9"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.61.post52+g267a7ecd8" />
+  <meta name="docsearch:version" content="0.61.post55+g0a8190de6" />
   </head>
   
   
@@ -1849,14 +1849,14 @@
 </li>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.delete_project">delete_project() (PortalClient method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.delete_record">delete_record() (DatasetCache method)</a>
 
       <ul>
         <li><a href="user_guide/qcportal_reference/clients.html#qcportal.cache.RecordCache.delete_record">(RecordCache method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetDeleteEntryBody.delete_records">delete_records (DatasetDeleteEntryBody attribute)</a>
 
       <ul>
@@ -2019,6 +2019,12 @@
 
       <ul>
         <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.ContributedValues.doi">(ContributedValues attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetAttachment.download">download() (DatasetAttachment method)</a>
+
+      <ul>
+        <li><a href="user_guide/qcportal_reference/external_files.html#qcportal.external_files.models.ExternalFile.download">(ExternalFile method)</a>
 </li>
       </ul></li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.download_attachment">download_attachment() (BaseDataset method)</a>
@@ -2665,6 +2671,12 @@
 </li>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.get_dataset_status_by_id">get_dataset_status_by_id() (PortalClient method)</a>
 </li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetAttachment.get_direct_url">get_direct_url() (DatasetAttachment method)</a>
+
+      <ul>
+        <li><a href="user_guide/qcportal_reference/external_files.html#qcportal.external_files.models.ExternalFile.get_direct_url">(ExternalFile method)</a>
+</li>
+      </ul></li>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.get_entries">get_entries() (DatasetCache method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.get_entry">get_entry() (BaseDataset method)</a>
@@ -2697,6 +2709,8 @@
         <li><a href="user_guide/qcportal_reference/clients.html#qcportal.cache.RecordCache.get_existing_records">(RecordCache method)</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.get_external_file_direct_link">get_external_file_direct_link() (PortalClient method)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.get_gridoptimizations">get_gridoptimizations() (PortalClient method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.get_group">get_group() (PortalClient method)</a>
@@ -4320,6 +4334,10 @@
         <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.ComputeHistory.propagate_client">(ComputeHistory method)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ComputeManager.propagate_client">(ComputeManager method)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetAttachment.propagate_client">(DatasetAttachment method)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/external_files.html#qcportal.external_files.models.ExternalFile.propagate_client">(ExternalFile method)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDataset.propagate_client">(GridoptimizationDataset method)</a>
 </li>

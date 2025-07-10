@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=79beb98f"></script>
+    <script src="../../_static/documentation_options.js?v=c543c0b9"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Managers" href="managers.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.61.post52+g267a7ecd8" />
+  <meta name="docsearch:version" content="0.61.post55+g0a8190de6" />
   </head>
   
   
@@ -603,6 +603,35 @@
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">file_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.external_files.models.ExternalFile.file_size" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.external_files.models.ExternalFile.propagate_client">
+<span class="sig-name descname"><span class="pre">propagate_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/external_files/models.html#ExternalFile.propagate_client"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.external_files.models.ExternalFile.propagate_client" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.external_files.models.ExternalFile.get_direct_url">
+<span class="sig-name descname"><span class="pre">get_direct_url</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/external_files/models.html#ExternalFile.get_direct_url"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.external_files.models.ExternalFile.get_direct_url" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.external_files.models.ExternalFile.download">
+<span class="sig-name descname"><span class="pre">download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">destination_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/external_files/models.html#ExternalFile.download"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.external_files.models.ExternalFile.download" title="Link to this definition">#</a></dt>
+<dd><p>Downloads an external file to the given path</p>
+<p>The file size and checksum will be checked against the metadata stored on the server</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>destination_path</strong> (<em>str</em>) – Full path to the destination file (including filename)</p></li>
+<li><p><strong>overwrite</strong> (<em>bool</em>) – If True, allow for overwriting an existing file. If False, and a file already exists at the given
+destination path, an exception will be raised.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -673,6 +702,9 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.external_files.models.ExternalFile.provenance"><code class="docutils literal notranslate"><span class="pre">ExternalFile.provenance</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.external_files.models.ExternalFile.sha256sum"><code class="docutils literal notranslate"><span class="pre">ExternalFile.sha256sum</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.external_files.models.ExternalFile.file_size"><code class="docutils literal notranslate"><span class="pre">ExternalFile.file_size</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.external_files.models.ExternalFile.propagate_client"><code class="docutils literal notranslate"><span class="pre">ExternalFile.propagate_client()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.external_files.models.ExternalFile.get_direct_url"><code class="docutils literal notranslate"><span class="pre">ExternalFile.get_direct_url()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.external_files.models.ExternalFile.download"><code class="docutils literal notranslate"><span class="pre">ExternalFile.download()</span></code></a></li>
 </ul>
 </li>
 </ul>
