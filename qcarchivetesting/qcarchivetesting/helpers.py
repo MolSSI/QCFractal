@@ -107,6 +107,7 @@ test_users = {
     },
 }
 
+
 def _read_data(directory: str, name: str):
     """
     Loads pre-computed/dummy procedure data from a test directory
@@ -162,7 +163,6 @@ def read_procedure_data(name: str):
     """
 
     return _read_data("procedure_data", name)
-
 
 
 def read_record_data(name: str):
