@@ -8,7 +8,6 @@ from flask.sessions import SessionInterface, SecureCookieSession
 from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
-    from qcfractal.db_socket import SQLAlchemySocket
     from flask import Flask, Response, Request
 
 
@@ -26,8 +25,11 @@ class QCFFlaskSessionInterface(SessionInterface):
     If there is something to store in the database, a random session_key will be generated in save_session.
     """
 
-    def __init__(self, storage_socket: SQLAlchemySocket):
-        self._storage_socket = storage_socket
+    def __init__(self, app: Flask):
+        if not hasattr(app, "extensions") or "storage_socket" not in app.extensions:
+            raise RuntimeError("The QCFFlaskSessionInterface requires the storage_socket extension to be initialized")
+
+        self._storage_socket = app.extensions["storage_socket"]
 
     def open_session(self, app: Flask, request: Request) -> QCFFlaskSession:
         """
