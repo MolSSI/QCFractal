@@ -19,17 +19,17 @@ def test_snowflake_restarting(tmp_path):
 
     time.sleep(5)
 
-    assert s._api_proc is None
-    assert s._compute_proc is None
-    assert s._job_runner_proc is None
+    assert s._api_thread is None
+    assert s._compute_thread is None
+    assert s._job_runner_thread is None
 
     s._start_api()
     s._start_compute()
     s._start_job_runner()
 
-    assert s._api_proc.is_alive()
-    assert s._compute_proc.is_alive()
-    assert s._job_runner_proc.is_alive()
+    assert s._api_thread.is_alive()
+    assert s._compute_thread.is_alive()
+    assert s._job_runner_thread.is_alive()
 
     c = s.client()
     assert c.ping()

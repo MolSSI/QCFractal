@@ -3,8 +3,8 @@ from __future__ import annotations
 import importlib
 import logging
 import logging.handlers
-import multiprocessing
 import os
+import queue
 import secrets
 import shutil
 import tempfile
@@ -23,29 +23,16 @@ from qcportal.utils import update_nested_dict
 from .config import FractalConfig, DatabaseConfig
 from .port_util import find_open_port
 from .postgres_harness import create_snowflake_postgres
-from .process_targets import api_process, job_runner_process
+from .process_targets import QCFJobRunnerThread, QCFAPIThread
 
 if importlib.util.find_spec("qcfractalcompute") is None:
     raise RuntimeError("qcfractalcompute is not installed. Snowflake is useless without it")
 
 from qcfractalcompute.config import FractalComputeConfig, FractalServerSettings, LocalExecutorConfig
-from qcfractalcompute.process_targets import compute_process
+from qcfractalcompute.process_targets import QCFComputeThread
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Sequence, Optional, Set
-
-
-def _logging_thread(logging_queue, logging_thread_stop):
-    while True:
-        try:
-            record = logging_queue.get(timeout=0.5)
-            logger = logging.getLogger(record.name)
-            logger.handle(record)
-        except Empty:
-            if logging_thread_stop.is_set():
-                break
-            else:
-                continue
 
 
 class FractalSnowflake:
@@ -69,21 +56,7 @@ class FractalSnowflake:
         This can also be used as a context manager (`with FractalSnowflake(...) as s:`)
         """
 
-        # Multiprocessing context - generally use spawn
-        self._mp_context = multiprocessing.get_context("spawn")
-
         self._logger = logging.getLogger("fractal_snowflake")
-
-        # Configure logging
-        # We receive log entries from various processes via a queue
-        # See https://docs.python.org/3/howto/logging-cookbook.html#logging-to-a-single-file-from-multiple-processes
-
-        self._logging_queue = self._mp_context.Queue()
-        self._logging_thread_stop = threading.Event()
-        self._logging_thread = threading.Thread(
-            target=_logging_thread, args=(self._logging_queue, self._logging_thread_stop), daemon=True
-        )
-        self._logging_thread.start()
 
         # Create a temporary directory for everything
         # Don't use TemporaryDirectory with autodelete - we will cleanup in the snowflake finalizer
@@ -91,7 +64,7 @@ class FractalSnowflake:
         # the pg_harness won't like that (since the db files are stored there)
         # tempfile.TemporaryDirectory doesn't have a "delete" parameter in older versions of python.
         # So let's just use mkdtemp and delete it manually.
-        # mdtemp will return relative paths in some versions of python with some parameters of `dir`,
+        # mktemp will return relative paths in some versions of python with some parameters of `dir`,
         # but I always feel more comfortable with absolute paths.
         self._tmpdir = os.path.abspath(tempfile.mkdtemp(dir=tmpdir_parent))
 
@@ -149,10 +122,10 @@ class FractalSnowflake:
         ######################################
 
         # For Flask
-        self._finished_queue = self._mp_context.Queue()
+        self._finished_queue = queue.Queue()
         self._all_completed: Set[int] = set()
-        self._api_proc = None
-        self._api_initialized = self._mp_context.Event()
+        self._api_thread = None
+        self._api_initialized = threading.Event()
 
         # For the compute manager
         uri = f"http://{self._qcf_config.api.host}:{self._qcf_config.api.port}"
@@ -178,12 +151,12 @@ class FractalSnowflake:
             },
         )
         self._compute_enabled = compute_workers > 0
-        self._compute_proc = None
-        self._compute_initialized = self._mp_context.Event()
+        self._compute_thread: Optional[QCFComputeThread] = None
+        self._compute_initialized = threading.Event()
 
         # Job runner
-        self._job_runner_proc = None
-        self._job_runner_initialized = self._mp_context.Event()
+        self._job_runner_thread = None
+        self._job_runner_initialized = threading.Event()
 
         # This is updated when starting components
         self._finalizer = None
@@ -201,34 +174,27 @@ class FractalSnowflake:
         self._finalizer = weakref.finalize(
             self,
             self._stop,
-            self._compute_proc,
-            self._api_proc,
-            self._job_runner_proc,
-            self._logging_queue,
-            self._logging_thread,
-            self._logging_thread_stop,
-            self._tmpdir,
+            self._compute_thread,
+            self._api_thread,
+            self._job_runner_thread,
             self._pg_harness if self._own_pg_harness else None,
+            self._tmpdir,
         )
 
     def _start_api(self, wait: bool = True):
-        if self._api_proc is None:
+        if self._api_thread is None:
             self._api_initialized.clear()
-            self._api_proc = self._mp_context.Process(
-                target=api_process,
-                args=(self._qcf_config, self._logging_queue, self._finished_queue, self._api_initialized),
-            )
-            self._api_proc.start()
+            self._api_thread = QCFAPIThread(self._qcf_config, self._finished_queue)
+            self._api_thread.start(self._api_initialized)
             self._update_finalizer()
 
         if wait:
             self._api_initialized.wait()
 
     def _stop_api(self):
-        if self._api_proc is not None:
-            self._api_proc.terminate()
-            self._api_proc.join()
-            self._api_proc = None
+        if self._api_thread is not None:
+            self._api_thread.stop()
+            self._api_thread = None
             self._api_initialized.clear()
             self._update_finalizer()
 
@@ -236,58 +202,47 @@ class FractalSnowflake:
         if not self._compute_enabled:
             return
 
-        if self._compute_proc is None:
+        if self._compute_thread is None:
             self._compute_initialized.clear()
-            self._compute_proc = self._mp_context.Process(
-                target=compute_process,
-                args=(self._compute_config, self._logging_queue, self._compute_initialized),
-            )
-            self._compute_proc.start()
+            self._compute_thread = QCFComputeThread(self._compute_config)
+            self._compute_thread.start(self._compute_initialized)
             self._update_finalizer()
 
         if wait:
             self._compute_initialized.wait()
 
     def _stop_compute(self):
-        if self._compute_proc is not None:
-            self._compute_proc.terminate()
-            self._compute_proc.join()
-            self._compute_proc = None
+        if self._compute_thread is not None:
+            self._compute_thread.stop()
+            self._compute_thread = None
             self._compute_initialized.clear()
             self._update_finalizer()
 
     def _start_job_runner(self, wait: bool = True):
-        if self._job_runner_proc is None:
+        if self._job_runner_thread is None:
             self._job_runner_initialized.clear()
-            self._job_runner_proc = self._mp_context.Process(
-                target=job_runner_process,
-                args=(self._qcf_config, self._logging_queue, self._finished_queue, self._job_runner_initialized),
-            )
-            self._job_runner_proc.start()
+            self._job_runner_thread = QCFJobRunnerThread(self._qcf_config, self._finished_queue)
+            self._job_runner_thread.start(self._job_runner_initialized)
             self._update_finalizer()
 
         if wait:
             self._job_runner_initialized.wait()
 
     def _stop_job_runner(self):
-        if self._job_runner_proc is not None:
-            self._job_runner_proc.terminate()
-            self._job_runner_proc.join()
-            self._job_runner_proc = None
+        if self._job_runner_thread is not None:
+            self._job_runner_thread.stop()
+            self._job_runner_thread = None
             self._job_runner_initialized.clear()
             self._update_finalizer()
 
     @classmethod
     def _stop(
         cls,
-        compute_proc,
-        api_proc,
-        job_runner_proc,
-        logging_queue,
-        logging_thread,
-        logging_thread_stop,
-        tmpdir,
+        compute_thread,
+        api_thread,
+        job_runner_thread,
         pg_harness,
+        tmpdir,
     ):
         ####################################################################################
         # This is written as a class method so that it can be called by a weakref finalizer
@@ -300,22 +255,14 @@ class FractalSnowflake:
         #  should NOT call this function, which allows data to persist between states of a particular
         #  snowflake object)
 
-        if compute_proc is not None:
-            compute_proc.terminate()
-            compute_proc.join()
+        if compute_thread is not None:
+            compute_thread.stop()
 
-        if job_runner_proc is not None:
-            job_runner_proc.terminate()
-            job_runner_proc.join()
+        if job_runner_thread is not None:
+            job_runner_thread.stop()
 
-        if api_proc is not None:
-            api_proc.terminate()
-            api_proc.join()
-
-        logging_thread_stop.set()
-        logging_thread.join()
-        logging_queue.close()
-        logging_queue.join_thread()
+        if api_thread is not None:
+            api_thread.stop()
 
         if pg_harness is not None:
             pg_harness.shutdown()
@@ -363,13 +310,13 @@ class FractalSnowflake:
         self._start_job_runner(wait=False)
 
         if wait:
-            if self._compute_proc is not None:
+            if self._compute_thread is not None:
                 self._compute_initialized.wait()
 
-            if self._job_runner_proc is not None:
+            if self._job_runner_thread is not None:
                 self._job_runner_initialized.wait()
 
-            if self._api_proc is not None:
+            if self._api_thread is not None:
                 self._api_initialized.wait()
                 self.wait_for_api()
 

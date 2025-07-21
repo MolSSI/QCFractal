@@ -194,7 +194,7 @@ class QCATestingSnowflake(FractalSnowflake):
         self._all_completed = set()
         self._qcf_config = self._original_config.copy(deep=True)
 
-        if self._api_proc is None:
+        if self._api_thread is None:
             self.start_api(wait=True)
 
         self._pg_harness.recreate_database()
