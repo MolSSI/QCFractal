@@ -5,29 +5,29 @@ import logging
 import queue
 from typing import TYPE_CHECKING
 
-from flask import Flask
+from flask import Flask, current_app
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
+from werkzeug.local import LocalProxy
 from werkzeug.routing import IntegerConverter
 
-from qcfractal.db_socket.socket import SQLAlchemySocket
 from .flask_session import QCFFlaskSessionInterface
+from .flask_socket import FlaskStorageSocket
 from .home_v1 import home_v1
+from ..db_socket import SQLAlchemySocket
 
 if TYPE_CHECKING:
     from ..config import FractalConfig
     from typing import Optional
 
-
-class _FlaskSQLAlchemySocket(SQLAlchemySocket):
-    def __init__(self):
-        pass
-
-    def init(self, qcf_config):
-        SQLAlchemySocket.__init__(self, qcf_config)
+app_storage_sockets = FlaskStorageSocket()
 
 
-storage_socket = _FlaskSQLAlchemySocket()
+def _get_storage_socket() -> SQLAlchemySocket:
+    return app_storage_sockets.get_socket(current_app._get_current_object())
+
+
+storage_socket = LocalProxy(_get_storage_socket)
 
 jwt = JWTManager()
 
@@ -38,9 +38,7 @@ class SignedIntConverter(IntegerConverter):
     regex = r"-?\d+"
 
 
-def create_flask_app(
-    qcfractal_config: FractalConfig, init_storage: bool = True, finished_queue: Optional[queue.Queue] = None
-):
+def create_flask_app(qcfractal_config: FractalConfig, finished_queue: Optional[queue.Queue] = None):
     app = Flask(__name__)
 
     app.url_map.converters["signed_int"] = SignedIntConverter
@@ -84,15 +82,11 @@ def create_flask_app(
         app.config["CORS_HEADERS"] = qcfractal_config.cors.headers
         CORS(app)
 
-    if init_storage:
-        # Initialize the database socket, API logger, and view handler
-        storage_socket.init(qcfractal_config)
-
-    if finished_queue:
-        storage_socket.set_finished_watch(finished_queue)
+    # Initialize the database socket, API logger, and view handler
+    app_storage_sockets.init_app(app, finished_queue=finished_queue)
 
     # Initialize the session interface after the storage socket
-    app.session_interface = QCFFlaskSessionInterface(storage_socket)
+    app.session_interface = QCFFlaskSessionInterface(app)
 
     # Registers the various error and before/after request handlers
     importlib.import_module("qcfractal.flask_app.handlers")
