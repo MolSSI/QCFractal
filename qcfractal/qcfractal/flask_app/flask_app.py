@@ -24,7 +24,7 @@ app_storage_sockets = FlaskStorageSocket()
 
 
 def _get_storage_socket() -> SQLAlchemySocket:
-    return app_storage_sockets.get_socket(current_app)
+    return app_storage_sockets.get_socket(current_app._get_current_object())
 
 
 storage_socket = LocalProxy(_get_storage_socket)

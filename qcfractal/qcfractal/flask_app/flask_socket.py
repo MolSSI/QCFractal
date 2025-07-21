@@ -30,9 +30,7 @@ class FlaskStorageSocket:
         self._app_sockets[app] = socket
 
     def get_socket(self, app) -> SQLAlchemySocket:
-        app_co = app._get_current_object()
-
-        s = self._app_sockets.get(app_co, None)
+        s = self._app_sockets.get(app, None)
         if s is None:
             raise RuntimeError("Socket not initialized for this flask app")
 
