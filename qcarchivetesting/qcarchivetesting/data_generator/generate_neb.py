@@ -1,13 +1,12 @@
-import json
 import logging
-import lzma
+import logging
 import sys
 
 from qcarchivetesting.data_generator import DataGeneratorComputeThread
+from qcarchivetesting.data_generator import read_input, write_outputs
 from qcfractal.components.neb.testing_helpers import generate_task_key
 from qcfractal.snowflake import FractalSnowflake
 from qcportal.molecules import Molecule
-from qcportal.serialization import _JSONEncoder
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -15,14 +14,7 @@ if len(sys.argv) != 2:
     raise RuntimeError("Script takes a single argument - path to a test data input file")
 
 infile_name = sys.argv[1]
-outfile_name = infile_name + ".xz"
-
-# Load the start of the test data
-print(f"** Reading in data from {infile_name}")
-
-with open(infile_name) as infile:
-    test_data = json.load(infile)
-
+test_data, outfile_name = read_input(infile_name)
 
 # Set up the snowflake and compute process
 print(f"** Starting snowflake")
@@ -55,7 +47,9 @@ while True:
         break
 
 print("** Computation complete. Assembling results **")
-record = client.get_records(record_id)
+record = client.get_nebs(record_id, include=["**"])
+record.fetch_children(include=["**"], force_fetch=True)
+
 if record.status != "complete":
     print(record.error)
     errs = client.query_records(status="error")
@@ -68,9 +62,7 @@ for task, result in result_data:
     task_key = generate_task_key(task)
     test_data["results"][task_key] = result
 
-print(f"** Writing output to {outfile_name}")
-with lzma.open(outfile_name, "wt") as f:
-    json.dump(test_data, f, cls=_JSONEncoder, indent=4, sort_keys=True)
+write_outputs(outfile_name, test_data, record)
 
 print(f"** Stopping compute worker")
 compute.stop()
