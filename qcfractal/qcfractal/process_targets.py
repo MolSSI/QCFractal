@@ -94,6 +94,9 @@ class QCFAPIThread:
         if self._api_thread is not None:
             raise RuntimeError("API already started")
 
+        # For some reason we need to set the level here manually? Otherwise it's always INFO
+        logging.getLogger("werkzeug").setLevel(self._qcf_config.loglevel)
+
         # We use daemon=True
         # This means that the main python process can exit, calling various destructors
         # and finalizers (rather than waiting for those threads to finish before doing so)
