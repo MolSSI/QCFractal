@@ -568,6 +568,19 @@ class BaseRecord(BaseModel):
         if detach:
             self._record_cache = None
 
+    def get_cache_dict(self, **kwargs) -> Dict[str, Any]:
+        """
+        Returns a dictionary of the record meant for caching
+
+        When a record is stored in the cache, it is stored without child records (which
+        are in the cache under their own keys). This function returns a dictionary that
+        excludes those children.
+
+        kwargs are passed directly to the pydantic `dict()` function.
+        """
+
+        return self.dict(**kwargs)
+
     def __str__(self) -> str:
         return f"<{self.__class__.__name__} id={self.id} status={self.status}>"
 

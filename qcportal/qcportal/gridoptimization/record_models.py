@@ -210,16 +210,20 @@ class GridoptimizationRecord(BaseRecord):
     starting_molecule_: Optional[Molecule] = Field(None, alias="starting_molecule")
     optimizations_: Optional[List[GridoptimizationOptimization]] = Field(None, alias="optimizations")
 
-    ########################################
-    # Caches
-    ########################################
-    _optimizations_cache: Optional[Dict[Any, OptimizationRecord]] = PrivateAttr(None)
+    ##############################################
+    # Fields with child records
+    # (generally not received from the server)
+    ##############################################
+    optimization_records_: Optional[Dict[Any, OptimizationRecord]] = Field(None, alias="optimizations_records")
+
+    # Actual mapping, with tuples as keys. These will point to the same lists & records as above
+    _optimization_map: Optional[Dict[Any, OptimizationRecord]] = PrivateAttr(None)
 
     def propagate_client(self, client, base_url_prefix: Optional[str]):
         BaseRecord.propagate_client(self, client, base_url_prefix)
 
-        if self._optimizations_cache is not None:
-            for opt in self._optimizations_cache.values():
+        if self.optimization_records_ is not None:
+            for opt in self.optimization_records_.values():
                 opt.propagate_client(client, base_url_prefix)
 
     @classmethod
@@ -259,12 +263,12 @@ class GridoptimizationRecord(BaseRecord):
 
             for r in records:
                 if r.optimizations_ is None:
-                    r._optimizations_cache = None
+                    r._optimization_map = None
                 else:
-                    r._optimizations_cache = {}
-                    for go_opt in r.optimizations_:
-                        key = deserialize_key(go_opt.key)
-                        r._optimizations_cache[key] = opt_map[go_opt.optimization_id]
+                    r.optimization_records_ = {
+                        go_opt.key: opt_map[go_opt.optimization_id] for go_opt in r.optimizations_
+                    }
+                    r._optimization_map = {deserialize_key(k): v for k, v in r.optimization_records_.items()}
 
                 r.propagate_client(r._client, base_url_prefix)
 
@@ -287,6 +291,9 @@ class GridoptimizationRecord(BaseRecord):
 
         self.fetch_children(["optimizations"])
 
+    def get_cache_dict(self, **kwargs) -> Dict[str, Any]:
+        return self.dict(exclude={"optimization_records_"}, **kwargs)
+
     @property
     def initial_molecule(self) -> Molecule:
         if self.initial_molecule_ is None:
@@ -301,15 +308,19 @@ class GridoptimizationRecord(BaseRecord):
 
     @property
     def optimizations(self) -> Dict[Any, OptimizationRecord]:
-        if self._optimizations_cache is None:
+        if self.optimization_records_ is None:
             self._fetch_optimizations()
-        return self._optimizations_cache
+
+        if self._optimization_map is None:
+            self._optimization_map = {deserialize_key(k): v for k, v in self.optimization_records_.items()}
+
+        return self._optimization_map
 
     @property
     def preoptimization(self) -> Optional[OptimizationRecord]:
-        if self._optimizations_cache is None:
+        if self.optimization_records_ is None:
             self._fetch_optimizations()
-        return self._optimizations_cache.get("preoptimization", None)
+        return self.optimization_records_.get("preoptimization", None)
 
     @property
     def final_energies(self) -> Dict[Tuple[int, ...], float]:

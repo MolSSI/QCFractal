@@ -153,11 +153,15 @@ class TorsiondriveRecord(BaseRecord):
     optimizations_: Optional[List[TorsiondriveOptimization]] = Field(None, alias="optimizations")
     minimum_optimizations_: Optional[Dict[str, int]] = Field(None, alias="minimum_optimizations")
 
-    ########################################
-    # Caches
-    ########################################
-    _optimizations_cache: Optional[Dict[Any, List[OptimizationRecord]]] = PrivateAttr(None)
-    _minimum_optimizations_cache: Optional[Dict[Any, OptimizationRecord]] = PrivateAttr(None)
+    ##############################################
+    # Fields with child records
+    # (generally not received from the server)
+    ##############################################
+    optimization_records_: Optional[Dict[str, List[OptimizationRecord]]] = Field(None, alias="optimization_records")
+
+    # Actual mapping, with tuples as keys. These will point to the same lists & records as above
+    _optimization_map: Optional[Dict[Any, List[OptimizationRecord]]] = PrivateAttr(None)
+    _minimum_optimization_map: Optional[Dict[Any, OptimizationRecord]] = PrivateAttr(None)
 
     @classmethod
     def _fetch_children_multi(
@@ -197,34 +201,42 @@ class TorsiondriveRecord(BaseRecord):
 
         for r in records:
             if do_opt:
-                r._optimizations_cache = None
+                r.optimization_records_ = None
+                r._optimization_map = None
             if do_minopt or do_opt:
-                r._minimum_optimizations_cache = None
+                r._minimum_optimization_map = None
 
             if r.optimizations_ is None and r.minimum_optimizations_ is None:
+                # Bail out early, leaving those fields as None
                 continue
 
             if do_opt and r.optimizations_ is not None:
-                r._optimizations_cache = {}
+                r.optimization_records_ = {}
+                r._optimization_map = {}
                 for td_opt in r.optimizations_:
+                    # optimization_records_ uses the string key
+                    r.optimization_records_.setdefault(td_opt.key, list())
+                    r.optimization_records_[td_opt.key].append(opt_map[td_opt.optimization_id])
+
+                    # maps use tuples or strings
                     key = deserialize_key(td_opt.key)
-                    r._optimizations_cache.setdefault(key, list())
-                    r._optimizations_cache[key].append(opt_map[td_opt.optimization_id])
+                    r._optimization_map.setdefault(key, list())
+                    r._optimization_map[key].append(opt_map[td_opt.optimization_id])
 
             if r.minimum_optimizations_ is None and r.optimizations_ is not None and do_opt:
                 # find the minimum optimizations for each key from what we have in the optimizations
                 # chooses the lowest id if there are records with the same energy
                 r.minimum_optimizations_ = {}
-                for k, v in r._optimizations_cache.items():
+                for str_key, rec_list in r.optimization_records_.items():
                     # Remove any optimizations without energies
-                    v2 = [x for x in v if x.energies]
+                    v2 = [x for x in rec_list if x.energies]
                     if v2:
                         lowest_opt = min(v2, key=lambda x: (x.energies[-1], x.id))
-                        r.minimum_optimizations_[serialize_key(k)] = lowest_opt.id
+                        r.minimum_optimizations_[str_key] = lowest_opt.id
 
-            if do_minopt or do_opt and r.minimum_optimizations_ is not None:  # either from the server or from above
-                r._minimum_optimizations_cache = {
-                    deserialize_key(k): opt_map[v] for k, v in r.minimum_optimizations_.items()
+            if (do_minopt or do_opt) and r.minimum_optimizations_ is not None:  # either from the server or from above
+                r._minimum_optimization_map = {
+                    deserialize_key(str_key): opt_map[opt_id] for str_key, opt_id in r.minimum_optimizations_.items()
                 }
 
             r.propagate_client(r._client, base_url_prefix)
@@ -232,14 +244,14 @@ class TorsiondriveRecord(BaseRecord):
     def propagate_client(self, client, base_url_prefix: Optional[str]):
         BaseRecord.propagate_client(self, client, base_url_prefix)
 
-        if self._optimizations_cache is not None:
-            for opts in self._optimizations_cache.values():
+        if self.optimization_records_ is not None:
+            for opts in self.optimization_records_.values():
                 for opt in opts:
                     opt.propagate_client(client, base_url_prefix)
 
-        # But may need to do minimum_optimizations_cache_, since they may have been obtained separately
-        if self._minimum_optimizations_cache is not None:
-            for opt in self._minimum_optimizations_cache.values():
+        # But may need to do minimum optimizations map, since they may have been obtained separately
+        if self._minimum_optimization_map is not None:
+            for opt in self._minimum_optimization_map.values():
                 opt.propagate_client(client, base_url_prefix)
 
     def _fetch_initial_molecules(self):
@@ -275,6 +287,9 @@ class TorsiondriveRecord(BaseRecord):
 
         self.fetch_children(["minimum_optimizations"])
 
+    def get_cache_dict(self, **kwargs) -> Dict[str, Any]:
+        return self.dict(exclude={"optimization_records_"}, **kwargs)
+
     @property
     def initial_molecules(self) -> List[Molecule]:
         if self.initial_molecules_ is None:
@@ -283,17 +298,33 @@ class TorsiondriveRecord(BaseRecord):
 
     @property
     def optimizations(self) -> Dict[str, List[OptimizationRecord]]:
-        if self._optimizations_cache is None:
+        if self.optimization_records_ is None:
             self._fetch_optimizations()
 
-        return self._optimizations_cache
+        if self._optimization_map is None:
+            self._optimization_map = {deserialize_key(k): v for k, v in self.optimization_records_.items()}
+
+        return self._optimization_map
 
     @property
     def minimum_optimizations(self) -> Dict[Tuple[float, ...], OptimizationRecord]:
-        if self._minimum_optimizations_cache is None:
+        if (
+            self._minimum_optimization_map is None
+            and self.minimum_optimizations_ is not None
+            and self.optimization_records_ is not None
+        ):
+            opt_map = {}
+            for opt_records in self.optimization_records_.values():
+                opt_map.update({x.id: x for x in opt_records})
+
+            self._minimum_optimization_map = {
+                deserialize_key(k): opt_map[v] for k, v in self.minimum_optimizations_.items()
+            }
+
+        elif self._minimum_optimization_map is None:
             self._fetch_minimum_optimizations()
 
-        return self._minimum_optimizations_cache
+        return self._minimum_optimization_map
 
     @property
     def final_energies(self) -> Dict[Tuple[float, ...], float]:

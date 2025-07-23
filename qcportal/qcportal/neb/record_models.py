@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import List, Optional, Union, Dict, Iterable
+from typing import List, Optional, Union, Dict, Iterable, Any
 
 try:
-    from pydantic.v1 import BaseModel, Field, Extra, root_validator, constr, validator, PrivateAttr
+    from pydantic.v1 import BaseModel, Field, Extra, root_validator, constr, validator
 except ImportError:
-    from pydantic import BaseModel, Field, Extra, root_validator, constr, validator, PrivateAttr
+    from pydantic import BaseModel, Field, Extra, root_validator, constr, validator
 from typing_extensions import Literal
 
 from qcportal.base_models import RestModelBase
@@ -147,22 +147,23 @@ class NEBRecord(BaseRecord):
     neb_result_: Optional[Molecule] = Field(None, alias="neb_result")
     initial_chain_: Optional[List[Molecule]] = Field(None, alias="initial_chain")
 
-    ########################################
-    # Caches
-    ########################################
-    _optimizations_cache: Optional[Dict[str, OptimizationRecord]] = PrivateAttr(None)
-    _singlepoints_cache: Optional[Dict[int, List[SinglepointRecord]]] = PrivateAttr(None)
-    _ts_hessian: Optional[SinglepointRecord] = PrivateAttr(None)
+    ##############################################
+    # Fields with child records
+    # (generally not received from the server)
+    ##############################################
+    optimization_records_: Optional[Dict[str, OptimizationRecord]] = Field(None, field="optimization_records")
+    singlepoint_records_: Optional[Dict[int, List[SinglepointRecord]]] = Field(None, field="singlepoint_records")
+    ts_hessian_: Optional[SinglepointRecord] = Field(None, field="ts_hessian")
 
     def propagate_client(self, client, base_url_prefix: Optional[str]):
         BaseRecord.propagate_client(self, client, base_url_prefix)
 
-        if self._optimizations_cache is not None:
-            for opt in self._optimizations_cache.values():
+        if self.optimization_records_ is not None:
+            for opt in self.optimization_records_.values():
                 opt.propagate_client(client, base_url_prefix)
 
-        if self._singlepoints_cache is not None:
-            for splist in self._singlepoints_cache.values():
+        if self.singlepoint_records_ is not None:
+            for splist in self.singlepoint_records_.values():
                 for sp2 in splist:
                     sp2.propagate_client(client, base_url_prefix)
 
@@ -221,25 +222,25 @@ class NEBRecord(BaseRecord):
 
         for r in records:
             if r.optimizations_ is None:
-                r._optimizations_cache = None
+                r.optimization_records_ = None
             elif do_opt:
-                r._optimizations_cache = dict()
+                r.optimization_records_ = dict()
                 for opt_key, opt_info in r.optimizations_.items():
-                    r._optimizations_cache[opt_key] = opt_map[opt_info.optimization_id]
+                    r.optimization_records_[opt_key] = opt_map[opt_info.optimization_id]
 
             if r.singlepoints_ is None:
-                r._singlepoints_cache = None
+                r.singlepoint_records_ = None
             elif do_sp:
-                r._singlepoints_cache = dict()
+                r.singlepoint_records_ = dict()
                 for sp_info in r.singlepoints_:
-                    r._singlepoints_cache.setdefault(sp_info.chain_iteration, list())
-                    r._singlepoints_cache[sp_info.chain_iteration].append(sp_map[sp_info.singlepoint_id])
+                    r.singlepoint_records_.setdefault(sp_info.chain_iteration, list())
+                    r.singlepoint_records_[sp_info.chain_iteration].append(sp_map[sp_info.singlepoint_id])
 
-                if len(r._singlepoints_cache) > 0:
-                    if len(r._singlepoints_cache[max(r._singlepoints_cache)]) == 1:
-                        _, temp_list = r._singlepoints_cache.popitem()
-                        r._ts_hessian = temp_list[0]
-                        assert r._ts_hessian.specification.driver == "hessian"
+                if len(r.singlepoint_records_) > 0:
+                    if len(r.singlepoint_records_[max(r.singlepoint_records_)]) == 1:
+                        _, temp_list = r.singlepoint_records_.popitem()
+                        r.ts_hessian_ = temp_list[0]
+                        assert r.ts_hessian_.specification.driver == "hessian"
 
             r.propagate_client(r._client, base_url_prefix)
 
@@ -286,6 +287,9 @@ class NEBRecord(BaseRecord):
                 Optional[Molecule],
             )
 
+    def get_cache_dict(self, **kwargs) -> Dict[str, Any]:
+        return self.dict(exclude={"optimization_records_", "singlepoint_records_", "ts_hessian_"}, **kwargs)
+
     @property
     def initial_chain(self) -> List[Molecule]:
         if self.initial_chain_ is None:
@@ -298,9 +302,9 @@ class NEBRecord(BaseRecord):
 
     @property
     def singlepoints(self) -> Dict[int, List[SinglepointRecord]]:
-        if self._singlepoints_cache is None:
+        if self.singlepoint_records_ is None:
             self._fetch_singlepoints()
-        return self._singlepoints_cache
+        return self.singlepoint_records_
 
     @property
     def result(self):
@@ -310,9 +314,9 @@ class NEBRecord(BaseRecord):
 
     @property
     def optimizations(self) -> Optional[Dict[str, OptimizationRecord]]:
-        if self._optimizations_cache is None:
+        if self.optimization_records_ is None:
             self._fetch_optimizations()
-        return self._optimizations_cache
+        return self.optimization_records_
 
     @property
     def ts_optimization(self) -> Optional[OptimizationRecord]:
@@ -320,6 +324,6 @@ class NEBRecord(BaseRecord):
 
     @property
     def ts_hessian(self) -> Optional[SinglepointRecord]:
-        if self._singlepoints_cache is None:
+        if self.singlepoint_records_ is None:
             self._fetch_singlepoints()
-        return self._ts_hessian
+        return self.ts_hessian_

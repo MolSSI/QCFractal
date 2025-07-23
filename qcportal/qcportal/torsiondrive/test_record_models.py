@@ -33,13 +33,13 @@ def test_torsiondrive_record_model(snowflake: QCATestingSnowflake, includes: Opt
         assert record.offline
 
         # children have all data fetched
-        for opts in record._optimizations_cache.values():
+        for opts in record.optimization_records_.values():
             assert all(x.initial_molecule_ is not None for x in opts)
             assert all(x.final_molecule_ is not None for x in opts)
     else:
         assert record.initial_molecules_ is None
         assert record.optimizations_ is None
-        assert record._optimizations_cache is None
+        assert record.optimization_records_ is None
 
     assert record.id == rec_id
     assert record.status == RecordStatusEnum.complete

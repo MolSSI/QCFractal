@@ -28,7 +28,7 @@ def test_reaction_record_model(snowflake: QCATestingSnowflake, includes: Optiona
 
     if includes is not None:
         assert record.components_meta_ is not None
-        assert record._components is not None
+        assert record.component_records_ is not None
         record.propagate_client(None, None)
         assert record.offline
 
@@ -45,7 +45,7 @@ def test_reaction_record_model(snowflake: QCATestingSnowflake, includes: Optiona
                 assert c.optimization_record.comments_ is not None
     else:
         assert record.components_meta_ is None
-        assert record._components is None
+        assert record.component_records_ is None
 
     assert record.id == rec_id
     assert record.status == RecordStatusEnum.complete

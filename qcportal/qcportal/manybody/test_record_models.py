@@ -28,7 +28,7 @@ def test_manybody_record_model(snowflake: QCATestingSnowflake, includes: Optiona
     if includes is not None:
         assert record.initial_molecule_ is not None
         assert record.clusters_meta_ is not None
-        assert record._clusters is not None
+        assert record.cluster_records_ is not None
         record.propagate_client(None, None)
         assert record.offline
 
@@ -41,7 +41,7 @@ def test_manybody_record_model(snowflake: QCATestingSnowflake, includes: Optiona
     else:
         assert record.initial_molecule_ is None
         assert record.clusters_meta_ is None
-        assert record._clusters is None
+        assert record.cluster_records_ is None
 
     assert record.id == rec_id
     assert record.status == RecordStatusEnum.complete
