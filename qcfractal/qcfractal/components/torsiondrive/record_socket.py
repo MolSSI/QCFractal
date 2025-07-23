@@ -36,6 +36,7 @@ from qcportal.torsiondrive import (
     TorsiondriveQueryFilters,
     TorsiondriveInput,
     TorsiondriveMultiInput,
+    TorsiondriveRecord,
 )
 from qcportal.utils import hash_dict, is_included
 from .record_db_models import (
@@ -324,6 +325,59 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
 
                 service_orm.dependencies.append(svc_dep)
                 td_orm.optimizations.append(opt_history)
+
+    def insert_complete_qcportal_records_v1(
+        self,
+        session: Session,
+        records: Sequence[TorsiondriveRecord],
+    ) -> List[TorsiondriveRecordORM]:
+        ret = []
+
+        for record in records:
+            meta, spec_ids = self.root_socket.records.torsiondrive.add_specifications(
+                [record.specification], session=session
+            )
+            if not meta.success:
+                raise RuntimeError(
+                    "Aborted torsiondrive insertion - could not add specifications: " + meta.error_string
+                )
+
+            meta, initial_mol_ids = self.root_socket.molecules.add(record.initial_molecules, session=session)
+            if not meta.success:
+                raise RuntimeError(
+                    "Aborted torsiondrive insertion - could not add initial molecules: " + meta.error_string
+                )
+
+            init_mol_orms = [TorsiondriveInitialMoleculeORM(molecule_id=m) for m in initial_mol_ids]
+
+            record_orm = TorsiondriveRecordORM(
+                specification_id=spec_ids[0],
+                initial_molecules=init_mol_orms,
+                status=RecordStatusEnum.complete,
+            )
+
+            if record.optimizations:
+                # a map of original record ids to the td opt info
+                td_opt_map = {o.optimization_id: o for o in record.optimizations_}
+
+                record_orm.optimizations = []
+                for k, opt_records in record.optimizations.items():
+                    # Just to be safe
+                    assert all(serialize_key(k) == td_opt_map[r.id].key for r in opt_records)
+
+                    opt_ids = self.root_socket.records.insert_complete_qcportal_records(session, opt_records)
+                    opt_orm = [
+                        TorsiondriveOptimizationORM(
+                            optimization_id=oid, key=td_opt_map[r.id].key, position=td_opt_map[r.id].position
+                        )
+                        for r, oid in zip(opt_records, opt_ids)
+                    ]
+
+                    record_orm.optimizations.extend(opt_orm)
+
+            ret.append(record_orm)
+
+        return ret
 
     def add_specifications(
         self, td_specs: Sequence[TorsiondriveSpecification], *, session: Optional[Session] = None

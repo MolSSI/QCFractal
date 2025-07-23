@@ -12,12 +12,13 @@ from qcportal.auth import UserInfo
 from qcportal.optimization import OptimizationSpecification, OptimizationProtocols
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification, SinglepointProtocols
-from qcportal.torsiondrive import TorsiondriveSpecification, TorsiondriveKeywords
+from qcportal.torsiondrive import TorsiondriveSpecification, TorsiondriveKeywords, compare_torsiondrive_records
 from qcportal.utils import now_at_utc
-from .testing_helpers import compare_torsiondrive_specs, test_specs, load_test_data, generate_task_key
+from .testing_helpers import compare_torsiondrive_specs, test_specs, load_test_data, generate_task_key, load_record_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
+    from qcarchivetesting.testing_classes import QCATestingSnowflake
     from qcportal.managers import ManagerName
     from sqlalchemy.orm.session import Session
 
@@ -354,3 +355,27 @@ def test_torsiondrive_socket_run_duplicate(
     opt_ids_2 = [x.optimization_id for x in rec_2.optimizations]
 
     assert set(opt_ids_1).isdisjoint(opt_ids_2)
+
+
+def test_torsiondrive_socket_insert_complete_qcportal_record(snowflake: QCATestingSnowflake):
+    test_names = [
+        "td_C9H11NO2_mopac_pm6",
+        "td_H2O2_mopac_pm6",
+        "td_H2O2_psi4_pbe0",
+        "td_H2O2_psi4_pbe",
+    ]
+
+    storage_socket = snowflake.get_storage_socket()
+    client = snowflake.client()
+
+    for test_name in test_names:
+        initial_record = load_record_data(test_name)
+        initial_record_copy = initial_record.copy(deep=True)
+
+        # Need a full copy of results - they can get mutated
+        with storage_socket.session_scope() as session:
+            ins_ids = storage_socket.records.insert_complete_qcportal_records(session, [initial_record_copy])
+
+        rec_1 = client.get_torsiondrives(ins_ids[0], include=["**"])
+        rec_1.fetch_children(include=["**"], force_fetch=True)
+        compare_torsiondrive_records(rec_1, initial_record)
