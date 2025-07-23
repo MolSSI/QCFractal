@@ -6,12 +6,18 @@ import pytest
 
 from qcarchivetesting import load_molecule_data
 from qcfractal.components.optimization.record_db_models import OptimizationRecordORM
-from qcfractal.components.optimization.testing_helpers import test_specs, load_test_data, run_test_data
+from qcfractal.components.optimization.testing_helpers import (
+    test_specs,
+    load_test_data,
+    run_test_data,
+    load_record_data,
+)
 from qcfractal.components.testing_helpers import convert_to_plain_qcschema_result
 from qcfractal.db_socket import SQLAlchemySocket
 from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule
 from qcportal.optimization import (
+    compare_optimization_records,
     OptimizationSpecification,
 )
 from qcportal.record_models import RecordStatusEnum, PriorityEnum, RecordTask
@@ -25,6 +31,7 @@ from ..record_utils import build_extras_properties
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
+    from qcarchivetesting.testing_classes import QCATestingSnowflake
     from sqlalchemy.orm.session import Session
     from typing import List, Dict
 
@@ -322,3 +329,22 @@ def test_optimization_socket_insert_complete_schema_v1(storage_socket: SQLAlchem
 
         _compare_record_with_schema(rec_1, plain_schema)
         _compare_record_with_schema(rec_2, plain_schema)
+
+
+def test_optimization_socket_insert_complete_qcportal_record(snowflake: QCATestingSnowflake):
+    test_names = ["opt_psi4_benzene", "opt_psi4_fluoroethane_notraj", "opt_psi4_methane", "opt_psi4_methane_sometraj"]
+
+    storage_socket = snowflake.get_storage_socket()
+    client = snowflake.client()
+
+    for test_name in test_names:
+        initial_record = load_record_data(test_name)
+        initial_record_copy = initial_record.copy(deep=True)
+
+        # Need a full copy of results - they can get mutated
+        with storage_socket.session_scope() as session:
+            ins_ids = storage_socket.records.insert_complete_qcportal_records(session, [initial_record_copy])
+
+        rec_1 = client.get_optimizations(ins_ids[0], include=["**"])
+        rec_1.fetch_children(include=["**"], force_fetch=True)
+        compare_optimization_records(rec_1, initial_record)
