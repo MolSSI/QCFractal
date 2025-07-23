@@ -328,14 +328,14 @@ class SQLAlchemySocket:
         else:
             return self.session_scope(read_only)
 
-    def set_finished_watch(self, mp_queue):
+    def set_finished_watch(self, finished_queue):
         """
         Set the finished watch queue to the given multiprocessing queue
 
         When a calculation finishes, its record ID and status will be placed in this queue
         """
 
-        self._finished_queue = mp_queue
+        self._finished_queue = finished_queue
 
     def notify_finished_watch(self, record_id, status):
         """
