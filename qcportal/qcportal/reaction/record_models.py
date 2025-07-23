@@ -87,7 +87,7 @@ class ReactionComponentMeta(BaseModel):
 
 class ReactionComponent(ReactionComponentMeta):
     singlepoint_record: Optional[SinglepointRecord] = None
-    optimization_record: Optional[SinglepointRecord] = None
+    optimization_record: Optional[OptimizationRecord] = None
 
 
 class ReactionRecord(BaseRecord):
