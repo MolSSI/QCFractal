@@ -20,6 +20,7 @@ from qcportal.reaction import (
     ReactionQueryFilters,
     ReactionInput,
     ReactionMultiInput,
+    ReactionRecord,
 )
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
 from qcportal.utils import hash_dict, is_included
@@ -276,6 +277,77 @@ class ReactionRecordSocket(BaseRecordSocket):
         append_output(session, rxn_orm, OutputTypeEnum.stdout, output)
 
         return not (opt_mols_to_compute or sp_mols_to_compute)
+
+    def insert_complete_qcportal_records_v1(
+        self,
+        session: Session,
+        records: Sequence[ReactionRecord],
+    ) -> List[ReactionRecordORM]:
+        ret = []
+
+        rxn_specs = []
+
+        for record in records:
+            rxn_specs.append(record.specification)
+
+        meta, spec_ids = self.root_socket.records.reaction.add_specifications(rxn_specs, session=session)
+        if not meta.success:
+            raise RuntimeError("Aborted reaction insertion - could not add specifications: " + meta.error_string)
+
+        for record, spec_id in zip(records, spec_ids):
+            record_orm = ReactionRecordORM(
+                specification_id=spec_id,
+                total_energy=record.total_energy,
+                status=RecordStatusEnum.complete,
+            )
+
+            if record.component_records_:
+                component_mols = [x.molecule for x in record.component_records_]
+                component_sps = [x.singlepoint_record for x in record.component_records_]
+                component_opts = [x.optimization_record for x in record.component_records_]
+
+                assert len(component_mols) == len(component_sps) == len(component_opts)
+                assert len(component_mols) > 0
+
+                # All are none or all are not none
+                assert all(x is None for x in component_sps) or all(x is not None for x in component_sps)
+                assert all(x is None for x in component_opts) or all(x is not None for x in component_opts)
+
+                meta, component_mol_ids = self.root_socket.molecules.add(component_mols, session=session)
+                if not meta.success:
+                    raise RuntimeError(
+                        "Aborted reaction insertion - could not add initial molecules: " + meta.error_string
+                    )
+
+                if component_sps[0] is not None:
+                    # all are not none
+                    component_sp_ids = self.root_socket.records.insert_complete_qcportal_records(session, component_sps)
+                else:
+                    component_sp_ids = [None for _ in component_sps]
+
+                if component_opts[0] is not None:
+                    # all are not none
+                    component_opt_ids = self.root_socket.records.insert_complete_qcportal_records(
+                        session, component_opts
+                    )
+                else:
+                    component_opt_ids = [None for _ in component_opts]
+
+                record_orm.components = [
+                    ReactionComponentORM(
+                        molecule_id=mid,
+                        coefficient=com.coefficient,
+                        singlepoint_id=spid,
+                        optimization_id=optid,
+                    )
+                    for mid, spid, optid, com in zip(
+                        component_mol_ids, component_sp_ids, component_opt_ids, record.component_records_
+                    )
+                ]
+
+            ret.append(record_orm)
+
+        return ret
 
     def add_specifications(
         self, rxn_specs: Sequence[ReactionSpecification], *, session: Optional[Session] = None

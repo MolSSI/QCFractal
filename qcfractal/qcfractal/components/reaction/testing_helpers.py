@@ -6,7 +6,7 @@ try:
     import pydantic.v1 as pydantic
 except ImportError:
     import pydantic
-from qcarchivetesting.helpers import read_procedure_data
+from qcarchivetesting.helpers import read_procedure_data, read_record_data
 from qcelemental.models import (
     Molecule,
     FailedOperation,
@@ -17,7 +17,7 @@ from qcelemental.models import (
 
 from qcfractal.components.reaction.record_db_models import ReactionRecordORM
 from qcfractal.testing_helpers import run_service
-from qcportal.reaction import ReactionSpecification, ReactionKeywords
+from qcportal.reaction import ReactionSpecification, ReactionKeywords, ReactionRecord
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, RecordTask
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 
@@ -87,6 +87,11 @@ def load_test_data(
         pydantic.parse_obj_as(List[Tuple[float, Molecule]], test_data["stoichiometry"]),
         pydantic.parse_obj_as(Dict[str, Union[QCEl_AtomicResult, QCEl_OptimizationResult]], test_data["results"]),
     )
+
+
+def load_record_data(name: str) -> ReactionRecord:
+    test_data = read_record_data(name)
+    return ReactionRecord(**test_data)
 
 
 def submit_test_data(
