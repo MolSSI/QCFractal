@@ -462,7 +462,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
             ):
                 options.append(joinedload(ManybodyRecordORM.initial_molecule))
             if is_included("clusters", include, exclude, False):
-                options.append(selectinload(ManybodyRecordORM.clusters))
+                options.append(selectinload(ManybodyRecordORM.clusters).selectinload(ManybodyClusterORM.molecule))
 
         with self.root_socket.optional_session(session, True) as session:
             return self.root_socket.records.get_base(
