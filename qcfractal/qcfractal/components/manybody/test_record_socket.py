@@ -9,14 +9,15 @@ from qcfractal.components.manybody.record_db_models import ManybodyRecordORM
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service
 from qcportal.auth import UserInfo
-from qcportal.manybody import ManybodySpecification
+from qcportal.manybody import ManybodySpecification, compare_manybody_records
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 from qcportal.utils import now_at_utc
-from .testing_helpers import compare_manybody_specs, test_specs, load_test_data, generate_task_key
+from .testing_helpers import compare_manybody_specs, test_specs, load_test_data, generate_task_key, load_record_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
+    from qcarchivetesting.testing_classes import QCATestingSnowflake
     from qcportal.managers import ManagerName
     from sqlalchemy.orm.session import Session
 
@@ -177,3 +178,26 @@ def test_manybody_socket_run_duplicate(
     sp_ids_2 = [x.singlepoint_id for x in rec_2.clusters]
 
     assert set(sp_ids_1).isdisjoint(sp_ids_2)
+
+
+def test_manybody_socket_insert_complete_qcportal_record(snowflake: QCATestingSnowflake):
+    test_names = [
+        "mb_all_he4_psi4_multi",
+        "mb_all_he4_psi4_multiss",
+        "mb_cp_he4_psi4_mp2",
+    ]
+
+    storage_socket = snowflake.get_storage_socket()
+    client = snowflake.client()
+
+    for test_name in test_names:
+        initial_record = load_record_data(test_name)
+        initial_record_copy = initial_record.copy(deep=True)
+
+        # Need a full copy of results - they can get mutated
+        with storage_socket.session_scope() as session:
+            ins_ids = storage_socket.records.insert_complete_qcportal_records(session, [initial_record_copy])
+
+        rec_1 = client.get_manybodys(ins_ids[0], include=["**"])
+        rec_1.fetch_children(include=["**"], force_fetch=True)
+        compare_manybody_records(rec_1, initial_record)

@@ -8,10 +8,10 @@ except ImportError:
     import pydantic
 from qcelemental.models import Molecule, FailedOperation, ComputeError, AtomicResult as QCEl_AtomicResult
 
-from qcarchivetesting.helpers import read_procedure_data
+from qcarchivetesting.helpers import read_procedure_data, read_record_data
 from qcfractal.components.manybody.record_db_models import ManybodyRecordORM
 from qcfractal.testing_helpers import run_service
-from qcportal.manybody import ManybodySpecification
+from qcportal.manybody import ManybodySpecification, ManybodyRecord
 from qcportal.singlepoint import QCSpecification, SinglepointProtocols
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, RecordTask
 
@@ -103,6 +103,11 @@ def load_test_data(name: str) -> Tuple[ManybodySpecification, Molecule, Dict[str
         pydantic.parse_obj_as(Molecule, test_data["molecule"]),
         pydantic.parse_obj_as(Dict[str, QCEl_AtomicResult], test_data["results"]),
     )
+
+
+def load_record_data(name: str) -> ManybodyRecord:
+    test_data = read_record_data(name)
+    return ManybodyRecord(**test_data)
 
 
 def submit_test_data(

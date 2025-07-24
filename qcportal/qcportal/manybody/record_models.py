@@ -12,10 +12,11 @@ from typing_extensions import Literal
 from qcportal.base_models import RestModelBase
 from qcportal.cache import get_records_with_cache
 from qcportal.molecules import Molecule
-from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
+from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters, compare_base_records
 from qcportal.singlepoint.record_models import (
     QCSpecification,
     SinglepointRecord,
+    compare_singlepoint_records,
 )
 
 
@@ -183,3 +184,25 @@ class ManybodyRecord(BaseRecord):
         if self.cluster_records_ is None:
             self._fetch_clusters()
         return self.cluster_records_
+
+
+def compare_manybody_records(record_1: ManybodyRecord, record_2: ManybodyRecord):
+    compare_base_records(record_1, record_2)
+
+    assert record_1.initial_molecule.get_hash() == record_2.initial_molecule.get_hash()
+
+    assert (record_1.cluster_records_ is None) == (record_2.cluster_records_ is None)
+
+    if record_1.cluster_records_ is not None:
+        assert len(record_1.cluster_records_) == len(record_2.cluster_records_)
+
+        # Record ids can be different, so sort by level, fragments, basis
+        cluster_1 = sorted(record_1.cluster_records_, key=lambda x: (x.mc_level, x.fragments, x.basis))
+        cluster_2 = sorted(record_2.cluster_records_, key=lambda x: (x.mc_level, x.fragments, x.basis))
+
+        for r1, r2 in zip(cluster_1, cluster_2):
+            assert r1.mc_level == r2.mc_level
+            assert r1.fragments == r2.fragments
+            assert r1.basis == r2.basis
+            assert r1.molecule.get_hash() == r2.molecule.get_hash()
+            compare_singlepoint_records(r1.singlepoint_record, r2.singlepoint_record)
