@@ -1777,17 +1777,7 @@ class BaseDataset(BaseModel):
         new_status: Optional[RecordStatusEnum] = None,
         *,
         refetch_records: bool = False,
-        **kwargs,  # For deprecated parameters
     ):
-
-        # TODO - DEPRECATED - remove eventually
-        logger = logging.getLogger(self.__class__.__name__)
-        if "new_tag" in kwargs:
-            logger.warning("'new_tag' is deprecated; use 'new_compute_tag' instead")
-            new_compute_tag = kwargs["new_tag"]
-        if "new_priority" in kwargs:
-            logger.warning("'new_priority' is deprecated; use 'new_compute_priority' instead")
-            new_compute_priority = kwargs["new_priority"]
 
         self.assert_is_not_view()
         self.assert_online()
@@ -1867,6 +1857,7 @@ class BaseDataset(BaseModel):
         new_comment: Optional[str] = None,
         *,
         refetch_records: bool = False,
+        **kwargs,  # For deprecated parameters
     ):
         """
         Modify the compute tag, compute priority, or comment of records in this dataset.
@@ -1888,6 +1879,15 @@ class BaseDataset(BaseModel):
         refetch_records
             If True, refetch the modified records from the server.
         """
+
+        # TODO - DEPRECATED - remove eventually
+        logger = logging.getLogger(self.__class__.__name__)
+        if "new_tag" in kwargs:
+            logger.warning("'new_tag' is deprecated; use 'new_compute_tag' instead")
+            new_compute_tag = kwargs["new_tag"]
+        if "new_priority" in kwargs:
+            logger.warning("'new_priority' is deprecated; use 'new_compute_priority' instead")
+            new_compute_priority = kwargs["new_priority"]
 
         self._modify_records(
             entry_names=entry_names,
