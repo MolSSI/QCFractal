@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=1719dd9b"></script>
+    <script src="../../../_static/documentation_options.js?v=ca098f77"></script>
     <script src="../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Base Record Models" href="base_record_models.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.62.post13+gd22cc780d" />
+  <meta name="docsearch:version" content="0.62.post15+gb14f2d146" />
   </head>
   
   
@@ -819,6 +819,21 @@ that can span multiple records</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointRecord.get_cache_dict">
+<span class="sig-name descname"><span class="pre">get_cache_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointRecord.get_cache_dict" title="Link to this definition">#</a></dt>
+<dd><p>Returns a dictionary of the record meant for caching</p>
+<p>When a record is stored in the cache, it is stored without child records (which
+are in the cache under their own keys). This function returns a dictionary that
+excludes those children.</p>
+<p>kwargs are passed directly to the pydantic <cite>dict()</cite> function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Dict</em>[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointRecord.get_subclass">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_subclass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointRecord.get_subclass" title="Link to this definition">#</a></dt>
 <dd><p>Obtain a subclass of this class given its record_type</p>
@@ -1263,7 +1278,7 @@ that can span multiple records</p>
 
 <dl class="py method pydantic_validator">
 <dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointQueryFilters.parse_dates">
-<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.created_after" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.created_after"><em class="xref py py-obj"><span class="pre">created_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.modified_before" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.modified_before"><em class="xref py py-obj"><span class="pre">modified_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.modified_after" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.modified_after"><em class="xref py py-obj"><span class="pre">modified_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.created_before" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.created_before"><em class="xref py py-obj"><span class="pre">created_before</span></em></a><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.created_after" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.created_after"><em class="xref py py-obj"><span class="pre">created_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.modified_after" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.modified_after"><em class="xref py py-obj"><span class="pre">modified_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.modified_before" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.modified_before"><em class="xref py py-obj"><span class="pre">modified_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.created_before" title="qcportal.singlepoint.record_models.SinglepointQueryFilters.created_before"><em class="xref py py-obj"><span class="pre">created_before</span></em></a><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method pydantic_validator">
@@ -2984,6 +2999,7 @@ records created for those that don’t match. If False, new records will always 
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointRecord.error"><code class="docutils literal notranslate"><span class="pre">SinglepointRecord.error</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointRecord.fetch_children"><code class="docutils literal notranslate"><span class="pre">SinglepointRecord.fetch_children()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointRecord.fetch_children_multi"><code class="docutils literal notranslate"><span class="pre">SinglepointRecord.fetch_children_multi()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointRecord.get_cache_dict"><code class="docutils literal notranslate"><span class="pre">SinglepointRecord.get_cache_dict()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointRecord.get_subclass"><code class="docutils literal notranslate"><span class="pre">SinglepointRecord.get_subclass()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointRecord.get_waiting_reason"><code class="docutils literal notranslate"><span class="pre">SinglepointRecord.get_waiting_reason()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointRecord.native_files"><code class="docutils literal notranslate"><span class="pre">SinglepointRecord.native_files</span></code></a></li>

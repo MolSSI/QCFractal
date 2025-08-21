@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=1719dd9b"></script>
+    <script src="_static/documentation_options.js?v=ca098f77"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.62.post13+gd22cc780d" />
+  <meta name="docsearch:version" content="0.62.post15+gb14f2d146" />
   </head>
   
   
@@ -1065,6 +1065,8 @@
         <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ManagerQueryFilters.cluster">(ManagerQueryFilters attribute)</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyRecord.cluster_records_">cluster_records_ (ManybodyRecord attribute)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyRecord.clusters">clusters (ManybodyRecord property)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyRecord.clusters_meta_">clusters_meta_ (ManybodyRecord attribute)</a>
@@ -1181,6 +1183,8 @@
         <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordStatusEnum.complete">(RecordStatusEnum attribute)</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionRecord.component_records_">component_records_ (ReactionRecord attribute)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionRecord.components">components (ReactionRecord property)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionRecord.components_meta_">components_meta_ (ReactionRecord attribute)</a>
@@ -2647,6 +2651,24 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.get_all_specifications">get_all_specifications() (DatasetCache method)</a>
 </li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord.get_cache_dict">get_cache_dict() (BaseRecord method)</a>
+
+      <ul>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationRecord.get_cache_dict">(GridoptimizationRecord method)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyRecord.get_cache_dict">(ManybodyRecord method)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBRecord.get_cache_dict">(NEBRecord method)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationRecord.get_cache_dict">(OptimizationRecord method)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionRecord.get_cache_dict">(ReactionRecord method)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointRecord.get_cache_dict">(SinglepointRecord method)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.get_cache_dict">(TorsiondriveRecord method)</a>, <a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.get_cache_dict">[1]</a>
+</li>
+      </ul></li>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.cache.PortalCache.get_cache_path">get_cache_path() (PortalCache method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.cache.PortalCache.get_cache_uri">get_cache_uri() (PortalCache method)</a>
@@ -2773,6 +2795,8 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.get_properties_df">(TorsiondriveDataset method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.get_reactions">get_reactions() (PortalClient method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.get_record">get_record() (BaseDataset method)</a>
@@ -2797,8 +2821,6 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.get_record">(TorsiondriveDataset method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.get_records">get_records() (DatasetCache method)</a>
 
       <ul>
@@ -4092,6 +4114,14 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionComponent.optimization_record">optimization_record (ReactionComponent attribute)</a>
 </li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationRecord.optimization_records_">optimization_records_ (GridoptimizationRecord attribute)</a>
+
+      <ul>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBRecord.optimization_records_">(NEBRecord attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.optimization_records_">(TorsiondriveRecord attribute)</a>, <a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.optimization_records_">[1]</a>
+</li>
+      </ul></li>
       <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationSpecification.optimization_specification">optimization_specification (GridoptimizationSpecification attribute)</a>
 
       <ul>
@@ -5467,6 +5497,8 @@
         <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionComponent.singlepoint_record">(ReactionComponent attribute)</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBRecord.singlepoint_records_">singlepoint_records_ (NEBRecord attribute)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBSpecification.singlepoint_specification">singlepoint_specification (NEBSpecification attribute)</a>
 
       <ul>
@@ -6043,9 +6075,13 @@
 </li>
       <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationRecord.trajectory_ids_">trajectory_ids_ (OptimizationRecord attribute)</a>
 </li>
+      <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationRecord.trajectory_records_">trajectory_records_ (OptimizationRecord attribute)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBOptimization.ts">ts (NEBOptimization attribute)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBRecord.ts_hessian">ts_hessian (NEBRecord property)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBRecord.ts_hessian_">ts_hessian_ (NEBRecord attribute)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBRecord.ts_optimization">ts_optimization (NEBRecord property)</a>
 </li>

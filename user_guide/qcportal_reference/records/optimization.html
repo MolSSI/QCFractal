@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=1719dd9b"></script>
+    <script src="../../../_static/documentation_options.js?v=ca098f77"></script>
     <script src="../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Singlepoint Records" href="singlepoint.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.62.post13+gd22cc780d" />
+  <meta name="docsearch:version" content="0.62.post15+gb14f2d146" />
   </head>
   
   
@@ -612,6 +612,7 @@
 <li><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationRecord.tags" title="qcportal.optimization.record_models.OptimizationRecord.tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tags</span> <span class="pre">(List[str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationRecord.task_" title="qcportal.optimization.record_models.OptimizationRecord.task_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">task_</span> <span class="pre">(qcportal.record_models.RecordTask</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationRecord.trajectory_ids_" title="qcportal.optimization.record_models.OptimizationRecord.trajectory_ids_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trajectory_ids_</span> <span class="pre">(List[int]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationRecord.trajectory_records_" title="qcportal.optimization.record_models.OptimizationRecord.trajectory_records_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trajectory_records_</span> <span class="pre">(List[qcportal.singlepoint.record_models.SinglepointRecord]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
 </ul>
 </dd>
 <dt class="field-odd">Validators<span class="colon">:</span></dt>
@@ -660,6 +661,11 @@
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">trajectory_ids_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"> <span class="pre">(alias</span> <span class="pre">'trajectory_ids')</span></em><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.trajectory_ids_" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationRecord.trajectory_records_">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">trajectory_records_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="singlepoint.html#qcportal.singlepoint.record_models.SinglepointRecord" title="qcportal.singlepoint.record_models.SinglepointRecord"><span class="pre">SinglepointRecord</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"> <span class="pre">(alias</span> <span class="pre">'trajectory_records')</span></em><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.trajectory_records_" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationRecord.propagate_client">
 <span class="sig-name descname"><span class="pre">propagate_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url_prefix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/optimization/record_models.html#OptimizationRecord.propagate_client"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.propagate_client" title="Link to this definition">#</a></dt>
@@ -668,6 +674,21 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>base_url_prefix</strong> (<em>str</em><em> | </em><em>None</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationRecord.get_cache_dict">
+<span class="sig-name descname"><span class="pre">get_cache_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/optimization/record_models.html#OptimizationRecord.get_cache_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.get_cache_dict" title="Link to this definition">#</a></dt>
+<dd><p>Returns a dictionary of the record meant for caching</p>
+<p>When a record is stored in the cache, it is stored without child records (which
+are in the cache under their own keys). This function returns a dictionary that
+excludes those children.</p>
+<p>kwargs are passed directly to the pydantic <cite>dict()</cite> function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Dict</em>[str, <em>Any</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1058,7 +1079,7 @@ that can span multiple records</p>
 
 <dl class="py method pydantic_validator">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationQueryFilters.parse_dates">
-<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.modified_before" title="qcportal.optimization.record_models.OptimizationQueryFilters.modified_before"><em class="xref py py-obj"><span class="pre">modified_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.modified_after" title="qcportal.optimization.record_models.OptimizationQueryFilters.modified_after"><em class="xref py py-obj"><span class="pre">modified_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.created_before" title="qcportal.optimization.record_models.OptimizationQueryFilters.created_before"><em class="xref py py-obj"><span class="pre">created_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.created_after" title="qcportal.optimization.record_models.OptimizationQueryFilters.created_after"><em class="xref py py-obj"><span class="pre">created_after</span></em></a><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_dates</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.created_after" title="qcportal.optimization.record_models.OptimizationQueryFilters.created_after"><em class="xref py py-obj"><span class="pre">created_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.modified_after" title="qcportal.optimization.record_models.OptimizationQueryFilters.modified_after"><em class="xref py py-obj"><span class="pre">modified_after</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.created_before" title="qcportal.optimization.record_models.OptimizationQueryFilters.created_before"><em class="xref py py-obj"><span class="pre">created_before</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.modified_before" title="qcportal.optimization.record_models.OptimizationQueryFilters.modified_before"><em class="xref py py-obj"><span class="pre">modified_before</span></em></a><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method pydantic_validator">
@@ -2808,7 +2829,9 @@ records created for those that don’t match. If False, new records will always 
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.initial_molecule_"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.initial_molecule_</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.final_molecule_"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.final_molecule_</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.trajectory_ids_"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.trajectory_ids_</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.trajectory_records_"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.trajectory_records_</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.propagate_client"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.propagate_client()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.get_cache_dict"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.get_cache_dict()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.initial_molecule"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.initial_molecule</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.final_molecule"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.final_molecule</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.trajectory"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.trajectory</span></code></a></li>
