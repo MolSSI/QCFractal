@@ -4,9 +4,9 @@ from copy import deepcopy
 from typing import Optional, Union, Any, List, Dict
 
 try:
-    from pydantic.v1 import BaseModel, Field, constr, validator, Extra, PrivateAttr
+    from pydantic.v1 import BaseModel, Field, constr, validator, Extra
 except ImportError:
-    from pydantic import BaseModel, Field, constr, validator, Extra, PrivateAttr
+    from pydantic import BaseModel, Field, constr, validator, Extra
 from qcelemental.models import Molecule
 from qcelemental.models.procedures import (
     OptimizationResult,
@@ -63,10 +63,11 @@ class OptimizationRecord(BaseRecord):
     final_molecule_: Optional[Molecule] = Field(None, alias="final_molecule")
     trajectory_ids_: Optional[List[int]] = Field(None, alias="trajectory_ids")
 
-    ########################################
-    # Caches
-    ########################################
-    _trajectory_records: Optional[List[SinglepointRecord]] = PrivateAttr(None)
+    ##############################################
+    # Fields with child records
+    # (generally not received from the server)
+    ##############################################
+    trajectory_records_: Optional[List[SinglepointRecord]] = Field(None, alias="trajectory_records")
 
     @classmethod
     def _fetch_children_multi(
@@ -105,16 +106,16 @@ class OptimizationRecord(BaseRecord):
 
             for r in records:
                 if r.trajectory_ids_ is None:
-                    r._trajectory_records = None
+                    r.trajectory_records_ = None
                 else:
-                    r._trajectory_records = [sp_map[x] for x in r.trajectory_ids_]
+                    r.trajectory_records_ = [sp_map[x] for x in r.trajectory_ids_]
                 r.propagate_client(r._client, base_url_prefix)
 
     def propagate_client(self, client, base_url_prefix: Optional[str]):
         BaseRecord.propagate_client(self, client, base_url_prefix)
 
-        if self._trajectory_records is not None:
-            for sp in self._trajectory_records:
+        if self.trajectory_records_ is not None:
+            for sp in self.trajectory_records_:
                 sp.propagate_client(client, base_url_prefix)
 
     def _fetch_initial_molecule(self):
@@ -137,6 +138,9 @@ class OptimizationRecord(BaseRecord):
 
         self.fetch_children(["trajectory"])
 
+    def get_cache_dict(self, **kwargs) -> Dict[str, Any]:
+        return self.dict(exclude={"trajectory_records_"}, **kwargs)
+
     @property
     def initial_molecule(self) -> Molecule:
         if self.initial_molecule_ is None:
@@ -151,13 +155,13 @@ class OptimizationRecord(BaseRecord):
 
     @property
     def trajectory(self) -> Optional[List[SinglepointRecord]]:
-        if self._trajectory_records is None:
+        if self.trajectory_records_ is None:
             self._fetch_trajectory()
-        return self._trajectory_records
+        return self.trajectory_records_
 
     def trajectory_element(self, trajectory_index: int) -> SinglepointRecord:
-        if self._trajectory_records is not None:
-            return self._trajectory_records[trajectory_index]
+        if self.trajectory_records_ is not None:
+            return self.trajectory_records_[trajectory_index]
         else:
             self._assert_online()
 

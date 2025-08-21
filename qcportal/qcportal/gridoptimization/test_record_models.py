@@ -33,12 +33,12 @@ def test_gridoptimization_record_model(snowflake: QCATestingSnowflake, includes:
         assert record.offline
 
         # children have all data fetched
-        assert all(x.initial_molecule_ is not None for x in record._optimizations_cache.values())
-        assert all(x.final_molecule_ is not None for x in record._optimizations_cache.values())
+        assert all(x.initial_molecule_ is not None for x in record.optimization_records_.values())
+        assert all(x.final_molecule_ is not None for x in record.optimization_records_.values())
     else:
         assert record.initial_molecule_ is None
         assert record.optimizations_ is None
-        assert record._optimizations_cache is None
+        assert record.optimization_records_ is None
 
     assert record.id == rec_id
     assert record.status == RecordStatusEnum.complete

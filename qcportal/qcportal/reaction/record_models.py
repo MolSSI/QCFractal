@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import List, Union, Optional, Tuple, Iterable
+from typing import List, Union, Optional, Tuple, Iterable, Dict, Any
 
 try:
-    from pydantic.v1 import BaseModel, Extra, root_validator, constr, PrivateAttr, Field
+    from pydantic.v1 import BaseModel, Extra, root_validator, constr, Field
 except ImportError:
-    from pydantic import BaseModel, Extra, root_validator, constr, PrivateAttr, Field
+    from pydantic import BaseModel, Extra, root_validator, constr, Field
 from typing_extensions import Literal
 
 from qcportal.base_models import RestModelBase
@@ -101,16 +101,17 @@ class ReactionRecord(BaseRecord):
     ######################################################
     components_meta_: Optional[List[ReactionComponentMeta]] = Field(None, alias="components")
 
-    ########################################
-    # Caches
-    ########################################
-    _components: Optional[List[ReactionComponent]] = PrivateAttr(None)
+    ##############################################
+    # Fields with child records
+    # (generally not received from the server)
+    ##############################################
+    component_records_: Optional[List[ReactionComponent]] = Field(None, alias="component_records")
 
     def propagate_client(self, client, base_url_prefix: Optional[str]):
         BaseRecord.propagate_client(self, client, base_url_prefix)
 
-        if self._components is not None:
-            for comp in self._components:
+        if self.component_records_ is not None:
+            for comp in self.component_records_:
                 if comp.singlepoint_record:
                     comp.singlepoint_record.propagate_client(self._client, base_url_prefix)
                 if comp.optimization_record:
@@ -167,9 +168,9 @@ class ReactionRecord(BaseRecord):
 
             for r in records:
                 if r.components_meta_ is None:
-                    r._components = None
+                    r.component_records_ = None
                 else:
-                    r._components = []
+                    r.component_records_ = []
                     for cm in r.components_meta_:
                         rc = ReactionComponent(**cm.dict())
 
@@ -178,7 +179,7 @@ class ReactionRecord(BaseRecord):
                         if rc.optimization_id is not None:
                             rc.optimization_record = opt_map[rc.optimization_id]
 
-                        r._components.append(rc)
+                        r.component_records_.append(rc)
 
                 r.propagate_client(r._client, base_url_prefix)
 
@@ -195,8 +196,11 @@ class ReactionRecord(BaseRecord):
 
         self.fetch_children(["components"])
 
+    def get_cache_dict(self, **kwargs) -> Dict[str, Any]:
+        return self.dict(exclude={"component_records_"}, **kwargs)
+
     @property
     def components(self) -> List[ReactionComponent]:
-        if self._components is None:
+        if self.component_records_ is None:
             self._fetch_components()
-        return self._components
+        return self.component_records_

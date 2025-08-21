@@ -10,18 +10,21 @@ from typing import TYPE_CHECKING, Optional, TypeVar, Type, Any, List, Iterable, 
 from urllib.parse import urlparse
 
 import apsw
+import msgpack
 
 from .utils import chunk_iterable
 
 try:
     import pydantic.v1 as pydantic
     from pydantic.v1 import BaseModel, Extra, validator, PrivateAttr, Field
+    from pydantic.v1.json import pydantic_encoder
 except ImportError:
     import pydantic
     from pydantic import BaseModel, Extra, validator, PrivateAttr, Field
+    from pydantic.json import pydantic_encoder
 import zstandard
 
-from .serialization import serialize, deserialize
+from .serialization import serialize, deserialize, _msgpack_encode
 
 if TYPE_CHECKING:
     from qcportal.record_models import RecordStatusEnum
@@ -33,8 +36,19 @@ _RECORD_T = TypeVar("_RECORD_T")
 _query_chunk_size = 125
 
 
+def _msgpack_encode_cache(obj: Any) -> Any:
+    # Similar to msgpack_encode in serialization, however
+    # does NOT include child records
+
+    # Importing BaseRecord is a circular dependency :(
+    if hasattr(obj, "get_cache_dict"):
+        return obj.get_cache_dict(exclude_unset=True, by_alias=True)
+    else:
+        return _msgpack_encode(obj)
+
+
 def compress_for_cache(data: Any) -> bytes:
-    serialized_data = serialize(data, "msgpack")
+    serialized_data = msgpack.dumps(data, default=_msgpack_encode_cache, use_bin_type=True)
     compressed_data = zstandard.compress(serialized_data, level=1)
     return compressed_data
 

@@ -4,9 +4,9 @@ from enum import Enum
 from typing import List, Union, Optional, Dict, Any, Iterable
 
 try:
-    from pydantic.v1 import BaseModel, Extra, validator, constr, PrivateAttr, Field
+    from pydantic.v1 import BaseModel, Extra, validator, constr, Field
 except ImportError:
-    from pydantic import BaseModel, Extra, validator, constr, PrivateAttr, Field
+    from pydantic import BaseModel, Extra, validator, constr, Field
 from typing_extensions import Literal
 
 from qcportal.base_models import RestModelBase
@@ -94,16 +94,17 @@ class ManybodyRecord(BaseRecord):
     initial_molecule_: Optional[Molecule] = Field(None, alias="initial_molecule")
     clusters_meta_: Optional[List[ManybodyClusterMeta]] = Field(None, alias="clusters")
 
-    ########################################
-    # Caches
-    ########################################
-    _clusters: Optional[List[ManybodyCluster]] = PrivateAttr(None)
+    ##############################################
+    # Fields with child records
+    # (generally not received from the server)
+    ##############################################
+    cluster_records_: Optional[List[ManybodyCluster]] = Field(None, alias="cluster_records")
 
     def propagate_client(self, client, base_url_prefix: Optional[str]):
         BaseRecord.propagate_client(self, client, base_url_prefix)
 
-        if self._clusters is not None:
-            for cluster in self._clusters:
+        if self.cluster_records_ is not None:
+            for cluster in self.cluster_records_:
                 if cluster.singlepoint_record:
                     cluster.singlepoint_record.propagate_client(client, base_url_prefix)
 
@@ -140,16 +141,16 @@ class ManybodyRecord(BaseRecord):
 
             for r in records:
                 if r.clusters_meta_ is None:
-                    r._clusters = None
+                    r.cluster_records_ = None
                 else:
-                    r._clusters = []
+                    r.cluster_records_ = []
                     for cm in r.clusters_meta_:
                         cluster = ManybodyCluster(**cm.dict())
 
                         if cluster.singlepoint_id is not None:
                             cluster.singlepoint_record = sp_map[cluster.singlepoint_id]
 
-                        r._clusters.append(cluster)
+                        r.cluster_records_.append(cluster)
 
                 r.propagate_client(client, base_url_prefix)
 
@@ -168,6 +169,9 @@ class ManybodyRecord(BaseRecord):
 
         self.fetch_children(["clusters"])
 
+    def get_cache_dict(self, **kwargs) -> Dict[str, Any]:
+        return self.dict(exclude={"cluster_records_"}, **kwargs)
+
     @property
     def initial_molecule(self) -> Molecule:
         if self.initial_molecule_ is None:
@@ -176,6 +180,6 @@ class ManybodyRecord(BaseRecord):
 
     @property
     def clusters(self) -> List[ManybodyCluster]:
-        if self._clusters is None:
+        if self.cluster_records_ is None:
             self._fetch_clusters()
-        return self._clusters
+        return self.cluster_records_
