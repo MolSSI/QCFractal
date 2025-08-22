@@ -332,9 +332,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
         return InsertMetadata.merge(all_metadata), all_ids
 
     def insert_full_qcportal_records_v1(
-        self,
-        session: Session,
-        records: Sequence[ManybodyRecord],
+        self, session: Session, records: Sequence[ManybodyRecord], creator_user_id: Optional[int]
     ) -> List[ManybodyRecordORM]:
         ret = []
 
@@ -370,7 +368,9 @@ class ManybodyRecordSocket(BaseRecordSocket):
                         "Aborted manybody insertion - could not add initial molecules: " + meta.error_string
                     )
 
-                cluster_sp_ids = self.root_socket.records.insert_full_qcportal_records(session, cluster_records)
+                cluster_sp_ids = self.root_socket.records.insert_full_qcportal_records(
+                    session, cluster_records, creator_user_id
+                )
                 record_orm.clusters = [
                     ManybodyClusterORM(
                         molecule_id=mid,

@@ -410,6 +410,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         self,
         session: Session,
         records: Sequence[GridoptimizationRecord],
+        creator_user_id: Optional[int],
     ) -> List[GridoptimizationRecordORM]:
         ret = []
 
@@ -457,7 +458,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                 opt_records_lst = list(record.optimization_records_.items())
                 opt_records = [x[1] for x in opt_records_lst]
 
-                opt_ids = self.root_socket.records.insert_full_qcportal_records(session, opt_records)
+                opt_ids = self.root_socket.records.insert_full_qcportal_records(session, opt_records, creator_user_id)
                 record_orm.optimizations = [
                     GridoptimizationOptimizationORM(
                         optimization_id=oid,

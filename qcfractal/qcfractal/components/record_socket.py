@@ -603,6 +603,7 @@ class RecordSocket:
         *,
         session: Optional[Session] = None,
     ):
+        # TODO - placeholder for now. Could support other types of inputs
         return self.add_from_input_qcportal(
             record_input, compute_tag, compute_priority, creator_user, find_existing, session=session
         )
@@ -612,7 +613,9 @@ class RecordSocket:
     ):
         return self.update_completed_schema_v1(session, record_id, record_type, result, manager_name)
 
-    def insert_full_record(self, session: Session, results: Sequence[AllResultTypes]) -> List[int]:
+    def insert_full_record(
+        self, session: Session, results: Sequence[AllResultTypes], creator_user: Optional[Union[int, str]]
+    ) -> List[int]:
 
         all_ids: List[Optional[int]] = [None for _ in range(len(results))]
 
@@ -629,15 +632,17 @@ class RecordSocket:
             else:
                 raise UserReportableError("Cannot insert a completed, unrecognized result")
 
+        creator_user_id = self.root_socket.users.get_optional_user_id(creator_user, session=session)
+
         if schema_v1_results:
             schema_tmp = [x[1] for x in schema_v1_results]
-            schema_ids = self.insert_full_schema_v1(session, schema_tmp)
+            schema_ids = self.insert_full_schema_v1(session, schema_tmp, creator_user_id)
             for (schema_idx, _), schema_id in zip(schema_v1_results, schema_ids):
                 all_ids[schema_idx] = schema_id
 
         if qcp_results:
             qcp_tmp = [x[1] for x in qcp_results]
-            qcp_ids = self.insert_full_qcportal_records(session, qcp_tmp)
+            qcp_ids = self.insert_full_qcportal_records(session, qcp_tmp, creator_user_id)
             for (record_idx, _), record_id in zip(qcp_results, qcp_ids):
                 all_ids[record_idx] = record_id
 
@@ -720,7 +725,9 @@ class RecordSocket:
         stmt = delete(TaskQueueORM).where(TaskQueueORM.record_id == record_id)
         session.execute(stmt)
 
-    def insert_full_qcportal_records(self, session: Session, records: Sequence[AllQCPortalRecordTypes]) -> List[int]:
+    def insert_full_qcportal_records(
+        self, session: Session, records: Sequence[AllQCPortalRecordTypes], creator_user_id: Optional[int]
+    ) -> List[int]:
         """
         Insert records into the database from a QCPortal record
 
@@ -748,11 +755,12 @@ class RecordSocket:
 
             # Now the record-specific stuff
             handler = self._handler_map[record_type]
-            record_orms = handler.insert_full_qcportal_records_v1(session, type_records)
+            record_orms = handler.insert_full_qcportal_records_v1(session, type_records, creator_user_id)
 
             for record_orm, history_orm, native_files_orm, (idx, type_record) in zip(
                 record_orms, history_orms, native_files_orms, idx_records
             ):
+                record_orm.creator_user_id = creator_user_id
                 record_orm.is_service = type_record.is_service
 
                 # Now back to the common modifications
@@ -761,11 +769,13 @@ class RecordSocket:
                 record_orm.status = type_record.status
 
                 if type_record.comments_:
-                    record_orm.comments = [RecordCommentORM(
-                        timestamp=c.timestamp,
-                        comment=c.comment,
-                    )
-                    for c in type_record.comments_]
+                    record_orm.comments = [
+                        RecordCommentORM(
+                            timestamp=c.timestamp,
+                            comment=c.comment,
+                        )
+                        for c in type_record.comments_
+                    ]
 
                 record_orm.created_on = type_record.created_on
                 record_orm.modified_on = type_record.modified_on
@@ -787,7 +797,9 @@ class RecordSocket:
 
         return [o.id for o in to_add_orm]
 
-    def insert_full_schema_v1(self, session: Session, results: Sequence[AllSchemaV1ResultTypes]) -> List[int]:
+    def insert_full_schema_v1(
+        self, session: Session, results: Sequence[AllSchemaV1ResultTypes], creator_user_id: Optional[int]
+    ) -> List[int]:
         """
         Insert records into the database from a QCSchema result
 
@@ -822,11 +834,12 @@ class RecordSocket:
 
             # Now the record-specific stuff
             handler = self._handler_map_by_schema[schema_name]
-            record_orms = handler.insert_full_schema_v1(session, type_results)
+            record_orms = handler.insert_full_schema_v1(session, type_results, creator_user_id)
 
             for record_orm, history_orm, native_files_orm, (idx, type_result) in zip(
                 record_orms, history_orms, native_files_orms, idx_results
             ):
+                record_orm.creator_user_id = creator_user_id
                 record_orm.is_service = False
 
                 # Now extras and properties

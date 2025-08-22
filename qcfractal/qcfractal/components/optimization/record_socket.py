@@ -129,7 +129,11 @@ class OptimizationRecordSocket(BaseRecordSocket):
             raise RuntimeError("Unable to add final molecule: " + meta.error_string)
 
         # Insert the trajectory
-        traj_ids = self.root_socket.records.insert_full_schema_v1(session, result.trajectory)
+        # Get the ID of the parent_record
+        stmt = select(OptimizationRecordORM.creator_user_id).where(OptimizationRecordORM.id == record_id)
+        creator_user_id = session.execute(stmt).scalar_one()
+
+        traj_ids = self.root_socket.records.insert_full_schema_v1(session, result.trajectory, creator_user_id)
 
         for position, traj_id in enumerate(traj_ids):
             assoc_orm = OptimizationTrajectoryORM(singlepoint_id=traj_id)
@@ -150,6 +154,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
         self,
         session: Session,
         records: Sequence[OptimizationRecord],
+        creator_user_id: Optional[int],
     ) -> List[OptimizationRecordORM]:
         ret = []
 
@@ -190,7 +195,9 @@ class OptimizationRecordSocket(BaseRecordSocket):
             )
 
             if record.trajectory:
-                trajectory_ids = self.root_socket.records.insert_full_qcportal_records(session, record.trajectory)
+                trajectory_ids = self.root_socket.records.insert_full_qcportal_records(
+                    session, record.trajectory, creator_user_id
+                )
                 opt_traj_orm = [
                     OptimizationTrajectoryORM(singlepoint_id=tid, position=idx)
                     for idx, tid in enumerate(trajectory_ids)
@@ -205,6 +212,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
         self,
         session: Session,
         results: Sequence[QCEl_OptimizationResult],
+        creator_user_id: Optional[int],
     ) -> List[OptimizationRecordORM]:
 
         ret = []
@@ -260,7 +268,9 @@ class OptimizationRecordSocket(BaseRecordSocket):
             )
 
             if result.trajectory:
-                trajectory_ids = self.root_socket.records.insert_full_schema_v1(session, result.trajectory)
+                trajectory_ids = self.root_socket.records.insert_full_schema_v1(
+                    session, result.trajectory, creator_user_id
+                )
                 record_orm.trajectory = [
                     OptimizationTrajectoryORM(singlepoint_id=tid, position=idx)
                     for idx, tid in enumerate(trajectory_ids)

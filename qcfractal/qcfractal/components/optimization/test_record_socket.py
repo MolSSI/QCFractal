@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcarchivetesting import load_molecule_data
+from qcarchivetesting import load_molecule_data, test_users
 from qcfractal.components.optimization.record_db_models import OptimizationRecordORM
 from qcfractal.components.optimization.testing_helpers import (
     test_specs,
@@ -295,13 +295,17 @@ def test_optimization_socket_run(
         _compare_record_with_schema(record, plain_result)
 
 
-def test_optimization_socket_insert_full_schema_v1(storage_socket: SQLAlchemySocket, session: Session):
+def test_optimization_socket_insert_full_schema_v1(secure_snowflake: QCATestingSnowflake):
     test_names = [
         "opt_psi4_benzene",
         "opt_psi4_fluoroethane_notraj",
         "opt_psi4_methane",
         "opt_psi4_methane_sometraj",
     ]
+
+    storage_socket = secure_snowflake.get_storage_socket()
+    client = secure_snowflake.client("submit_user", test_users["submit_user"]["pw"])
+    user_id = client.get_user().id
 
     all_ids = []
 
@@ -312,8 +316,8 @@ def test_optimization_socket_insert_full_schema_v1(storage_socket: SQLAlchemySoc
 
         # Need a full copy of results - they can get mutated
         with storage_socket.session_scope() as session2:
-            ins_ids_1 = storage_socket.records.insert_full_schema_v1(session2, [result_schema.copy(deep=True)])
-            ins_ids_2 = storage_socket.records.insert_full_schema_v1(session2, [plain_schema.copy(deep=True)])
+            ins_ids_1 = storage_socket.records.insert_full_schema_v1(session2, [result_schema.copy(deep=True)], user_id)
+            ins_ids_2 = storage_socket.records.insert_full_schema_v1(session2, [plain_schema.copy(deep=True)], user_id)
 
         ins_id_1 = ins_ids_1[0]
         ins_id_2 = ins_ids_2[0]
@@ -324,19 +328,29 @@ def test_optimization_socket_insert_full_schema_v1(storage_socket: SQLAlchemySoc
         assert ins_id_2 not in all_ids
         all_ids.extend([ins_id_1, ins_id_2])
 
-        rec_1 = session.get(OptimizationRecordORM, ins_id_1)
-        rec_2 = session.get(OptimizationRecordORM, ins_id_2)
+        with storage_socket.session_scope() as session:
+            rec_1 = session.get(OptimizationRecordORM, ins_id_1)
+            rec_2 = session.get(OptimizationRecordORM, ins_id_2)
 
-        _compare_record_with_schema(rec_1, plain_schema)
-        _compare_record_with_schema(rec_2, plain_schema)
+            assert rec_1.creator_user_id == user_id
+            assert rec_2.creator_user_id == user_id
+
+            _compare_record_with_schema(rec_1, plain_schema)
+            _compare_record_with_schema(rec_2, plain_schema)
 
 
-def test_optimization_socket_insert_full_qcportal_record(snowflake: QCATestingSnowflake):
-    test_names = ["opt_psi4_benzene", "opt_psi4_fluoroethane_notraj", "opt_psi4_methane", "opt_psi4_methane_sometraj",
-                  "opt_error_118868739"]
+def test_optimization_socket_insert_full_qcportal_record(secure_snowflake: QCATestingSnowflake):
+    test_names = [
+        "opt_psi4_benzene",
+        "opt_psi4_fluoroethane_notraj",
+        "opt_psi4_methane",
+        "opt_psi4_methane_sometraj",
+        "opt_error_118868739",
+    ]
 
-    storage_socket = snowflake.get_storage_socket()
-    client = snowflake.client()
+    storage_socket = secure_snowflake.get_storage_socket()
+    client = secure_snowflake.client("submit_user", test_users["submit_user"]["pw"])
+    user_id = client.get_user().id
 
     for test_name in test_names:
         initial_record = load_record_data(test_name)
@@ -344,8 +358,13 @@ def test_optimization_socket_insert_full_qcportal_record(snowflake: QCATestingSn
 
         # Need a full copy of results - they can get mutated
         with storage_socket.session_scope() as session:
-            ins_ids = storage_socket.records.insert_full_qcportal_records(session, [initial_record_copy])
+            ins_ids = storage_socket.records.insert_full_qcportal_records(session, [initial_record_copy], user_id)
 
         rec_1 = client.get_optimizations(ins_ids[0], include=["**"])
         rec_1.fetch_children(include=["**"], force_fetch=True)
+
         compare_optimization_records(rec_1, initial_record)
+
+        assert rec_1.creator_user == "submit_user"
+        for sp in rec_1.trajectory:
+            assert sp.creator_user == "submit_user"

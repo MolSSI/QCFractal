@@ -182,9 +182,7 @@ class BaseRecordSocket:
         )
 
     def insert_full_qcportal_records_v1(
-        self,
-        session: Session,
-        records: Sequence[AllResultTypes],
+        self, session: Session, records: Sequence[AllResultTypes], creator_user_id: Optional[int]
     ) -> List[BaseRecordORM]:
         """
         Insert records into the database from a QCSchema result
@@ -196,9 +194,7 @@ class BaseRecordSocket:
         )
 
     def insert_full_schema_v1(
-        self,
-        session: Session,
-        results: Sequence[AllResultTypes],
+        self, session: Session, results: Sequence[AllResultTypes], creator_user_id: Optional[int]
     ) -> List[BaseRecordORM]:
         """
         Insert records into the database from a QCSchema result

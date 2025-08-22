@@ -330,6 +330,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         self,
         session: Session,
         records: Sequence[TorsiondriveRecord],
+        creator_user_id: Optional[int],
     ) -> List[TorsiondriveRecordORM]:
         ret = []
 
@@ -365,7 +366,9 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                     # Just to be safe
                     assert all(serialize_key(k) == td_opt_map[r.id].key for r in opt_records)
 
-                    opt_ids = self.root_socket.records.insert_full_qcportal_records(session, opt_records)
+                    opt_ids = self.root_socket.records.insert_full_qcportal_records(
+                        session, opt_records, creator_user_id
+                    )
                     opt_orm = [
                         TorsiondriveOptimizationORM(
                             optimization_id=oid, key=td_opt_map[r.id].key, position=td_opt_map[r.id].position

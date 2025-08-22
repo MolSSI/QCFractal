@@ -448,9 +448,7 @@ class NEBRecordSocket(BaseRecordSocket):
         service_orm.dependencies.append(svc_dep)
 
     def insert_full_qcportal_records_v1(
-        self,
-        session: Session,
-        records: Sequence[NEBRecord],
+        self, session: Session, records: Sequence[NEBRecord], creator_user_id: Optional[int]
     ) -> List[NEBRecordORM]:
         ret = []
 
@@ -479,7 +477,9 @@ class NEBRecordSocket(BaseRecordSocket):
                 record_orm.singlepoints = []
 
                 for chain_iteration, singlepoint_records in record.singlepoint_records_.items():
-                    sp_ids = self.root_socket.records.insert_full_qcportal_records(session, singlepoint_records)
+                    sp_ids = self.root_socket.records.insert_full_qcportal_records(
+                        session, singlepoint_records, creator_user_id
+                    )
 
                     for idx, sp_id in enumerate(sp_ids):
                         ns = NEBSinglepointsORM(
@@ -490,7 +490,9 @@ class NEBRecordSocket(BaseRecordSocket):
                         record_orm.singlepoints.append(ns)
 
             if record.ts_hessian_:
-                hessian_id = self.root_socket.records.insert_full_qcportal_records(session, [record.ts_hessian_])
+                hessian_id = self.root_socket.records.insert_full_qcportal_records(
+                    session, [record.ts_hessian_], creator_user_id
+                )
                 ns = NEBSinglepointsORM(
                     chain_iteration=max(record.singlepoint_records_.keys()) + 1,
                     position=0,
@@ -504,7 +506,7 @@ class NEBRecordSocket(BaseRecordSocket):
                 opt_info = list(record.optimization_records_.items())
 
                 opt_records = [x[1] for x in opt_info]
-                opt_ids = self.root_socket.records.insert_full_qcportal_records(session, opt_records)
+                opt_ids = self.root_socket.records.insert_full_qcportal_records(session, opt_records, creator_user_id)
 
                 for opt_record, opt_id, (k, _) in zip(opt_records, opt_ids, opt_info):
                     o_meta = record.optimizations_[k]

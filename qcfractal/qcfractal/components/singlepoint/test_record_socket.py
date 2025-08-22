@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcarchivetesting import load_molecule_data
+from qcarchivetesting import load_molecule_data, test_users
 from qcfractal.components.testing_helpers import convert_to_plain_qcschema_result
 from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule
@@ -293,7 +293,7 @@ def test_singlepoint_socket_run(
         assert record.specification.method in short_desc
 
 
-def test_singlepoint_socket_insert_full_schema_v1(storage_socket: SQLAlchemySocket, session: Session):
+def test_singlepoint_socket_insert_full_schema_v1(secure_snowflake: QCATestingSnowflake):
     test_names = [
         "sp_psi4_benzene_energy_1",
         "sp_psi4_benzene_energy_2",
@@ -308,6 +308,10 @@ def test_singlepoint_socket_insert_full_schema_v1(storage_socket: SQLAlchemySock
         "sp_rdkit_water_energy",
     ]
 
+    storage_socket = secure_snowflake.get_storage_socket()
+    client = secure_snowflake.client("submit_user", test_users["submit_user"]["pw"])
+    user_id = client.get_user().id
+
     all_ids = []
 
     for test_name in test_names:
@@ -317,8 +321,8 @@ def test_singlepoint_socket_insert_full_schema_v1(storage_socket: SQLAlchemySock
 
         # Need a full copy of results - they can get mutated
         with storage_socket.session_scope() as session2:
-            ins_ids_1 = storage_socket.records.insert_full_schema_v1(session2, [result_schema.copy(deep=True)])
-            ins_ids_2 = storage_socket.records.insert_full_schema_v1(session2, [plain_schema.copy(deep=True)])
+            ins_ids_1 = storage_socket.records.insert_full_schema_v1(session2, [result_schema.copy(deep=True)], user_id)
+            ins_ids_2 = storage_socket.records.insert_full_schema_v1(session2, [plain_schema.copy(deep=True)], user_id)
 
         ins_id_1 = ins_ids_1[0]
         ins_id_2 = ins_ids_2[0]
@@ -329,14 +333,18 @@ def test_singlepoint_socket_insert_full_schema_v1(storage_socket: SQLAlchemySock
         assert ins_id_2 not in all_ids
         all_ids.extend([ins_id_1, ins_id_2])
 
-        rec_1 = session.get(SinglepointRecordORM, ins_id_1)
-        rec_2 = session.get(SinglepointRecordORM, ins_id_2)
+        with storage_socket.session_scope() as session:
+            rec_1 = session.get(SinglepointRecordORM, ins_id_1)
+            rec_2 = session.get(SinglepointRecordORM, ins_id_2)
 
-        _compare_record_with_schema(rec_1, plain_schema)
-        _compare_record_with_schema(rec_2, plain_schema)
+            assert rec_1.creator_user_id == user_id
+            assert rec_2.creator_user_id == user_id
+
+            _compare_record_with_schema(rec_1, plain_schema)
+            _compare_record_with_schema(rec_2, plain_schema)
 
 
-def test_singlepoint_socket_insert_full_qcportal_record(snowflake: QCATestingSnowflake):
+def test_singlepoint_socket_insert_full_qcportal_record(secure_snowflake: QCATestingSnowflake):
     test_names = [
         "sp_psi4_benzene_energy_1",
         "sp_psi4_peroxide_energy_wfn",
@@ -346,8 +354,9 @@ def test_singlepoint_socket_insert_full_qcportal_record(snowflake: QCATestingSno
         "sp_error_119608646",
     ]
 
-    storage_socket = snowflake.get_storage_socket()
-    client = snowflake.client()
+    storage_socket = secure_snowflake.get_storage_socket()
+    client = secure_snowflake.client("submit_user", test_users["submit_user"]["pw"])
+    user_id = client.get_user().id
 
     for test_name in test_names:
         initial_record = load_record_data(test_name)
@@ -355,8 +364,10 @@ def test_singlepoint_socket_insert_full_qcportal_record(snowflake: QCATestingSno
 
         # Need a full copy of results - they can get mutated
         with storage_socket.session_scope() as session:
-            ins_ids = storage_socket.records.insert_full_qcportal_records(session, [initial_record_copy])
+            ins_ids = storage_socket.records.insert_full_qcportal_records(session, [initial_record_copy], user_id)
 
         rec_1 = client.get_singlepoints(ins_ids[0], include=["**"])
+
         compare_singlepoint_records(rec_1, initial_record)
-        print(rec_1, initial_record)
+
+        assert rec_1.creator_user == "submit_user"

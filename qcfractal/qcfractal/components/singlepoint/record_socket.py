@@ -120,7 +120,10 @@ class SinglepointRecordSocket(BaseRecordSocket):
         self,
         session: Session,
         records: Sequence[SinglepointRecord],
+        creator_user_id: Optional[int],
     ) -> List[SinglepointRecordORM]:
+
+        # No child records, so creator_user_id is ignored
         ret = []
 
         mols = []
@@ -158,10 +161,10 @@ class SinglepointRecordSocket(BaseRecordSocket):
         return ret
 
     def insert_full_schema_v1(
-        self,
-        session: Session,
-        results: Sequence[QCEl_AtomicResult],
+        self, session: Session, results: Sequence[QCEl_AtomicResult], creator_user_id: Optional[int]
     ) -> List[SinglepointRecordORM]:
+
+        # No child records, so creator_user_id is ignored
 
         ret = []
 
