@@ -267,7 +267,11 @@ def compare_optimization_records(record_1: OptimizationRecord, record_2: Optimiz
     compare_base_records(record_1, record_2)
 
     assert record_1.initial_molecule.get_hash() == record_2.initial_molecule.get_hash()
-    assert record_1.final_molecule.get_hash() == record_2.final_molecule.get_hash()
+
+    assert (record_1.final_molecule_id is None) == (record_2.final_molecule_id is None)
+    if record_1.final_molecule_id is not None:
+        assert record_1.final_molecule.get_hash() == record_2.final_molecule.get_hash()
+
     assert record_1.energies == record_2.energies
 
     assert (record_1.trajectory_records_ is None) == (record_2.trajectory_records_ is None)

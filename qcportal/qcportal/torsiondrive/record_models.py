@@ -334,7 +334,11 @@ class TorsiondriveRecord(BaseRecord):
 def compare_torsiondrive_records(record_1: TorsiondriveRecord, record_2: TorsiondriveRecord):
     compare_base_records(record_1, record_2)
 
-    assert all(m1.get_hash() == m2.get_hash() for m1, m2 in zip(record_1.initial_molecules, record_2.initial_molecules))
+    assert len(record_1.initial_molecules) == len(record_2.initial_molecules)
+
+    mol1 = sorted(record_1.initial_molecules, key=lambda x: x.get_hash())
+    mol2 = sorted(record_2.initial_molecules, key=lambda x: x.get_hash())
+    assert mol1 == mol2
 
     assert (record_1.optimization_records_ is None) == (record_2.optimizations_ is None)
 
@@ -346,6 +350,7 @@ def compare_torsiondrive_records(record_1: TorsiondriveRecord, record_2: Torsion
             for t1, t2 in zip(t1_lst, t2_lst):
                 compare_optimization_records(t1, t2)
 
-        for k, t1 in record_1.minimum_optimizations.items():
-            t2 = record_2.minimum_optimizations[k]
-            compare_optimization_records(t1, t2)
+        if record_1.status == "complete":
+            for k, t1 in record_1.minimum_optimizations.items():
+                t2 = record_2.minimum_optimizations[k]
+                compare_optimization_records(t1, t2)

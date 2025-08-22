@@ -761,7 +761,11 @@ class RecordSocket:
                 record_orm.status = type_record.status
 
                 if type_record.comments_:
-                    record_orm.comments = type_record.comments_
+                    record_orm.comments = [RecordCommentORM(
+                        timestamp=c.timestamp,
+                        comment=c.comment,
+                    )
+                    for c in type_record.comments_]
 
                 record_orm.created_on = type_record.created_on
                 record_orm.modified_on = type_record.modified_on

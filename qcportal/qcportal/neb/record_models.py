@@ -15,6 +15,7 @@ from qcportal.record_models import (
     BaseRecord,
     RecordAddBodyBase,
     RecordQueryFilters,
+    RecordStatusEnum,
     compare_base_records,
 )
 from qcportal.utils import recursive_normalizer, is_included
@@ -313,6 +314,9 @@ class NEBRecord(BaseRecord):
 
     @property
     def result(self):
+        if self.status != RecordStatusEnum.complete:
+            raise ValueError("NEB result is only available after the calculation is complete.")
+
         if self.neb_result_ is None:
             # Fetch the result if possible
             if self._client is not None:
@@ -351,7 +355,8 @@ def compare_neb_records(record_1: NEBRecord, record_2: NEBRecord):
     for m1, m2 in zip(record_1.initial_chain_, record_2.initial_chain_):
         assert m1.get_hash() == m2.get_hash()
 
-    assert record_1.result.get_hash() == record_2.result.get_hash()
+    if record_1.status == RecordStatusEnum.complete:
+        assert record_1.result.get_hash() == record_2.result.get_hash()
 
     assert (record_1.singlepoint_records_.keys()) == (record_2.singlepoint_records_.keys())
 

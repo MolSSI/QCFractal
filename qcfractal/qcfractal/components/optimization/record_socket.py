@@ -170,11 +170,17 @@ class OptimizationRecordSocket(BaseRecordSocket):
         if not meta.success:
             raise RuntimeError("Aborted optimization insertion - could not add initial molecules: " + meta.error_string)
 
-        meta, final_mol_ids = self.root_socket.molecules.add(final_mols, session=session)
-        if not meta.success:
-            raise RuntimeError("Aborted optimization insertion - could not add final molecules: " + meta.error_string)
+        for record, initial_mol_id, spec_id in zip(records, initial_mol_ids, spec_ids):
 
-        for record, initial_mol_id, final_mol_id, spec_id in zip(records, initial_mol_ids, final_mol_ids, spec_ids):
+            final_mol_id = None
+            if record.final_molecule:
+                meta, final_mol_ids = self.root_socket.molecules.add([record.final_molecule], session=session)
+                if not meta.success:
+                    raise RuntimeError(
+                        "Aborted optimization insertion - could not add final molecule: " + meta.error_string
+                    )
+                final_mol_id = final_mol_ids[0]
+
             record_orm = OptimizationRecordORM(
                 specification_id=spec_id,
                 initial_molecule_id=initial_mol_id,

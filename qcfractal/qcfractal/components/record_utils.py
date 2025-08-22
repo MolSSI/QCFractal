@@ -107,7 +107,11 @@ def compute_history_orms_from_qcportal_record(result: AllQCPortalRecordTypes) ->
         history_orm.status = ch.status
         history_orm.manager_name = ch.manager_name
         history_orm.modified_on = ch.modified_on
-        history_orm.provenance = ch.provenance.dict()
+
+        if ch.provenance is not None:
+            history_orm.provenance = ch.provenance.dict()
+        else:
+            history_orm.provenance = None
 
         # Get the compressed outputs if they exist
         if ch.outputs_:
