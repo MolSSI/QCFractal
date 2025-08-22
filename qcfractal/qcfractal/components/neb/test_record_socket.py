@@ -12,6 +12,7 @@ from qcportal.auth import UserInfo
 from qcportal.neb import (
     NEBSpecification,
     NEBKeywords,
+    compare_neb_records,
 )
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import (
@@ -19,10 +20,11 @@ from qcportal.singlepoint import (
     SinglepointProtocols,
 )
 from qcportal.utils import now_at_utc
-from .testing_helpers import compare_neb_specs, test_specs, load_test_data, generate_task_key
+from .testing_helpers import compare_neb_specs, test_specs, load_test_data, generate_task_key, load_record_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
+    from qcarchivetesting.testing_classes import QCATestingSnowflake
     from qcportal.managers import ManagerName
     from sqlalchemy.orm.session import Session
 
@@ -276,3 +278,28 @@ def test_neb_socket_run_duplicate(
     opt_ids_2 = [x.optimization_id for x in rec_2.optimizations]
 
     assert set(sp_ids_1 + opt_ids_1).isdisjoint(sp_ids_2 + opt_ids_2)
+
+
+def test_neb_socket_insert_complete_qcportal_record(snowflake: QCATestingSnowflake):
+    test_names = [
+        "neb_HCN_psi4_b3lyp_opt3",
+        "neb_HCN_psi4_pbe0_opt1",
+        "neb_HCN_psi4_pbe",
+        "neb_HCN_psi4_pbe_opt2",
+        "neb_HCN_psi4_pbe_opt_diff",
+    ]
+
+    storage_socket = snowflake.get_storage_socket()
+    client = snowflake.client()
+
+    for test_name in test_names:
+        initial_record = load_record_data(test_name)
+        initial_record_copy = initial_record.copy(deep=True)
+
+        # Need a full copy of results - they can get mutated
+        with storage_socket.session_scope() as session:
+            ins_ids = storage_socket.records.insert_complete_qcportal_records(session, [initial_record_copy])
+
+        rec_1 = client.get_nebs(ins_ids[0], include=["**"])
+        rec_1.fetch_children(include=["**"], force_fetch=True)
+        compare_neb_records(rec_1, initial_record)

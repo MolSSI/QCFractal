@@ -285,10 +285,7 @@ class ReactionRecordSocket(BaseRecordSocket):
     ) -> List[ReactionRecordORM]:
         ret = []
 
-        rxn_specs = []
-
-        for record in records:
-            rxn_specs.append(record.specification)
+        rxn_specs = [r.specification for r in records]
 
         meta, spec_ids = self.root_socket.records.reaction.add_specifications(rxn_specs, session=session)
         if not meta.success:

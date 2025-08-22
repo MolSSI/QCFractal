@@ -11,10 +11,15 @@ from typing_extensions import Literal
 from qcportal.base_models import RestModelBase
 from qcportal.cache import get_records_with_cache
 from qcportal.molecules import Molecule
-from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
+from qcportal.record_models import (
+    BaseRecord,
+    RecordAddBodyBase,
+    RecordQueryFilters,
+    compare_base_records,
+)
 from qcportal.utils import recursive_normalizer, is_included
-from ..optimization.record_models import OptimizationRecord, OptimizationSpecification
-from ..singlepoint.record_models import QCSpecification, SinglepointRecord
+from ..optimization.record_models import OptimizationRecord, OptimizationSpecification, compare_optimization_records
+from ..singlepoint.record_models import QCSpecification, SinglepointRecord, compare_singlepoint_records
 
 
 class NEBKeywords(BaseModel):
@@ -308,8 +313,18 @@ class NEBRecord(BaseRecord):
 
     @property
     def result(self):
-        if self.neb_result_ is None and "neb_result_" not in self.__fields_set__:
-            self._fetch_neb_result()
+        if self.neb_result_ is None:
+            # Fetch the result if possible
+            if self._client is not None:
+                self._fetch_neb_result()
+            elif self.singlepoints_ is not None:
+                max_iter = max(self.singlepoints.keys())
+                max_sp = max(self.singlepoints[max_iter], key=lambda x: x.properties["return_energy"])
+                self.neb_result_ = max_sp.molecule
+            else:
+                # Raise the usual exception
+                self.assert_online()
+
         return self.neb_result_
 
     @property
@@ -327,3 +342,51 @@ class NEBRecord(BaseRecord):
         if self.singlepoint_records_ is None:
             self._fetch_singlepoints()
         return self.ts_hessian_
+
+
+def compare_neb_records(record_1: NEBRecord, record_2: NEBRecord):
+    compare_base_records(record_1, record_2)
+
+    assert len(record_1.initial_chain_) == len(record_2.initial_chain_)
+    for m1, m2 in zip(record_1.initial_chain_, record_2.initial_chain_):
+        assert m1.get_hash() == m2.get_hash()
+
+    assert record_1.result.get_hash() == record_2.result.get_hash()
+
+    assert (record_1.singlepoint_records_.keys()) == (record_2.singlepoint_records_.keys())
+
+    # sort singlepoint info by iteration and position
+    assert len(record_1.singlepoints_) == len(record_2.singlepoints_)
+    singlepoint_info_1 = sorted(record_1.singlepoints_, key=lambda x: (x.chain_iteration, x.position))
+    singlepoint_info_2 = sorted(record_2.singlepoints_, key=lambda x: (x.chain_iteration, x.position))
+    assert len(singlepoint_info_1) == len(singlepoint_info_2)
+
+    for m1, m2 in zip(singlepoint_info_1, singlepoint_info_2):
+        assert m1.chain_iteration == m2.chain_iteration
+        assert m1.position == m2.position
+
+    # compare actual records
+    for k, sp1 in record_1.singlepoint_records_.items():
+        sp2 = record_2.singlepoint_records_[k]
+        assert len(sp1) == len(sp2)
+        for m1, m2 in zip(sp1, sp2):
+            compare_singlepoint_records(m1, m2)
+
+    # Hessian part
+    assert (record_1.ts_hessian_ is None) == (record_2.ts_hessian_ is None)
+    if record_1.ts_hessian_ is not None:
+        compare_singlepoint_records(record_1.ts_hessian_, record_2.ts_hessian_)
+
+    # Optimizations
+    assert (record_1.optimizations_ is None) == (record_2.optimizations_ is None)
+    if record_1.optimizations_ is not None:
+        assert len(record_1.optimizations_) == len(record_2.optimizations_)
+
+        for k, v in record_1.optimizations_.items():
+            v2 = record_2.optimizations_[k]
+            assert v.position == v2.position
+            assert v.ts == v2.ts
+
+        for k, c1 in record_1.optimization_records_.items():
+            c2 = record_2.optimization_records_[k]
+            compare_optimization_records(c1, c2)
