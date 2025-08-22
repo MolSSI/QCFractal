@@ -287,6 +287,7 @@ def test_neb_socket_insert_full_qcportal_record(snowflake: QCATestingSnowflake):
         "neb_HCN_psi4_pbe",
         "neb_HCN_psi4_pbe_opt2",
         "neb_HCN_psi4_pbe_opt_diff",
+        "neb_error_68251163",
     ]
 
     storage_socket = snowflake.get_storage_socket()

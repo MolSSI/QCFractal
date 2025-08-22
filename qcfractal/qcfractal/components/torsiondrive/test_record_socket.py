@@ -363,6 +363,7 @@ def test_torsiondrive_socket_insert_full_qcportal_record(snowflake: QCATestingSn
         "td_H2O2_mopac_pm6",
         "td_H2O2_psi4_pbe0",
         "td_H2O2_psi4_pbe",
+        "td_error_137174663",
     ]
 
     storage_socket = snowflake.get_storage_socket()

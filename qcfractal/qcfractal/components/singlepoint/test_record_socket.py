@@ -342,6 +342,8 @@ def test_singlepoint_socket_insert_full_qcportal_record(snowflake: QCATestingSno
         "sp_psi4_peroxide_energy_wfn",
         "sp_rdkit_water_energy",
         "sp_psi4_h2_b3lyp_nativefiles",
+        "sp_error_123975361",
+        "sp_error_119608646",
     ]
 
     storage_socket = snowflake.get_storage_socket()
@@ -357,3 +359,4 @@ def test_singlepoint_socket_insert_full_qcportal_record(snowflake: QCATestingSno
 
         rec_1 = client.get_singlepoints(ins_ids[0], include=["**"])
         compare_singlepoint_records(rec_1, initial_record)
+        print(rec_1, initial_record)

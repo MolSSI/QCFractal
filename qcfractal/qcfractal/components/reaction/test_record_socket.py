@@ -199,6 +199,7 @@ def test_reaction_socket_insert_full_qcportal_record(snowflake: QCATestingSnowfl
         "rxn_H2O_psi4_mp2_opt",
         "rxn_H2O_psi4_mp2_optsp",
         "rxn_H2_psi4_b3lyp_sp",
+        "rxn_error_118326390",
     ]
 
     storage_socket = snowflake.get_storage_socket()

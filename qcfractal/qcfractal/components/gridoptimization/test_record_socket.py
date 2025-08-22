@@ -262,6 +262,7 @@ def test_gridoptimization_socket_insert_full_qcportal_record(snowflake: QCATesti
         "go_H2O2_psi4_pbe",
         "go_H2O2_psi4_b3lyp",
         "go_H3NS_psi4_pbe",
+        "go_error_17761737",
     ]
 
     storage_socket = snowflake.get_storage_socket()

@@ -332,7 +332,8 @@ def test_optimization_socket_insert_full_schema_v1(storage_socket: SQLAlchemySoc
 
 
 def test_optimization_socket_insert_full_qcportal_record(snowflake: QCATestingSnowflake):
-    test_names = ["opt_psi4_benzene", "opt_psi4_fluoroethane_notraj", "opt_psi4_methane", "opt_psi4_methane_sometraj"]
+    test_names = ["opt_psi4_benzene", "opt_psi4_fluoroethane_notraj", "opt_psi4_methane", "opt_psi4_methane_sometraj",
+                  "opt_error_118868739"]
 
     storage_socket = snowflake.get_storage_socket()
     client = snowflake.client()
