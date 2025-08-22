@@ -278,7 +278,7 @@ class ReactionRecordSocket(BaseRecordSocket):
 
         return not (opt_mols_to_compute or sp_mols_to_compute)
 
-    def insert_complete_qcportal_records_v1(
+    def insert_full_qcportal_records_v1(
         self,
         session: Session,
         records: Sequence[ReactionRecord],
@@ -318,15 +318,13 @@ class ReactionRecordSocket(BaseRecordSocket):
 
                 if component_sps[0] is not None:
                     # all are not none
-                    component_sp_ids = self.root_socket.records.insert_complete_qcportal_records(session, component_sps)
+                    component_sp_ids = self.root_socket.records.insert_full_qcportal_records(session, component_sps)
                 else:
                     component_sp_ids = [None for _ in component_sps]
 
                 if component_opts[0] is not None:
                     # all are not none
-                    component_opt_ids = self.root_socket.records.insert_complete_qcportal_records(
-                        session, component_opts
-                    )
+                    component_opt_ids = self.root_socket.records.insert_full_qcportal_records(session, component_opts)
                 else:
                     component_opt_ids = [None for _ in component_opts]
 

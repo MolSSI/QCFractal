@@ -129,7 +129,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
             raise RuntimeError("Unable to add final molecule: " + meta.error_string)
 
         # Insert the trajectory
-        traj_ids = self.root_socket.records.insert_complete_schema_v1(session, result.trajectory)
+        traj_ids = self.root_socket.records.insert_full_schema_v1(session, result.trajectory)
 
         for position, traj_id in enumerate(traj_ids):
             assoc_orm = OptimizationTrajectoryORM(singlepoint_id=traj_id)
@@ -146,7 +146,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
         stmt = update(OptimizationRecordORM).where(OptimizationRecordORM.id == record_id).values(record_updates)
         session.execute(stmt)
 
-    def insert_complete_qcportal_records_v1(
+    def insert_full_qcportal_records_v1(
         self,
         session: Session,
         records: Sequence[OptimizationRecord],
@@ -184,7 +184,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
             )
 
             if record.trajectory:
-                trajectory_ids = self.root_socket.records.insert_complete_qcportal_records(session, record.trajectory)
+                trajectory_ids = self.root_socket.records.insert_full_qcportal_records(session, record.trajectory)
                 opt_traj_orm = [
                     OptimizationTrajectoryORM(singlepoint_id=tid, position=idx)
                     for idx, tid in enumerate(trajectory_ids)
@@ -195,7 +195,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
 
         return ret
 
-    def insert_complete_schema_v1(
+    def insert_full_schema_v1(
         self,
         session: Session,
         results: Sequence[QCEl_OptimizationResult],
@@ -254,7 +254,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
             )
 
             if result.trajectory:
-                trajectory_ids = self.root_socket.records.insert_complete_schema_v1(session, result.trajectory)
+                trajectory_ids = self.root_socket.records.insert_full_schema_v1(session, result.trajectory)
                 record_orm.trajectory = [
                     OptimizationTrajectoryORM(singlepoint_id=tid, position=idx)
                     for idx, tid in enumerate(trajectory_ids)

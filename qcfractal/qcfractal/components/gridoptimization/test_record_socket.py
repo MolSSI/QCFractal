@@ -256,7 +256,7 @@ def test_gridoptimization_socket_run_duplicate(
     assert set(opt_ids_1).isdisjoint(opt_ids_2)
 
 
-def test_gridoptimization_socket_insert_complete_qcportal_record(snowflake: QCATestingSnowflake):
+def test_gridoptimization_socket_insert_full_qcportal_record(snowflake: QCATestingSnowflake):
     test_names = [
         "go_C4H4N2OS_mopac_pm6",
         "go_H2O2_psi4_pbe",
@@ -273,7 +273,7 @@ def test_gridoptimization_socket_insert_complete_qcportal_record(snowflake: QCAT
 
         # Need a full copy of results - they can get mutated
         with storage_socket.session_scope() as session:
-            ins_ids = storage_socket.records.insert_complete_qcportal_records(session, [initial_record_copy])
+            ins_ids = storage_socket.records.insert_full_qcportal_records(session, [initial_record_copy])
 
         rec_1 = client.get_gridoptimizations(ins_ids[0], include=["**"])
         rec_1.fetch_children(include=["**"], force_fetch=True)

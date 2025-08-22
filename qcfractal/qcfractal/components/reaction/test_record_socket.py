@@ -193,7 +193,7 @@ def test_reaction_socket_run_duplicate(
     assert set(opt_ids_1 + sp_ids_1).isdisjoint(opt_ids_2 + sp_ids_2)
 
 
-def test_reaction_socket_insert_complete_qcportal_record(snowflake: QCATestingSnowflake):
+def test_reaction_socket_insert_full_qcportal_record(snowflake: QCATestingSnowflake):
     test_names = [
         "rxn_H2O_psi4_b3lyp_sp",
         "rxn_H2O_psi4_mp2_opt",
@@ -210,7 +210,7 @@ def test_reaction_socket_insert_complete_qcportal_record(snowflake: QCATestingSn
 
         # Need a full copy of results - they can get mutated
         with storage_socket.session_scope() as session:
-            ins_ids = storage_socket.records.insert_complete_qcportal_records(session, [initial_record_copy])
+            ins_ids = storage_socket.records.insert_full_qcportal_records(session, [initial_record_copy])
 
         rec_1 = client.get_reactions(ins_ids[0], include=["**"])
         rec_1.fetch_children(include=["**"], force_fetch=True)

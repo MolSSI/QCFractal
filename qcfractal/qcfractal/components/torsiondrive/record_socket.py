@@ -326,7 +326,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                 service_orm.dependencies.append(svc_dep)
                 td_orm.optimizations.append(opt_history)
 
-    def insert_complete_qcportal_records_v1(
+    def insert_full_qcportal_records_v1(
         self,
         session: Session,
         records: Sequence[TorsiondriveRecord],
@@ -365,7 +365,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                     # Just to be safe
                     assert all(serialize_key(k) == td_opt_map[r.id].key for r in opt_records)
 
-                    opt_ids = self.root_socket.records.insert_complete_qcportal_records(session, opt_records)
+                    opt_ids = self.root_socket.records.insert_full_qcportal_records(session, opt_records)
                     opt_orm = [
                         TorsiondriveOptimizationORM(
                             optimization_id=oid, key=td_opt_map[r.id].key, position=td_opt_map[r.id].position

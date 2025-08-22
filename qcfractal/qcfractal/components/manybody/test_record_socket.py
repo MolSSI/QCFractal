@@ -180,7 +180,7 @@ def test_manybody_socket_run_duplicate(
     assert set(sp_ids_1).isdisjoint(sp_ids_2)
 
 
-def test_manybody_socket_insert_complete_qcportal_record(snowflake: QCATestingSnowflake):
+def test_manybody_socket_insert_full_qcportal_record(snowflake: QCATestingSnowflake):
     test_names = [
         "mb_all_he4_psi4_multi",
         "mb_all_he4_psi4_multiss",
@@ -196,7 +196,7 @@ def test_manybody_socket_insert_complete_qcportal_record(snowflake: QCATestingSn
 
         # Need a full copy of results - they can get mutated
         with storage_socket.session_scope() as session:
-            ins_ids = storage_socket.records.insert_complete_qcportal_records(session, [initial_record_copy])
+            ins_ids = storage_socket.records.insert_full_qcportal_records(session, [initial_record_copy])
 
         rec_1 = client.get_manybodys(ins_ids[0], include=["**"])
         rec_1.fetch_children(include=["**"], force_fetch=True)

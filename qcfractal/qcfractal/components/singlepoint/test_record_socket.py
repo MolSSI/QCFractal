@@ -293,7 +293,7 @@ def test_singlepoint_socket_run(
         assert record.specification.method in short_desc
 
 
-def test_singlepoint_socket_insert_complete_schema_v1(storage_socket: SQLAlchemySocket, session: Session):
+def test_singlepoint_socket_insert_full_schema_v1(storage_socket: SQLAlchemySocket, session: Session):
     test_names = [
         "sp_psi4_benzene_energy_1",
         "sp_psi4_benzene_energy_2",
@@ -317,13 +317,13 @@ def test_singlepoint_socket_insert_complete_schema_v1(storage_socket: SQLAlchemy
 
         # Need a full copy of results - they can get mutated
         with storage_socket.session_scope() as session2:
-            ins_ids_1 = storage_socket.records.insert_complete_schema_v1(session2, [result_schema.copy(deep=True)])
-            ins_ids_2 = storage_socket.records.insert_complete_schema_v1(session2, [plain_schema.copy(deep=True)])
+            ins_ids_1 = storage_socket.records.insert_full_schema_v1(session2, [result_schema.copy(deep=True)])
+            ins_ids_2 = storage_socket.records.insert_full_schema_v1(session2, [plain_schema.copy(deep=True)])
 
         ins_id_1 = ins_ids_1[0]
         ins_id_2 = ins_ids_2[0]
 
-        # insert_complete_schema always inserts
+        # insert_full_schema always inserts
         assert ins_id_1 != ins_id_2
         assert ins_id_1 not in all_ids
         assert ins_id_2 not in all_ids
@@ -336,7 +336,7 @@ def test_singlepoint_socket_insert_complete_schema_v1(storage_socket: SQLAlchemy
         _compare_record_with_schema(rec_2, plain_schema)
 
 
-def test_singlepoint_socket_insert_complete_qcportal_record(snowflake: QCATestingSnowflake):
+def test_singlepoint_socket_insert_full_qcportal_record(snowflake: QCATestingSnowflake):
     test_names = [
         "sp_psi4_benzene_energy_1",
         "sp_psi4_peroxide_energy_wfn",
@@ -353,7 +353,7 @@ def test_singlepoint_socket_insert_complete_qcportal_record(snowflake: QCATestin
 
         # Need a full copy of results - they can get mutated
         with storage_socket.session_scope() as session:
-            ins_ids = storage_socket.records.insert_complete_qcportal_records(session, [initial_record_copy])
+            ins_ids = storage_socket.records.insert_full_qcportal_records(session, [initial_record_copy])
 
         rec_1 = client.get_singlepoints(ins_ids[0], include=["**"])
         compare_singlepoint_records(rec_1, initial_record)

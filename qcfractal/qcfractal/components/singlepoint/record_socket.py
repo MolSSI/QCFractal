@@ -116,7 +116,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
             wavefunction_orm.record_id = record_id
             session.add(wavefunction_orm)
 
-    def insert_complete_qcportal_records_v1(
+    def insert_full_qcportal_records_v1(
         self,
         session: Session,
         records: Sequence[SinglepointRecord],
@@ -157,7 +157,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
 
         return ret
 
-    def insert_complete_schema_v1(
+    def insert_full_schema_v1(
         self,
         session: Session,
         results: Sequence[QCEl_AtomicResult],

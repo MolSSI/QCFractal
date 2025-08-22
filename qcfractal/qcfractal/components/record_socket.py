@@ -612,7 +612,7 @@ class RecordSocket:
     ):
         return self.update_completed_schema_v1(session, record_id, record_type, result, manager_name)
 
-    def insert_complete(self, session: Session, results: Sequence[AllResultTypes]) -> List[int]:
+    def insert_full_record(self, session: Session, results: Sequence[AllResultTypes]) -> List[int]:
 
         all_ids: List[Optional[int]] = [None for _ in range(len(results))]
 
@@ -621,7 +621,7 @@ class RecordSocket:
 
         for idx, result in enumerate(results):
             if isinstance(result, FailedOperation) or not result.success:
-                raise UserReportableError("Cannot insert a completed, failed operation")
+                raise UserReportableError("Cannot insert a full, failed operation")
             elif isinstance(result, AllSchemaV1ResultTypes):
                 schema_v1_results.append((idx, result))
             elif isinstance(result, AllQCPortalRecordTypes):
@@ -631,18 +631,18 @@ class RecordSocket:
 
         if schema_v1_results:
             schema_tmp = [x[1] for x in schema_v1_results]
-            schema_ids = self.insert_complete_schema_v1(session, schema_tmp)
+            schema_ids = self.insert_full_schema_v1(session, schema_tmp)
             for (schema_idx, _), schema_id in zip(schema_v1_results, schema_ids):
                 all_ids[schema_idx] = schema_id
 
         if qcp_results:
             qcp_tmp = [x[1] for x in qcp_results]
-            qcp_ids = self.insert_complete_qcportal_records(session, qcp_tmp)
+            qcp_ids = self.insert_full_qcportal_records(session, qcp_tmp)
             for (record_idx, _), record_id in zip(qcp_results, qcp_ids):
                 all_ids[record_idx] = record_id
 
         if None in all_ids:
-            raise RuntimeError("Developer error - Missing record ID in insert_complete")
+            raise RuntimeError("Developer error - Missing record ID in insert_full_record")
 
         return all_ids
 
@@ -720,9 +720,7 @@ class RecordSocket:
         stmt = delete(TaskQueueORM).where(TaskQueueORM.record_id == record_id)
         session.execute(stmt)
 
-    def insert_complete_qcportal_records(
-        self, session: Session, records: Sequence[AllQCPortalRecordTypes]
-    ) -> List[int]:
+    def insert_full_qcportal_records(self, session: Session, records: Sequence[AllQCPortalRecordTypes]) -> List[int]:
         """
         Insert records into the database from a QCPortal record
 
@@ -750,7 +748,7 @@ class RecordSocket:
 
             # Now the record-specific stuff
             handler = self._handler_map[record_type]
-            record_orms = handler.insert_complete_qcportal_records_v1(session, type_records)
+            record_orms = handler.insert_full_qcportal_records_v1(session, type_records)
 
             for record_orm, history_orm, native_files_orm, (idx, type_record) in zip(
                 record_orms, history_orms, native_files_orms, idx_records
@@ -785,7 +783,7 @@ class RecordSocket:
 
         return [o.id for o in to_add_orm]
 
-    def insert_complete_schema_v1(self, session: Session, results: Sequence[AllSchemaV1ResultTypes]) -> List[int]:
+    def insert_full_schema_v1(self, session: Session, results: Sequence[AllSchemaV1ResultTypes]) -> List[int]:
         """
         Insert records into the database from a QCSchema result
 
@@ -820,7 +818,7 @@ class RecordSocket:
 
             # Now the record-specific stuff
             handler = self._handler_map_by_schema[schema_name]
-            record_orms = handler.insert_complete_schema_v1(session, type_results)
+            record_orms = handler.insert_full_schema_v1(session, type_results)
 
             for record_orm, history_orm, native_files_orm, (idx, type_result) in zip(
                 record_orms, history_orms, native_files_orms, idx_results

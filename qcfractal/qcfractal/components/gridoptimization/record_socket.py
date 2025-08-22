@@ -406,7 +406,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
             service_orm.dependencies.append(svc_dep)
             go_orm.optimizations.append(opt_assoc)
 
-    def insert_complete_qcportal_records_v1(
+    def insert_full_qcportal_records_v1(
         self,
         session: Session,
         records: Sequence[GridoptimizationRecord],
@@ -457,7 +457,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                 opt_records_lst = list(record.optimization_records_.items())
                 opt_records = [x[1] for x in opt_records_lst]
 
-                opt_ids = self.root_socket.records.insert_complete_qcportal_records(session, opt_records)
+                opt_ids = self.root_socket.records.insert_full_qcportal_records(session, opt_records)
                 record_orm.optimizations = [
                     GridoptimizationOptimizationORM(
                         optimization_id=oid,
