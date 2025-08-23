@@ -4,6 +4,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Tuple, Union
 
 from qcportal.all_inputs import AllInputTypes
+from qcportal.all_results import AllResultTypes
 from qcportal.base_models import RestModelBase, validate_list_to_single
 from qcportal.dataset_models import BaseDataset, dataset_from_dict
 from qcportal.external_files import ExternalFile
@@ -94,6 +95,13 @@ class ProjectUnlinkDatasetsBody(RestModelBase):
 
 class ProjectRecordAddBody(RecordAddBodyBase):
     record_input: AllInputTypes
+    name: str
+    description: str
+    tags: List[str]
+
+
+class ProjectRecordImportBody(RestModelBase):
+    record_data: AllResultTypes
     name: str
     description: str
     tags: List[str]
@@ -265,6 +273,60 @@ class Project(BaseModel):
         meta, record_id = self._client.make_request(
             "post", f"api/v1/projects/{self.id}/records", Tuple[InsertCountsMetadata, int], body=body_data
         )
+
+        if not meta.success:
+            raise RuntimeError(f"Adding record failed: {meta.error_message}")
+
+        full_record = self.get_record(record_id)
+
+        record_meta = ProjectRecordMetadata(
+            record_id=record_id,
+            name=name,
+            description=description,
+            tags=tags,
+            record_type=full_record.record_type,
+            status=full_record.status,
+        )
+
+        self._record_metadata.append(record_meta)
+
+        return full_record
+
+    def import_record(
+        self,
+        name: str,
+        record: AllResultTypes,
+        *,
+        description: Optional[str] = None,
+        tags: List[str] = None,
+    ) -> BaseRecord:
+        """
+        Imports a computation record into this project
+
+
+        Parameters
+        ----------
+        name
+        record
+        description
+        tags
+
+        Returns
+        -------
+        :
+            The record, attached to the project and server
+        """
+
+        self.assert_online()
+
+        body_data = ProjectRecordImportBody(
+            name=name,
+            description=description,
+            tags=tags,
+            record_data=record,
+        )
+
+        record_id = self._client.make_request("post", f"api/v1/projects/{self.id}/records/import", int, body=body_data)
 
         full_record = self.get_record(record_id)
 
