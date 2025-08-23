@@ -26,6 +26,8 @@ from qcfractal.db_socket.helpers import (
     get_general,
     delete_general,
 )
+from qcportal.all_inputs import AllQCPortalInputTypes, AllInputTypes
+from qcportal.all_results import AllSchemaV1ResultTypes, AllQCPortalRecordTypes, AllResultTypes
 from qcportal.exceptions import UserReportableError, MissingDataError
 from qcportal.managers.models import ManagerStatusEnum
 from qcportal.metadata_models import DeleteMetadata, UpdateMetadata
@@ -54,9 +56,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from sqlalchemy.sql import Select
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from qcportal.all_results import AllSchemaV1ResultTypes, AllQCPortalRecordTypes, AllResultTypes
     from qcportal.record_models import RecordQueryFilters
-    from qcportal.all_inputs import AllQCPortalInputTypes, AllInputTypes
     from typing import List, Dict, Tuple, Optional, Sequence, Any, Iterable, Type, Union
 
 
@@ -623,11 +623,14 @@ class RecordSocket:
         qcp_results: List[Tuple[int, AllQCPortalRecordTypes]] = []
 
         for idx, result in enumerate(results):
-            if isinstance(result, FailedOperation) or not result.success:
+            is_qcptype = isinstance(result, AllQCPortalRecordTypes)
+            is_schemav1type = isinstance(result, AllSchemaV1ResultTypes)
+
+            if isinstance(result, FailedOperation) or (is_schemav1type and not result.success):
                 raise UserReportableError("Cannot insert a full, failed operation")
-            elif isinstance(result, AllSchemaV1ResultTypes):
+            elif is_schemav1type:
                 schema_v1_results.append((idx, result))
-            elif isinstance(result, AllQCPortalRecordTypes):
+            elif is_qcptype:
                 qcp_results.append((idx, result))
             else:
                 raise UserReportableError("Cannot insert a completed, unrecognized result")
