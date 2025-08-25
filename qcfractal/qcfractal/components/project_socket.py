@@ -18,6 +18,7 @@ from qcfractal.components.project_db_models import (
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.db_socket.helpers import get_general
 from qcportal.all_inputs import AllInputTypes
+from qcportal.all_results import AllResultTypes
 from qcportal.exceptions import MissingDataError, UserReportableError, AlreadyExistsError
 from qcportal.internal_jobs import InternalJobStatusEnum
 from qcportal.metadata_models import InsertCountsMetadata
@@ -544,6 +545,33 @@ class ProjectSocket:
                 session.add(proj_rec_orm)
 
             return meta, record_id
+
+    def import_record(
+        self,
+        project_id: int,
+        name: str,
+        description: str,
+        tags: List[str],
+        record_data: AllResultTypes,
+        creator_user: Optional[Union[int, str]],
+        *,
+        session: Optional[Session] = None,
+    ) -> int:
+
+        with self.root_socket.optional_session(session) as session:
+            record_ids = self.root_socket.records.insert_full_record(session, [record_data], creator_user)
+            record_id = record_ids[0]
+
+            proj_rec_orm = ProjectRecordORM(
+                project_id=project_id,
+                record_id=record_id,
+                name=name,
+                description=description,
+                tags=tags,
+            )
+
+            session.add(proj_rec_orm)
+            return record_id
 
     def get_record(
         self,

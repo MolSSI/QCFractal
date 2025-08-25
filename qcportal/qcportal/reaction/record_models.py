@@ -12,12 +12,9 @@ from qcportal.base_models import RestModelBase
 from qcportal.molecules import Molecule
 from qcportal.utils import is_included
 from qcportal.cache import get_records_with_cache
-from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
-from ..optimization.record_models import OptimizationRecord, OptimizationSpecification
-from ..singlepoint.record_models import (
-    QCSpecification,
-    SinglepointRecord,
-)
+from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters, compare_base_records
+from ..optimization.record_models import OptimizationRecord, OptimizationSpecification, compare_optimization_records
+from ..singlepoint.record_models import QCSpecification, SinglepointRecord, compare_singlepoint_records
 
 
 class ReactionKeywords(BaseModel):
@@ -204,3 +201,29 @@ class ReactionRecord(BaseRecord):
         if self.component_records_ is None:
             self._fetch_components()
         return self.component_records_
+
+
+def compare_reaction_records(record_1: ReactionRecord, record_2: ReactionRecord):
+    compare_base_records(record_1, record_2)
+
+    assert record_1.total_energy == record_2.total_energy
+
+    assert (record_1.component_records_ is None) == (record_2.component_records_ is None)
+
+    if record_1.component_records_ is not None:
+        assert len(record_1.component_records_) == len(record_2.component_records_)
+
+        # Sort by molecule hash
+        components_1 = sorted(record_1.component_records_, key=lambda x: x.molecule.get_hash())
+        components_2 = sorted(record_2.component_records_, key=lambda x: x.molecule.get_hash())
+
+        for c1, c2 in zip(components_1, components_2):
+            assert c1.molecule.get_hash() == c2.molecule.get_hash()
+            assert c1.coefficient == c2.coefficient
+            assert (c1.singlepoint_record is None) == (c2.singlepoint_record is None)
+            assert (c1.optimization_record is None) == (c2.optimization_record is None)
+
+            if c1.singlepoint_record is not None:
+                compare_singlepoint_records(c1.singlepoint_record, c2.singlepoint_record)
+            if c1.optimization_record is not None:
+                compare_optimization_records(c1.optimization_record, c2.optimization_record)

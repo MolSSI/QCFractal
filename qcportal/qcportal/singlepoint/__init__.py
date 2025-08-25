@@ -16,4 +16,5 @@ from .record_models import (
     SinglepointMultiInput,
     SinglepointAddBody,
     SinglepointQueryFilters,
+    compare_singlepoint_records,
 )

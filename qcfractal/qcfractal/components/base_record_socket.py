@@ -181,10 +181,8 @@ class BaseRecordSocket:
             f"update_completed_schema_v1 not implemented for {type(self)}! This is a developer error"
         )
 
-    def insert_complete_schema_v1(
-        self,
-        session: Session,
-        results: Sequence[AllResultTypes],
+    def insert_full_qcportal_records_v1(
+        self, session: Session, records: Sequence[AllResultTypes], creator_user_id: Optional[int]
     ) -> List[BaseRecordORM]:
         """
         Insert records into the database from a QCSchema result
@@ -192,8 +190,18 @@ class BaseRecordSocket:
         This will always create new ORMs from scratch, and not update any existing records.
         """
         raise NotImplementedError(
-            f"insert_complete_schema_v1 not implemented for {type(self)}! This is a developer error"
+            f"insert_full_qcportal_records_v1 not implemented for {type(self)}! This is a developer error"
         )
+
+    def insert_full_schema_v1(
+        self, session: Session, results: Sequence[AllResultTypes], creator_user_id: Optional[int]
+    ) -> List[BaseRecordORM]:
+        """
+        Insert records into the database from a QCSchema result
+
+        This will always create new ORMs from scratch, and not update any existing records.
+        """
+        raise NotImplementedError(f"insert_full_schema_v1 not implemented for {type(self)}! This is a developer error")
 
     def initialize_service(self, session: Session, service_orm: ServiceQueueORM) -> None:
         """

@@ -11,10 +11,10 @@ from typing_extensions import Literal
 
 from qcportal.base_models import RestModelBase
 from qcportal.molecules import Molecule
-from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
+from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters, compare_base_records
 from qcportal.cache import get_records_with_cache
 from qcportal.utils import recursive_normalizer, is_included
-from ..optimization.record_models import OptimizationSpecification, OptimizationRecord
+from ..optimization.record_models import OptimizationSpecification, OptimizationRecord, compare_optimization_records
 
 
 def serialize_key(key: Union[str, Sequence[int]]) -> str:
@@ -329,3 +329,28 @@ class TorsiondriveRecord(BaseRecord):
     @property
     def final_energies(self) -> Dict[Tuple[float, ...], float]:
         return {k: v.energies[-1] for k, v in self.minimum_optimizations.items() if v.energies}
+
+
+def compare_torsiondrive_records(record_1: TorsiondriveRecord, record_2: TorsiondriveRecord):
+    compare_base_records(record_1, record_2)
+
+    assert len(record_1.initial_molecules) == len(record_2.initial_molecules)
+
+    mol1 = sorted(record_1.initial_molecules, key=lambda x: x.get_hash())
+    mol2 = sorted(record_2.initial_molecules, key=lambda x: x.get_hash())
+    assert mol1 == mol2
+
+    assert (record_1.optimization_records_ is None) == (record_2.optimizations_ is None)
+
+    if record_1.optimization_records_ is not None:
+        assert len(record_1.optimization_records_) == len(record_2.optimization_records_)
+        for k, t1_lst in record_1.optimization_records_.items():
+            t2_lst = record_2.optimization_records_[k]
+            assert len(t1_lst) == len(t2_lst)
+            for t1, t2 in zip(t1_lst, t2_lst):
+                compare_optimization_records(t1, t2)
+
+        if record_1.status == "complete":
+            for k, t1 in record_1.minimum_optimizations.items():
+                t2 = record_2.minimum_optimizations[k]
+                compare_optimization_records(t1, t2)

@@ -13,4 +13,5 @@ from .record_models import (
     OptimizationInput,
     OptimizationMultiInput,
     OptimizationAddBody,
+    compare_optimization_records,
 )

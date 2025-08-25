@@ -17,4 +17,5 @@ from .record_models import (
     GridoptimizationMultiInput,
     GridoptimizationAddBody,
     GridoptimizationQueryFilters,
+    compare_gridoptimization_records,
 )

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from copy import deepcopy
 from enum import Enum
 from typing import Optional, Union, Any, List, Dict, Tuple
@@ -13,13 +15,18 @@ from qcelemental.models.results import (
     AtomicResultProtocols as SinglepointProtocols,
     AtomicResultProperties,
     WavefunctionProperties,
-    WavefunctionProtocolEnum,
 )
 from typing_extensions import Literal
 
 from qcportal.compression import CompressionEnum, decompress
 from qcportal.base_models import RestModelBase
-from qcportal.record_models import RecordStatusEnum, BaseRecord, RecordAddBodyBase, RecordQueryFilters
+from qcportal.record_models import (
+    RecordStatusEnum,
+    BaseRecord,
+    RecordAddBodyBase,
+    RecordQueryFilters,
+    compare_base_records,
+)
 
 
 class SinglepointDriver(str, Enum):
@@ -220,3 +227,13 @@ class SinglepointQueryFilters(RecordQueryFilters):
             return ["" if x is None else x for x in v]
         else:
             return None
+
+
+def compare_singlepoint_records(record_1: SinglepointRecord, record_2: SinglepointRecord):
+    compare_base_records(record_1, record_2)
+
+    assert record_1.molecule.get_hash() == record_2.molecule.get_hash()
+    assert (record_1.wavefunction_ is not None) == (record_2.wavefunction_ is not None)
+
+    if record_1.wavefunction_ is not None:
+        assert record_1.wavefunction_.data_ == record_2.wavefunction_.data_

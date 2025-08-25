@@ -8,4 +8,4 @@ d.pop("result", None)
 d.pop("results", None)
 
 with open(sys.argv[1], "w") as f:
-    json.dump(d, f, indent=2)
+    json.dump(d, f, indent=2, sort_keys=True)

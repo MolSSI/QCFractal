@@ -12,8 +12,12 @@ from typing_extensions import Literal
 
 from qcportal.base_models import RestModelBase
 from qcportal.molecules import Molecule
-from qcportal.optimization.record_models import OptimizationSpecification, OptimizationRecord
-from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
+from qcportal.optimization.record_models import (
+    OptimizationSpecification,
+    OptimizationRecord,
+    compare_optimization_records,
+)
+from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters, compare_base_records
 from qcportal.utils import recursive_normalizer, is_included
 from qcportal.cache import get_records_with_cache
 
@@ -325,3 +329,19 @@ class GridoptimizationRecord(BaseRecord):
     @property
     def final_energies(self) -> Dict[Tuple[int, ...], float]:
         return {k: v.energies[-1] for k, v in self.optimizations.items() if v.energies}
+
+
+def compare_gridoptimization_records(record_1: GridoptimizationRecord, record_2: GridoptimizationRecord):
+    compare_base_records(record_1, record_2)
+
+    assert record_1.initial_molecule.get_hash() == record_2.initial_molecule.get_hash()
+    assert record_1.starting_molecule.get_hash() == record_2.starting_molecule.get_hash()
+    assert record_1.starting_grid == record_2.starting_grid
+
+    assert (record_1.optimization_records_ is None) == (record_2.optimizations_ is None)
+
+    if record_1.optimization_records_ is not None:
+        assert len(record_1.optimization_records_) == len(record_2.optimization_records_)
+        for k, t1 in record_1.optimization_records_.items():
+            t2 = record_2.optimization_records_[k]
+            compare_optimization_records(t1, t2)

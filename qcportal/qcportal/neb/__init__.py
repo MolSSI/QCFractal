@@ -13,4 +13,5 @@ from .record_models import (
     NEBAddBody,
     NEBQueryFilters,
     NEBRecord,
+    compare_neb_records,
 )

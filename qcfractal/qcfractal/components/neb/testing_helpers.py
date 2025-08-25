@@ -6,7 +6,7 @@ try:
     import pydantic.v1 as pydantic
 except ImportError:
     import pydantic
-from qcarchivetesting.helpers import read_procedure_data
+from qcarchivetesting.helpers import read_procedure_data, read_record_data
 from qcelemental.models import (
     Molecule,
     FailedOperation,
@@ -18,7 +18,7 @@ from qcelemental.models import (
 from qcfractal.components.neb.record_db_models import NEBRecordORM
 from qcfractal.testing_helpers import run_service
 from qcportal.generic_result import GenericTaskResult
-from qcportal.neb import NEBSpecification, NEBKeywords
+from qcportal.neb import NEBSpecification, NEBKeywords, NEBRecord
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, RecordTask
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 from qcportal.utils import recursive_normalizer, hash_dict
@@ -109,6 +109,11 @@ def load_test_data(
             Dict[str, Union[QCEl_AtomicResult, QCEl_OptimizationResult, GenericTaskResult]], test_data["results"]
         ),
     )
+
+
+def load_record_data(name: str) -> NEBRecord:
+    test_data = read_record_data(name)
+    return NEBRecord(**test_data)
 
 
 def submit_test_data(

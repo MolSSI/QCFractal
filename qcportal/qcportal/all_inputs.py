@@ -17,3 +17,13 @@ AllInputTypes = Union[
     ManybodyInput,
     NEBInput,
 ]
+
+AllQCPortalInputTypes = Union[
+    SinglepointInput,
+    OptimizationInput,
+    TorsiondriveInput,
+    GridoptimizationInput,
+    ReactionInput,
+    ManybodyInput,
+    NEBInput,
+]

@@ -29,6 +29,7 @@ from qcportal.neb import (
     NEBQueryFilters,
     NEBInput,
     NEBMultiInput,
+    NEBRecord,
 )
 from qcportal.optimization import OptimizationSpecification
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
@@ -445,6 +446,80 @@ class NEBRecordSocket(BaseRecordSocket):
         )
 
         service_orm.dependencies.append(svc_dep)
+
+    def insert_full_qcportal_records_v1(
+        self, session: Session, records: Sequence[NEBRecord], creator_user_id: Optional[int]
+    ) -> List[NEBRecordORM]:
+        ret = []
+
+        neb_specs = [r.specification for r in records]
+
+        meta, spec_ids = self.root_socket.records.neb.add_specifications(neb_specs, session=session)
+        if not meta.success:
+            raise RuntimeError("Aborted NEB insertion - could not add specifications: " + meta.error_string)
+
+        for record, spec_id in zip(records, spec_ids):
+
+            record_orm = NEBRecordORM(
+                specification_id=spec_id,
+                status=RecordStatusEnum.complete,
+            )
+
+            meta, init_chain_mol_ids = self.root_socket.molecules.add(record.initial_chain_, session=session)
+            if not meta.success:
+                raise RuntimeError("Aborted NEB insertion - could not add initial chain: " + meta.error_string)
+
+            record_orm.initial_chain = [
+                NEBInitialchainORM(molecule_id=mid, position=pos) for pos, mid in enumerate(init_chain_mol_ids)
+            ]
+
+            if record.singlepoint_records_:
+                record_orm.singlepoints = []
+
+                for chain_iteration, singlepoint_records in record.singlepoint_records_.items():
+                    sp_ids = self.root_socket.records.insert_full_qcportal_records(
+                        session, singlepoint_records, creator_user_id
+                    )
+
+                    for idx, sp_id in enumerate(sp_ids):
+                        ns = NEBSinglepointsORM(
+                            chain_iteration=chain_iteration,
+                            position=idx,
+                            singlepoint_id=sp_id,
+                        )
+                        record_orm.singlepoints.append(ns)
+
+            if record.ts_hessian_:
+                hessian_id = self.root_socket.records.insert_full_qcportal_records(
+                    session, [record.ts_hessian_], creator_user_id
+                )
+                ns = NEBSinglepointsORM(
+                    chain_iteration=max(record.singlepoint_records_.keys()) + 1,
+                    position=0,
+                    singlepoint_id=hessian_id[0],
+                )
+                record_orm.singlepoints.append(ns)
+
+            if record.optimization_records_:
+                record_orm.optimizations = []
+
+                opt_info = list(record.optimization_records_.items())
+
+                opt_records = [x[1] for x in opt_info]
+                opt_ids = self.root_socket.records.insert_full_qcportal_records(session, opt_records, creator_user_id)
+
+                for opt_record, opt_id, (k, _) in zip(opt_records, opt_ids, opt_info):
+                    o_meta = record.optimizations_[k]
+                    opt_orm = NEBOptimizationsORM(
+                        optimization_id=opt_id,
+                        position=o_meta.position,
+                        ts=o_meta.ts,
+                    )
+                    record_orm.optimizations.append(opt_orm)
+
+            ret.append(record_orm)
+
+        return ret
 
     def add_specifications(
         self, neb_specs: Sequence[NEBSpecification], *, session: Optional[Session] = None

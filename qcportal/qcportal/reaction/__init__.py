@@ -13,4 +13,5 @@ from .record_models import (
     ReactionAddBody,
     ReactionRecord,
     ReactionQueryFilters,
+    compare_reaction_records,
 )

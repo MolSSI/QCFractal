@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcarchivetesting import load_molecule_data
+from qcarchivetesting import load_molecule_data, test_users
 from qcfractal.components.torsiondrive.record_db_models import TorsiondriveRecordORM
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service
@@ -12,12 +12,13 @@ from qcportal.auth import UserInfo
 from qcportal.optimization import OptimizationSpecification, OptimizationProtocols
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification, SinglepointProtocols
-from qcportal.torsiondrive import TorsiondriveSpecification, TorsiondriveKeywords
+from qcportal.torsiondrive import TorsiondriveSpecification, TorsiondriveKeywords, compare_torsiondrive_records
 from qcportal.utils import now_at_utc
-from .testing_helpers import compare_torsiondrive_specs, test_specs, load_test_data, generate_task_key
+from .testing_helpers import compare_torsiondrive_specs, test_specs, load_test_data, generate_task_key, load_record_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
+    from qcarchivetesting.testing_classes import QCATestingSnowflake
     from qcportal.managers import ManagerName
     from sqlalchemy.orm.session import Session
 
@@ -354,3 +355,34 @@ def test_torsiondrive_socket_run_duplicate(
     opt_ids_2 = [x.optimization_id for x in rec_2.optimizations]
 
     assert set(opt_ids_1).isdisjoint(opt_ids_2)
+
+
+def test_torsiondrive_socket_insert_full_qcportal_record(secure_snowflake: QCATestingSnowflake):
+    test_names = [
+        "td_C9H11NO2_mopac_pm6",
+        "td_H2O2_mopac_pm6",
+        "td_H2O2_psi4_pbe0",
+        "td_H2O2_psi4_pbe",
+        "td_error_137174663",
+    ]
+
+    storage_socket = secure_snowflake.get_storage_socket()
+    client = secure_snowflake.client("submit_user", test_users["submit_user"]["pw"])
+    user_id = client.get_user().id
+
+    for test_name in test_names:
+        initial_record = load_record_data(test_name)
+        initial_record_copy = initial_record.copy(deep=True)
+
+        # Need a full copy of results - they can get mutated
+        with storage_socket.session_scope() as session:
+            ins_ids = storage_socket.records.insert_full_qcportal_records(session, [initial_record_copy], user_id)
+
+        rec_1 = client.get_torsiondrives(ins_ids[0], include=["**"])
+        rec_1.fetch_children(include=["**"], force_fetch=True)
+        compare_torsiondrive_records(rec_1, initial_record)
+
+        assert rec_1.creator_user == "submit_user"
+        for opts in rec_1.optimizations.values():
+            for opt in opts:
+                assert opt.creator_user == "submit_user"

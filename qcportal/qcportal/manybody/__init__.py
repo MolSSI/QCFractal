@@ -14,4 +14,5 @@ from .record_models import (
     ManybodyAddBody,
     ManybodyRecord,
     ManybodyQueryFilters,
+    compare_manybody_records,
 )

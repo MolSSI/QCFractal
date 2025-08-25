@@ -30,6 +30,7 @@ from qcportal.gridoptimization import (
     GridoptimizationQueryFilters,
     GridoptimizationInput,
     GridoptimizationMultiInput,
+    GridoptimizationRecord,
 )
 from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.molecules import Molecule
@@ -404,6 +405,71 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
 
             service_orm.dependencies.append(svc_dep)
             go_orm.optimizations.append(opt_assoc)
+
+    def insert_full_qcportal_records_v1(
+        self,
+        session: Session,
+        records: Sequence[GridoptimizationRecord],
+        creator_user_id: Optional[int],
+    ) -> List[GridoptimizationRecordORM]:
+        ret = []
+
+        initial_mols = []
+        starting_mols = []
+        go_specs = []
+
+        for record in records:
+            initial_mols.append(record.initial_molecule)
+
+            # Starting molecule should always be set for a completed gridoptimization
+            starting_mols.append(record.starting_molecule)
+            go_specs.append(record.specification)
+
+        meta, spec_ids = self.root_socket.records.gridoptimization.add_specifications(go_specs, session=session)
+        if not meta.success:
+            raise RuntimeError(
+                "Aborted gridoptimization insertion - could not add specifications: " + meta.error_string
+            )
+
+        meta, initial_mol_ids = self.root_socket.molecules.add(initial_mols, session=session)
+        if not meta.success:
+            raise RuntimeError(
+                "Aborted gridoptimization insertion - could not add initial molecules: " + meta.error_string
+            )
+
+        meta, starting_mol_ids = self.root_socket.molecules.add(starting_mols, session=session)
+        if not meta.success:
+            raise RuntimeError(
+                "Aborted gridoptimization insertion - could not add starting molecules: " + meta.error_string
+            )
+
+        for record, initial_mol_id, starting_mol_id, spec_id in zip(
+            records, initial_mol_ids, starting_mol_ids, spec_ids
+        ):
+            record_orm = GridoptimizationRecordORM(
+                specification_id=spec_id,
+                initial_molecule_id=initial_mol_id,
+                starting_molecule_id=starting_mol_id,
+                starting_grid=record.starting_grid,
+                status=RecordStatusEnum.complete,
+            )
+
+            if record.optimizations:
+                opt_records_lst = list(record.optimization_records_.items())
+                opt_records = [x[1] for x in opt_records_lst]
+
+                opt_ids = self.root_socket.records.insert_full_qcportal_records(session, opt_records, creator_user_id)
+                record_orm.optimizations = [
+                    GridoptimizationOptimizationORM(
+                        optimization_id=oid,
+                        key=k,
+                    )
+                    for (k, _), oid in zip(opt_records_lst, opt_ids)
+                ]
+
+            ret.append(record_orm)
+
+        return ret
 
     def add_specifications(
         self, go_specs: Sequence[GridoptimizationSpecification], *, session: Optional[Session] = None

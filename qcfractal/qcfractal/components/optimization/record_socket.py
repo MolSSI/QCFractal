@@ -15,6 +15,7 @@ from qcportal.exceptions import MissingDataError
 from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.molecules import Molecule
 from qcportal.optimization import (
+    OptimizationRecord,
     OptimizationSpecification,
     OptimizationQueryFilters,
     OptimizationInput,
@@ -128,7 +129,11 @@ class OptimizationRecordSocket(BaseRecordSocket):
             raise RuntimeError("Unable to add final molecule: " + meta.error_string)
 
         # Insert the trajectory
-        traj_ids = self.root_socket.records.insert_complete_schema_v1(session, result.trajectory)
+        # Get the ID of the parent_record
+        stmt = select(OptimizationRecordORM.creator_user_id).where(OptimizationRecordORM.id == record_id)
+        creator_user_id = session.execute(stmt).scalar_one()
+
+        traj_ids = self.root_socket.records.insert_full_schema_v1(session, result.trajectory, creator_user_id)
 
         for position, traj_id in enumerate(traj_ids):
             assoc_orm = OptimizationTrajectoryORM(singlepoint_id=traj_id)
@@ -145,10 +150,69 @@ class OptimizationRecordSocket(BaseRecordSocket):
         stmt = update(OptimizationRecordORM).where(OptimizationRecordORM.id == record_id).values(record_updates)
         session.execute(stmt)
 
-    def insert_complete_schema_v1(
+    def insert_full_qcportal_records_v1(
+        self,
+        session: Session,
+        records: Sequence[OptimizationRecord],
+        creator_user_id: Optional[int],
+    ) -> List[OptimizationRecordORM]:
+        ret = []
+
+        initial_mols = []
+        final_mols = []
+        opt_specs = []
+
+        for record in records:
+            initial_mols.append(record.initial_molecule)
+            final_mols.append(record.final_molecule)
+            opt_specs.append(record.specification)
+
+        meta, spec_ids = self.root_socket.records.optimization.add_specifications(opt_specs, session=session)
+        if not meta.success:
+            raise RuntimeError("Aborted optimization insertion - could not add specifications: " + meta.error_string)
+
+        meta, initial_mol_ids = self.root_socket.molecules.add(initial_mols, session=session)
+        if not meta.success:
+            raise RuntimeError("Aborted optimization insertion - could not add initial molecules: " + meta.error_string)
+
+        for record, initial_mol_id, spec_id in zip(records, initial_mol_ids, spec_ids):
+
+            final_mol_id = None
+            if record.final_molecule:
+                meta, final_mol_ids = self.root_socket.molecules.add([record.final_molecule], session=session)
+                if not meta.success:
+                    raise RuntimeError(
+                        "Aborted optimization insertion - could not add final molecule: " + meta.error_string
+                    )
+                final_mol_id = final_mol_ids[0]
+
+            record_orm = OptimizationRecordORM(
+                specification_id=spec_id,
+                initial_molecule_id=initial_mol_id,
+                final_molecule_id=final_mol_id,
+                energies=record.energies,
+                status=RecordStatusEnum.complete,
+            )
+
+            if record.trajectory:
+                trajectory_ids = self.root_socket.records.insert_full_qcportal_records(
+                    session, record.trajectory, creator_user_id
+                )
+                opt_traj_orm = [
+                    OptimizationTrajectoryORM(singlepoint_id=tid, position=idx)
+                    for idx, tid in enumerate(trajectory_ids)
+                ]
+                record_orm.trajectory = opt_traj_orm
+
+            ret.append(record_orm)
+
+        return ret
+
+    def insert_full_schema_v1(
         self,
         session: Session,
         results: Sequence[QCEl_OptimizationResult],
+        creator_user_id: Optional[int],
     ) -> List[OptimizationRecordORM]:
 
         ret = []
@@ -204,12 +268,13 @@ class OptimizationRecordSocket(BaseRecordSocket):
             )
 
             if result.trajectory:
-                trajectory_ids = self.root_socket.records.insert_complete_schema_v1(session, result.trajectory)
-                opt_traj_orm = [
+                trajectory_ids = self.root_socket.records.insert_full_schema_v1(
+                    session, result.trajectory, creator_user_id
+                )
+                record_orm.trajectory = [
                     OptimizationTrajectoryORM(singlepoint_id=tid, position=idx)
                     for idx, tid in enumerate(trajectory_ids)
                 ]
-                record_orm.trajectory = opt_traj_orm
 
             ret.append(record_orm)
 

@@ -4,19 +4,20 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcarchivetesting import load_molecule_data
+from qcarchivetesting import load_molecule_data, test_users
 from qcfractal.components.reaction.record_db_models import ReactionRecordORM
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service
-from qcportal.auth import UserInfo, GroupInfo
-from qcportal.reaction import ReactionSpecification, ReactionKeywords
+from qcportal.auth import UserInfo
+from qcportal.reaction import ReactionSpecification, ReactionKeywords, compare_reaction_records
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 from qcportal.utils import now_at_utc
-from .testing_helpers import compare_reaction_specs, test_specs, load_test_data, generate_task_key
+from .testing_helpers import compare_reaction_specs, test_specs, load_test_data, generate_task_key, load_record_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
+    from qcarchivetesting.testing_classes import QCATestingSnowflake
     from qcportal.managers import ManagerName
     from sqlalchemy.orm.session import Session
 
@@ -190,3 +191,37 @@ def test_reaction_socket_run_duplicate(
     sp_ids_2 = [x.singlepoint_id for x in rec_2.components]
 
     assert set(opt_ids_1 + sp_ids_1).isdisjoint(opt_ids_2 + sp_ids_2)
+
+
+def test_reaction_socket_insert_full_qcportal_record(secure_snowflake: QCATestingSnowflake):
+    test_names = [
+        "rxn_H2O_psi4_b3lyp_sp",
+        "rxn_H2O_psi4_mp2_opt",
+        "rxn_H2O_psi4_mp2_optsp",
+        "rxn_H2_psi4_b3lyp_sp",
+        "rxn_error_118326390",
+    ]
+
+    storage_socket = secure_snowflake.get_storage_socket()
+    client = secure_snowflake.client("submit_user", test_users["submit_user"]["pw"])
+    user_id = client.get_user().id
+
+    for test_name in test_names:
+        initial_record = load_record_data(test_name)
+        initial_record_copy = initial_record.copy(deep=True)
+
+        # Need a full copy of results - they can get mutated
+        with storage_socket.session_scope() as session:
+            ins_ids = storage_socket.records.insert_full_qcportal_records(session, [initial_record_copy], user_id)
+
+        rec_1 = client.get_reactions(ins_ids[0], include=["**"])
+        rec_1.fetch_children(include=["**"], force_fetch=True)
+        compare_reaction_records(rec_1, initial_record)
+
+        assert rec_1.creator_user == "submit_user"
+
+        for c in rec_1.components:
+            if c.singlepoint_record is not None:
+                assert c.singlepoint_record.creator_user == "submit_user"
+            if c.optimization_record is not None:
+                assert c.optimization_record.creator_user == "submit_user"
