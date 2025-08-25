@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING, Optional, List, Dict, Any, Tuple, Union
+from typing import TYPE_CHECKING, Optional, List, Dict, Any, Tuple, Union, Sequence
 
 from qcportal.all_inputs import AllInputTypes
 from qcportal.all_results import AllResultTypes
+from qcportal.base_models import ProjURLParameters
 from qcportal.base_models import RestModelBase, validate_list_to_single
 from qcportal.dataset_models import BaseDataset, dataset_from_dict
 from qcportal.external_files import ExternalFile
@@ -377,12 +378,20 @@ class Project(BaseModel):
         self._client.make_request("post", f"api/v1/projects/{self.id}/records/unlink", None, body=body)
         self._record_metadata = [r for r in self._record_metadata if r.record_id not in record_ids]
 
-    def get_record(self, record_id: Union[int, str]) -> BaseRecord:
+    def get_record(
+        self,
+        record_id: Union[int, str],
+        include: Optional[Sequence[str]] = None,
+    ) -> BaseRecord:
 
         if isinstance(record_id, str):
             record_id = self._lookup_record_id(record_id)
 
-        r_dict = self._client.make_request("get", f"api/v1/projects/{self.id}/records/{record_id}", Dict[str, Any])
+        url_params = ProjURLParameters(include=include)
+
+        r_dict = self._client.make_request(
+            "get", f"api/v1/projects/{self.id}/records/{record_id}", Dict[str, Any], url_params=url_params
+        )
 
         # set prefix to be the main prefix of the server. We will fetch all the records/datasets
         # directly via the regular (non-project) endpoints
