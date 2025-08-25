@@ -16,6 +16,17 @@ from qcfractal.flask_app import storage_socket
 from qcportal.serialization import deserialize, serialize
 
 
+def get_file_extension(filename, allowed_extensions):
+    filename = filename.lower()
+    with_period = [f".{ext}" for ext in allowed_extensions]
+
+    for ext in with_period:
+        if filename.endswith(ext):
+            return ext
+
+    raise BadRequest(f"Invalid file extension on file: {filename}. Allowed extensions: {allowed_extensions}")
+
+
 def wrap_global_route(
     requested_resource,
     requested_action,
@@ -133,12 +144,11 @@ def wrap_global_route(
 
                     req_files = request.files.getlist("files")
                     for f in req_files:
-                        if f.filename.split(".")[-1] not in allowed_file_extensions:
-                            raise BadRequest(
-                                f"Invalid file extension on file: {f.filename}. Allowed extensions: {allowed_file_extensions}"
-                            )
 
-                        with tempfile.NamedTemporaryFile("wb", dir=temp_dir, delete=False) as temp_file:
+                        # Will raise on invalid file extension
+                        ext = get_file_extension(f.filename, allowed_file_extensions)
+
+                        with tempfile.NamedTemporaryFile("wb", dir=temp_dir, suffix=ext, delete=False) as temp_file:
                             f.save(temp_file)
                             kwargs["files"].append((f.filename, temp_file.name))
                 else:

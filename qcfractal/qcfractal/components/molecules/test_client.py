@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import TYPE_CHECKING
 
 import pytest
@@ -280,3 +281,35 @@ def test_molecules_client_update_nonexist(snowflake_client: PortalClient):
             identifiers=MoleculeIdentifiers(smiles="madeupsmiles", inchi="madeupinchi"),
             overwrite_identifiers=False,
         )
+
+
+def test_molecules_client_upload_files(snowflake_client: PortalClient):
+    from qcarchivetesting.helpers import _my_path
+
+    data_path = os.path.join(_my_path, "molecule_data")
+
+    # These are the hashes for the various files
+    file_hashes = {
+        "water_stacked.json": "27061c76f7de3eca6a2d9521d660661fe177192f",
+        "benzene_dimer.xyz": "2a7b21a54fb2adf8ef4064b8aa25804a24a61781",
+        "benzene_dimer.json": "0990d963680c22adde43bd650dff75e3b16808be",
+    }
+
+    file_paths = [
+        os.path.join(data_path, "test_archive_1.zip"),
+        os.path.join(data_path, "test_archive_1.tar.gz"),
+        os.path.join(data_path, "test_archive_1.tar.bz2"),
+        os.path.join(data_path, "test_archive_1.tar.xz"),
+        os.path.join(data_path, "benzene_dimer.xyz"),
+        os.path.join(data_path, "water_stacked.json"),
+    ]
+
+    assert all(os.path.isfile(x) for x in file_paths)
+
+    minfo, errors = snowflake_client.upload_molecules(file_paths)
+    assert len(errors) == 0
+
+    for k, v in minfo.items():
+        for fname, mid in v:
+            mol = snowflake_client.get_molecules(mid)
+            assert mol.get_hash() == file_hashes[fname]

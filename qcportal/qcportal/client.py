@@ -608,19 +608,18 @@ class PortalClient(PortalClientBase):
         )
         return mols
 
-    def upload_molecules(self, file_paths: List[str]) -> Tuple[InsertMetadata, List[Tuple[str, int]]]:
+    def upload_molecules(self, file_paths: List[str]) -> Tuple[Dict[str, List[Tuple[str, int]]], List[str]]:
         file_info = [(os.path.basename(f), f) for f in file_paths]
 
         body = MoleculeUploadOptions()
 
-        mols = self.make_request(
+        return self.make_request(
             "post",
             "api/v1/molecules/fromFiles",
-            Tuple[InsertMetadata, List[Tuple[str, int]]],
+            Tuple[Dict[str, List[Tuple[str, int]]], List[str]],
             body=body,
             upload_files=file_info,
         )
-        return mols
 
     def modify_molecule(
         self,
