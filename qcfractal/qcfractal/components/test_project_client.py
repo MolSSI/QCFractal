@@ -1,13 +1,15 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import pytest
 
+from qcarchivetesting.helpers import test_users, read_record_data
+from qcfractal.components.singlepoint.testing_helpers import load_test_data, run_test_data
 from qcportal import PortalRequestError
-from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.compare_records import compare_records
+from qcportal.record_models import PriorityEnum, RecordStatusEnum, record_from_dict
 from qcportal.singlepoint import SinglepointInput
-from qcfractal.components.singlepoint.testing_helpers import load_test_data as load_test_data, run_test_data
 
 if TYPE_CHECKING:
     from qcportal import PortalClient
@@ -282,3 +284,50 @@ def test_project_client_add_duplicates(snowflake_client: PortalClient):
 
     with pytest.raises(PortalRequestError, match="Dataset 'test optimization dataset' already exists in project"):
         proj.add_dataset("optimization", "test optimization dataset")
+
+
+def test_project_client_import_records(secure_snowflake: QCATestingSnowflake):
+
+    client = secure_snowflake.client("submit_user", test_users["submit_user"]["pw"])
+    proj = client.add_project("test project")
+
+    test_files = [
+        "go_error_17761737",
+        "go_H2O2_psi4_b3lyp",
+        "mb_all_he4_psi4_multiss",
+        "neb_error_68251163",
+        "neb_HCN_psi4_b3lyp_opt3",
+        "opt_error_118868739",
+        "opt_psi4_benzene",
+        "rxn_error_118326390",
+        "rxn_H2O_psi4_mp2_optsp",
+        "sp_error_119608646",
+        "sp_psi4_benzene_energy_1",
+        "sp_psi4_h2_b3lyp_nativefiles",
+        "sp_psi4_peroxide_energy_wfn",
+        "td_error_137174663",
+        "td_H2O2_mopac_pm6",
+    ]
+
+    test_data = {}
+    id_map = {}
+
+    for t_name in test_files:
+        d = read_record_data(t_name)
+        r = record_from_dict(d)
+        test_data[t_name] = r
+
+        tag = t_name.split("_")[0]
+        server_r = proj.import_record(t_name, r, description=f"Record {t_name}", tags=["imported", tag])
+        id_map[t_name] = server_r.id
+
+    # Check that they are there
+    proj = client.get_project("test project")
+    for rm in proj.record_metadata:
+        assert rm.tags == ["imported", rm.name.split("_")[0]]
+        server_r = proj.get_record(rm.record_id, include=["**"])
+        server_r.fetch_children(include=["**"])
+
+        test_r = test_data[rm.name]
+        compare_records(server_r, test_r)
+        assert server_r.creator_user == "submit_user"
