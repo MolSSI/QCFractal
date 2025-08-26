@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=11de5fd8"></script>
+    <script src="../../../_static/documentation_options.js?v=6bfa0e88"></script>
     <script src="../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.62.post20+g55d0f3800" />
+  <meta name="docsearch:version" content="0.62.post43+g0141ee931" />
   </head>
   
   
@@ -451,10 +451,16 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.base_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">RestModelBase</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.cache</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_records_with_cache</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.molecules</span><span class="w"> </span><span class="kn">import</span> <span class="n">Molecule</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.record_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseRecord</span><span class="p">,</span> <span class="n">RecordAddBodyBase</span><span class="p">,</span> <span class="n">RecordQueryFilters</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.record_models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BaseRecord</span><span class="p">,</span>
+    <span class="n">RecordAddBodyBase</span><span class="p">,</span>
+    <span class="n">RecordQueryFilters</span><span class="p">,</span>
+    <span class="n">RecordStatusEnum</span><span class="p">,</span>
+    <span class="n">compare_base_records</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">recursive_normalizer</span><span class="p">,</span> <span class="n">is_included</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">..optimization.record_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationRecord</span><span class="p">,</span> <span class="n">OptimizationSpecification</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">..singlepoint.record_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span><span class="p">,</span> <span class="n">SinglepointRecord</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..optimization.record_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationRecord</span><span class="p">,</span> <span class="n">OptimizationSpecification</span><span class="p">,</span> <span class="n">compare_optimization_records</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..singlepoint.record_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span><span class="p">,</span> <span class="n">SinglepointRecord</span><span class="p">,</span> <span class="n">compare_singlepoint_records</span>
 
 
 <div class="viewcode-block" id="NEBKeywords">
@@ -786,8 +792,21 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">neb_result_</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">&quot;neb_result_&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__fields_set__</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_neb_result</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">complete</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;NEB result is only available after the calculation is complete.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">neb_result_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Fetch the result if possible</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_neb_result</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">singlepoints_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">max_iter</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">singlepoints</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+                <span class="n">max_sp</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">singlepoints</span><span class="p">[</span><span class="n">max_iter</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="s2">&quot;return_energy&quot;</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">neb_result_</span> <span class="o">=</span> <span class="n">max_sp</span><span class="o">.</span><span class="n">molecule</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Raise the usual exception</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
+
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">neb_result_</span>
 
     <span class="nd">@property</span>
@@ -805,6 +824,58 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">singlepoint_records_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_singlepoints</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ts_hessian_</span></div>
+
+
+
+<div class="viewcode-block" id="compare_neb_records">
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.compare_neb_records">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compare_neb_records</span><span class="p">(</span><span class="n">record_1</span><span class="p">:</span> <span class="n">NEBRecord</span><span class="p">,</span> <span class="n">record_2</span><span class="p">:</span> <span class="n">NEBRecord</span><span class="p">):</span>
+    <span class="n">compare_base_records</span><span class="p">(</span><span class="n">record_1</span><span class="p">,</span> <span class="n">record_2</span><span class="p">)</span>
+
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">record_1</span><span class="o">.</span><span class="n">initial_chain_</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">record_2</span><span class="o">.</span><span class="n">initial_chain_</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">m1</span><span class="p">,</span> <span class="n">m2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">record_1</span><span class="o">.</span><span class="n">initial_chain_</span><span class="p">,</span> <span class="n">record_2</span><span class="o">.</span><span class="n">initial_chain_</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">m1</span><span class="o">.</span><span class="n">get_hash</span><span class="p">()</span> <span class="o">==</span> <span class="n">m2</span><span class="o">.</span><span class="n">get_hash</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">record_1</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">complete</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">record_1</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">get_hash</span><span class="p">()</span> <span class="o">==</span> <span class="n">record_2</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">get_hash</span><span class="p">()</span>
+
+    <span class="k">assert</span> <span class="p">(</span><span class="n">record_1</span><span class="o">.</span><span class="n">singlepoint_records_</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="p">(</span><span class="n">record_2</span><span class="o">.</span><span class="n">singlepoint_records_</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="c1"># sort singlepoint info by iteration and position</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">record_1</span><span class="o">.</span><span class="n">singlepoints_</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">record_2</span><span class="o">.</span><span class="n">singlepoints_</span><span class="p">)</span>
+    <span class="n">singlepoint_info_1</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">record_1</span><span class="o">.</span><span class="n">singlepoints_</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">chain_iteration</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">position</span><span class="p">))</span>
+    <span class="n">singlepoint_info_2</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">record_2</span><span class="o">.</span><span class="n">singlepoints_</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">chain_iteration</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">position</span><span class="p">))</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">singlepoint_info_1</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">singlepoint_info_2</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">m1</span><span class="p">,</span> <span class="n">m2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">singlepoint_info_1</span><span class="p">,</span> <span class="n">singlepoint_info_2</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">m1</span><span class="o">.</span><span class="n">chain_iteration</span> <span class="o">==</span> <span class="n">m2</span><span class="o">.</span><span class="n">chain_iteration</span>
+        <span class="k">assert</span> <span class="n">m1</span><span class="o">.</span><span class="n">position</span> <span class="o">==</span> <span class="n">m2</span><span class="o">.</span><span class="n">position</span>
+
+    <span class="c1"># compare actual records</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">sp1</span> <span class="ow">in</span> <span class="n">record_1</span><span class="o">.</span><span class="n">singlepoint_records_</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">sp2</span> <span class="o">=</span> <span class="n">record_2</span><span class="o">.</span><span class="n">singlepoint_records_</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">sp1</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">sp2</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">m1</span><span class="p">,</span> <span class="n">m2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">sp1</span><span class="p">,</span> <span class="n">sp2</span><span class="p">):</span>
+            <span class="n">compare_singlepoint_records</span><span class="p">(</span><span class="n">m1</span><span class="p">,</span> <span class="n">m2</span><span class="p">)</span>
+
+    <span class="c1"># Hessian part</span>
+    <span class="k">assert</span> <span class="p">(</span><span class="n">record_1</span><span class="o">.</span><span class="n">ts_hessian_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">record_2</span><span class="o">.</span><span class="n">ts_hessian_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">record_1</span><span class="o">.</span><span class="n">ts_hessian_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">compare_singlepoint_records</span><span class="p">(</span><span class="n">record_1</span><span class="o">.</span><span class="n">ts_hessian_</span><span class="p">,</span> <span class="n">record_2</span><span class="o">.</span><span class="n">ts_hessian_</span><span class="p">)</span>
+
+    <span class="c1"># Optimizations</span>
+    <span class="k">assert</span> <span class="p">(</span><span class="n">record_1</span><span class="o">.</span><span class="n">optimizations_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">record_2</span><span class="o">.</span><span class="n">optimizations_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">record_1</span><span class="o">.</span><span class="n">optimizations_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">record_1</span><span class="o">.</span><span class="n">optimizations_</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">record_2</span><span class="o">.</span><span class="n">optimizations_</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">record_1</span><span class="o">.</span><span class="n">optimizations_</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">v2</span> <span class="o">=</span> <span class="n">record_2</span><span class="o">.</span><span class="n">optimizations_</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="n">v</span><span class="o">.</span><span class="n">position</span> <span class="o">==</span> <span class="n">v2</span><span class="o">.</span><span class="n">position</span>
+            <span class="k">assert</span> <span class="n">v</span><span class="o">.</span><span class="n">ts</span> <span class="o">==</span> <span class="n">v2</span><span class="o">.</span><span class="n">ts</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">c1</span> <span class="ow">in</span> <span class="n">record_1</span><span class="o">.</span><span class="n">optimization_records_</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">c2</span> <span class="o">=</span> <span class="n">record_2</span><span class="o">.</span><span class="n">optimization_records_</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="n">compare_optimization_records</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span></div>
 
 </pre></div>
 
