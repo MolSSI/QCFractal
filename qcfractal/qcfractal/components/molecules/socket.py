@@ -106,11 +106,19 @@ class MoleculeSocket:
 
     def add_from_files(
         self, file_list: List[Tuple[str, str]], options: MoleculeUploadOptions, *, session: Optional[Session] = None
-    ) -> Tuple[InsertMetadata, List[Tuple[str, int]]]:
-        minfo = molecules_from_files(file_list, options)
-        meta, molecule_ids = self.add([x[1] for x in minfo], session=session)
+    ) -> Tuple[Dict[str, List[Tuple[str, int]]], List[str]]:
+        minfo, errors = molecules_from_files(file_list, options)
 
-        return meta, [(mname, mid) for (mname, _), mid in zip(minfo, molecule_ids)]
+        ret: Dict[str, List[Tuple[str, int]]] = {}
+        for k, v in minfo.items():
+            meta, molecule_ids = self.add([x[1] for x in v], session=session)
+            if not meta.success:
+                ret[k] = []  # Just so people can see nothing was inserted
+                errors.append(meta.error_string)
+            else:
+                ret[k] = [(fname, mid) for (fname, _), mid in zip(v, molecule_ids)]
+
+        return ret, errors
 
     def get(
         self,

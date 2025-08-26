@@ -63,8 +63,21 @@ def add_molecules_v1(body_data: List[Molecule]):
     return storage_socket.molecules.add(body_data)
 
 
+allowed_extensions = [
+    "xyz",
+    "json",
+    "zip",
+    "tar.gz",
+    "tgz",
+    "tar.bz2",
+    "tbz2",
+    "tar.xz",
+    "txz",
+]
+
+
 @api_v1.route("/molecules/fromFiles", methods=["POST"])
-@wrap_global_route("records", "add", allowed_file_extensions=["xyz", "sdf"])
+@wrap_global_route("records", "add", allowed_file_extensions=allowed_extensions)
 def add_molecules_from_files_v1(body_data: MoleculeUploadOptions, files: List[Tuple[str, str]]):
     return storage_socket.molecules.add_from_files(files, body_data)
 
