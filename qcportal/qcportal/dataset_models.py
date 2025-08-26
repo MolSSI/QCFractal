@@ -1237,17 +1237,21 @@ class BaseDataset(BaseModel):
     def rename_entries(self, name_map: Dict[str, str]):
         """
         Renames entries in the dataset based on the provided mapping.
+
         This method updates the names of entries both on the server and in the local cache.
         It ensures that the dataset is not a view and is online before proceeding with the renaming.
-        Args:
-            name_map (Dict[str, str]): A dictionary mapping old entry names to new entry names.
-                                       Entries where the old name is the same as the new name
-                                       are ignored.
-        Raises:
-            AssertionError: If the dataset is a view or is not online.
-        Side Effects:
-            - Sends a patch request to the server to update entry names.
-            - Updates the local cache and entry names list with the new names.
+
+        Parameters
+        ----------
+        name_map:
+            A dictionary mapping old entry names to new entry names.
+            Entries where the old name is the same as the new name
+            are ignored.
+
+        Raises
+        ------
+        AssertionError:
+            If the dataset is a view or is not online.
         """
 
         self.assert_is_not_view()
@@ -1273,21 +1277,22 @@ class BaseDataset(BaseModel):
         """
         Modifies the entries in the dataset by updating their attributes or comments.
 
-        Parameters:
-            attribute_map (Optional[Dict[str, Dict[str, Any]]]):
-                A dictionary mapping entry names to their updated attributes.
-                Each entry name maps to a dictionary of attribute key-value pairs to be updated.
-            comment_map (Optional[Dict[str, str]]):
-                A dictionary mapping entry names to their updated comments.
-            overwrite_attributes (bool):
-                If True, existing attributes for the specified entries will be completely
-                replaced by the provided attributes in ``attribute_map``. If False, only the
-                specified attributes will be updated, leaving others unchanged.
-        Raises:
-            AssertionError: If the dataset is a view or if the client is offline.
-        Side Effects:
-            - Sends a request to the server to modify the specified entries.
-            - Synchronizes the local cache with the updated server data for the modified entries.
+        Parameters
+        ----------
+        attribute_map:
+            A dictionary mapping entry names to their updated attributes.
+            Each entry name maps to a dictionary of attribute key-value pairs to be updated.
+        comment_map:
+            A dictionary mapping entry names to their updated comments.
+        overwrite_attributes:
+            If True, existing attributes for the specified entries will be completely
+            replaced by the provided attributes in ``attribute_map``. If False, only the
+            specified attributes will be updated, leaving others unchanged.
+
+        Raises
+        ------
+        AssertionError:
+            If the dataset is a view or if the client is offline.
         """
 
         self.assert_is_not_view()
@@ -1311,13 +1316,23 @@ class BaseDataset(BaseModel):
     def delete_entries(self, names: Union[str, Iterable[str]], delete_records: bool = False) -> DeleteMetadata:
         """
         Deletes entries from the dataset.
-        Parameters:
-            names (Union[str, Iterable[str]]): The name or list of names of the entries to delete.
-            delete_records (bool, optional): If True, associated records will also be deleted. Defaults to False.
-        Returns:
-            DeleteMetadata: Metadata about the deletion operation.
-        Raises:
-            AssertionError: If the dataset is a view or not online.
+
+        Parameters
+        ----------
+        names:
+            The name or list of names of the entries to delete.
+        delete_records:
+            If True, associated records will also be deleted. Defaults to False.
+
+        Returns
+        -------
+        :
+            Metadata about the deletion operation.
+
+        Raises
+        ------
+        AssertionError:
+            If the dataset is a view or not online.
         """
 
         self.assert_is_not_view()
