@@ -10,6 +10,7 @@ from qcportal.project_models import (
     ProjectDeleteParams,
     ProjectDatasetAddBody,
     ProjectRecordAddBody,
+    ProjectRecordImportBody,
     ProjectLinkDatasetBody,
     ProjectUnlinkDatasetsBody,
     ProjectLinkRecordBody,
@@ -156,6 +157,19 @@ def add_project_record_v1(project_id: int, body_data: ProjectRecordAddBody):
         compute_priority=body_data.compute_priority,
         creator_user=g.username,
         find_existing=body_data.find_existing,
+    )
+
+
+@api_v1.route("/projects/<int:project_id>/records/import", methods=["POST"])
+@wrap_global_route("projects", "modify")
+def import_project_record_v1(project_id: int, body_data: ProjectRecordImportBody):
+    return storage_socket.projects.import_record(
+        project_id,
+        name=body_data.name,
+        description=body_data.description,
+        tags=body_data.tags,
+        record_data=body_data.record_data,
+        creator_user=g.username,
     )
 
 

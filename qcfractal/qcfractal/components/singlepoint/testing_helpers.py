@@ -6,7 +6,7 @@ try:
     import pydantic.v1 as pydantic
 except ImportError:
     import pydantic
-from qcarchivetesting.helpers import read_procedure_data
+from qcarchivetesting.helpers import read_procedure_data, read_record_data
 from qcelemental.models import (
     Molecule,
     FailedOperation,
@@ -17,7 +17,7 @@ from qcelemental.models import (
 from qcfractal.components.singlepoint.record_db_models import SinglepointRecordORM
 from qcfractalcompute.compress import compress_result
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
-from qcportal.singlepoint import SinglepointProtocols, QCSpecification, SinglepointDriver
+from qcportal.singlepoint import SinglepointProtocols, QCSpecification, SinglepointDriver, SinglepointRecord
 from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
@@ -66,6 +66,11 @@ def load_test_data(name: str) -> Tuple[QCSpecification, Molecule, QCEl_AtomicRes
         pydantic.parse_obj_as(Molecule, test_data["molecule"]),
         pydantic.parse_obj_as(QCEl_AtomicResult, test_data["result"]),
     )
+
+
+def load_record_data(name: str) -> SinglepointRecord:
+    test_data = read_record_data(name)
+    return SinglepointRecord(**test_data)
 
 
 def submit_test_data(

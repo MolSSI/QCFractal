@@ -10,13 +10,13 @@ except ImportError:
 from qcelemental.models import Molecule, FailedOperation, ComputeError, OptimizationResult as QCEl_OptimizationResult
 from qcelemental.models.procedures import OptimizationProtocols
 
-from qcarchivetesting.helpers import read_procedure_data
+from qcarchivetesting.helpers import read_procedure_data, read_record_data
 from qcfractal.components.torsiondrive.record_db_models import TorsiondriveRecordORM
 from qcfractal.testing_helpers import run_service
 from qcportal.optimization import OptimizationSpecification
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, RecordTask
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
-from qcportal.torsiondrive import TorsiondriveSpecification, TorsiondriveKeywords
+from qcportal.torsiondrive import TorsiondriveSpecification, TorsiondriveKeywords, TorsiondriveRecord
 from qcportal.utils import recursive_normalizer
 
 if TYPE_CHECKING:
@@ -110,6 +110,11 @@ def load_test_data(name: str) -> Tuple[TorsiondriveSpecification, List[Molecule]
         pydantic.parse_obj_as(List[Molecule], test_data["initial_molecules"]),
         pydantic.parse_obj_as(Dict[str, QCEl_OptimizationResult], test_data["results"]),
     )
+
+
+def load_record_data(name: str) -> TorsiondriveRecord:
+    test_data = read_record_data(name)
+    return TorsiondriveRecord(**test_data)
 
 
 def submit_test_data(

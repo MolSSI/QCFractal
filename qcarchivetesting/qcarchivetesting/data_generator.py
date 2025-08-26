@@ -2,12 +2,17 @@ from __future__ import annotations
 
 import queue
 import tempfile
+import os
+import lzma
+import json
+from qcportal.serialization import _JSONEncoder
 import threading
 import weakref
 from typing import TYPE_CHECKING
 
 from qcfractalcompute import ComputeManager
 from qcfractalcompute.config import FractalComputeConfig, FractalServerSettings, LocalExecutorConfig
+from .helpers import _my_path
 
 if TYPE_CHECKING:
     from typing import List, Dict, Any
@@ -30,6 +35,36 @@ def clean_conda_env(d: Dict[str, Any]):
             for x in v:
                 if isinstance(x, dict):
                     clean_conda_env(x)
+
+
+def read_input(infile_path: str):
+    print(f"** Reading in data from {infile_path}")
+    infile_name = os.path.split(infile_path)[1]
+
+    if infile_name.endswith(".xz"):
+        with lzma.open(infile_name, "rt") as infile:
+            test_data = json.load(infile)
+            outfile_name = infile_name
+            outfile_name = infile_name
+    else:
+        with open(infile_name) as infile:
+            test_data = json.load(infile)
+            outfile_name = infile_name + ".xz"
+
+    return test_data, outfile_name
+
+
+def write_outputs(outfile_name: str, test_data, record):
+    test_data_path = os.path.join(_my_path, "procedure_data", outfile_name)
+    record_data_path = os.path.join(_my_path, "record_data", outfile_name)
+
+    print(f"** Writing procedure data to {test_data_path}")
+    with lzma.open(test_data_path, "wt") as f:
+        json.dump(test_data, f, cls=_JSONEncoder, indent=4, sort_keys=False)
+
+    print(f"** Writing record data to {record_data_path}")
+    with lzma.open(record_data_path, "wt") as f:
+        json.dump(record.dict(by_alias=True), f, cls=_JSONEncoder, indent=4, sort_keys=False)
 
 
 class DataGeneratorManager(ComputeManager):

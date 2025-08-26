@@ -930,3 +930,42 @@ def records_from_dicts(
         else:
             ret.append(record_from_dict(rd, client, base_url_prefix))
     return ret
+
+
+def compare_base_records(record_1: BaseRecord, record_2: BaseRecord):
+    """
+    Compares two QCPortal record objects
+    """
+
+    assert record_1.status == record_2.status
+    assert record_1.specification == record_2.specification
+
+    if record_1.manager_name != record_2.manager_name:
+        print(f"WARNING: manager_name mismatch: {record_1.manager_name} != {record_2.manager_name}")
+    # assert record_1.manager_name == record_2.manager_name
+
+    assert record_1.is_service == record_2.is_service
+
+    assert [c.comment for c in record_1.comments] == [c.comment for c in record_2.comments]
+    assert record_1.properties == record_2.properties
+    assert record_1.extras == record_2.extras
+
+    assert len(record_1.compute_history) == len(record_2.compute_history)
+
+    for ch1, ch2 in zip(record_1.compute_history, record_2.compute_history):
+        assert ch1.status == ch2.status
+        assert ch1.manager_name == ch2.manager_name
+        assert ch1.modified_on == ch2.modified_on
+        assert ch1.provenance == ch2.provenance
+
+        assert len(ch1.outputs) == len(ch2.outputs)
+        for key, val1 in ch1.outputs.items():
+            val2 = ch2.outputs[key]
+            assert val1.data == val2.data
+            # Don't test compression type and level - can be different
+
+    assert len(record_1.native_files) == len(record_2.native_files)
+    for key, val1 in record_1.native_files.items():
+        val2 = record_2.native_files[key]
+        assert val1.data == val2.data
+        # Don't test compression type and level - can be different

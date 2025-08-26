@@ -20,6 +20,7 @@ from qcportal.singlepoint import (
     SinglepointQueryFilters,
     SinglepointInput,
     SinglepointMultiInput,
+    SinglepointRecord,
 )
 from qcportal.utils import hash_dict, is_included
 from .record_db_models import QCSpecificationORM, SinglepointRecordORM, WavefunctionORM
@@ -115,11 +116,55 @@ class SinglepointRecordSocket(BaseRecordSocket):
             wavefunction_orm.record_id = record_id
             session.add(wavefunction_orm)
 
-    def insert_complete_schema_v1(
+    def insert_full_qcportal_records_v1(
         self,
         session: Session,
-        results: Sequence[QCEl_AtomicResult],
+        records: Sequence[SinglepointRecord],
+        creator_user_id: Optional[int],
     ) -> List[SinglepointRecordORM]:
+
+        # No child records, so creator_user_id is ignored
+        ret = []
+
+        mols = []
+        qc_specs = []
+
+        for record in records:
+            mols.append(record.molecule)
+            qc_specs.append(record.specification)
+
+        meta, spec_ids = self.root_socket.records.singlepoint.add_specifications(qc_specs, session=session)
+        if not meta.success:
+            raise RuntimeError("Aborted single point insertion - could not add specifications: " + meta.error_string)
+
+        meta, mol_ids = self.root_socket.molecules.add(mols, session=session)
+        if not meta.success:
+            raise RuntimeError("Aborted single point insertion - could not add molecules: " + meta.error_string)
+
+        for record, mol_id, spec_id in zip(records, mol_ids, spec_ids):
+            record_orm = SinglepointRecordORM(
+                specification_id=spec_id,
+                molecule_id=mol_id,
+                status=RecordStatusEnum.complete,
+            )
+
+            if record.wavefunction_:
+                wfn_orm = WavefunctionORM(
+                    compression_type=record.wavefunction_.compression_type,
+                    compression_level=-1,  # We don't know :( But it's not really used anywhere - just for curiosity
+                    data=record.wavefunction_.data_,
+                )
+                record_orm.wavefunction = wfn_orm
+
+            ret.append(record_orm)
+
+        return ret
+
+    def insert_full_schema_v1(
+        self, session: Session, results: Sequence[QCEl_AtomicResult], creator_user_id: Optional[int]
+    ) -> List[SinglepointRecordORM]:
+
+        # No child records, so creator_user_id is ignored
 
         ret = []
 

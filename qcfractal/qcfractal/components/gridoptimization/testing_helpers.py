@@ -10,10 +10,10 @@ except ImportError:
 from qcelemental.models import Molecule, FailedOperation, ComputeError, OptimizationResult as QCEl_OptimizationResult
 from qcelemental.models.procedures import OptimizationProtocols
 
-from qcarchivetesting.helpers import read_procedure_data
+from qcarchivetesting.helpers import read_procedure_data, read_record_data
 from qcfractal.components.gridoptimization.record_db_models import GridoptimizationRecordORM
 from qcfractal.testing_helpers import run_service
-from qcportal.gridoptimization import GridoptimizationSpecification, GridoptimizationKeywords
+from qcportal.gridoptimization import GridoptimizationSpecification, GridoptimizationKeywords, GridoptimizationRecord
 from qcportal.optimization import OptimizationSpecification
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, RecordTask
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
@@ -109,6 +109,11 @@ def load_test_data(name: str) -> Tuple[GridoptimizationSpecification, Molecule, 
         pydantic.parse_obj_as(Molecule, test_data["initial_molecule"]),
         pydantic.parse_obj_as(Dict[str, QCEl_OptimizationResult], test_data["results"]),
     )
+
+
+def load_record_data(name: str) -> GridoptimizationRecord:
+    test_data = read_record_data(name)
+    return GridoptimizationRecord(**test_data)
 
 
 def submit_test_data(

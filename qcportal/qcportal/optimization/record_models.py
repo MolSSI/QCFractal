@@ -18,10 +18,22 @@ from typing_extensions import Literal
 from typing import Iterable
 
 from qcportal.base_models import RestModelBase
-from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters, RecordStatusEnum
+from qcportal.record_models import (
+    BaseRecord,
+    RecordAddBodyBase,
+    RecordQueryFilters,
+    RecordStatusEnum,
+    compare_base_records,
+)
 from qcportal.utils import is_included
 from qcportal.cache import get_records_with_cache
-from qcportal.singlepoint import SinglepointProtocols, SinglepointRecord, QCSpecification, SinglepointDriver
+from qcportal.singlepoint import (
+    SinglepointProtocols,
+    SinglepointRecord,
+    QCSpecification,
+    SinglepointDriver,
+    compare_singlepoint_records,
+)
 
 
 class OptimizationSpecification(BaseModel):
@@ -249,3 +261,23 @@ class OptimizationMultiInput(RestModelBase):
 
 class OptimizationAddBody(RecordAddBodyBase, OptimizationMultiInput):
     pass
+
+
+def compare_optimization_records(record_1: OptimizationRecord, record_2: OptimizationRecord):
+    compare_base_records(record_1, record_2)
+
+    assert record_1.initial_molecule.get_hash() == record_2.initial_molecule.get_hash()
+
+    assert (record_1.final_molecule_id is None) == (record_2.final_molecule_id is None)
+    if record_1.final_molecule_id is not None:
+        assert record_1.final_molecule.get_hash() == record_2.final_molecule.get_hash()
+
+    assert record_1.energies == record_2.energies
+
+    assert (record_1.trajectory_records_ is None) == (record_2.trajectory_records_ is None)
+    assert (record_1.trajectory_ids_ is None) == (record_2.trajectory_ids_ is None)
+
+    if record_1.trajectory_records_ is not None:
+        assert len(record_1.trajectory_records_) == len(record_2.trajectory_records_)
+        for t1, t2 in zip(record_1.trajectory_records_, record_2.trajectory_records_):
+            compare_singlepoint_records(t1, t2)

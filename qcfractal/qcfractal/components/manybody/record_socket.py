@@ -21,6 +21,7 @@ from qcportal.manybody import (
     ManybodyQueryFilters,
     ManybodyInput,
     ManybodyMultiInput,
+    ManybodyRecord,
 )
 from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.molecules import Molecule
@@ -330,6 +331,61 @@ class ManybodyRecordSocket(BaseRecordSocket):
 
         return InsertMetadata.merge(all_metadata), all_ids
 
+    def insert_full_qcportal_records_v1(
+        self, session: Session, records: Sequence[ManybodyRecord], creator_user_id: Optional[int]
+    ) -> List[ManybodyRecordORM]:
+        ret = []
+
+        initial_mols = []
+        mb_specs = []
+
+        for record in records:
+            initial_mols.append(record.initial_molecule)
+            mb_specs.append(record.specification)
+
+        meta, spec_ids = self.root_socket.records.manybody.add_specifications(mb_specs, session=session)
+        if not meta.success:
+            raise RuntimeError("Aborted manybody insertion - could not add specifications: " + meta.error_string)
+
+        meta, initial_mol_ids = self.root_socket.molecules.add(initial_mols, session=session)
+        if not meta.success:
+            raise RuntimeError("Aborted manybody insertion - could not add initial molecules: " + meta.error_string)
+
+        for record, initial_mol_id, spec_id in zip(records, initial_mol_ids, spec_ids):
+            record_orm = ManybodyRecordORM(
+                specification_id=spec_id,
+                initial_molecule_id=initial_mol_id,
+                status=RecordStatusEnum.complete,
+            )
+
+            if record.cluster_records_:
+                cluster_mols = [x.molecule for x in record.cluster_records_]
+                cluster_records = [x.singlepoint_record for x in record.cluster_records_]
+
+                meta, cluster_mol_ids = self.root_socket.molecules.add(cluster_mols, session=session)
+                if not meta.success:
+                    raise RuntimeError(
+                        "Aborted manybody insertion - could not add initial molecules: " + meta.error_string
+                    )
+
+                cluster_sp_ids = self.root_socket.records.insert_full_qcportal_records(
+                    session, cluster_records, creator_user_id
+                )
+                record_orm.clusters = [
+                    ManybodyClusterORM(
+                        molecule_id=mid,
+                        singlepoint_id=spid,
+                        mc_level=crec.mc_level,
+                        fragments=crec.fragments,
+                        basis=crec.basis,
+                    )
+                    for mid, spid, crec in zip(cluster_mol_ids, cluster_sp_ids, record.cluster_records_)
+                ]
+
+            ret.append(record_orm)
+
+        return ret
+
     def add_specification(
         self, mb_spec: ManybodySpecification, *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, Optional[int]]:
@@ -462,7 +518,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
             ):
                 options.append(joinedload(ManybodyRecordORM.initial_molecule))
             if is_included("clusters", include, exclude, False):
-                options.append(selectinload(ManybodyRecordORM.clusters))
+                options.append(selectinload(ManybodyRecordORM.clusters).selectinload(ManybodyClusterORM.molecule))
 
         with self.root_socket.optional_session(session, True) as session:
             return self.root_socket.records.get_base(

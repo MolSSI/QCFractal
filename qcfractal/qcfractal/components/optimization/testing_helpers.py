@@ -6,7 +6,7 @@ try:
     import pydantic.v1 as pydantic
 except ImportError:
     import pydantic
-from qcarchivetesting.helpers import read_procedure_data
+from qcarchivetesting.helpers import read_procedure_data, read_record_data
 from qcelemental.models import (
     Molecule,
     FailedOperation,
@@ -16,7 +16,7 @@ from qcelemental.models import (
 
 from qcfractal.components.optimization.record_db_models import OptimizationRecordORM
 from qcfractalcompute.compress import compress_result
-from qcportal.optimization import OptimizationSpecification
+from qcportal.optimization import OptimizationSpecification, OptimizationRecord
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import QCSpecification, SinglepointProtocols
 from qcportal.utils import now_at_utc
@@ -84,6 +84,11 @@ def load_test_data(name: str) -> Tuple[OptimizationSpecification, Molecule, QCEl
         pydantic.parse_obj_as(Molecule, test_data["initial_molecule"]),
         pydantic.parse_obj_as(QCEl_OptimizationResult, test_data["result"]),
     )
+
+
+def load_record_data(name: str) -> OptimizationRecord:
+    test_data = read_record_data(name)
+    return OptimizationRecord(**test_data)
 
 
 def submit_test_data(
