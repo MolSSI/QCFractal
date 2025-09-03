@@ -1,0 +1,24 @@
+{
+  "molecule_name": "Water",
+  "atoms": [
+    {
+      "element": "O",
+      "coordinates": [0.0, 0.0, 0.0],
+      "charge": -0.82
+    },
+    {
+      "element": "H",
+      "coordinates": [0.757, 0.587, 0.0],
+      "charge": 0.41
+    },
+    {
+      "element": "H",
+      "coordinates": [-0.757, 0.587, 0.0],
+      "charge": 0.41
+    }
+  ],
+  "bonds": [
+    { "atom1_index": 0, "atom2_index": 1, "type": "single" },
+    { "atom1_index": 0, "atom2_index": 2, "type": "single" }
+  ]
+}
