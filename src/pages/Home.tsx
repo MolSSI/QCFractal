@@ -51,8 +51,8 @@ const HomePage = () => {
             <Button variant="outlined" onClick={handleAddMolecule}>
               Add a molecule
             </Button>
-      <TextField label="Molecule ID" value={currentMoleculeId ? String(currentMoleculeId) : ""} size="small" slotProps={{ input: { readOnly: true } }} />
-          </Box>
+          <TextField label="Molecule ID" value={currentMoleculeId ? String(currentMoleculeId) : ""} size="medium" slotProps={{ input: { readOnly: true } }} />
+      </Box>
 
       <button onClick={() => navigate("/projects/11/addRecord")}>Add a record</button>
       <button onClick={() => navigate("/projects/11")}>Go to Project 11</button>

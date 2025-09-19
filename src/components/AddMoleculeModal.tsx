@@ -29,9 +29,9 @@ const AddMoleculeModal: React.FC<Props> = ({ open, onClose, onSubmit }) => {
   const [pasteText, setPasteText] = useState<string>("");
   const [uploadedName, setUploadedName] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [filename, setFilename] = useState<string>("");
-  const [fileFormat, setFileFormat] = useState<string>("xyz");
-  const [purpose, setPurpose] = useState<string>("");
+  const [pastedFilename, setPastedFilename] =
+    useState<string>("pastedMolecule");
+  const [pastedFormat, setPastedFormat] = useState<string>("xyz");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -62,6 +62,7 @@ const AddMoleculeModal: React.FC<Props> = ({ open, onClose, onSubmit }) => {
       overflow: "auto",
     },
   } as const;
+
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabIndex(newValue);
   };
@@ -80,9 +81,14 @@ const AddMoleculeModal: React.FC<Props> = ({ open, onClose, onSubmit }) => {
       const form = new FormData();
 
       if (tabIndex === 0) {
-        // paste: create a blob and send as a file so backend can handle uniformly
-        const blob = new Blob([pasteText || ""], { type: "text/plain" });
-        form.append("files", blob, "paste.txt");
+        // Use filename and selected format from inputs
+        const pasteFilename = `${pastedFilename}.${pastedFormat}`;
+        const mime =
+          pastedFormat === "json" ? "application/json" : "chemical/x-xyz";
+        const blob = new Blob([pasteText || ""], { type: mime });
+        form.append("files", blob, pasteFilename);
+        // include filename field for backends that expect it
+        form.append("filename", pasteFilename);
       } else if (tabIndex === 1) {
         if (!selectedFile) {
           setErrorMessage("No file selected");
@@ -150,9 +156,16 @@ const AddMoleculeModal: React.FC<Props> = ({ open, onClose, onSubmit }) => {
 
       // fallback to previous patterns
       if (extractedId === null) {
-        const id =
-          json &&
-          (json.id ?? json.data?.id ?? json.molecule_id ?? json.molecule?.id);
+        const extractId = (obj: any): number | null => {
+          if (!obj) return null;
+          if (typeof obj.id === "number") return obj.id;
+          if (obj.data && typeof obj.data.id === "number") return obj.data.id;
+          if (typeof obj.molecule_id === "number") return obj.molecule_id;
+          if (obj.molecule && typeof obj.molecule.id === "number")
+            return obj.molecule.id;
+          return null;
+        };
+        const id = extractId(json);
         if (typeof id === "number") extractedId = id;
       }
 
@@ -215,15 +228,42 @@ const AddMoleculeModal: React.FC<Props> = ({ open, onClose, onSubmit }) => {
             }}
           >
             {tabIndex === 0 && (
-              <TextField
-                fullWidth
-                multiline
-                rows={8}
-                value={pasteText}
-                onChange={(e) => setPasteText(e.target.value)}
-                variant="outlined"
-                sx={{ ...textFieldSx }}
-              />
+              <>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={8}
+                  value={pasteText}
+                  onChange={(e) => setPasteText(e.target.value)}
+                  variant="outlined"
+                  sx={{ ...textFieldSx }}
+                />
+
+                <Box
+                  sx={{ display: "flex", gap: 2, alignItems: "center", mt: 1 }}
+                >
+                  <TextField
+                    label="Filename"
+                    value={pastedFilename}
+                    onChange={(e) => setPastedFilename(e.target.value)}
+                    size="small"
+                    sx={{ bgcolor: "transparent", input: { color: "#fff" } }}
+                  />
+
+                  <FormControl size="small" sx={{ minWidth: 120 }}>
+                    <InputLabel sx={{ color: "#fff" }}>Format</InputLabel>
+                    <Select
+                      value={pastedFormat}
+                      label="Format"
+                      onChange={(e) => setPastedFormat(e.target.value)}
+                      sx={{ color: "#fff" }}
+                    >
+                      <MenuItem value="xyz">xyz</MenuItem>
+                      <MenuItem value="json">json</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+              </>
             )}
 
             {tabIndex === 1 && (
@@ -254,40 +294,7 @@ const AddMoleculeModal: React.FC<Props> = ({ open, onClose, onSubmit }) => {
                 variant="caption"
                 sx={{ color: "#fff", mt: 1, display: "block" }}
               >
-                Paste SMILES/molfile/other small molecule text here
-              </Typography>
-
-              {/* Filename / format / purpose inputs */}
-              <Box sx={{ display: "flex", gap: 2, alignItems: "center", mt: 1 }}>
-                <TextField
-                  label="Filename"
-                  value={filename}
-                  onChange={(e) => setFilename(e.target.value)}
-                  size="small"
-                  sx={{ bgcolor: "transparent", input: { color: "#fff" } }}
-                />
-
-                <FormControl size="small" sx={{ minWidth: 120 }}>
-                  <InputLabel sx={{ color: '#fff' }}>Format</InputLabel>
-                  <Select
-                    value={fileFormat}
-                    label="Format"
-                    onChange={(e) => setFileFormat(e.target.value)}
-                    sx={{ color: '#fff' }}
-                  >
-                    <MenuItem value="xyz">xyz</MenuItem>
-                    <MenuItem value="json">json</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
-
-              <Typography variant="caption" sx={{ color: "#bbb", mt: 1, display: "block" }}>
-                Purpose: <input
-                  style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none' }}
-                  placeholder="Enter purpose or description"
-                  value={purpose}
-                  onChange={(e) => setPurpose(e.target.value)}
-                />
+                Please paste the molecule data here
               </Typography>
             </>
           )}
