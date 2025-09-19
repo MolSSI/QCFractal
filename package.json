@@ -23,6 +23,7 @@
     "@mui/x-tree-view": "^8.1.0",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
+    "ketcher-react": "^3.6.0",
     "ngl": "^2.4.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
