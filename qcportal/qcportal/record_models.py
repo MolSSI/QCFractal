@@ -737,7 +737,7 @@ class BaseRecord(BaseModel):
 
     @property
     def native_files(self) -> Optional[Dict[str, NativeFile]]:
-        if self.native_files_ is None:
+        if self.native_files_ is None and "native_files_" not in self.__fields_set__ and not self.offline:
             self._fetch_native_files()
         return self.native_files_
 

@@ -153,7 +153,7 @@ class SinglepointRecord(BaseRecord):
     @property
     def wavefunction(self) -> Optional[WavefunctionProperties]:
         # wavefunction may be None if it doesn't exist or hasn't been fetched yet
-        if self.wavefunction_ is None and "wavefunction_" not in self.__fields_set__:
+        if self.wavefunction_ is None and "wavefunction_" not in self.__fields_set__ and not self.offline:
             self._fetch_wavefunction()
 
         if self.wavefunction_ is not None:
