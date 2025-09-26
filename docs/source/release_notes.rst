@@ -1,26 +1,30 @@
 Release Notes
 =============
 
-0.62 / 2025-07-11
+0.63 / 2025-09-26
 -----------------
 
-A few minor bug fixes and improvements - nothing terribly major. Some work on stabilizing tests and
-moving from "fork" to "spawn" for multiprocessing, but this should be transparent.
+The main big change is moving the snowflake from using multiprocessing to threads. This should
+be even cleaner than before at the expense of a bit of performance (maybe). There were reports
+of multiprocessing still causing problems on certain architectures. This hopefully fixes that for everyone.
 
-This also improves error handling in various clients, particularly the manager client, and improves
-snowflake startup stability.
+This release also includes nacent support for ingesting records from external sources (ie, uploading
+records from another server, or ones you have created yourself). Right now only individual records
+can be imported, and only into a project. See :pr:`972`.
 
-One small database migration - removing the foreign key from `manager_name` to allow for copying between instances
-in the future.
+There is a change to how some data is stored internally inside records. This should be backwards compatible
+and invisible to the user.
+
+Also of note, python 3.9 is no longer supported.
 
 Notable PRs:
 
-- (:pr:`947`) Reduce batch size in view creation (helps with job runner memory usage)
-- (:pr:`951`) Ability to append to a dataset with scaffold (J. Clark :contrib:`jaclark5`)
-- (:pr:`955`, :pr:`959`) Rework multiprocessing and switch to "spawn" over "fork"
-- (:pr:`958`) Force compute tag to be lowercase when modifying records
-- (:pr:`960`) Cleanup and preparation for external record ingestion (includes the DB migration mentioned above)
-- (:pr:`961`) Implement getting direct download url for external files (including attachments and views)
+- (:pr:`965`) Switch to using threads in snowflake
+- (:pr:`967`) Change how child records are stored (not in PrivateAttr)
+- (:pr:`972`) Ability to ingest/import records from other sources
+- (:pr:`973`) Remove python 3.9 support
+- (:pr:`974`) Handle more file types when uploading molecule files
+- (:pr:`975`) Check if native files has been set before fetching
 
 
 0.61 / 2025-05-15
