@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=974d6797"></script>
+    <script src="_static/documentation_options.js?v=9830f895"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="NEB Records" href="user_guide/qcportal_reference/records/neb.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.62.post46+gbdc7426ce" />
+  <meta name="docsearch:version" content="0.62.post48+g381d0de2d" />
   </head>
   
   
@@ -451,21 +451,24 @@
   <section id="release-notes">
 <h1>Release Notes<a class="headerlink" href="#release-notes" title="Link to this heading">#</a></h1>
 <section id="id1">
-<h2>0.62 / 2025-07-11<a class="headerlink" href="#id1" title="Link to this heading">#</a></h2>
-<p>A few minor bug fixes and improvements - nothing terribly major. Some work on stabilizing tests and
-moving from “fork” to “spawn” for multiprocessing, but this should be transparent.</p>
-<p>This also improves error handling in various clients, particularly the manager client, and improves
-snowflake startup stability.</p>
-<p>One small database migration - removing the foreign key from <cite>manager_name</cite> to allow for copying between instances
-in the future.</p>
+<h2>0.63 / 2025-09-26<a class="headerlink" href="#id1" title="Link to this heading">#</a></h2>
+<p>The main big change is moving the snowflake from using multiprocessing to threads. This should
+be even cleaner than before at the expense of a bit of performance (maybe). There were reports
+of multiprocessing still causing problems on certain architectures. This hopefully fixes that for everyone.</p>
+<p>This release also includes nacent support for ingesting records from external sources (ie, uploading
+records from another server, or ones you have created yourself). Right now only individual records
+can be imported, and only into a project. See <a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/972">PR 972</a>.</p>
+<p>There is a change to how some data is stored internally inside records. This should be backwards compatible
+and invisible to the user.</p>
+<p>Also of note, python 3.9 is no longer supported.</p>
 <p>Notable PRs:</p>
 <ul class="simple">
-<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/947">PR 947</a>) Reduce batch size in view creation (helps with job runner memory usage)</p></li>
-<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/951">PR 951</a>) Ability to append to a dataset with scaffold (J. Clark <a class="extlink-contrib reference external" href="https://github.com/jaclark5">&#64;jaclark5</a>)</p></li>
-<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/955">PR 955</a>, <a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/959">PR 959</a>) Rework multiprocessing and switch to “spawn” over “fork”</p></li>
-<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/958">PR 958</a>) Force compute tag to be lowercase when modifying records</p></li>
-<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/960">PR 960</a>) Cleanup and preparation for external record ingestion (includes the DB migration mentioned above)</p></li>
-<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/961">PR 961</a>) Implement getting direct download url for external files (including attachments and views)</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/965">PR 965</a>) Switch to using threads in snowflake</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/967">PR 967</a>) Change how child records are stored (not in PrivateAttr)</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/972">PR 972</a>) Ability to ingest/import records from other sources</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/973">PR 973</a>) Remove python 3.9 support</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/974">PR 974</a>) Handle more file types when uploading molecule files</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/975">PR 975</a>) Check if native files has been set before fetching</p></li>
 </ul>
 </section>
 <section id="id2">
@@ -754,7 +757,7 @@ due to efficiency gains, but is not required.</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">0.62 / 2025-07-11</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">0.63 / 2025-09-26</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">0.61 / 2025-05-15</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">0.60 / 2025-04-05</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">0.59 / 2025-02-17</a></li>
