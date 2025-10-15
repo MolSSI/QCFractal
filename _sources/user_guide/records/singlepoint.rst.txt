@@ -193,7 +193,7 @@ This method takes the following information:
 - ``molecules`` - A single molecule or list of molecules to compute
 - ``program``, ``driver``, ``method``, ``basis``, ``keywords``, ``protocols`` - The computational details of the calculation (see :ref:`above <singlepoint_specification>`)
 
-See :doc:`../record_submission` for more information about other fields.
+See :doc:`../record_submission` for more information about other arguments.
 
 
 .. _singlepoint_dataset:
@@ -202,7 +202,8 @@ Singlepoint Datasets
 --------------------
 
 Singlepoint :ref:`datasets <glossary_dataset>` are collections of singlepoint records.
-:class:`Entries <qcportal.singlepoint.dataset_models.SinglepointDatasetEntry>` contain a single molecule.
+:class:`Entries <qcportal.singlepoint.dataset_models.SinglepointDatasetEntry>` contain a single molecule and some
+optional metadata.
 
 The :class:`dataset specifications <qcportal.singlepoint.dataset_models.SinglepointDatasetSpecification>`
 contain a singlepoint specification (see :ref:`above <singlepoint_specification>`)

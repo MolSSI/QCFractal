@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=9830f895"></script>
+    <script src="../../_static/documentation_options.js?v=44d3b0ad"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Optimization calculations" href="optimization.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.62.post48+g381d0de2d" />
+  <meta name="docsearch:version" content="0.63.post6+g5015d795c" />
   </head>
   
   
@@ -508,18 +508,406 @@
                   
   <section id="gridoptimization-calculations">
 <h1>Gridoptimization calculations<a class="headerlink" href="#gridoptimization-calculations" title="Link to this heading">#</a></h1>
-<p>Stuff</p>
-<section id="gridoptimization-record">
-<span id="id1"></span><h2>Gridoptimization Record<a class="headerlink" href="#gridoptimization-record" title="Link to this heading">#</a></h2>
-<p>Stuff</p>
+<p>Grid optimizations perform a multi-dimensional scan over internal coordinates (distance, angle, dihedral).
+At each grid point, a constrained geometry optimization is performed to minimize the energy while holding
+selected coordinates fixed. This produces a grid of optimized structures and their final energies.</p>
+<section id="gridoptimization-records">
+<span id="gridoptimization-record"></span><h2>Gridoptimization Records<a class="headerlink" href="#gridoptimization-records" title="Link to this heading">#</a></h2>
+<p>Gridoptimization records contain all the fields of a <a class="reference internal" href="base.html"><span class="doc">base record</span></a>, and additionally include:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">initial_molecule</span></code> - The molecule used as the starting geometry for the scan</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">starting_molecule</span></code> - The molecule actually used to start the scan (after optional preoptimization)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">starting_grid</span></code> - The grid indices where the scan started (if relative steps were used)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">optimizations</span></code> - A mapping from grid keys to each constrained <a class="reference internal" href="../qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationRecord" title="qcportal.optimization.record_models.OptimizationRecord"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationRecord</span></code></a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">specification</span></code> - The scan/optimization setup (see below)</p></li>
+</ul>
+<p>The optimizations can be accessed via the <a class="reference internal" href="../qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationRecord.optimizations" title="qcportal.gridoptimization.record_models.GridoptimizationRecord.optimizations"><code class="xref py py-attr docutils literal notranslate"><span class="pre">optimizations</span></code></a>
+property, which returns a dictionary mapping grid keys to optimization records. Grid keys are tuples of integers
+(one per scan dimension) that index the steps defined in your scan. A special key <code class="docutils literal notranslate"><span class="pre">&quot;preoptimization&quot;</span></code> is used
+for the optional initial unconstrained optimization.</p>
+<p>The convenience property <a class="reference internal" href="../qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationRecord.final_energies" title="qcportal.gridoptimization.record_models.GridoptimizationRecord.final_energies"><code class="xref py py-attr docutils literal notranslate"><span class="pre">final_energies</span></code></a>
+returns a dictionary mapping grid keys (tuples) to the final energy from each optimization.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The mapping keys are represented as strings when serialized;
+use <a class="reference internal" href="../qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.serialize_key" title="qcportal.gridoptimization.record_models.serialize_key"><code class="xref py py-func docutils literal notranslate"><span class="pre">serialize_key()</span></code></a> and
+<a class="reference internal" href="../qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.deserialize_key" title="qcportal.gridoptimization.record_models.deserialize_key"><code class="xref py py-func docutils literal notranslate"><span class="pre">deserialize_key()</span></code></a> for conversions if needed.</p>
+</div>
 </section>
-<section id="gridoptimization-dataset">
-<span id="id2"></span><h2>Gridoptimization Dataset<a class="headerlink" href="#gridoptimization-dataset" title="Link to this heading">#</a></h2>
-<p>Stuff</p>
+<section id="gridoptimization-specification">
+<span id="id1"></span><h2>Gridoptimization Specification<a class="headerlink" href="#gridoptimization-specification" title="Link to this heading">#</a></h2>
+<p>The <a class="reference internal" href="../../overview/glossary.html#glossary-specification"><span class="std std-ref">specification</span></a> for a grid optimization is a
+<a class="reference internal" href="../qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationSpecification" title="qcportal.gridoptimization.record_models.GridoptimizationSpecification"><code class="xref py py-class docutils literal notranslate"><span class="pre">GridoptimizationSpecification</span></code></a>. The key fields are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">program</span></code> - The gridoptimization driver program (<code class="docutils literal notranslate"><span class="pre">&quot;gridoptimization&quot;</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">optimization_specification</span></code> - How each constrained optimization should be run; see
+<a class="reference internal" href="optimization.html#optimization-specification"><span class="std std-ref">Optimization Specification</span></a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">keywords</span></code> - The scan definition and related options (see below)</p></li>
+</ul>
+<p>The keywords are provided via <a class="reference internal" href="../qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationKeywords" title="qcportal.gridoptimization.record_models.GridoptimizationKeywords"><code class="xref py py-class docutils literal notranslate"><span class="pre">GridoptimizationKeywords</span></code></a> and include:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scans</span></code> - A list of <a class="reference internal" href="../qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.ScanDimension" title="qcportal.gridoptimization.record_models.ScanDimension"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScanDimension</span></code></a> objects
+describing each scan dimension:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">type</span></code> - One of <a class="reference internal" href="../qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.ScanTypeEnum" title="qcportal.gridoptimization.record_models.ScanTypeEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScanTypeEnum</span></code></a> (<code class="docutils literal notranslate"><span class="pre">distance</span></code>, <code class="docutils literal notranslate"><span class="pre">angle</span></code>, <code class="docutils literal notranslate"><span class="pre">dihedral</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">indices</span></code> - Atom indices. This is zero-indexed, so the first atom of the molecule has index 0. There are 2 indices
+for distance, 3 for angle, 4 for dihedral.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">steps</span></code> - A strictly monotonic list of values; units are Bohr for distances and degrees for angles/dihedrals</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">step_type</span></code> - <a class="reference internal" href="../qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.StepTypeEnum" title="qcportal.gridoptimization.record_models.StepTypeEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">StepTypeEnum</span></code></a> (<code class="docutils literal notranslate"><span class="pre">absolute</span></code> or <code class="docutils literal notranslate"><span class="pre">relative</span></code>)</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">preoptimization</span></code> - If <code class="docutils literal notranslate"><span class="pre">True</span></code>, perform an unconstrained optimization before scanning. This is especially
+useful with <code class="docutils literal notranslate"><span class="pre">relative</span></code> step types so that relative steps are taken from a relaxed starting geometry.</p></li>
+</ul>
+<p>Note: The constrained optimizations at each grid point use the specification supplied by the
+<a class="reference internal" href="../qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationSpecification" title="qcportal.optimization.record_models.OptimizationSpecification"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationSpecification</span></code></a>, including the level of theory
+and programs. See <a class="reference internal" href="optimization.html#optimization-specification"><span class="std std-ref">Optimization Specification</span></a>.</p>
+<section id="absolute-vs-relative-step-type">
+<h3>Absolute vs. Relative step_type<a class="headerlink" href="#absolute-vs-relative-step-type" title="Link to this heading">#</a></h3>
+<p>Each <a class="reference internal" href="../qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.ScanDimension" title="qcportal.gridoptimization.record_models.ScanDimension"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScanDimension</span></code></a> declares how its <code class="docutils literal notranslate"><span class="pre">steps</span></code> should be
+interpreted via the <code class="docutils literal notranslate"><span class="pre">step_type</span></code> field:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">absolute</span></code> – The values in <code class="docutils literal notranslate"><span class="pre">steps</span></code> are the absolute target values for the corresponding internal coordinate.
+For example, a dihedral scan with <code class="docutils literal notranslate"><span class="pre">steps=[-180,</span> <span class="pre">-165,</span> <span class="pre">...,</span> <span class="pre">180]</span></code> constrains that dihedral to those exact
+angles at each grid point. Likewise, a bond-distance scan with <code class="docutils literal notranslate"><span class="pre">steps=[2.5,</span> <span class="pre">2.6,</span> <span class="pre">2.7]</span></code> (in Bohr) constrains the
+distance to those exact values.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">relative</span></code> – The values in <code class="docutils literal notranslate"><span class="pre">steps</span></code> are offsets relative to the value measured on the starting molecule for the
+scan. At submission time the server constructs the constraints by adding the offset to the measured value on the
+starting geometry. Concretely, for a given grid index <code class="docutils literal notranslate"><span class="pre">i</span></code> the constraint value used is
+<code class="docutils literal notranslate"><span class="pre">steps[i]</span> <span class="pre">+</span> <span class="pre">measure(starting_molecule,</span> <span class="pre">indices)</span></code>.</p></li>
+</ul>
+<section id="starting-molecule-and-starting-grid">
+<h4>Starting molecule and starting grid<a class="headerlink" href="#starting-molecule-and-starting-grid" title="Link to this heading">#</a></h4>
+<ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">preoptimization</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, the starting molecule is the final geometry from an initial unconstrained
+optimization of the input structure. If <code class="docutils literal notranslate"><span class="pre">preoptimization</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code>, the starting molecule is simply the
+initial molecule you submitted.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">starting_grid</span></code> stored on the record is the index tuple of the first constrained optimization that is launched:
+it is chosen as the grid point whose target value is closest to the starting molecule. For <code class="docutils literal notranslate"><span class="pre">absolute</span></code> dimensions
+this means picking the step closest to <code class="docutils literal notranslate"><span class="pre">measure(starting_molecule,</span> <span class="pre">indices)</span></code>; for <code class="docutils literal notranslate"><span class="pre">relative</span></code> dimensions this means
+picking the step closest to <code class="docutils literal notranslate"><span class="pre">0</span></code> (no change).</p></li>
+</ul>
 </section>
+<section id="practical-tips">
+<h4>Practical tips<a class="headerlink" href="#practical-tips" title="Link to this heading">#</a></h4>
+<ul class="simple">
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">relative</span></code> steps when you want to explore around the current structure without having to compute absolute
+values ahead of time (for example, <code class="docutils literal notranslate"><span class="pre">[-0.2,</span> <span class="pre">0.0,</span> <span class="pre">0.2]</span></code> Bohr around the current bond length, or <code class="docutils literal notranslate"><span class="pre">[-10,</span> <span class="pre">0,</span> <span class="pre">10]</span></code> degrees
+around a torsion).</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">absolute</span></code> steps when you want the grid aligned to specific absolute values (for example, a canonical
+<code class="docutils literal notranslate"><span class="pre">[-180,</span> <span class="pre">-165,</span> <span class="pre">...,</span> <span class="pre">180]</span></code> dihedral scan).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">preoptimization=True</span></code> is often helpful with <code class="docutils literal notranslate"><span class="pre">relative</span></code> scans so the offsets are applied from a relaxed geometry.</p></li>
+</ul>
+</section>
+</section>
+<section id="examples-of-building-specifications">
+<h3>Examples of building specifications<a class="headerlink" href="#examples-of-building-specifications" title="Link to this heading">#</a></h3>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Single-dimension dihedral scan with preoptimization</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-0">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.gridoptimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">GridoptimizationSpecification</span><span class="p">,</span> <span class="n">GridoptimizationKeywords</span><span class="p">,</span> <span class="n">ScanDimension</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.optimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationSpecification</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="n">go_spec</span> <span class="o">=</span> <span class="n">GridoptimizationSpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;gridoptimization&quot;</span><span class="p">,</span>
+    <span class="n">optimization_specification</span><span class="o">=</span><span class="n">OptimizationSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">GridoptimizationKeywords</span><span class="p">(</span>
+        <span class="n">scans</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">ScanDimension</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;dihedral&quot;</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">step_type</span><span class="o">=</span><span class="s2">&quot;absolute&quot;</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="mi">180</span><span class="p">,</span> <span class="mi">181</span><span class="p">,</span> <span class="mi">15</span><span class="p">)))</span>
+        <span class="p">],</span>
+        <span class="n">preoptimization</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Two-dimensional scan combining a bond stretch and angle bend</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-1">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.gridoptimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">GridoptimizationSpecification</span><span class="p">,</span> <span class="n">GridoptimizationKeywords</span><span class="p">,</span> <span class="n">ScanDimension</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.optimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationSpecification</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="n">go_spec</span> <span class="o">=</span> <span class="n">GridoptimizationSpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;gridoptimization&quot;</span><span class="p">,</span>
+    <span class="n">optimization_specification</span><span class="o">=</span><span class="n">OptimizationSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;wb97x-d&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-tzvp&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">GridoptimizationKeywords</span><span class="p">(</span>
+        <span class="n">scans</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">ScanDimension</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;distance&quot;</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">step_type</span><span class="o">=</span><span class="s2">&quot;relative&quot;</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">]),</span>
+            <span class="n">ScanDimension</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;angle&quot;</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">step_type</span><span class="o">=</span><span class="s2">&quot;absolute&quot;</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="p">[</span><span class="mf">90.0</span><span class="p">,</span> <span class="mf">110.0</span><span class="p">,</span> <span class="mf">130.0</span><span class="p">]),</span>
+        <span class="p">],</span>
+        <span class="n">preoptimization</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Relative dihedral offsets around the starting torsion (with preoptimization)</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-2" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-2">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.gridoptimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">GridoptimizationSpecification</span><span class="p">,</span> <span class="n">GridoptimizationKeywords</span><span class="p">,</span> <span class="n">ScanDimension</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.optimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationSpecification</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="n">go_spec</span> <span class="o">=</span> <span class="n">GridoptimizationSpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;gridoptimization&quot;</span><span class="p">,</span>
+    <span class="n">optimization_specification</span><span class="o">=</span><span class="n">OptimizationSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">GridoptimizationKeywords</span><span class="p">(</span>
+        <span class="n">scans</span><span class="o">=</span><span class="p">[</span>
+            <span class="c1"># Offsets in degrees relative to the starting torsion value</span>
+            <span class="n">ScanDimension</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;dihedral&quot;</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">step_type</span><span class="o">=</span><span class="s2">&quot;relative&quot;</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mf">30.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">30.0</span><span class="p">])</span>
+        <span class="p">],</span>
+        <span class="n">preoptimization</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Relative bond-length scan without preoptimization</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-3">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.gridoptimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">GridoptimizationSpecification</span><span class="p">,</span> <span class="n">GridoptimizationKeywords</span><span class="p">,</span> <span class="n">ScanDimension</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.optimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationSpecification</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="n">go_spec</span> <span class="o">=</span> <span class="n">GridoptimizationSpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;gridoptimization&quot;</span><span class="p">,</span>
+    <span class="n">optimization_specification</span><span class="o">=</span><span class="n">OptimizationSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;wb97x-d&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-tzvp&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">GridoptimizationKeywords</span><span class="p">(</span>
+        <span class="n">scans</span><span class="o">=</span><span class="p">[</span>
+            <span class="c1"># Offsets in Bohr relative to the starting bond length</span>
+            <span class="n">ScanDimension</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;distance&quot;</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">step_type</span><span class="o">=</span><span class="s2">&quot;relative&quot;</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">])</span>
+        <span class="p">],</span>
+        <span class="n">preoptimization</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details></section>
+</section>
+<section id="submitting-records">
+<span id="gridoptimization-submission"></span><h2>Submitting Records<a class="headerlink" href="#submitting-records" title="Link to this heading">#</a></h2>
+<p>Gridoptimization records can be submitted using a client via the <a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.add_gridoptimizations" title="qcportal.client.PortalClient.add_gridoptimizations"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_gridoptimizations()</span></code></a> method.
+This method takes the following key information:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">initial_molecules</span></code> - A single molecule or list of molecules to scan</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">program</span></code> - The gridoptimization program (use <code class="docutils literal notranslate"><span class="pre">&quot;gridoptimization&quot;</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">optimization_specification</span></code> - The optimization setup for each grid point (see <a class="reference internal" href="#gridoptimization-specification"><span class="std std-ref">Gridoptimization Specification</span></a>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">keywords</span></code> - The grid scan definition and options</p></li>
+</ul>
+<p>See <a class="reference internal" href="../record_submission.html"><span class="doc">Submitting computations</span></a> for more information about other common fields such as compute tag and priority.</p>
+</section>
+<section id="client-examples">
+<h2>Client Examples<a class="headerlink" href="#client-examples" title="Link to this heading">#</a></h2>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Obtain a single gridoptimization record by ID</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-4" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-4">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_gridoptimizations</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Obtain multiple gridoptimization records by ID</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-5" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-5">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_lst</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_gridoptimizations</span><span class="p">([</span><span class="mi">123</span><span class="p">,</span> <span class="mi">456</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Include molecules and child optimizations during initial fetch</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-6" name="sd-tab-set-6" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-6">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_gridoptimizations</span><span class="p">(</span><span class="mi">123</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;**&quot;</span><span class="p">])</span>  <span class="c1"># include all data</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Query gridoptimizations by QC method/basis and include optimizations</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-7" name="sd-tab-set-7" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-7">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_iter</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_gridoptimizations</span><span class="p">(</span><span class="n">qc_method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> <span class="n">qc_basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;optimizations&#39;</span><span class="p">])</span>
+<span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">r_iter</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">optimizations</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Submit gridoptimizations</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-8" name="sd-tab-set-8" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-8">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.gridoptimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">GridoptimizationSpecification</span><span class="p">,</span> <span class="n">GridoptimizationKeywords</span><span class="p">,</span> <span class="n">ScanDimension</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.optimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationSpecification</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="n">spec</span> <span class="o">=</span> <span class="n">GridoptimizationSpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s1">&#39;gridoptimization&#39;</span><span class="p">,</span>
+    <span class="n">optimization_specification</span><span class="o">=</span><span class="n">OptimizationSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s1">&#39;geometric&#39;</span><span class="p">,</span>
+        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;deferred&#39;</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">GridoptimizationKeywords</span><span class="p">(</span>
+        <span class="n">scans</span><span class="o">=</span><span class="p">[</span><span class="n">ScanDimension</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s1">&#39;dihedral&#39;</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="n">step_type</span><span class="o">=</span><span class="s1">&#39;absolute&#39;</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="mi">180</span><span class="p">,</span><span class="mi">181</span><span class="p">,</span><span class="mi">15</span><span class="p">)))],</span>
+        <span class="n">preoptimization</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_gridoptimizations</span><span class="p">([</span><span class="n">mol1</span><span class="p">,</span> <span class="n">mol2</span><span class="p">],</span> <span class="n">program</span><span class="o">=</span><span class="s1">&#39;gridoptimization&#39;</span><span class="p">,</span> <span class="n">optimization_specification</span><span class="o">=</span><span class="n">spec</span><span class="o">.</span><span class="n">optimization_specification</span><span class="p">,</span> <span class="n">keywords</span><span class="o">=</span><span class="n">spec</span><span class="o">.</span><span class="n">keywords</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details></section>
+<section id="gridoptimization-datasets">
+<span id="gridoptimization-dataset"></span><h2>Gridoptimization Datasets<a class="headerlink" href="#gridoptimization-datasets" title="Link to this heading">#</a></h2>
+<p>Gridoptimization <a class="reference internal" href="../../overview/glossary.html#glossary-dataset"><span class="std std-ref">datasets</span></a> are collections of gridoptimization records.
+<a class="reference internal" href="../qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDatasetEntry" title="qcportal.gridoptimization.dataset_models.GridoptimizationDatasetEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">Entries</span></code></a> contain a single initial molecule
+and optional metadata. The <a class="reference internal" href="../qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDatasetSpecification" title="qcportal.gridoptimization.dataset_models.GridoptimizationDatasetSpecification"><code class="xref py py-class docutils literal notranslate"><span class="pre">dataset</span> <span class="pre">specifications</span></code></a>
+wrap a <a class="reference internal" href="../qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationSpecification" title="qcportal.gridoptimization.record_models.GridoptimizationSpecification"><code class="xref py py-class docutils literal notranslate"><span class="pre">GridoptimizationSpecification</span></code></a>.</p>
+<p>See <a class="reference internal" href="../datasets/index.html"><span class="doc">Datasets</span></a> for general dataset operations and advanced usage.</p>
+</section>
+<section id="dataset-examples">
+<h2>Dataset Examples<a class="headerlink" href="#dataset-examples" title="Link to this heading">#</a></h2>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Create a gridoptimization dataset</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-9" name="sd-tab-set-9" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-9">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;gridoptimization&quot;</span><span class="p">,</span> <span class="s2">&quot;Grid Scan Dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;A demonstration grid scan dataset&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Add entries to a gridoptimization dataset</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-10" name="sd-tab-set-10" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-10">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.gridoptimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">GridoptimizationDatasetEntry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.molecules</span><span class="w"> </span><span class="kn">import</span> <span class="n">Molecule</span>
+
+<span class="n">entries</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">geom</span> <span class="ow">in</span> <span class="p">[(</span><span class="s2">&quot;butane&quot;</span><span class="p">,</span> <span class="n">butane_geom</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;ethane&quot;</span><span class="p">,</span> <span class="n">ethane_geom</span><span class="p">)]:</span>
+    <span class="n">mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="o">.</span><span class="n">from_data</span><span class="p">(</span><span class="n">geom</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">geom</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">Molecule</span><span class="p">(</span><span class="o">**</span><span class="n">geom</span><span class="p">)</span>
+    <span class="n">entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">GridoptimizationDatasetEntry</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">initial_molecule</span><span class="o">=</span><span class="n">mol</span><span class="p">))</span>
+
+<span class="n">ds</span><span class="o">.</span><span class="n">add_entries</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Add a specification to a gridoptimization dataset</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-11" name="sd-tab-set-11" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-11">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.gridoptimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">GridoptimizationSpecification</span><span class="p">,</span> <span class="n">GridoptimizationKeywords</span><span class="p">,</span> <span class="n">ScanDimension</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.optimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationSpecification</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="n">go_spec</span> <span class="o">=</span> <span class="n">GridoptimizationSpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;gridoptimization&quot;</span><span class="p">,</span>
+    <span class="n">optimization_specification</span><span class="o">=</span><span class="n">OptimizationSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">GridoptimizationKeywords</span><span class="p">(</span>
+        <span class="n">scans</span><span class="o">=</span><span class="p">[</span><span class="n">ScanDimension</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;dihedral&quot;</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">step_type</span><span class="o">=</span><span class="s2">&quot;absolute&quot;</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="mi">180</span><span class="p">,</span> <span class="mi">181</span><span class="p">,</span> <span class="mi">60</span><span class="p">)))],</span>
+        <span class="n">preoptimization</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="s2">&quot;go-geometric/psi4-b3lyp-def2-svp&quot;</span><span class="p">,</span> <span class="n">go_spec</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details></section>
 <section id="gridoptimization-qcportal-api">
-<span id="id3"></span><h2>Gridoptimization QCPortal API<a class="headerlink" href="#gridoptimization-qcportal-api" title="Link to this heading">#</a></h2>
-<p>TODO</p>
+<span id="id2"></span><h2>Gridoptimization QCPortal API<a class="headerlink" href="#gridoptimization-qcportal-api" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../qcportal_reference/records/gridoptimization.html#module-qcportal.gridoptimization.record_models" title="qcportal.gridoptimization.record_models"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Record</span> <span class="pre">models</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/records/gridoptimization.html#module-qcportal.gridoptimization.dataset_models" title="qcportal.gridoptimization.dataset_models"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Dataset</span> <span class="pre">models</span></code></a></p></li>
+<li><p>PortalClient methods</p>
+<ul>
+<li><p><a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.add_gridoptimizations" title="qcportal.client.PortalClient.add_gridoptimizations"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_gridoptimizations()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.get_gridoptimizations" title="qcportal.client.PortalClient.get_gridoptimizations"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_gridoptimizations()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.query_gridoptimizations" title="qcportal.client.PortalClient.query_gridoptimizations"><code class="xref py py-meth docutils literal notranslate"><span class="pre">query_gridoptimizations()</span></code></a></p></li>
+</ul>
+</li>
+</ul>
 </section>
 </section>
 
@@ -570,8 +958,20 @@
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gridoptimization-record">Gridoptimization Record</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gridoptimization-dataset">Gridoptimization Dataset</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gridoptimization-records">Gridoptimization Records</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gridoptimization-specification">Gridoptimization Specification</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#absolute-vs-relative-step-type">Absolute vs. Relative step_type</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#starting-molecule-and-starting-grid">Starting molecule and starting grid</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#practical-tips">Practical tips</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#examples-of-building-specifications">Examples of building specifications</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submitting-records">Submitting Records</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#client-examples">Client Examples</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gridoptimization-datasets">Gridoptimization Datasets</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dataset-examples">Dataset Examples</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gridoptimization-qcportal-api">Gridoptimization QCPortal API</a></li>
 </ul>
   </nav></div>

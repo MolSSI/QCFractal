@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=9830f895"></script>
+    <script src="../../_static/documentation_options.js?v=44d3b0ad"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Base Record" href="base.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.62.post48+g381d0de2d" />
+  <meta name="docsearch:version" content="0.63.post6+g5015d795c" />
   </head>
   
   
@@ -706,12 +706,13 @@ This method takes the following information:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">molecules</span></code> - A single molecule or list of molecules to compute</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">program</span></code>, <code class="docutils literal notranslate"><span class="pre">driver</span></code>, <code class="docutils literal notranslate"><span class="pre">method</span></code>, <code class="docutils literal notranslate"><span class="pre">basis</span></code>, <code class="docutils literal notranslate"><span class="pre">keywords</span></code>, <code class="docutils literal notranslate"><span class="pre">protocols</span></code> - The computational details of the calculation (see <a class="reference internal" href="#singlepoint-specification"><span class="std std-ref">above</span></a>)</p></li>
 </ul>
-<p>See <a class="reference internal" href="../record_submission.html"><span class="doc">Submitting computations</span></a> for more information about other fields.</p>
+<p>See <a class="reference internal" href="../record_submission.html"><span class="doc">Submitting computations</span></a> for more information about other arguments.</p>
 </section>
 <section id="singlepoint-datasets">
 <span id="singlepoint-dataset"></span><h2>Singlepoint Datasets<a class="headerlink" href="#singlepoint-datasets" title="Link to this heading">#</a></h2>
 <p>Singlepoint <a class="reference internal" href="../../overview/glossary.html#glossary-dataset"><span class="std std-ref">datasets</span></a> are collections of singlepoint records.
-<a class="reference internal" href="../qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetEntry" title="qcportal.singlepoint.dataset_models.SinglepointDatasetEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">Entries</span></code></a> contain a single molecule.</p>
+<a class="reference internal" href="../qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetEntry" title="qcportal.singlepoint.dataset_models.SinglepointDatasetEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">Entries</span></code></a> contain a single molecule and some
+optional metadata.</p>
 <p>The <a class="reference internal" href="../qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetSpecification" title="qcportal.singlepoint.dataset_models.SinglepointDatasetSpecification"><code class="xref py py-class docutils literal notranslate"><span class="pre">dataset</span> <span class="pre">specifications</span></code></a>
 contain a singlepoint specification (see <a class="reference internal" href="#singlepoint-specification"><span class="std std-ref">above</span></a>)</p>
 <section id="adding-entries-from-other-types-of-datasets">

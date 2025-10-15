@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=9830f895"></script>
+    <script src="../../_static/documentation_options.js?v=44d3b0ad"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.62.post48+g381d0de2d" />
+  <meta name="docsearch:version" content="0.63.post6+g5015d795c" />
   </head>
   
   
@@ -1822,17 +1822,21 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">rename_entries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Renames entries in the dataset based on the provided mapping.</span>
+
 <span class="sd">        This method updates the names of entries both on the server and in the local cache.</span>
 <span class="sd">        It ensures that the dataset is not a view and is online before proceeding with the renaming.</span>
-<span class="sd">        Args:</span>
-<span class="sd">            name_map (Dict[str, str]): A dictionary mapping old entry names to new entry names.</span>
-<span class="sd">                                       Entries where the old name is the same as the new name</span>
-<span class="sd">                                       are ignored.</span>
-<span class="sd">        Raises:</span>
-<span class="sd">            AssertionError: If the dataset is a view or is not online.</span>
-<span class="sd">        Side Effects:</span>
-<span class="sd">            - Sends a patch request to the server to update entry names.</span>
-<span class="sd">            - Updates the local cache and entry names list with the new names.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name_map:</span>
+<span class="sd">            A dictionary mapping old entry names to new entry names.</span>
+<span class="sd">            Entries where the old name is the same as the new name</span>
+<span class="sd">            are ignored.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        AssertionError:</span>
+<span class="sd">            If the dataset is a view or is not online.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
@@ -1861,21 +1865,22 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Modifies the entries in the dataset by updating their attributes or comments.</span>
 
-<span class="sd">        Parameters:</span>
-<span class="sd">            attribute_map (Optional[Dict[str, Dict[str, Any]]]):</span>
-<span class="sd">                A dictionary mapping entry names to their updated attributes.</span>
-<span class="sd">                Each entry name maps to a dictionary of attribute key-value pairs to be updated.</span>
-<span class="sd">            comment_map (Optional[Dict[str, str]]):</span>
-<span class="sd">                A dictionary mapping entry names to their updated comments.</span>
-<span class="sd">            overwrite_attributes (bool):</span>
-<span class="sd">                If True, existing attributes for the specified entries will be completely</span>
-<span class="sd">                replaced by the provided attributes in ``attribute_map``. If False, only the</span>
-<span class="sd">                specified attributes will be updated, leaving others unchanged.</span>
-<span class="sd">        Raises:</span>
-<span class="sd">            AssertionError: If the dataset is a view or if the client is offline.</span>
-<span class="sd">        Side Effects:</span>
-<span class="sd">            - Sends a request to the server to modify the specified entries.</span>
-<span class="sd">            - Synchronizes the local cache with the updated server data for the modified entries.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        attribute_map:</span>
+<span class="sd">            A dictionary mapping entry names to their updated attributes.</span>
+<span class="sd">            Each entry name maps to a dictionary of attribute key-value pairs to be updated.</span>
+<span class="sd">        comment_map:</span>
+<span class="sd">            A dictionary mapping entry names to their updated comments.</span>
+<span class="sd">        overwrite_attributes:</span>
+<span class="sd">            If True, existing attributes for the specified entries will be completely</span>
+<span class="sd">            replaced by the provided attributes in ``attribute_map``. If False, only the</span>
+<span class="sd">            specified attributes will be updated, leaving others unchanged.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        AssertionError:</span>
+<span class="sd">            If the dataset is a view or if the client is offline.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
@@ -1902,13 +1907,23 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">delete_entries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">delete_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DeleteMetadata</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Deletes entries from the dataset.</span>
-<span class="sd">        Parameters:</span>
-<span class="sd">            names (Union[str, Iterable[str]]): The name or list of names of the entries to delete.</span>
-<span class="sd">            delete_records (bool, optional): If True, associated records will also be deleted. Defaults to False.</span>
-<span class="sd">        Returns:</span>
-<span class="sd">            DeleteMetadata: Metadata about the deletion operation.</span>
-<span class="sd">        Raises:</span>
-<span class="sd">            AssertionError: If the dataset is a view or not online.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        names:</span>
+<span class="sd">            The name or list of names of the entries to delete.</span>
+<span class="sd">        delete_records:</span>
+<span class="sd">            If True, associated records will also be deleted. Defaults to False.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :</span>
+<span class="sd">            Metadata about the deletion operation.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        AssertionError:</span>
+<span class="sd">            If the dataset is a view or not online.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>

@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=9830f895"></script>
+    <script src="../../_static/documentation_options.js?v=44d3b0ad"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Datasets" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.62.post48+g381d0de2d" />
+  <meta name="docsearch:version" content="0.63.post6+g5015d795c" />
   </head>
   
   
@@ -549,14 +549,14 @@ the entire table itself. As an example, you can add a new specification, and the
 submit computations for that specification that apply to all the existing entries.</p>
 <p>Dataset entries, specifications, and records are dependent on the type of dataset; different dataset types
 have different types for these items. That is, entries in a <a class="reference internal" href="../records/singlepoint.html#singlepoint-dataset"><span class="std std-ref">Singlepoint Datasets</span></a> are different than entries
-in an <a class="reference internal" href="../records/optimization.html#optimization-dataset"><span class="std std-ref">Optimization Dataset</span></a>, and the same is true for specifications.</p>
+in an <a class="reference internal" href="../records/optimization.html#optimization-dataset"><span class="std std-ref">Optimization Datasets</span></a>, and the same is true for specifications.</p>
 <p>One important thing to keep in mind is that records exist outside of a dataset, and a dataset
 references these records. Therefore, <cite>records can be part of multiple datasets</cite>, or not be part of any dataset.
 This has implications, for example, when <a class="reference internal" href="creating.html#dataset-submission"><span class="std std-ref">submitting calculations</span></a>.</p>
 <section id="dataset-limitations">
 <h2>Dataset Limitations<a class="headerlink" href="#dataset-limitations" title="Link to this heading">#</a></h2>
 <p>A dataset can only contain one type of calculation. For example, you can have a <a class="reference internal" href="../records/singlepoint.html#singlepoint-dataset"><span class="std std-ref">Singlepoint Datasets</span></a>
-or a <a class="reference internal" href="../records/optimization.html#optimization-dataset"><span class="std std-ref">Optimization Dataset</span></a>, but not a dataset that contains both single point and optimization
+or a <a class="reference internal" href="../records/optimization.html#optimization-dataset"><span class="std std-ref">Optimization Datasets</span></a>, but not a dataset that contains both single point and optimization
 calculations.</p>
 <p>A specification should work for all entries in the dataset. There is some limited ability to override
 keywords on a per-entry basis, but there is no way to assign a different basis for a particular entry.</p>
