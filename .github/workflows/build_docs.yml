@@ -35,7 +35,6 @@ jobs:
         run: |
           export QCArchiveUsername=${{ secrets.QCARCHIVEUSERNAME }}
           export QCArchivePWD=${{ secrets.QCARCHIVEPWD }}
-          cd docs
           make html
 
       - name: Deploy Documentation
