@@ -162,11 +162,13 @@ def parse_args() -> argparse.Namespace:
     start = subparsers.add_parser("start", help="Starts a QCFractal server instance.", parents=[base_parser])
 
     # Allow some config settings to be altered via the command line
-    start.add_argument("--port", **WebAPIConfig.help_info("port"))
-    start.add_argument("--host", **WebAPIConfig.help_info("host"))
-    start.add_argument("--logfile", **FractalConfig.help_info("logfile"))
-    start.add_argument("--loglevel", **FractalConfig.help_info("loglevel"))
-    start.add_argument("--enable-security", **FractalConfig.help_info("enable_security"))
+    start.add_argument("--port", type=int, help=WebAPIConfig.__pydantic_fields__["port"].description)
+    start.add_argument("--host", type=str, help=WebAPIConfig.__pydantic_fields__["host"].description)
+    start.add_argument("--logfile", type=str, help=FractalConfig.__pydantic_fields__["logfile"].description)
+    start.add_argument("--loglevel", type=str, help=FractalConfig.__pydantic_fields__["loglevel"].description)
+    start.add_argument(
+        "--enable-security", type=bool, help=FractalConfig.__pydantic_fields__["enable_security"].description
+    )
 
     start.add_argument(
         "--disable-job-runner",
@@ -182,8 +184,8 @@ def parse_args() -> argparse.Namespace:
     )
 
     # Allow some config settings to be altered via the command line
-    start_per.add_argument("--logfile", **FractalConfig.help_info("logfile"))
-    start_per.add_argument("--loglevel", **FractalConfig.help_info("loglevel"))
+    start_per.add_argument("--logfile", type=str, help=FractalConfig.__pydantic_fields__["logfile"].description)
+    start_per.add_argument("--loglevel", type=str, help=FractalConfig.__pydantic_fields__["loglevel"].description)
 
     #####################################
     # start-api subcommand
@@ -191,8 +193,8 @@ def parse_args() -> argparse.Namespace:
     start_api = subparsers.add_parser("start-api", help="Starts a QCFractal server instance.", parents=[base_parser])
 
     # Allow some config settings to be altered via the command line
-    start_api.add_argument("--logfile", **FractalConfig.help_info("logfile"))
-    start_api.add_argument("--loglevel", **FractalConfig.help_info("loglevel"))
+    start_api.add_argument("--logfile", type=str, help=FractalConfig.__pydantic_fields__["logfile"].description)
+    start_api.add_argument("--loglevel", type=str, help=FractalConfig.__pydantic_fields__["loglevel"].description)
 
     #####################################
     # upgrade-db subcommand
@@ -567,7 +569,7 @@ def server_upgrade_db(config):
 
 def server_upgrade_config(config_path):
     import secrets
-    from qcfractal.old_config import OldFractalConfig
+    from qcfractal.old_config import OldFractalQCFConfig
     from qcfractal.config import convert_old_configuration
 
     logger = logging.getLogger(__name__)
@@ -581,7 +583,7 @@ def server_upgrade_config(config_path):
         logger.info(f"Configuration appears to be up-to-date")
         return
 
-    old_qcf_config = OldFractalConfig(**file_data)
+    old_qcf_config = OldFractalQCFConfig(**file_data)
     new_qcf_config = convert_old_configuration(old_qcf_config)
 
     # Move the old file out of the way

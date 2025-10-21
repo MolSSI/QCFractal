@@ -73,10 +73,10 @@ def test_config_durations_dhms(tmp_path):
 
 
 def test_config_tmpdir_create(tmp_path):
-    base_folder = str(tmp_path)
     base_config = copy.deepcopy(_base_config)
+    base_config["base_folder"] = str(tmp_path)
     base_config["temporary_dir"] = str(tmp_path / "qcatmpdir")
-    cfg = FractalConfig(base_folder=base_folder, **base_config)
+    cfg = FractalConfig(**base_config)
 
     assert cfg.temporary_dir == str(tmp_path / "qcatmpdir")
     assert os.path.exists(cfg.temporary_dir)

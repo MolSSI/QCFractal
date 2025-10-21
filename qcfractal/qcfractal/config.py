@@ -12,13 +12,8 @@ from typing import Optional, Dict, Union, List, Any
 
 import yaml
 from psycopg2.extensions import make_dsn, parse_dsn
-
-try:
-    from pydantic.v1 import BaseSettings, Field, validator, root_validator, ValidationError
-    from pydantic.v1.env_settings import SettingsSourceCallable
-except ImportError:
-    from pydantic import BaseSettings, Field, validator, root_validator, ValidationError
-    from pydantic.env_settings import SettingsSourceCallable
+from pydantic import Field, field_validator, model_validator, ValidationError
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine.url import URL, make_url
 
 from qcfractal.port_util import find_open_port
@@ -64,50 +59,11 @@ def make_uri_string(
         return f"postgresql://{username}{password}{sep}{host}:{port}/{dbname}{query_str}"
 
 
-class ConfigCommon:
-    case_sensitive = False
-    extra = "forbid"
-
-    # Forces environment variables to take precedent over values
-    # passed to init (which usually come from a file)
-    @classmethod
-    def customise_sources(
-        cls,
-        init_settings: SettingsSourceCallable,
-        env_settings: SettingsSourceCallable,
-        file_secret_settings: SettingsSourceCallable,
-    ) -> tuple[SettingsSourceCallable, ...]:
-        return env_settings, init_settings, file_secret_settings
+class QCFConfigBase(BaseSettings):
+    model_config = SettingsConfigDict(extra="forbid", case_sensitive=False)
 
 
-class ConfigBase(BaseSettings):
-    _type_map = {"string": str, "integer": int, "float": float, "boolean": bool}
-
-    @classmethod
-    def field_names(cls):
-        return list(cls.schema()["properties"].keys())
-
-    @classmethod
-    def help_info(cls, field):
-        """
-        Create 'help' information for use by argparse from a field in a settings class
-        """
-        info = cls.schema()["properties"][field]
-
-        ret = {"type": cls._type_map[info["type"]]}
-
-        # Don't add defaults here. Argparse would then end up using thses
-        # defaults on the command line, overriding values specified in the config
-        # if "default" in info:
-        #     ret["default"] = info["default"]
-
-        if "description" in info:
-            ret["help"] = info["description"]
-
-        return ret
-
-
-class DatabaseConfig(ConfigBase):
+class DatabaseConfig(QCFConfigBase):
     """
     Settings for the database used by QCFractal
     """
@@ -141,9 +97,9 @@ class DatabaseConfig(ConfigBase):
 
     data_directory: Optional[str] = Field(
         None,
-        description="Location to place the database if own == True. Default is [base_folder]/database if we own the databse",
+        description="Location to place the database if own == True. Default is [base_folder]/database if we own the database",
     )
-    logfile: str = Field(
+    logfile: Optional[str] = Field(
         None,
         description="Path to a file to use as the database logfile (if own == True). Default is [base_folder]/qcfractal_database.log",
     )
@@ -164,19 +120,14 @@ class DatabaseConfig(ConfigBase):
         description="[ADVANCED] An existing database (not the one you want to use/create). This is used for database management",
     )
 
-    class Config(ConfigCommon):
-        env_prefix = "QCF_DB_"
+    model_config = QCFConfigBase.model_config | SettingsConfigDict(env_prefix="QCF_DB_")
 
-    @validator("data_directory")
-    def _check_data_directory(cls, v, values):
-        if values["own"] is True:
-            return _make_abs_path(v, values["base_folder"], "postgres")
-        else:
-            return None
-
-    @validator("logfile")
-    def _check_logfile(cls, v, values):
-        return _make_abs_path(v, values["base_folder"], "qcfractal_database.log")
+    @model_validator(mode="after")
+    def _check_paths(self):
+        if self.own:
+            self.data_directory = _make_abs_path(self.data_directory, self.base_folder, "postgres")
+            self.logfile = _make_abs_path(self.logfile, self.base_folder, "qcfractal_database.log")
+        return self
 
     @property
     def database_uri(self) -> str:
@@ -238,7 +189,7 @@ class DatabaseConfig(ConfigBase):
         )  # everything left over
 
 
-class AutoResetConfig(ConfigBase):
+class AutoResetConfig(QCFConfigBase):
     """
     Limits on the number of records returned per query. This can be specified per object (molecule, etc)
     """
@@ -248,11 +199,10 @@ class AutoResetConfig(ConfigBase):
     compute_lost: int = Field(5, description="Max restarts for computations where the compute resource disappeared")
     random_error: int = Field(5, description="Max restarts for random errors")
 
-    class Config(ConfigCommon):
-        env_prefix = "QCF_AUTORESET_"
+    model_config = QCFConfigBase.model_config | SettingsConfigDict(env_prefix="QCF_AUTORESET_")
 
 
-class APILimitConfig(ConfigBase):
+class APILimitConfig(QCFConfigBase):
     """
     Limits on the number of records returned per query. This can be specified per object (molecule, etc)
     """
@@ -274,11 +224,10 @@ class APILimitConfig(ConfigBase):
     get_error_logs: int = Field(100, description="Number of error log records to return")
     get_internal_jobs: int = Field(1000, description="Number of internal jobs to return")
 
-    class Config(ConfigCommon):
-        env_prefix = "QCF_APILIMIT_"
+    model_config = QCFConfigBase.model_config | SettingsConfigDict(env_prefix="QCF_APILIMIT_")
 
 
-class WebAPIConfig(ConfigBase):
+class WebAPIConfig(QCFConfigBase):
     """
     Settings for the Web API (api) interface
     """
@@ -329,24 +278,24 @@ class WebAPIConfig(ConfigBase):
         None, description="Any additional options to pass directly to the waitress serve function"
     )
 
-    @validator(
+    @field_validator(
         "jwt_access_token_expires",
         "jwt_refresh_token_expires",
         "user_session_max_age",
-        pre=True,
+        mode="before",
     )
+    @classmethod
     def _convert_durations(cls, v):
         return duration_to_seconds(v)
 
-    class Config(ConfigCommon):
-        env_prefix = "QCF_API_"
+    model_config = QCFConfigBase.model_config | SettingsConfigDict(env_prefix="QCF_API_")
 
 
-class S3BucketMap(ConfigBase):
+class S3BucketMap(QCFConfigBase):
     dataset_attachment: str = Field("dataset_attachment", description="Bucket to hold dataset views")
 
 
-class S3Config(ConfigBase):
+class S3Config(QCFConfigBase):
     """
     Settings for using external files with S3
     """
@@ -358,22 +307,22 @@ class S3Config(ConfigBase):
     access_key_id: Optional[str] = Field(None, description="AWS/S3 access key")
     secret_access_key: Optional[str] = Field(None, description="AWS/S3 secret key")
 
-    bucket_map: S3BucketMap = Field(S3BucketMap(), description="Configuration for where to store various files")
+    bucket_map: S3BucketMap = Field(
+        default_factory=S3BucketMap, description="Configuration for where to store various files"
+    )
 
-    class Config(ConfigCommon):
-        env_prefix = "QCF_S3_"
+    model_config = QCFConfigBase.model_config | SettingsConfigDict(env_prefix="QCF_S3_")
 
-    @root_validator()
-    def _check_enabled(cls, values):
-        if values.get("enabled", False) is True:
+    @model_validator(mode="after")
+    def _check_enabled(self):
+        if self.enabled:
             for key in ["endpoint_url", "access_key_id", "secret_access_key"]:
-                if values.get(key, None) is None:
+                if getattr(self, key) is None:
                     raise ValueError(f"S3 enabled but {key} not set")
+        return self
 
-        return values
 
-
-class CORSconfig(ConfigBase):
+class CORSconfig(QCFConfigBase):
     """
     Settings for using CORS
     """
@@ -385,7 +334,7 @@ class CORSconfig(ConfigBase):
     methods: List[str] = Field([])
 
 
-class FractalConfig(ConfigBase):
+class FractalConfig(QCFConfigBase):
     """
     Fractal Server settings
     """
@@ -440,7 +389,7 @@ class FractalConfig(ConfigBase):
         description="The frequency (in seconds) to check the heartbeat of compute managers",
         gt=0,
     )
-    heartbeat_frequency_jitter: int = Field(
+    heartbeat_frequency_jitter: float = Field(
         0.1, description="Jitter fraction to be applied to the heartbeat frequency", ge=0
     )
     heartbeat_max_missed: int = Field(
@@ -488,130 +437,61 @@ class FractalConfig(ConfigBase):
     # Other settings blocks
     database: DatabaseConfig = Field(..., description="Configuration of the settings for the database")
     api: WebAPIConfig = Field(..., description="Configuration of the REST interface")
-    s3: S3Config = Field(S3Config(), description="Configuration of the S3 file storage (optional)")
-    api_limits: APILimitConfig = Field(..., description="Configuration of the limits to the api")
-    cors: CORSconfig = Field(..., description="Configuration Cross Origin Resource sharing (advanced)")
-    auto_reset: AutoResetConfig = Field(..., description="Configuration for automatic resetting of tasks")
+    s3: S3Config = Field(default_factory=S3Config, description="Configuration of the S3 file storage (optional)")
+    api_limits: APILimitConfig = Field(
+        default_factory=APILimitConfig, description="Configuration of the limits to the api"
+    )
+    cors: CORSconfig = Field(
+        default_factory=CORSconfig, description="Configuration Cross Origin Resource sharing (advanced)"
+    )
+    auto_reset: AutoResetConfig = Field(
+        default_factory=AutoResetConfig, description="Configuration for automatic resetting of tasks"
+    )
 
-    @root_validator(pre=True)
-    def _root_validator(cls, values):
-        logger = logging.getLogger("config_validation")
-
-        values.setdefault("database", dict())
-        if "base_folder" not in values["database"]:
-            values["database"]["base_folder"] = values.get("base_folder")
-
-        values.setdefault("api_limits", dict())
-        values.setdefault("api", dict())
-        values.setdefault("auto_reset", dict())
-        values.setdefault("cors", dict())
-
-        if "statistics_frequency" in values:
-            values.pop("statistics_frequency")
-            logger.warning("The 'statistics_frequency' setting is no longer used and is now ignored")
-
-        if "num_workers" in values["api"]:
-            values["api"].pop("num_workers")
-            logger.warning("The 'num_workers' setting is no longer used and is now ignored")
-
-        if "get_server_stats" in values["api_limits"]:
-            values["api_limits"].pop("get_server_stats")
-            logger.warning("The 'get_server_stats' setting in 'api_limits' is no longer used and is now ignored")
-
-        return values
-
-    @validator("geoip2_dir")
-    def _check_geoip2_dir(cls, v, values):
-        return _make_abs_path(v, values["base_folder"], "geoip2")
-
-    @validator("homepage_directory")
-    def _check_hompepage_directory_path(cls, v, values):
-        return _make_abs_path(v, values["base_folder"], None)
-
-    @validator("upload_directory")
-    def _check_upload_directory_path(cls, v, values):
-        return _make_abs_path(v, values["base_folder"], None)
-
-    @validator("logfile")
-    def _check_logfile_path(cls, v, values):
-        return _make_abs_path(v, values["base_folder"], None)
-
-    @validator("loglevel")
+    @field_validator("loglevel", mode="after")
+    @classmethod
     def _check_loglevel(cls, v):
         v = v.upper()
         if v not in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
             raise ValidationError(f"{v} is not a valid loglevel. Must be DEBUG, INFO, WARNING, ERROR, or CRITICAL")
         return v
 
-    @validator("service_frequency", "heartbeat_frequency", pre=True)
+    @field_validator("service_frequency", "heartbeat_frequency", mode="before")
+    @classmethod
     def _convert_durations(cls, v):
         return duration_to_seconds(v)
 
-    @validator("access_log_keep", "internal_job_keep", pre=True)
+    @field_validator("access_log_keep", "internal_job_keep", mode="before")
     def _convert_durations_days(cls, v):
         if isinstance(v, int) or (isinstance(v, str) and v.isdigit()):
             return int(v) * 86400
         return duration_to_seconds(v)
 
-    @validator("temporary_dir", pre=True)
-    def _create_temporary_directory(cls, v, values):
-        v = _make_abs_path(v, values["base_folder"], tempfile.gettempdir())
+    @model_validator(mode="before")
+    @classmethod
+    def _propagate_base_folder(cls, values):
+        if isinstance(values, dict) and "base_folder" in values:
+            values.setdefault("database", {})
+            values["database"]["base_folder"] = values["base_folder"]
+        return values
 
-        if v is not None and not os.path.exists(v):
-            os.makedirs(v)
+    @model_validator(mode="after")
+    def _check_paths(self):
+        self.homepage_directory = _make_abs_path(self.homepage_directory, self.base_folder, None)
+        self.upload_directory = _make_abs_path(self.upload_directory, self.base_folder, None)
+        self.logfile = _make_abs_path(self.logfile, self.base_folder, None)
+        self.geoip2_dir = _make_abs_path(self.geoip2_dir, self.base_folder, "geoip2")
 
-        return v
+        if self.temporary_dir is None:
+            self.temporary_dir = tempfile.gettempdir()
+            self.temporary_dir = _make_abs_path("qcf_tmp", self.base_folder, tempfile.gettempdir())
+        else:
+            self.temporary_dir = _make_abs_path(self.temporary_dir, self.base_folder, None)
 
-    class Config(ConfigCommon):
-        env_prefix = "QCF_"
+        os.makedirs(self.temporary_dir, exist_ok=True)
+        return self
 
-
-def convert_old_configuration(old_config):
-    cfg_dict = {}
-
-    cfg_dict["base_folder"] = old_config.base_folder
-
-    # Database settings
-    cfg_dict["database"] = {}
-    cfg_dict["database"]["own"] = old_config.database.own
-    cfg_dict["database"]["host"] = old_config.database.host
-    cfg_dict["database"]["port"] = old_config.database.port
-    cfg_dict["database"]["username"] = old_config.database.username
-    cfg_dict["database"]["password"] = old_config.database.password
-    cfg_dict["database"]["database_name"] = old_config.database.database_name
-    cfg_dict["database"]["logfile"] = old_config.database.logfile
-
-    if old_config.database.own:
-        cfg_dict["database"]["data_directory"] = old_config.database.directory
-
-    # Response limits. The old config only had one. Set all the possible
-    # limits to that value
-    response_limit = old_config.fractal.query_limit
-    field_list = APILimitConfig.field_names()
-    cfg_dict["api_limits"] = {k: response_limit for k in field_list}
-
-    # Flask server settings
-    cfg_dict["api"] = {}
-    cfg_dict["api"]["port"] = old_config.fractal.port
-    cfg_dict["api"]["secret_key"] = secrets.token_urlsafe(32)
-    cfg_dict["api"]["jwt_secret_key"] = secrets.token_urlsafe(32)
-
-    # Now general fractal settings. Before these were in a
-    # separate config class, but now they are in the top level
-    cfg_dict["name"] = old_config.fractal.name
-    cfg_dict["enable_security"] = old_config.fractal.security == "local"
-    cfg_dict["allow_unauthenticated_read"] = old_config.fractal.allow_read
-    cfg_dict["logfile"] = old_config.fractal.logfile
-    cfg_dict["loglevel"] = old_config.fractal.loglevel
-    cfg_dict["service_frequency"] = old_config.fractal.service_frequency
-    cfg_dict["max_active_services"] = old_config.fractal.max_active_services
-    cfg_dict["heartbeat_frequency"] = old_config.fractal.heartbeat_frequency
-    cfg_dict["log_access"] = old_config.fractal.log_apis
-
-    if old_config.fractal.geo_file_path:
-        cfg_dict["geoip2_dir"] = os.path.basename(old_config.fractal.geo_file_path)
-
-    return FractalConfig(**cfg_dict)
+    model_config = QCFConfigBase.model_config | SettingsConfigDict(env_prefix="QCF_")
 
 
 def read_configuration(file_paths: list[str], extra_config: Optional[Dict[str, Any]] = None) -> FractalConfig:
