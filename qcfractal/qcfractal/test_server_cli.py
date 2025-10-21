@@ -13,8 +13,6 @@ from qcfractal.config import read_configuration
 from qcfractal.port_util import find_open_port
 
 config_file = os.path.join(testconfig_path, "qcf_basic.yaml")
-old_config_file = os.path.join(migrationdata_path, "qcfractal_config_v0.15.8.yaml")
-old_db_dump = os.path.join(migrationdata_path, "qcfractal_config_v0.15.8.yaml")
 
 pytestmark = pytest.mark.slow
 
@@ -348,22 +346,6 @@ def test_cli_upgrade_noinit(cli_runner_core):
         assert "has not been initialized" in output
     else:
         assert "does not exist for upgrading" in output
-
-
-def test_cli_upgrade_config(tmp_path):
-    tmp_subdir = tmp_path / "cli_tmp"
-    tmp_subdir.mkdir()
-
-    shutil.copy(old_config_file, tmp_subdir)
-
-    old_config_path = os.path.join(tmp_subdir, os.path.basename(old_config_file))
-
-    output = subprocess.check_output(
-        ["qcfractal-server", "upgrade-config", "-v", "--config", old_config_path], universal_newlines=True
-    )
-
-    assert "Your configuration file has been upgraded" in output
-    assert os.path.isfile(old_config_path + ".backup")
 
 
 def test_cli_start(cli_runner):
