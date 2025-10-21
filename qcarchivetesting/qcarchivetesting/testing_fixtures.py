@@ -27,7 +27,7 @@ def _generate_default_config(pg_harness, extra_config=None) -> FractalConfig:
     cfg_dict = {}
     cfg_dict["base_folder"] = pg_harness.config.base_folder
     cfg_dict["loglevel"] = "DEBUG"
-    cfg_dict["database"] = pg_harness.config.dict()
+    cfg_dict["database"] = pg_harness.config.model_dump()
     cfg_dict["database"]["pool_size"] = 0
     cfg_dict["log_access"] = True
 

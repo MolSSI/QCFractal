@@ -88,7 +88,9 @@ class DatabaseConfig(QCFConfigBase):
     database_name: str = Field("qcfractal_default", description="The database name to connect to.")
     username: str = Field(..., description="The database username to connect with")
     password: str = Field(..., description="The database password to connect with")
-    query: Dict[str, str] = Field({}, description="Extra connection query parameters at the end of the URL string")
+    query: Dict[str, Union[str, int]] = Field(
+        {}, description="Extra connection query parameters at the end of the URL string"
+    )
 
     own: bool = Field(
         True,

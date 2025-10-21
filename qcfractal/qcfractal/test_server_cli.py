@@ -58,11 +58,11 @@ def cli_runner_core(postgres_server, tmp_config, request, unique_db_name):
         pg_harness.delete_database()
 
         config = read_configuration([tmp_config])
-        config.database = pg_harness.config.copy(deep=True)
+        config.database = pg_harness.config.model_copy(deep=True)
         config.database.own = False
 
         with open(tmp_config, "w") as f:
-            yaml.dump(config.dict(), f)
+            yaml.dump(config.model_dump(), f)
 
     # Use a functor so we can get own_db (and maybe other info in the future)
     class run_qcfractal_cli:

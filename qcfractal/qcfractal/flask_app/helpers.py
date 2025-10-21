@@ -166,7 +166,7 @@ def get_public_server_information():
         "manager_heartbeat_frequency_jitter": qcf_cfg.heartbeat_frequency_jitter,
         "manager_heartbeat_max_missed": qcf_cfg.heartbeat_max_missed,
         "version": qcfractal_version,
-        "api_limits": qcf_cfg.api_limits.dict(),
+        "api_limits": qcf_cfg.api_limits.model_dump(mode="json"),
         "client_version_lower_limit": "0.50",
         "client_version_upper_limit": "1.00",
         "manager_version_lower_limit": "0.50",

@@ -97,7 +97,7 @@ class FractalSnowflake:
         qcf_cfg: Dict[str, Any] = {}
         qcf_cfg["base_folder"] = self._tmpdir
         qcf_cfg["loglevel"] = logging.getLevelName(loglevel)
-        qcf_cfg["database"] = db_config.dict()
+        qcf_cfg["database"] = db_config.model_dump()
         qcf_cfg["enable_security"] = False
         qcf_cfg["hide_internal_errors"] = False
         qcf_cfg["service_frequency"] = 10

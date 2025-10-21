@@ -78,7 +78,7 @@ class QCATestingPostgresServer:
         assert self.harness.is_alive() and not self.harness.can_connect()
 
     def get_new_harness(self, db_name: str) -> QCATestingPostgresHarness:
-        harness_config = deepcopy(self.harness.config.dict())
+        harness_config = deepcopy(self.harness.config.model_dump())
         harness_config["database_name"] = db_name
 
         new_harness = QCATestingPostgresHarness(DatabaseConfig(**harness_config))
@@ -170,7 +170,7 @@ class QCATestingSnowflake(FractalSnowflake):
             extra_config=qcf_config,
         )
 
-        self._original_config = self._qcf_config.copy(deep=True)
+        self._original_config = self._qcf_config.model_copy(deep=True)
 
         if create_users:
             self.create_users()
@@ -192,7 +192,7 @@ class QCATestingSnowflake(FractalSnowflake):
         self._stop_job_runner()
         self._stop_compute()
         self._all_completed = set()
-        self._qcf_config = self._original_config.copy(deep=True)
+        self._qcf_config = self._original_config.model_copy(deep=True)
 
         if self._api_thread is None:
             self.start_api(wait=True)
