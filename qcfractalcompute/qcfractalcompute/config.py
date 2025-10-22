@@ -46,7 +46,7 @@ def _walltime_must_be_str(w) -> str:
 
 
 class QCFComputeConfigBase(BaseSettings):
-    model_config = SettingsConfigDict(extra="forbid", case_sensitive=False)
+    model_config = SettingsConfigDict(extra="forbid", case_sensitive=False, env_prefix="QCF_COMPUTE_")
 
 
 class PackageEnvironmentSettings(QCFComputeConfigBase):
