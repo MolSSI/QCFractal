@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from copy import deepcopy
 
 from qcarchivetesting import geoip_path, geoip_filename, ip_tests_enabled
 from qcfractal.config import DatabaseConfig
@@ -78,10 +77,8 @@ class QCATestingPostgresServer:
         assert self.harness.is_alive() and not self.harness.can_connect()
 
     def get_new_harness(self, db_name: str) -> QCATestingPostgresHarness:
-        harness_config = deepcopy(self.harness.config.model_dump())
-        harness_config["database_name"] = db_name
-
-        new_harness = QCATestingPostgresHarness(DatabaseConfig(**harness_config))
+        db_config = self.harness.config.model_copy(deep=True, update={"database_name": db_name})
+        new_harness = QCATestingPostgresHarness(db_config)
         new_harness.create_database(create_tables=True)
         return new_harness
 
