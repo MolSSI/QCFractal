@@ -22,7 +22,7 @@ def test_manager_config_walltime(time_str):
 
     # Walltime as a string
     config_yaml = f"""
-        queue_tags:
+        compute_tags:
           - '*'
         cores_per_worker: 1
         memory_per_worker: 1.0
@@ -37,7 +37,7 @@ def test_manager_config_walltime(time_str):
 
     # Walltime without quotes (gets converted by yaml to int)
     config_yaml = f"""
-        queue_tags:
+        compute_tags:
           - '*'
         cores_per_worker: 1
         memory_per_worker: 1.0

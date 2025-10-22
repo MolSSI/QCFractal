@@ -17,5 +17,5 @@ executors:
     max_workers: 1
     cores_per_worker: 2
     memory_per_worker: 2
-    queue_tags:
+    compute_tags:
       - '*'
