@@ -11,6 +11,7 @@ dependencies:
   - requests
   - pyyaml
   - pydantic
+  - pydantic-settings
   - zstandard
   - apsw>=3.42
   - qcelemental<0.70a0
