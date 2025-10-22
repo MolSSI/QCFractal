@@ -364,7 +364,7 @@ def test_task_socket_claim_tag_wildcard_strict(postgres_server, pytestconfig):
 
     pg_harness = postgres_server.get_new_harness("claim_tag_wildcard_strict")
     encoding = pytestconfig.getoption("--client-encoding")
-    with QCATestingSnowflake(pg_harness, encoding=encoding, extra_config={"strict_queue_tags": True}) as snowflake:
+    with QCATestingSnowflake(pg_harness, encoding=encoding, extra_config={"strict_compute_tags": True}) as snowflake:
         storage_socket = snowflake.get_storage_socket()
 
         mname1 = ManagerName(cluster="test_cluster", hostname="a_host1", uuid="1234-5678-1234-5678")

@@ -359,11 +359,11 @@ class FractalConfig(QCFConfigBase):
         True,
         description="Allows unauthenticated read access to this instance. This does not extend to sensitive tables (such as user information)",
     )
-    strict_queue_tags: bool = Field(
+    strict_compute_tags: bool = Field(
         False,
-        description="If True, disables wildcard behavior for queue tags. This disables managers from claiming all "
+        description="If True, disables wildcard behavior for compute tags. This disables managers from claiming all "
         "tags if they specify a wildcard ('*') tag. Managers will still be able to claim tasks with an "
-        "explicit '*' tag if they specifiy the '*' queue tag in their config",
+        "explicit '*' tag if they specify the '*' queue tag in their config",
     )
 
     # Logging and profiling
@@ -475,6 +475,15 @@ class FractalConfig(QCFConfigBase):
         if isinstance(values, dict) and "base_folder" in values:
             values.setdefault("database", {})
             values["database"]["base_folder"] = values["base_folder"]
+        return values
+
+    @model_validator(mode="before")
+    @classmethod
+    def _detect_deprecated_fields(cls, values):
+        if isinstance(values, dict):
+            if "strict_queue_tags" in values:
+                logging.getLogger(__name__).warning("strict_queue_tags is deprecated. Use strict_compute_tags instead")
+                values["strict_compute_tags"] = values.pop("strict_queue_tags")
         return values
 
     @model_validator(mode="after")
